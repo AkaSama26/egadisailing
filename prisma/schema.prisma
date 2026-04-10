@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+}
+
+enum ServiceType {
+  SOCIAL_BOATING
+  EXCLUSIVE_EXPERIENCE
+  CABIN_CHARTER
+  BOAT_SHARED
+  BOAT_EXCLUSIVE
+}
+
+enum TripStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  PENDING
+  CANCELLED
+  REFUNDED
+}
+
+enum BookingChannel {
+  WEBSITE
+  GET_YOUR_GUIDE
+  AIRBNB
+  CLICK_AND_BOAT
+  MUSEMENT
+  VIATOR
+  SAMBOAT
+  MANUAL
+}
+
+enum CrewRole {
+  SKIPPER
+  CHEF
+  HOSTESS
+}
+
+enum DurationType {
+  FULL_DAY
+  HALF_DAY_MORNING
+  WEEK
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         UserRole @default(STAFF)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Service {
+  id            String       @id @default(cuid())
+  name          String
+  type          ServiceType
+  description   Json
+  durationType  DurationType @map("duration_type")
+  durationHours Int          @map("duration_hours")
+  capacityMax   Int          @map("capacity_max")
+  minPaying     Int?         @map("min_paying")
+  boatId        String?      @map("boat_id")
+  active        Boolean      @default(true)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  boat           Boat?           @relation(fields: [boatId], references: [id])
+  pricingPeriods PricingPeriod[]
+  trips          Trip[]
+
+  @@map("services")
+}
+
+model Boat {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  length      Float?
+  year        Int?
+  description Json?
+  amenities   Json?
+  images      Json?
+  cabins      Int?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  services Service[]
+
+  @@map("boats")
+}
+
+model PricingPeriod {
+  id             String   @id @default(cuid())
+  serviceId      String   @map("service_id")
+  label          String
+  startDate      DateTime @map("start_date")
+  endDate        DateTime @map("end_date")
+  pricePerPerson Decimal  @map("price_per_person") @db.Decimal(10, 2)
+  year           Int
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("pricing_periods")
+}
+
+model Trip {
+  id             String     @id @default(cuid())
+  serviceId      String     @map("service_id")
+  date           DateTime   @db.Date
+  departureTime  String     @map("departure_time")
+  returnTime     String     @map("return_time")
+  status         TripStatus @default(SCHEDULED)
+  availableSpots Int        @map("available_spots")
+  notes          String?
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  service  Service    @relation(fields: [serviceId], references: [id])
+  bookings Booking[]
+  crew     TripCrew[]
+
+  @@map("trips")
+}
+
+model Booking {
+  id              String         @id @default(cuid())
+  tripId          String         @map("trip_id")
+  customerId      String         @map("customer_id")
+  numPeople       Int            @map("num_people")
+  totalPrice      Decimal        @map("total_price") @db.Decimal(10, 2)
+  status          BookingStatus  @default(PENDING)
+  channel         BookingChannel @default(WEBSITE)
+  stripePaymentId String?        @map("stripe_payment_id")
+  cabinNumber     Int?           @map("cabin_number")
+  notes           String?
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  trip     Trip     @relation(fields: [tripId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@map("bookings")
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+  nationality String?
+  language    String?  @default("it")
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  bookings Booking[]
+
+  @@map("customers")
+}
+
+model CrewMember {
+  id        String   @id @default(cuid())
+  name      String
+  role      CrewRole
+  phone     String?
+  email     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  trips TripCrew[]
+
+  @@map("crew_members")
+}
+
+model TripCrew {
+  id           String @id @default(cuid())
+  tripId       String @map("trip_id")
+  crewMemberId String @map("crew_member_id")
+
+  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  crewMember CrewMember @relation(fields: [crewMemberId], references: [id])
+
+  @@unique([tripId, crewMemberId])
+  @@map("trip_crew")
+}
+
+model PortalSync {
+  id        String    @id @default(cuid())
+  portal    String
+  lastSync  DateTime? @map("last_sync")
+  status    String    @default("idle")
+  errorLog  String?   @map("error_log")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("portal_syncs")
+}
