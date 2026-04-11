@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "../_components/admin-sidebar";
 import { AdminTopbar } from "../_components/admin-topbar";
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function DashboardLayout({
   children,
@@ -23,6 +24,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
+      <Toaster />
     </div>
   );
 }
