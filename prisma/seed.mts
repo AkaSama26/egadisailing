@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { hashSync } from "bcryptjs";
 import pg from "pg";
-const { PrismaClient } = await import("../src/generated/prisma/client.ts");
+const { PrismaClient } = await import("../src/generated/prisma/client.js");
 const { PrismaPg } = await import("@prisma/adapter-pg");
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
