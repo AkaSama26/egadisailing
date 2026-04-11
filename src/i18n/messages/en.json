@@ -1,0 +1,55 @@
+{
+  "common": {
+    "bookNow": "Book Now",
+    "learnMore": "Learn More",
+    "contactUs": "Contact Us",
+    "home": "Home",
+    "about": "About Us",
+    "contacts": "Contacts",
+    "faq": "FAQ",
+    "priceFrom": "From",
+    "perPerson": "per person",
+    "fullDay": "Full day",
+    "halfDay": "Half day",
+    "week": "Week"
+  },
+  "hero": {
+    "title": "Discover the Egadi Islands by Sea",
+    "subtitle": "Unique boat experiences between Favignana, Levanzo and Marettimo. Accessible luxury, adventure and Mediterranean flavours.",
+    "cta": "Explore Experiences"
+  },
+  "services": {
+    "socialBoating": {
+      "title": "Social Boating",
+      "short": "Sailing, swimming and fresh fish lunch. The most convivial way to discover the Egadi."
+    },
+    "exclusive": {
+      "title": "Exclusive Experience",
+      "short": "Renowned chef, customized route, uncompromised luxury."
+    },
+    "cabinCharter": {
+      "title": "Cabin Charter",
+      "short": "A week among the Egadi Islands. Your home is the sea."
+    },
+    "boatShared": {
+      "title": "Shared Boat Tour",
+      "short": "Boat tour to the Egadi, ideal for small groups."
+    },
+    "boatExclusive": {
+      "title": "Exclusive Boat Tour",
+      "short": "The boat all for you and your group."
+    }
+  },
+  "nav": {
+    "experiences": "Experiences",
+    "boats": "Our Boats",
+    "islands": "The Islands",
+    "about": "About Us",
+    "contacts": "Contacts"
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "common": {
+    "bookNow": "Prenota Ora",
+    "learnMore": "Scopri di più",
+    "contactUs": "Contattaci",
+    "home": "Home",
+    "about": "Chi Siamo",
+    "contacts": "Contatti",
+    "faq": "FAQ",
+    "priceFrom": "A partire da",
+    "perPerson": "a persona",
+    "fullDay": "Giornata intera",
+    "halfDay": "Mezza giornata",
+    "week": "Settimana"
+  },
+  "hero": {
+    "title": "Scopri le Isole Egadi dal Mare",
+    "subtitle": "Esperienze in barca uniche tra Favignana, Levanzo e Marettimo. Lusso accessibile, avventura e sapori del Mediterraneo.",
+    "cta": "Esplora le Esperienze"
+  },
+  "services": {
+    "socialBoating": {
+      "title": "Social Boating",
+      "short": "Navigazione, tuffi e pranzo di pesce fresco. Il modo più conviviale di scoprire le Egadi."
+    },
+    "exclusive": {
+      "title": "Exclusive Experience",
+      "short": "Chef rinomato, rotta personalizzata, lusso senza compromessi."
+    },
+    "cabinCharter": {
+      "title": "Cabin Charter",
+      "short": "Una settimana tra le Egadi. La tua casa è il mare."
+    },
+    "boatShared": {
+      "title": "Boat Tour Condiviso",
+      "short": "Tour in barca alle Egadi, ideale per piccoli gruppi."
+    },
+    "boatExclusive": {
+      "title": "Boat Tour Esclusivo",
+      "short": "La barca tutta per te e il tuo gruppo."
+    }
+  },
+  "nav": {
+    "experiences": "Esperienze",
+    "boats": "Le Barche",
+    "islands": "Le Isole",
+    "about": "Chi Siamo",
+    "contacts": "Contatti"
+  },
+  "footer": {
+    "rights": "Tutti i diritti riservati",
+    "privacy": "Privacy Policy",
+    "terms": "Termini e Condizioni"
+  }
+}
