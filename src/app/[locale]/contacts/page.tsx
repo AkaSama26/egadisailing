@@ -1,10 +1,24 @@
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { ScrollSection } from "@/components/scroll-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Mail, Phone, MessageCircle } from "lucide-react";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "contacts" });
+  return {
+    title: `${t("title")} — Egadisailing`,
+    description: t("subtitle"),
+  };
+}
 
 export default async function ContactsPage({
   params,

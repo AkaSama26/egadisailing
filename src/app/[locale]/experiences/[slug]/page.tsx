@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
@@ -20,6 +21,22 @@ const durationLabels: Record<string, string> = {
   HALF_DAY_MORNING: "halfDay",
   WEEK: "week",
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const service = await db.service.findUnique({ where: { id: slug } });
+  if (!service) return { title: "Not Found" };
+  const description =
+    (service.description as any)[locale] || (service.description as any).it;
+  return {
+    title: `${service.name} — Egadisailing`,
+    description,
+  };
+}
 
 export default async function ExperienceDetailPage({
   params,

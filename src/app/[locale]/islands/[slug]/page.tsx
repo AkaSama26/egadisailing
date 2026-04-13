@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
@@ -12,6 +13,20 @@ const gradients: Record<string, string> = {
   levanzo: "from-[#06b6d4] to-[#0891b2]",
   marettimo: "from-[#14b8a6] to-[#0d9488]",
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  if (!validSlugs.includes(slug as any)) return { title: "Not Found" };
+  const t = await getTranslations({ locale, namespace: "islands" });
+  return {
+    title: `${t(`${slug}.name`)} — Egadisailing`,
+    description: t(`${slug}.description`),
+  };
+}
 
 export default async function IslandDetailPage({
   params,

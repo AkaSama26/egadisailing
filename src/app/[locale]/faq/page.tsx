@@ -1,8 +1,22 @@
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { ScrollSection } from "@/components/scroll-section";
 import { ChevronDown } from "lucide-react";
 
 const faqKeys = [1, 2, 3, 4, 5, 6];
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "faq" });
+  return {
+    title: `${t("title")} — Egadisailing`,
+    description: t("subtitle"),
+  };
+}
 
 export default async function FaqPage({
   params,

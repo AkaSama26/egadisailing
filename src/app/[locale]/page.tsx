@@ -1,6 +1,21 @@
 import { db } from "@/lib/db";
+import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { HeroSection } from "@/components/hero-section";
 import { LandingSections } from "./landing-sections";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "hero" });
+  return {
+    title: `${t("title")} — Egadisailing`,
+    description: t("subtitle"),
+  };
+}
 
 export default async function HomePage() {
   const services = await db.service.findMany({
@@ -21,6 +36,24 @@ export default async function HomePage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "TouristAttraction",
+            name: "Egadisailing",
+            description: "Boat experiences in the Egadi Islands, Sicily",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: "Trapani",
+              addressRegion: "Sicilia",
+              addressCountry: "IT",
+            },
+            url: "https://egadisailing.com",
+          }),
+        }}
+      />
       <HeroSection />
       <LandingSections services={serializedServices} />
     </>

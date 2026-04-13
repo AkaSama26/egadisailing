@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,19 @@ const durationLabels: Record<string, string> = {
   HALF_DAY_MORNING: "halfDay",
   WEEK: "week",
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "experiences" });
+  return {
+    title: `${t("title")} — Egadisailing`,
+    description: t("subtitle"),
+  };
+}
 
 export default async function ExperiencesPage({
   params,

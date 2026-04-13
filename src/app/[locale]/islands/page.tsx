@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +23,19 @@ const islands = [
     animation: "fade-right" as const,
   },
 ];
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "islands" });
+  return {
+    title: `${t("title")} — Egadisailing`,
+    description: t("subtitle"),
+  };
+}
 
 export default async function IslandsPage({
   params,
