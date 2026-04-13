@@ -50,6 +50,55 @@
   "footer": {
     "rights": "Tutti i diritti riservati",
     "privacy": "Privacy Policy",
-    "terms": "Termini e Condizioni"
+    "terms": "Termini e Condizioni",
+    "tagline": "Esperienze in barca uniche nelle Isole Egadi",
+    "quickLinks": "Link Rapidi",
+    "address": "Porto di Trapani, Trapani (TP), Italia"
+  },
+  "about": {
+    "title": "Chi Siamo",
+    "subtitle": "La passione per il mare, dal 2010"
+  },
+  "contacts": {
+    "title": "Contattaci",
+    "address": "Porto di Trapani, Trapani (TP), Italia",
+    "email": "info@egadisailing.com",
+    "formName": "Nome",
+    "formEmail": "Email",
+    "formMessage": "Messaggio",
+    "formSend": "Invia Messaggio",
+    "whatsapp": "Scrivici su WhatsApp"
+  },
+  "islands": {
+    "title": "Le Isole Egadi",
+    "subtitle": "Tre gioielli nel cuore del Mediterraneo",
+    "favignana": {
+      "name": "Favignana",
+      "description": "La più grande delle Egadi, famosa per Cala Rossa e le acque turchesi."
+    },
+    "levanzo": {
+      "name": "Levanzo",
+      "description": "La più piccola e selvaggia, con la Grotta del Genovese."
+    },
+    "marettimo": {
+      "name": "Marettimo",
+      "description": "La più lontana e incontaminata, paradiso per snorkeling."
+    }
+  },
+  "experience": {
+    "includes": "Cosa Include",
+    "bring": "Cosa Portare",
+    "itinerary": "Itinerario",
+    "pricing": "Prezzi e Stagionalità",
+    "reviews": "Recensioni",
+    "bookNow": "Prenota Ora",
+    "from": "A partire da",
+    "perPerson": "a persona",
+    "duration": "Durata",
+    "capacity": "Capacità max",
+    "crew": "Crew a bordo"
+  },
+  "faq": {
+    "title": "Domande Frequenti"
   }
 }
