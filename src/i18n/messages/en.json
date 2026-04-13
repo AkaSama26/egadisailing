@@ -61,32 +61,51 @@
   },
   "about": {
     "title": "About Us",
-    "subtitle": "A passion for the sea, since 2010"
+    "subtitle": "A passion for the sea, since 2010",
+    "heroText": "Egadisailing was born from a passion for the sea and a love for the Egadi Islands. Since 2010, we offer unique boat experiences for those who want to discover one of the most beautiful stretches of sea in the Mediterranean.",
+    "storyText": "It all started with a boat and a dream: to let every guest experience the magic of the Egadi as we live it every day. Today, with a curated fleet and a passionate crew, we continue to turn every outing into an unforgettable memory.",
+    "valuesTitle": "Our Values",
+    "value1Title": "Passion for the Sea",
+    "value1Desc": "The sea is our home. Every day on the boat is an opportunity to share the beauty of the Egadi with our guests.",
+    "value2Title": "Sicilian Hospitality",
+    "value2Desc": "Warm welcome, lovingly prepared lunches and attention to detail: Sicilian tradition aboard our boats.",
+    "value3Title": "Environmental Respect",
+    "value3Desc": "We sail responsibly, protecting the marine ecosystem of the Egadi for future generations.",
+    "crewTitle": "Our Crew",
+    "crewText": "Our team is made up of sea professionals: experienced skippers, talented chefs, and attentive hostesses. Every crew member shares the same passion for the Egadi and for hospitality."
   },
   "contacts": {
     "title": "Contact Us",
+    "subtitle": "We are here for you",
     "address": "Port of Trapani, Trapani (TP), Italy",
     "email": "info@egadisailing.com",
+    "phone": "+39 000 000 0000",
     "formName": "Name",
     "formEmail": "Email",
     "formMessage": "Message",
     "formSend": "Send Message",
-    "whatsapp": "Message us on WhatsApp"
+    "whatsapp": "Message us on WhatsApp",
+    "findUs": "Where to Find Us",
+    "writeUs": "Write to Us"
   },
   "islands": {
     "title": "The Egadi Islands",
     "subtitle": "Three jewels in the heart of the Mediterranean",
+    "discoverExperiences": "Discover experiences visiting this island",
     "favignana": {
       "name": "Favignana",
-      "description": "The largest of the Egadi, famous for Cala Rossa and its turquoise waters."
+      "description": "The largest of the Egadi, famous for Cala Rossa and its turquoise waters. Known as the 'Butterfly on the Sea' for its distinctive shape, Favignana offers stunning beaches, a charming town centre and the former Florio Establishment, a testament to the historic tuna fishing tradition.",
+      "highlights": "Cala Rossa, Cala Azzurra, Lido Burrone, Former Florio Establishment"
     },
     "levanzo": {
       "name": "Levanzo",
-      "description": "The smallest and wildest, home to the Grotta del Genovese."
+      "description": "The smallest and wildest, home to the Grotta del Genovese. With just 200 inhabitants, Levanzo is an unspoiled gem where time seems to have stood still. Its crystal-clear waters and rich marine life make it perfect for snorkelling.",
+      "highlights": "Grotta del Genovese, Cala Minnola, Cala Fredda, Faraglione"
     },
     "marettimo": {
       "name": "Marettimo",
-      "description": "The most remote and unspoiled, a snorkelling paradise."
+      "description": "The most remote and unspoiled, a snorkelling paradise. Marettimo is the wildest island of the archipelago, with hiking trails through lush nature and sea caves accessible only from the water.",
+      "highlights": "Grotta del Cammello, Punta Troia, Cala Bianca, Scalo Maestro"
     }
   },
   "experience": {
@@ -100,10 +119,64 @@
     "perPerson": "per person",
     "duration": "Duration",
     "capacity": "Max capacity",
-    "crew": "Crew on board"
+    "crew": "Crew on board",
+    "boat": "Boat",
+    "allExperiences": "All Experiences",
+    "include1": "Professional skipper",
+    "include2": "Chef-prepared lunch with fresh fish",
+    "include3": "Snorkelling equipment",
+    "include4": "On-board towels",
+    "include5": "Water and soft drinks",
+    "bring1": "Sunscreen",
+    "bring2": "Swimsuit",
+    "bring3": "Personal towel",
+    "bring4": "Hat",
+    "bring5": "Comfortable shoes",
+    "itin1Time": "09:00",
+    "itin1Text": "Departure from the Port of Trapani",
+    "itin2Time": "10:00",
+    "itin2Text": "Arrival at Favignana — Cala Rossa, swimming and snorkelling",
+    "itin3Time": "12:30",
+    "itin3Text": "On-board lunch prepared by the chef",
+    "itin4Time": "14:00",
+    "itin4Text": "Sailing towards Levanzo",
+    "itin5Time": "15:30",
+    "itin5Text": "Grotta del Genovese, swimming in crystal-clear waters",
+    "itin6Time": "17:00",
+    "itin6Text": "Return to the Port of Trapani",
+    "periodLabel": "Period",
+    "periodPrice": "Price per person",
+    "periodDates": "Dates"
+  },
+  "experiences": {
+    "title": "Our Experiences",
+    "subtitle": "Discover the perfect way to experience the Egadi Islands"
+  },
+  "boats": {
+    "title": "Our Boats",
+    "subtitle": "Comfort and safety for your sea adventures",
+    "length": "Length",
+    "year": "Year",
+    "cabins": "Cabins",
+    "meters": "m",
+    "availableServices": "Available experiences",
+    "specs": "Specifications"
   },
   "faq": {
-    "title": "Frequently Asked Questions"
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know before setting sail",
+    "q1": "What should I bring?",
+    "a1": "Sunscreen (biodegradable preferably), swimsuit, personal towel, sun hat and comfortable shoes. We also recommend bringing a light sweater for the return trip.",
+    "q2": "Can I cancel my booking?",
+    "a2": "Yes, you can cancel up to 48 hours before the departure date for a full refund. For cancellations within 48 hours, 50% of the amount will be retained.",
+    "q3": "What happens in case of bad weather?",
+    "a3": "We constantly monitor weather conditions. In case of bad weather, we will contact you to reschedule the trip or provide a full refund. The safety of our guests is our top priority.",
+    "q4": "Can children participate?",
+    "a4": "Yes, children are welcome on board! For very young children (under 3 years old), please contact us in advance. Children's life jackets are always available.",
+    "q5": "Is lunch included?",
+    "a5": "For Social Boating and Exclusive Experience, the chef-prepared lunch is included in the price. For Boat Tours, it is possible to add the lunch service upon request.",
+    "q6": "Where do we board?",
+    "a6": "Boarding takes place at the Port of Trapani. We will send you exact directions and the meeting point by email after booking confirmation."
   },
   "landing": {
     "experiencesTitle": "Our Experiences",

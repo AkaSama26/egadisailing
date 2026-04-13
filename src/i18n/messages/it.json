@@ -61,32 +61,51 @@
   },
   "about": {
     "title": "Chi Siamo",
-    "subtitle": "La passione per il mare, dal 2010"
+    "subtitle": "La passione per il mare, dal 2010",
+    "heroText": "Egadisailing nasce dalla passione per il mare e dall'amore per le Isole Egadi. Dal 2010, offriamo esperienze uniche in barca per chi vuole scoprire uno dei tratti di mare più belli del Mediterraneo.",
+    "storyText": "Tutto è iniziato con una barca e un sogno: far vivere a ogni ospite la magia delle Egadi come la viviamo noi ogni giorno. Oggi, con una flotta curata e una crew appassionata, continuiamo a trasformare ogni uscita in un ricordo indimenticabile.",
+    "valuesTitle": "I Nostri Valori",
+    "value1Title": "Passione per il Mare",
+    "value1Desc": "Il mare è la nostra casa. Ogni giornata in barca è un'opportunità per condividere la bellezza delle Egadi con i nostri ospiti.",
+    "value2Title": "Ospitalità Siciliana",
+    "value2Desc": "Accoglienza calorosa, pranzi preparati con amore e attenzione ai dettagli: la tradizione siciliana a bordo delle nostre barche.",
+    "value3Title": "Rispetto dell'Ambiente",
+    "value3Desc": "Navighiamo con responsabilità, proteggendo l'ecosistema marino delle Egadi per le generazioni future.",
+    "crewTitle": "La Nostra Crew",
+    "crewText": "Il nostro team è composto da professionisti del mare: skipper esperti, chef talentuosi e hostess attente. Ogni membro della crew condivide la stessa passione per le Egadi e per l'ospitalità."
   },
   "contacts": {
     "title": "Contattaci",
+    "subtitle": "Siamo qui per te",
     "address": "Porto di Trapani, Trapani (TP), Italia",
     "email": "info@egadisailing.com",
+    "phone": "+39 000 000 0000",
     "formName": "Nome",
     "formEmail": "Email",
     "formMessage": "Messaggio",
     "formSend": "Invia Messaggio",
-    "whatsapp": "Scrivici su WhatsApp"
+    "whatsapp": "Scrivici su WhatsApp",
+    "findUs": "Dove Trovarci",
+    "writeUs": "Scrivici"
   },
   "islands": {
     "title": "Le Isole Egadi",
     "subtitle": "Tre gioielli nel cuore del Mediterraneo",
+    "discoverExperiences": "Scopri le esperienze che visitano quest'isola",
     "favignana": {
       "name": "Favignana",
-      "description": "La più grande delle Egadi, famosa per Cala Rossa e le acque turchesi."
+      "description": "La più grande delle Egadi, famosa per Cala Rossa e le acque turchesi. Conosciuta come la 'Farfalla sul mare' per la sua forma caratteristica, Favignana offre spiagge mozzafiato, un centro storico affascinante e l'ex Stabilimento Florio, testimonianza della storica pesca del tonno.",
+      "highlights": "Cala Rossa, Cala Azzurra, Lido Burrone, Ex Stabilimento Florio"
     },
     "levanzo": {
       "name": "Levanzo",
-      "description": "La più piccola e selvaggia, con la Grotta del Genovese."
+      "description": "La più piccola e selvaggia, con la Grotta del Genovese. Con appena 200 abitanti, Levanzo è un gioiello incontaminato dove il tempo sembra essersi fermato. Le sue acque cristalline e i fondali ricchi di vita marina la rendono perfetta per lo snorkeling.",
+      "highlights": "Grotta del Genovese, Cala Minnola, Cala Fredda, Faraglione"
     },
     "marettimo": {
       "name": "Marettimo",
-      "description": "La più lontana e incontaminata, paradiso per snorkeling."
+      "description": "La più lontana e incontaminata, paradiso per snorkeling. Marettimo è l'isola più selvaggia dell'arcipelago, con sentieri escursionistici che attraversano una natura rigogliosa e grotte marine accessibili solo dal mare.",
+      "highlights": "Grotta del Cammello, Punta Troia, Cala Bianca, Scalo Maestro"
     }
   },
   "experience": {
@@ -100,10 +119,64 @@
     "perPerson": "a persona",
     "duration": "Durata",
     "capacity": "Capacità max",
-    "crew": "Crew a bordo"
+    "crew": "Crew a bordo",
+    "boat": "Barca",
+    "allExperiences": "Tutte le Esperienze",
+    "include1": "Skipper professionista",
+    "include2": "Pranzo preparato dallo chef con pesce fresco",
+    "include3": "Attrezzatura snorkeling",
+    "include4": "Asciugamani di bordo",
+    "include5": "Acqua e soft drink",
+    "bring1": "Crema solare",
+    "bring2": "Costume da bagno",
+    "bring3": "Asciugamano personale",
+    "bring4": "Cappello",
+    "bring5": "Scarpe comode",
+    "itin1Time": "09:00",
+    "itin1Text": "Partenza dal Porto di Trapani",
+    "itin2Time": "10:00",
+    "itin2Text": "Arrivo a Favignana — Cala Rossa, tuffi e snorkeling",
+    "itin3Time": "12:30",
+    "itin3Text": "Pranzo a bordo preparato dallo chef",
+    "itin4Time": "14:00",
+    "itin4Text": "Navigazione verso Levanzo",
+    "itin5Time": "15:30",
+    "itin5Text": "Grotta del Genovese, bagno in acque cristalline",
+    "itin6Time": "17:00",
+    "itin6Text": "Rientro al Porto di Trapani",
+    "periodLabel": "Periodo",
+    "periodPrice": "Prezzo per persona",
+    "periodDates": "Date"
+  },
+  "experiences": {
+    "title": "Le Nostre Esperienze",
+    "subtitle": "Scopri il modo perfetto per vivere le Isole Egadi"
+  },
+  "boats": {
+    "title": "Le Nostre Barche",
+    "subtitle": "Comfort e sicurezza per le tue avventure in mare",
+    "length": "Lunghezza",
+    "year": "Anno",
+    "cabins": "Cabine",
+    "meters": "m",
+    "availableServices": "Esperienze disponibili",
+    "specs": "Specifiche"
   },
   "faq": {
-    "title": "Domande Frequenti"
+    "title": "Domande Frequenti",
+    "subtitle": "Tutto quello che devi sapere prima di partire",
+    "q1": "Cosa devo portare?",
+    "a1": "Crema solare (biodegradabile preferibilmente), costume da bagno, asciugamano personale, cappello per il sole e scarpe comode. Ti consigliamo anche di portare una felpa leggera per il rientro.",
+    "q2": "Posso cancellare la prenotazione?",
+    "a2": "Sì, puoi cancellare fino a 48 ore prima della data di partenza con rimborso completo. Per cancellazioni entro le 48 ore, verrà trattenuto il 50% dell'importo.",
+    "q3": "Cosa succede in caso di maltempo?",
+    "a3": "Monitoriamo costantemente le condizioni meteo. In caso di maltempo, ti contatteremo per riprogrammare l'uscita o per un rimborso completo. La sicurezza dei nostri ospiti è la nostra priorità.",
+    "q4": "I bambini possono partecipare?",
+    "a4": "Sì, i bambini sono i benvenuti a bordo! Per i più piccoli (sotto i 3 anni) chiediamo di contattarci in anticipo. Giubbotti di salvataggio per bambini sono sempre disponibili.",
+    "q5": "Il pranzo è incluso?",
+    "a5": "Per Social Boating e Exclusive Experience il pranzo preparato dallo chef è incluso nel prezzo. Per i Boat Tour, è possibile aggiungere il servizio pranzo su richiesta.",
+    "q6": "Dove ci si imbarca?",
+    "a6": "L'imbarco avviene dal Porto di Trapani. Ti invieremo le indicazioni esatte e il punto di incontro via email dopo la conferma della prenotazione."
   },
   "landing": {
     "experiencesTitle": "Le Nostre Esperienze",
