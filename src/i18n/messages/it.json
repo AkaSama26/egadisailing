@@ -104,5 +104,24 @@
   },
   "faq": {
     "title": "Domande Frequenti"
+  },
+  "landing": {
+    "experiencesTitle": "Le Nostre Esperienze",
+    "experiencesSubtitle": "Scegli l'esperienza perfetta per te",
+    "islandsTitle": "Le Isole Egadi",
+    "islandsSubtitle": "Tre gioielli nel cuore del Mediterraneo",
+    "whyTitle": "Perché Egadisailing",
+    "whyChef": "Chef a Bordo",
+    "whyChefDesc": "Pranzo di pesce fresco preparato dal nostro chef, con ingredienti locali e ricette siciliane.",
+    "whyLuxury": "Lusso Accessibile",
+    "whyLuxuryDesc": "Esperienze premium a prezzi ragionevoli, per vivere il mare come meriti.",
+    "whyCrew": "Crew Esperta",
+    "whyCrewDesc": "Skipper, chef e hostess professionisti per un'esperienza sicura e curata nei dettagli.",
+    "whyIslands": "Isole Incontaminate",
+    "whyIslandsDesc": "Le acque più cristalline del Mediterraneo, grotte marine e calette nascoste.",
+    "testimonialsTitle": "Cosa Dicono i Nostri Ospiti",
+    "ctaTitle": "Prenota la Tua Esperienza",
+    "ctaSubtitle": "Scegli la tua avventura nelle Isole Egadi",
+    "ctaButton": "Esplora le Esperienze"
   }
 }

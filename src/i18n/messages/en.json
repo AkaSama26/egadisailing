@@ -104,5 +104,24 @@
   },
   "faq": {
     "title": "Frequently Asked Questions"
+  },
+  "landing": {
+    "experiencesTitle": "Our Experiences",
+    "experiencesSubtitle": "Choose the perfect experience for you",
+    "islandsTitle": "The Egadi Islands",
+    "islandsSubtitle": "Three jewels in the heart of the Mediterranean",
+    "whyTitle": "Why Egadisailing",
+    "whyChef": "Chef on Board",
+    "whyChefDesc": "Fresh fish lunch prepared by our chef, with local ingredients and Sicilian recipes.",
+    "whyLuxury": "Accessible Luxury",
+    "whyLuxuryDesc": "Premium experiences at reasonable prices, to live the sea as you deserve.",
+    "whyCrew": "Expert Crew",
+    "whyCrewDesc": "Professional skipper, chef and hostess for a safe and curated experience.",
+    "whyIslands": "Unspoiled Islands",
+    "whyIslandsDesc": "The clearest waters of the Mediterranean, sea caves and hidden coves.",
+    "testimonialsTitle": "What Our Guests Say",
+    "ctaTitle": "Book Your Experience",
+    "ctaSubtitle": "Choose your adventure in the Egadi Islands",
+    "ctaButton": "Explore Experiences"
   }
 }
