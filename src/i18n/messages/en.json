@@ -16,7 +16,11 @@
   "hero": {
     "title": "Discover the Egadi Islands by Sea",
     "subtitle": "Unique boat experiences between Favignana, Levanzo and Marettimo. Accessible luxury, adventure and Mediterranean flavours.",
-    "cta": "Explore Experiences"
+    "cta": "Explore Experiences",
+    "experienceLabel": "Experience",
+    "experiencePlaceholder": "Choose an experience",
+    "dateLabel": "Date",
+    "datePlaceholder": "Select dates"
   },
   "services": {
     "socialBoating": {
