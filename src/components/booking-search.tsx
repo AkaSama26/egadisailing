@@ -7,16 +7,16 @@ export function BookingSearch() {
   const t = useTranslations("hero");
 
   return (
-    <div className="flex items-center bg-white rounded-full shadow-2xl overflow-hidden max-w-xl w-full">
+    <div className="flex items-center bg-white rounded-full shadow-2xl overflow-hidden max-w-2xl w-full">
       {/* Experience field */}
       <button
         type="button"
-        className="flex-1 px-4 sm:px-6 py-4 border-r border-gray-200 text-left cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex-1 px-6 sm:px-8 py-5 sm:py-6 border-r border-gray-200 text-left cursor-pointer hover:bg-gray-50 transition-colors"
       >
-        <p className="text-xs font-semibold text-gray-800">
+        <p className="text-sm sm:text-base font-semibold text-gray-800">
           {t("experienceLabel")}
         </p>
-        <p className="text-sm text-gray-400 truncate">
+        <p className="text-sm sm:text-base text-gray-400 truncate">
           {t("experiencePlaceholder")}
         </p>
       </button>
@@ -24,10 +24,10 @@ export function BookingSearch() {
       {/* Date field */}
       <button
         type="button"
-        className="flex-1 px-4 sm:px-6 py-4 text-left cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex-1 px-6 sm:px-8 py-5 sm:py-6 text-left cursor-pointer hover:bg-gray-50 transition-colors"
       >
-        <p className="text-xs font-semibold text-gray-800">{t("dateLabel")}</p>
-        <p className="text-sm text-gray-400 truncate">
+        <p className="text-sm sm:text-base font-semibold text-gray-800">{t("dateLabel")}</p>
+        <p className="text-sm sm:text-base text-gray-400 truncate">
           {t("datePlaceholder")}
         </p>
       </button>
@@ -35,10 +35,10 @@ export function BookingSearch() {
       {/* Search button */}
       <button
         type="button"
-        className="w-12 h-12 m-2 rounded-full bg-[#0ea5e9] flex items-center justify-center text-white hover:bg-[#0284c7] transition-colors cursor-pointer shrink-0"
+        className="w-14 h-14 sm:w-16 sm:h-16 m-2 sm:m-3 rounded-full bg-[#0ea5e9] flex items-center justify-center text-white hover:bg-[#0284c7] transition-colors cursor-pointer shrink-0"
         aria-label="Search"
       >
-        <Search className="w-5 h-5" />
+        <Search className="w-6 h-6" />
       </button>
     </div>
   );

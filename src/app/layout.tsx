@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Inter } from "next/font/google";
+import { Poppins, Inter, Caveat } from "next/font/google";
 import "./globals.css";
 
-const instrumentSerif = Instrument_Serif({
+const poppins = Poppins({
   variable: "--font-heading",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["300", "400", "600", "700", "800"],
   display: "swap",
 });
 
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const caveat = Caveat({
+  variable: "--font-handwriting",
   subsets: ["latin"],
   display: "swap",
 });
@@ -26,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${instrumentSerif.variable} ${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );
