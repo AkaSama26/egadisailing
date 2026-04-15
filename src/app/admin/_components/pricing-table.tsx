@@ -20,16 +20,12 @@ interface PricingTableProps {
     pricingPeriods: {
       id: string;
       label: string;
-      startDate: Date;
-      endDate: Date;
-      pricePerPerson: { toNumber(): number } | number;
+      startDate: string;
+      endDate: string;
+      pricePerPerson: string;
       year: number;
     }[];
   }[];
-}
-
-function getPrice(value: { toNumber(): number } | number): number {
-  return typeof value === "number" ? value : value.toNumber();
 }
 
 export function PricingTable({ services }: PricingTableProps) {
@@ -81,7 +77,7 @@ export function PricingTable({ services }: PricingTableProps) {
                       {new Date(period.endDate).toLocaleDateString("it-IT")}
                     </TableCell>
                     <TableCell>
-                      {getPrice(period.pricePerPerson).toLocaleString("it-IT", {
+                      {parseFloat(period.pricePerPerson).toLocaleString("it-IT", {
                         minimumFractionDigits: 2,
                       })}{" "}
                       €

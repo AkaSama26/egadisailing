@@ -9,6 +9,20 @@ export default async function PricingPage() {
     orderBy: { name: "asc" },
   });
 
+  // Serialize Decimal fields for client component
+  const serialized = services.map((s) => ({
+    id: s.id,
+    name: s.name,
+    pricingPeriods: s.pricingPeriods.map((p) => ({
+      id: p.id,
+      label: p.label,
+      startDate: p.startDate.toISOString(),
+      endDate: p.endDate.toISOString(),
+      pricePerPerson: p.pricePerPerson.toString(),
+      year: p.year,
+    })),
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -17,7 +31,7 @@ export default async function PricingPage() {
           services={services.map((s) => ({ id: s.id, name: s.name }))}
         />
       </div>
-      <PricingTable services={services} />
+      <PricingTable services={serialized} />
     </div>
   );
 }
