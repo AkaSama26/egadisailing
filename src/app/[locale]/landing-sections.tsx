@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { ScrollSection } from "@/components/scroll-section";
 import { IslandsItinerary } from "@/components/islands-itinerary";
+import { BookingSearch } from "@/components/booking-search";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
@@ -472,79 +473,157 @@ export function LandingSections({ services }: LandingSectionsProps) {
       <IslandsItinerary />
 
       {/* ============================================================ */}
-      {/*  Section 3: Perché Egadisailing                              */}
+      {/*  Section 3: Perché Siamo la Scelta Giusta                    */}
+      {/*  Three alternating rows with polaroid photos                 */}
       {/* ============================================================ */}
-      <section className="py-24 px-6 md:px-12 lg:px-20">
+      <section
+        className="relative py-32 px-4 md:px-8 lg:px-12"
+        style={{
+          background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 60%, #071934 100%)",
+        }}
+      >
         <div className="max-w-7xl mx-auto">
           <ScrollSection animation="fade-up">
-            <div className="text-center mb-16">
-              <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--color-ocean)] mb-4">
-                {t("landing.whyTitle")}
-              </h2>
+            <div className="text-center mb-24">
+              <RevealTitle text="Perché Siamo la Scelta Giusta" />
             </div>
           </ScrollSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {[
-              {
-                icon: <ChefHat className="h-10 w-10" />,
-                titleKey: "landing.whyChef",
-                descKey: "landing.whyChefDesc",
-                animation: "fade-left" as const,
-              },
-              {
-                icon: <Gem className="h-10 w-10" />,
-                titleKey: "landing.whyLuxury",
-                descKey: "landing.whyLuxuryDesc",
-                animation: "fade-right" as const,
-              },
-              {
-                icon: <Anchor className="h-10 w-10" />,
-                titleKey: "landing.whyCrew",
-                descKey: "landing.whyCrewDesc",
-                animation: "fade-left" as const,
-              },
-              {
-                icon: <Waves className="h-10 w-10" />,
-                titleKey: "landing.whyIslands",
-                descKey: "landing.whyIslandsDesc",
-                animation: "fade-right" as const,
-              },
-            ].map((item, i) => (
-              <ScrollSection
-                key={item.titleKey}
-                animation={item.animation}
-                delay={i * 0.1}
+          {/* Row 1 — Chef a bordo (testo sinistra, foto destra) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center mb-32">
+            <ScrollSection animation="fade-left" className="space-y-6">
+              <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                Il Nostro Chef
+              </h2>
+              <p className="text-white/70 text-lg leading-relaxed max-w-lg">
+                Pesce freschissimo del mercato di Trapani, preparato a bordo dal nostro chef con ricette della tradizione siciliana. Un pranzo vista mare che non dimenticherai.
+              </p>
+              <Link
+                href={`/${locale}/experiences`}
+                className="inline-flex items-center gap-2 text-[var(--color-gold)] font-semibold hover:gap-3 transition-all text-lg"
               >
-                <div className="flex gap-5 p-6 rounded-xl bg-white/80 backdrop-blur shadow-sm">
-                  <div className="shrink-0 text-[var(--color-turquoise)]">
-                    {item.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-heading text-lg font-bold text-[var(--color-ocean)] mb-2">
-                      {t(item.titleKey)}
-                    </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {t(item.descKey)}
+                Scopri il menù compreso nel prezzo <ArrowRight className="h-5 w-5" />
+              </Link>
+            </ScrollSection>
+
+            <div className="relative h-[450px] hidden lg:block">
+              {[
+                { caption: "Pranzo a bordo", color: "#F5DEB3", x: 5, y: 5, rotate: -6 },
+                { caption: "Vista dal tavolo", color: "#87CEEB", x: 45, y: 15, rotate: 5 },
+              ].map((p, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute cursor-pointer"
+                  style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
+                  initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
+                  whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
+                  whileHover={{ scale: 1.1, rotate: 0, zIndex: 50, transition: { duration: 0.3 } }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.7, delay: i * 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+                >
+                  <div className="bg-white p-[5%] pb-[16%] shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-shadow duration-300">
+                    <div className="w-full aspect-square rounded-sm" style={{ backgroundColor: p.color }} />
+                    <p className="text-sm md:text-base lg:text-lg text-gray-600 mt-2 text-center" style={{ fontFamily: "var(--font-handwriting), cursive" }}>
+                      {p.caption}
                     </p>
                   </div>
-                </div>
-              </ScrollSection>
-            ))}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2 — Snorkeling (testo destra, foto sinistra) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center mb-32">
+            <div className="relative h-[450px] hidden lg:block lg:order-1">
+              {[
+                { caption: "Fondali cristallini", color: "#B2EBF2", x: 5, y: 5, rotate: -4 },
+                { caption: "Snorkeling!", color: "#90EE90", x: 45, y: 20, rotate: 7 },
+              ].map((p, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute cursor-pointer"
+                  style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
+                  initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
+                  whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
+                  whileHover={{ scale: 1.1, rotate: 0, zIndex: 50, transition: { duration: 0.3 } }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.7, delay: i * 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+                >
+                  <div className="bg-white p-[5%] pb-[16%] shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-shadow duration-300">
+                    <div className="w-full aspect-square rounded-sm" style={{ backgroundColor: p.color }} />
+                    <p className="text-sm md:text-base lg:text-lg text-gray-600 mt-2 text-center" style={{ fontFamily: "var(--font-handwriting), cursive" }}>
+                      {p.caption}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <ScrollSection animation="fade-right" className="space-y-6 lg:order-2">
+              <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                Tuffati nel Blu
+              </h2>
+              <p className="text-white/70 text-lg leading-relaxed max-w-lg">
+                Le Egadi custodiscono i fondali più belli del Mediterraneo. Posidonia, pesci colorati, grotte marine — attrezzatura snorkeling inclusa, gli hotspot li conosciamo noi.
+              </p>
+            </ScrollSection>
+          </div>
+
+          {/* Row 3 — Esperienza unica (testo sinistra, foto destra) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <ScrollSection animation="fade-left" className="space-y-6">
+              <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                Un&apos;Esperienza Unica
+              </h2>
+              <p className="text-white/70 text-lg leading-relaxed max-w-lg">
+                Un trimarano con chef, hostess e skipper dedicati. Non è una semplice gita in barca — è un&apos;esperienza rara, esclusiva, che ti resterà nel cuore. Una volta nella vita.
+              </p>
+            </ScrollSection>
+
+            <div className="relative h-[450px] hidden lg:block">
+              {[
+                { caption: "A bordo del trimarano", color: "#DDA0DD", x: 5, y: 5, rotate: -5 },
+                { caption: "Tramonto alle Egadi", color: "#FFDAB9", x: 45, y: 18, rotate: 6 },
+              ].map((p, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute cursor-pointer"
+                  style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
+                  initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
+                  whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
+                  whileHover={{ scale: 1.1, rotate: 0, zIndex: 50, transition: { duration: 0.3 } }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.7, delay: i * 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+                >
+                  <div className="bg-white p-[5%] pb-[16%] shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-shadow duration-300">
+                    <div className="w-full aspect-square rounded-sm" style={{ backgroundColor: p.color }} />
+                    <p className="text-sm md:text-base lg:text-lg text-gray-600 mt-2 text-center" style={{ fontFamily: "var(--font-handwriting), cursive" }}>
+                      {p.caption}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ============================================================ */}
-      {/*  Section 4: Cosa Dicono i Nostri Ospiti                      */}
+      {/*  Section 4: Fatti convincere — Recensioni TripAdvisor        */}
       {/* ============================================================ */}
-      <section className="py-24 px-6 md:px-12 lg:px-20 bg-white/60">
+      <section
+        className="py-32 px-4 md:px-8 lg:px-12"
+        style={{
+          background: "linear-gradient(180deg, #071934 0%, #0a2a4a 50%, #071934 100%)",
+        }}
+      >
         <div className="max-w-7xl mx-auto">
           <ScrollSection animation="fade-up">
-            <div className="text-center mb-16">
-              <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--color-ocean)] mb-4">
-                {t("landing.testimonialsTitle")}
-              </h2>
+            <div className="text-center mb-20">
+              <RevealTitle text="Fatti Convincere" />
+              <p className="text-white/50 text-lg mt-6">
+                Da chi ci ha già provato
+              </p>
             </div>
           </ScrollSection>
 
@@ -552,35 +631,45 @@ export function LandingSections({ services }: LandingSectionsProps) {
             {[
               {
                 name: "Marco R.",
+                location: "Milano",
                 stars: 5,
-                text: "Un'esperienza indimenticabile! Lo chef ha preparato un pranzo straordinario con pesce freschissimo. Le acque delle Egadi sono un sogno.",
+                text: "Un'esperienza indimenticabile! Lo chef ha preparato un pranzo straordinario con pesce freschissimo. Le acque delle Egadi sono un sogno. La crew è stata impeccabile.",
               },
               {
                 name: "Giulia M.",
+                location: "Roma",
                 stars: 5,
-                text: "La crew è stata fantastica, professionale e simpatica. Abbiamo visitato calette nascoste che non avremmo mai trovato da soli. Consigliatissimo!",
+                text: "La crew è stata fantastica, professionale e simpatica. Abbiamo visitato calette nascoste che non avremmo mai trovato da soli. Consigliatissimo a tutti!",
               },
               {
                 name: "Alessandro P.",
+                location: "Monaco",
                 stars: 5,
                 text: "Il cabin charter è stato il viaggio più bello della nostra vita. Svegliarsi ogni mattina in un'isola diversa, con il mare cristallino. Torneremo sicuramente.",
               },
             ].map((testimonial, i) => (
               <ScrollSection key={i} animation="fade-up" delay={i * 0.15}>
-                <div className="p-8 rounded-2xl bg-white shadow-sm h-full flex flex-col">
+                <div className="p-8 rounded-2xl bg-white/[0.06] backdrop-blur border border-white/[0.08] h-full flex flex-col">
+                  {/* TripAdvisor style header */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-[#00aa6c] flex items-center justify-center text-white font-bold text-sm">
+                      {testimonial.name[0]}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{testimonial.name}</p>
+                      <p className="text-white/40 text-xs">{testimonial.location}</p>
+                    </div>
+                  </div>
                   <div className="flex gap-1 mb-4">
                     {Array.from({ length: testimonial.stars }).map((_, j) => (
                       <Star
                         key={j}
-                        className="h-5 w-5 fill-[var(--color-gold)] text-[var(--color-gold)]"
+                        className="h-4 w-4 fill-[#00aa6c] text-[#00aa6c]"
                       />
                     ))}
                   </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed flex-1 italic">
+                  <p className="text-white/60 text-sm leading-relaxed flex-1 italic">
                     &ldquo;{testimonial.text}&rdquo;
-                  </p>
-                  <p className="mt-4 font-semibold text-[var(--color-ocean)]">
-                    {testimonial.name}
                   </p>
                 </div>
               </ScrollSection>
@@ -590,25 +679,58 @@ export function LandingSections({ services }: LandingSectionsProps) {
       </section>
 
       {/* ============================================================ */}
-      {/*  Section 5: CTA Finale                                       */}
+      {/*  Section 5: CTA Finale con pennellata SVG + form pillola    */}
       {/* ============================================================ */}
-      <section className="py-24 px-6 md:px-12 lg:px-20 bg-gradient-to-br from-[#0ea5e9] via-[#0284c7] to-[#0369a1]">
-        <div className="max-w-3xl mx-auto text-center">
+      <section
+        className="py-32 px-4 md:px-8 lg:px-12"
+        style={{
+          background: "linear-gradient(180deg, #071934 0%, #0c3d5e 50%, #071934 100%)",
+        }}
+      >
+        <div className="max-w-4xl mx-auto text-center">
           <ScrollSection animation="fade-up">
-            <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-              {t("landing.ctaTitle")}
-            </h2>
-            <p className="text-white/80 text-lg mb-10">
-              {t("landing.ctaSubtitle")}
-            </p>
-            <Link href={`/${locale}/experiences`}>
-              <Button
-                size="lg"
-                className="bg-white text-[var(--color-ocean)] hover:bg-white/90 font-semibold text-lg px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+            <div className="relative inline-block mb-8">
+              <h2 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-white relative z-10">
+                Lascia la Terra Ferma
+              </h2>
+              {/* SVG brush stroke under title */}
+              <svg
+                viewBox="0 0 400 30"
+                className="absolute -bottom-3 left-0 w-full h-auto z-0"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                {t("landing.ctaButton")}
-              </Button>
-            </Link>
+                <path
+                  d="M5 20 C40 8, 80 25, 120 15 S200 8, 240 18 S320 10, 360 20 S390 12, 395 16"
+                  stroke="url(#brushGold)"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  opacity="0.6"
+                />
+                <path
+                  d="M10 24 C50 14, 100 28, 150 18 S250 12, 300 22 S370 14, 395 20"
+                  stroke="url(#brushGold)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  opacity="0.35"
+                />
+                <defs>
+                  <linearGradient id="brushGold" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#d97706" stopOpacity="0" />
+                    <stop offset="15%" stopColor="#f59e0b" stopOpacity="1" />
+                    <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+                    <stop offset="85%" stopColor="#f59e0b" stopOpacity="1" />
+                    <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <p className="text-white/60 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
+              Prenota la tua esperienza nelle Isole Egadi. Scegli la data, sali a bordo.
+            </p>
+            <div className="flex justify-center">
+              <BookingSearch />
+            </div>
           </ScrollSection>
         </div>
       </section>

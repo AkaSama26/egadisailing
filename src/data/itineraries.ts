@@ -4,6 +4,7 @@ export interface ItineraryStop {
   islandKey?: string;
   descriptionKey: string;
   mapPosition: { x: number; y: number };
+  noMapMarker?: boolean;
 }
 
 export interface Itinerary {
@@ -21,20 +22,21 @@ export const itineraries: Itinerary[] = [
         time: "09:00",
         nameKey: "itinerary.socialBoating.stop1.name",
         descriptionKey: "itinerary.socialBoating.stop1.description",
-        mapPosition: { x: 15, y: 82 },
+        mapPosition: { x: 130, y: 70 },
+        noMapMarker: true,
       },
       {
         time: "10:30",
         nameKey: "itinerary.socialBoating.stop2.name",
         islandKey: "itinerary.socialBoating.stop2.island",
         descriptionKey: "itinerary.socialBoating.stop2.description",
-        mapPosition: { x: 38, y: 52 },
+        mapPosition: { x: 68, y: 62 },
       },
       {
         time: "13:00",
         nameKey: "itinerary.socialBoating.stop3.name",
         descriptionKey: "itinerary.socialBoating.stop3.description",
-        mapPosition: { x: 52, y: 38 },
+        mapPosition: { x: 52, y: 78 },
       },
       {
         time: "15:00",
@@ -47,7 +49,8 @@ export const itineraries: Itinerary[] = [
         time: "17:00",
         nameKey: "itinerary.socialBoating.stop5.name",
         descriptionKey: "itinerary.socialBoating.stop5.description",
-        mapPosition: { x: 15, y: 82 },
+        mapPosition: { x: 130, y: 70 },
+        noMapMarker: true,
       },
     ],
   },

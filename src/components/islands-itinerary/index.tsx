@@ -53,18 +53,15 @@ export function IslandsItinerary() {
       ref={sectionRef}
       style={{
         background:
-          "linear-gradient(180deg, #071934 0%, #0a2a4a 50%, #071934 95%, #f5f5f4 100%)",
+          "linear-gradient(180deg, #071934 0%, #0a2a4a 50%, #071934 100%)",
         height: `${currentItinerary.stops.length * 60}vh`,
       }}
     >
       <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
         {/* Section title */}
-        <div className="text-center pt-16 pb-4 shrink-0">
-          <p className="text-amber-500 text-xs font-semibold tracking-[3px] uppercase mb-3">
-            {t("islands.sectionLabel")}
-          </p>
-          <h2 className="font-heading text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-bold text-white italic">
-            {t("islands.title")}
+        <div className="text-center pt-28 pb-4 shrink-0">
+          <h2 className="font-heading text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-bold text-white">
+            Scopri le Isole Egadi
           </h2>
         </div>
 

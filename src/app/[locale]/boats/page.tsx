@@ -1,11 +1,10 @@
 import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Ruler, Calendar, BedDouble, Anchor } from "lucide-react";
+import { BedDouble, DoorOpen, UtensilsCrossed, Bath, Users, Gauge, ArrowRight } from "lucide-react";
 
 export async function generateMetadata({
   params,
@@ -13,10 +12,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "boats" });
   return {
-    title: `${t("title")} — Egadisailing`,
-    description: t("subtitle"),
+    title: "Le Nostre Barche — Egadisailing",
+    description: "Trimarano luxury con chef e barca motoscafo per tour alle Isole Egadi da Trapani.",
   };
 }
 
@@ -38,139 +36,245 @@ export default async function BoatsPage({
     },
   });
 
+  const trimaran = boats.find((b) => b.type === "trimaran");
+  const motorboat = boats.find((b) => b.type === "motorboat");
+
+  const getDescription = (boat: typeof boats[0]) =>
+    boat.description
+      ? (boat.description as Record<string, string>)[locale] ||
+        (boat.description as Record<string, string>).it ||
+        ""
+      : "";
+
   return (
-    <div className="bg-[#fefce8]/30 min-h-screen">
-      {/* Hero */}
-      <section className="pt-32 pb-16 px-6 md:px-12 lg:px-20 bg-gradient-to-br from-[#0ea5e9] via-[#0284c7] to-[#0369a1]">
-        <div className="max-w-7xl mx-auto text-center">
-          <ScrollSection animation="fade-up">
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-              {t("boats.title")}
-            </h1>
-            <p className="text-white/80 text-lg max-w-2xl mx-auto">
-              {t("boats.subtitle")}
-            </p>
-          </ScrollSection>
+    <div
+      className="min-h-screen"
+      style={{
+        background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 50%, #0a2a4a 80%, #071934 100%)",
+      }}
+    >
+      {/* ── Hero: H1 + bouquet image ── */}
+      <section className="pt-36 pb-32 px-4 md:px-8 lg:px-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: H1 */}
+            <ScrollSection animation="fade-left">
+              <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white leading-tight">
+                Le Isole Egadi Meritano la Barca Giusta
+              </h1>
+              <p className="text-white/50 text-lg mt-6 max-w-lg">
+                Trimarano luxury con chef a bordo e barca motoscafo per tour esclusivi. Scegli la tua.
+              </p>
+            </ScrollSection>
+
+            {/* Right: placeholder for bouquet image */}
+            <ScrollSection animation="fade-right">
+              <div className="relative flex items-center justify-center h-[400px] md:h-[500px]">
+                <div
+                  className="absolute w-[80%] aspect-square rounded-full"
+                  style={{
+                    background: "radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 60%)",
+                    filter: "blur(40px)",
+                  }}
+                />
+                <div className="relative w-full h-full rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center overflow-hidden">
+                  <Image
+                    src="/images/trimarano.webp"
+                    alt="Le nostre barche"
+                    width={2752}
+                    height={1536}
+                    className="w-[85%] h-auto object-contain drop-shadow-[0_15px_40px_rgba(14,165,233,0.15)]"
+                    priority
+                  />
+                  <p className="absolute bottom-4 right-4 text-white/20 text-xs tracking-wider uppercase">Foto completa in arrivo</p>
+                </div>
+              </div>
+            </ScrollSection>
+          </div>
         </div>
       </section>
 
-      {/* Boats */}
-      <section className="py-20 px-6 md:px-12 lg:px-20">
-        <div className="max-w-7xl mx-auto space-y-12">
-          {boats.map((boat, i) => {
-            const description = boat.description
-              ? (boat.description as any)[locale] ||
-                (boat.description as any).it ||
-                ""
-              : "";
-            const amenities = boat.amenities
-              ? (boat.amenities as any)[locale] ||
-                (boat.amenities as any).it ||
-                []
-              : [];
-
-            return (
-              <ScrollSection
-                key={boat.id}
-                animation={i % 2 === 0 ? "fade-left" : "fade-right"}
-              >
-                <Card className="overflow-hidden border-none bg-white/90 backdrop-blur shadow-lg">
-                  <div className="grid grid-cols-1 lg:grid-cols-2">
-                    {/* Placeholder image */}
-                    <div className="h-64 lg:h-auto bg-gradient-to-br from-[var(--color-turquoise)] via-[var(--color-ocean)] to-[#0369a1] flex items-center justify-center">
-                      <Anchor className="h-24 w-24 text-white/30" />
-                    </div>
-
-                    <CardContent className="p-8 lg:p-10 space-y-6">
-                      <div>
-                        <Badge
-                          variant="secondary"
-                          className="mb-3 bg-[var(--color-sand)]/30 text-[var(--color-ocean)]"
-                        >
-                          {boat.type}
-                        </Badge>
-                        <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)]">
-                          {boat.name}
-                        </h2>
-                      </div>
-
-                      {description && (
-                        <p className="text-muted-foreground leading-relaxed">
-                          {description}
-                        </p>
-                      )}
-
-                      {/* Specs */}
-                      <div>
-                        <h3 className="font-heading text-sm font-semibold text-[var(--color-ocean)] uppercase tracking-wider mb-3">
-                          {t("boats.specs")}
-                        </h3>
-                        <div className="flex flex-wrap gap-4">
-                          {boat.length && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Ruler className="h-4 w-4 text-[var(--color-turquoise)]" />
-                              {t("boats.length")}: {boat.length}
-                              {t("boats.meters")}
-                            </div>
-                          )}
-                          {boat.year && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Calendar className="h-4 w-4 text-[var(--color-turquoise)]" />
-                              {t("boats.year")}: {boat.year}
-                            </div>
-                          )}
-                          {boat.cabins && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <BedDouble className="h-4 w-4 text-[var(--color-turquoise)]" />
-                              {t("boats.cabins")}: {boat.cabins}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Amenities */}
-                      {Array.isArray(amenities) && amenities.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {amenities.map((amenity: string, j: number) => (
-                            <Badge
-                              key={j}
-                              variant="outline"
-                              className="text-[var(--color-ocean)] border-[var(--color-turquoise)]/30"
-                            >
-                              {amenity}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Services */}
-                      {boat.services.length > 0 && (
-                        <div>
-                          <h3 className="font-heading text-sm font-semibold text-[var(--color-ocean)] uppercase tracking-wider mb-3">
-                            {t("boats.availableServices")}
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {boat.services.map((svc) => (
-                              <Link
-                                key={svc.id}
-                                href={`/${locale}/experiences/${svc.id}`}
-                              >
-                                <Badge className="bg-[var(--color-turquoise)]/10 text-[var(--color-ocean)] hover:bg-[var(--color-turquoise)]/20 transition-colors cursor-pointer border-none">
-                                  {svc.name}
-                                </Badge>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </div>
-                </Card>
+      {/* ── Trimarano detail ── */}
+      {trimaran && (
+        <section className="pb-32 px-4 md:px-8 lg:px-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              {/* Image */}
+              <ScrollSection animation="fade-left">
+                <div className="relative flex justify-center">
+                  <Image
+                    src="/images/trimarano.webp"
+                    alt={trimaran.name}
+                    width={2752}
+                    height={1536}
+                    className="w-full h-auto drop-shadow-[0_20px_60px_rgba(14,165,233,0.2)]"
+                  />
+                  <div
+                    className="absolute inset-0 -z-10 scale-110"
+                    style={{
+                      background: "radial-gradient(ellipse, rgba(14,165,233,0.12) 0%, transparent 60%)",
+                      filter: "blur(40px)",
+                    }}
+                  />
+                </div>
               </ScrollSection>
-            );
-          })}
-        </div>
-      </section>
+
+              {/* Info */}
+              <ScrollSection animation="fade-right">
+                <div className="space-y-6">
+                  <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white">
+                    {trimaran.name}
+                  </h2>
+                  <p className="text-white/70 text-lg leading-relaxed">
+                    {getDescription(trimaran)}
+                  </p>
+
+                  {/* Specs icons */}
+                  <div className="flex flex-wrap gap-8 py-4">
+                    <div className="text-center">
+                      <DoorOpen className="h-7 w-7 text-[var(--color-gold)] mx-auto mb-2" />
+                      <p className="text-white font-bold text-xl">3</p>
+                      <p className="text-white/40 text-xs uppercase tracking-wider">Cabine</p>
+                    </div>
+                    <div className="text-center">
+                      <BedDouble className="h-7 w-7 text-[var(--color-gold)] mx-auto mb-2" />
+                      <p className="text-white font-bold text-xl">10</p>
+                      <p className="text-white/40 text-xs uppercase tracking-wider">Posti Letto</p>
+                    </div>
+                    <div className="text-center">
+                      <UtensilsCrossed className="h-7 w-7 text-[var(--color-gold)] mx-auto mb-2" />
+                      <p className="text-white font-bold text-xl">1</p>
+                      <p className="text-white/40 text-xs uppercase tracking-wider">Cucina</p>
+                    </div>
+                    <div className="text-center">
+                      <Bath className="h-7 w-7 text-[var(--color-gold)] mx-auto mb-2" />
+                      <p className="text-white font-bold text-xl">1</p>
+                      <p className="text-white/40 text-xs uppercase tracking-wider">Bagno</p>
+                    </div>
+                  </div>
+
+                  {/* Linked services */}
+                  {trimaran.services.length > 0 && (
+                    <div>
+                      <h3 className="text-white/40 text-xs font-semibold uppercase tracking-[3px] mb-4">
+                        Esperienze disponibili
+                      </h3>
+                      <div className="space-y-3">
+                        {trimaran.services.map((svc) => (
+                          <Link
+                            key={svc.id}
+                            href={`/${locale}/experiences/${svc.id}`}
+                            className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] transition-colors group"
+                          >
+                            <span className="text-white font-medium">{svc.name}</span>
+                            <ArrowRight className="h-4 w-4 text-white/40 group-hover:text-[var(--color-gold)] transition-colors" />
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollSection>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Divider ── */}
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      </div>
+
+      {/* ── Motorboat section ── */}
+      {motorboat && (
+        <section className="py-32 px-4 md:px-8 lg:px-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              {/* SVG placeholder */}
+              <ScrollSection animation="fade-left">
+                <div className="relative flex items-center justify-center h-[400px]">
+                  {/* Glow */}
+                  <div
+                    className="absolute w-[70%] aspect-square rounded-full"
+                    style={{
+                      background: "radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 60%)",
+                      filter: "blur(30px)",
+                    }}
+                  />
+                  {/* Boat silhouette SVG */}
+                  <svg viewBox="0 0 400 200" fill="none" className="w-[80%] h-auto relative z-10 drop-shadow-[0_10px_40px_rgba(14,165,233,0.1)]">
+                    {/* Hull */}
+                    <path
+                      d="M40 140 Q40 170 80 175 L320 175 Q360 170 360 140 L350 120 Q340 110 50 110 Z"
+                      fill="white"
+                      opacity="0.08"
+                      stroke="white"
+                      strokeWidth="1"
+                      strokeOpacity="0.2"
+                    />
+                    {/* Cabin */}
+                    <rect x="120" y="85" width="160" height="30" rx="8" fill="white" opacity="0.06" stroke="white" strokeWidth="1" strokeOpacity="0.15" />
+                    {/* Windshield */}
+                    <path d="M130 85 L150 65 L260 65 L270 85" fill="white" opacity="0.04" stroke="white" strokeWidth="1" strokeOpacity="0.12" />
+                    {/* Railing */}
+                    <line x1="80" y1="108" x2="320" y2="108" stroke="white" strokeWidth="0.8" strokeOpacity="0.15" />
+                    {/* Wake lines */}
+                    <path d="M360 145 Q380 145 400 150" stroke="white" strokeWidth="0.8" strokeOpacity="0.1" />
+                    <path d="M360 155 Q385 155 400 162" stroke="white" strokeWidth="0.6" strokeOpacity="0.08" />
+                  </svg>
+                </div>
+              </ScrollSection>
+
+              {/* Info */}
+              <ScrollSection animation="fade-right">
+                <div className="space-y-6">
+                  <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white">
+                    {motorboat.name}
+                  </h2>
+                  <p className="text-white/70 text-lg leading-relaxed">
+                    {getDescription(motorboat)}
+                  </p>
+
+                  {/* Specs icons */}
+                  <div className="flex flex-wrap gap-8 py-4">
+                    <div className="text-center">
+                      <Users className="h-7 w-7 text-[var(--color-gold)] mx-auto mb-2" />
+                      <p className="text-white font-bold text-xl">10</p>
+                      <p className="text-white/40 text-xs uppercase tracking-wider">Posti</p>
+                    </div>
+                    <div className="text-center">
+                      <Gauge className="h-7 w-7 text-[var(--color-gold)] mx-auto mb-2" />
+                      <p className="text-white font-bold text-xl">200</p>
+                      <p className="text-white/40 text-xs uppercase tracking-wider">HP</p>
+                    </div>
+                  </div>
+
+                  {/* Linked services */}
+                  {motorboat.services.length > 0 && (
+                    <div>
+                      <h3 className="text-white/40 text-xs font-semibold uppercase tracking-[3px] mb-4">
+                        Esperienze disponibili
+                      </h3>
+                      <div className="space-y-3">
+                        {motorboat.services.map((svc) => (
+                          <Link
+                            key={svc.id}
+                            href={`/${locale}/experiences/${svc.id}`}
+                            className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] transition-colors group"
+                          >
+                            <span className="text-white font-medium">{svc.name}</span>
+                            <ArrowRight className="h-4 w-4 text-white/40 group-hover:text-[var(--color-gold)] transition-colors" />
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollSection>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

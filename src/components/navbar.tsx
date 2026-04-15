@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -26,9 +27,13 @@ const navLinks = [
 
 export function Navbar() {
   const locale = useLocale();
+  const pathname = usePathname();
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
   const [scrolled, setScrolled] = useState(false);
+
+  // Pages with dark background throughout — navbar stays transparent
+  const alwaysTransparent = pathname.includes("/islands") || pathname.includes("/boats") || pathname.includes("/experiences");
 
   useEffect(() => {
     function handleScroll() {
@@ -39,11 +44,13 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const isTransparent = !scrolled || alwaysTransparent;
+
   return (
     <header
       className={cn(
         "fixed top-0 left-0 w-full z-50 transition-all duration-300",
-        scrolled
+        !isTransparent
           ? "bg-white/90 backdrop-blur-md shadow-sm"
           : "bg-transparent"
       )}
@@ -54,7 +61,7 @@ export function Navbar() {
           href={`/${locale}`}
           className={cn(
             "font-heading text-xl font-bold tracking-tight transition-colors",
-            scrolled ? "text-[var(--color-ocean)]" : "text-white"
+            !isTransparent ? "text-[var(--color-ocean)]" : "text-white"
           )}
         >
           Egadisailing
@@ -68,7 +75,7 @@ export function Navbar() {
               href={`/${locale}${link.href}`}
               className={cn(
                 "text-sm font-medium transition-colors hover:opacity-80",
-                scrolled ? "text-gray-700" : "text-white"
+                !isTransparent ? "text-gray-700" : "text-white"
               )}
             >
               {t(link.key)}
@@ -79,7 +86,7 @@ export function Navbar() {
         {/* Desktop right side */}
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageSwitcher
-            className={cn(scrolled ? "text-gray-700" : "text-white")}
+            className={cn(!isTransparent ? "text-gray-700" : "text-white")}
           />
           <Link
             href={`/${locale}/experiences`}
