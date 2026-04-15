@@ -91,6 +91,7 @@
   "islands": {
     "title": "Le Isole Egadi",
     "subtitle": "Tre gioielli nel cuore del Mediterraneo",
+    "sectionLabel": "Scopri il viaggio",
     "discoverExperiences": "Scopri le esperienze che visitano quest'isola",
     "favignana": {
       "name": "Favignana",
@@ -177,6 +178,49 @@
     "a5": "Per Social Boating e Exclusive Experience il pranzo preparato dallo chef è incluso nel prezzo. Per i Boat Tour, è possibile aggiungere il servizio pranzo su richiesta.",
     "q6": "Dove ci si imbarca?",
     "a6": "L'imbarco avviene dal Porto di Trapani. Ti invieremo le indicazioni esatte e il punto di incontro via email dopo la conferma della prenotazione."
+  },
+  "itinerary": {
+    "tabs": {
+      "socialBoating": "Social Boating",
+      "exclusive": "Exclusive",
+      "cabinCharter": "Cabin Charter",
+      "boatShared": "Tour Barca",
+      "boatExclusive": "Barca Esclusiva"
+    },
+    "socialBoating": {
+      "stop1": { "name": "Partenza", "description": "Imbarco al porto di Trapani, welcome drink e briefing del capitano" },
+      "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "Tuffo nelle acque turchesi più famose del Mediterraneo, snorkeling tra fondali di posidonia" },
+      "stop3": { "name": "Pranzo a bordo", "description": "Lo chef prepara pesce freschissimo del giorno con vista mare aperto" },
+      "stop4": { "name": "Bue Marino", "island": "Favignana", "description": "Grotta marina spettacolare, acque cristalline tra le falesie" },
+      "stop5": { "name": "Rientro", "description": "Navigazione al tramonto verso Trapani" }
+    },
+    "exclusive": {
+      "stop1": { "name": "Partenza", "description": "Imbarco riservato, accoglienza con champagne e briefing privato" },
+      "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "La spiaggia più iconica delle Egadi, tutta per voi" },
+      "stop3": { "name": "Pranzo gourmet", "description": "Menu raffinato dello chef con pesce del mercato di Trapani" },
+      "stop4": { "name": "Cala Tramontana", "island": "Levanzo", "description": "Caletta nascosta con acque trasparenti e fondali incontaminati" },
+      "stop5": { "name": "Rientro", "description": "Aperitivo al tramonto durante la navigazione di ritorno" }
+    },
+    "cabinCharter": {
+      "stop1": { "name": "Partenza", "description": "Check-in a bordo, sistemazione in cabina e briefing settimanale" },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Due giorni esplorando cale, grotte e il borgo dell'isola farfalla" },
+      "stop3": { "name": "Levanzo", "island": "Levanzo", "description": "L'isola più selvaggia, Grotta del Genovese e fondali da sogno" },
+      "stop4": { "name": "Marettimo", "island": "Marettimo", "description": "La perla delle Egadi, sentieri montani e grotte marine" },
+      "stop5": { "name": "Rientro", "description": "Ultima colazione in mare e rientro a Trapani" }
+    },
+    "boatShared": {
+      "stop1": { "name": "Partenza", "description": "Ritrovo al porto di Trapani e partenza verso le isole" },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Giro dell'isola con soste nelle cale più belle" },
+      "stop3": { "name": "Levanzo", "island": "Levanzo", "description": "Tuffo e snorkeling nelle acque cristalline" },
+      "stop4": { "name": "Rientro", "description": "Rientro a Trapani nel primo pomeriggio" }
+    },
+    "boatExclusive": {
+      "stop1": { "name": "Partenza", "description": "Partenza privata, scegliete voi l'orario" },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Le cale più esclusive con sosta prolungata" },
+      "stop3": { "name": "Pranzo a bordo", "description": "Pranzo con prodotti tipici siciliani" },
+      "stop4": { "name": "Levanzo", "island": "Levanzo", "description": "Calette segrete e snorkeling in acque incontaminate" },
+      "stop5": { "name": "Rientro", "description": "Navigazione rilassata al tramonto" }
+    }
   },
   "landing": {
     "experiencesTitle": "Pronto a Salpare?",

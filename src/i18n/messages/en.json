@@ -91,6 +91,7 @@
   "islands": {
     "title": "The Egadi Islands",
     "subtitle": "Three jewels in the heart of the Mediterranean",
+    "sectionLabel": "Discover the journey",
     "discoverExperiences": "Discover experiences visiting this island",
     "favignana": {
       "name": "Favignana",
@@ -177,6 +178,49 @@
     "a5": "For Social Boating and Exclusive Experience, the chef-prepared lunch is included in the price. For Boat Tours, it is possible to add the lunch service upon request.",
     "q6": "Where do we board?",
     "a6": "Boarding takes place at the Port of Trapani. We will send you exact directions and the meeting point by email after booking confirmation."
+  },
+  "itinerary": {
+    "tabs": {
+      "socialBoating": "Social Boating",
+      "exclusive": "Exclusive",
+      "cabinCharter": "Cabin Charter",
+      "boatShared": "Boat Tour",
+      "boatExclusive": "Private Boat"
+    },
+    "socialBoating": {
+      "stop1": { "name": "Departure", "description": "Boarding at Trapani harbour, welcome drink and captain's briefing" },
+      "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "Swim in the most famous turquoise waters of the Mediterranean, snorkelling over posidonia seabeds" },
+      "stop3": { "name": "Lunch on board", "description": "The chef prepares the freshest catch of the day with open-sea views" },
+      "stop4": { "name": "Bue Marino", "island": "Favignana", "description": "Spectacular sea cave, crystal-clear waters among the cliffs" },
+      "stop5": { "name": "Return", "description": "Sunset cruise back to Trapani" }
+    },
+    "exclusive": {
+      "stop1": { "name": "Departure", "description": "Private boarding, champagne welcome and personal briefing" },
+      "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "The most iconic beach of the Egadi, all to yourselves" },
+      "stop3": { "name": "Gourmet lunch", "description": "Refined chef's menu with fish from Trapani market" },
+      "stop4": { "name": "Cala Tramontana", "island": "Levanzo", "description": "Hidden cove with transparent waters and pristine seabeds" },
+      "stop5": { "name": "Return", "description": "Sunset aperitivo during the return sail" }
+    },
+    "cabinCharter": {
+      "stop1": { "name": "Departure", "description": "Check-in on board, cabin setup and weekly briefing" },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Two days exploring coves, caves and the butterfly island's village" },
+      "stop3": { "name": "Levanzo", "island": "Levanzo", "description": "The wildest island, Grotta del Genovese and dreamy seabeds" },
+      "stop4": { "name": "Marettimo", "island": "Marettimo", "description": "The pearl of the Egadi, mountain trails and sea caves" },
+      "stop5": { "name": "Return", "description": "Last breakfast at sea and return to Trapani" }
+    },
+    "boatShared": {
+      "stop1": { "name": "Departure", "description": "Meet at Trapani harbour and set off towards the islands" },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Island tour with stops at the most beautiful coves" },
+      "stop3": { "name": "Levanzo", "island": "Levanzo", "description": "Swim and snorkelling in crystal-clear waters" },
+      "stop4": { "name": "Return", "description": "Return to Trapani in the early afternoon" }
+    },
+    "boatExclusive": {
+      "stop1": { "name": "Departure", "description": "Private departure, you choose the time" },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "The most exclusive coves with extended stops" },
+      "stop3": { "name": "Lunch on board", "description": "Lunch with typical Sicilian produce" },
+      "stop4": { "name": "Levanzo", "island": "Levanzo", "description": "Secret coves and snorkelling in pristine waters" },
+      "stop5": { "name": "Return", "description": "Relaxed sunset sail back" }
+    }
   },
   "landing": {
     "experiencesTitle": "Ready to Set Sail?",
