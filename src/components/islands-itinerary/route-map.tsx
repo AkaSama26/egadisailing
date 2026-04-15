@@ -1,12 +1,20 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import type { ItineraryStop } from "@/data/itineraries";
 import {
   catmullRomToSvgPath,
   mapPositionToSvg,
   getPathLength,
 } from "./utils";
+
+const islandImages: Record<string, string> = {
+  favignana: "/images/islands/favignana.webp",
+  levanzo: "/images/islands/levanzo.webp",
+  marettimo: "/images/islands/marettimo.webp",
+};
 
 interface RouteMapProps {
   stops: ItineraryStop[];
@@ -53,10 +61,34 @@ export function RouteMap({ stops, progress, activeStopIndex }: RouteMapProps) {
 
   const dashOffset = totalLength * (1 - Math.min(progress, 1));
 
+  // Determine which island illustration to show based on active stop
+  const activeStop = stops[activeStopIndex];
+  const activeIsland = useMemo(() => {
+    if (!activeStop?.islandKey) return null;
+    // islandKey is like "itinerary.socialBoating.stop2.island" — we need the translated value
+    // but here we just need to match to an image file. Extract island name from the data.
+    // Look through the translation keys to find the island name
+    // The stops that have islandKey reference Favignana, Levanzo, or Marettimo
+    // We can determine which by checking the mapPosition pattern or by a lookup
+    // Simple approach: find island from nearby stops or use a mapping
+    const stop = stops[activeStopIndex];
+    if (!stop.islandKey) return null;
+    // The islandKey contains the experience path, e.g. "itinerary.socialBoating.stop2.island"
+    // The actual island name is the translated value. Since we can't call useTranslations here
+    // in a useMemo, we use mapPosition to determine which island it is geographically.
+    const { x, y } = stop.mapPosition;
+    // Favignana: roughly center (30-50, 40-60)
+    // Levanzo: upper center (50-65, 20-40)
+    // Marettimo: upper right (70-85, 10-20)
+    if (x >= 70) return "marettimo";
+    if (x >= 50 && y <= 35) return "levanzo";
+    if (x >= 25 && x < 70) return "favignana";
+    return null;
+  }, [activeStopIndex, stops, activeStop]);
+
   return (
     <div
-      className="relative w-full border border-white/[0.04] rounded-2xl overflow-hidden"
-      style={{ aspectRatio: "1 / 1" }}
+      className="relative w-full h-full border border-white/[0.04] rounded-2xl overflow-hidden"
     >
       {/* Subtle radial ocean-blue background */}
       <div
@@ -67,6 +99,29 @@ export function RouteMap({ stops, progress, activeStopIndex }: RouteMapProps) {
         }}
         aria-hidden="true"
       />
+
+      {/* ── Active island illustration — crossfade ── */}
+      <AnimatePresence mode="wait">
+        {activeIsland && islandImages[activeIsland] && (
+          <motion.div
+            key={activeIsland}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.2 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
+            aria-hidden="true"
+          >
+            <Image
+              src={islandImages[activeIsland]}
+              alt=""
+              width={400}
+              height={400}
+              className="w-[70%] h-auto object-contain drop-shadow-[0_0_40px_rgba(14,165,233,0.15)]"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <svg
         viewBox="0 0 400 400"

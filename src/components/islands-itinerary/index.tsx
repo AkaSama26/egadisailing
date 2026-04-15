@@ -57,9 +57,9 @@ export function IslandsItinerary() {
         height: `${currentItinerary.stops.length * 60}vh`,
       }}
     >
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
         {/* Section title */}
-        <div className="text-center pt-16 pb-4">
+        <div className="text-center pt-16 pb-4 shrink-0">
           <p className="text-amber-500 text-xs font-semibold tracking-[3px] uppercase mb-3">
             {t("islands.sectionLabel")}
           </p>
@@ -72,14 +72,15 @@ export function IslandsItinerary() {
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as string)}
+          className="shrink-0"
         >
           <div className="flex justify-center py-5 overflow-x-auto">
-            <TabsList className="bg-white/[0.04] border border-white/[0.06]">
+            <TabsList className="bg-white/[0.06] border border-white/[0.1]">
               {itineraries.map((it) => (
                 <TabsTrigger
                   key={it.experienceType}
                   value={it.experienceType}
-                  className="text-white/35 data-active:bg-white/[0.08] data-active:text-white text-xs sm:text-sm"
+                  className="text-white/50 data-active:bg-white/[0.12] data-active:text-white text-sm px-4 py-2"
                 >
                   {t(it.tabLabelKey)}
                 </TabsTrigger>
@@ -89,7 +90,7 @@ export function IslandsItinerary() {
         </Tabs>
 
         {/* Gold separator */}
-        <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent mx-auto" />
+        <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent mx-auto shrink-0" />
 
         {/* Two-column content */}
         <AnimatePresence mode="wait">
@@ -99,7 +100,7 @@ export function IslandsItinerary() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="flex flex-col lg:flex-row flex-1"
+            className="flex flex-col lg:flex-row flex-1 min-h-0"
           >
             {/* Left: DestinationText */}
             <div className="flex-1 flex items-center px-6 md:px-12 lg:px-20">
@@ -111,7 +112,7 @@ export function IslandsItinerary() {
             </div>
 
             {/* Right: RouteMap */}
-            <div className="flex-1 h-[250px] lg:h-auto px-4 lg:px-8">
+            <div className="flex-1 h-[250px] lg:h-full px-4 lg:px-8 py-4">
               <RouteMap
                 stops={currentItinerary.stops}
                 progress={effectiveProgress}
