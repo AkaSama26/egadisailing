@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { ScrollSection } from "@/components/scroll-section";
+import { IslandsItinerary } from "@/components/islands-itinerary";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
@@ -466,65 +467,9 @@ export function LandingSections({ services }: LandingSectionsProps) {
       </section>
 
       {/* ============================================================ */}
-      {/*  Section 2: Le Isole Egadi                                   */}
+      {/*  Section 2: Le Isole Egadi — Interactive Itinerary           */}
       {/* ============================================================ */}
-      <section className="py-24 px-6 md:px-12 lg:px-20 bg-[#fefce8]/30">
-        <div className="max-w-7xl mx-auto">
-          <ScrollSection animation="fade-up">
-            <div className="text-center mb-16">
-              <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--color-ocean)] mb-4">
-                {t("islands.title")}
-              </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                {t("islands.subtitle")}
-              </p>
-            </div>
-          </ScrollSection>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {(
-              [
-                {
-                  key: "favignana",
-                  animation: "fade-left" as const,
-                  gradient: "from-[#0ea5e9] to-[#0284c7]",
-                },
-                {
-                  key: "levanzo",
-                  animation: "fade-up" as const,
-                  gradient: "from-[#06b6d4] to-[#0891b2]",
-                },
-                {
-                  key: "marettimo",
-                  animation: "fade-right" as const,
-                  gradient: "from-[#14b8a6] to-[#0d9488]",
-                },
-              ] as const
-            ).map((island, i) => (
-              <ScrollSection
-                key={island.key}
-                animation={island.animation}
-                delay={i * 0.15}
-              >
-                <div className="group rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all hover:-translate-y-1">
-                  <div
-                    className={`h-48 bg-gradient-to-br ${island.gradient} flex items-end p-6`}
-                  >
-                    <h3 className="font-heading text-2xl font-bold text-white drop-shadow">
-                      {t(`islands.${island.key}.name`)}
-                    </h3>
-                  </div>
-                  <div className="p-6 bg-white">
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {t(`islands.${island.key}.description`)}
-                    </p>
-                  </div>
-                </div>
-              </ScrollSection>
-            ))}
-          </div>
-        </div>
-      </section>
+      <IslandsItinerary />
 
       {/* ============================================================ */}
       {/*  Section 3: Perché Egadisailing                              */}

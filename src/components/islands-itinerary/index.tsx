@@ -98,11 +98,7 @@ export function IslandsItinerary() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{
-              enter: { duration: 0.3 },
-              exit: { duration: 0.2 },
-              duration: 0.3,
-            }}
+            transition={{ duration: 0.3 }}
             className="flex flex-col lg:flex-row flex-1"
           >
             {/* Left: DestinationText */}

@@ -26,11 +26,7 @@ export function DestinationText({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          transition={{
-            enter: { duration: 0.3 },
-            exit: { duration: 0.2 },
-            duration: 0.3,
-          }}
+          transition={{ duration: 0.3 }}
         >
           {/* Time badge */}
           <div className="flex items-center gap-2 mb-4">
