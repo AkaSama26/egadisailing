@@ -33,7 +33,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   // Pages with dark background throughout — navbar stays transparent
-  const alwaysTransparent = pathname.includes("/islands") || pathname.includes("/boats") || pathname.includes("/experiences");
+  const alwaysTransparent = pathname.includes("/islands");
 
   useEffect(() => {
     function handleScroll() {
