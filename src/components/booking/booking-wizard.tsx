@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { StripePaymentForm } from "./stripe-payment-form";
+import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 
 type Step = "date" | "people" | "customer" | "payment" | "success";
 
@@ -14,6 +15,7 @@ interface Props {
   capacityMax: number;
   defaultPaymentSchedule: "FULL" | "DEPOSIT_BALANCE";
   defaultDepositPercentage: number | null;
+  turnstileSiteKey: string;
 }
 
 interface Customer {
@@ -45,9 +47,15 @@ export function BookingWizard(props: Props) {
     amountCents: number;
     totalCents: number;
   } | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   async function createIntent() {
     setError(null);
+    // In prod il server richiede Turnstile token (enforce). In dev passa senza.
+    if (props.turnstileSiteKey && !turnstileToken) {
+      setError("Completa la verifica CAPTCHA prima di continuare");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/payment-intent", {
@@ -60,6 +68,7 @@ export function BookingWizard(props: Props) {
           customer,
           paymentSchedule: props.defaultPaymentSchedule,
           depositPercentage: props.defaultDepositPercentage ?? undefined,
+          turnstileToken: turnstileToken ?? undefined,
         }),
       });
       if (!res.ok) {
@@ -119,6 +128,9 @@ export function BookingWizard(props: Props) {
           onBack={() => setStep("people")}
           onNext={() => void createIntent()}
           loading={loading}
+          turnstileSiteKey={props.turnstileSiteKey}
+          onTurnstileToken={setTurnstileToken}
+          onTurnstileExpired={() => setTurnstileToken(null)}
         />
       )}
 
@@ -224,12 +236,18 @@ function CustomerStep({
   onBack,
   onNext,
   loading,
+  turnstileSiteKey,
+  onTurnstileToken,
+  onTurnstileExpired,
 }: {
   value: Customer;
   onChange: (v: Customer) => void;
   onBack: () => void;
   onNext: () => void;
   loading: boolean;
+  turnstileSiteKey: string;
+  onTurnstileToken: (token: string) => void;
+  onTurnstileExpired: () => void;
 }) {
   const valid = value.email && value.firstName && value.lastName;
   return (
@@ -268,6 +286,13 @@ function CustomerStep({
         value={value.phone}
         onChange={(e) => onChange({ ...value, phone: e.target.value })}
       />
+      {turnstileSiteKey && (
+        <TurnstileWidget
+          siteKey={turnstileSiteKey}
+          onToken={onTurnstileToken}
+          onExpired={onTurnstileExpired}
+        />
+      )}
       <div className="flex gap-3">
         <button
           onClick={onBack}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import {
   requestOtp,
   verifyOtpAndLogin,
@@ -11,7 +12,11 @@ import {
 const initialRequest: RequestOtpState = { status: "idle" };
 const initialVerify: VerifyOtpState = { status: "idle" };
 
-export function RecuperaPrenotazioneClient() {
+export interface RecuperaPrenotazioneClientProps {
+  turnstileSiteKey: string;
+}
+
+export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenotazioneClientProps) {
   const [reqState, requestAction, reqPending] = useActionState(requestOtp, initialRequest);
   const [verState, verifyAction, verPending] = useActionState(verifyOtpAndLogin, initialVerify);
   const [email, setEmail] = useState("");
@@ -29,6 +34,7 @@ export function RecuperaPrenotazioneClient() {
           onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-3 rounded-lg border border-gray-300"
         />
+        {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} />}
         <button
           disabled={reqPending}
           className="w-full py-3 rounded-full bg-[#d97706] text-white font-bold disabled:opacity-50"

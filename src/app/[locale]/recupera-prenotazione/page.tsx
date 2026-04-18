@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { RecuperaPrenotazioneClient } from "./client";
 
 export default function RecuperaPrenotazionePage() {
@@ -9,7 +10,7 @@ export default function RecuperaPrenotazionePage() {
           Inserisci l&apos;email usata al momento della prenotazione. Ti invieremo un codice di
           verifica valido per 15 minuti.
         </p>
-        <RecuperaPrenotazioneClient />
+        <RecuperaPrenotazioneClient turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""} />
       </div>
     </div>
   );

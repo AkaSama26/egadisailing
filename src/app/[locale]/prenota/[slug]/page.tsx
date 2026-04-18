@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { env } from "@/lib/env";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 
 export default async function BookingPage({
@@ -26,6 +27,7 @@ export default async function BookingPage({
           capacityMax={service.capacityMax}
           defaultPaymentSchedule={service.defaultPaymentSchedule}
           defaultDepositPercentage={service.defaultDepositPercentage}
+          turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
         />
       </div>
     </div>
