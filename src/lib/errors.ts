@@ -39,12 +39,13 @@ export class AppError extends Error {
     };
   }
 
-  /** Risposta sanitizzata per il client HTTP (no stack, no context raw). */
-  toClientJSON(): { code: string; message: string; statusCode: number; retryAfterSeconds?: number } {
-    const payload: { code: string; message: string; statusCode: number; retryAfterSeconds?: number } = {
+  /** Risposta sanitizzata per il client HTTP (no stack, no context raw).
+   * statusCode NON incluso nel body — il client lo legge dall'HTTP status.
+   * Retry-After e' esposto come header dal withErrorHandler. */
+  toClientJSON(): { code: string; message: string; retryAfterSeconds?: number } {
+    const payload: { code: string; message: string; retryAfterSeconds?: number } = {
       code: this.code,
       message: this.message,
-      statusCode: this.statusCode,
     };
     if (typeof this.context.retryAfterSeconds === "number") {
       payload.retryAfterSeconds = this.context.retryAfterSeconds;

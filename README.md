@@ -11,9 +11,19 @@ Next.js 16 + Prisma 7 + PostgreSQL + Redis + BullMQ + Stripe + Bokun.
 
 ## Prerequisiti
 
-- Node.js 20+
-- Docker + Docker Compose
+- **Node.js 20.11+** (package.json engine-strict)
+- Docker + Docker Compose v2
 - `openssl` per generare secret
+
+## Per developers / AI agents
+
+Il vero handbook tecnico e' [AGENTS.md](./AGENTS.md) — regole invarianti, foundation libs, findings audit, roadmap.
+
+Per operazioni in produzione: [docs/runbook/operations.md](./docs/runbook/operations.md).
+Per deploy: [docs/runbook/deployment.md](./docs/runbook/deployment.md).
+Per contribuire: [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+⚠️ **Import Prisma**: usa `@/generated/prisma/client`, NON `@prisma/client` (generatore `prisma-client` v7 con output custom — vedi `prisma/schema.prisma:2`).
 
 ## Setup
 
@@ -63,6 +73,8 @@ Open http://localhost:3000
 | `npm run db:seed` | Run seed only |
 | `npm run db:studio` | Open Prisma Studio (DB GUI) |
 | `npm run db:generate` | Regenerate Prisma client |
+| `npm test` | Vitest pure-function suite (47 test oggi) |
+| `npm run test:watch` | Vitest watch mode |
 
 ## Healthcheck
 
@@ -126,6 +138,20 @@ Dettagli in `docs/superpowers/specs/2026-04-17-platform-v2-design.md`.
 **Seed password dimenticata** → `npm run db:reset` (ricrea DB + stampa nuova password)
 
 **Container non si avvia** → verifica `.env` (POSTGRES_PASSWORD, REDIS_PASSWORD, NEXTAUTH_SECRET con rand32)
+
+**`Invalid environment variables` al boot** → vedi `src/lib/env.ts` per schema Zod; i secret non devono contenere "changeme"
+
+**Import Prisma fallisce** → usa `@/generated/prisma/client` NON `@prisma/client`
+
+**`npx prisma migrate dev` fallisce in non-interactive shell** → usa `npx prisma db push` per test, o `npx prisma migrate dev --create-only` + `npx prisma migrate deploy`
+
+**Webhook Stripe non arriva in dev** → installa Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
+
+**Rate limit bloccato in dev** → flush Redis: `docker compose exec redis redis-cli -a $REDIS_PASSWORD FLUSHDB`
+
+**Tests falliscono per timezone** → vitest usa Europe/Rome implicitamente tramite Intl; assicurati che il test assumi timezone CET/CEST
+
+**Cabin charter rifiutato** → ora richiede startDate = sabato (cambio sabato-sabato, standard Mediterraneo). Modificare il client o rimuovere vincolo in `create-direct.ts` se necessario
 
 ## Status
 

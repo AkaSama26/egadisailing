@@ -59,11 +59,41 @@ export async function createPendingDirectBooking(
     );
   }
 
+  // minPaying: soglia minima per ordine singolo (non pooling cross-ordine).
+  // Es. SOCIAL_BOATING minPaying=11: il cliente singolo non puo' acquistare
+  // 1 posto su una giornata non ancora attiva. La logica "tour parte se
+  // cumulativamente raggiunge minPaying" va gestita separatamente (Plan 5
+  // admin: cancel + refund se soglia non raggiunta X giorni prima).
+  if (service.minPaying && input.numPeople < service.minPaying) {
+    throw new ValidationError(
+      `Minimum ${service.minPaying} persone richieste per ${service.name}`,
+    );
+  }
+
+  // Enforce paymentSchedule dal service — il client non puo' overridere.
+  // Es. Cabin Charter e' sempre DEPOSIT_BALANCE: bloccare FULL mantiene
+  // coerenza con il flusso commerciale (admin puo' sempre fare booking
+  // manuali con logica diversa).
+  if (input.paymentSchedule !== service.defaultPaymentSchedule) {
+    throw new ValidationError(
+      `${service.name} richiede ${service.defaultPaymentSchedule}, ricevuto ${input.paymentSchedule}`,
+    );
+  }
+
   // Normalizza startDate al giorno di calendario Europe/Rome (risolve
   // off-by-one: 2026-04-07 digitato dal cliente e' 2026-04-06T22:00Z).
   const startDay = parseDateLikelyLocalDay(input.startDate);
   if (startDay.getTime() < toUtcDay(new Date()).getTime()) {
     throw new ValidationError("startDate must not be in the past");
+  }
+
+  // Cabin charter e' settimana-intera con pivot sabato (standard Mediterraneo).
+  // Validare per evitare booking che bloccano mercoledi-martedi invece
+  // di sabato-sabato (pattern del settore charter).
+  if (service.durationType === "WEEK" && startDay.getUTCDay() !== 6) {
+    throw new ValidationError(
+      "Cabin charter settimanali iniziano il sabato (cambio sabato-sabato)",
+    );
   }
 
   const endDate = deriveEndDate(startDay, service.durationType, service.durationHours);

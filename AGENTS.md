@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 completati + 3 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap). Plan 3-6 da implementare.
+**Stato**: Plan 1 + Plan 2 completati + 4 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation). Plan 3-6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -149,6 +149,35 @@ Spec completa: `docs/superpowers/specs/2026-04-17-platform-v2-design.md`
 - 47 test unit OK per pure functions (pricing, dates, html-escape, metadata, advisory-lock, email-normalize, booking helpers)
 - **Plan 3+ richiede**: `ioredis-mock` per rate-limit tests, prisma test-db per integration (availability, booking flow, webhook-handler end-to-end)
 - **Extract refactors pending**: `computeQuote(period, hotDay, numPeople)` pure in pricing/service, `verifyExpectedAmount(booking, paymentType)` pure in webhook-handler
+
+### Da round 4 audit (supply chain)
+- **CRITICA**: `lucide-react@1.8.0` e' linea abbandonata (current 0.x). 37 file lo importano. Verificare manualmente e migrare a `lucide-react@^0.500.0` come Plan 3+ task.
+- **ALTA**: `next-auth@5.0.0-beta.30` — bumpare a ultima beta, migrare a GA appena disponibile.
+- Gia' rimossi: `shadcn` (era prod dep non usata), `@types/ioredis` + `@types/bcryptjs` (obsoleti, types inclusi nei pacchetti runtime).
+- Gia' aggiunto: `.npmrc` con `audit-level=moderate`, `engine-strict=true`.
+
+### Da round 4 audit (business logic)
+- **CRITICA**: `capacityMax` non somma booking esistenti. SOCIAL_BOATING (20 posti, 11 min pagamenti) e BOAT_SHARED (12 posti) sono tour CONDIVISI ma `blockDates` blocca l'intera giornata al primo ordine. Serve semantica `PARTIALLY_BOOKED` con contatore cumulativo. Plan 3-4 (Bokun integration e charter) o admin decision.
+- **ALTA**: admin cancellation/refund rotti: `admin/_actions/booking-actions.ts` ha `@ts-nocheck` + schema obsoleto. `refundPayment` helper esiste ma nessuno lo chiama. Plan 5.
+- **ALTA**: `Cabin Charter` pricing unit — attualmente `pricePerPerson × numPeople`. Per boat-intero (8 posti), tipicamente si vende a pacchetto. Decisione business: aggiungere `Service.pricingUnit: PER_PERSON|PER_BOAT`.
+- **MEDIA**: `PricingPeriod` overlap non previsto. Admin puo' creare due periodi sovrapposti → `findFirst orderBy startDate` non deterministico. Aggiungere validation o SQL EXCLUDE constraint.
+- **BASSA**: `DirectBooking.bookingId` no vincolo `Booking.source=DIRECT`. Fragile.
+- Gia' applicato: enforce server-side `paymentSchedule` = `service.defaultPaymentSchedule`; validazione `minPaying` per ordine singolo; sabato-pivot per `WEEK`.
+
+### Da round 4 audit (API contract)
+- **ALTA**: Idempotency-Key su POST /api/payment-intent non supportato. Double-click submit crea 2 booking + 2 PaymentIntent. Plan 3+ con Redis memoization.
+- **MEDIA**: API versioning non deciso. Prima di esporre a partner (Bokun integration), decidere `/api/v1/...` vs `Api-Version` header.
+- **MEDIA**: `POST /api/payment-intent` ora ritorna 201 + Location + envelope `{data:...}`. Se esporremo ad altri consumatori, documentare lo shape coerente.
+- **BASSA**: 207 Multi-Status su cron con partial failures (oggi sempre 200).
+- **BASSA**: `/api/health` aggiungere `version` + `uptimeSec`.
+- Gia' applicato: `Retry-After` header su 429, `X-Request-Id` end-to-end, `statusCode` rimosso dal body, envelope `{data:...}` sul payment-intent.
+
+### Da round 4 audit (documentation) — gap restanti
+- **MEDIA**: JSDoc `@param/@returns/@throws` sui 15-20 export pubblici di `src/lib/` (booking, availability, pricing, stripe). IntelliSense migliora drasticamente.
+- **MEDIA**: Sezione "Booking lifecycle" in AGENTS.md con diagramma sequenza ASCII.
+- **MEDIA**: `CHANGELOG.md` per tracciare plan completati.
+- **BASSA**: architettura diagram duplicato da spec a README.
+- Gia' creati: `docs/runbook/operations.md`, `docs/runbook/deployment.md`, `CONTRIBUTING.md`, `.env.example` esteso con Plan 3-6 commentato, README con warning Prisma import + comandi test + troubleshooting 8+ casi.
 
 ### Da round 2 audit (UX)
 - **Wizard state persistence**: salvare state in sessionStorage + sync step ad URL search param (refresh/back safety).

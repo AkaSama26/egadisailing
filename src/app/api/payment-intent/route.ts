@@ -6,6 +6,7 @@ import { buildBookingMetadata } from "@/lib/stripe/metadata";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { getClientIp } from "@/lib/http/client-ip";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
@@ -70,11 +71,23 @@ export const POST = withErrorHandler(async (req: Request) => {
     }),
   });
 
-  return NextResponse.json({
-    confirmationCode: booking.confirmationCode,
-    clientSecret: pi.clientSecret,
-    amountCents: booking.upfrontAmountCents,
-    totalCents: booking.totalAmountCents,
-    balanceCents: booking.balanceAmountCents,
-  });
+  // 201 Created + Location per consumer REST-aware. Envelope { data: ... }
+  // coerente con convenzione documentata in AGENTS.md.
+  return NextResponse.json(
+    {
+      data: {
+        confirmationCode: booking.confirmationCode,
+        clientSecret: pi.clientSecret,
+        amountCents: booking.upfrontAmountCents,
+        totalCents: booking.totalAmountCents,
+        balanceCents: booking.balanceAmountCents,
+      },
+    },
+    {
+      status: 201,
+      headers: {
+        Location: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/prenota/success/${booking.confirmationCode}`,
+      },
+    },
+  );
 });

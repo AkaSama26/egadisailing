@@ -66,12 +66,13 @@ export function BookingWizard(props: Props) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error?.message ?? "Errore creazione prenotazione");
       }
-      const data = await res.json();
+      const body = await res.json();
+      const payload = body.data ?? body; // tolleranza per envelope old/new
       setIntent({
-        confirmationCode: data.confirmationCode,
-        clientSecret: data.clientSecret,
-        amountCents: data.amountCents,
-        totalCents: data.totalCents,
+        confirmationCode: payload.confirmationCode,
+        clientSecret: payload.clientSecret,
+        amountCents: payload.amountCents,
+        totalCents: payload.totalCents,
       });
       setStep("payment");
     } catch (err) {
