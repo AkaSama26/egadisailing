@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 completati (foundation + sito/Stripe/OTP). Plan 3-6 da implementare.
+**Stato**: Plan 1 + Plan 2 completati (foundation + sito/Stripe/OTP) + 2 round di audit applicati. Plan 3-6 da implementare.
 
 ## Stack
 
@@ -40,6 +40,8 @@ Spec completa: `docs/superpowers/specs/2026-04-17-platform-v2-design.md`
 | `src/lib/pricing/service.ts` | `quotePrice(serviceId, date, numPeople)` | Calcolo prezzi — ritorna Decimal |
 | `src/lib/rate-limit/service.ts` | `enforceRateLimit`, `blockIdentifier` | Prima di ogni endpoint pubblico |
 | `src/lib/audit/log.ts` | `auditLog(entry)` — failure-safe | Dopo ogni mutazione sensibile |
+| `src/lib/db/advisory-lock.ts` | `computeAdvisoryLockKey`, `acquireTxAdvisoryLock` | OGNI sezione critica serializzabile — usa namespace consistenti |
+| `src/types/next-auth.d.ts` | Module augmentation Session.user.role + JWT.role | Implicito — elimina `as any` |
 | `src/lib/dates.ts` | `addDays`, `addHours` aggiunti | OGNI manipolazione date — NON duplicare |
 | `src/lib/http/client-ip.ts` | `getClientIp`, `getUserAgent` | OGNI Server Action/route con rate-limit |
 | `src/lib/http/with-error-handler.ts` | `withErrorHandler`, `requireBearerSecret` (timing-safe) | OGNI API route |
@@ -85,7 +87,7 @@ Spec completa: `docs/superpowers/specs/2026-04-17-platform-v2-design.md`
 - **Overall**: `enforceOtpRequestLimit` batch in singola Redis MULTI (oggi 6 round-trip sequenziali).
 - **Overall**: `eachUtcDayInclusive` single-day sequential. Per cabin charter (7gg) valutare batch `createMany`.
 
-### Da Plan 2
+### Da Plan 2 (originali)
 - **Plan 3**: sostituire `node-cron` in-process con BullMQ repeatable jobs (sicuro multi-replica).
 - **Plan 3**: outbox pattern reale per `blockDates` post-commit (oggi best-effort se processo crasha tra commit e blockDates).
 - **Plan 5**: audit log da chiamare nelle mutation Plan 2 (BOOKING_CONFIRMED, OTP_ISSUED, SESSION_CREATED). Oggi nessuna mutation Plan 2 scrive audit.
@@ -93,7 +95,30 @@ Spec completa: `docs/superpowers/specs/2026-04-17-platform-v2-design.md`
 - **Plan 6** (weather): `weatherGuarantee` flag rimosso dal client payload (era server-ignored); reintrodurre con pricing addon server-side.
 - **Admin PR**: PENDING booking GC cron (cancellare PENDING older than 30min + stripe.paymentIntents.cancel) per prevenire PaymentIntent resurrection.
 - **Schema**: valutare unique partial index su `HotDayOverride (date) WHERE serviceId IS NULL` (Postgres NULL-distinct).
-- **Minor**: `booking-wizard.tsx` 280 righe — split in steps/ dir se cresce ancora.
+
+### Da round 2 audit (production readiness)
+- **Deploy**: `docker-compose.prod.yml` con container app + healthcheck HTTP + reverse proxy Caddy/Nginx con auto-TLS + webhook Stripe HTTPS. Senza questo non si va live.
+- **Shutdown**: `process.on('SIGTERM')` per chiudere BullMQ worker, Redis conn, pg Pool.
+- **Backup**: sidecar `pg_dump` schedulato + offsite (S3/B2) + retention + test restore.
+- **Observability**: Sentry o simile + uptime monitor esterno su `/api/health`.
+- **Migrations CI/CD**: deploy flow esplicito con `prisma migrate deploy` prima di start app (init container / entrypoint).
+- **Secrets**: `.env` fuori dall'immagine Docker; iniezione via Docker Secrets / SOPS.
+- **Redis persistence**: configurare `--appendonly yes` + `--maxmemory-policy noeviction` (BullMQ).
+- **Stripe recovery**: cron giornaliero che rilegge `/v1/events` degli ultimi N giorni e replaya quelli non in `ProcessedStripeEvent`.
+- **CORS / security headers**: `headers()` in next.config.ts (HSTS, X-Frame-Options, CSP).
+
+### Da round 2 audit (UX)
+- **Wizard state persistence**: salvare state in sessionStorage + sync step ad URL search param (refresh/back safety).
+- **Payment retry**: se Stripe fallisce con `requires_payment_method` terminale, offrire "torna indietro" che ricrea PaymentIntent.
+- **Form labels**: `<label>` veri (WCAG 3.3.2) invece di placeholder-as-label su wizard e OTP.
+- **Wizard form wrap**: ogni step in `<form onSubmit>` per abilitare Enter-to-submit + native validation.
+- **OTP cooldown**: countdown 60s "Reinvia tra Xs" dopo invio.
+- **Stripe events**: `checkout.session.expired/async_payment_failed` per notificare cancel.
+- **Nationality/language selector** invece di default IT/it silente.
+- **Progress indicator** nel wizard ("Passo 2 di 4", aria-current).
+- **@ts-nocheck su admin pages**: rimuovere uno a uno — i modelli Prisma esistono, compilerebbero.
+- **Duplicate tab**: broadcast channel o idempotency key per prevenire doppi PaymentIntent.
+- **Confirmation code case-insensitive**: normalize to uppercase at input.
 
 ## Plan roadmap
 
