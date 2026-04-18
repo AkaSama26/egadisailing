@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
 import { BedDouble, DoorOpen, UtensilsCrossed, Bath, Users, Gauge, ArrowRight } from "lucide-react";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata({
   params,
@@ -13,10 +14,13 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  return {
-    title: "Le Nostre Barche — Egadisailing",
-    description: "Trimarano luxury con chef e barca motoscafo per tour alle Isole Egadi da Trapani.",
-  };
+  return buildPageMetadata({
+    title: "Le Nostre Barche",
+    description:
+      "Trimarano luxury con chef e barca motoscafo per tour alle Isole Egadi da Trapani.",
+    path: "/boats",
+    locale,
+  });
 }
 
 export default async function BoatsPage({

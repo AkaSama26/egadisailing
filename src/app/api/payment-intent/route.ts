@@ -4,7 +4,7 @@ import { createPendingDirectBooking } from "@/lib/booking/create-direct";
 import { createPaymentIntent } from "@/lib/stripe/payment-intents";
 import { buildBookingMetadata } from "@/lib/stripe/metadata";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
-import { getClientIp } from "@/lib/http/client-ip";
+import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
 import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { ValidationError } from "@/lib/errors";
@@ -29,6 +29,13 @@ const schema = z.object({
   depositPercentage: z.number().int().min(1).max(100).optional(),
   notes: z.string().max(1000).optional(),
   turnstileToken: z.string().optional(),
+  // GDPR consent — obbligatorio, server-validated (anche se il client
+  // dovrebbe impedire il submit, non ci fidiamo del client).
+  consent: z.object({
+    privacyAccepted: z.literal(true),
+    termsAccepted: z.literal(true),
+    policyVersion: z.string().min(1).max(16),
+  }),
 });
 
 export const POST = withErrorHandler(async (req: Request) => {
@@ -71,6 +78,13 @@ export const POST = withErrorHandler(async (req: Request) => {
     paymentSchedule: input.paymentSchedule,
     depositPercentage: input.depositPercentage,
     notes: input.notes,
+    consent: {
+      privacyAccepted: input.consent.privacyAccepted,
+      termsAccepted: input.consent.termsAccepted,
+      policyVersion: input.consent.policyVersion,
+      ipAddress: ip,
+      userAgent: getUserAgent(req.headers),
+    },
   });
 
   const pi = await createPaymentIntent({

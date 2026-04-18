@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { ScrollSection } from "@/components/scroll-section";
-import { MapPin, Mail, Phone, Send } from "lucide-react";
+import { MapPin, Mail, Phone } from "lucide-react";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { env } from "@/lib/env";
+import { ContactForm } from "./contact-form";
 
 function IconInstagram({ className }: { className?: string }) {
   return (
@@ -26,14 +29,27 @@ function IconWhatsApp({ className }: { className?: string }) {
   );
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "Contattaci — Egadisailing",
-    description: "Scrivici per prenotare la tua esperienza alle Isole Egadi. Porto di Trapani, WhatsApp, email.",
-  };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildPageMetadata({
+    title: "Contattaci",
+    description:
+      "Scrivici per prenotare la tua esperienza alle Isole Egadi. Porto di Trapani, WhatsApp, email.",
+    path: "/contacts",
+    locale,
+  });
 }
 
-export default async function ContactsPage() {
+export default async function ContactsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  await params;
   return (
     <div
       className="min-h-screen"
@@ -165,70 +181,7 @@ export default async function ContactsPage() {
                   Ti rispondiamo entro 24 ore
                 </p>
 
-                <form className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="name" className="text-white/50 text-sm">Nome</label>
-                      <input
-                        id="name"
-                        type="text"
-                        placeholder="Il tuo nome"
-                        className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="email" className="text-white/50 text-sm">Email</label>
-                      <input
-                        id="email"
-                        type="email"
-                        placeholder="La tua email"
-                        className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="phone" className="text-white/50 text-sm">Telefono (opzionale)</label>
-                    <input
-                      id="phone"
-                      type="tel"
-                      placeholder="+39 ..."
-                      className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="subject" className="text-white/50 text-sm">Oggetto</label>
-                    <select
-                      id="subject"
-                      className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white/60 focus:border-[var(--color-gold)] focus:outline-none transition-colors"
-                    >
-                      <option value="">Seleziona...</option>
-                      <option value="booking">Prenotazione</option>
-                      <option value="info">Informazioni</option>
-                      <option value="group">Gruppi / Eventi</option>
-                      <option value="other">Altro</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="message" className="text-white/50 text-sm">Messaggio</label>
-                    <textarea
-                      id="message"
-                      rows={5}
-                      placeholder="Raccontaci cosa cerchi..."
-                      className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors resize-none"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-center gap-2 py-4 rounded-full bg-[var(--color-gold)] hover:bg-[var(--color-gold)]/90 text-[var(--color-ocean)] font-semibold text-lg transition-colors shadow-lg"
-                  >
-                    <Send className="h-5 w-5" />
-                    Invia Messaggio
-                  </button>
-                </form>
+                <ContactForm turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""} />
               </div>
             </ScrollSection>
           </div>

@@ -6,6 +6,10 @@ import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 
 type Step = "date" | "people" | "customer" | "payment" | "success";
 
+// Versione della privacy+T&C attualmente in vigore. Sincronizzare con
+// EFFECTIVE_DATE/POLICY_VERSION nelle pagine /privacy e /terms se aggiornate.
+const POLICY_VERSION = "1.0";
+
 interface Props {
   locale: string;
   serviceId: string;
@@ -48,9 +52,15 @@ export function BookingWizard(props: Props) {
     totalCents: number;
   } | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [consentPrivacy, setConsentPrivacy] = useState(false);
+  const [consentTerms, setConsentTerms] = useState(false);
 
   async function createIntent() {
     setError(null);
+    if (!consentPrivacy || !consentTerms) {
+      setError("Accetta Privacy Policy e Termini & Condizioni per continuare");
+      return;
+    }
     // In prod il server richiede Turnstile token (enforce). In dev passa senza.
     if (props.turnstileSiteKey && !turnstileToken) {
       setError("Completa la verifica CAPTCHA prima di continuare");
@@ -69,6 +79,11 @@ export function BookingWizard(props: Props) {
           paymentSchedule: props.defaultPaymentSchedule,
           depositPercentage: props.defaultDepositPercentage ?? undefined,
           turnstileToken: turnstileToken ?? undefined,
+          consent: {
+            privacyAccepted: consentPrivacy,
+            termsAccepted: consentTerms,
+            policyVersion: POLICY_VERSION,
+          },
         }),
       });
       if (!res.ok) {
@@ -123,6 +138,7 @@ export function BookingWizard(props: Props) {
 
       {step === "customer" && (
         <CustomerStep
+          locale={props.locale}
           value={customer}
           onChange={setCustomer}
           onBack={() => setStep("people")}
@@ -131,6 +147,10 @@ export function BookingWizard(props: Props) {
           turnstileSiteKey={props.turnstileSiteKey}
           onTurnstileToken={setTurnstileToken}
           onTurnstileExpired={() => setTurnstileToken(null)}
+          consentPrivacy={consentPrivacy}
+          consentTerms={consentTerms}
+          onConsentPrivacyChange={setConsentPrivacy}
+          onConsentTermsChange={setConsentTerms}
         />
       )}
 
@@ -231,6 +251,7 @@ function PeopleStep({
 }
 
 function CustomerStep({
+  locale,
   value,
   onChange,
   onBack,
@@ -239,7 +260,12 @@ function CustomerStep({
   turnstileSiteKey,
   onTurnstileToken,
   onTurnstileExpired,
+  consentPrivacy,
+  consentTerms,
+  onConsentPrivacyChange,
+  onConsentTermsChange,
 }: {
+  locale: string;
   value: Customer;
   onChange: (v: Customer) => void;
   onBack: () => void;
@@ -248,6 +274,10 @@ function CustomerStep({
   turnstileSiteKey: string;
   onTurnstileToken: (token: string) => void;
   onTurnstileExpired: () => void;
+  consentPrivacy: boolean;
+  consentTerms: boolean;
+  onConsentPrivacyChange: (v: boolean) => void;
+  onConsentTermsChange: (v: boolean) => void;
 }) {
   const valid = value.email && value.firstName && value.lastName;
   return (
@@ -293,6 +323,52 @@ function CustomerStep({
           onExpired={onTurnstileExpired}
         />
       )}
+
+      <div className="space-y-2 text-sm border-t pt-4">
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consentPrivacy}
+            onChange={(e) => onConsentPrivacyChange(e.target.checked)}
+            className="mt-1 size-4"
+            required
+          />
+          <span>
+            Ho letto e accetto la{" "}
+            <a
+              href={`/${locale}/privacy`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
+              Privacy Policy
+            </a>
+            . *
+          </span>
+        </label>
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={consentTerms}
+            onChange={(e) => onConsentTermsChange(e.target.checked)}
+            className="mt-1 size-4"
+            required
+          />
+          <span>
+            Accetto i{" "}
+            <a
+              href={`/${locale}/terms`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
+              Termini &amp; Condizioni
+            </a>{" "}
+            di prenotazione, inclusa la policy di cancellazione. *
+          </span>
+        </label>
+      </div>
+
       <div className="flex gap-3">
         <button
           onClick={onBack}
@@ -303,7 +379,7 @@ function CustomerStep({
         </button>
         <button
           onClick={onNext}
-          disabled={!valid || loading}
+          disabled={!valid || loading || !consentPrivacy || !consentTerms}
           className="flex-1 py-3 rounded-full bg-[#d97706] text-white font-bold disabled:opacity-50"
         >
           {loading ? "Attendere..." : "Procedi al pagamento"}

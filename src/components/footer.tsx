@@ -158,7 +158,7 @@ export function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-gray-400 sm:flex-row lg:px-8">
-          <p>&copy; 2026 Egadisailing. {tFooter("rights")}.</p>
+          <p>&copy; {new Date().getFullYear()} Egadisailing. {tFooter("rights")}.</p>
           <div className="flex gap-4">
             <Link
               href={`/${locale}/privacy`}
@@ -171,6 +171,12 @@ export function Footer() {
               className="transition-colors hover:text-white"
             >
               {tFooter("terms")}
+            </Link>
+            <Link
+              href={`/${locale}/cookie-policy`}
+              className="transition-colors hover:text-white"
+            >
+              Cookie
             </Link>
           </div>
         </div>

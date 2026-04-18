@@ -2,12 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
 import { Waves, Heart, Anchor, Users, ArrowRight } from "lucide-react";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "Chi Siamo — Egadisailing",
-    description: "Ogni onda racconta la nostra storia. Scopri la famiglia dietro Egadisailing, la passione per il mare e le Isole Egadi.",
-  };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildPageMetadata({
+    title: "Chi Siamo",
+    description:
+      "Ogni onda racconta la nostra storia. Scopri la famiglia dietro Egadisailing, la passione per il mare e le Isole Egadi.",
+    path: "/about",
+    locale,
+  });
 }
 
 export default async function AboutPage({

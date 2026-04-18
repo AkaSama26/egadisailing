@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { ScrollSection } from "@/components/scroll-section";
 import { ExperiencesList } from "./experiences-list";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata({
   params,
@@ -12,10 +13,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "experiences" });
-  return {
-    title: `Esperienze in Barca alle Egadi — Egadisailing`,
+  return buildPageMetadata({
+    title: t("title"),
     description: t("subtitle"),
-  };
+    path: "/experiences",
+    locale,
+  });
 }
 
 export default async function ExperiencesPage({

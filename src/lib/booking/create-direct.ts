@@ -7,6 +7,14 @@ import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
 import { deriveEndDate, generateConfirmationCode } from "./helpers";
 
+export interface ConsentInput {
+  privacyAccepted: boolean;
+  termsAccepted: boolean;
+  policyVersion: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}
+
 export interface CreateDirectBookingInput {
   serviceId: string;
   startDate: Date;
@@ -22,6 +30,11 @@ export interface CreateDirectBookingInput {
   paymentSchedule: "FULL" | "DEPOSIT_BALANCE";
   depositPercentage?: number;
   notes?: string;
+  /**
+   * GDPR art. 7: consenso esplicito a privacy + T&C. Obbligatorio.
+   * Persistito in `ConsentRecord` dentro la stessa tx del Booking.
+   */
+  consent: ConsentInput;
 }
 
 export interface CreatedBooking {
@@ -49,6 +62,14 @@ export interface CreatedBooking {
 export async function createPendingDirectBooking(
   input: CreateDirectBookingInput,
 ): Promise<CreatedBooking> {
+  // GDPR: checkbox privacy + T&C obbligatorie, senza il consenso il booking
+  // non puo' essere creato (art. 7 + art. 6.1.a).
+  if (!input.consent.privacyAccepted || !input.consent.termsAccepted) {
+    throw new ValidationError(
+      "Devi accettare privacy policy e termini & condizioni per prenotare",
+    );
+  }
+
   const service = await db.service.findUnique({ where: { id: input.serviceId } });
   if (!service) throw new NotFoundError("Service", input.serviceId);
   if (!service.active) throw new ValidationError("Service is not active");
@@ -184,7 +205,7 @@ export async function createPendingDirectBooking(
       },
     });
 
-    return tx.booking.create({
+    const created = await tx.booking.create({
       data: {
         confirmationCode,
         source: "DIRECT",
@@ -212,6 +233,24 @@ export async function createPendingDirectBooking(
         },
       },
     });
+
+    // GDPR art. 7: snapshot del consenso al momento della creazione booking.
+    // Persistere prima del pagamento (puo' succedere che l'utente non
+    // completi il checkout — il consenso e' comunque stato dato). Plan 5
+    // batch 4 fix deferred CRITICA ConsentRecord.
+    await tx.consentRecord.create({
+      data: {
+        customerId: customer.id,
+        bookingId: created.id,
+        privacyAccepted: input.consent.privacyAccepted,
+        termsAccepted: input.consent.termsAccepted,
+        policyVersion: input.consent.policyVersion,
+        ipAddress: input.consent.ipAddress ?? null,
+        userAgent: input.consent.userAgent ?? null,
+      },
+    });
+
+    return created;
   });
 
   const upfrontCents = input.paymentSchedule === "DEPOSIT_BALANCE" ? depositCents : totalCents;

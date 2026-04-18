@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/hero-section";
 import { LandingSections } from "./landing-sections";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata({
   params,
@@ -12,10 +13,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "hero" });
-  return {
-    title: `${t("title")} — Egadisailing`,
+  return buildPageMetadata({
+    title: t("title"),
     description: t("subtitle"),
-  };
+    path: "/",
+    locale,
+  });
 }
 
 export default async function HomePage() {

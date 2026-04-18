@@ -296,6 +296,29 @@ model DirectBooking {
   @@index([paymentSchedule, balanceReminderSentAt, balancePaidAt])
 }
 
+/// GDPR art. 7 — prova del consenso. Salvata al momento della creazione
+/// del Booking con checkbox "accetto privacy + T&C" nel wizard.
+///
+/// Manteniamo IP + userAgent + `policyVersion` per tracciare quale copia
+/// legale ha accettato il cliente. Non facciamo cascade su `onDelete`:
+/// il ConsentRecord sopravvive alla cancellazione/anonymization del
+/// Customer (audit fiscale + probatorio 10 anni art. 2220 c.c.).
+model ConsentRecord {
+  id              String   @id @default(cuid())
+  customerId      String?
+  bookingId       String?
+  privacyAccepted Boolean  @default(false)
+  termsAccepted   Boolean  @default(false)
+  policyVersion   String
+  acceptedAt      DateTime @default(now())
+  ipAddress       String?
+  userAgent       String?
+
+  @@index([customerId])
+  @@index([bookingId])
+  @@index([acceptedAt])
+}
+
 model BokunBooking {
   bookingId        String   @id
   bokunBookingId   String   @unique
