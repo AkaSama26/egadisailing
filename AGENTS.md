@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 completati + 9 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment, Plan4 charter security/race/parser/ops, app-security beyond integrations). Plan 5-6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 completati + 9 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment, Plan4 charter security/race/parser/ops, app-security beyond integrations). Plan 6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -447,13 +447,65 @@ Audit manuale sul perimetro app NON coperto dai round 1-8 (Bokun/Boataround/emai
 - **Middleware i18n**: correttamente esclude `api|admin|_next|_vercel`, admin e' protetto dal `layout.tsx` (post-fix).
 - **NextAuth password**: bcryptjs `compare` timing-safe — OK.
 
+## Plan 5 — Dashboard admin (completato)
+
+13 sezioni (rotte italiane) accessibili da sidebar unificata. Layout protetto
+con `auth()` + `role=ADMIN` check (Round 9 hardening). Tutte le mutation passano
+per `auditLog` + `revalidatePath`.
+
+| Rotta | Scope | Server Actions |
+|---|---|---|
+| `/admin` | Dashboard KPI (revenue mese/anno, booking count, uscite future, saldi pendenti) + ManualAlert banner + Channel health pills | — |
+| `/admin/prenotazioni` | Lista cross-source con filtri (DIRECT/BOKUN/BOATAROUND/SAMBOAT/CLICKANDBOAT/NAUTAL × PENDING/CONFIRMED/CANCELLED/REFUNDED) · limite 200 | — |
+| `/admin/prenotazioni/[id]` | Dettaglio + cliente + pagamenti + note · bottone Cancella+refund + form registra pagamento manuale (CASH/BANK_TRANSFER) + note | `cancelBooking`, `addBookingNote`, `registerManualPayment` |
+| `/admin/calendario` | Grid mensile per barca · color coding per source · BLOCKED/PARTIALLY_BOOKED/AVAILABLE · navigazione prev/next/oggi | — |
+| `/admin/disponibilita` | Block/release manuale range per boat (max 90g) · fan-out verso tutti i canali esterni via `blockDates`/`releaseDates` | `manualBlockRange`, `manualReleaseRange` |
+| `/admin/prezzi` | CRUD PricingPeriod (€/pax base stagionale) + HotDayRule (moltiplicatori su range/weekdays) · ogni modifica accoda `scheduleBokunPricingSync` | `upsertPricingPeriod`, `upsertHotDayRule`, `deleteHotDayRule` |
+| `/admin/servizi` | Catalog read-only (seed DB) — verifica bokunProductId mapping | — |
+| `/admin/clienti` | Lista 200 recenti + ricerca (nome/cognome/email) + link Export CSV | — |
+| `/admin/clienti/[id]` | Dettaglio + speso totale netto refund + storico prenotazioni | — |
+| `/admin/crew` | Tabella crew + form add/toggle active (SKIPPER/CHEF/HOSTESS) | `upsertCrewMember`, `assignCrewToBooking`, `toggleCrewActive` |
+| `/admin/finanza` | KPI revenue mese/anno (lordo + netto refund) + groupBy source + groupBy servizio YTD | — |
+| `/admin/canali` | Channel health per CHANNELS · lastSyncAt + lastError + sync mode (API/iCal/Email) | — |
+| `/admin/meteo` | Prossimi 7gg uscite CONFIRMED con forecast `WeatherForecastCache` (Plan 6 popolera' il cache) | — |
+| `/admin/sync-log` | BullMQ queue counts + ManualAlert pendenti + ultimi 20 event dedup per canale + AuditLog ultimi 50 | — |
+| `/admin/impostazioni` | Account info + link utili (health deep, CSV export) | — |
+
+### Hardening applicato
+- Layout: `session?.user?.role !== "ADMIN"` → redirect (Round 9)
+- Ogni server action: `requireAdmin()` (Unauthorized/Forbidden throw)
+- `auditLog` su CREATE/UPDATE/DELETE/CANCEL/ASSIGN/ACTIVATE
+- `revalidatePath` post-mutation su URL affected
+- Decimal-safe: `Prisma.Decimal` o `.toString()` → `formatEur`, mai `.toNumber()` come boundary
+- `cancelBooking` cascata: refund Stripe tutti charge SUCCEEDED + `releaseDates` via `CHANNELS[source]`
+- `registerManualPayment` in tx: crea Payment + opzionale `balancePaidAt`
+- `manualBlockRange` validazione: range max 90g, endDate > startDate
+- `upsertHotDayRule` weekdays filter per fan-out solo su date effettive
+
+### Cleanup eseguito
+Rimossi moduli V1 obsoleti che avevano `@ts-nocheck` con schema precedente:
+- `src/app/admin/(dashboard)/{bookings,calendar,customers,finance,pricing,settings,trips}/`
+- `src/app/admin/_actions/*` (booking/crew/customer/pricing/trip V1)
+- `src/app/admin/_components/{booking-form,crew-form,crew-table,customer-table,finance-charts,finance-filters,pricing-form,pricing-table,trip-calendar,trip-form,stats-card}.tsx`
+
+Zero `@ts-nocheck` residuo nell'admin. Sidebar e pagine tutte con schema V2 coerente.
+
+### Deferred Plan 6
+- **KPI charts Recharts** — oggi solo numeri singoli. Plan 6: trend mese/anno.
+- **Crew auto-assign** su booking create — `assignCrewToBooking` esposto ma UI integrata nella booking detail manca.
+- **Admin user CRUD** (User.role enum + UI editor) — ancora deferred Round 9.
+- **Impostazioni UI per env non-sensibili** — markup Bokun, soglie rate-limit, config meteo.
+- **Filtri avanzati prenotazioni** — range date custom, cliente lookup, esport CSV.
+- **Bulk operations** — cancel multiplo, update status batch.
+- **Meteo widget integrato in prenotazione detail** + **cron meteo Plan 6**.
+
 ## Plan roadmap
 
 1. ✅ Plan 1 — DB + Backend foundation (completato)
 2. ✅ Plan 2 — Sito + Stripe + OTP (completato + audit fixes)
 3. ✅ Plan 3 — Bokun integration (completato + round 5 audit fixes)
 4. ✅ Plan 4 — Charter integrations (iCal export + Boataround + SamBoat/Click&Boat/Nautal email parser)
-5. ⏳ Plan 5 — Dashboard admin
+5. ✅ Plan 5 — Dashboard admin (13 sezioni operativa, rotte italiane)
 6. ⏳ Plan 6 — Weather + notifiche + E2E
 
 Piani dettagliati in `docs/superpowers/plans/2026-04-17-plan-*.md`.
