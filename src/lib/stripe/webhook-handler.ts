@@ -126,6 +126,9 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
     const { refundPayment } = await import("./payment-intents");
     try {
       const ref = await refundPayment(charge);
+      // Round 11 Reg-C2: NO stripeChargeId/stripeRefundId sul record REFUND
+      // per non violare gli unique index (il charge e' nuovo ma il refund id
+      // potrebbe collidere con futuri record). Identificatori preservati in `note`.
       await db.payment.create({
         data: {
           bookingId: booking.id,
@@ -133,15 +136,14 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
           type: "REFUND",
           method: "STRIPE",
           status: "REFUNDED",
-          stripeChargeId: charge,
-          stripeRefundId: ref.id,
           processedAt: new Date(),
-          note: "Auto-refund: admin canceled booking before Stripe confirmed",
+          note: `Auto-refund race admin-cancel vs stripe-succeeded · charge=${charge} · refund=${ref.id} · pi=${pi.id}`,
         },
       });
     } catch (err) {
-      // Se il refund fallisce qui, Stripe ritentera' il webhook → al prossimo
-      // giro retentiamo il refund (idempotent via stripeChargeId unique).
+      // Se il refund fallisce qui, Stripe ritentera' il webhook. Stripe refund
+      // e' idempotent per charge (stripe.refunds.create non duplica se esiste
+      // gia' su charge fully-refunded) quindi retry e' safe.
       logger.error({ err, bookingId: booking.id }, "Auto-refund failed after cancel race");
       throw err;
     }

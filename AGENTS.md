@@ -8,9 +8,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 completati + 10 round di audit applicati. Plan 6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 completati + 11 round di audit applicati. Plan 6 da implementare.
 
-**Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
+**Test suite**: 95 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter.
 
 ## Stack
 
@@ -542,6 +542,58 @@ Quattro audit paralleli sul dashboard admin (security, business logic, UX/a11y, 
 - **BASSA — Copy-to-clipboard confirmationCode** (UX-B2).
 - **BASSA — Partial REFUND in registerManualPayment** (BL-M3): enum richiede UI dedicata.
 - **BASSA — PENDING > 30min GC cron** (Int-B1): booking orfani inflano KPI.
+
+## Round 11 audit — regression Round 10 + SEO/i18n + tech debt + test gap (fix applicati)
+
+Quattro audit paralleli post-Plan 5 hanno trovato **2 regressioni critiche** nei fix Round 10 + pulizie SEO/i18n bloccanti.
+
+### Critiche fixate
+- **Reg-C1 Payment type=REFUND violava unique `stripeChargeId`/`stripeRefundId`**: il fix Round 10 Int-C1 creava un record REFUND riutilizzando gli id del Payment originale gia' updated → **P2002 al 100%** → ogni refund admin fallisce (tx rollback → ValidationError). Fix: record REFUND con `stripeChargeId=null`/`stripeRefundId=null`, identificatori preservati in `note` per correlation audit. Same fix in `stripe/webhook-handler.ts` auto-refund (Reg-C2).
+- **SEO-C1 25 locali dichiarati, solo 2 tradotti**: `routing.ts` elencava 25 codici ma solo `it.json`/`en.json` esistono. Sitemap 450 URL (18 pagine × 25 loc) con 92% duplicati IT → Google penalty thin content. Fix: ridotti a `["it", "en"]`; regola: NON aggiungere locale senza file messages/ effettivo.
+- **SEO-C3/Reg-A1 `<html lang="it">` hardcoded**: il fix Round 10 rompeva `/en` (screen reader voce IT su contenuti EN, segnale hreflang errato). Fix: `lang={await getLocale()}` nel root layout via `next-intl/server`.
+
+### Alte fixate
+- **Reg-A2 Redirect loop admin per role != ADMIN**: user con ruolo diverso da ADMIN faceva signIn→`/admin`→middleware→`/admin/login`→loop. Oggi teorico (schema `User.role` default "ADMIN"), ma difesa preventiva. Fix: in `login/page.tsx` post-signIn `getSession()` + check role, fail-fast con messaggio esplicito senza redirect.
+- **Reg-A3 manualReleaseRange count errato**: `take:10` + `overlapping.length` nel messaggio → sottostima. Fix: `count` separato in parallelo con `findMany({take:10})` → messaggio corretto "N booking (mostrati primi 10 di N)".
+- **SEO-A1 robots.txt mancante**: `/admin` indicizzabile. Fix: `src/app/robots.ts` dinamico con disallow `/admin`, `/api`, `/b`, `/*/prenota/success`, `/*/recupera-prenotazione`.
+- **SEO-M3 `/prenota/[slug]` no noindex**: wizard in SERP con URL contenenti slug servizi. Fix: `export const metadata = { robots: { index: false, follow: false } }`.
+- **B3 Middleware NEXTAUTH_SECRET hardcoded**: migration v5 a `AUTH_SECRET` silenziosamente rompe token decode. Fix: `process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET`.
+- **M2 Cast fuorviante `booking.source as "CLICKANDBOAT"|"NAUTAL"`**: dopo Round 10 che estende `ManualAlertChannel` a BOKUN/BOATAROUND/SAMBOAT il cast era obsoleto. Fix: `as ManualAlertChannel` con import del tipo.
+
+### Deferred CRITICA (richiedono lavoro dedicato, documentati per Plan 6+)
+- **SEO-C2 Zero Open Graph/Twitter Card/canonical/hreflang**: serve `generateMetadata` per-pagina con `openGraph`, `alternates.languages` per-locale, asset `/public/og-*.jpg` 1200×630. Lavoro ~0.5 gg.
+- **i18n-C1 Hardcode italiano massiccio** in `about/contacts/boats/experiences/islands/landing-sections` (~40 stringhe): pagine non passano per `useTranslations`. Migration ~1 gg. Senza, `/en` mostra mix IT+EN.
+- **i18n-C2 DB dynamic content** (`Boat.name`, `Service.name`, `PricingPeriod.label`): singola stringa non multilingua. Richiede business decision + schema change (JSON per-locale come gia' `Service.description`). Plan 6+.
+- **A11y-A2 Contact form NON funzionante**: `contacts/page.tsx` bottone `type="button"` senza action/onSubmit. Utente pensa di inviare, nulla accade. Fix: Server Action con Brevo + Turnstile + rate-limit.
+- **ConsentRecord GDPR + /privacy /terms /cookie-policy** (pre-esistente multi-round): footer link → 404 oggi.
+
+### Tech debt ALTA documentato (Round 11 cleanup audit)
+- **File media 30MB in repo root**: `video_bg_hero.mp4` + duplicati `trimarano*.webp` non usati. `git rm` + BFG history. Effort S.
+- **6 dipendenze dead**: `lenis`, `@base-ui/react`, `recharts`, `react-day-picker`, `@prisma/client`, `@types/node-cron`. `npm uninstall` + drop componenti `ui/chart.tsx`, `ui/calendar.tsx`. Effort M.
+- **`lucide-react@1.8.0` linea abbandonata** (AGENTS Round 4 noto): bump a `^0.540.x`. Effort M.
+- **`next-auth@5.0.0-beta.30`**: bumpare ultimo beta o attendere GA.
+- **Prisma dead models**: `SyncQueue`, `WeatherGuaranteeApplication`, `CrewAvailability`, enum `SyncStatus`, `PaymentMethod.POS/STRIPE_LINK`. Migration drop. Effort M.
+- **HotDayOverride** ha solo read path, no admin CRUD — Plan 6 decision: implementare o droppare.
+- **AGENTS.md 567 righe**: compaction + estrazione round audit in `docs/audits/round-N.md`. Effort L ma alto ROI context agenti.
+- **`.superpowers/` tracciato per errore**: 5 HTML brainstorm pushati. `git rm -r .superpowers/` + gitignore.
+- **9 `@ts-nocheck`** residui in 4 pagine `[locale]` legacy (schema obsoleto) — Plan 6 refactor o tipi espliciti.
+- **tsconfig `noUnusedLocals`/`noUnusedParameters`** disabilitati — abilitare.
+- **ESLint custom rules mancanti** — `no-restricted-imports` bloccare `@prisma/client`, `no-console` (fuori env.ts/instrumentation).
+
+### Test gap coverage — roadmap pre-go-live (~10 gg eng)
+Top 8 gap bloccanti dal Round 11 audit E2E:
+1. Stripe webhook triple dedup + cancel-vs-succeeded race (Round 10) — 1.5 gg
+2. `createPendingDirectBooking` concurrency (advisory lock) — 1 gg
+3. `cancelBooking` refund cascade + rollback + Payment REFUND — 1 gg
+4. Admin Server Actions `requireAdmin` guard — 0.5 gg
+5. Middleware `/admin` JWT role check — 0.5 gg
+6. Bokun webhook E2E (HMAC+dedup+P2002+fan-out+SSRF) — 2 gg
+7. Email parser reale vs fixture cliente — 1.5 gg + dipendenza cliente
+8. Turnstile widget rendering Playwright — 0.5 gg
+
+**Infra mancante**: `@electric-sql/pglite` (test-db), `ioredis-mock`, `@playwright/test`, `msw`/`nock` (fetch mock), GitHub Actions CI (Round 7 deferred).
+
+Primo mese post-launch altri ~8.5 gg (Boataround, charter email, iCal consumer, OTP flow, Stripe reconciliation, availability self-echo, balance reminders, retention GDPR, rate-limit fail-open).
 
 ## Plan roadmap
 

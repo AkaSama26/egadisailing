@@ -8,7 +8,7 @@ import { refundPayment, cancelPaymentIntent } from "@/lib/stripe/payment-intents
 import { releaseDates } from "@/lib/availability/service";
 import { toCents } from "@/lib/pricing/cents";
 import { CHANNELS } from "@/lib/channels";
-import { createManualAlert } from "@/lib/charter/manual-alerts";
+import { createManualAlert, type ManualAlertChannel } from "@/lib/charter/manual-alerts";
 import { logger } from "@/lib/logger";
 import {
   ForbiddenError,
@@ -75,10 +75,11 @@ export async function cancelBooking(bookingId: string): Promise<void> {
             where: { id: p.id },
             data: { status: "REFUNDED", stripeRefundId: ref.id },
           });
-          // Round 10 Int-C1: record REFUND separato (type=REFUND) per
-          // preservare audit fiscale (revenue mese originale non cambia
-          // retroattivamente — a marzo la finanza groupBy status mostra
-          // il refund come voce separata).
+          // Round 10 Int-C1 + Round 11 Reg-C1: record REFUND separato per
+          // audit fiscale (revenue mese originale non cambia retroattivamente),
+          // ma SENZA stripeChargeId/stripeRefundId che sono @unique sul
+          // Payment originale gia' updated sopra. Riferimento preservato
+          // in `note` per correlation audit.
           await tx.payment.create({
             data: {
               bookingId: booking.id,
@@ -86,10 +87,8 @@ export async function cancelBooking(bookingId: string): Promise<void> {
               type: "REFUND",
               method: p.method,
               status: "REFUNDED",
-              stripeChargeId: p.stripeChargeId,
-              stripeRefundId: ref.id,
               processedAt: new Date(),
-              note: `Refund admin-cancel payment ${p.id}`,
+              note: `Refund admin-cancel · paymentId=${p.id} · charge=${p.stripeChargeId} · refund=${ref.id}`,
             },
           });
         });
@@ -128,7 +127,7 @@ export async function cancelBooking(bookingId: string): Promise<void> {
   if (booking.source !== "DIRECT") {
     try {
       await createManualAlert({
-        channel: booking.source as "CLICKANDBOAT" | "NAUTAL", // type pragmatico: il record ammette ogni canale
+        channel: booking.source as ManualAlertChannel,
         boatId: booking.boatId,
         date: booking.startDate,
         action: "UNBLOCK",

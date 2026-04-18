@@ -18,7 +18,9 @@ export default async function middleware(req: NextRequest) {
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const token = await getToken({
       req,
-      secret: process.env.NEXTAUTH_SECRET,
+      // Round 11 B3: fallback a AUTH_SECRET (preferred v5) per migrazione
+      // futura senza rompere middleware silenziosamente.
+      secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
     });
     if (!token || token.role !== "ADMIN") {
       const url = req.nextUrl.clone();

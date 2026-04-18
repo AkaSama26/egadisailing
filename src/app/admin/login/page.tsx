@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -31,14 +31,28 @@ export default function LoginPage() {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (result?.error) {
+      setLoading(false);
       setError("Email o password non validi");
-    } else {
-      router.push("/admin");
-      router.refresh();
+      return;
     }
+
+    // Round 11 Reg-A2: previene redirect loop per utenti con role != ADMIN.
+    // Se domani l'enum User.role ammette VIEWER/EDITOR, o un bug DB-side
+    // cambia il role, la redirect a /admin viene rimbalzata dal middleware
+    // su /admin/login → loop. Fail-fast qui con messaggio esplicito.
+    const session = await getSession();
+    if (session?.user?.role !== "ADMIN") {
+      setLoading(false);
+      setError("Accesso negato: ruolo amministratore richiesto.");
+      // Non facciamo signOut automatico per non perdere il session JWT in caso
+      // di glitch transitorio; l'admin puo' riprovare o contattare tech.
+      return;
+    }
+
+    setLoading(false);
+    router.push("/admin");
+    router.refresh();
   }
 
   return (

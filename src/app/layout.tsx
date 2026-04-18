@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Inter, Caveat } from "next/font/google";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -26,13 +27,17 @@ export const metadata: Metadata = {
   description: "Favignana, Levanzo, Marettimo ti aspettano. Con chef, skipper e il lusso del mare aperto.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Round 11 Reg-A1/SEO-C3: `lang` dinamico dal locale next-intl (derivato
+  // dall'URL `/it/...` / `/en/...`). Default "it" se fuori dal pattern
+  // (es. `/admin/*`, admin e' IT-only).
+  const locale = await getLocale();
   return (
-    <html lang="it" className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
+    <html lang={locale} className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );

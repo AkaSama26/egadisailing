@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { env } from "@/lib/env";
 import { BookingWizard } from "@/components/booking/booking-wizard";
+
+// Round 11 SEO-M3: wizard di prenotazione non indexabile (no SEO value,
+// contiene codici/intent-dati sensibili).
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function BookingPage({
   params,

@@ -88,24 +88,36 @@ export async function manualReleaseRange(
   // PENDING/CONFIRMED attivo, il release lascia il Booking orfano (status
   // attivo ma availability AVAILABLE) → un altro cliente puo' prenotare le
   // stesse date cross-channel. Bloccare e chiedere di cancellare il booking
-  // prima (Round 10 BL-C1).
-  const overlapping = await db.booking.findMany({
-    where: {
-      boatId,
-      status: { in: ["PENDING", "CONFIRMED"] },
-      startDate: { lte: end },
-      endDate: { gte: start },
-    },
-    select: { confirmationCode: true, source: true, status: true },
-    take: 10,
-  });
-  if (overlapping.length > 0) {
-    const refs = overlapping
+  // prima (Round 10 BL-C1). Round 11 Reg-A3: count separato vs take:10 per
+  // non sottostimare il numero totale nel messaggio utente.
+  const overlapWhere = {
+    boatId,
+    status: { in: ["PENDING" as const, "CONFIRMED" as const] },
+    startDate: { lte: end },
+    endDate: { gte: start },
+  };
+  const [overlappingSample, overlappingTotal] = await Promise.all([
+    db.booking.findMany({
+      where: overlapWhere,
+      select: { confirmationCode: true, source: true, status: true },
+      take: 10,
+    }),
+    db.booking.count({ where: overlapWhere }),
+  ]);
+  if (overlappingTotal > 0) {
+    const refs = overlappingSample
       .map((b) => `${b.confirmationCode} (${b.source}, ${b.status})`)
       .join(", ");
+    const suffix =
+      overlappingTotal > overlappingSample.length
+        ? ` (mostrati primi ${overlappingSample.length} di ${overlappingTotal})`
+        : "";
     throw new ValidationError(
-      `Impossibile rilasciare: ${overlapping.length} booking attivo/i nel range. Cancellarli prima. Codici: ${refs}`,
-      { overlapping: overlapping.map((b) => b.confirmationCode) },
+      `Impossibile rilasciare: ${overlappingTotal} booking attivo/i nel range. Cancellarli prima. Codici${suffix}: ${refs}`,
+      {
+        overlappingTotal,
+        overlappingSample: overlappingSample.map((b) => b.confirmationCode),
+      },
     );
   }
 
