@@ -20,9 +20,14 @@ export interface SendEmailOptions {
  */
 export async function sendEmail(opts: SendEmailOptions): Promise<void> {
   if (!env.BREVO_API_KEY) {
+    // In production, env.ts ha gia' enforced la presenza della key quindi
+    // arriveremo qui solo se mancante. Fail loud invece di silent-skip.
+    if (env.NODE_ENV === "production") {
+      throw new ExternalServiceError("Brevo", "BREVO_API_KEY not configured");
+    }
     logger.warn(
       { to: opts.to, subject: opts.subject },
-      "BREVO_API_KEY not set — skipping email send",
+      "BREVO_API_KEY not set in dev — skipping email send",
     );
     return;
   }

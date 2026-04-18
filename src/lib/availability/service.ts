@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import type { AvailabilityStatus } from "@/generated/prisma/enums";
 import { logger } from "@/lib/logger";
 import { toUtcDay, isoDay, eachUtcDayInclusive } from "@/lib/dates";
+import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { fanOutAvailability } from "./fan-out";
 
 export interface UpdateAvailabilityInput {
@@ -16,19 +17,11 @@ export interface UpdateAvailabilityInput {
 const SELF_ECHO_WINDOW_SECONDS = 120;
 
 /**
- * Genera un lock key deterministico a 63-bit per Postgres advisory lock.
- * Usa hashCode semplice su "boatId|YYYY-MM-DD".
+ * Namespace per advisory lock sull'availability. Serializza update concorrenti
+ * sulla stessa (boatId, date). Deve essere coerente tra availability service
+ * e qualunque altro caller che lockki la stessa cella — usare lo stesso helper.
  */
-function advisoryLockKey(boatId: string, day: string): string {
-  const input = `${boatId}|${day}`;
-  const MOD = BigInt("9223372036854775807"); // 2^63 - 1
-  const BASE = BigInt(31);
-  let h = BigInt(0);
-  for (let i = 0; i < input.length; i++) {
-    h = (h * BASE + BigInt(input.charCodeAt(i))) % MOD;
-  }
-  return h.toString();
-}
+const AVAILABILITY_LOCK_NAMESPACE = "availability";
 
 /**
  * Aggiorna BoatAvailability in modo atomico.
@@ -47,12 +40,10 @@ function advisoryLockKey(boatId: string, day: string): string {
 export async function updateAvailability(input: UpdateAvailabilityInput): Promise<void> {
   const dateOnly = toUtcDay(input.date);
   const dayIso = isoDay(dateOnly);
-  const lockKey = advisoryLockKey(input.boatId, dayIso);
 
   const { shouldFanOut } = await db.$transaction(async (tx) => {
     // Advisory lock transazionale: rilasciato auto al commit/rollback.
-    // $executeRawUnsafe perche' pg_advisory_xact_lock ritorna VOID.
-    await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${lockKey})`);
+    await acquireTxAdvisoryLock(tx, AVAILABILITY_LOCK_NAMESPACE, input.boatId, dayIso);
 
     // Re-read con lock gia' acquisito
     const current = await tx.boatAvailability.findUnique({
@@ -92,16 +83,24 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
     return { shouldFanOut: !input.skipFanOut };
   });
 
-  // Fan-out POST-commit (outbox-lite): se crashiamo qui, la consistency DB e' salva
-  // e un reconciliation cron separato puo' recuperare.
+  // Fan-out POST-commit (outbox-lite): se Redis e' giu' logghiamo e andiamo
+  // avanti — la consistency DB e' salva e un reconciliation cron separato
+  // (Plan 3+) recuperera' dalle SyncQueue entry failed.
   if (shouldFanOut) {
-    await fanOutAvailability({
-      boatId: input.boatId,
-      date: dayIso,
-      status: input.status,
-      sourceChannel: input.sourceChannel,
-      originBookingId: input.lockedByBookingId,
-    });
+    try {
+      await fanOutAvailability({
+        boatId: input.boatId,
+        date: dayIso,
+        status: input.status,
+        sourceChannel: input.sourceChannel,
+        originBookingId: input.lockedByBookingId,
+      });
+    } catch (err) {
+      logger.error(
+        { err, boatId: input.boatId, date: dayIso, source: input.sourceChannel },
+        "Fan-out enqueue failed — reconciliation cron will recover",
+      );
+    }
   }
 }
 

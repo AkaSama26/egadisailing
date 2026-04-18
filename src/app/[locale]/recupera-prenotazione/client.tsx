@@ -36,12 +36,22 @@ export function RecuperaPrenotazioneClient() {
           {reqPending ? "Invio..." : "Invia codice"}
         </button>
         {reqState.status === "sent" && (
-          <div className="p-3 rounded-lg bg-emerald-50 text-emerald-700 text-sm">
+          <div
+            role="status"
+            aria-live="polite"
+            className="p-3 rounded-lg bg-emerald-50 text-emerald-700 text-sm"
+          >
             Codice inviato a <strong>{reqState.email}</strong>. Controlla la tua email.
           </div>
         )}
         {reqState.status === "error" && (
-          <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{reqState.message}</div>
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="p-3 rounded-lg bg-red-50 text-red-700 text-sm"
+          >
+            {reqState.message}
+          </div>
         )}
       </form>
 
@@ -73,7 +83,13 @@ export function RecuperaPrenotazioneClient() {
           {verPending ? "Verifica..." : "Accedi"}
         </button>
         {verState.status === "error" && (
-          <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{verState.message}</div>
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="p-3 rounded-lg bg-red-50 text-red-700 text-sm"
+          >
+            {verState.message}
+          </div>
         )}
       </form>
     </div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getRedisConnection } from "@/lib/queue";
 import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/http/with-error-handler";
 
 type CheckResult = { ok: true; latencyMs: number } | { ok: false; error: string };
 
@@ -26,7 +27,7 @@ async function checkRedis(): Promise<CheckResult> {
   }
 }
 
-export async function GET() {
+export const GET = withErrorHandler(async () => {
   const [database, redis] = await Promise.all([checkDatabase(), checkRedis()]);
   const healthy = database.ok && redis.ok;
 
@@ -42,4 +43,4 @@ export async function GET() {
     },
     { status: healthy ? 200 : 503 },
   );
-}
+});

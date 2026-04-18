@@ -28,7 +28,18 @@ interface Props {
 
 export function StripePaymentForm(props: Props) {
   const options = useMemo(
-    () => ({ clientSecret: props.clientSecret, appearance: { theme: "stripe" as const } }),
+    () => ({
+      clientSecret: props.clientSecret,
+      appearance: {
+        theme: "stripe" as const,
+        variables: {
+          colorPrimary: "#d97706",
+          borderRadius: "8px",
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        },
+      },
+    }),
     [props.clientSecret],
   );
   return (

@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
-import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { quotePrice } from "@/lib/pricing/service";
 import { toCents, fromCents } from "@/lib/pricing/cents";
-import { toUtcDay, eachUtcDayInclusive, addHours, addDays } from "@/lib/dates";
+import { toUtcDay, isoDay, addHours, addDays } from "@/lib/dates";
+import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
 import type { DurationType } from "@/generated/prisma/enums";
 
@@ -113,9 +113,9 @@ export async function createPendingDirectBooking(
 
   const result = await db.$transaction(async (tx) => {
     // Advisory lock sulla barca per serializzare i payment-intent concorrenti
-    // sullo stesso startDay. Il lock si rilascia al commit/rollback.
-    const lockKey = hashLockKey(`booking:${service.boatId}:${startDay.toISOString()}`);
-    await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${lockKey})`);
+    // sullo stesso startDay. Stesso namespace di availability/service.ts per
+    // serializzare anche vs blockDates concorrenti.
+    await acquireTxAdvisoryLock(tx, "availability", service.boatId, isoDay(startDay));
 
     // Pre-check: verifica che non ci siano dates BLOCKED nel range
     const conflicts = await tx.boatAvailability.findMany({
@@ -190,14 +190,4 @@ export async function createPendingDirectBooking(
     balanceAmountCents: balanceCents,
     upfrontAmountCents: upfrontCents,
   };
-}
-
-function hashLockKey(input: string): string {
-  const MOD = BigInt("9223372036854775807");
-  const BASE = BigInt(31);
-  let h = BigInt(0);
-  for (let i = 0; i < input.length; i++) {
-    h = (h * BASE + BigInt(input.charCodeAt(i))) % MOD;
-  }
-  return h.toString();
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import Decimal from "decimal.js";
 import { db } from "@/lib/db";
@@ -5,6 +6,13 @@ import { getBookingSession } from "@/lib/session/verify";
 import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
 import { LogoutButton } from "./logout-button";
+
+const STATUS_LABEL: Record<string, string> = {
+  CONFIRMED: "Confermata",
+  PENDING: "In attesa",
+  CANCELLED: "Annullata",
+  REFUNDED: "Rimborsata",
+};
 
 export default async function SessionePage({
   params,
@@ -32,8 +40,14 @@ export default async function SessionePage({
           Accesso come <strong className="text-white">{session.email}</strong>
         </p>
         {bookings.length === 0 && (
-          <div className="bg-white rounded-2xl p-8 text-center text-gray-600">
-            Nessuna prenotazione trovata per {session.email}.
+          <div className="bg-white rounded-2xl p-8 text-center space-y-4">
+            <p className="text-gray-600">Nessuna prenotazione trovata per {session.email}.</p>
+            <Link
+              href={`/${locale || env.APP_LOCALES_DEFAULT}`}
+              className="inline-block px-6 py-3 rounded-full bg-[#d97706] text-white font-bold"
+            >
+              Scopri le esperienze
+            </Link>
           </div>
         )}
         {bookings.map((b) => {
@@ -61,7 +75,7 @@ export default async function SessionePage({
                           : "bg-red-100 text-red-700",
                   ].join(" ")}
                 >
-                  {b.status}
+                  {STATUS_LABEL[b.status] ?? b.status}
                 </span>
               </div>
               <p>

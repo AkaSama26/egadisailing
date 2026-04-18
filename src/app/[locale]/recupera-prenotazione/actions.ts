@@ -12,6 +12,7 @@ import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { env } from "@/lib/env";
 import { ValidationError } from "@/lib/errors";
 import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
+import { db } from "@/lib/db";
 
 const requestSchema = z.object({
   email: z.string().email().max(320),
@@ -50,8 +51,20 @@ export async function requestOtp(
 
     await enforceOtpRequestLimit(email, ip);
 
-    const { code } = await createOtp(email, ip);
-    await sendOtpEmail(email, code);
+    const { code, otpId } = await createOtp(email, ip);
+    try {
+      await sendOtpEmail(email, code);
+    } catch (err) {
+      // Email fallita: invalida l'OTP appena creato per evitare che l'utente
+      // sia bloccato (rate-limit consumato) con codice fantasma.
+      await db.bookingRecoveryOtp
+        .update({
+          where: { id: otpId },
+          data: { expiresAt: new Date() },
+        })
+        .catch(() => {});
+      throw err;
+    }
 
     return { status: "sent", email };
   } catch (err) {
@@ -100,6 +113,13 @@ export async function verifyOtpAndLogin(
             ? "Troppi tentativi, richiedi un nuovo codice"
             : "Codice non valido";
       return { status: "error", message: msg };
+    }
+
+    // Richiedi che esista una Customer con questa email. Previene sessioni
+    // orfane su email arbitrarie (enumeration + quota DoS).
+    const customer = await db.customer.findUnique({ where: { email } });
+    if (!customer) {
+      return { status: "error", message: "Nessuna prenotazione trovata per questa email" };
     }
 
     await createBookingSession(email, ip, userAgent);

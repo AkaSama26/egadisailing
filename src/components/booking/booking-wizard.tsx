@@ -84,7 +84,13 @@ export function BookingWizard(props: Props) {
   return (
     <div className="bg-white rounded-2xl shadow-2xl p-8">
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm"
+        >
+          {error}
+        </div>
       )}
 
       {step === "date" && (

@@ -7,27 +7,32 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { toCents, formatEur, formatEurCents } from "@/lib/pricing/cents";
 import { parseBookingMetadata } from "./metadata";
+import { ValidationError } from "@/lib/errors";
 
 /**
- * Handler dei webhook Stripe. Event-level idempotency via tabella
- * ProcessedStripeEvent — duplicate event.id ritorna early.
+ * Handler dei webhook Stripe.
+ *
+ * Idempotency: marker `ProcessedStripeEvent` inserito ALLA FINE (dopo tutti
+ * i side-effect). Se il processo crasha a metà:
+ *  - Stripe riprova (5xx)
+ *  - al secondo tentativo, Payment.stripeChargeId @unique previene doppio insert
+ *  - booking.updateMany(status=PENDING) previene doppia transizione
+ *  - blockDates e' idempotente (self-echo)
+ *  - marker viene finalmente scritto
+ *
+ * Il marker serve solo a evitare lavoro ridondante quando l'handler e' gia'
+ * completato correttamente (non e' l'unica linea di difesa contro duplicati).
  */
 export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
   logger.info({ type: event.type, id: event.id }, "Stripe event received");
 
-  // Event-level idempotency: insert con chiave primaria event.id.
-  // Se esiste, P2002 → early return.
-  try {
-    await db.processedStripeEvent.create({
-      data: { eventId: event.id, eventType: event.type },
-    });
-  } catch (err) {
-    const message = (err as Error).message ?? "";
-    if (message.includes("Unique constraint") || message.includes("P2002")) {
-      logger.info({ eventId: event.id }, "Duplicate Stripe event, skipping");
-      return;
-    }
-    throw err;
+  // Early return se event gia' processato completamente
+  const existing = await db.processedStripeEvent.findUnique({
+    where: { eventId: event.id },
+  });
+  if (existing) {
+    logger.info({ eventId: event.id }, "Duplicate Stripe event, skipping");
+    return;
   }
 
   switch (event.type) {
@@ -43,6 +48,22 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
     default:
       logger.debug({ type: event.type }, "Unhandled stripe event");
   }
+
+  // Mark event as processed AFTER all side-effects succeeded.
+  // Unique constraint previene doppio insert se Stripe retry atterra in
+  // un'altra istanza dopo il commit.
+  try {
+    await db.processedStripeEvent.create({
+      data: { eventId: event.id, eventType: event.type },
+    });
+  } catch (err) {
+    const message = (err as Error).message ?? "";
+    if (message.includes("Unique constraint") || message.includes("P2002")) {
+      logger.info({ eventId: event.id }, "Event already marked processed by another worker");
+      return;
+    }
+    throw err;
+  }
 }
 
 async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void> {
@@ -50,12 +71,15 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
 
   const charge = typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
   if (!charge) {
-    logger.error({ piId: pi.id }, "PaymentIntent succeeded but no latest_charge");
-    return;
+    // Lasciamo propagare: Stripe fara' retry. In tempo utile latest_charge sara'
+    // popolato. Meglio retry che silent-return (che perdeva l'evento dopo insert
+    // del marker quando questo era all'inizio).
+    throw new ValidationError(
+      `PaymentIntent ${pi.id} succeeded ma latest_charge mancante — retry richiesto`,
+    );
   }
 
   // Amount verification: confronta con valore atteso in DB.
-  // Previene spoofing di metadata su PI con amount_received arbitrario.
   const booking = await db.booking.findUnique({
     where: { id: metadata.bookingId },
     include: { directBooking: true },
@@ -85,6 +109,8 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
         : balanceCents;
 
   if (pi.amount_received !== expectedCents) {
+    // Hard-fail: throw so Stripe retries AND operator gets alerted via logs.
+    // A silent return would lose the event after marker insert.
     logger.error(
       {
         bookingId: metadata.bookingId,
@@ -92,9 +118,11 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
         expectedCents,
         actualCents: pi.amount_received,
       },
-      "Payment amount mismatch — NOT confirming booking. Manual review required.",
+      "Payment amount mismatch — manual review required",
     );
-    return;
+    throw new ValidationError(
+      `Payment amount mismatch for booking ${metadata.bookingId}: expected ${expectedCents}, got ${pi.amount_received}`,
+    );
   }
 
   await confirmDirectBookingAfterPayment({
@@ -105,7 +133,6 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
     paymentType: metadata.paymentType,
   });
 
-  // Email di conferma: solo al primo pagamento (non al saldo).
   if (metadata.paymentType !== "BALANCE") {
     await sendConfirmationEmail(metadata.bookingId, pi.amount_received).catch((err) => {
       logger.error(
@@ -123,7 +150,7 @@ async function sendConfirmationEmail(bookingId: string, paidCents: number): Prom
   });
   if (!booking) return;
 
-  const { subject, html } = bookingConfirmationTemplate({
+  const { subject, html, text } = bookingConfirmationTemplate({
     customerName: `${booking.customer.firstName} ${booking.customer.lastName}`,
     confirmationCode: booking.confirmationCode,
     serviceName: booking.service.name,
@@ -142,22 +169,33 @@ async function sendConfirmationEmail(bookingId: string, paidCents: number): Prom
     toName: `${booking.customer.firstName} ${booking.customer.lastName}`,
     subject,
     htmlContent: html,
+    textContent: text,
   });
 }
 
 async function onPaymentIntentFailed(pi: Stripe.PaymentIntent): Promise<void> {
-  const bookingId = pi.metadata?.bookingId;
-  if (!bookingId) return;
-  logger.warn(
-    { bookingId, lastPaymentError: pi.last_payment_error?.message },
-    "Payment intent failed",
-  );
+  // Tolerant metadata parsing: se il PI era orfano (no booking), logga e basta.
+  try {
+    const metadata = parseBookingMetadata(pi.metadata);
+    logger.warn(
+      {
+        bookingId: metadata.bookingId,
+        paymentType: metadata.paymentType,
+        lastPaymentError: pi.last_payment_error?.message,
+      },
+      "Payment intent failed",
+    );
+  } catch {
+    logger.warn(
+      { piId: pi.id, lastPaymentError: pi.last_payment_error?.message },
+      "Payment intent failed without bookingId metadata",
+    );
+  }
 }
 
 async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   const payment = await db.payment.findFirst({ where: { stripeChargeId: charge.id } });
   if (!payment) return;
-  // Idempotent: se gia' REFUNDED non fare nulla
   if (payment.status === "REFUNDED") return;
 
   await db.payment.update({
