@@ -75,5 +75,25 @@ export function startCronScheduler(): void {
     }
   });
 
+  // Weather check: ogni mattina 07:00 Europe/Rome. Alert admin su booking
+  // CONFIRMED nei prossimi 7gg con risk HIGH/EXTREME (Plan 6).
+  cron.schedule(
+    "0 7 * * *",
+    async () => {
+      try {
+        const url = `${env.APP_URL}/api/cron/weather-check`;
+        const res = await fetch(url, {
+          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+        });
+        if (!res.ok) {
+          logger.warn({ status: res.status }, "weather-check cron non-2xx");
+        }
+      } catch (err) {
+        logger.error({ err }, "weather-check cron fetch failed");
+      }
+    },
+    { timezone: "Europe/Rome" },
+  );
+
   logger.info("Cron scheduler started");
 }

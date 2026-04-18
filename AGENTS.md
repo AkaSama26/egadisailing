@@ -8,9 +8,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 completati + 11 round di audit applicati. Plan 6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 11 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
 
-**Test suite**: 95 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter.
+**Test suite**: 103 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment.
 
 ## Stack
 
@@ -595,6 +595,38 @@ Top 8 gap bloccanti dal Round 11 audit E2E:
 
 Primo mese post-launch altri ~8.5 gg (Boataround, charter email, iCal consumer, OTP flow, Stripe reconciliation, availability self-echo, balance reminders, retention GDPR, rate-limit fail-open).
 
+## Plan 6 — Weather + notifications (core completato)
+
+Weather system + notification dispatcher admin integrati nei flussi booking.
+
+### Moduli weather
+- `src/lib/weather/open-meteo.ts` — client Open-Meteo (free, no API key) per Trapani 38.02/12.54. Daily forecast + marine wave height. Timeout 10s via `AbortSignal`.
+- `src/lib/weather/risk-assessment.ts` — classifica rischio in 4 livelli LOW/MEDIUM/HIGH/EXTREME basato su vento km/h, onde m, pioggia %, temperatura min. Soglie default per Mediterraneo. 8 test vitest.
+- `src/lib/weather/service.ts` — `getWeatherForDate(date)` con cache `WeatherForecastCache` 6h + fallback stale-cache se Open-Meteo unreachable (degraded mode).
+- `src/lib/weather/reassurance.ts` — messaggi rassicuranti in IT per ogni livello rischio (condizioni ideali / mare mosso / condizioni impegnative / difficilmente praticabile).
+- `src/components/booking/weather-info-card.tsx` — UI card con titolo/body/stat temp/vento/onde/pioggia. Color coded per risk level.
+
+### Notification dispatcher
+- `src/lib/notifications/events.ts` — tipi eventi (NEW_BOOKING_*, BOOKING_CANCELLED, PAYMENT_FAILED, SYNC_FAILURE, WEATHER_ALERT) × canali (EMAIL/TELEGRAM).
+- `src/lib/notifications/dispatcher.ts` — route template → sendEmail Brevo + sendTelegramMessage (fallisce ognuno indipendentemente).
+- `src/lib/notifications/telegram.ts` — bot API stub con graceful skip se `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` non configurati. Timeout 10s.
+- Templates: `new-booking`, `weather-alert`, `booking-cancelled` — tutti con `escapeHtml` anti-injection.
+- ENV nuove: `ADMIN_EMAIL` (default admin@egadisailing.com), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (entrambi optional).
+
+### Cron + integrazioni
+- `GET /api/cron/weather-check` — ogni mattina 07:00 Europe/Rome: scan booking CONFIRMED nei prossimi 7gg, dispatch WEATHER_ALERT su risk HIGH/EXTREME. Schedulato in `cron/scheduler.ts`.
+- Stripe webhook `onPaymentIntentSucceeded` dispatcha `NEW_BOOKING_DIRECT` post-email customer.
+- Admin `cancelBooking` dispatcha `BOOKING_CANCELLED` dopo audit.
+
+### Deferred Plan 6+
+- **Stormglass fallback** (Task 2): secondo provider meteo se Open-Meteo giu'. Richiede API key (freemium).
+- **Telegram bot**: creare bot + fornire token/chatId. Per ora `TELEGRAM_BOT_TOKEN` opzionale, dispatcher no-op.
+- **Playwright E2E** (Task 9-10): `@playwright/test` non installato, `tests/e2e/` vuoto. Serve per booking-flow + OTP + Bokun webhook smoke. Infra test-db + Stripe fixture per integration.
+- **Sentry wiring**: `SENTRY_DSN` in `.env.example` commentato. Init in `src/instrumentation.ts` + `withErrorHandler` 500 branch.
+- **Alternative dates suggestion** (Task 4 Plan): se date selezionata risk EXTREME, mostra 3 date piu' vicine con risk LOW. UI da integrare nel wizard.
+- **Weather Guarantee** business decision: model ricreato se cliente conferma feature.
+- **Metrics funnel** (conversion, Stripe latency): fuori scope Plan 6 core.
+
 ## Plan roadmap
 
 1. ✅ Plan 1 — DB + Backend foundation (completato)
@@ -602,6 +634,7 @@ Primo mese post-launch altri ~8.5 gg (Boataround, charter email, iCal consumer, 
 3. ✅ Plan 3 — Bokun integration (completato + round 5 audit fixes)
 4. ✅ Plan 4 — Charter integrations (iCal export + Boataround + SamBoat/Click&Boat/Nautal email parser)
 5. ✅ Plan 5 — Dashboard admin (13 sezioni operativa, rotte italiane)
+6. ✅ Plan 6 — Weather system + notifications (core: client Open-Meteo, risk assessment, cron alert admin, notification dispatcher email+Telegram, integrazioni booking confirm/cancel). Deferred: E2E Playwright, Sentry, Stormglass fallback.
 6. ⏳ Plan 6 — Weather + notifiche + E2E
 
 Piani dettagliati in `docs/superpowers/plans/2026-04-17-plan-*.md`.

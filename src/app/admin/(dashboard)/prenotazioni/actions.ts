@@ -37,7 +37,12 @@ export async function cancelBooking(bookingId: string): Promise<void> {
 
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    include: { payments: true, directBooking: true },
+    include: {
+      payments: true,
+      directBooking: true,
+      customer: { select: { firstName: true, lastName: true } },
+      service: { select: { name: true } },
+    },
   });
   if (!booking) throw new NotFoundError("Booking", bookingId);
   if (booking.status === "CANCELLED" || booking.status === "REFUNDED") {
@@ -154,6 +159,26 @@ export async function cancelBooking(bookingId: string): Promise<void> {
       refundsAttempted: refundsSucceeded + refundErrors.length,
     },
   });
+
+  // Plan 6 Task 8: notify admin su cancel (audit backup + Telegram).
+  try {
+    const { dispatchNotification } = await import("@/lib/notifications/dispatcher");
+    await dispatchNotification({
+      type: "BOOKING_CANCELLED",
+      channels: ["EMAIL"],
+      payload: {
+        confirmationCode: booking.confirmationCode,
+        customerName: `${booking.customer?.firstName ?? ""} ${booking.customer?.lastName ?? ""}`.trim() || "n/a",
+        serviceName: booking.service?.name ?? "n/a",
+        startDate: booking.startDate.toISOString().slice(0, 10),
+        source: booking.source,
+        refundAmount:
+          refundsSucceeded > 0 ? `${refundsSucceeded} pagamento/i refundato/i` : undefined,
+      },
+    });
+  } catch (err) {
+    logger.warn({ err, bookingId }, "Cancel notification failed (non-blocking)");
+  }
 
   revalidatePath(`/admin/prenotazioni/${bookingId}`);
   revalidatePath("/admin/prenotazioni");

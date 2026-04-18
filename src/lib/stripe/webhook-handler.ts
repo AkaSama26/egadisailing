@@ -197,7 +197,37 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
         "Confirmation email failed (booking still confirmed)",
       );
     });
+
+    // Plan 6 Task 8: alert admin su nuova prenotazione DIRECT.
+    void notifyNewBooking(metadata.bookingId, "DIRECT").catch((err) =>
+      logger.error({ err, bookingId: metadata.bookingId }, "Admin notify failed"),
+    );
   }
+}
+
+async function notifyNewBooking(bookingId: string, source: string): Promise<void> {
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      service: { select: { name: true } },
+      customer: { select: { firstName: true, lastName: true } },
+    },
+  });
+  if (!booking) return;
+  const { dispatchNotification } = await import("@/lib/notifications/dispatcher");
+  await dispatchNotification({
+    type: "NEW_BOOKING_DIRECT",
+    channels: ["EMAIL"],
+    payload: {
+      source,
+      confirmationCode: booking.confirmationCode,
+      customerName: `${booking.customer.firstName} ${booking.customer.lastName}`.trim(),
+      serviceName: booking.service.name,
+      startDate: booking.startDate.toISOString().slice(0, 10),
+      numPeople: booking.numPeople,
+      totalPrice: formatEur(booking.totalPrice),
+    },
+  });
 }
 
 async function sendConfirmationEmail(bookingId: string, paidCents: number): Promise<void> {

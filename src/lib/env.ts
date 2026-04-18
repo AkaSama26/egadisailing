@@ -69,6 +69,11 @@ const envSchema = z.object({
     .default("1.15")
     .refine((s) => !isNaN(parseFloat(s)) && parseFloat(s) >= 1, "must be a number >= 1.0"),
 
+  // Admin notifications (Plan 6)
+  ADMIN_EMAIL: z.string().email().default("admin@egadisailing.com"),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_CHAT_ID: z.string().optional(),
+
   // Boataround (Plan 4)
   BOATAROUND_API_URL: z.string().url().default("https://partner-api.boataround.com"),
   BOATAROUND_API_TOKEN: z.string().optional(),
