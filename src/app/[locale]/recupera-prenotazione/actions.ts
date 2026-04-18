@@ -11,19 +11,12 @@ import { createBookingSession } from "@/lib/session/create";
 import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { env } from "@/lib/env";
 import { ValidationError } from "@/lib/errors";
+import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 
 const requestSchema = z.object({
   email: z.string().email().max(320),
   turnstileToken: z.string().optional(),
 });
-
-function getClientIp(h: Headers): string {
-  return (
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip")?.trim() ??
-    "unknown"
-  );
-}
 
 export interface RequestOtpState {
   status: "idle" | "sent" | "error";
@@ -85,9 +78,9 @@ export async function verifyOtpAndLogin(
 ): Promise<VerifyOtpState> {
   const h = await headers();
   const ip = getClientIp(h);
-  const userAgent = h.get("user-agent") ?? null;
+  const userAgent = getUserAgent(h);
 
-  let locale = env.APP_LOCALES_DEFAULT;
+  const locale = env.APP_LOCALES_DEFAULT;
 
   try {
     const parsed = verifySchema.parse({

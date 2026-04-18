@@ -19,6 +19,7 @@ function getStripe(): Promise<Stripe | null> {
 }
 
 interface Props {
+  locale: string;
   clientSecret: string;
   confirmationCode: string;
   amountCents: number;
@@ -37,7 +38,7 @@ export function StripePaymentForm(props: Props) {
   );
 }
 
-function InnerForm({ amountCents, confirmationCode, onSuccess }: Props) {
+function InnerForm({ locale, amountCents, confirmationCode, onSuccess }: Props) {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ function InnerForm({ amountCents, confirmationCode, onSuccess }: Props) {
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/it/prenota/success/${confirmationCode}`,
+        return_url: `${window.location.origin}/${locale}/prenota/success/${confirmationCode}`,
       },
       redirect: "if_required",
     });

@@ -371,7 +371,7 @@ model Payment {
   type           PaymentType
   method         PaymentMethod
   status         PaymentStatus @default(PENDING)
-  stripeChargeId String?
+  stripeChargeId String?       @unique
   stripeRefundId String?
   note           String?
   createdAt      DateTime      @default(now())
@@ -381,6 +381,17 @@ model Payment {
 
   @@index([bookingId, type])
   @@index([status])
+}
+
+/// Event-level idempotency per webhook Stripe: se vediamo lo stesso event.id
+/// due volte (retry / replay attack entro tolerance), il secondo insert
+/// fallisce con P2002 e il worker ritorna early.
+model ProcessedStripeEvent {
+  eventId     String   @id
+  eventType   String
+  processedAt DateTime @default(now())
+
+  @@index([eventType, processedAt])
 }
 
 // ═══════════════════════════════════════════════════════════

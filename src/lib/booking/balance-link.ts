@@ -3,6 +3,8 @@ import { stripe } from "@/lib/stripe/server";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { toCents } from "@/lib/pricing/cents";
+import { buildBookingMetadata } from "@/lib/stripe/metadata";
 
 /**
  * Crea un Stripe Checkout Session per il saldo di una DirectBooking.
@@ -18,14 +20,15 @@ export async function createBalancePaymentLink(bookingId: string): Promise<strin
   }
 
   const balanceAmount = booking.directBooking.balanceAmount;
-  if (!balanceAmount || new Decimal(balanceAmount.toString()).lte(0)) {
+  if (!balanceAmount || new Decimal(balanceAmount).lte(0)) {
     throw new ValidationError("No balance due for this booking");
   }
 
-  const balanceCents = new Decimal(balanceAmount.toString())
-    .mul(100)
-    .toDecimalPlaces(0, Decimal.ROUND_HALF_UP)
-    .toNumber();
+  const metadata = buildBookingMetadata({
+    bookingId: booking.id,
+    confirmationCode: booking.confirmationCode,
+    paymentType: "BALANCE",
+  });
 
   const session = await stripe().checkout.sessions.create({
     mode: "payment",
@@ -36,25 +39,15 @@ export async function createBalancePaymentLink(bookingId: string): Promise<strin
         quantity: 1,
         price_data: {
           currency: "eur",
-          unit_amount: balanceCents,
+          unit_amount: toCents(balanceAmount),
           product_data: {
             name: `Saldo ${booking.confirmationCode} · ${booking.service.name}`,
           },
         },
       },
     ],
-    payment_intent_data: {
-      metadata: {
-        bookingId: booking.id,
-        confirmationCode: booking.confirmationCode,
-        paymentType: "BALANCE",
-      },
-    },
-    metadata: {
-      bookingId: booking.id,
-      confirmationCode: booking.confirmationCode,
-      paymentType: "BALANCE",
-    },
+    payment_intent_data: { metadata },
+    metadata,
     success_url: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/prenota/success/${booking.confirmationCode}`,
     cancel_url: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/recupera-prenotazione`,
   });

@@ -58,3 +58,19 @@ export function daysBetween(start: Date, end: Date): number {
   const ms = toUtcDay(end).getTime() - toUtcDay(start).getTime();
   return Math.round(ms / (24 * 60 * 60 * 1000)) + 1;
 }
+
+/**
+ * Aggiunge giorni a una date preservando UTC midnight normalization.
+ */
+export function addDays(d: Date, days: number): Date {
+  const day = toUtcDay(d);
+  day.setUTCDate(day.getUTCDate() + days);
+  return day;
+}
+
+/**
+ * Aggiunge ore a una date (non normalizzato a midnight).
+ */
+export function addHours(d: Date, hours: number): Date {
+  return new Date(d.getTime() + hours * 60 * 60 * 1000);
+}

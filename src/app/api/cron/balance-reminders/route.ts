@@ -5,28 +5,26 @@ import { sendEmail } from "@/lib/email/brevo";
 import { balanceReminderTemplate } from "@/lib/email/templates/balance-reminder";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { formatEur } from "@/lib/pricing/cents";
+import { toUtcDay, addDays } from "@/lib/dates";
+import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
 
 export const runtime = "nodejs";
 
 /**
- * Cron quotidiano: trova le DirectBooking con saldo pendente per esperienze
- * che partono tra ~7 giorni, genera payment link Stripe e manda email.
- * Marca `balanceReminderSentAt` per non ripetere.
+ * Cron quotidiano: invia payment link per il saldo di booking con experienza
+ * tra ~7 giorni e balanceReminderSentAt null.
  *
- * Auth: header `Authorization: Bearer <CRON_SECRET>`.
+ * Claim-then-do: updateMany guard su balanceReminderSentAt=null prima di
+ * creare il link Stripe. Se un'altra istanza ha gia' claimato, count=0 e
+ * skippiamo → no doppio invio anche se il cron parte 2 volte.
  */
-export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export const GET = withErrorHandler(async (req: Request) => {
+  requireBearerSecret(req, env.CRON_SECRET);
 
-  const now = new Date();
-  const sevenDaysFrom = new Date(now);
-  sevenDaysFrom.setUTCDate(sevenDaysFrom.getUTCDate() + 7);
-  sevenDaysFrom.setUTCHours(0, 0, 0, 0);
-  const eightDaysFrom = new Date(sevenDaysFrom);
-  eightDaysFrom.setUTCDate(eightDaysFrom.getUTCDate() + 1);
+  const today = toUtcDay(new Date());
+  const sevenDaysFrom = addDays(today, 7);
+  const eightDaysFrom = addDays(today, 8);
 
   const candidates = await db.booking.findMany({
     where: {
@@ -46,13 +44,23 @@ export async function GET(req: Request) {
 
   for (const b of candidates) {
     try {
+      // Claim-then-do: solo chi vince l'updateMany (count=1) procede.
+      const claim = await db.directBooking.updateMany({
+        where: { bookingId: b.id, balanceReminderSentAt: null },
+        data: { balanceReminderSentAt: new Date() },
+      });
+      if (claim.count === 0) {
+        results.push({ bookingId: b.id, sent: false, error: "already claimed" });
+        continue;
+      }
+
       const link = await createBalancePaymentLink(b.id);
-      const { subject, html } = balanceReminderTemplate({
+      const { subject, html, text } = balanceReminderTemplate({
         customerName: `${b.customer.firstName} ${b.customer.lastName}`,
         confirmationCode: b.confirmationCode,
         serviceName: b.service.name,
         startDate: b.startDate.toLocaleDateString("it-IT"),
-        balanceAmount: `€${b.directBooking!.balanceAmount!.toFixed(2)}`,
+        balanceAmount: formatEur(b.directBooking!.balanceAmount!),
         paymentLinkUrl: link,
       });
       await sendEmail({
@@ -60,17 +68,21 @@ export async function GET(req: Request) {
         toName: `${b.customer.firstName} ${b.customer.lastName}`,
         subject,
         htmlContent: html,
-      });
-      await db.directBooking.update({
-        where: { bookingId: b.id },
-        data: { balanceReminderSentAt: new Date() },
+        textContent: text,
       });
       results.push({ bookingId: b.id, sent: true });
     } catch (err) {
       logger.error({ err, bookingId: b.id }, "Balance reminder failed");
-      results.push({ bookingId: b.id, sent: false, error: (err as Error).message });
+      // Release claim per retry futuro (altrimenti il booking e' "morto")
+      await db.directBooking
+        .update({
+          where: { bookingId: b.id },
+          data: { balanceReminderSentAt: null },
+        })
+        .catch(() => {});
+      results.push({ bookingId: b.id, sent: false, error: "send_failed" });
     }
   }
 
   return NextResponse.json({ processed: candidates.length, results });
-}
+});

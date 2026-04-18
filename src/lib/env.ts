@@ -62,13 +62,28 @@ function loadEnv() {
     throw new Error("Environment validation failed");
   }
 
-  // Regole extra per production
-  if (parsed.data.NODE_ENV === "production") {
+  // Regole extra per production runtime. Saltate durante `next build`
+  // (NEXT_PHASE=phase-production-build) perche' la build gira con
+  // NODE_ENV=production ma i secret non sono obbligatori al compile.
+  const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+  if (parsed.data.NODE_ENV === "production" && !isBuildPhase) {
     if (!parsed.data.SEED_ADMIN_PASSWORD) {
       throw new Error("SEED_ADMIN_PASSWORD is required in production");
     }
-    if (!parsed.data.STRIPE_SECRET_KEY) {
-      console.warn("⚠️  STRIPE_SECRET_KEY missing in production");
+    if (!parsed.data.STRIPE_SECRET_KEY || !parsed.data.STRIPE_WEBHOOK_SECRET) {
+      throw new Error("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET required in production");
+    }
+    if (!parsed.data.BREVO_API_KEY) {
+      throw new Error("BREVO_API_KEY required in production");
+    }
+    if (!parsed.data.TURNSTILE_SECRET_KEY || !parsed.data.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
+      throw new Error("TURNSTILE_SECRET_KEY + NEXT_PUBLIC_TURNSTILE_SITE_KEY required in production");
+    }
+    if (
+      parsed.data.CRON_SECRET === "dev-cron-please-change" ||
+      parsed.data.CRON_SECRET.length < 32
+    ) {
+      throw new Error("CRON_SECRET must be changed and >= 32 chars in production");
     }
   }
 

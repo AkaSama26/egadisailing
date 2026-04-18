@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true });
   } catch (err) {
     logger.error({ err, type: event.type }, "Stripe webhook handler error");
-    // Return 500 so Stripe retries (important: the handler must be idempotent).
+    // 500 triggera retry di Stripe — handler e' idempotente via ProcessedStripeEvent
     return NextResponse.json({ error: "Handler failed" }, { status: 500 });
   }
 }

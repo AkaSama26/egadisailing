@@ -2,77 +2,79 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createPendingDirectBooking } from "@/lib/booking/create-direct";
 import { createPaymentIntent } from "@/lib/stripe/payment-intents";
-import { logger } from "@/lib/logger";
-import { AppError } from "@/lib/errors";
+import { buildBookingMetadata } from "@/lib/stripe/metadata";
+import { enforceRateLimit } from "@/lib/rate-limit/service";
+import { getClientIp } from "@/lib/http/client-ip";
+import { withErrorHandler } from "@/lib/http/with-error-handler";
 
 export const runtime = "nodejs";
 
 const schema = z.object({
-  serviceId: z.string().min(1),
+  serviceId: z.string().min(1).max(100),
   startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
   numPeople: z.number().int().min(1).max(50),
   customer: z.object({
-    email: z.string().email(),
-    firstName: z.string().min(1).max(100),
-    lastName: z.string().min(1).max(100),
+    email: z.string().email().max(320),
+    // Escape HTML-dangerous chars: riducono rischio XSS nei template email
+    firstName: z.string().min(1).max(100).regex(/^[^<>]*$/, "Invalid chars"),
+    lastName: z.string().min(1).max(100).regex(/^[^<>]*$/, "Invalid chars"),
     phone: z.string().max(30).optional(),
     nationality: z.string().length(2).optional(),
     language: z.string().max(8).optional(),
   }),
   paymentSchedule: z.enum(["FULL", "DEPOSIT_BALANCE"]),
   depositPercentage: z.number().int().min(1).max(100).optional(),
-  weatherGuarantee: z.boolean().default(false),
   notes: z.string().max(1000).optional(),
 });
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const input = schema.parse(body);
+export const POST = withErrorHandler(async (req: Request) => {
+  const ip = getClientIp(req.headers);
 
-    const booking = await createPendingDirectBooking({
-      serviceId: input.serviceId,
-      startDate: new Date(input.startDate),
-      endDate: new Date(input.endDate),
-      numPeople: input.numPeople,
-      customer: input.customer,
-      paymentSchedule: input.paymentSchedule,
-      depositPercentage: input.depositPercentage,
-      weatherGuarantee: input.weatherGuarantee,
-      notes: input.notes,
-    });
+  // Rate limit aggressivo: 10/hour per IP, 5/hour per email
+  await enforceRateLimit({
+    identifier: ip,
+    scope: "PAYMENT_INTENT_IP_HOUR",
+    limit: 10,
+    windowSeconds: 3600,
+  });
 
-    const pi = await createPaymentIntent({
-      amountCents: booking.upfrontAmountCents,
-      customerEmail: input.customer.email,
-      customerName: `${input.customer.firstName} ${input.customer.lastName}`,
-      description: `Egadisailing ${booking.confirmationCode}`,
-      metadata: {
-        bookingId: booking.bookingId,
-        confirmationCode: booking.confirmationCode,
-        paymentType: input.paymentSchedule === "DEPOSIT_BALANCE" ? "DEPOSIT" : "FULL",
-      },
-    });
+  const body = await req.json();
+  const input = schema.parse(body);
 
-    return NextResponse.json({
+  await enforceRateLimit({
+    identifier: input.customer.email.toLowerCase(),
+    scope: "PAYMENT_INTENT_EMAIL_HOUR",
+    limit: 5,
+    windowSeconds: 3600,
+  });
+
+  const booking = await createPendingDirectBooking({
+    serviceId: input.serviceId,
+    startDate: new Date(input.startDate),
+    numPeople: input.numPeople,
+    customer: input.customer,
+    paymentSchedule: input.paymentSchedule,
+    depositPercentage: input.depositPercentage,
+    notes: input.notes,
+  });
+
+  const pi = await createPaymentIntent({
+    amountCents: booking.upfrontAmountCents,
+    customerEmail: input.customer.email,
+    customerName: `${input.customer.firstName} ${input.customer.lastName}`,
+    description: `Egadisailing ${booking.confirmationCode}`,
+    metadata: buildBookingMetadata({
+      bookingId: booking.bookingId,
       confirmationCode: booking.confirmationCode,
-      clientSecret: pi.clientSecret,
-      amountCents: booking.upfrontAmountCents,
-      totalCents: booking.totalAmountCents,
-      balanceCents: booking.balanceAmountCents,
-    });
-  } catch (err) {
-    if (err instanceof AppError) {
-      return NextResponse.json({ error: err.toClientJSON() }, { status: err.statusCode });
-    }
-    if (err instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: { code: "VALIDATION_ERROR", issues: err.issues } },
-        { status: 400 },
-      );
-    }
-    logger.error({ err }, "payment-intent route error");
-    return NextResponse.json({ error: { code: "INTERNAL_ERROR" } }, { status: 500 });
-  }
-}
+      paymentType: input.paymentSchedule === "DEPOSIT_BALANCE" ? "DEPOSIT" : "FULL",
+    }),
+  });
+
+  return NextResponse.json({
+    confirmationCode: booking.confirmationCode,
+    clientSecret: pi.clientSecret,
+    amountCents: booking.upfrontAmountCents,
+    totalCents: booking.totalAmountCents,
+    balanceCents: booking.balanceAmountCents,
+  });
+});

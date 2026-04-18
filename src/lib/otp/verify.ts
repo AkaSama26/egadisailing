@@ -9,12 +9,15 @@ export interface OtpVerifyResult {
 }
 
 /**
- * Verifica un OTP per una email. bcrypt.compare e' intrinsecamente
- * timing-safe (usa crypto.timingSafeEqual internamente), quindi no leak.
+ * Verifica un OTP in modo atomico (no TOCTOU).
  *
- * Incrementa `attempts` su fallimento, invalida l'OTP dopo `verifyAttemptsPerCode`
- * tentativi. Se le richieste fallite per email in 1h superano la soglia,
- * blocca l'email per 1h.
+ * Race mitigation:
+ * - Increment attempts via `updateMany({ where: { attempts < max, ... } })`:
+ *   solo il primo update con count=1 procede.
+ * - Claim-then-do su usedAt: il winner marca usedAt, gli altri vedono
+ *   ALREADY_USED.
+ *
+ * bcrypt.compare e' intrinsecamente timing-safe.
  */
 export async function verifyOtp(email: string, code: string): Promise<OtpVerifyResult> {
   const now = new Date();
@@ -37,7 +40,6 @@ export async function verifyOtp(email: string, code: string): Promise<OtpVerifyR
       where: { id: otp.id },
       data: { expiresAt: now },
     });
-    // Blocca l'email per 1h se ha esaurito tentativi su questo codice
     await blockEmail(email, 60 * 60);
     return { valid: false, reason: "TOO_MANY_ATTEMPTS" };
   }
@@ -45,17 +47,29 @@ export async function verifyOtp(email: string, code: string): Promise<OtpVerifyR
   const match = await bcrypt.compare(code, otp.codeHash);
 
   if (!match) {
-    await db.bookingRecoveryOtp.update({
-      where: { id: otp.id },
+    // Atomic increment con guard: solo se attempts e' ancora < max
+    const result = await db.bookingRecoveryOtp.updateMany({
+      where: {
+        id: otp.id,
+        usedAt: null,
+        attempts: { lt: OTP_LIMITS.verifyAttemptsPerCode },
+      },
       data: { attempts: { increment: 1 } },
     });
+    if (result.count === 0) {
+      return { valid: false, reason: "TOO_MANY_ATTEMPTS" };
+    }
     return { valid: false, reason: "INVALID" };
   }
 
-  await db.bookingRecoveryOtp.update({
-    where: { id: otp.id },
+  // Claim atomico: solo il primo a fare updateMany vince.
+  const claim = await db.bookingRecoveryOtp.updateMany({
+    where: { id: otp.id, usedAt: null },
     data: { usedAt: now },
   });
+  if (claim.count === 0) {
+    return { valid: false, reason: "ALREADY_USED" };
+  }
 
   return { valid: true, email: otp.email };
 }

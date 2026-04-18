@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { getBookingSession } from "@/lib/session/verify";
 import { env } from "@/lib/env";
+import { formatEur } from "@/lib/pricing/cents";
 import { LogoutButton } from "./logout-button";
 
 export default async function SessionePage({
@@ -37,9 +39,9 @@ export default async function SessionePage({
         {bookings.map((b) => {
           const paid = b.payments
             .filter((p) => p.status === "SUCCEEDED" && p.type !== "REFUND")
-            .reduce((acc, p) => acc + Number(p.amount), 0);
-          const total = Number(b.totalPrice);
-          const balance = Math.max(0, total - paid);
+            .reduce((acc, p) => acc.plus(p.amount.toString()), new Decimal(0));
+          const total = new Decimal(b.totalPrice.toString());
+          const balance = Decimal.max(0, total.minus(paid));
           return (
             <div key={b.id} className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex justify-between items-start mb-3">
@@ -63,14 +65,14 @@ export default async function SessionePage({
                 </span>
               </div>
               <p>
-                📅 {b.startDate.toLocaleDateString("it-IT")} · 👥 {b.numPeople}
+                {b.startDate.toLocaleDateString("it-IT")} · {b.numPeople} persone
               </p>
               <p>
-                💰 Totale €{total.toFixed(2)} · Pagato €{paid.toFixed(2)}
+                Totale {formatEur(total)} · Pagato {formatEur(paid)}
               </p>
-              {balance > 0 && (
+              {balance.gt(0) && (
                 <p className="text-amber-700 font-semibold mt-2">
-                  Saldo da pagare: €{balance.toFixed(2)}
+                  Saldo da pagare: {formatEur(balance)}
                 </p>
               )}
             </div>

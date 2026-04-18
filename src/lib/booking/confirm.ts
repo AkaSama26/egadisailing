@@ -4,47 +4,52 @@ import { blockDates } from "@/lib/availability/service";
 import { logger } from "@/lib/logger";
 import { NotFoundError } from "@/lib/errors";
 import { CHANNELS } from "@/lib/channels";
+import { fromCents } from "@/lib/pricing/cents";
+import type { PaymentType } from "@/lib/stripe/metadata";
 
 /**
- * Chiamata dal webhook Stripe quando un Payment Intent va a buon fine.
+ * Chiamato dal webhook Stripe quando un Payment Intent va a buon fine.
  *
- * Idempotente: se Payment con lo stesso chargeId esiste, non fa nulla.
- * In transazione: update Booking + update DirectBooking + create Payment.
- * Dopo il commit: blockDates() triggera fan-out availability ai canali esterni.
+ * Idempotent a multiple layer:
+ * 1. Event-level: handleStripeEvent filtra via ProcessedStripeEvent
+ * 2. Charge-level: Payment.stripeChargeId ha UNIQUE constraint →
+ *    il secondo INSERT fallisce silently
+ * 3. Status-level: updateMany guard su status=PENDING per transizione atomica
+ *
+ * blockDates viene chiamato SOLO al primo CONFIRMED (transizione atomica).
  */
 export async function confirmDirectBookingAfterPayment(params: {
   bookingId: string;
   stripePaymentIntentId: string;
   stripeChargeId: string;
   amountCents: number;
-  paymentType: "FULL" | "DEPOSIT" | "BALANCE";
+  paymentType: PaymentType;
 }): Promise<void> {
-  const existing = await db.payment.findFirst({
-    where: { stripeChargeId: params.stripeChargeId },
-  });
-  if (existing) {
-    logger.info(
-      { chargeId: params.stripeChargeId, bookingId: params.bookingId },
-      "Payment already processed, skipping",
-    );
-    return;
-  }
-
   const booking = await db.booking.findUnique({
     where: { id: params.bookingId },
     include: { directBooking: true },
   });
   if (!booking) throw new NotFoundError("Booking", params.bookingId);
 
-  const wasAlreadyConfirmed = booking.status === "CONFIRMED";
-  const amountDecimal = new Decimal(params.amountCents).div(100);
+  const amountDecimal = fromCents(params.amountCents);
 
-  await db.$transaction(async (tx) => {
-    if (!wasAlreadyConfirmed) {
-      await tx.booking.update({
-        where: { id: booking.id },
+  // Transizione atomica PENDING→CONFIRMED + create Payment.
+  // updateMany ritorna count=1 solo al primo che vede status=PENDING.
+  const statusChanged = await db.$transaction(async (tx) => {
+    // Duplicate check sul chargeId: UNIQUE constraint previene doppio insert,
+    // ma controlliamo esplicitamente per fare early return senza eccezione.
+    const existing = await tx.payment.findFirst({
+      where: { stripeChargeId: params.stripeChargeId },
+    });
+    if (existing) return false;
+
+    let transitioned = false;
+    if (params.paymentType !== "BALANCE") {
+      const upd = await tx.booking.updateMany({
+        where: { id: booking.id, status: "PENDING" },
         data: { status: "CONFIRMED" },
       });
+      transitioned = upd.count === 1;
     }
 
     if (booking.directBooking) {
@@ -67,17 +72,20 @@ export async function confirmDirectBookingAfterPayment(params: {
       data: {
         bookingId: booking.id,
         amount: amountDecimal.toFixed(2),
-        type: params.paymentType === "BALANCE" ? "BALANCE" : params.paymentType === "FULL" ? "FULL" : "DEPOSIT",
+        type: params.paymentType,
         method: "STRIPE",
         status: "SUCCEEDED",
         stripeChargeId: params.stripeChargeId,
         processedAt: new Date(),
       },
     });
+
+    return transitioned;
   });
 
-  // Blocca availability per il range della booking. Primo pagamento solo.
-  if (!wasAlreadyConfirmed) {
+  // blockDates SOLO se questo e' il primo a confermare (no double-block su
+  // webhook retry / balance payment).
+  if (statusChanged) {
     await blockDates(
       booking.boatId,
       booking.startDate,
@@ -88,7 +96,12 @@ export async function confirmDirectBookingAfterPayment(params: {
   }
 
   logger.info(
-    { bookingId: booking.id, confirmationCode: booking.confirmationCode },
-    "Direct booking confirmed",
+    {
+      bookingId: booking.id,
+      confirmationCode: booking.confirmationCode,
+      paymentType: params.paymentType,
+      statusChanged,
+    },
+    "Direct booking payment processed",
   );
 }

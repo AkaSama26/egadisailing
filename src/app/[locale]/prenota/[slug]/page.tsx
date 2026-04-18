@@ -7,7 +7,7 @@ export default async function BookingPage({
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
   const service = await db.service.findUnique({ where: { id: slug } });
   if (!service || !service.active) notFound();
 
@@ -18,6 +18,7 @@ export default async function BookingPage({
           Prenota {service.name}
         </h1>
         <BookingWizard
+          locale={locale}
           serviceId={service.id}
           serviceName={service.name}
           durationType={service.durationType}

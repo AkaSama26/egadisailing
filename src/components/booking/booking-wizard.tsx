@@ -6,6 +6,7 @@ import { StripePaymentForm } from "./stripe-payment-form";
 type Step = "date" | "people" | "customer" | "payment" | "success";
 
 interface Props {
+  locale: string;
   serviceId: string;
   serviceName: string;
   durationType: string;
@@ -55,12 +56,10 @@ export function BookingWizard(props: Props) {
         body: JSON.stringify({
           serviceId: props.serviceId,
           startDate: new Date(startDate).toISOString(),
-          endDate: new Date(startDate).toISOString(),
           numPeople,
           customer,
           paymentSchedule: props.defaultPaymentSchedule,
           depositPercentage: props.defaultDepositPercentage ?? undefined,
-          weatherGuarantee: true,
         }),
       });
       if (!res.ok) {
@@ -118,6 +117,7 @@ export function BookingWizard(props: Props) {
 
       {step === "payment" && intent && (
         <StripePaymentForm
+          locale={props.locale}
           clientSecret={intent.clientSecret}
           confirmationCode={intent.confirmationCode}
           amountCents={intent.amountCents}
