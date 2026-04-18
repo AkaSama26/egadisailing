@@ -1,159 +1,134 @@
-// @ts-nocheck - legacy schema references, refactored in Plan 5
+import Link from "next/link";
+import Decimal from "decimal.js";
+import { Euro, Calendar, Clock, AlertTriangle } from "lucide-react";
 import { db } from "@/lib/db";
-import { BookingStatus } from "@/generated/prisma/enums";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { BookOpen, DollarSign, Users, CalendarDays } from "lucide-react";
-import { StatsCard } from "../_components/stats-card";
+import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
+import { KpiCard } from "@/components/admin/kpi-card";
+import { formatEur } from "@/lib/pricing/cents";
 
-const statusVariant: Record<
-  BookingStatus,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  CONFIRMED: "default",
-  PENDING: "secondary",
-  CANCELLED: "destructive",
-  REFUNDED: "outline",
-};
+export default async function DashboardHome() {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-export default async function AdminDashboardPage() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const [
+    revenueAgg,
+    bookingsCount,
+    upcomingCount,
+    balancesAgg,
+    pendingAlerts,
+    channelStatuses,
+  ] = await Promise.all([
+    db.payment.aggregate({
+      where: {
+        status: "SUCCEEDED",
+        type: { in: ["DEPOSIT", "BALANCE", "FULL"] },
+        processedAt: { gte: monthStart },
+      },
+      _sum: { amount: true },
+    }),
+    db.booking.count({
+      where: { createdAt: { gte: monthStart }, status: { in: ["CONFIRMED", "PENDING"] } },
+    }),
+    db.booking.count({
+      where: { status: "CONFIRMED", startDate: { gte: now } },
+    }),
+    db.directBooking.aggregate({
+      where: {
+        paymentSchedule: "DEPOSIT_BALANCE",
+        balancePaidAt: null,
+        booking: { startDate: { gte: now }, status: "CONFIRMED" },
+      },
+      _sum: { balanceAmount: true },
+    }),
+    listPendingManualAlerts(),
+    db.channelSyncStatus.findMany({
+      orderBy: { channel: "asc" },
+    }),
+  ]);
 
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-
-  const [todayBookings, monthRevenue, totalCustomers, scheduledTrips, recentBookings] =
-    await Promise.all([
-      // Count of today's bookings (CONFIRMED or PENDING)
-      db.booking.count({
-        where: {
-          trip: {
-            date: { gte: today, lt: tomorrow },
-          },
-          status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING] },
-        },
-      }),
-
-      // Sum of this month's confirmed booking revenue
-      db.booking.aggregate({
-        _sum: { totalPrice: true },
-        where: {
-          status: BookingStatus.CONFIRMED,
-          trip: {
-            date: { gte: monthStart, lt: monthEnd },
-          },
-        },
-      }),
-
-      // Total customer count
-      db.customer.count(),
-
-      // Count of scheduled trips in the future
-      db.trip.count({
-        where: {
-          date: { gte: today },
-          status: "SCHEDULED",
-        },
-      }),
-
-      // Last 10 bookings with customer and trip/service info
-      db.booking.findMany({
-        take: 10,
-        orderBy: { createdAt: "desc" },
-        include: {
-          customer: { select: { name: true, email: true } },
-          trip: { select: { date: true, service: { select: { name: true } } } },
-        },
-      }),
-    ]);
-
-  const revenue = monthRevenue._sum.totalPrice
-    ? monthRevenue._sum.totalPrice.toNumber()
-    : 0;
+  const revenueDec = new Decimal(revenueAgg._sum.amount?.toString() ?? "0");
+  const balancesDec = new Decimal(balancesAgg._sum.balanceAmount?.toString() ?? "0");
+  const anyRed = channelStatuses.some((c) => c.healthStatus === "RED");
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Prenotazioni Oggi"
-          value={todayBookings}
-          icon={BookOpen}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard label="Revenue del mese" value={formatEur(revenueDec)} icon={Euro} />
+        <KpiCard
+          label="Prenotazioni del mese"
+          value={String(bookingsCount)}
+          icon={Calendar}
+          hint="CONFIRMED + PENDING"
         />
-        <StatsCard
-          title="Guadagno Mese"
-          value={`€ ${revenue.toLocaleString("it-IT", { minimumFractionDigits: 2 })}`}
-          icon={DollarSign}
+        <KpiCard
+          label="Uscite future"
+          value={String(upcomingCount)}
+          icon={Clock}
+          hint="CONFIRMED con startDate futura"
         />
-        <StatsCard
-          title="Clienti Totali"
-          value={totalCustomers}
-          icon={Users}
-        />
-        <StatsCard
-          title="Uscite Programmate"
-          value={scheduledTrips}
-          icon={CalendarDays}
+        <KpiCard
+          label="Saldi pendenti"
+          value={formatEur(balancesDec)}
+          icon={AlertTriangle}
+          tone={balancesDec.gt(0) ? "warn" : "default"}
+          hint="DEPOSIT_BALANCE non ancora saldati"
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ultime Prenotazioni</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentBookings.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nessuna prenotazione ancora
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Servizio</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Persone</TableHead>
-                  <TableHead>Totale (€)</TableHead>
-                  <TableHead>Stato</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentBookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell>{booking.customer.name}</TableCell>
-                    <TableCell>{booking.trip.service.name}</TableCell>
-                    <TableCell>
-                      {booking.trip.date.toLocaleDateString("it-IT")}
-                    </TableCell>
-                    <TableCell>{booking.numPeople}</TableCell>
-                    <TableCell>
-                      € {booking.totalPrice.toNumber().toLocaleString("it-IT", { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant[booking.status]}>
-                        {booking.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {pendingAlerts.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-red-800">🚨 Alert manuali ({pendingAlerts.length})</h2>
+            <Link href="/admin/sync-log" className="text-red-700 hover:underline text-sm font-medium">
+              Vai al registro
+            </Link>
+          </div>
+          <ul className="space-y-1 text-sm text-red-900">
+            {pendingAlerts.slice(0, 5).map((a) => (
+              <li key={a.id} className="flex justify-between">
+                <span>
+                  <strong>{a.channel}</strong> — {a.action} {a.boatId} il{" "}
+                  {a.date.toISOString().slice(0, 10)}
+                </span>
+              </li>
+            ))}
+            {pendingAlerts.length > 5 && (
+              <li className="text-xs text-red-700">+ altri {pendingAlerts.length - 5}</li>
+            )}
+          </ul>
+        </div>
+      )}
+
+      <div
+        className={`bg-white rounded-xl border p-5 ${anyRed ? "border-red-200" : "border-slate-200"}`}
+      >
+        <h2 className="font-bold mb-3 text-slate-900">Channel health</h2>
+        {channelStatuses.length === 0 ? (
+          <p className="text-sm text-slate-500">Nessun canale ancora sincronizzato.</p>
+        ) : (
+          <div className="flex gap-2 flex-wrap">
+            {channelStatuses.map((c) => {
+              const tone =
+                c.healthStatus === "GREEN"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : c.healthStatus === "YELLOW"
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-red-100 text-red-800";
+              return (
+                <span
+                  key={c.channel}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${tone}`}
+                  title={c.lastError ?? ""}
+                >
+                  {c.channel} · {c.healthStatus}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

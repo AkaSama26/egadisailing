@@ -2,59 +2,75 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
-  CalendarDays,
-  Ship,
-  BookOpen,
-  DollarSign,
-  UserCog,
+  ListChecks,
+  Calendar,
+  CalendarX,
+  Coins,
+  Boxes,
   Users,
-  BarChart3,
+  UserCog,
+  LineChart,
+  Plug,
+  CloudSun,
+  Activity,
   Settings,
+  Ship,
 } from "lucide-react";
 
+/**
+ * Sidebar admin — 13 sezioni Plan 5. Rotte in italiano (spec V2).
+ * `active` matching: `/admin` esatto (dashboard home) + prefix-match
+ * per sottorotte (es. `/admin/prenotazioni/[id]`).
+ */
 const navItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Calendario", href: "/admin/calendar", icon: CalendarDays },
-  { label: "Uscite", href: "/admin/trips", icon: Ship },
-  { label: "Prenotazioni", href: "/admin/bookings", icon: BookOpen },
-  { label: "Prezzi", href: "/admin/pricing", icon: DollarSign },
-  { label: "Crew", href: "/admin/crew", icon: UserCog },
-  { label: "Clienti", href: "/admin/customers", icon: Users },
-  { label: "Finanza", href: "/admin/finance", icon: BarChart3 },
-  { label: "Impostazioni", href: "/admin/settings", icon: Settings },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/prenotazioni", label: "Prenotazioni", icon: ListChecks },
+  { href: "/admin/calendario", label: "Calendario", icon: Calendar },
+  { href: "/admin/disponibilita", label: "Disponibilità", icon: CalendarX },
+  { href: "/admin/prezzi", label: "Prezzi", icon: Coins },
+  { href: "/admin/servizi", label: "Servizi", icon: Boxes },
+  { href: "/admin/clienti", label: "Clienti", icon: Users },
+  { href: "/admin/crew", label: "Crew", icon: UserCog },
+  { href: "/admin/finanza", label: "Finanza", icon: LineChart },
+  { href: "/admin/canali", label: "Canali", icon: Plug },
+  { href: "/admin/meteo", label: "Meteo", icon: CloudSun },
+  { href: "/admin/sync-log", label: "Sync & Log", icon: Activity },
+  { href: "/admin/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r">
+    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r bg-white">
       <div className="flex h-14 items-center gap-2 border-b px-4">
         <Link href="/admin" className="flex items-center gap-2 font-semibold">
           <Ship className="size-5" />
           <span>Egadisailing</span>
         </Link>
       </div>
-      <nav className="flex-1 space-y-1 p-2">
+      <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive =
+          const active =
             item.href === "/admin"
               ? pathname === "/admin"
               : pathname.startsWith(item.href);
-
+          const Icon = item.icon;
           return (
-            <Button
+            <Link
               key={item.href}
-              variant={isActive ? "secondary" : "ghost"}
-              className="w-full justify-start gap-2"
-              render={<Link href={item.href} />}
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
+                active
+                  ? "bg-slate-100 text-slate-900 font-medium"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
             >
-              <item.icon className="size-4" />
+              <Icon className="size-4" />
               {item.label}
-            </Button>
+            </Link>
           );
         })}
       </nav>
