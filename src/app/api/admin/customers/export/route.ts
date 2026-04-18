@@ -54,9 +54,17 @@ export const GET = withErrorHandler(async () => {
   });
 });
 
+/**
+ * CSV escape con difesa contro formula injection (CVE-2014-3524-class).
+ * Excel/LibreOffice eseguono celle che iniziano con `=`/`+`/`-`/`@` come
+ * formule → attaccante con nome cliente `=HYPERLINK("http://evil",...)` fa
+ * eseguire codice all'admin che apre l'export. Prefisso `'` neutralizza.
+ */
 function escapeCsv(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
+  const needsFormulaGuard = /^[=+\-@\t\r]/.test(value);
+  const guarded = needsFormulaGuard ? `'${value}` : value;
+  if (guarded.includes(",") || guarded.includes('"') || guarded.includes("\n")) {
+    return `"${guarded.replace(/"/g, '""')}"`;
   }
-  return value;
+  return guarded;
 }

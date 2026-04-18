@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 completati + 8 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment, Plan4 charter security/race/parser/ops). Plan 5-6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 completati + 9 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment, Plan4 charter security/race/parser/ops, app-security beyond integrations). Plan 5-6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -419,6 +419,33 @@ Quattro audit paralleli sul Plan 4 (security/email injection, cross-channel race
 - iCal UTF-8 byte folding (multi-byte safe)
 
 Totale: **95 test** (+7 Round 7→8), typecheck clean, build OK.
+
+## Round 9 audit — app security beyond integrations (fix applicati)
+
+Audit manuale sul perimetro app NON coperto dai round 1-8 (Bokun/Boataround/email parser).
+
+### Alte fixate
+- **Admin dashboard layout non verificava `role=ADMIN`**: `src/app/admin/(dashboard)/layout.tsx` controllava solo `!session`. Se in futuro verranno introdotti ruoli diversi (VIEWER/EDITOR/USER con `User.role` oggi `String` default "ADMIN"), tutti vedrebbero la dashboard. Fix: `if (!session?.user || session.user.role !== "ADMIN")` (difesa-in-profondità, allinea con `/api/admin/customers/export`).
+- **`/api/payment-intent` senza Turnstile**: rate-limit IP+email (10/h + 5/h) NON blocca un bot pool con IP diversi. Attaccante creava Stripe PaymentIntent fittizi + PENDING booking stuck in DB. Fix: aggiunto `verifyTurnstileToken` (stessa logica del recovery OTP — enforced prod, optional dev). Schema Zod accetta `turnstileToken: z.string().optional()`.
+- **`recupera-prenotazione/actions.ts` usava `.toLowerCase()` invece di `normalizeEmail`**: violazione invariant #17. Gmail alias `mario+tag@gmail.com` non trovava il Customer salvato come `mario@gmail.com`. Fix: sostituito con `normalizeEmail()` sia in `requestOtp` che in `verifyOtpAndLogin`.
+- **CSV formula injection nell'admin customer export**: `escapeCsv` gestiva `,`/`"`/`\n` ma NON il prefisso `=`/`+`/`-`/`@`/`\t`. Admin apre CSV in Excel → formula `=HYPERLINK(...)` eseguita. Fix: prefisso `'` su valori che iniziano con caratteri pericolosi.
+
+### Deferred (Plan 5)
+- **CRITICA — Turnstile widget client**: né `booking-wizard.tsx` né `recupera-prenotazione/client.tsx` renderizzano il widget Cloudflare Turnstile. In prod il check server throws `ValidationError` senza token. Plan 5 MUST integrare `<Turnstile data-sitekey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}>` con script loader. Senza questo, il payment-intent e il recovery OTP sono inutilizzabili in prod.
+- **ALTA — Admin role enum**: `User.role` e' `String` con default "ADMIN". Convertire a Postgres enum `AdminRole` (ADMIN, EDITOR, VIEWER) + UI admin per CRUD utenti Plan 5.
+- **MEDIA — Admin CSV export pagination**: oggi `findMany` senza limit, memoria proporzionale. Già noto Round 3 performance.
+- **MEDIA — Admin @ts-nocheck pages**: `admin/_actions/booking-actions.ts` + altre pagine admin hanno `@ts-nocheck` con schema obsoleto. Riscrivere in Plan 5.
+- **MEDIA — Session cookie SameSite=lax**: accettabile per link inbound email recovery, ma per la dashboard admin si puo' valutare SameSite=Strict separato.
+- **BASSA — NextAuth v5 beta.30 → GA**: bumpare appena disponibile.
+- **BASSA — `session.user.role` fallback "USER"**: `auth.ts:51` hypothetical branch mai raggiunto oggi (schema default ADMIN), ma da allineare quando introdotto enum.
+
+### Finding verificati come OK
+- **Session cookie**: HttpOnly + Secure (prod) + SameSite=lax + hash SHA-256 con 256-bit random token + timing-safe lookup via unique index — OK.
+- **`/b/sessione` IDOR**: filtro `customer.email` derivato dal `session.email` server-side — no bookingId in URL, no IDOR.
+- **Stripe webhook metadata**: `bookingId` viene scritto server-side al momento della creazione PI, non accettato da client → no IDOR via metadata spoofing.
+- **OTP verify**: rate-limit email+IP + timing-safe hash compare + atomic `verifyOtp` — OK.
+- **Middleware i18n**: correttamente esclude `api|admin|_next|_vercel`, admin e' protetto dal `layout.tsx` (post-fix).
+- **NextAuth password**: bcryptjs `compare` timing-safe — OK.
 
 ## Plan roadmap
 

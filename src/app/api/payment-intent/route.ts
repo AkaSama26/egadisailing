@@ -6,6 +6,8 @@ import { buildBookingMetadata } from "@/lib/stripe/metadata";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { getClientIp } from "@/lib/http/client-ip";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
+import { verifyTurnstileToken } from "@/lib/turnstile/verify";
+import { ValidationError } from "@/lib/errors";
 import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -26,6 +28,7 @@ const schema = z.object({
   paymentSchedule: z.enum(["FULL", "DEPOSIT_BALANCE"]),
   depositPercentage: z.number().int().min(1).max(100).optional(),
   notes: z.string().max(1000).optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export const POST = withErrorHandler(async (req: Request) => {
@@ -41,6 +44,17 @@ export const POST = withErrorHandler(async (req: Request) => {
 
   const body = await req.json();
   const input = schema.parse(body);
+
+  // Anti-bot: Turnstile enforced in production, optional in dev (allinea con
+  // recupera-prenotazione OTP flow). Senza CAPTCHA, un bot pool bypassava il
+  // rate-limit IP creando Stripe PaymentIntent fittizi + booking PENDING in DB.
+  if (env.NODE_ENV === "production" || input.turnstileToken) {
+    if (!input.turnstileToken) {
+      throw new ValidationError("CAPTCHA verification required");
+    }
+    const valid = await verifyTurnstileToken(input.turnstileToken, ip);
+    if (!valid) throw new ValidationError("CAPTCHA verification failed");
+  }
 
   await enforceRateLimit({
     identifier: input.customer.email.toLowerCase(),

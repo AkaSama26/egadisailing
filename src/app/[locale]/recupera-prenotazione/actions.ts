@@ -11,6 +11,7 @@ import { createBookingSession } from "@/lib/session/create";
 import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { env } from "@/lib/env";
 import { ValidationError } from "@/lib/errors";
+import { normalizeEmail } from "@/lib/email-normalize";
 import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 import { db } from "@/lib/db";
 
@@ -38,7 +39,10 @@ export async function requestOtp(
       turnstileToken: formData.get("cf-turnstile-response") ?? undefined,
     });
 
-    const email = parsed.email.toLowerCase();
+    // normalizeEmail invece di toLowerCase: applica Gmail alias dedup
+    // (`mario+tag@gmail.com` → `mario@gmail.com`). Cosi' il lookup Customer
+    // e il rate-limit per-email matchano quelli di checkout/webhook (invariante #17).
+    const email = normalizeEmail(parsed.email);
 
     // Turnstile enforced in production, optional in dev
     if (env.NODE_ENV === "production" || parsed.turnstileToken) {
@@ -101,7 +105,10 @@ export async function verifyOtpAndLogin(
       code: formData.get("code"),
     });
 
-    const email = parsed.email.toLowerCase();
+    // normalizeEmail invece di toLowerCase: applica Gmail alias dedup
+    // (`mario+tag@gmail.com` → `mario@gmail.com`). Cosi' il lookup Customer
+    // e il rate-limit per-email matchano quelli di checkout/webhook (invariante #17).
+    const email = normalizeEmail(parsed.email);
     await enforceOtpVerifyLimit(email, ip);
 
     const result = await verifyOtp(email, parsed.code);

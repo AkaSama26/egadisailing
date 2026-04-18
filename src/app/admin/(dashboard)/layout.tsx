@@ -11,7 +11,11 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
-  if (!session) {
+  // Defense-in-depth: non basta `!session`. Se in futuro verranno introdotti
+  // ruoli diversi (VIEWER/EDITOR/USER), la dashboard admin deve restare
+  // limitata a role=ADMIN. Lo stesso check appare sulle route API sensibili
+  // (es. /api/admin/customers/export).
+  if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/admin/login");
   }
 
