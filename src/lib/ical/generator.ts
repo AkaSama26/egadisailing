@@ -59,18 +59,27 @@ export async function generateBoatIcal(boatId: string): Promise<string> {
     }
   }
 
-  const events: IcalEvent[] = ranges.map((r, idx) => ({
-    // UID stabile: stesso booking → stesso UID anche su rigenerazione.
-    // Clienti iCal usano UID per dedup/update invece di creare nuovi eventi.
-    uid: r.bookingId
-      ? `egadisailing-booking-${r.bookingId}@egadisailing.com`
-      : `egadisailing-manual-${boatId}-${r.start.toISOString().slice(0, 10)}-${idx}@egadisailing.com`,
-    summary: "Prenotato",
-    startDate: r.start,
-    endDate: r.end,
-    description: r.bookingId ? `Booking ref: ${r.bookingId}` : "Blocco manuale",
-    lastModified: r.lastModified,
-  }));
+  const events: IcalEvent[] = ranges.map((r, idx) => {
+    // UID DEVE essere unico per ogni VEVENT (RFC5545 §3.8.4.7): includiamo
+    // SEMPRE start-date e index per evitare collision quando un singolo
+    // booking produce range non-contigui (es. cancellazione parziale 15-17
+    // poi 19-22 stesso bookingId). Altrimenti Google Calendar silently-drop
+    // il secondo VEVENT.
+    const startKey = r.start.toISOString().slice(0, 10);
+    const uid = r.bookingId
+      ? `egadisailing-${r.bookingId}-${startKey}-${idx}@egadisailing.com`
+      : `egadisailing-manual-${boatId}-${startKey}-${idx}@egadisailing.com`;
+    return {
+      uid,
+      summary: "Prenotato",
+      startDate: r.start,
+      endDate: r.end,
+      // GDPR data minimization: niente ID interno esposto a partner OTA.
+      // "Prenotato" e' gia' sufficiente per bloccare lo slot lato consumer.
+      description: "Prenotato",
+      lastModified: r.lastModified,
+    };
+  });
 
   return generateIcal({
     prodId: "-//Egadisailing//Availability v2//IT",

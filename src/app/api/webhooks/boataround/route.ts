@@ -30,10 +30,13 @@ export const POST = withErrorHandler(async (req: Request) => {
     windowSeconds: 60,
   });
 
-  const rawBody = await req.text();
+  // arrayBuffer invece di text() per preservare BOM/charset originali —
+  // HMAC upstream e' sui bytes raw, UTF-8 decode puo' consumare BOM e divergere.
+  const bodyBuf = Buffer.from(await req.arrayBuffer());
+  const rawBody = bodyBuf.toString("utf8");
   const signature = req.headers.get("x-boataround-signature") ?? "";
 
-  if (!verifyBoataroundWebhook(rawBody, signature, env.BOATAROUND_WEBHOOK_SECRET)) {
+  if (!verifyBoataroundWebhook(bodyBuf, signature, env.BOATAROUND_WEBHOOK_SECRET)) {
     logger.warn(
       {
         ip,

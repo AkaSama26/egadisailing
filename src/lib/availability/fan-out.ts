@@ -1,6 +1,6 @@
 import { syncQueue } from "@/lib/queue";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
-import { FAN_OUT_CHANNELS, type Channel } from "@/lib/channels";
+import { CHANNEL_SYNC_MODE, FAN_OUT_CHANNELS, SYNC_MODE, type Channel } from "@/lib/channels";
 import { logger } from "@/lib/logger";
 
 export interface FanOutOptions {
@@ -20,7 +20,13 @@ export interface FanOutOptions {
  */
 export async function fanOutAvailability(opts: FanOutOptions): Promise<void> {
   const sourceAsChannel = opts.sourceChannel as Channel;
-  const targets = FAN_OUT_CHANNELS.filter((ch) => ch !== sourceAsChannel);
+  // Skip canali che usano pull (iCal): SamBoat legge il feed a intervallo,
+  // non ha senso accodare job ignorati da ogni worker (spreco estrazione + log).
+  // Gli UNBLOCK comunque non si propagano automaticamente per iCal senza
+  // METHOD:CANCEL — limite noto del formato sottoscrizione (deferred Plan 5).
+  const targets = FAN_OUT_CHANNELS.filter(
+    (ch) => ch !== sourceAsChannel && CHANNEL_SYNC_MODE[ch] !== SYNC_MODE.ICAL,
+  );
 
   const queue = syncQueue();
   await Promise.all(

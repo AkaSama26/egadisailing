@@ -1,4 +1,7 @@
+import { normalizeEmail } from "@/lib/email-normalize";
 import {
+  MAX_PARSER_TEXT_LENGTH,
+  detectCancellationKeywords,
   parseAmountToCents,
   parseFlexibleDate,
   stripHtml,
@@ -9,18 +12,21 @@ import {
 /**
  * Parser per email SamBoat.
  *
- * I template SamBoat cambiano frequentemente: se il parse fallisce torna
- * `null` e il dispatcher logga la riga per review manuale (no auto-block
- * di availability con dati incompleti).
+ * I template SamBoat cambiano: se il parse fallisce torna `null` e il
+ * dispatcher logga per review manuale (no auto-block con dati incompleti).
+ *
+ * Text cap anti-ReDoS: 200KB.
  */
 export const samboatParser: CharterParser = {
   platform: "SAMBOAT",
   senderDomains: ["samboat.com", "samboat.fr", "samboat.it", "samboat.es"],
 
   parse(email) {
-    const text = email.text ?? stripHtml(email.html ?? "");
+    const rawText = email.text ?? stripHtml(email.html ?? "");
+    if (rawText.length > MAX_PARSER_TEXT_LENGTH) return null;
+    const text = rawText;
 
-    const refMatch = text.match(/Booking\s+(?:ref|n°|id|number)[:\s]+([A-Z0-9\-]+)/i);
+    const refMatch = text.match(/Booking\s+(?:ref|n°|id|number)[:\s]+([A-Z0-9\-]{1,64})/i);
     const nameMatch = text.match(
       /(?:Guest|Client)[:\s]+([A-Za-zÀ-ÿ\-']+)\s+([A-Za-zÀ-ÿ\-']+)/i,
     );
@@ -45,12 +51,13 @@ export const samboatParser: CharterParser = {
       platformBookingRef: refMatch[1],
       customerFirstName: nameMatch[1],
       customerLastName: nameMatch[2],
-      customerEmail: emailMatch[0],
+      customerEmail: normalizeEmail(emailMatch[0]),
       startDate,
       endDate,
       totalAmountCents,
       currency: "EUR",
       rawEmailSubject: email.subject,
+      status: detectCancellationKeywords(text, email.subject) ? "CANCELLED" : "CONFIRMED",
     };
     return result;
   },

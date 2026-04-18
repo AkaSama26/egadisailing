@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 completati + 7 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment). Plan 5-6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 completati + 8 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment, Plan4 charter security/race/parser/ops). Plan 5-6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -367,6 +367,58 @@ Strategia ibrida per 4 canali charter:
 - Auto-resolve manual alerts via iCal polling del portale esterno
 - `Boat.boataroundBoatId` explicit mapping se upstream usa slug diverso
 - Integration test suite (pglite + ioredis-mock) per adapter+webhook+cron
+
+## Round 8 audit — Plan 4 charter (fix applicati)
+
+Quattro audit paralleli sul Plan 4 (security/email injection, cross-channel race, parser robustness, ops+GDPR+testing).
+
+### Critiche fixate
+- **`parseAmountToCents("1.234")` interpretato come 1€23 invece di 1234€**: heuristica rotta causava **errore 1000x silent** su amount EU migliaia senza decimali. Fix: branch esplicito "3 cifre dopo ultimo separatore + nessun altro" → thousands.
+- **`parseFlexibleDate` accettava mm/dd silent**: `"07/15/2026"` → `Date.UTC(2026, 14, 7)` = 7 marzo 2027 (month overflow). Fix: strict dd/mm EU + reject `m>12` + round-trip validation (`31/02/2026` rigettato).
+- **iCal UID duplicato su range non contigui stesso booking**: viola RFC5545 §3.8.4.7, Google Calendar silently-drop il secondo VEVENT. Fix: UID include SEMPRE `startKey-idx` anche quando bookingId presente.
+- **iCal line folding contava chars JS invece di ottetti UTF-8**: rotto con accenti (`à` = 2 ottetti UTF-8). Fix: `Buffer.byteLength` + fold safe sui code-point multi-byte + no split di 2-char escape sequence.
+- **Autoblock availability senza sanity check range**: email spoofata con regex match "2026-01-01 to 2099-12-31" avrebbe creato 26k `BoatAvailability` + altrettanti fan-out job. Fix: `validateCharterInput` enforce max 30g durata, max 2y future, min 50€ / max 100k€ total.
+- **PII in `CharterBooking.rawPayload.subject`**: subject email contiene regolarmente nome cliente. Fix: rimosso da whitelist `buildSafeRawPayload`.
+- **Loop fan-out cross-channel BOKUN ↔ BOATAROUND**: `updateAvailability` faceva upsert + enqueue fan-out anche quando stato non cambiava → ping-pong API upstream infinito. Fix: early return `shouldFanOut: false` se `status` + `lockedByBookingId` uguali (aggiornando solo `lastSyncedSource`).
+- **Fan-out inutile verso canali iCal**: SAMBOAT non ha worker (e' pull-based); job venivano estratti e scartati da ogni worker. Fix: `fanOutAvailability` skippa canali con `CHANNEL_SYNC_MODE === ICAL`.
+
+### Alte fixate
+- **Cancellation charter persa**: parser riconoscevano solo confirm. Fix: `detectCancellationKeywords` (IT/EN/FR/ES coverage) + parser dichiara `status: "CONFIRMED"|"CANCELLED"` + `importCharterBooking` update existing booking a CANCELLED + `releaseDates` post-commit.
+- **`ManualAlert` race duplicati**: `findFirst` + `create` fuori tx su worker concurrency=3. Fix: `acquireTxAdvisoryLock` + partial unique index `ManualAlert (channel, boatId, date, action) WHERE status='PENDING'` (migration `20260418220000_plan4_round8_manual_alert_unique`).
+- **Boataround worker usava `data.status` stale dal payload**: coalescenza jobId BullMQ puo' passare update fuori ordine. Fix: worker rilegge `BoatAvailability` da DB prima di chiamare upstream (pattern Bokun-compliant).
+- **HMAC Boataround su `req.text()` (UTF-8 decode)**: BOM/charset non-UTF-8 divergeva dai bytes firmati upstream. Fix: `req.arrayBuffer()` → `Buffer.from(...)` + `verifyBoataroundWebhook` accetta Buffer.
+- **Multi-value `x-boataround-signature` header**: `fetch` concatena con `, ` causando verify fail "silente". Fix: reject esplicito se `signature.includes(",")`.
+- **HTML bomb / ReDoS nei parser email**: `simpleParser` senza limiti + body email non capped. Fix: `MAX_MESSAGE_SIZE_BYTES=5MB` skip ingest + `maxHtmlLengthToParse=1MB` su simpleParser + `MAX_PARSER_TEXT_LENGTH=200KB` nei 3 parser.
+- **`normalizeEmail` NON invocato nei parser** (violazione invariant #17): Gmail alias/case bypassavano Customer dedup. Fix: tutti e 3 parser usano `normalizeEmail(emailMatch[0])`.
+- **Message-ID dedup poisoning**: attaccante pre-marca hash → email legittima droppata. Fix: hash include `from` — attaccante con Message-ID fake da dominio diverso ha hash diverso.
+- **`markEmailsSeen` non paginato**: backlog 10k+ UID in singola UID SET saturava limite server IMAP. Fix: chunk da 500 UID.
+- **Message-ID fallback collision-prone**: `no-id-${Date.now()}-${uid}` collideva a ms-level. Fix: `crypto.randomUUID()`.
+- **Booking ref in iCal `DESCRIPTION`**: espone ID interno su feed pubblico. Fix: `description = "Prenotato"` sempre.
+
+### Deferred (Plan 5+/runbook)
+- **CRITICA — SPF/DKIM/DMARC verification**: `imapflow`/`mailparser` non verificano autenticazione mittente. Attaccante spoofa `From: noreply@samboat.com` → import fake booking + DoS su alta stagione. Richiede DMARC config upstream + check `Authentication-Results: dkim=pass` nel dispatcher. Documentare in runbook come OBBLIGATORIO pre-go-live Plan 4.
+- **CRITICA — IMAP mailbox erasure GDPR**: email con PII restano sul server dopo `markSeen`. Richiesta art. 17 non implementabile. Fix: cancellare messaggi processati (o move a folder `Processed/`). Plan 5.
+- **ALTA — iCal feed secret/token per-boat**: `/api/ical/[boatId]` espone BLOCKED dates chi conosce il boatId. Pattern Airbnb: `/api/ical/[boatId]/[token]`. Plan 5 admin CRUD per token rotation.
+- **ALTA — iCal METHOD:CANCEL propagation**: `releaseDates` rimuove VEVENT ma Google Calendar conserva stale. Serve `publishedCancellations` table per emettere `STATUS:CANCELLED`.
+- **ALTA — Parser snapshot tests**: chiedere al cliente email campione reali anonimizzate, fixture dir + test regressione template drift.
+- **ALTA — SIGTERM IMAP connection cleanup**: cron email-parser apre ImapFlow locale al request-scope, non tracciato dal shutdown handler. Richiede AbortSignal propagato.
+- **MEDIA — `ManualAlert.notes` Plan 5 UI**: escape HTML obbligatorio quando la dashboard admin renderizza il campo (mai HTML raw injection).
+- **MEDIA — Deep health check IMAP/Boataround probe**: oggi `/api/health?deep=1` testa solo DB/Redis/queue/channels.
+- **MEDIA — Breakdown metrics per platform**: `skippedUnparsed` aggregato non discrimina tra parser buggato e burst email non-charter.
+- **MEDIA — `BOATAROUND_WEBHOOK_SECRET_NEXT` rotation zero-downtime**: analogo Bokun Round 5 deferred.
+- **MEDIA — Reconciliation cron Boataround**: analogo Bokun, legge eventi upstream e replaya webhook persi.
+- **MEDIA — Runbook sections**: "SamBoat template change", "Replay failed email", "Rotate IMAP_PASSWORD", "Disable parser temporaneo".
+- **BASSA — Dispatcher subdomain malicious test**: aggiungere test esplicito vs regressione.
+- **BASSA — IMAP debug log gate**: `emitLogs: false` → debug difficile prod. Flag `env.IMAP_DEBUG`.
+- **BASSA — iCal 24-month window hardcoded**: configurabile env.
+- **BASSA — `simpleParser` attachment bomb**: oltre HTML cap, limit allegati.
+
+### Test nuovi (Round 8)
+- `parseAmountToCents`: 4 cases (EU thousands, US thousands, confermati decimali)
+- `parseFlexibleDate`: 3 cases (US mm/dd reject, 31/02 invalid, year range)
+- iCal UTF-8 byte folding (multi-byte safe)
+
+Totale: **95 test** (+7 Round 7→8), typecheck clean, build OK.
 
 ## Plan roadmap
 

@@ -69,9 +69,24 @@ describe("generateIcal", () => {
       events: [{ ...baseEvent, description: longDesc }],
     });
     const lines = out.split("\r\n");
-    // Nessuna linea > 75 char
     for (const line of lines) {
-      expect(line.length).toBeLessThanOrEqual(75);
+      expect(Buffer.byteLength(line, "utf8")).toBeLessThanOrEqual(75);
     }
+  });
+
+  it("folds by OCTETS not chars (UTF-8 multi-byte safe)", () => {
+    // "à" = 2 ottetti UTF-8. 40 chars + 20 `à` = 60 chars ma 80 ottetti → deve foldare.
+    const mixed = "x".repeat(40) + "à".repeat(20);
+    const out = generateIcal({
+      prodId: "-//Test//EN",
+      name: "Test",
+      events: [{ ...baseEvent, description: mixed }],
+    });
+    const lines = out.split("\r\n");
+    for (const line of lines) {
+      expect(Buffer.byteLength(line, "utf8")).toBeLessThanOrEqual(75);
+    }
+    // Nessun code-point multi-byte deve essere spezzato (replacement char U+FFFD assente).
+    expect(out).not.toContain("\uFFFD");
   });
 });

@@ -1,4 +1,7 @@
+import { normalizeEmail } from "@/lib/email-normalize";
 import {
+  MAX_PARSER_TEXT_LENGTH,
+  detectCancellationKeywords,
   parseAmountToCents,
   parseFlexibleDate,
   stripHtml,
@@ -10,10 +13,12 @@ export const nautalParser: CharterParser = {
   senderDomains: ["nautal.com", "nautal.es", "nautal.it", "nautal.fr"],
 
   parse(email) {
-    const text = email.text ?? stripHtml(email.html ?? "");
+    const rawText = email.text ?? stripHtml(email.html ?? "");
+    if (rawText.length > MAX_PARSER_TEXT_LENGTH) return null;
+    const text = rawText;
 
     const refMatch = text.match(
-      /(?:Reserva|Booking|Prenotazione)\s+(?:n°|#|ID)[:\s]*([A-Z0-9\-]+)/i,
+      /(?:Reserva|Booking|Prenotazione)\s+(?:n°|#|ID)[:\s]*([A-Z0-9\-]{1,64})/i,
     );
     const nameMatch = text.match(
       /(?:Cliente|Guest|Ospite)[:\s]+([A-Za-zÀ-ÿ\-']+)\s+([A-Za-zÀ-ÿ\-']+)/i,
@@ -35,12 +40,13 @@ export const nautalParser: CharterParser = {
       platformBookingRef: refMatch[1],
       customerFirstName: nameMatch[1],
       customerLastName: nameMatch[2],
-      customerEmail: emailMatch[0],
+      customerEmail: normalizeEmail(emailMatch[0]),
       startDate,
       endDate,
       totalAmountCents,
       currency: "EUR",
       rawEmailSubject: email.subject,
+      status: detectCancellationKeywords(text, email.subject) ? "CANCELLED" : "CONFIRMED",
     };
   },
 };

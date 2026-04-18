@@ -70,7 +70,7 @@ export const GET = withErrorHandler(async (req: Request) => {
 
     for (const email of emails) {
       try {
-        if (await wasMessageProcessed(email.messageId)) {
+        if (await wasMessageProcessed(email.messageId, email.from)) {
           processedUids.push(email.uid);
           skippedDedup++;
           continue;
@@ -108,7 +108,7 @@ export const GET = withErrorHandler(async (req: Request) => {
           platform: dispatched.platform,
           boatId: defaultBoat.id,
         });
-        await markMessageProcessed(email.messageId, dispatched.platform);
+        await markMessageProcessed(email.messageId, email.from, dispatched.platform);
         processedUids.push(email.uid);
         imported++;
       } catch (err) {

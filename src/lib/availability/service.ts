@@ -70,6 +70,25 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
       }
     }
 
+    // Idempotency cross-channel: se lo stato DB e' gia' quello target e il
+    // lockedByBookingId coincide, non c'e' niente da propagare — evita ping-pong
+    // BOKUN ↔ BOATAROUND infinito quando due canali confermano lo stesso slot.
+    const noChange =
+      current?.status === input.status &&
+      (current?.lockedByBookingId ?? null) === (input.lockedByBookingId ?? null);
+    if (noChange) {
+      // Aggiorniamo comunque `lastSyncedSource`/`lastSyncedAt` per la prossima
+      // self-echo, ma skippiamo il fan-out.
+      await tx.boatAvailability.update({
+        where: { boatId_date: { boatId: input.boatId, date: dateOnly } },
+        data: {
+          lastSyncedSource: input.sourceChannel,
+          lastSyncedAt: new Date(),
+        },
+      });
+      return { shouldFanOut: false };
+    }
+
     await tx.boatAvailability.upsert({
       where: { boatId_date: { boatId: input.boatId, date: dateOnly } },
       update: {

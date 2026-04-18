@@ -1,4 +1,7 @@
+import { normalizeEmail } from "@/lib/email-normalize";
 import {
+  MAX_PARSER_TEXT_LENGTH,
+  detectCancellationKeywords,
   parseAmountToCents,
   parseFlexibleDate,
   stripHtml,
@@ -10,9 +13,11 @@ export const clickandboatParser: CharterParser = {
   senderDomains: ["clickandboat.com", "click-and-boat.com"],
 
   parse(email) {
-    const text = email.text ?? stripHtml(email.html ?? "");
+    const rawText = email.text ?? stripHtml(email.html ?? "");
+    if (rawText.length > MAX_PARSER_TEXT_LENGTH) return null;
+    const text = rawText;
 
-    const refMatch = text.match(/(?:Reservation|Booking)\s+(?:n°|#|ID)[:\s]*([A-Z0-9\-]+)/i);
+    const refMatch = text.match(/(?:Reservation|Booking)\s+(?:n°|#|ID)[:\s]*([A-Z0-9\-]{1,64})/i);
     const nameMatch = text.match(
       /(?:Client|Guest|Tenant|Locataire)[:\s]+([A-Za-zÀ-ÿ\-']+)\s+([A-Za-zÀ-ÿ\-']+)/i,
     );
@@ -33,12 +38,13 @@ export const clickandboatParser: CharterParser = {
       platformBookingRef: refMatch[1],
       customerFirstName: nameMatch[1],
       customerLastName: nameMatch[2],
-      customerEmail: emailMatch[0],
+      customerEmail: normalizeEmail(emailMatch[0]),
       startDate,
       endDate,
       totalAmountCents,
       currency: "EUR",
       rawEmailSubject: email.subject,
+      status: detectCancellationKeywords(text, email.subject) ? "CANCELLED" : "CONFIRMED",
     };
   },
 };

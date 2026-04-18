@@ -1,8 +1,10 @@
 import { createWorker, registerWorker } from "@/lib/queue";
 import { updateBoataroundAvailability } from "@/lib/boataround/availability";
 import { isBoataroundConfigured } from "@/lib/boataround/client";
+import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { CHANNELS } from "@/lib/channels";
+import { parseIsoDay } from "@/lib/dates";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
 
 interface AvailabilityJob {
@@ -30,10 +32,22 @@ export function startBoataroundAvailabilityWorker() {
         return;
       }
 
+      // Re-read DB prima di pushare upstream: coalescenza jobId BullMQ
+      // garantisce l'ultimo job vinca per ID, ma job con date/boat diverse
+      // o order stale possono portare status obsoleto nel payload. Leggiamo
+      // lo stato DB corrente per essere sempre coerenti.
+      const current = await db.boatAvailability.findUnique({
+        where: {
+          boatId_date: { boatId: data.boatId, date: parseIsoDay(data.date) },
+        },
+        select: { status: true },
+      });
+      const effectiveStatus = current?.status ?? data.status;
+
       await updateBoataroundAvailability({
         boatId: data.boatId,
         date: data.date,
-        available: data.status === "AVAILABLE",
+        available: effectiveStatus === "AVAILABLE",
       });
     },
     { concurrency: 3, limiter: { max: 10, duration: 1000 } },

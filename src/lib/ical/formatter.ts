@@ -60,19 +60,36 @@ function escapeText(s: string): string {
 }
 
 /**
- * RFC 5545 §3.1 limita le linee a 75 ottetti: se superano, split con CRLF + space.
+ * RFC 5545 §3.1 limita le linee a 75 OTTETTI (non chars UTF-16). Foldiamo
+ * preservando i code-point multi-byte UTF-8 (non tagliamo a meta' di "à")
+ * e le escape-sequence (non separiamo `\` dal carattere escapato).
  */
 function foldLine(line: string): string {
-  if (line.length <= 75) return line;
+  if (Buffer.byteLength(line, "utf8") <= 75) return line;
   const chunks: string[] = [];
-  let remaining = line;
-  chunks.push(remaining.slice(0, 75));
-  remaining = remaining.slice(75);
-  while (remaining.length > 0) {
-    chunks.push(" " + remaining.slice(0, 74));
-    remaining = remaining.slice(74);
+  let idx = 0;
+  let limit = 75;
+  while (idx < line.length) {
+    let bytes = 0;
+    let end = idx;
+    while (end < line.length) {
+      const cp = line.codePointAt(end);
+      if (cp === undefined) break;
+      const cpBytes = cp <= 0x7f ? 1 : cp <= 0x7ff ? 2 : cp <= 0xffff ? 3 : 4;
+      if (bytes + cpBytes > limit) break;
+      bytes += cpBytes;
+      end += cp > 0xffff ? 2 : 1;
+    }
+    // Evita di tagliare una 2-char escape sequence (backslash + char successivo).
+    if (end > idx && end < line.length && line[end - 1] === "\\") {
+      end -= 1;
+    }
+    if (end === idx) end = idx + 1; // safety: avanza almeno di un code-unit
+    chunks.push(line.slice(idx, end));
+    idx = end;
+    limit = 74; // continuation lines iniziano con uno space.
   }
-  return chunks.join(CRLF);
+  return chunks.join(CRLF + " ");
 }
 
 export function generateIcal(options: IcalOptions): string {

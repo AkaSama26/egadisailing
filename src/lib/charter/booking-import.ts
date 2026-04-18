@@ -4,13 +4,21 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { fromCents } from "@/lib/pricing/cents";
-import { NotFoundError } from "@/lib/errors";
-import { blockDates } from "@/lib/availability/service";
+import { NotFoundError, ValidationError } from "@/lib/errors";
+import { blockDates, releaseDates } from "@/lib/availability/service";
 import { CHANNELS, type Channel } from "@/lib/channels";
+import { toUtcDay } from "@/lib/dates";
 import type {
   CharterPlatform,
   ExtractedCharterBooking,
 } from "@/lib/email-parser/booking-extractor";
+
+// Sanity check anti-DoS e anti-parser-bug. Un parser buggato (o email
+// spoofata) non deve poter bloccare anni di availability.
+const MAX_CHARTER_DURATION_DAYS = 30;
+const MAX_CHARTER_FUTURE_DAYS = 730; // 2 anni
+const MIN_CHARTER_CENTS = 5_000; // 50 EUR
+const MAX_CHARTER_CENTS = 100_000_00; // 100k EUR
 
 export interface ImportCharterInput extends ExtractedCharterBooking {
   platform: CharterPlatform;
@@ -45,6 +53,7 @@ const PLATFORM_TO_CHANNEL: Record<CharterPlatform, Channel> = {
 export async function importCharterBooking(
   input: ImportCharterInput,
 ): Promise<ImportedCharterBooking> {
+  validateCharterInput(input);
   const emailLower = normalizeEmail(input.customerEmail);
 
   const service = await db.service.findFirst({
@@ -74,10 +83,18 @@ export async function importCharterBooking(
       });
 
       if (existing) {
-        logger.debug(
-          { platform: input.platform, ref: input.platformBookingRef },
-          "Charter booking already imported, skipping",
-        );
+        // Email di cancellazione su booking gia' importato come CONFIRMED:
+        // aggiorna lo status + triggera releaseDates post-commit.
+        const targetStatus: BookingStatus =
+          input.status === "CANCELLED" ? "CANCELLED" : existing.booking.status;
+        if (targetStatus !== existing.booking.status) {
+          const updated = await tx.booking.update({
+            where: { id: existing.bookingId },
+            data: { status: targetStatus },
+            select: { id: true, boatId: true, startDate: true, endDate: true, status: true },
+          });
+          return { booking: updated, mode: "cancelled" as const };
+        }
         return {
           booking: {
             id: existing.bookingId,
@@ -140,16 +157,17 @@ export async function importCharterBooking(
           numPeople: 1,
           totalPrice: new Prisma.Decimal(totalPriceStr),
           currency: input.currency,
-          status: "CONFIRMED",
+          status: input.status === "CANCELLED" ? "CANCELLED" : "CONFIRMED",
           charterBooking: {
             create: {
               platformName: input.platform,
               platformBookingRef: input.platformBookingRef,
-              // GDPR minimization: salviamo solo campi non-PII.
+              // GDPR minimization: niente subject (contiene nome cliente in
+              // template "Prenotazione di Mario Rossi confermata") — viola
+              // art. 5.1.c. La PII vive su `Customer` con policy dedicata.
               rawPayload: {
                 platform: input.platform,
                 ref: input.platformBookingRef,
-                subject: input.rawEmailSubject,
                 startDate: input.startDate.toISOString().slice(0, 10),
                 endDate: input.endDate.toISOString().slice(0, 10),
                 totalAmountCents: input.totalAmountCents,
@@ -165,14 +183,21 @@ export async function importCharterBooking(
     });
 
     // Fan-out availability POST-commit per evitare ghost jobs su rollback.
-    if (result.mode === "created") {
-      const channel = PLATFORM_TO_CHANNEL[input.platform];
+    const channel = PLATFORM_TO_CHANNEL[input.platform];
+    if (result.mode === "created" && result.booking.status !== "CANCELLED") {
       await blockDates(
         result.booking.boatId,
         result.booking.startDate,
         result.booking.endDate,
         channel,
         result.booking.id,
+      );
+    } else if (result.mode === "cancelled" || result.booking.status === "CANCELLED") {
+      await releaseDates(
+        result.booking.boatId,
+        result.booking.startDate,
+        result.booking.endDate,
+        channel,
       );
     }
 
@@ -221,5 +246,58 @@ export async function importCharterBooking(
       };
     }
     throw err;
+  }
+}
+
+/**
+ * Sanity check pre-insert anti-DoS.
+ *
+ * Un parser buggato o un'email spoofata puo' estrarre un range arbitrario
+ * (es. "2026-01-01 to 2099-12-31" = 26k righe BoatAvailability + altrettanti
+ * job fan-out). Throw di `ValidationError` fa tornare il cron un error che
+ * lascia l'email UNSEEN per review manuale.
+ *
+ * @throws ValidationError se dates/amount fuori range ragionevole.
+ */
+function validateCharterInput(input: ImportCharterInput): void {
+  const start = toUtcDay(input.startDate);
+  const end = toUtcDay(input.endDate);
+
+  if (end < start) {
+    throw new ValidationError("Charter endDate before startDate", {
+      platform: input.platform,
+      ref: input.platformBookingRef,
+    });
+  }
+
+  const durationDays = Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+  if (durationDays > MAX_CHARTER_DURATION_DAYS) {
+    throw new ValidationError(
+      `Charter duration ${durationDays}d exceeds max ${MAX_CHARTER_DURATION_DAYS}d`,
+      { platform: input.platform, ref: input.platformBookingRef, durationDays },
+    );
+  }
+
+  const today = toUtcDay(new Date());
+  const daysFromNow = Math.round((start.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  if (daysFromNow < -7) {
+    throw new ValidationError("Charter startDate too far in the past", {
+      platform: input.platform,
+      ref: input.platformBookingRef,
+      daysFromNow,
+    });
+  }
+  if (daysFromNow > MAX_CHARTER_FUTURE_DAYS) {
+    throw new ValidationError(
+      `Charter startDate ${daysFromNow}d in future exceeds max ${MAX_CHARTER_FUTURE_DAYS}d`,
+      { platform: input.platform, ref: input.platformBookingRef, daysFromNow },
+    );
+  }
+
+  if (input.totalAmountCents < MIN_CHARTER_CENTS || input.totalAmountCents > MAX_CHARTER_CENTS) {
+    throw new ValidationError(
+      `Charter totalAmountCents ${input.totalAmountCents} out of range [${MIN_CHARTER_CENTS}..${MAX_CHARTER_CENTS}]`,
+      { platform: input.platform, ref: input.platformBookingRef },
+    );
   }
 }
