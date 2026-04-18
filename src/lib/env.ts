@@ -52,6 +52,17 @@ const envSchema = z.object({
 
   // Cron
   CRON_SECRET: z.string().default("dev-cron-please-change"),
+
+  // Bokun (Plan 3)
+  BOKUN_API_URL: z.string().url().default("https://api.bokuntest.com"),
+  BOKUN_VENDOR_ID: z.string().optional(),
+  BOKUN_ACCESS_KEY: z.string().optional(),
+  BOKUN_SECRET_KEY: z.string().optional(),
+  BOKUN_WEBHOOK_SECRET: z.string().optional(),
+  BOKUN_PRICE_MARKUP: z
+    .string()
+    .default("1.15")
+    .refine((s) => !isNaN(parseFloat(s)) && parseFloat(s) >= 1, "must be a number >= 1.0"),
 });
 
 function loadEnv() {

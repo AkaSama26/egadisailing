@@ -44,5 +44,20 @@ export function startCronScheduler(): void {
     { timezone: "Europe/Rome" },
   );
 
+  // Bokun reconciliation: ogni 5 minuti, fallback per webhook persi.
+  cron.schedule("*/5 * * * *", async () => {
+    try {
+      const url = `${env.APP_URL}/api/cron/bokun-reconciliation`;
+      const res = await fetch(url, {
+        headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+      });
+      if (!res.ok) {
+        logger.warn({ status: res.status }, "bokun-reconciliation cron non-2xx");
+      }
+    } catch (err) {
+      logger.error({ err }, "bokun-reconciliation cron fetch failed");
+    }
+  });
+
   logger.info("Cron scheduler started");
 }
