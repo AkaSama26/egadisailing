@@ -63,7 +63,6 @@ model Boat {
   services         Service[]
   availability     BoatAvailability[]
   bookings         Booking[]
-  crewAvailability CrewAvailability[]
 }
 
 enum PaymentSchedule {
@@ -197,29 +196,8 @@ model BoatAvailability {
   @@index([date])
 }
 
-enum SyncStatus {
-  PENDING
-  PROCESSING
-  SYNCED
-  FAILED
-}
-
-model SyncQueue {
-  id              String     @id @default(cuid())
-  targetChannel   String
-  operation       String
-  payload         Json
-  status          SyncStatus @default(PENDING)
-  attempts        Int        @default(0)
-  nextRetryAt     DateTime?
-  lastError       String?
-  originBookingId String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  @@index([status, nextRetryAt])
-  @@index([targetChannel, status])
-}
+// Note: `SyncQueue` + enum `SyncStatus` erano il vecchio job model V1,
+// sostituito da BullMQ (Plan 1/Round 2). Droppato in `round11_cleanup`.
 
 model ChannelSyncStatus {
   channel      String    @id
@@ -296,7 +274,6 @@ model Booking {
   payments       Payment[]
   bookingNotes   BookingNote[]
   tripCrew       TripCrew[]
-  weatherApps    WeatherGuaranteeApplication[]
 
   @@index([source, status])
   @@index([startDate])
@@ -354,10 +331,8 @@ enum PaymentType {
 
 enum PaymentMethod {
   STRIPE
-  STRIPE_LINK
   CASH
   BANK_TRANSFER
-  POS
   EXTERNAL
 }
 
@@ -495,29 +470,11 @@ model CrewMember {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  availability CrewAvailability[]
-  tripCrew     TripCrew[]
+  tripCrew TripCrew[]
 }
 
-enum CrewAvailabilityStatus {
-  AVAILABLE
-  UNAVAILABLE
-  VACATION
-}
-
-model CrewAvailability {
-  id           String                 @id @default(cuid())
-  crewMemberId String
-  boatId       String?
-  date         DateTime               @db.Date
-  status       CrewAvailabilityStatus @default(AVAILABLE)
-  note         String?
-
-  crewMember CrewMember @relation(fields: [crewMemberId], references: [id], onDelete: Cascade)
-  boat       Boat?      @relation(fields: [boatId], references: [id])
-
-  @@unique([crewMemberId, date])
-}
+// Note: `CrewAvailability` + enum `CrewAvailabilityStatus` droppati in
+// round11_cleanup (zero app-code reference, feature mai esposta).
 
 model TripCrew {
   id           String   @id @default(cuid())
@@ -550,21 +507,9 @@ model WeatherForecastCache {
   @@index([fetchedAt])
 }
 
-enum WeatherGuaranteeType {
-  FULL_REFUND
-  RESCHEDULE
-  CREDIT
-}
-
-model WeatherGuaranteeApplication {
-  id        String               @id @default(cuid())
-  bookingId String
-  type      WeatherGuaranteeType
-  reason    String
-  appliedAt DateTime             @default(now())
-
-  booking Booking @relation(fields: [bookingId], references: [id])
-}
+// Note: enum `WeatherGuaranteeType` + model `WeatherGuaranteeApplication`
+// droppati in round11_cleanup. Plan 6 reintrodurra' con UI admin se il
+// cliente conferma la feature.
 
 // ═══════════════════════════════════════════════════════════
 // OTP E RATE LIMIT
