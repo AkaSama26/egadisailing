@@ -51,7 +51,10 @@ export const bokunBookingResponseSchema = z.object({
       }),
     )
     .optional(),
-  numPeople: z.number().int().min(1).max(100).optional(),
+  // Bokun alcuni booking legacy/gift-voucher hanno numPeople: 0 (carrier vuoto).
+  // Accettiamo e facciamo fallback a 1 al momento dell'insert DB — rifiutare
+  // qui vorrebbe dire webhook 500 + retry loop Bokun.
+  numPeople: z.number().int().min(0).max(100).optional(),
   paymentStatus: z.string().max(64).optional(),
   commissionAmount: z.number().nonnegative().max(1_000_000).optional().nullable(),
   netAmount: z.number().nonnegative().max(1_000_000).optional().nullable(),

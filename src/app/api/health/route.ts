@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import { getRedisConnection, syncQueue } from "@/lib/queue";
 import { logger } from "@/lib/logger";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
@@ -95,9 +97,30 @@ async function checkChannels(): Promise<ChannelStatus> {
  * - `/api/health?deep=1`: include queue depth + ChannelSyncStatus. Usare
  *   per monitor esterno / admin dashboard. 503 se RED o failed > threshold.
  */
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
 export const GET = withErrorHandler(async (req: Request) => {
   const url = new URL(req.url);
-  const deep = url.searchParams.get("deep") === "1";
+  const deepRequested = url.searchParams.get("deep") === "1";
+
+  // Deep mode espone internals (queue counts, lastError, channel health).
+  // Richiede Bearer CRON_SECRET.
+  let deep = false;
+  if (deepRequested) {
+    const authHeader = req.headers.get("authorization") ?? "";
+    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/);
+    if (bearerMatch && timingSafeEqualStr(bearerMatch[1], env.CRON_SECRET)) {
+      deep = true;
+    } else {
+      logger.warn(
+        { ip: req.headers.get("x-forwarded-for") ?? "unknown" },
+        "Deep health check requested without valid auth",
+      );
+    }
+  }
 
   const [database, redis] = await Promise.all([checkDatabase(), checkRedis()]);
   const coreOk = database.ok && redis.ok;

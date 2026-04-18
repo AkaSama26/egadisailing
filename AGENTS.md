@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 completati + 6 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability). Plan 4-6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 completati + 7 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment). Plan 4-6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -278,6 +278,50 @@ Top 10 gap da colmare pre-go-live (ordine di rischio):
 10. `sync-availability`+`fan-out` helper (S)
 
 Infra necessaria: pglite/testcontainers, ioredis-mock, @playwright/test, vitest setup. Rimandata a Plan 6.
+
+## Round 7 audit — regression + schema + cross-flow + deployment (fix applicati)
+
+Quattro audit paralleli: regression su fix Round 6, DB schema deep-dive, cross-integration booking flow, production deployment readiness.
+
+### Critiche fixate
+- **Advisory session lock buggato su Prisma pool** (R7-C1): `pg_try_advisory_lock`/`pg_advisory_unlock` finivano su connessioni diverse del pool (max=20) → `unlock` no-op silenzioso, lock de facto permanente. Fix: sostituito con **Redis lease** via SETNX+TTL (`src/lib/lease/redis-lease.ts`). Atomic, multi-replica safe, auto-libera al TTL se il processo crasha. Rimosso helper `tryAcquireSessionAdvisoryLock`/`releaseSessionAdvisoryLock` per evitare misuse.
+- **Zod `numPeople.min(1)` bloccava webhook Bokun con gift voucher** (R7-C2): Bokun invia `numPeople: 0` su alcuni booking legacy — strict parse causava webhook 500 + retry loop. Fix: `.min(0)` + fallback `?? 1` a livello DB insert.
+- **Double booking cross-channel DIRECT+BOKUN** (Scenario 1): `createPendingDirectBooking` controllava solo `BoatAvailability.BLOCKED`, non `Booking` attivi PENDING/CONFIRMED. Un webhook Bokun arrivato durante checkout DIRECT creava un secondo Booking sulla stessa slot. Fix: aggiunto pre-check 2 su `Booking` overlapping `{ startDate: { lte: endDay }, endDate: { gte: startDay } }` dentro l'advisory lock. Lato Bokun: warn log se rileva overlap DIRECT (Bokun ha gia' committato upstream, serve azione admin).
+- **Refund non rilasciava availability** (Scenario 2): `onChargeRefunded` aggiornava solo `Payment.status`. Fix: full refund ora updata `Booking.status=REFUNDED` in tx + `releaseDates(CHANNELS.DIRECT)` post-commit. Partial refund mantiene lo slot (il cliente viene comunque).
+- **Stripe webhook `return` su `!booking`** (Scenario 3): su replica lag Postgres, il webhook ritornava 200 senza confermare, Stripe non ritentava, evento perso. Fix: `throw ValidationError` → Stripe ritenta fino a risoluzione replica.
+- **Rate-limit hang on Redis down** (R7-A2): `getRedisConnection()` con `maxRetriesPerRequest: null` (necessario per BullMQ) fa queue i comandi → `enforceRateLimit` si blocca minuti durante outage. Fix: `Promise.race` con timeout 3s + fail-open (log warn). Meglio un rate-limit bypass temporaneo che perdere webhook critici.
+
+### Alte fixate
+- **Health check `deep=1` esposto senza auth** (R7-M2): rivelava queue counts, error message, channel health. Fix: `deep=1` richiede Bearer CRON_SECRET (timing-safe compare). Fallback a shallow senza 401 (health per liveness probe deve restare 200).
+- **Retention redaction `take:500` senza loop** (R7-M3): backlog iniziale silenziosamente distribuito su N giorni. Fix: cursor-based loop con MAX_BATCHES=20 (cap 10k/run), log warn se hit del cap.
+- **`Service.bokunProductId` non unique**: due service potevano puntare stesso Bokun product → doppio push. Fix: `@unique` + partial index Postgres (NULL-distinct via WHERE).
+- **`Payment.stripeRefundId` non unique**: webhook `charge.refunded` replay poteva match multiple row. Fix: `@unique` + partial index.
+- **`AuditLog.timestamp` index standalone mancante**: retention deleteMany usava compound `(userId, timestamp)` che NON supporta full-scan su timestamp. Fix: aggiunto `@@index([timestamp])`.
+- **`BoatAvailability.date` index standalone mancante**: query admin calendario cross-boat facevano seq-scan. Fix: `@@index([date])`.
+- **Retention whitelist estesa**: ora tiene `paymentStatus` + `passengerCount` (campi non-PII) per audit fiscale 10-anni art. 2220 c.c.
+- **`email()` strict droppa booking legacy Bokun**: `searchBokunBookings.safeParse` loggava solo 3 issues senza `bokunBookingId`. Fix: include `bokunBookingId` + `confirmationCode` nel warn log per diagnosi manuale.
+- **Dockerfile non copiava Prisma CLI** (deployment CRITICA-4): `npx prisma migrate deploy` a runtime falliva. Fix: COPY `node_modules/prisma`, `@prisma`, `.bin/prisma` + entrypoint `docker/entrypoint.sh` che esegue `prisma migrate deploy` prima di `node server.js`.
+
+### Deferred (bloccanti go-live che richiedono lavoro dedicato)
+- **CRITICA — GDPR ConsentRecord**: modello mancante (Round 3 segnalato). Blocca go-live finche' non c'e' checkbox Privacy+T&C nel wizard + pagine /privacy /terms /cookie-policy + endpoint Data Subject Rights. Lavoro ~1 settimana incluso copy legale dal cliente.
+- **CRITICA — Exclusion constraint `Booking (boatId, daterange, status)`**: difesa DB-level vs double booking cross-channel. Richiede `CREATE EXTENSION btree_gist` + raw migration. Plan 4.
+- **CRITICA — deployment infra completa**: `docker-compose.prod.yml`, `Caddyfile` (reverse proxy+TLS+security headers), backup sidecar S3/B2, CI/CD GitHub Actions, uptime monitor esterno, log aggregation, staging env. ~3-5 giornate ingegnere.
+- **CRITICA — `admin/_actions/booking-actions.ts` rotto**: `@ts-nocheck` con schema obsoleto, refund/cancel admin non funziona fuori dal webhook Stripe. Plan 5.
+- **ALTA — Customer.email case-insensitive**: oggi `Mario@X.it` ≠ `mario@x.it`. `normalizeEmail` app-level ma bypass in admin actions. Fix sicuro richiede CITEXT extension + data migration (controllare email miste-case esistenti). Defer a Plan 5.
+- **ALTA — `Booking.customerId onDelete: Restrict`**: blocca GDPR erasure. Serve `anonymizeCustomer()` helper (mask email + nomi) invece di delete hard. Plan 5.
+- **ALTA — `DirectBooking.bookingId` no vincolo `source=DIRECT`**: trigger Postgres o view-based check.
+- **ALTA — `BokunPriceSync.hotDayRuleId` non-FK**: orphan rows invisibili se HotDayRule cancellata.
+- **ALTA — index `Booking_source_status_startDate`**: compound per reconciliation cron (oggi separati).
+- **MEDIA — Confirmation code P2002 retry handler**: spazio collision trascurabile ma non zero. Wrap `tx.booking.create` in loop 3x con regen.
+- **MEDIA — `BokunBooking.createdAt` per retention**: oggi filtro usa `booking.createdAt` via join → seq-scan. Aggiungere colonna dedicata.
+- **MEDIA — Check constraints**: `numPeople > 0`, `totalPrice >= 0`, `currency = 'EUR'`, VarChar limits su Customer fields.
+- **MEDIA — `PricingPeriod` overlap constraint**: EXCLUDE USING gist (gia' noto Round 4).
+- **MEDIA — `HotDayOverride` partial unique NULL-aware**: gia' noto Round 3.
+- **MEDIA — AbortSignal wall-clock bounded**: retry worst case 48-50s supera webhook budget proxy 30-60s.
+- **MEDIA — Stripe events reconciliation cron** (noto Round 2): legge `/v1/events` e replaya mancati.
+- **MEDIA — `sendConfirmationEmail` silent failure** (noto Round 6): accodare a BullMQ con retry+DLQ.
+- **MEDIA — SIGTERM shutdown con job pending**: worker idempotency jobId deterministico + limiter OK, ma Plan 4+ valutare drain pattern `worker.pause()+await active=0`.
+- **BASSA — Dead models**: `SyncQueue`, `WeatherGuaranteeApplication`, `CrewAvailability`, enum `SyncStatus`, `PaymentMethod.POS/STRIPE_LINK` mai usati. Drop in Plan 6 cleanup.
 
 ## Plan roadmap
 

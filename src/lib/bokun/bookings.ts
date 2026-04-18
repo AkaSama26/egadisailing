@@ -54,8 +54,13 @@ export async function searchBokunBookings(params: SearchParams): Promise<SearchR
     if (parsed.success) {
       bookings.push(parsed.data);
     } else {
+      const anyB = b as { id?: unknown; confirmationCode?: unknown };
       logger.warn(
-        { issues: parsed.error.issues.slice(0, 3) },
+        {
+          bokunBookingId: anyB?.id,
+          confirmationCode: anyB?.confirmationCode,
+          issues: parsed.error.issues.slice(0, 3),
+        },
         "Dropped malformed Bokun booking from search result",
       );
     }

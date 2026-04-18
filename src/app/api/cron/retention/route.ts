@@ -111,25 +111,47 @@ export const GET = withErrorHandler(async (req: Request) => {
   // sostituiamo il payload con i soli campi business-essenziali, cancellando
   // la PII residua. Idempotent: ri-esecuzione su record gia' redatti non ha
   // effetti (non matchano il filtro grazie al marker `_redacted: true`).
+  // Loop fino a esaurire il backlog (cap 10k/run per evitare overrun cron).
+  // Idempotent grazie al marker `_redacted: true` — record gia' redatti vengono
+  // skippati senza update sprecato.
+  const BATCH = 500;
+  const MAX_BATCHES = 20;
   try {
-    const ninetyDayOldBookings = await db.bokunBooking.findMany({
-      where: { booking: { createdAt: { lt: ninetyDaysAgo } } },
-      select: { bookingId: true, rawPayload: true },
-      take: 500,
-    });
-    for (const row of ninetyDayOldBookings) {
+    let batchIdx = 0;
+    let lastId: string | null = null;
+    while (batchIdx < MAX_BATCHES) {
+      const ninetyDayOldBookings: Array<{ bookingId: string; rawPayload: unknown }> =
+        await db.bokunBooking.findMany({
+          where: {
+            booking: { createdAt: { lt: ninetyDaysAgo } },
+            ...(lastId ? { bookingId: { gt: lastId } } : {}),
+          },
+          select: { bookingId: true, rawPayload: true },
+          orderBy: { bookingId: "asc" },
+          take: BATCH,
+        });
+      if (ninetyDayOldBookings.length === 0) break;
+      batchIdx++;
+      lastId = ninetyDayOldBookings[ninetyDayOldBookings.length - 1].bookingId;
+      for (const row of ninetyDayOldBookings) {
       const payload = row.rawPayload as Record<string, unknown>;
       if (payload && typeof payload === "object" && payload._redacted === true) continue;
+      const pickNumber = (v: unknown): number | null =>
+        typeof v === "number" ? v : null;
+      const pickString = (v: unknown): string | null => (typeof v === "string" ? v : null);
       const redacted: Prisma.InputJsonValue = {
-        id: (payload?.id as number | undefined) ?? null,
-        productId: (payload?.productId as string | undefined) ?? null,
-        status: (payload?.status as string | undefined) ?? null,
-        channelName: (payload?.channelName as string | undefined) ?? null,
-        startDate: (payload?.startDate as string | undefined) ?? null,
-        endDate: (payload?.endDate as string | undefined) ?? null,
-        numPeople: (payload?.numPeople as number | undefined) ?? null,
-        totalPrice: (payload?.totalPrice as number | undefined) ?? null,
-        currency: (payload?.currency as string | undefined) ?? null,
+        id: pickNumber(payload?.id),
+        productId: pickString(payload?.productId),
+        status: pickString(payload?.status),
+        channelName: pickString(payload?.channelName),
+        startDate: pickString(payload?.startDate),
+        endDate: pickString(payload?.endDate),
+        numPeople: pickNumber(payload?.numPeople),
+        totalPrice: pickNumber(payload?.totalPrice),
+        currency: pickString(payload?.currency),
+        // Campi non-PII tenuti per audit fiscale (art. 2220 c.c., 10 anni).
+        paymentStatus: pickString(payload?.paymentStatus),
+        passengerCount: pickNumber(payload?.passengerCount),
         _redacted: true,
         _redactedAt: now.toISOString(),
       };
@@ -138,6 +160,13 @@ export const GET = withErrorHandler(async (req: Request) => {
         data: { rawPayload: redacted },
       });
       results.bokunPayloadRedacted++;
+      }
+    }
+    if (batchIdx >= MAX_BATCHES) {
+      logger.warn(
+        { batches: batchIdx, redacted: results.bokunPayloadRedacted },
+        "Bokun rawPayload redaction hit MAX_BATCHES — backlog remains",
+      );
     }
   } catch (err) {
     errors.push("bokunPayload");

@@ -120,7 +120,9 @@ export async function createPendingDirectBooking(
     // serializzare anche vs blockDates concorrenti.
     await acquireTxAdvisoryLock(tx, "availability", service.boatId, isoDay(startDay));
 
-    // Pre-check: verifica che non ci siano dates BLOCKED nel range
+    // Pre-check 1: nessuna cella BoatAvailability BLOCKED nel range.
+    // Questo intercetta booking CONFIRMED (che fanno blockDates) e blocchi
+    // manuali admin.
     const conflicts = await tx.boatAvailability.findMany({
       where: {
         boatId: service.boatId,
@@ -131,6 +133,33 @@ export async function createPendingDirectBooking(
     if (conflicts.length > 0) {
       throw new ConflictError("Dates not available", {
         blockedDates: conflicts.map((c) => c.date.toISOString().slice(0, 10)),
+      });
+    }
+
+    // Pre-check 2: nessun Booking attivo overlapping (PENDING o CONFIRMED)
+    // da qualsiasi canale (DIRECT, BOKUN, charter platforms).
+    //
+    // Senza questo: durante il checkout DIRECT il BoatAvailability non e'
+    // ancora BLOCKED (viene bloccato solo dopo Stripe webhook), quindi un
+    // webhook Bokun concorrente passa il check #1 e crea un secondo Booking
+    // sulla stessa slot. Il DB accetta perche' manca l'exclusion constraint
+    // `EXCLUDE USING gist (boatId, daterange, status)` — aggiunta in backlog.
+    const overlappingBookings = await tx.booking.findMany({
+      where: {
+        boatId: service.boatId,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        // Range overlap: NOT (existing.end < new.start OR existing.start > new.end)
+        startDate: { lte: endDay },
+        endDate: { gte: startDay },
+      },
+      select: { id: true, source: true, confirmationCode: true },
+    });
+    if (overlappingBookings.length > 0) {
+      throw new ConflictError("Dates not available (overlapping active booking)", {
+        conflictingBookings: overlappingBookings.map((b) => ({
+          code: b.confirmationCode,
+          source: b.source,
+        })),
       });
     }
 

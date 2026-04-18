@@ -11,10 +11,7 @@ import { CHANNELS, RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
 import { getClientIp } from "@/lib/http/client-ip";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
-import {
-  tryAcquireSessionAdvisoryLock,
-  releaseSessionAdvisoryLock,
-} from "@/lib/db/advisory-lock";
+import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 
 export const runtime = "nodejs";
 
@@ -24,17 +21,19 @@ const MAX_PAGES = 20; // safety cap: 2000 bookings/run
 // nostro server e Bokun. Senza buffer, eventi con updatedAt == now() esatto
 // possono essere persi tra un run e il successivo.
 const CLOCK_SKEW_BUFFER_MS = 30_000;
-const LOCK_NAMESPACE = "cron";
-const LOCK_KEY = "bokun_reconciliation";
+const LEASE_NAME = "cron:bokun_reconciliation";
+// Il cron gira ogni 5min; il lease deve coprire il run normale con margine.
+// TTL auto-libera se il processo crasha (Redis scade, no stale lock).
+const LEASE_TTL_SECONDS = 8 * 60;
 
 /**
  * Cron ogni 5 minuti che importa bookings Bokun aggiornati dopo l'ultimo
  * sync noto — fallback per webhook persi.
  *
- * Anti-overrun: acquisisce un advisory session lock `cron:bokun_reconciliation`.
- * Se un run precedente e' ancora in corso (overrun >5min) o un'altra replica
- * Next sta eseguendo, skippiamo senza bloccare. Garantisce single-flight
- * cross-replica.
+ * Anti-overrun: lease Redis single-flight con TTL auto-liberation. Se un
+ * run precedente e' ancora in corso o un'altra replica Next sta eseguendo,
+ * skippiamo senza bloccare. Se il processo crasha, il TTL libera il lease
+ * entro 8 minuti (il cron successivo recupera).
  *
  * Rate-limit: 10 req/min per IP (un cron legittimo fa 12 req/ora, l'attacco
  * con secret leakato viene cappato).
@@ -59,8 +58,8 @@ export const GET = withErrorHandler(async (req: Request) => {
     return NextResponse.json({ skipped: "bokun_not_configured" });
   }
 
-  const locked = await tryAcquireSessionAdvisoryLock(db, LOCK_NAMESPACE, LOCK_KEY);
-  if (!locked) {
+  const leased = await tryAcquireLease(LEASE_NAME, LEASE_TTL_SECONDS);
+  if (!leased) {
     logger.warn("Bokun reconciliation skipped: another run in progress");
     return NextResponse.json({ skipped: "concurrent_run" });
   }
@@ -149,8 +148,8 @@ export const GET = withErrorHandler(async (req: Request) => {
     });
     throw err;
   } finally {
-    await releaseSessionAdvisoryLock(db, LOCK_NAMESPACE, LOCK_KEY).catch((err) => {
-      logger.error({ err }, "Failed to release Bokun reconciliation lock");
+    await releaseLease(LEASE_NAME).catch((err) => {
+      logger.warn({ err }, "Failed to release Bokun reconciliation lease (TTL will recover)");
     });
   }
 });

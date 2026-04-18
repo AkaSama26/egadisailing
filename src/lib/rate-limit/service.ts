@@ -1,5 +1,6 @@
 import { getRedisConnection } from "@/lib/queue";
 import { RateLimitError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 
 /**
  * Rate limiter atomico su Redis.
@@ -91,8 +92,35 @@ export async function checkRateLimit(config: RateLimitConfig): Promise<RateLimit
   };
 }
 
+/**
+ * Timeout hard sul check: Redis `maxRetriesPerRequest: null` fa queue-in
+ * i comandi durante outage invece di throware, quindi senza questo race
+ * l'endpoint si blocca fino al reconnect (minuti) e il webhook upstream
+ * va in timeout.
+ */
+const RATE_LIMIT_TIMEOUT_MS = 3000;
+
 export async function enforceRateLimit(config: RateLimitConfig): Promise<void> {
-  const result = await checkRateLimit(config);
+  let result: RateLimitCheck;
+  try {
+    result = await Promise.race([
+      checkRateLimit(config),
+      new Promise<RateLimitCheck>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("rate-limit-timeout")),
+          RATE_LIMIT_TIMEOUT_MS,
+        ),
+      ),
+    ]);
+  } catch (err) {
+    // Fail-open: meglio un rate-limit bypass temporaneo durante outage
+    // Redis che un webhook Bokun/Stripe perso per timeout.
+    logger.warn(
+      { err, scope: config.scope, identifier: config.identifier },
+      "Rate limit check failed — allowing request (fail-open)",
+    );
+    return;
+  }
   if (!result.allowed) {
     throw new RateLimitError(result.retryAfterSeconds ?? 60, {
       identifier: config.identifier,

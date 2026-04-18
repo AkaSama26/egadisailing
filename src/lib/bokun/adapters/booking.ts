@@ -84,6 +84,33 @@ export async function importBokunBooking(
         return { booking: updated, mode: "updated" as const };
       }
 
+      // Race-detection: c'e' un Booking DIRECT PENDING overlapping sulla
+       // stessa boat? Se si, due canali hanno prenotato la stessa slot.
+       // Bokun e' gia' confermata upstream, non possiamo rigettare qui; logghiamo
+       // warn per azione admin (cancel+refund del PENDING DIRECT). Plan 5
+       // aggiungera' auto-cancel del PENDING + stripe.paymentIntents.cancel.
+      const overlappingDirect = await tx.booking.findFirst({
+        where: {
+          boatId: service.boatId,
+          status: { in: ["PENDING", "CONFIRMED"] },
+          source: "DIRECT",
+          startDate: { lte: endDate },
+          endDate: { gte: startDate },
+        },
+        select: { id: true, confirmationCode: true, status: true },
+      });
+      if (overlappingDirect) {
+        logger.warn(
+          {
+            bokunBookingId: String(booking.id),
+            directBookingId: overlappingDirect.id,
+            directCode: overlappingDirect.confirmationCode,
+            directStatus: overlappingDirect.status,
+          },
+          "Bokun booking overlaps with active DIRECT booking — admin review needed",
+        );
+      }
+
       const customer = await tx.customer.upsert({
         where: { email: emailLower },
         update: {
@@ -111,7 +138,10 @@ export async function importBokunBooking(
           boatId: service.boatId,
           startDate,
           endDate,
-          numPeople: booking.numPeople ?? 1,
+          // Bokun a volte manda 0 (gift voucher, cart senza conferma); il
+          // booking esiste ma senza persone definite — default a 1 per non
+          // violare CHECK downstream.
+          numPeople: booking.numPeople && booking.numPeople > 0 ? booking.numPeople : 1,
           totalPrice: totalPriceStr,
           currency: booking.currency,
           status,

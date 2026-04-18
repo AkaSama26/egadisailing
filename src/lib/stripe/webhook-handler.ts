@@ -97,12 +97,20 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
     include: { directBooking: true },
   });
   if (!booking) {
-    logger.error({ bookingId: metadata.bookingId }, "Booking not found for PI");
-    return;
+    // Throw (non return): il marker ProcessedStripeEvent NON e' ancora
+    // inserito (lo fa il caller a fine handler), quindi Stripe retryera'.
+    // Caso tipico: replica lag Postgres — al retry successivo il booking
+    // sara' visibile.
+    logger.error({ bookingId: metadata.bookingId }, "Booking not found for PI — Stripe will retry");
+    throw new ValidationError(
+      `Booking ${metadata.bookingId} not found for PI ${pi.id} — retry required`,
+    );
   }
   if (!booking.directBooking) {
-    logger.error({ bookingId: metadata.bookingId }, "DirectBooking missing");
-    return;
+    logger.error({ bookingId: metadata.bookingId }, "DirectBooking missing — Stripe will retry");
+    throw new ValidationError(
+      `DirectBooking missing for ${metadata.bookingId} — retry required`,
+    );
   }
 
   const totalCents = toCents(booking.totalPrice);
@@ -206,16 +214,64 @@ async function onPaymentIntentFailed(pi: Stripe.PaymentIntent): Promise<void> {
 }
 
 async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
-  const payment = await db.payment.findFirst({ where: { stripeChargeId: charge.id } });
+  const payment = await db.payment.findFirst({
+    where: { stripeChargeId: charge.id },
+    include: { booking: true },
+  });
   if (!payment) return;
   if (payment.status === "REFUNDED") return;
 
-  await db.payment.update({
-    where: { id: payment.id },
-    data: {
-      status: "REFUNDED",
-      stripeRefundId: charge.refunds?.data[0]?.id,
-    },
+  // Full refund se `amount_refunded === amount`. Partial refund: NON
+  // rilasciamo availability (il cliente sta ancora venendo).
+  const isFullRefund = charge.amount_refunded === charge.amount;
+
+  await db.$transaction(async (tx) => {
+    await tx.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: "REFUNDED",
+        stripeRefundId: charge.refunds?.data[0]?.id,
+      },
+    });
+
+    if (isFullRefund && payment.booking.status !== "REFUNDED") {
+      await tx.booking.update({
+        where: { id: payment.bookingId },
+        data: { status: "REFUNDED" },
+      });
+    }
   });
-  logger.info({ paymentId: payment.id, chargeId: charge.id }, "Payment marked as refunded");
+
+  // Fan-out release FUORI dalla tx (side-effect su availability+BullMQ).
+  // Solo per full refund: partial refund mantiene lo slot perche' il
+  // booking e' ancora attivo, il cliente riceve solo parziale rimborso.
+  if (isFullRefund) {
+    try {
+      const { releaseDates } = await import("@/lib/availability/service");
+      const { CHANNELS } = await import("@/lib/channels");
+      await releaseDates(
+        payment.booking.boatId,
+        payment.booking.startDate,
+        payment.booking.endDate,
+        CHANNELS.DIRECT,
+      );
+    } catch (err) {
+      // Log ma non throw: il refund Stripe e' gia' committato. Admin
+      // dovra' rilasciare manualmente il calendario se questo fallisce.
+      logger.error(
+        { err, bookingId: payment.bookingId },
+        "Availability release after refund failed — manual admin action required",
+      );
+    }
+  }
+
+  logger.info(
+    {
+      paymentId: payment.id,
+      chargeId: charge.id,
+      bookingId: payment.bookingId,
+      isFullRefund,
+    },
+    "Payment refunded",
+  );
 }

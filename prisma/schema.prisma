@@ -39,6 +39,7 @@ model AuditLog {
 
   @@index([entity, entityId])
   @@index([userId, timestamp])
+  @@index([timestamp])
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -89,7 +90,7 @@ model Service {
   defaultPaymentSchedule   PaymentSchedule @default(FULL)
   defaultDepositPercentage Int?
   priority                 Int             @default(5)
-  bokunProductId           String?
+  bokunProductId           String?         @unique
   active                   Boolean         @default(true)
   createdAt                DateTime        @default(now())
   updatedAt                DateTime        @updatedAt
@@ -193,6 +194,7 @@ model BoatAvailability {
 
   @@unique([boatId, date])
   @@index([status])
+  @@index([date])
 }
 
 enum SyncStatus {
@@ -375,7 +377,7 @@ model Payment {
   method         PaymentMethod
   status         PaymentStatus @default(PENDING)
   stripeChargeId String?       @unique
-  stripeRefundId String?
+  stripeRefundId String?       @unique
   note           String?
   createdAt      DateTime      @default(now())
   processedAt    DateTime?
