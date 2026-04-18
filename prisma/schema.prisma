@@ -7,42 +7,400 @@ datasource db {
   provider = "postgresql"
 }
 
-enum UserRole {
-  ADMIN
-  STAFF
+// ═══════════════════════════════════════════════════════════
+// SISTEMA
+// ═══════════════════════════════════════════════════════════
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditLogs AuditLog[]
 }
 
-enum ServiceType {
-  SOCIAL_BOATING
-  EXCLUSIVE_EXPERIENCE
-  CABIN_CHARTER
-  BOAT_SHARED
-  BOAT_EXCLUSIVE
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  before    Json?
+  after     Json?
+  ip        String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([userId, timestamp])
 }
 
-enum TripStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
+// ═══════════════════════════════════════════════════════════
+// CATALOGO
+// ═══════════════════════════════════════════════════════════
+
+model Boat {
+  id          String   @id
+  name        String
+  type        String
+  description String
+  length      Float?
+  year        Int?
+  cabins      Int?
+  engineHp    Int?
+  amenities   Json
+  images      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  services         Service[]
+  availability     BoatAvailability[]
+  bookings         Booking[]
+  crewAvailability CrewAvailability[]
+}
+
+enum PaymentSchedule {
+  FULL
+  DEPOSIT_BALANCE
+}
+
+enum DurationType {
+  FULL_DAY
+  HALF_DAY_MORNING
+  HALF_DAY_AFTERNOON
+  WEEK
+}
+
+model Service {
+  id                       String          @id
+  name                     String
+  type                     String
+  boatId                   String
+  durationType             DurationType
+  durationHours            Int
+  capacityMax              Int
+  minPaying                Int?
+  defaultPaymentSchedule   PaymentSchedule @default(FULL)
+  defaultDepositPercentage Int?
+  priority                 Int             @default(5)
+  bokunProductId           String?
+  active                   Boolean         @default(true)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+
+  boat            Boat             @relation(fields: [boatId], references: [id])
+  bookings        Booking[]
+  pricingPeriods  PricingPeriod[]
+  hotDayOverrides HotDayOverride[]
+}
+
+// ═══════════════════════════════════════════════════════════
+// PREZZI
+// ═══════════════════════════════════════════════════════════
+
+model PricingPeriod {
+  id             String   @id @default(cuid())
+  serviceId      String
+  label          String
+  startDate      DateTime @db.Date
+  endDate        DateTime @db.Date
+  pricePerPerson Decimal  @db.Decimal(10, 2)
+  year           Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@index([serviceId, startDate, endDate])
+}
+
+model HotDayRule {
+  id             String   @id @default(cuid())
+  name           String
+  dateRangeStart DateTime @db.Date
+  dateRangeEnd   DateTime @db.Date
+  weekdays       Int[]
+  multiplier     Decimal  @db.Decimal(4, 3)
+  roundTo        Int      @default(10)
+  priority       Int      @default(0)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([dateRangeStart, dateRangeEnd, active])
+}
+
+model HotDayOverride {
+  id            String   @id @default(cuid())
+  date          DateTime @db.Date
+  serviceId     String?
+  multiplier    Decimal? @db.Decimal(4, 3)
+  absolutePrice Decimal? @db.Decimal(10, 2)
+  roundTo       Int      @default(10)
+  note          String?
+  createdBy     String
+  createdAt     DateTime @default(now())
+
+  service Service? @relation(fields: [serviceId], references: [id])
+
+  @@unique([date, serviceId])
+}
+
+model BokunPriceSync {
+  id                   String    @id @default(cuid())
+  hotDayRuleId         String?
+  bokunExperienceId    String
+  bokunPriceOverrideId String?
+  date                 DateTime  @db.Date
+  amount               Decimal   @db.Decimal(10, 2)
+  status               String
+  syncedAt             DateTime?
+  lastError            String?
+  createdAt            DateTime  @default(now())
+
+  @@index([status])
+  @@index([bokunExperienceId, date])
+}
+
+// ═══════════════════════════════════════════════════════════
+// DISPONIBILITA E SYNC
+// ═══════════════════════════════════════════════════════════
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BLOCKED
+  PARTIALLY_BOOKED
+}
+
+model BoatAvailability {
+  id                String             @id @default(cuid())
+  boatId            String
+  date              DateTime           @db.Date
+  status            AvailabilityStatus @default(AVAILABLE)
+  lockedByBookingId String?
+  lastSyncedSource  String?
+  lastSyncedAt      DateTime?
+  updatedAt         DateTime           @updatedAt
+  createdAt         DateTime           @default(now())
+
+  boat Boat @relation(fields: [boatId], references: [id])
+
+  @@unique([boatId, date])
+  @@index([status])
+}
+
+enum SyncStatus {
+  PENDING
+  PROCESSING
+  SYNCED
+  FAILED
+}
+
+model SyncQueue {
+  id              String     @id @default(cuid())
+  targetChannel   String
+  operation       String
+  payload         Json
+  status          SyncStatus @default(PENDING)
+  attempts        Int        @default(0)
+  nextRetryAt     DateTime?
+  lastError       String?
+  originBookingId String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([status, nextRetryAt])
+  @@index([targetChannel, status])
+}
+
+model ChannelSyncStatus {
+  channel      String    @id
+  lastSyncAt   DateTime?
+  lastError    String?
+  healthStatus String    @default("GREEN")
+  updatedAt    DateTime  @updatedAt
+}
+
+// ═══════════════════════════════════════════════════════════
+// CLIENTI
+// ═══════════════════════════════════════════════════════════
+
+model Customer {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  firstName   String
+  lastName    String
+  phone       String?
+  nationality String?
+  language    String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings Booking[]
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRENOTAZIONI
+// ═══════════════════════════════════════════════════════════
+
+enum BookingSource {
+  DIRECT
+  BOKUN
+  BOATAROUND
+  SAMBOAT
+  CLICKANDBOAT
+  NAUTAL
 }
 
 enum BookingStatus {
-  CONFIRMED
   PENDING
+  CONFIRMED
   CANCELLED
   REFUNDED
 }
 
-enum BookingChannel {
-  WEBSITE
-  GET_YOUR_GUIDE
-  AIRBNB
-  CLICK_AND_BOAT
-  MUSEMENT
-  VIATOR
-  SAMBOAT
-  MANUAL
+model Booking {
+  id               String        @id @default(cuid())
+  confirmationCode String        @unique
+  source           BookingSource
+  externalRef      String?
+  customerId       String
+  serviceId        String
+  boatId           String
+  startDate        DateTime      @db.Date
+  endDate          DateTime      @db.Date
+  numPeople        Int
+  totalPrice       Decimal       @db.Decimal(10, 2)
+  currency         String        @default("EUR")
+  status           BookingStatus @default(PENDING)
+  weatherGuarantee Boolean       @default(false)
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  customer       Customer                      @relation(fields: [customerId], references: [id])
+  service        Service                       @relation(fields: [serviceId], references: [id])
+  boat           Boat                          @relation(fields: [boatId], references: [id])
+  directBooking  DirectBooking?
+  bokunBooking   BokunBooking?
+  charterBooking CharterBooking?
+  payments       Payment[]
+  bookingNotes   BookingNote[]
+  tripCrew       TripCrew[]
+  weatherApps    WeatherGuaranteeApplication[]
+
+  @@index([source, status])
+  @@index([startDate])
+  @@index([customerId])
 }
+
+model DirectBooking {
+  bookingId                 String          @id
+  paymentSchedule           PaymentSchedule
+  depositAmount             Decimal?        @db.Decimal(10, 2)
+  balanceAmount             Decimal?        @db.Decimal(10, 2)
+  stripePaymentIntentId     String?
+  cancellationPolicyApplied String?
+  balanceReminderSentAt     DateTime?
+  balancePaidAt             DateTime?
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model BokunBooking {
+  bookingId        String   @id
+  bokunBookingId   String   @unique
+  channelName      String
+  commissionAmount Decimal? @db.Decimal(10, 2)
+  netAmount        Decimal? @db.Decimal(10, 2)
+  rawPayload       Json
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model CharterBooking {
+  bookingId          String   @id
+  platformName       String
+  platformBookingRef String
+  rawPayload         Json
+  commissionAmount   Decimal? @db.Decimal(10, 2)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  @@unique([platformName, platformBookingRef])
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAGAMENTI
+// ═══════════════════════════════════════════════════════════
+
+enum PaymentType {
+  DEPOSIT
+  BALANCE
+  FULL
+  REFUND
+}
+
+enum PaymentMethod {
+  STRIPE
+  STRIPE_LINK
+  CASH
+  BANK_TRANSFER
+  POS
+  EXTERNAL
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  bookingId      String
+  amount         Decimal       @db.Decimal(10, 2)
+  currency       String        @default("EUR")
+  type           PaymentType
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  stripeChargeId String?
+  stripeRefundId String?
+  note           String?
+  createdAt      DateTime      @default(now())
+  processedAt    DateTime?
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId, type])
+  @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTES
+// ═══════════════════════════════════════════════════════════
+
+model BookingNote {
+  id        String   @id @default(cuid())
+  bookingId String
+  note      String
+  authorId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+// ═══════════════════════════════════════════════════════════
+// CREW
+// ═══════════════════════════════════════════════════════════
 
 enum CrewRole {
   SKIPPER
@@ -50,170 +408,130 @@ enum CrewRole {
   HOSTESS
 }
 
-enum DurationType {
-  FULL_DAY
-  HALF_DAY_MORNING
-  WEEK
-}
-
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  name         String
-  role         UserRole @default(STAFF)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  @@map("users")
-}
-
-model Service {
-  id            String       @id @default(cuid())
-  name          String
-  type          ServiceType
-  description   Json
-  durationType  DurationType @map("duration_type")
-  durationHours Int          @map("duration_hours")
-  capacityMax   Int          @map("capacity_max")
-  minPaying     Int?         @map("min_paying")
-  boatId        String?      @map("boat_id")
-  active        Boolean      @default(true)
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
-
-  boat           Boat?           @relation(fields: [boatId], references: [id])
-  pricingPeriods PricingPeriod[]
-  trips          Trip[]
-
-  @@map("services")
-}
-
-model Boat {
-  id          String   @id @default(cuid())
-  name        String
-  type        String
-  length      Float?
-  year        Int?
-  description Json?
-  amenities   Json?
-  images      Json?
-  cabins      Int?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  services Service[]
-
-  @@map("boats")
-}
-
-model PricingPeriod {
-  id             String   @id @default(cuid())
-  serviceId      String   @map("service_id")
-  label          String
-  startDate      DateTime @map("start_date")
-  endDate        DateTime @map("end_date")
-  pricePerPerson Decimal  @map("price_per_person") @db.Decimal(10, 2)
-  year           Int
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-
-  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  @@map("pricing_periods")
-}
-
-model Trip {
-  id             String     @id @default(cuid())
-  serviceId      String     @map("service_id")
-  date           DateTime   @db.Date
-  departureTime  String     @map("departure_time")
-  returnTime     String     @map("return_time")
-  status         TripStatus @default(SCHEDULED)
-  availableSpots Int        @map("available_spots")
-  notes          String?
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @updatedAt @map("updated_at")
-
-  service  Service    @relation(fields: [serviceId], references: [id])
-  bookings Booking[]
-  crew     TripCrew[]
-
-  @@map("trips")
-}
-
-model Booking {
-  id              String         @id @default(cuid())
-  tripId          String         @map("trip_id")
-  customerId      String         @map("customer_id")
-  numPeople       Int            @map("num_people")
-  totalPrice      Decimal        @map("total_price") @db.Decimal(10, 2)
-  status          BookingStatus  @default(PENDING)
-  channel         BookingChannel @default(WEBSITE)
-  stripePaymentId String?        @map("stripe_payment_id")
-  cabinNumber     Int?           @map("cabin_number")
-  notes           String?
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
-
-  trip     Trip     @relation(fields: [tripId], references: [id])
-  customer Customer @relation(fields: [customerId], references: [id])
-
-  @@map("bookings")
-}
-
-model Customer {
-  id          String   @id @default(cuid())
-  name        String
-  email       String   @unique
-  phone       String?
-  nationality String?
-  language    String?  @default("it")
-  notes       String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  bookings Booking[]
-
-  @@map("customers")
-}
-
 model CrewMember {
-  id        String   @id @default(cuid())
-  name      String
-  role      CrewRole
-  phone     String?
-  email     String?
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  name           String
+  role           CrewRole
+  phone          String?
+  email          String?  @unique
+  dailyRate      Decimal? @db.Decimal(10, 2)
+  certifications Json?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  trips TripCrew[]
+  availability CrewAvailability[]
+  tripCrew     TripCrew[]
+}
 
-  @@map("crew_members")
+enum CrewAvailabilityStatus {
+  AVAILABLE
+  UNAVAILABLE
+  VACATION
+}
+
+model CrewAvailability {
+  id           String                 @id @default(cuid())
+  crewMemberId String
+  boatId       String?
+  date         DateTime               @db.Date
+  status       CrewAvailabilityStatus @default(AVAILABLE)
+  note         String?
+
+  crewMember CrewMember @relation(fields: [crewMemberId], references: [id], onDelete: Cascade)
+  boat       Boat?      @relation(fields: [boatId], references: [id])
+
+  @@unique([crewMemberId, date])
 }
 
 model TripCrew {
-  id           String @id @default(cuid())
-  tripId       String @map("trip_id")
-  crewMemberId String @map("crew_member_id")
+  id           String   @id @default(cuid())
+  bookingId    String
+  crewMemberId String
+  role         CrewRole
+  hoursWorked  Float?
+  cost         Decimal? @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
 
-  trip       Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  booking    Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   crewMember CrewMember @relation(fields: [crewMemberId], references: [id])
 
-  @@unique([tripId, crewMemberId])
-  @@map("trip_crew")
+  @@unique([bookingId, crewMemberId])
 }
 
-model PortalSync {
-  id        String    @id @default(cuid())
-  portal    String
-  lastSync  DateTime? @map("last_sync")
-  status    String    @default("idle")
-  errorLog  String?   @map("error_log")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+// ═══════════════════════════════════════════════════════════
+// METEO
+// ═══════════════════════════════════════════════════════════
 
-  @@map("portal_syncs")
+model WeatherForecastCache {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  locationKey String
+  forecast    Json
+  source      String
+  fetchedAt   DateTime @default(now())
+
+  @@unique([date, locationKey, source])
+  @@index([fetchedAt])
+}
+
+enum WeatherGuaranteeType {
+  FULL_REFUND
+  RESCHEDULE
+  CREDIT
+}
+
+model WeatherGuaranteeApplication {
+  id        String               @id @default(cuid())
+  bookingId String
+  type      WeatherGuaranteeType
+  reason    String
+  appliedAt DateTime             @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+}
+
+// ═══════════════════════════════════════════════════════════
+// OTP E RATE LIMIT
+// ═══════════════════════════════════════════════════════════
+
+model BookingRecoveryOtp {
+  id        String    @id @default(cuid())
+  email     String
+  codeHash  String
+  attempts  Int       @default(0)
+  ipAddress String
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  @@index([email, expiresAt])
+}
+
+model BookingRecoverySession {
+  id        String    @id @default(cuid())
+  email     String
+  tokenHash String    @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([email])
+}
+
+model RateLimitEntry {
+  id           String    @id @default(cuid())
+  identifier   String
+  scope        String
+  count        Int       @default(0)
+  windowStart  DateTime
+  windowEnd    DateTime
+  blockedUntil DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([identifier, scope, windowEnd])
+  @@index([blockedUntil])
 }
