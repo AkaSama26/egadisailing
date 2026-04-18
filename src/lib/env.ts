@@ -63,6 +63,24 @@ const envSchema = z.object({
     .string()
     .default("1.15")
     .refine((s) => !isNaN(parseFloat(s)) && parseFloat(s) >= 1, "must be a number >= 1.0"),
+
+  // Boataround (Plan 4)
+  BOATAROUND_API_URL: z.string().url().default("https://partner-api.boataround.com"),
+  BOATAROUND_API_TOKEN: z.string().optional(),
+  BOATAROUND_WEBHOOK_SECRET: z.string().optional(),
+
+  // IMAP for charter email parsing (Plan 4)
+  IMAP_HOST: z.string().optional(),
+  IMAP_PORT: z
+    .string()
+    .default("993")
+    .refine((s) => !isNaN(parseInt(s, 10)), "IMAP_PORT must be numeric"),
+  IMAP_USER: z.string().optional(),
+  IMAP_PASSWORD: z.string().optional(),
+  IMAP_TLS: z
+    .string()
+    .default("true")
+    .transform((s) => s !== "false"),
 });
 
 function loadEnv() {

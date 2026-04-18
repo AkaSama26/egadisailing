@@ -59,5 +59,21 @@ export function startCronScheduler(): void {
     }
   });
 
+  // Charter email parser: ogni 5 minuti (sfasato di 2 min dal Bokun per
+  // spalmare carico). Skippa silenzioso se IMAP non configurato.
+  cron.schedule("2-59/5 * * * *", async () => {
+    try {
+      const url = `${env.APP_URL}/api/cron/email-parser`;
+      const res = await fetch(url, {
+        headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+      });
+      if (!res.ok) {
+        logger.warn({ status: res.status }, "email-parser cron non-2xx");
+      }
+    } catch (err) {
+      logger.error({ err }, "email-parser cron fetch failed");
+    }
+  });
+
   logger.info("Cron scheduler started");
 }

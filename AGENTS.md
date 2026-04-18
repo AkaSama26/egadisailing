@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 completati + 7 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment). Plan 4-6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 completati + 7 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment). Plan 5-6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -323,12 +323,57 @@ Quattro audit paralleli: regression su fix Round 6, DB schema deep-dive, cross-i
 - **MEDIA — SIGTERM shutdown con job pending**: worker idempotency jobId deterministico + limiter OK, ma Plan 4+ valutare drain pattern `worker.pause()+await active=0`.
 - **BASSA — Dead models**: `SyncQueue`, `WeatherGuaranteeApplication`, `CrewAvailability`, enum `SyncStatus`, `PaymentMethod.POS/STRIPE_LINK` mai usati. Drop in Plan 6 cleanup.
 
+## Plan 4 — Charter integrations (completato)
+
+Strategia ibrida per 4 canali charter:
+
+| Canale | Modo | Detail |
+|---|---|---|
+| **Boataround** | API REST bidirezionale | `src/lib/boataround/*` client (retry+jitter+timeout) + webhook endpoint HMAC-SHA256 + worker availability 10/s limiter |
+| **SamBoat** | iCal export + email import | `GET /api/ical/[boatId]` feed RFC5545 (cache 15min, rate-limit 30/min IP) + parser email `src/lib/email-parser/samboat.ts` |
+| **Click&Boat** | Email parse + manual alert | Parser email + `ManualAlert` table PENDING → admin agisce manualmente sul portale |
+| **Nautal** | Email parse + manual alert | Idem Click&Boat |
+
+**Moduli chiave**:
+- `src/lib/ical/formatter.ts` — RFC5545 writer (CRLF, line folding <75 octets, escape, DTEND exclusive). 5 test.
+- `src/lib/ical/generator.ts` — raggruppa `BoatAvailability.BLOCKED` contigui in VEVENT stabile `egadisailing-booking-{bookingId}`.
+- `src/lib/boataround/{client,bookings,availability,schemas,webhook-verifier}.ts` — stesso shape Bokun (Zod response, SSRF-safe id, retry+jitter+AbortSignal.timeout, P2002 race handler).
+- `src/lib/boataround/adapters/booking.ts` — `mapBoataroundStatus` esplicito + `buildSafeRawPayload` GDPR whitelist.
+- `src/lib/email-parser/imap-client.ts` — `imapflow` (non `node-imap` che ha utf7 vulns high). Fetch UNSEEN max 100/run, timeout 30s, mark SEEN solo post-processing.
+- `src/lib/email-parser/{samboat,clickandboat,nautal}.ts` — parser template-based. Regex flessibili (ISO o dd/mm/yyyy, EU/US amount format). Parse fallito → null → email resta UNSEEN per review manuale.
+- `src/lib/email-parser/booking-extractor.ts` — `parseAmountToCents` / `parseFlexibleDate` / `stripHtml` condivisi, 11 test.
+- `src/lib/email-parser/dedup.ts` — `ProcessedCharterEmail` dedup via sha256(Message-ID), insert-first con P2002 handler.
+- `src/lib/email-parser/dispatcher.ts` — domain-based routing (endsWith .samboat.com ecc).
+- `src/lib/charter/booking-import.ts` — upsert Customer (normalizeEmail) + Booking + CharterBooking con cross-channel warn su DIRECT overlap.
+- `src/lib/charter/manual-alerts.ts` — `ManualAlert` PENDING/RESOLVED/IGNORED, idempotent dedup su slot.
+- `src/lib/queue/workers/boataround-availability-worker.ts` — limiter 10/s.
+- `src/lib/queue/workers/manual-alert-worker.ts` — traduce fan-out `availability.update` per Click&Boat/Nautal in `ManualAlert` row.
+
+**Endpoints**:
+- `GET /api/ical/[boatId]` — feed pubblico iCal (rate-limit 30/min, cache 15min).
+- `POST /api/webhooks/boataround` — HMAC-SHA256 + rate-limit 60/min + `ProcessedBoataroundEvent` dedup.
+- `GET /api/cron/email-parser` — Bearer CRON_SECRET + Redis lease single-flight + cron ogni 5 min sfasato 2min dal Bokun.
+
+**Migrations**: `20260418210000_plan4_charter` (ProcessedBoataroundEvent), `20260418210500_plan4_email_dedup` (ProcessedCharterEmail), `20260418211000_plan4_manual_alerts` (ManualAlert + enum).
+
+**Retention**: ProcessedBoataroundEvent 30g, ProcessedCharterEmail 90g (aggiunti al cron retention).
+
+**Test nuovi**: 21 (iCal formatter 5, Boataround webhook verifier 5, extractor helpers 11). Total 88 test passanti.
+
+**Deferred Plan 4+/5**:
+- Stripe-style reconciliation cron per Boataround (webhook persi)
+- Boat resolution da subject email (oggi default first boat)
+- Parser email template snapshot-test con email reali dal cliente
+- Auto-resolve manual alerts via iCal polling del portale esterno
+- `Boat.boataroundBoatId` explicit mapping se upstream usa slug diverso
+- Integration test suite (pglite + ioredis-mock) per adapter+webhook+cron
+
 ## Plan roadmap
 
 1. ✅ Plan 1 — DB + Backend foundation (completato)
 2. ✅ Plan 2 — Sito + Stripe + OTP (completato + audit fixes)
 3. ✅ Plan 3 — Bokun integration (completato + round 5 audit fixes)
-4. ⏳ Plan 4 — Charter integrations (Boataround, SamBoat iCal, Click&Boat, Nautal email)
+4. ✅ Plan 4 — Charter integrations (iCal export + Boataround + SamBoat/Click&Boat/Nautal email parser)
 5. ⏳ Plan 5 — Dashboard admin
 6. ⏳ Plan 6 — Weather + notifiche + E2E
 

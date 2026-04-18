@@ -411,6 +411,53 @@ model ProcessedBokunEvent {
   @@index([topic, processedAt])
 }
 
+/// Event-level idempotency per webhook Boataround. `eventId =
+/// sha256(type|bookingId|timestamp|signature)`. Stesso pattern di
+/// `ProcessedBokunEvent` / `ProcessedStripeEvent` per dedup replay.
+model ProcessedBoataroundEvent {
+  eventId     String   @id
+  eventType   String
+  processedAt DateTime @default(now())
+
+  @@index([eventType, processedAt])
+}
+
+/// Dedup per email processate dal cron charter (Plan 4). Key = sha256
+/// dell'header `Message-ID` (o fallback quando mancante). Retention 90g.
+model ProcessedCharterEmail {
+  messageHash String   @id
+  platform    String?
+  processedAt DateTime @default(now())
+
+  @@index([processedAt])
+}
+
+/// Alert per azioni manuali sulle piattaforme charter che NON supportano
+/// API (Click&Boat, Nautal). L'admin vede la lista in dashboard, fa
+/// l'azione sul portale esterno, poi marca come risolto.
+enum ManualAlertStatus {
+  PENDING
+  RESOLVED
+  IGNORED
+}
+
+model ManualAlert {
+  id             String            @id @default(cuid())
+  channel        String            // CLICKANDBOAT | NAUTAL
+  boatId         String
+  date           DateTime          @db.Date
+  action         String            // BLOCK | UNBLOCK
+  status         ManualAlertStatus @default(PENDING)
+  bookingId      String?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  resolvedAt     DateTime?
+  resolvedByUserId String?
+
+  @@index([status, createdAt])
+  @@index([channel, date])
+}
+
 // ═══════════════════════════════════════════════════════════
 // NOTES
 // ═══════════════════════════════════════════════════════════

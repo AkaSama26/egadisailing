@@ -17,6 +17,8 @@ export const runtime = "nodejs";
  * - RateLimitEntry con window chiusa   → delete dopo 7 giorni
  * - ProcessedStripeEvent               → delete dopo 60 giorni (Stripe retry max 30g)
  * - ProcessedBokunEvent                → delete dopo 30 giorni
+ * - ProcessedBoataroundEvent           → delete dopo 30 giorni
+ * - ProcessedCharterEmail              → delete dopo 90 giorni
  * - WeatherForecastCache               → delete dopo 14 giorni
  * - AuditLog                           → delete dopo 24 mesi (bilanciato con antifraud/compliance)
  * - BokunBooking.rawPayload            → redacted PII dopo 90 giorni
@@ -41,6 +43,8 @@ export const GET = withErrorHandler(async (req: Request) => {
     rateLimitDeleted: 0,
     stripeEventDeleted: 0,
     bokunEventDeleted: 0,
+    boataroundEventDeleted: 0,
+    charterEmailDeleted: 0,
     bokunPayloadRedacted: 0,
     weatherCacheDeleted: 0,
     auditLogDeleted: 0,
@@ -103,6 +107,28 @@ export const GET = withErrorHandler(async (req: Request) => {
   } catch (err) {
     errors.push("bokunEvent");
     logger.error({ err }, "BokunEvent retention cleanup failed");
+  }
+
+  try {
+    results.boataroundEventDeleted = (
+      await db.processedBoataroundEvent.deleteMany({
+        where: { processedAt: { lt: thirtyDaysAgo } },
+      })
+    ).count;
+  } catch (err) {
+    errors.push("boataroundEvent");
+    logger.error({ err }, "BoataroundEvent retention cleanup failed");
+  }
+
+  try {
+    results.charterEmailDeleted = (
+      await db.processedCharterEmail.deleteMany({
+        where: { processedAt: { lt: ninetyDaysAgo } },
+      })
+    ).count;
+  } catch (err) {
+    errors.push("charterEmail");
+    logger.error({ err }, "CharterEmail retention cleanup failed");
   }
 
   // GDPR: BokunBooking.rawPayload contiene PII (firstName/lastName/email/phone/

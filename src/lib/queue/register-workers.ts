@@ -1,5 +1,7 @@
 import { startBokunAvailabilityWorker } from "./workers/bokun-availability-worker";
 import { startBokunPricingWorker } from "./workers/bokun-pricing-worker";
+import { startBoataroundAvailabilityWorker } from "./workers/boataround-availability-worker";
+import { startManualAlertWorker } from "./workers/manual-alert-worker";
 import { getRegisteredWorkers, getRedisConnection } from "./index";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
@@ -23,7 +25,11 @@ export function registerQueueWorkers(): void {
 
   startBokunAvailabilityWorker();
   startBokunPricingWorker();
-  logger.info("BullMQ workers registered (bokun availability, bokun pricing)");
+  startBoataroundAvailabilityWorker();
+  startManualAlertWorker();
+  logger.info(
+    "BullMQ workers registered (bokun availability, bokun pricing, boataround availability, manual alert)",
+  );
 
   registerShutdownHandler();
 }
