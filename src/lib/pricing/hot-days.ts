@@ -25,9 +25,25 @@ export async function resolveHotDay(
 ): Promise<HotDayResult> {
   const dateOnly = toUtcDay(date);
 
-  const specificOverride = await db.hotDayOverride.findUnique({
-    where: { date_serviceId: { date: dateOnly, serviceId } },
-  });
+  // 3 query in parallelo: la priorita' e' nel return, non nell'ordine di fetch.
+  const [specificOverride, globalOverride, rules] = await Promise.all([
+    db.hotDayOverride.findUnique({
+      where: { date_serviceId: { date: dateOnly, serviceId } },
+    }),
+    db.hotDayOverride.findFirst({
+      where: { date: dateOnly, serviceId: null },
+      orderBy: { createdAt: "desc" },
+    }),
+    db.hotDayRule.findMany({
+      where: {
+        active: true,
+        dateRangeStart: { lte: dateOnly },
+        dateRangeEnd: { gte: dateOnly },
+      },
+      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+    }),
+  ]);
+
   if (specificOverride) {
     return {
       applied: true,
@@ -38,10 +54,6 @@ export async function resolveHotDay(
     };
   }
 
-  const globalOverride = await db.hotDayOverride.findFirst({
-    where: { date: dateOnly, serviceId: null },
-    orderBy: { createdAt: "desc" },
-  });
   if (globalOverride) {
     return {
       applied: true,
@@ -53,14 +65,6 @@ export async function resolveHotDay(
   }
 
   const weekday = dateOnly.getUTCDay();
-  const rules = await db.hotDayRule.findMany({
-    where: {
-      active: true,
-      dateRangeStart: { lte: dateOnly },
-      dateRangeEnd: { gte: dateOnly },
-    },
-    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-  });
 
   for (const rule of rules) {
     if (rule.weekdays.length === 0 || rule.weekdays.includes(weekday)) {

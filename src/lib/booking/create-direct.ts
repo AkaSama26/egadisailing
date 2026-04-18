@@ -1,11 +1,11 @@
-import crypto from "node:crypto";
 import { db } from "@/lib/db";
 import { quotePrice } from "@/lib/pricing/service";
 import { toCents, fromCents } from "@/lib/pricing/cents";
-import { toUtcDay, isoDay, addHours, addDays } from "@/lib/dates";
+import { toUtcDay, isoDay, parseDateLikelyLocalDay } from "@/lib/dates";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
+import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
-import type { DurationType } from "@/generated/prisma/enums";
+import { deriveEndDate, generateConfirmationCode } from "./helpers";
 
 export interface CreateDirectBookingInput {
   serviceId: string;
@@ -31,35 +31,6 @@ export interface CreatedBooking {
   depositAmountCents: number;
   balanceAmountCents: number;
   upfrontAmountCents: number;
-}
-
-const CONFIRMATION_CODE_ALPHABET = "ABCDEFGHIJKLMNPQRSTUVWXYZ23456789";
-
-function generateConfirmationCode(): string {
-  let code = "ES-";
-  for (let i = 0; i < 7; i++) {
-    code += CONFIRMATION_CODE_ALPHABET[crypto.randomInt(0, CONFIRMATION_CODE_ALPHABET.length)];
-  }
-  return code;
-}
-
-/**
- * Derives endDate from service duration. Fonte di verita' server-side — NON
- * accettare endDate dal client (DoS: cliente blocca calendario per mesi
- * pagando una giornata).
- */
-function deriveEndDate(startDate: Date, durationType: DurationType, durationHours: number): Date {
-  switch (durationType) {
-    case "WEEK":
-      // Cabin charter: 7 giorni, cambio sabato
-      return addDays(startDate, 6);
-    case "FULL_DAY":
-    case "HALF_DAY_MORNING":
-    case "HALF_DAY_AFTERNOON":
-      return addHours(startDate, durationHours);
-    default:
-      return addHours(startDate, durationHours);
-  }
 }
 
 /**
@@ -88,15 +59,17 @@ export async function createPendingDirectBooking(
     );
   }
 
-  if (input.startDate.getTime() < Date.now()) {
-    throw new ValidationError("startDate must be in the future");
+  // Normalizza startDate al giorno di calendario Europe/Rome (risolve
+  // off-by-one: 2026-04-07 digitato dal cliente e' 2026-04-06T22:00Z).
+  const startDay = parseDateLikelyLocalDay(input.startDate);
+  if (startDay.getTime() < toUtcDay(new Date()).getTime()) {
+    throw new ValidationError("startDate must not be in the past");
   }
 
-  const endDate = deriveEndDate(input.startDate, service.durationType, service.durationHours);
-  const startDay = toUtcDay(input.startDate);
+  const endDate = deriveEndDate(startDay, service.durationType, service.durationHours);
   const endDay = toUtcDay(endDate);
 
-  const quote = await quotePrice(input.serviceId, input.startDate, input.numPeople);
+  const quote = await quotePrice(input.serviceId, startDay, input.numPeople);
   const totalCents = toCents(quote.totalPrice);
 
   let depositCents = 0;
@@ -109,7 +82,7 @@ export async function createPendingDirectBooking(
   }
 
   const confirmationCode = generateConfirmationCode();
-  const emailLower = input.customer.email.toLowerCase();
+  const emailLower = normalizeEmail(input.customer.email);
 
   const result = await db.$transaction(async (tx) => {
     // Advisory lock sulla barca per serializzare i payment-intent concorrenti
@@ -131,14 +104,16 @@ export async function createPendingDirectBooking(
       });
     }
 
+    // Upsert customer. NON sovrascriviamo firstName/lastName alla seconda
+    // prenotazione stessa email: il cliente ha gia' ricevuto email con il
+    // nome originale, tenerlo stabile. Aggiorniamo solo campi non-critici
+    // (phone/nationality/language se forniti).
     const customer = await tx.customer.upsert({
       where: { email: emailLower },
       update: {
-        firstName: input.customer.firstName,
-        lastName: input.customer.lastName,
-        phone: input.customer.phone,
-        nationality: input.customer.nationality,
-        language: input.customer.language,
+        phone: input.customer.phone || undefined,
+        nationality: input.customer.nationality || undefined,
+        language: input.customer.language || undefined,
       },
       create: {
         email: emailLower,
@@ -157,8 +132,8 @@ export async function createPendingDirectBooking(
         customerId: customer.id,
         serviceId: service.id,
         boatId: service.boatId,
-        startDate: input.startDate,
-        endDate,
+        startDate: startDay,
+        endDate: endDay,
         numPeople: input.numPeople,
         totalPrice: quote.totalPrice.toFixed(2),
         notes: input.notes,

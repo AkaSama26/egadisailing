@@ -40,6 +40,30 @@ export function parseIsoDay(s: string): Date {
 }
 
 /**
+ * Parsa input datetime dal client (es. `new Date(dateInput).toISOString()`)
+ * con intento "giorno locale Europe/Rome" e restituisce il day UTC corrispondente.
+ *
+ * Risolve il bug off-by-one: un cliente italiano che seleziona "7 aprile"
+ * emette 2026-04-06T22:00Z — se normalizzato con `toUtcDay` diventa il 6
+ * aprile. Qui riconosciamo il pattern "datetime alla mezzanotte locale
+ * Europe/Rome" e restituiamo la data intesa.
+ *
+ * Strategia robusta: usa il day component dell'ISO string in Europe/Rome.
+ */
+export function parseDateLikelyLocalDay(input: Date | string): Date {
+  const d = typeof input === "string" ? new Date(input) : input;
+  // Formatta in Europe/Rome e ri-estrae YYYY-MM-DD.
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const iso = fmt.format(d); // "YYYY-MM-DD"
+  return parseIsoDay(iso);
+}
+
+/**
  * Generator che yielda ogni giorno UTC tra start ed end inclusi.
  */
 export function* eachUtcDayInclusive(start: Date, end: Date): Generator<Date> {

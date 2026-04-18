@@ -67,7 +67,19 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
 }
 
 async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void> {
-  const metadata = parseBookingMetadata(pi.metadata);
+  // Tolerant parsing: PI creato fuori dal flusso (Stripe dashboard, testing)
+  // non ha booking metadata — loggiamo e skippiamo senza throw (altrimenti
+  // Stripe ritenta forever).
+  let metadata;
+  try {
+    metadata = parseBookingMetadata(pi.metadata);
+  } catch {
+    logger.warn(
+      { piId: pi.id, amount: pi.amount_received },
+      "PaymentIntent succeeded without valid booking metadata — ignored",
+    );
+    return;
+  }
 
   const charge = typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
   if (!charge) {

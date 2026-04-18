@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { formatEur } from "@/lib/pricing/cents";
+import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 
 export default async function BookingSuccessPage({
   params,
@@ -10,7 +11,7 @@ export default async function BookingSuccessPage({
 }) {
   const { code } = await params;
   const booking = await db.booking.findUnique({
-    where: { confirmationCode: code },
+    where: { confirmationCode: normalizeConfirmationCode(code) },
     include: { service: true, customer: true, directBooking: true, payments: true },
   });
   if (!booking) notFound();

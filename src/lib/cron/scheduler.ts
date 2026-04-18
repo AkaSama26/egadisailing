@@ -26,5 +26,23 @@ export function startCronScheduler(): void {
     { timezone: "Europe/Rome" },
   );
 
+  // Data retention cleanup: ogni giorno alle 03:00 Europe/Rome (low-traffic).
+  cron.schedule(
+    "0 3 * * *",
+    async () => {
+      logger.info("Running retention cleanup cron");
+      try {
+        const url = `${env.APP_URL}/api/cron/retention`;
+        const res = await fetch(url, {
+          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+        });
+        logger.info({ status: res.status }, "retention cron response");
+      } catch (err) {
+        logger.error({ err }, "retention cron fetch failed");
+      }
+    },
+    { timezone: "Europe/Rome" },
+  );
+
   logger.info("Cron scheduler started");
 }

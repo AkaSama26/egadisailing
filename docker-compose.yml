@@ -29,6 +29,16 @@ services:
       - ${REDIS_PASSWORD:?REDIS_PASSWORD required}
       - --protected-mode
       - "yes"
+      # AOF persistence: BullMQ jobs + rate-limit counters non vengono persi
+      # in caso di restart container. "everysec" e' il miglior tradeoff
+      # fsync durability vs throughput.
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - "everysec"
+      # noeviction: BullMQ richiede che i job non vengano mai evicted.
+      - --maxmemory-policy
+      - "noeviction"
     volumes:
       - redis_data:/data
     healthcheck:

@@ -298,6 +298,7 @@ model Booking {
 
   @@index([source, status])
   @@index([startDate])
+  @@index([status, startDate])
   @@index([customerId])
 }
 
@@ -312,6 +313,8 @@ model DirectBooking {
   balancePaidAt             DateTime?
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([paymentSchedule, balanceReminderSentAt, balancePaidAt])
 }
 
 model BokunBooking {

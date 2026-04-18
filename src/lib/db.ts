@@ -7,7 +7,14 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: Number(process.env.DATABASE_POOL_MAX ?? 20),
+    idleTimeoutMillis: 30_000,
+    // Statement-level timeout: previene query runaway (deadlock, full scan
+    // accidentali) da bloccare connessioni per minuti.
+    statement_timeout: 15_000,
+  });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({
     adapter,

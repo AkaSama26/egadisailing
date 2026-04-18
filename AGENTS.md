@@ -8,7 +8,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 completati (foundation + sito/Stripe/OTP) + 2 round di audit applicati. Plan 3-6 da implementare.
+**Stato**: Plan 1 + Plan 2 completati + 3 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap). Plan 3-6 da implementare.
+
+**Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
 ## Stack
 
@@ -42,7 +44,9 @@ Spec completa: `docs/superpowers/specs/2026-04-17-platform-v2-design.md`
 | `src/lib/audit/log.ts` | `auditLog(entry)` — failure-safe | Dopo ogni mutazione sensibile |
 | `src/lib/db/advisory-lock.ts` | `computeAdvisoryLockKey`, `acquireTxAdvisoryLock` | OGNI sezione critica serializzabile — usa namespace consistenti |
 | `src/types/next-auth.d.ts` | Module augmentation Session.user.role + JWT.role | Implicito — elimina `as any` |
-| `src/lib/dates.ts` | `addDays`, `addHours` aggiunti | OGNI manipolazione date — NON duplicare |
+| `src/lib/dates.ts` | `addDays`, `addHours`, `parseDateLikelyLocalDay` | OGNI manipolazione date — `parseDateLikelyLocalDay` per input utente client (timezone-safe) |
+| `src/lib/email-normalize.ts` | `normalizeEmail` — Gmail alias handling | Rate limit per email + Customer upsert |
+| `src/lib/booking/helpers.ts` | `generateConfirmationCode`, `normalizeConfirmationCode`, `deriveEndDate` | Pure, testabili — extracted per Plan 3+ |
 | `src/lib/http/client-ip.ts` | `getClientIp`, `getUserAgent` | OGNI Server Action/route con rate-limit |
 | `src/lib/http/with-error-handler.ts` | `withErrorHandler`, `requireBearerSecret` (timing-safe) | OGNI API route |
 | `src/lib/pricing/cents.ts` | `toCents`, `fromCents`, `formatEur` | OGNI boundary Stripe o UI price |
@@ -75,6 +79,11 @@ Spec completa: `docs/superpowers/specs/2026-04-17-platform-v2-design.md`
 13. **Idempotency stripe**: insert su `ProcessedStripeEvent.eventId` all'inizio dell'handler — skippa se gia' processato.
 14. **Rate limit** ogni endpoint pubblico via `enforceRateLimit({ identifier: ip | email, scope, limit, windowSeconds })`.
 15. **API routes** wrappate in `withErrorHandler` per AppError/ZodError mapping coerente.
+16. **Date input utente** passa per `parseDateLikelyLocalDay` — `toUtcDay` su ISO datetime client causa off-by-one (cliente italiano CEST digita "7 aprile" → "2026-04-06T22:00Z" → toUtcDay = 6 aprile).
+17. **Email utente** normalizzata con `normalizeEmail()` — gmail alias + `.` → stesso Customer + no rate-limit bypass.
+18. **Confirmation code lookup** case-insensitive via `normalizeConfirmationCode()` — users copy-paste from email con case diverso.
+19. **Customer upsert** NON sovrascrive firstName/lastName alla 2a prenotazione stessa email — tenere stabile per email transazionali gia' inviate.
+20. **Pure helpers testabili** in `src/lib/booking/helpers.ts` — export esplicitamente funzioni critiche per unit test.
 
 ## Findings residui dall'audit (da attaccare nei piani successivi)
 
@@ -106,6 +115,40 @@ Spec completa: `docs/superpowers/specs/2026-04-17-platform-v2-design.md`
 - **Redis persistence**: configurare `--appendonly yes` + `--maxmemory-policy noeviction` (BullMQ).
 - **Stripe recovery**: cron giornaliero che rilegge `/v1/events` degli ultimi N giorni e replaya quelli non in `ProcessedStripeEvent`.
 - **CORS / security headers**: `headers()` in next.config.ts (HSTS, X-Frame-Options, CSP).
+
+### Da round 3 audit (Performance)
+- **CRITICA**: `blockDates` N+1 — 7 transazioni seriali per WEEK booking. Batch con raw SQL `INSERT ... ON CONFLICT` + singolo fan-out range.
+- **CRITICA**: Admin customers + CSV export no pagination + no `groupBy` DB (aggregate in JS). Sostituire con `groupBy({ by: 'customerId', _sum: ... })` + cursor pagination.
+- **ALTA**: Service/Boat ri-letti da DB su ogni request pubblico. `unstable_cache` con tag + revalidateTag da server actions admin.
+- **ALTA**: `quotePrice` fuori dalla transazione `createPendingDirectBooking`. Cache in-memory LRU per (serviceId, dateOnly) → quote.
+- **MEDIA**: Rate limit block path 2 round-trip (GET + PTTL separati). Unire in MULTI o Lua script atomico.
+- **MEDIA**: BullMQ worker senza `limiter` — canale esterno rate-limit puo' martellare.
+- **MEDIA**: Advisory lock tenuto per l'intera tx `createPendingDirectBooking`. `customer.upsert` puo' uscire dalla tx (email unique).
+- **MEDIA**: `recharts` in bundle admin — `dynamic(() => import(...))` per charts.
+- **MEDIA**: `next/image` non usato per trimarano.webp — LCP mobile scadente.
+
+### Da round 3 audit (GDPR — blockers go-live)
+- **CRITICA**: Checkbox Privacy/T&C + visualizzazione cancellation policy PRIMA del pagamento. Modello `ConsentRecord(customerId, bookingId, policyVersion, acceptedAt, ip, userAgent)`.
+- **CRITICA**: Pagine `/privacy`, `/terms`, `/cookie-policy` — ora 404, linkate nel footer. Legal copy da fornire al cliente.
+- **CRITICA**: Endpoint Data Subject Rights (export JSON + richiesta cancellazione) in `/b/sessione`.
+- **ALTA**: `onDelete: Restrict` Booking→Customer rende cancellazione impossibile. Implementare `anonymizeCustomer()` (mask email+nome) vs delete hard.
+- **ALTA**: Data retention cron (implementato in Plan 3 round 3: `/api/cron/retention` per OTP 30g, sessions 90g, rate-limit 7g, stripe events 60g, weather 14g, audit 24mesi). Booking/Customer retention 10y (art. 2220 c.c.) poi anonymize.
+- **ALTA**: IP retention policy documentata (90gg per antifraud, poi anon).
+- **ALTA**: Cookie Policy deve dichiarare cookie Cloudflare Turnstile (third-party).
+- **MEDIA**: Trasferimenti extra-UE (Stripe US, Cloudflare US) — SCC / EU-US DPF in Privacy Policy.
+- **MEDIA**: Footer legale + Privacy link in tutti i template email.
+
+### Da round 3 audit (Edge cases ancora aperti)
+- **ALTA**: Cron Stripe reconciliation — rileggere `/v1/events` ultimi N giorni e replayare su webhook handler se mai consegnati.
+- **MEDIA**: Nessun TTL/GC su booking PENDING — cleanup cron + `stripe.paymentIntents.cancel`.
+- **MEDIA**: Booking startDate senza buffer minimo (es. "almeno 2h di preavviso"). Business rule da aggiungere.
+- **MEDIA**: `quotePrice` throws se date oltre PricingPeriod configurato. UI deve impedire selezione o API 400 user-friendly.
+- **BASSA**: Confirmation code collision retry (P2002 handler).
+
+### Da round 3 audit (Testing — roadmap)
+- 47 test unit OK per pure functions (pricing, dates, html-escape, metadata, advisory-lock, email-normalize, booking helpers)
+- **Plan 3+ richiede**: `ioredis-mock` per rate-limit tests, prisma test-db per integration (availability, booking flow, webhook-handler end-to-end)
+- **Extract refactors pending**: `computeQuote(period, hotDay, numPeople)` pure in pricing/service, `verifyExpectedAmount(booking, paymentType)` pure in webhook-handler
 
 ### Da round 2 audit (UX)
 - **Wizard state persistence**: salvare state in sessionStorage + sync step ad URL search param (refresh/back safety).
