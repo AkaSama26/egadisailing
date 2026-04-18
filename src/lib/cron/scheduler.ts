@@ -75,10 +75,12 @@ export function startCronScheduler(): void {
     }
   });
 
-  // Weather check: ogni mattina 07:00 Europe/Rome. Alert admin su booking
+  // Weather check: ogni mattina 07:15 Europe/Rome (R12-M1: sfasato 15min
+  // da balance-reminders per non saturare il worker in-process single-thread
+  // e disperdere i picchi di carico Open-Meteo). Alert admin su booking
   // CONFIRMED nei prossimi 7gg con risk HIGH/EXTREME (Plan 6).
   cron.schedule(
-    "0 7 * * *",
+    "15 7 * * *",
     async () => {
       try {
         const url = `${env.APP_URL}/api/cron/weather-check`;

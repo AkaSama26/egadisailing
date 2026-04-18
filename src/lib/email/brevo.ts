@@ -43,6 +43,11 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
       body: JSON.stringify({
         sender: { email: env.BREVO_SENDER_EMAIL, name: env.BREVO_SENDER_NAME },
         to: [{ email: opts.to, name: opts.toName }],
+        // R12-A3: replyTo dedicato cosi' le risposte cliente non finiscono
+        // nel mailbox "noreply". Default al sender se non configurato.
+        replyTo: env.BREVO_REPLY_TO
+          ? { email: env.BREVO_REPLY_TO }
+          : { email: env.BREVO_SENDER_EMAIL, name: env.BREVO_SENDER_NAME },
         subject: opts.subject,
         htmlContent: opts.htmlContent,
         textContent: opts.textContent,

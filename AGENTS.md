@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 11 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 12 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
 
 **Test suite**: 103 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment.
 
@@ -627,6 +627,40 @@ Weather system + notification dispatcher admin integrati nei flussi booking.
 - **Weather Guarantee** business decision: model ricreato se cliente conferma feature.
 - **Metrics funnel** (conversion, Stripe latency): fuori scope Plan 6 core.
 
+## Round 12 audit — Plan 6 weather + notifications (fix applicati)
+
+Tre audit paralleli (regression Plan 6, notification abuse + GDPR, deployment readiness final).
+
+### Critiche fixate
+- **Weather cron timezone off-by-one** (R12-C1): `new Date()` come lower bound escludeva booking di oggi perche' `Booking.startDate` e' UTC midnight. A 07:15 Europe/Rome (02:15-05:15 UTC a seconda CET/CEST) `new Date() > 2026-04-20T00:00Z` → il booking di oggi veniva saltato. Fix: `toUtcDay(new Date())`. Anche run manuale alle 23:00 `gte: today` includeva booking del giorno corrente.
+- **Weather cron no lease multi-replica** (R12-C4): `node-cron` multi-pod fire 2x + run > 1min apriva rotto `Open-Meteo` API con quote burst. Fix: Redis lease `cron:weather-check` TTL 5min + rate-limit `WEATHER_CRON_IP` 10/min pre-Bearer (protegge in caso CRON_SECRET leak).
+- **Risk assessment NaN silent LOW** (R12-C2): `wind >= 46` con `wind = NaN` valuta false → booking in condizioni estreme loggato LOW quando Open-Meteo ritorna payload malformed. Fix: `Number.isFinite` guard per ogni asse + collezione `missingAxes[]` + forza MEDIUM con reason "dati parziali: vento, onde". Admin riceve alert anche su dati incompleti invece di silent-pass.
+- **Dynamic import dispatcher** (R12-C3): `await import("@/lib/notifications/dispatcher")` in webhook-handler + admin cancelBooking aggiungeva round-trip inutile e nascondeva type errors al typecheck boot. Fix: top-level import.
+- **Weather cache stampede** (R12-C6): homepage + /meteo + cron concorrenti su cache scaduta facevano 3 fetch Open-Meteo simultanei. Fix: Redis lease `weather:fetch:trapani` TTL 30s single-flight; i worker losing polano la cache ogni 500ms per 3s poi fallback al fetch (se Open-Meteo lento).
+- **Alert fatigue weather** (R12-A1): il cron riesegue ogni giorno → stesso risk notificato 7 mattine di fila per lo stesso booking. Fix: `Booking.weatherLastAlertedRisk` + `weatherLastAlertedAt` (migration `20260420120000_weather_alert_dedup`). Throttle 24h per stesso risk level; cambio risk (HIGH → EXTREME) dispatcha subito senza attendere throttle.
+
+### Alte fixate
+- **Brevo `replyTo` mancante** (R12-A3): customer rispondeva a `noreply@egadisailing.com` → mail nel vuoto. Fix: `replyTo` settato a `BREVO_REPLY_TO` env (default sender) in `sendEmail()`.
+- **Env vars undocumented**: `SERVER_ACTIONS_ALLOWED_ORIGINS` e `BREVO_REPLY_TO` nello schema ma non in `.env.example`. Ops potrebbero deployare senza sapere che servono. Fix: aggiunti entrambi con commento esplicativo.
+- **Cron scheduler collision** (R12-M1): balance-reminders e weather-check entrambi `"0 7 * * *"` → `node-cron` single-thread fire uno dopo l'altro ma `APP_URL` fetch concorrenti saturavano Next. Fix: weather-check spostato a `"15 7 * * *"`.
+
+### Deferred (Plan 7+/go-live checklist)
+- **CRITICA — Notification abuse rate-limit**: `dispatchNotification` no rate-limit per admin. Attaccante che hack admin o trigger multiplo del cron sabota SMTP reputation. Valutare BullMQ queue `notification-dispatch` con limiter 30/min + dedup window per-type-per-booking.
+- **CRITICA — GDPR notification retention**: email payloads non persistiti ma `audit_log.after` puo' contenere customerName/serviceName. Verificare con cliente retention 24mesi audit vs art. 17 erasure request.
+- **ALTA — Weather alert digest batching**: 7 booking + 3 alert per giorno = 21 email admin/settimana. Valutare daily digest `WEATHER_DIGEST` (1 email con tutti i risk HIGH/EXTREME dei prossimi 7gg) vs alert real-time.
+- **ALTA — Telegram escalation policy**: solo email oggi. Per EXTREME admin deve essere notificato in 5min anche se non apre Gmail. Telegram + SMS fallback documentato Plan 7.
+- **ALTA — Weather guarantee pricing**: flag `weatherGuarantee: Boolean` existe ma mai applicato. Decisione business: addon prezzo + refund policy se risk HIGH/EXTREME al giorno X.
+- **ALTA — Stormglass fallback**: Open-Meteo free tier 10k req/day. In alta stagione (giugno-settembre) con 50+ booking/day + homepage rebuilds rischio rate-limit. Secondo provider (Stormglass freemium, `SW_API_KEY` env) con switchover automatico.
+- **ALTA — Weather dashboard admin**: `/admin/meteo` lista risk ma no storico alert dispatched ne' controllo manuale "invia ora" / "ignora". Plan 7.
+- **MEDIA — Notification dispatcher retry**: `dispatchNotification` fail-fast su Brevo 503 → email persa. BullMQ retry + DLQ con alert admin su failure > 1h.
+- **MEDIA — Replica lag weather cron**: multi-replica deploy vede `Booking.weatherLastAlertedAt` su primary ma query replica 2s lag → risk di doppio alert al fire simultaneo. Redis lease mitiga ma non elimina.
+- **MEDIA — Sentry wiring**: `SENTRY_DSN` commentato in `.env.example`. Init in `src/instrumentation.ts` + `withErrorHandler` 500 branch capture.
+- **MEDIA — E2E Playwright**: `@playwright/test` non installato. Smoke test booking wizard + OTP + Bokun webhook richiesti pre-go-live.
+- **BASSA — `BREVO_REPLY_TO` single-address**: Plan 7+ valutare per-type reply (prenotazioni@ vs info@ vs meteo@).
+- **BASSA — Weather unit tests `missingAxes`**: 8 test assessRisk non coprono NaN / Infinity / undefined. Aggiungere fixture "forecast con wind NaN" → risk MEDIUM + reason contiene "dati parziali".
+
+### Test: 103 passing (era 95 Round 8→12, +8 da Plan 6). Typecheck clean, build OK.
+
 ## Plan roadmap
 
 1. ✅ Plan 1 — DB + Backend foundation (completato)
@@ -634,8 +668,7 @@ Weather system + notification dispatcher admin integrati nei flussi booking.
 3. ✅ Plan 3 — Bokun integration (completato + round 5 audit fixes)
 4. ✅ Plan 4 — Charter integrations (iCal export + Boataround + SamBoat/Click&Boat/Nautal email parser)
 5. ✅ Plan 5 — Dashboard admin (13 sezioni operativa, rotte italiane)
-6. ✅ Plan 6 — Weather system + notifications (core: client Open-Meteo, risk assessment, cron alert admin, notification dispatcher email+Telegram, integrazioni booking confirm/cancel). Deferred: E2E Playwright, Sentry, Stormglass fallback.
-6. ⏳ Plan 6 — Weather + notifiche + E2E
+6. ✅ Plan 6 — Weather system + notifications (core: client Open-Meteo, risk assessment, cron alert admin, notification dispatcher email+Telegram, integrazioni booking confirm/cancel + Round 12 audit fixes). Deferred: E2E Playwright, Sentry, Stormglass fallback, weather digest batching.
 
 Piani dettagliati in `docs/superpowers/plans/2026-04-17-plan-*.md`.
 

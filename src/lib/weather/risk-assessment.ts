@@ -50,8 +50,15 @@ export function assessRisk(
   const reasons: string[] = [];
   let level: WeatherRisk = "LOW";
 
+  // R12-C2: dati mancanti (NaN/Infinity da Open-Meteo malformed) non devono
+  // collassare silenziosamente a LOW. Forziamo MEDIUM con reason esplicita
+  // cosi' l'admin riceve un alert e decide manualmente.
+  const missingAxes: string[] = [];
+
   const wind = forecast.windSpeedKmh;
-  if (wind >= thresholds.windKmhExtreme) {
+  if (!Number.isFinite(wind)) {
+    missingAxes.push("vento");
+  } else if (wind >= thresholds.windKmhExtreme) {
     level = "EXTREME";
     reasons.push(`vento ${Math.round(wind)}km/h estremo`);
   } else if (wind >= thresholds.windKmhHigh) {
@@ -63,7 +70,9 @@ export function assessRisk(
   }
 
   const wave = forecast.waveHeightM ?? 0;
-  if (wave >= thresholds.waveMHigh) {
+  if (forecast.waveHeightM !== null && !Number.isFinite(wave)) {
+    missingAxes.push("onde");
+  } else if (wave >= thresholds.waveMHigh) {
     level = escalate(level, "HIGH");
     reasons.push(`onde ${wave.toFixed(1)}m alte`);
   } else if (wave >= thresholds.waveMMedium) {
@@ -72,7 +81,9 @@ export function assessRisk(
   }
 
   const rain = forecast.precipitationProbability;
-  if (rain >= thresholds.precipitationPctHigh) {
+  if (!Number.isFinite(rain)) {
+    missingAxes.push("pioggia");
+  } else if (rain >= thresholds.precipitationPctHigh) {
     level = escalate(level, "HIGH");
     reasons.push(`pioggia ${rain}% probabile`);
   } else if (rain >= thresholds.precipitationPctMedium) {
@@ -80,9 +91,16 @@ export function assessRisk(
     reasons.push(`pioggia ${rain}% possibile`);
   }
 
-  if (forecast.temperatureMin < thresholds.temperatureMinMedium) {
+  if (!Number.isFinite(forecast.temperatureMin)) {
+    missingAxes.push("temperatura");
+  } else if (forecast.temperatureMin < thresholds.temperatureMinMedium) {
     level = escalate(level, "MEDIUM");
     reasons.push(`temperatura min ${Math.round(forecast.temperatureMin)}°C`);
+  }
+
+  if (missingAxes.length > 0) {
+    level = escalate(level, "MEDIUM");
+    reasons.push(`dati parziali: ${missingAxes.join(", ")}`);
   }
 
   return { risk: level, reasons };

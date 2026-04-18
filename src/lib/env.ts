@@ -49,6 +49,7 @@ const envSchema = z.object({
   BREVO_API_KEY: z.string().optional(),
   BREVO_SENDER_EMAIL: z.string().email().default("noreply@egadisailing.com"),
   BREVO_SENDER_NAME: z.string().default("Egadisailing"),
+  BREVO_REPLY_TO: z.string().email().optional(),
 
   // Cloudflare Turnstile
   TURNSTILE_SITE_KEY: z.string().optional(),

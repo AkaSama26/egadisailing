@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import { toCents, formatEur, formatEurCents } from "@/lib/pricing/cents";
 import { parseBookingMetadata } from "./metadata";
 import { ValidationError } from "@/lib/errors";
+import { dispatchNotification } from "@/lib/notifications/dispatcher";
 
 /**
  * Handler dei webhook Stripe.
@@ -214,7 +215,6 @@ async function notifyNewBooking(bookingId: string, source: string): Promise<void
     },
   });
   if (!booking) return;
-  const { dispatchNotification } = await import("@/lib/notifications/dispatcher");
   await dispatchNotification({
     type: "NEW_BOOKING_DIRECT",
     channels: ["EMAIL"],

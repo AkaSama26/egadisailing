@@ -9,6 +9,7 @@ import { releaseDates } from "@/lib/availability/service";
 import { toCents } from "@/lib/pricing/cents";
 import { CHANNELS } from "@/lib/channels";
 import { createManualAlert, type ManualAlertChannel } from "@/lib/charter/manual-alerts";
+import { dispatchNotification } from "@/lib/notifications/dispatcher";
 import { logger } from "@/lib/logger";
 import {
   ForbiddenError,
@@ -162,7 +163,6 @@ export async function cancelBooking(bookingId: string): Promise<void> {
 
   // Plan 6 Task 8: notify admin su cancel (audit backup + Telegram).
   try {
-    const { dispatchNotification } = await import("@/lib/notifications/dispatcher");
     await dispatchNotification({
       type: "BOOKING_CANCELLED",
       channels: ["EMAIL"],
