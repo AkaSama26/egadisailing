@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
+import { SubmitButton } from "@/components/admin/submit-button";
 import {
   cancelBooking,
   addBookingNote,
@@ -30,6 +31,7 @@ export default async function BookingDetailPage({
 
   const cancelAction = cancelBooking.bind(null, booking.id);
   const canCancel = booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
+  const isNonDirect = booking.source !== "DIRECT";
 
   return (
     <div className="space-y-6">
@@ -45,15 +47,26 @@ export default async function BookingDetailPage({
         </div>
         {canCancel && (
           <form action={cancelAction}>
-            <button
+            <SubmitButton
               className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700"
-              type="submit"
+              confirmMessage={`Confermi la cancellazione di ${booking.confirmationCode}?\n\nVerranno rimborsati tutti i pagamenti SUCCEEDED su Stripe e rilasciate le date sul calendario. Operazione irreversibile.`}
+              pendingLabel="Annullamento in corso..."
             >
               Cancella + refund
-            </button>
+            </SubmitButton>
           </form>
         )}
       </div>
+
+      {isNonDirect && canCancel && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+          <strong>Attenzione</strong> — questo booking proviene da{" "}
+          <strong>{booking.source}</strong>. La cancellazione qui rilascia l'availability
+          interna e crea un ManualAlert per ricordarti di cancellare anche sul pannello
+          OTA esterno (Bokun UI, Boataround, ecc). L'API release NON cancella il booking
+          upstream.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <section className="bg-white rounded-xl border p-5 space-y-2">
@@ -175,12 +188,12 @@ export default async function BookingDetailPage({
               <option value="BANK_TRANSFER">Bonifico</option>
             </select>
           </label>
-          <button
-            type="submit"
+          <SubmitButton
             className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800"
+            pendingLabel="Registrazione..."
           >
             Registra pagamento
-          </button>
+          </SubmitButton>
         </form>
       </section>
 
@@ -200,12 +213,12 @@ export default async function BookingDetailPage({
             className="w-full border rounded px-3 py-2 text-sm"
             placeholder="Aggiungi nota..."
           />
-          <button
-            type="submit"
+          <SubmitButton
             className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800"
+            pendingLabel="Salvataggio..."
           >
             Salva nota
-          </button>
+          </SubmitButton>
         </form>
         {booking.bookingNotes.length === 0 ? (
           <p className="text-sm text-slate-500">Nessuna nota ancora.</p>

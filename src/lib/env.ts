@@ -34,6 +34,11 @@ const envSchema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   APP_LOCALES_DEFAULT: z.string().default("it"),
 
+  // Server Actions allowed origins (comma-separated). Obbligatorio in prod
+  // dietro reverse proxy (Round 10 Sec-C1). Es.:
+  //   "egadisailing.com,www.egadisailing.com"
+  SERVER_ACTIONS_ALLOWED_ORIGINS: z.string().optional(),
+
   // Stripe
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_PUBLISHABLE_KEY: z.string().optional(),

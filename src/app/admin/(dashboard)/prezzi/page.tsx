@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
+import { SubmitButton } from "@/components/admin/submit-button";
 import {
   upsertPricingPeriod,
   upsertHotDayRule,
@@ -152,7 +153,13 @@ export default async function PrezziPage() {
                     await deleteHotDayRule(r.id);
                   }}
                 >
-                  <button className="text-xs text-red-600 hover:underline">Elimina</button>
+                  <SubmitButton
+                    className="text-xs text-red-600 hover:underline"
+                    confirmMessage={`Elimina HotDayRule "${r.name}"? I prezzi Bokun saranno ricalcolati (base-price).`}
+                    pendingLabel="..."
+                  >
+                    Elimina
+                  </SubmitButton>
                 </form>
               </div>
             </li>

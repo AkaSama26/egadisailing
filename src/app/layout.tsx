@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
+    <html lang="it" className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );

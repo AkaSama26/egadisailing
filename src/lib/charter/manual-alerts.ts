@@ -4,7 +4,17 @@ import { logger } from "@/lib/logger";
 import { toUtcDay, isoDay } from "@/lib/dates";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 
-export type ManualAlertChannel = "CLICKANDBOAT" | "NAUTAL";
+/**
+ * Canali che supportano ManualAlert: oltre ai "email-only" (Click&Boat/Nautal)
+ * ora usati anche per notificare admin su cancel cross-channel BOKUN/BOATAROUND/
+ * SAMBOAT quando l'API release non e' sufficiente (Round 10 BL-C2).
+ */
+export type ManualAlertChannel =
+  | "CLICKANDBOAT"
+  | "NAUTAL"
+  | "BOKUN"
+  | "BOATAROUND"
+  | "SAMBOAT";
 export type ManualAlertAction = "BLOCK" | "UNBLOCK";
 
 export interface CreateManualAlertInput {
@@ -84,6 +94,16 @@ export async function resolveManualAlert(id: string, userId?: string): Promise<v
   await db.manualAlert.update({
     where: { id },
     data: { status: "RESOLVED", resolvedAt: new Date(), resolvedByUserId: userId },
+  });
+  // Audit log Round 10 Int-A1: tracciare chi/quando chiude un alert.
+  // L'import circolare e' evitato con dynamic import (manualAlerts e' chiamato
+  // da audit-adjacent paths).
+  const { auditLog } = await import("@/lib/audit/log");
+  await auditLog({
+    userId,
+    action: "RESOLVE_MANUAL_ALERT",
+    entity: "ManualAlert",
+    entityId: id,
   });
 }
 

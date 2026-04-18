@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 completati + 9 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability, regression/schema/cross-flow/deployment, Plan4 charter security/race/parser/ops, app-security beyond integrations). Plan 6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 completati + 10 round di audit applicati. Plan 6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -498,6 +498,50 @@ Zero `@ts-nocheck` residuo nell'admin. Sidebar e pagine tutte con schema V2 coer
 - **Filtri avanzati prenotazioni** — range date custom, cliente lookup, esport CSV.
 - **Bulk operations** — cancel multiplo, update status batch.
 - **Meteo widget integrato in prenotazione detail** + **cron meteo Plan 6**.
+
+## Round 10 audit — Plan 5 admin (fix applicati)
+
+Quattro audit paralleli sul dashboard admin (security, business logic, UX/a11y, integration+metrics).
+
+### Critiche fixate
+- **BL-C1 Double-booking via manualReleaseRange**: il release su range con booking attivi scollegava `lockedByBookingId` → Booking resta CONFIRMED ma availability AVAILABLE, altro cliente può prenotare cross-channel. Fix: guard `booking.findMany` overlapping status IN ('PENDING','CONFIRMED') → ValidationError con lista codici prima di procedere.
+- **BL-C2 cancelBooking source=BOKUN/BOATAROUND non rilasciava canale origine**: fan-out esclude source → Bokun upstream restava CONFIRMED. Fix: admin-cancel usa `CHANNELS.DIRECT` come source (fan-out a TUTTI gli esterni) + auto-genera `ManualAlert` con notes "cancellare anche upstream sul panel OTA" per source != DIRECT.
+- **BL-C3 Race Stripe webhook vs admin-cancel**: booking PENDING con PI in processing, admin cancella, webhook succeeded arriva dopo → Payment SUCCEEDED su Booking CANCELLED (cliente pagato, niente refund). Fix: `cancelPaymentIntent` helper Stripe chiamato PRIMA del cancel + webhook-handler rileva booking CANCELLED/REFUNDED e fa `refundPayment` auto + crea Payment type=REFUND.
+- **BL-C4 + Sec-M6 registerManualPayment NaN bypass + no status check**: `parseFloat("")=NaN`, `NaN<=0 === false` → Prisma insert con amount="NaN". E accettava payment su booking CANCELLED. Fix: `Number.isFinite` guard + range max 1M€ + pre-tx booking status check + BALANCE ammesso solo su booking DIRECT.
+- **Int-C1 Revenue retroattivo su refund**: `onChargeRefunded` overwrite `Payment.status` → KPI mese precedente cambia a refund successivo (audit fiscale rotto). Fix: `cancelBooking` crea ORA record Payment `type=REFUND` separato + update original a REFUNDED (doppia entry, sum corretto). `webhook-handler` auto-refund su race fa stesso pattern.
+- **Int-C2 revalidatePath mancanti**: cancelBooking, registerManualPayment, manualReleaseRange ora revalidano `/admin` + `/admin/finanza` + `/admin/calendario` dove applicabile.
+- **Sec-C1 serverActions.allowedOrigins**: non configurato in `next.config.ts` → CSRF/origin reject dietro proxy. Fix: env `SERVER_ACTIONS_ALLOWED_ORIGINS` (comma-separated) + security headers (HSTS prod, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy).
+- **Sec-C2 No middleware admin guard**: solo layout check, bypass teorico RSC streaming. Fix: `src/middleware.ts` verifica `token.role === "ADMIN"` su `/admin/*` (eccetto `/admin/login`) PRIMA del rendering.
+- **UX-C1 No confirmation azioni destructive**: click accidentale = refund + cancel irreversibile. Fix: `<SubmitButton confirmMessage>` wrapper client con `window.confirm` + `useFormStatus` disabled durante pending. Applicato a cancel+refund, block/release, delete hotDay.
+- **UX-C3 No error.tsx/loading.tsx**: errori Server Action = 500 generico. Fix: `error.tsx` con messaggio user-friendly + retry + digest display; `loading.tsx` skeleton KPI+table.
+
+### Alte fixate
+- **BL-A1 assignCrewToBooking**: no active/status check. Fix: guard crew.active + booking.status ∈ {PENDING, CONFIRMED}.
+- **BL-A2 deleteHotDayRule no re-sync**: Bokun conservava prezzo obsoleto. Fix: `scheduleBokunPricingSync` post-delete sulle date affected (skip past).
+- **BL-A3 upsertPricingPeriod overlap silenzioso**: `quotePrice` non-deterministico su overlap. Fix: pre-check `findFirst overlapping` stesso serviceId → ValidationError.
+- **BL-A4 HotDayRule date passate**: accoda sync inutile. Fix: reject se `dateRangeEnd < today` + filter past dates in sync enqueue.
+- **BL-M4 cancelBooking refund failure no rollback**: il booking finiva CANCELLED senza refund eseguito. Fix: collecting `refundErrors[]` + throw con non-update se errors.length>0 → admin riprova.
+- **Int-A1 resolveManualAlert senza UI+audit**: funzione isolata, admin doveva usare psql. Fix: Server Action `resolveAlertAction` con requireAdmin + auditLog + bottone "Risolvi" inline in `/admin/sync-log`.
+- **Int-A3/A4 BullMQ silent catch + no failed details**: `0 failed` ingannevole + no failedReason visibile. Fix: `loadQueueStatus` ritorna `{reachable: false}` su error con banner UI + `getFailed(0, 9)` con details espandibili (`<details>`).
+- **Sec-A3 Session maxAge default 30gg**: JWT rubato valido un mese. Fix: `maxAge: 8h` (giornata lavoro) + `updateAge: 1h` (session roll).
+- **UX-A1 Double-submit tutti i form**: `SubmitButton` usa `useFormStatus` → disabled + label pending.
+- **UX-A5 `<html lang="en">`**: screen reader voce inglese su contenuti IT. Fix: `lang="it"`.
+
+### Deferred (Plan 6+)
+- **CRITICA — Rate-limit Server Actions destructive** (Sec-A2): admin con JWT compromesso può spammare cancelBooking. Wrapper `requireAdminWithRateLimit` 30/min.
+- **ALTA — Step-up auth**: richiesta password per cancelBooking > €X / refund > €X.
+- **ALTA — Toast feedback** (UX-C4): Toaster montato ma mai invocato. Server actions dovrebbero ritornare `{ok, message}` + `useActionState` + `toast.success`.
+- **MEDIA — Timezone Europe/Rome esplicito** (Int-M1): oggi dashboard `new Date(y,m,1)` (locale server) vs finanza `Date.UTC`. Standardizzare con date-fns-tz.
+- **MEDIA — Status color-only** (UX-A2): aggiungere icone lucide per CONFIRMED/CANCELLED/REFUNDED.
+- **MEDIA — Table `scope="col"` + caption sr-only** (UX-A3): WCAG 1.3.1.
+- **MEDIA — `upsertPricingPeriod` cap range** (Int-M4): max 365g.
+- **MEDIA — Skip-to-content link** (UX-M1): sr-only a11y.
+- **MEDIA — Confirmation code leak on screen share** (Sec-M2): hover-reveal.
+- **MEDIA — Calendario groupBy server** (Sec-M4): O(n*m*k) JS filter → SQL groupBy.
+- **BASSA — Emoji 🚨 in dashboard** (UX-B1): sostituire con AlertTriangle icon.
+- **BASSA — Copy-to-clipboard confirmationCode** (UX-B2).
+- **BASSA — Partial REFUND in registerManualPayment** (BL-M3): enum richiede UI dedicata.
+- **BASSA — PENDING > 30min GC cron** (Int-B1): booking orfani inflano KPI.
 
 ## Plan roadmap
 

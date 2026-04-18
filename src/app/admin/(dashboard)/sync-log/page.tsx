@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { syncQueue } from "@/lib/queue";
 import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
+import { resolveAlertAction } from "./actions";
 
 /**
  * Admin view: stato sync real-time.
@@ -9,12 +10,48 @@ import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
  * Leggiamo direttamente dalla BullMQ queue + tabelle dedup (ProcessedBokun/
  * Boataround/Email) + AuditLog.
  */
+interface QueueStatusInfo {
+  counts: { waiting: number; active: number; delayed: number; failed: number; completed: number };
+  failedJobs: Array<{ id: string; failedReason: string; name: string; attemptsMade: number }>;
+  reachable: true;
+}
+interface QueueStatusUnreachable {
+  reachable: false;
+  error: string;
+}
+
+async function loadQueueStatus(): Promise<QueueStatusInfo | QueueStatusUnreachable> {
+  try {
+    const q = syncQueue();
+    const [counts, failed] = await Promise.all([
+      q.getJobCounts("waiting", "active", "delayed", "failed", "completed"),
+      q.getFailed(0, 9),
+    ]);
+    return {
+      counts: {
+        waiting: counts.waiting ?? 0,
+        active: counts.active ?? 0,
+        delayed: counts.delayed ?? 0,
+        failed: counts.failed ?? 0,
+        completed: counts.completed ?? 0,
+      },
+      failedJobs: failed.map((j) => ({
+        id: String(j.id),
+        failedReason: (j.failedReason ?? "").slice(0, 300),
+        name: j.name,
+        attemptsMade: j.attemptsMade,
+      })),
+      reachable: true,
+    };
+  } catch (err) {
+    return { reachable: false, error: (err as Error).message };
+  }
+}
+
 export default async function SyncLogPage() {
-  const [queueCounts, manualAlerts, bokunEvents, boataroundEvents, charterEmails, auditEntries] =
+  const [queueStatus, manualAlerts, bokunEvents, boataroundEvents, charterEmails, auditEntries] =
     await Promise.all([
-      syncQueue()
-        .getJobCounts("waiting", "active", "delayed", "failed", "completed")
-        .catch(() => ({ waiting: 0, active: 0, delayed: 0, failed: 0, completed: 0 })),
+      loadQueueStatus(),
       listPendingManualAlerts(),
       db.processedBokunEvent.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
       db.processedBoataroundEvent.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
@@ -28,17 +65,45 @@ export default async function SyncLogPage() {
 
       <section className="bg-white rounded-xl border p-5">
         <h2 className="font-bold text-slate-900 mb-3">BullMQ queue · sync</h2>
-        <div className="grid grid-cols-5 gap-3 text-sm">
-          <QueueStat label="Waiting" value={queueCounts.waiting} />
-          <QueueStat label="Active" value={queueCounts.active} />
-          <QueueStat label="Delayed" value={queueCounts.delayed} />
-          <QueueStat
-            label="Failed"
-            value={queueCounts.failed}
-            tone={queueCounts.failed > 100 ? "alert" : undefined}
-          />
-          <QueueStat label="Completed" value={queueCounts.completed} />
-        </div>
+        {queueStatus.reachable ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+              <QueueStat label="Waiting" value={queueStatus.counts.waiting} />
+              <QueueStat label="Active" value={queueStatus.counts.active} />
+              <QueueStat label="Delayed" value={queueStatus.counts.delayed} />
+              <QueueStat
+                label="Failed"
+                value={queueStatus.counts.failed}
+                tone={queueStatus.counts.failed > 100 ? "alert" : undefined}
+              />
+              <QueueStat label="Completed" value={queueStatus.counts.completed} />
+            </div>
+            {queueStatus.failedJobs.length > 0 && (
+              <details className="mt-4">
+                <summary className="text-sm font-semibold text-slate-700 cursor-pointer">
+                  Ultimi {queueStatus.failedJobs.length} job falliti
+                </summary>
+                <ul className="mt-2 text-xs font-mono space-y-1">
+                  {queueStatus.failedJobs.map((j) => (
+                    <li key={j.id} className="border-l-2 border-red-200 pl-2 py-1">
+                      <div className="text-slate-700">
+                        <strong>{j.name}</strong> · id {j.id} · attempts {j.attemptsMade}
+                      </div>
+                      <div className="text-red-600 break-words">{j.failedReason}</div>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </>
+        ) : (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm">
+            <strong className="text-red-800">BullMQ unreachable</strong>
+            <p className="text-xs text-red-700 mt-1 break-words">
+              {queueStatus.error}
+            </p>
+          </div>
+        )}
       </section>
 
       <section className="bg-white rounded-xl border p-5">
@@ -50,14 +115,33 @@ export default async function SyncLogPage() {
         ) : (
           <ul className="text-sm divide-y divide-slate-100">
             {manualAlerts.slice(0, 30).map((a) => (
-              <li key={a.id} className="py-2 flex justify-between gap-3">
-                <span>
+              <li key={a.id} className="py-2 flex items-center justify-between gap-3 flex-wrap">
+                <span className="flex-1 min-w-0">
                   <strong>{a.channel}</strong> · {a.action} · boat{" "}
-                  <code className="text-xs">{a.boatId}</code> · {a.date.toISOString().slice(0, 10)}
+                  <code className="text-xs">{a.boatId}</code> ·{" "}
+                  {a.date.toLocaleDateString("it-IT")}
+                  {a.notes && (
+                    <span className="block text-xs text-slate-500 mt-1">{a.notes}</span>
+                  )}
                 </span>
-                <span className="text-xs text-slate-500 shrink-0">
-                  {a.createdAt.toLocaleString("it-IT")}
-                </span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-xs text-slate-500">
+                    {a.createdAt.toLocaleString("it-IT")}
+                  </span>
+                  <form
+                    action={async () => {
+                      "use server";
+                      await resolveAlertAction(a.id);
+                    }}
+                  >
+                    <button
+                      type="submit"
+                      className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700"
+                    >
+                      Risolvi
+                    </button>
+                  </form>
+                </div>
               </li>
             ))}
           </ul>
@@ -111,14 +195,14 @@ function QueueStat({
   tone,
 }: {
   label: string;
-  value: number | undefined;
+  value: number;
   tone?: "alert";
 }) {
   const bg = tone === "alert" ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200";
   return (
     <div className={`rounded-lg border p-3 ${bg}`}>
       <div className="text-xs text-slate-500">{label}</div>
-      <div className="text-xl font-bold tabular-nums">{value ?? 0}</div>
+      <div className="text-xl font-bold tabular-nums">{value}</div>
     </div>
   );
 }

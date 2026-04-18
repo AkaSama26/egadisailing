@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(npx next:*)",
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in {**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}.items\\(\\) if 'framer' in k or 'base-ui' in k or 'next-intl' in k or 'next' == k}, indent=2\\)\\)\")",
+      "Bash(/home/akasama/.claude/plugins/cache/superpowers-marketplace/superpowers-dev/4.3.0/lib/brainstorm-server/stop-server.sh /home/akasama/Scrivania/egadisailing/.superpowers/brainstorm/2614109-1776163660)",
+      "Bash(git push:*)",
+      "Bash(PGPASSWORD=changeme psql -h 127.0.0.1 -U egadisailing -d egadisailing)",
+      "Bash(docker exec:*)",
+      "Bash(npm install *)",
+      "Bash(npm ls *)",
+      "Bash(git rm *)",
+      "Bash(npm list *)",
+      "Bash(git reset *)",
+      "Bash(sed -i 's|^STRIPE_SECRET_KEY=$|STRIPE_SECRET_KEY=sk_test_placeholder|' .env)",
+      "Bash(sed -i 's|^STRIPE_WEBHOOK_SECRET=$|STRIPE_WEBHOOK_SECRET=whsec_placeholder|' .env)",
+      "Bash(npm uninstall *)",
+      "Bash(mkdir -p \"src/app/[locale]/prenota/success/[code]\")",
+      "Bash(mv \"src/app/[locale]/prenota/[slug]/success/[code]/page.tsx\" \"src/app/[locale]/prenota/success/[code]/page.tsx\")",
+      "Bash(rm -rf \"src/app/[locale]/prenota/[slug]/success\")",
+      "Bash(npx vitest *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(chmod +x docker/entrypoint.sh)",
+      "Bash(npm audit *)",
+      "Bash(grep -n \"^## Task\\\\|^### Step\\\\|^## Phase\\\\|^---$\" docs/superpowers/plans/2026-04-17-plan-5-dashboard-admin.md)"
+    ],
+    "additionalDirectories": [
+      "/home/akasama/Scrivania/egadisailing/src/app/[locale]/prenota/[slug]/success",
+      "/home/akasama/Scrivania/egadisailing/src/app/[locale]",
+      "/home/akasama/Scrivania/egadisailing/src/app/api/ical",
+      "/home/akasama/Scrivania/egadisailing/src/app/admin/(dashboard)/prenotazioni",
+      "/home/akasama/Scrivania/egadisailing/src/app/admin/(dashboard)/clienti"
+    ]
+  }
+}

@@ -58,3 +58,35 @@ export async function refundPayment(chargeId: string, amountCents?: number) {
     throw new ExternalServiceError("Stripe", "refund failed");
   }
 }
+
+/**
+ * Cancella un PaymentIntent se ancora in stato cancellabile (requires_*).
+ * Idempotent: se Stripe ritorna uno status finale (succeeded/canceled),
+ * ritorna l'intent senza modificarlo.
+ *
+ * Uso: admin `cancelBooking` su booking PENDING per prevenire la race
+ * Stripe webhook `payment_intent.succeeded` dopo la cancellazione DB
+ * (Round 10 BL-C3).
+ */
+export async function cancelPaymentIntent(paymentIntentId: string) {
+  try {
+    const pi = await stripe().paymentIntents.retrieve(paymentIntentId);
+    const cancelable = [
+      "requires_payment_method",
+      "requires_confirmation",
+      "requires_action",
+      "processing",
+      "requires_capture",
+    ];
+    if (!cancelable.includes(pi.status)) {
+      logger.info({ paymentIntentId, status: pi.status }, "PI not cancelable, skipping");
+      return pi;
+    }
+    const canceled = await stripe().paymentIntents.cancel(paymentIntentId);
+    logger.info({ paymentIntentId, status: canceled.status }, "PI canceled by admin");
+    return canceled;
+  } catch (err) {
+    logger.error({ err, paymentIntentId }, "Stripe cancelPaymentIntent failed");
+    throw new ExternalServiceError("Stripe", "cancelPaymentIntent failed");
+  }
+}

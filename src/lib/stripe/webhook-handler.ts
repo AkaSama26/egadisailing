@@ -113,6 +113,41 @@ async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void>
     );
   }
 
+  // Round 10 BL-C3: race admin-cancel vs stripe-webhook. Se il booking e'
+  // gia' stato cancellato dall'admin mentre il PI era in "processing",
+  // NON confermiamo e facciamo auto-refund del charge appena arrivato.
+  // Senza questo fix, il cliente pagava ma il booking restava CANCELLED
+  // senza refund automatico.
+  if (booking.status === "CANCELLED" || booking.status === "REFUNDED") {
+    logger.warn(
+      { bookingId: booking.id, status: booking.status, piId: pi.id, charge },
+      "Stripe webhook for already-cancelled booking — auto-refunding",
+    );
+    const { refundPayment } = await import("./payment-intents");
+    try {
+      const ref = await refundPayment(charge);
+      await db.payment.create({
+        data: {
+          bookingId: booking.id,
+          amount: (pi.amount_received / 100).toFixed(2),
+          type: "REFUND",
+          method: "STRIPE",
+          status: "REFUNDED",
+          stripeChargeId: charge,
+          stripeRefundId: ref.id,
+          processedAt: new Date(),
+          note: "Auto-refund: admin canceled booking before Stripe confirmed",
+        },
+      });
+    } catch (err) {
+      // Se il refund fallisce qui, Stripe ritentera' il webhook → al prossimo
+      // giro retentiamo il refund (idempotent via stripeChargeId unique).
+      logger.error({ err, bookingId: booking.id }, "Auto-refund failed after cancel race");
+      throw err;
+    }
+    return; // NON confermare il booking — e' cancellato.
+  }
+
   const totalCents = toCents(booking.totalPrice);
   const depositCents = booking.directBooking.depositAmount
     ? toCents(booking.directBooking.depositAmount)

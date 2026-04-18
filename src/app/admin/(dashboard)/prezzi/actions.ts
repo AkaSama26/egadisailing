@@ -39,7 +39,34 @@ export async function upsertPricingPeriod(input: UpsertPricingPeriodInput): Prom
   const start = parseIsoDay(input.startDate);
   const end = parseIsoDay(input.endDate);
   if (end < start) throw new ValidationError("endDate before startDate");
-  if (input.pricePerPerson <= 0) throw new ValidationError("pricePerPerson must be positive");
+  // Guard NaN/Infinity + range (Round 10 Sec-M6).
+  if (!Number.isFinite(input.pricePerPerson) || input.pricePerPerson <= 0) {
+    throw new ValidationError("pricePerPerson must be a positive number");
+  }
+  if (input.pricePerPerson > 100_000) {
+    throw new ValidationError("pricePerPerson fuori range (max 100.000€/pax)");
+  }
+  if (!Number.isInteger(input.year) || input.year < 2020 || input.year > 2100) {
+    throw new ValidationError("year out of range 2020-2100");
+  }
+
+  // Prevent overlap con altri period dello stesso servizio — `quotePrice`
+  // usa findFirst orderBy startDate e sarebbe non-deterministico sul giorno
+  // di overlap (Round 10 BL-A3, finding pre-esistente R4).
+  const overlap = await db.pricingPeriod.findFirst({
+    where: {
+      serviceId: input.serviceId,
+      ...(input.id ? { id: { not: input.id } } : {}),
+      startDate: { lte: end },
+      endDate: { gte: start },
+    },
+    select: { id: true, label: true, startDate: true, endDate: true },
+  });
+  if (overlap) {
+    throw new ValidationError(
+      `Overlap con period "${overlap.label}" (${overlap.startDate.toISOString().slice(0, 10)} → ${overlap.endDate.toISOString().slice(0, 10)})`,
+    );
+  }
 
   const data = {
     serviceId: input.serviceId,
@@ -92,10 +119,32 @@ export async function upsertHotDayRule(input: UpsertHotDayRuleInput): Promise<vo
   const start = parseIsoDay(input.dateRangeStart);
   const end = parseIsoDay(input.dateRangeEnd);
   if (end < start) throw new ValidationError("dateRangeEnd before dateRangeStart");
-  if (input.multiplier <= 0) throw new ValidationError("multiplier must be positive");
-  if (input.roundTo < 0 || input.roundTo > 1000) throw new ValidationError("roundTo invalid");
-  if (input.weekdays.some((d) => d < 0 || d > 6)) {
-    throw new ValidationError("weekdays must be in 0..6");
+  if (!Number.isFinite(input.multiplier) || input.multiplier <= 0) {
+    throw new ValidationError("multiplier must be a positive number");
+  }
+  if (input.multiplier > 10) {
+    throw new ValidationError("multiplier fuori range (max 10×)");
+  }
+  if (
+    !Number.isInteger(input.roundTo) ||
+    input.roundTo < 0 ||
+    input.roundTo > 1000
+  ) {
+    throw new ValidationError("roundTo invalid (0-1000)");
+  }
+  if (!Number.isInteger(input.priority)) {
+    throw new ValidationError("priority must be integer");
+  }
+  if (input.weekdays.some((d) => !Number.isInteger(d) || d < 0 || d > 6)) {
+    throw new ValidationError("weekdays must be integers in 0..6");
+  }
+  // Round 10 BL-A4: no past-only HotDayRule. Un admin distratto potrebbe
+  // creare "Ferragosto 2024" per errore; la sync accoda job inutili.
+  const todayUtc = parseIsoDay(new Date().toISOString().slice(0, 10));
+  if (end < todayUtc) {
+    throw new ValidationError(
+      "HotDayRule con dateRangeEnd nel passato — nessuna data futura da applicare",
+    );
   }
 
   const data = {
@@ -130,9 +179,10 @@ export async function upsertHotDayRule(input: UpsertHotDayRuleInput): Promise<vo
     },
   });
 
-  // Enqueue sync Bokun solo sulle date effettive (weekday filter).
+  // Enqueue sync Bokun solo sulle date future effettive (skip past + weekday filter).
   const dates: Date[] = [];
   for (const d of eachUtcDayInclusive(start, end)) {
+    if (d < todayUtc) continue;
     if (data.weekdays.length === 0 || data.weekdays.includes(d.getUTCDay())) {
       dates.push(d);
     }
@@ -145,7 +195,9 @@ export async function upsertHotDayRule(input: UpsertHotDayRuleInput): Promise<vo
 export async function deleteHotDayRule(id: string): Promise<void> {
   const { userId } = await requireAdmin();
   const before = await db.hotDayRule.findUnique({ where: { id } });
-  if (!before) return;
+  if (!before) {
+    throw new ValidationError(`HotDayRule ${id} non trovata`);
+  }
   await db.hotDayRule.delete({ where: { id } });
   await auditLog({
     userId,
@@ -154,5 +206,20 @@ export async function deleteHotDayRule(id: string): Promise<void> {
     entityId: id,
     before: { name: before.name, multiplier: before.multiplier.toString() },
   });
+
+  // Re-sync Bokun pricing sulle date precedentemente affected (Round 10 BL-A2).
+  // Senza questo, Bokun conserva il prezzo-con-markup vecchio finche' un
+  // altro evento non tocca le stesse date. Il worker ricalcolera' la
+  // base-price corrente (senza il multiplier appena eliminato).
+  const todayUtc = parseIsoDay(new Date().toISOString().slice(0, 10));
+  const dates: Date[] = [];
+  for (const d of eachUtcDayInclusive(before.dateRangeStart, before.dateRangeEnd)) {
+    if (d < todayUtc) continue;
+    if (before.weekdays.length === 0 || before.weekdays.includes(d.getUTCDay())) {
+      dates.push(d);
+    }
+  }
+  if (dates.length > 0) await scheduleBokunPricingSync({ dates });
+
   revalidatePath("/admin/prezzi");
 }

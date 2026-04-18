@@ -58,5 +58,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    // Round 10 Sec-A3: session admin 8h (giornata lavorativa) invece del
+    // default NextAuth 30gg. Se il JWT viene rubato (XSS third-party, device
+    // perso), l'attacker ha finestra limitata. `updateAge` rolla la session
+    // se l'admin usa la dashboard ogni ora.
+    maxAge: 8 * 60 * 60,
+    updateAge: 60 * 60,
   },
 });

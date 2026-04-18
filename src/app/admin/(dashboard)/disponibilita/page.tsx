@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { manualBlockRange, manualReleaseRange } from "./actions";
 
 export default async function DisponibilitaPage() {
@@ -61,12 +62,13 @@ export default async function DisponibilitaPage() {
                 maxLength={500}
                 className="w-full border rounded px-3 py-2 text-sm"
               />
-              <button
-                type="submit"
+              <SubmitButton
                 className="w-full bg-red-600 text-white rounded py-2 text-sm font-medium hover:bg-red-700"
+                confirmMessage={`Confermi il blocco del range su ${boat.name}? Verranno bloccate le date su tutti i canali esterni.`}
+                pendingLabel="Blocco in corso..."
               >
                 Blocca
-              </button>
+              </SubmitButton>
             </form>
 
             <form
@@ -105,12 +107,13 @@ export default async function DisponibilitaPage() {
                 Rende disponibili le date selezionate (solo se non bloccate da una prenotazione
                 attiva).
               </p>
-              <button
-                type="submit"
+              <SubmitButton
                 className="w-full bg-emerald-600 text-white rounded py-2 text-sm font-medium hover:bg-emerald-700"
+                confirmMessage={`Confermi il rilascio del range su ${boat.name}? L'azione viene bloccata se trova booking attivi nel range.`}
+                pendingLabel="Rilascio in corso..."
               >
                 Rilascia
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </section>
