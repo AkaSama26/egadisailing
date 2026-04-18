@@ -30,9 +30,28 @@ const envSchema = z.object({
   // Seed admin (required in production, optional in dev)
   SEED_ADMIN_PASSWORD: z.string().min(12).optional(),
 
-  // Stripe (futuro)
+  // App URL
+  APP_URL: z.string().url().default("http://localhost:3000"),
+  APP_LOCALES_DEFAULT: z.string().default("it"),
+
+  // Stripe
   STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+
+  // Brevo
+  BREVO_API_KEY: z.string().optional(),
+  BREVO_SENDER_EMAIL: z.string().email().default("noreply@egadisailing.com"),
+  BREVO_SENDER_NAME: z.string().default("Egadisailing"),
+
+  // Cloudflare Turnstile
+  TURNSTILE_SITE_KEY: z.string().optional(),
+  TURNSTILE_SECRET_KEY: z.string().optional(),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
+
+  // Cron
+  CRON_SECRET: z.string().default("dev-cron-please-change"),
 });
 
 function loadEnv() {
