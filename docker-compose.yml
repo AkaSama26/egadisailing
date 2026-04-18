@@ -2,24 +2,37 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    # Bind solo su loopback: no esposizione LAN/Internet
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
-      POSTGRES_USER: egadisailing
-      POSTGRES_PASSWORD: changeme
-      POSTGRES_DB: egadisailing
+      POSTGRES_USER: ${POSTGRES_USER:-egadisailing}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: ${POSTGRES_DB:-egadisailing}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-egadisailing} -d ${POSTGRES_DB:-egadisailing}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    # Bind solo su loopback
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?REDIS_PASSWORD required}
+      - --protected-mode
+      - "yes"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5

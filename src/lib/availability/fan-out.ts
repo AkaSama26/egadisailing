@@ -1,55 +1,47 @@
 import { syncQueue } from "@/lib/queue";
+import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
+import { FAN_OUT_CHANNELS, type Channel } from "@/lib/channels";
 import { logger } from "@/lib/logger";
-
-export type TargetChannel =
-  | "BOKUN"
-  | "BOATAROUND"
-  | "SAMBOAT_ICAL"
-  | "CLICKANDBOAT_MANUAL"
-  | "NAUTAL_MANUAL";
-
-const ALL_CHANNELS: TargetChannel[] = [
-  "BOKUN",
-  "BOATAROUND",
-  "SAMBOAT_ICAL",
-  "CLICKANDBOAT_MANUAL",
-  "NAUTAL_MANUAL",
-];
 
 export interface FanOutOptions {
   boatId: string;
-  date: string; // ISO
+  date: string; // ISO YYYY-MM-DD
   status: "AVAILABLE" | "BLOCKED" | "PARTIALLY_BOOKED";
-  sourceChannel: string; // canale che ha originato l'update (viene escluso dal fan-out)
+  sourceChannel: string;
   originBookingId?: string;
 }
 
 /**
- * Distribuisce un cambio di availability a tutti i canali esterni,
- * escludendo la source che l'ha originato.
+ * Accoda un job per ogni canale esterno diverso dalla source.
+ *
+ * `jobId` deterministico per coalescenza BullMQ: update multipli sulla stessa
+ * cella convergeranno sullo stato finale (il worker rilegge sempre dal DB
+ * prima di chiamare il canale esterno, quindi l'ordine di esecuzione non conta).
  */
 export async function fanOutAvailability(opts: FanOutOptions): Promise<void> {
-  const targets = ALL_CHANNELS.filter((ch) => ch !== opts.sourceChannel);
+  const sourceAsChannel = opts.sourceChannel as Channel;
+  const targets = FAN_OUT_CHANNELS.filter((ch) => ch !== sourceAsChannel);
 
-  for (const target of targets) {
-    await syncQueue().add(
-      "availability.update",
-      {
-        targetChannel: target,
-        operation: "AVAILABILITY_UPDATE",
-        payload: {
-          boatId: opts.boatId,
-          date: opts.date,
-          status: opts.status,
-          originBookingId: opts.originBookingId,
+  const queue = syncQueue();
+  await Promise.all(
+    targets.map((targetChannel) => {
+      const payload: AvailabilityUpdateJobPayload = {
+        boatId: opts.boatId,
+        date: opts.date,
+        status: opts.status,
+        targetChannel,
+        originBookingId: opts.originBookingId,
+      };
+      return queue.add(
+        "availability.update",
+        { type: "availability.update", data: payload },
+        {
+          jobId: `availability-${opts.boatId}-${opts.date}-${targetChannel}`,
+          priority: 1,
         },
-      },
-      {
-        jobId: `availability-${opts.boatId}-${opts.date}-${target}`,
-        priority: 1,
-      },
-    );
-  }
+      );
+    }),
+  );
 
   logger.info(
     {

@@ -1,28 +1,35 @@
+import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { resolveHotDay, applyHotDay } from "./hot-days";
 import { NotFoundError } from "@/lib/errors";
+import { toUtcDay } from "@/lib/dates";
 
 export interface PriceQuote {
-  basePricePerPerson: number;
-  finalPricePerPerson: number;
+  basePricePerPerson: Decimal;
+  finalPricePerPerson: Decimal;
   hotDayApplied: boolean;
   hotDayMultiplier: number;
   hotDaySource: string;
-  totalPrice: number;
+  hotDayRuleName?: string;
+  totalPrice: Decimal;
 }
 
 /**
- * Calcola il prezzo finale per una combinazione servizio+data+persone
- * considerando prezzo stagionale base + hot day.
+ * Calcola il prezzo finale per (servizio, data, persone).
+ * Tiene tutto in Decimal per evitare errori di floating point.
+ *
+ * La conversione a number va fatta SOLO al confine API (JSON response).
  */
 export async function quotePrice(
   serviceId: string,
   date: Date,
   numPeople: number,
 ): Promise<PriceQuote> {
-  const dateOnly = new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-  );
+  if (numPeople < 1) {
+    throw new Error("numPeople must be >= 1");
+  }
+
+  const dateOnly = toUtcDay(date);
 
   const period = await db.pricingPeriod.findFirst({
     where: {
@@ -37,9 +44,10 @@ export async function quotePrice(
     throw new NotFoundError("PricingPeriod", `${serviceId} @ ${dateOnly.toISOString()}`);
   }
 
-  const basePrice = period.pricePerPerson.toNumber();
+  const basePrice = new Decimal(period.pricePerPerson.toString());
   const hotDay = await resolveHotDay(dateOnly, serviceId);
   const finalPrice = applyHotDay(basePrice, hotDay);
+  const total = finalPrice.mul(numPeople);
 
   return {
     basePricePerPerson: basePrice,
@@ -47,6 +55,23 @@ export async function quotePrice(
     hotDayApplied: hotDay.applied,
     hotDayMultiplier: hotDay.multiplier,
     hotDaySource: hotDay.source,
-    totalPrice: finalPrice * numPeople,
+    hotDayRuleName: hotDay.ruleName,
+    totalPrice: total,
+  };
+}
+
+/**
+ * Serializza un PriceQuote per JSON response (perdita precisione accettata
+ * solo al boundary presentazione).
+ */
+export function quoteToJson(q: PriceQuote) {
+  return {
+    basePricePerPerson: q.basePricePerPerson.toNumber(),
+    finalPricePerPerson: q.finalPricePerPerson.toNumber(),
+    hotDayApplied: q.hotDayApplied,
+    hotDayMultiplier: q.hotDayMultiplier,
+    hotDaySource: q.hotDaySource,
+    hotDayRuleName: q.hotDayRuleName,
+    totalPrice: q.totalPrice.toNumber(),
   };
 }

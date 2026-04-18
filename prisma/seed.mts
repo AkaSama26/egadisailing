@@ -11,11 +11,22 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // Admin user
-  const adminPassword = hashSync("admin123", 10);
+  // Admin user — password from env, never hardcoded
+  const rawAdminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (process.env.NODE_ENV === "production" && !rawAdminPassword) {
+    throw new Error("SEED_ADMIN_PASSWORD is required in production");
+  }
+  const adminPasswordPlain =
+    rawAdminPassword ??
+    (() => {
+      const generated = `dev-${Math.random().toString(36).slice(2, 10)}`;
+      console.log(`⚠️  SEED_ADMIN_PASSWORD not set — generated dev password: ${generated}`);
+      return generated;
+    })();
+  const adminPassword = hashSync(adminPasswordPlain, 12);
   await prisma.user.upsert({
     where: { email: "admin@egadisailing.com" },
-    update: {},
+    update: { passwordHash: adminPassword },
     create: {
       email: "admin@egadisailing.com",
       passwordHash: adminPassword,

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import Decimal from "decimal.js";
 import { roundUpTo } from "./rounding";
+import { toUtcDay } from "@/lib/dates";
 
 export interface HotDayResult {
   applied: boolean;
@@ -12,19 +13,18 @@ export interface HotDayResult {
 }
 
 /**
- * Valuta quale hot day (se esiste) si applica a questa data/servizio.
- * - Override manuale (stessa data + serviceId) ha priorità assoluta
- * - Altrimenti rule attiva con priority più alta
+ * Valuta quale hot day si applica a (date, serviceId).
+ * Priorita':
+ *   1. Override manuale per il servizio specifico
+ *   2. Override globale (serviceId null) per la data
+ *   3. Rule attive con priority piu' alta (tie-break: createdAt DESC)
  */
 export async function resolveHotDay(
   date: Date,
   serviceId: string,
 ): Promise<HotDayResult> {
-  const dateOnly = new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
-  );
+  const dateOnly = toUtcDay(date);
 
-  // 1. Override per il servizio specifico
   const specificOverride = await db.hotDayOverride.findUnique({
     where: { date_serviceId: { date: dateOnly, serviceId } },
   });
@@ -38,9 +38,9 @@ export async function resolveHotDay(
     };
   }
 
-  // 2. Override globale (serviceId null)
   const globalOverride = await db.hotDayOverride.findFirst({
     where: { date: dateOnly, serviceId: null },
+    orderBy: { createdAt: "desc" },
   });
   if (globalOverride) {
     return {
@@ -52,7 +52,6 @@ export async function resolveHotDay(
     };
   }
 
-  // 3. Rule attive che coprono questa data
   const weekday = dateOnly.getUTCDay();
   const rules = await db.hotDayRule.findMany({
     where: {
@@ -60,7 +59,7 @@ export async function resolveHotDay(
       dateRangeStart: { lte: dateOnly },
       dateRangeEnd: { gte: dateOnly },
     },
-    orderBy: { priority: "desc" },
+    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
   });
 
   for (const rule of rules) {
@@ -79,16 +78,17 @@ export async function resolveHotDay(
 }
 
 /**
- * Applica un hot day result a un prezzo base e arrotonda.
+ * Applica un hot day a un prezzo base mantenendo precisione Decimal fino
+ * all'arrotondamento finale.
  */
-export function applyHotDay(basePrice: number | Decimal, hotDay: HotDayResult): number {
+export function applyHotDay(basePrice: number | Decimal | string, hotDay: HotDayResult): Decimal {
   const base = new Decimal(basePrice);
-  if (!hotDay.applied) return base.toNumber();
+  if (!hotDay.applied) return base;
 
   if (hotDay.absolutePrice !== undefined) {
-    return roundUpTo(hotDay.absolutePrice, hotDay.roundTo);
+    return new Decimal(roundUpTo(hotDay.absolutePrice, hotDay.roundTo));
   }
 
-  const raw = base.mul(hotDay.multiplier).toNumber();
-  return roundUpTo(raw, hotDay.roundTo);
+  const raw = base.mul(hotDay.multiplier);
+  return new Decimal(roundUpTo(raw.toNumber(), hotDay.roundTo));
 }
