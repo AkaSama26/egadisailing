@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { z } from "zod";
+import { Prisma } from "@/generated/prisma/client";
 import { verifyBokunWebhook } from "@/lib/bokun/webhook-verifier";
 import { getBokunBooking } from "@/lib/bokun/bookings";
 import { importBokunBooking } from "@/lib/bokun/adapters/booking";
-import { blockDates, releaseDates } from "@/lib/availability/service";
+import { syncBookingAvailability } from "@/lib/bokun/sync-availability";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { CHANNELS } from "@/lib/channels";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
-import { UnauthorizedError, ValidationError } from "@/lib/errors";
+import { AppError, UnauthorizedError, ValidationError } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -18,10 +19,15 @@ const webhookBodySchema = z.object({
   bookingId: z.union([z.number(), z.string()]),
 });
 
+const HANDLED_TOPICS = new Set([
+  "bookings/create",
+  "bookings/update",
+  "bookings/cancel",
+]);
+
 export const POST = withErrorHandler(async (req: Request) => {
   if (!env.BOKUN_WEBHOOK_SECRET) {
-    logger.error("BOKUN_WEBHOOK_SECRET not configured");
-    return NextResponse.json({ error: { code: "WEBHOOK_NOT_CONFIGURED" } }, { status: 500 });
+    throw new AppError("WEBHOOK_NOT_CONFIGURED", "Bokun webhook not configured", 500);
   }
 
   const headers: Record<string, string> = {};
@@ -35,31 +41,44 @@ export const POST = withErrorHandler(async (req: Request) => {
   }
 
   const topic = headers["x-bokun-topic"];
-  if (!topic) {
-    throw new ValidationError("Missing x-bokun-topic header");
-  }
+  if (!topic) throw new ValidationError("Missing x-bokun-topic header");
 
   const rawBody = await req.json().catch(() => null);
   const body = webhookBodySchema.parse(rawBody);
 
-  if (topic.startsWith("bookings/")) {
-    const bokunBooking = await getBokunBooking(String(body.bookingId));
-    const ourBookingId = await importBokunBooking(bokunBooking);
+  // Idempotency: hash(topic|bookingId|timestamp|signature) come eventId.
+  // Bokun non fornisce un event.id esplicito, ma la combinazione e' unica
+  // entro la ragionevole finestra di retry upstream.
+  const signature = headers["x-bokun-hmac"] ?? headers["x-bokun-signature"] ?? "";
+  const eventId = crypto
+    .createHash("sha256")
+    .update(`${topic}|${body.bookingId}|${body.timestamp ?? ""}|${signature}`)
+    .digest("hex");
 
-    const b = await db.booking.findUnique({ where: { id: ourBookingId } });
-    if (!b) {
-      logger.error({ ourBookingId }, "Imported booking not found after import");
-      return NextResponse.json({ received: true });
+  try {
+    await db.processedBokunEvent.create({ data: { eventId, topic } });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      logger.info({ eventId, topic }, "Bokun webhook duplicate, skipping");
+      return NextResponse.json({ received: true, duplicate: true });
     }
-
-    if (topic === "bookings/cancel" || b.status === "CANCELLED" || b.status === "REFUNDED") {
-      await releaseDates(b.boatId, b.startDate, b.endDate, CHANNELS.BOKUN);
-    } else if (topic === "bookings/create" || topic === "bookings/update") {
-      await blockDates(b.boatId, b.startDate, b.endDate, CHANNELS.BOKUN, b.id);
-    }
-  } else {
-    logger.debug({ topic }, "Bokun webhook topic unhandled");
+    throw err;
   }
+
+  if (!topic.startsWith("bookings/")) {
+    logger.debug({ topic }, "Bokun webhook topic outside bookings namespace");
+    return NextResponse.json({ received: true });
+  }
+
+  if (!HANDLED_TOPICS.has(topic)) {
+    // Topic noto ma non mappato (es. bookings/reschedule): import+sync comunque,
+    // cosi' il DB riflette lo stato upstream.
+    logger.warn({ topic }, "Bokun webhook topic unhandled, forcing import+sync");
+  }
+
+  const bokunBooking = await getBokunBooking(String(body.bookingId));
+  const imported = await importBokunBooking(bokunBooking);
+  await syncBookingAvailability(imported);
 
   return NextResponse.json({ received: true });
 });

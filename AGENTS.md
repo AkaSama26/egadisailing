@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 completati + 4 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation). Plan 3-6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 completati + 5 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out). Plan 4-6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -192,11 +192,42 @@ Spec completa: `docs/superpowers/specs/2026-04-17-platform-v2-design.md`
 - **Duplicate tab**: broadcast channel o idempotency key per prevenire doppi PaymentIntent.
 - **Confirmation code case-insensitive**: normalize to uppercase at input.
 
+## Round 5 audit — Plan 3 Bokun (fix applicati)
+
+Quattro audit paralleli (security/integration/concurrency/code quality) hanno trovato:
+
+### Critiche fixate
+- **Double-insert race webhook+cron**: `findUnique` era fuori dalla tx → due import concorrenti vedevano `null` entrambi e andavano in P2002 sul `confirmationCode` unique. Fix: tutto in una `$transaction`, handler P2002 che degrada a refetch+update. `src/lib/bokun/adapters/booking.ts`.
+- **Reconciliation cron non faceva fan-out availability**: solo il webhook route chiamava `blockDates`/`releaseDates`, quindi un webhook perso → DB OK, ma BoatAvailability mai aggiornata. Fix: helper condiviso `src/lib/bokun/sync-availability.ts` chiamato da entrambi i call site.
+- **`mapStatus` substring fragile + default CONFIRMED**: `includes("CANCEL")` matchava `NOT_CANCELLED`; stati sconosciuti diventavano CONFIRMED silenziosamente. Fix: mappa esplicita con `BOKUN_STATUS_MAP`, throw su unknown (6 test vitest aggiunti).
+- **`hourAgo` rotto**: `addDays(new Date(), 0).setUTCHours(-1)` restituiva 23:00 UTC del giorno precedente invece di 1h fa. Fix: `addHours(runStartedAt, -1)`.
+- **Reconciliation `pageSize=100` senza loop**: persi >100 booking/hour. Fix: loop fino a `bookings.length < pageSize` con MAX_PAGES=20 safety cap.
+- **Clock skew su `lastSyncAt`**: salvato come `new Date()` post-run → eventi con updatedAt borderline venivano persi. Fix: `nextSince = runStartedAt - 30s` (buffer), capture pre-fetch.
+- **Self-echo window 120s insufficiente per OTA**: Bokun come hub Viator/GYG può rimandare webhook minuti dopo. Fix: esteso a 600s + commento che motiva. `src/lib/availability/service.ts`.
+- **Webhook dedup mancante**: nessuna tabella analoga a `ProcessedStripeEvent`. Fix: `ProcessedBokunEvent(eventId, topic, processedAt)` con `eventId = sha256(topic|bookingId|timestamp|signature)`, insert-first con catch P2002 → 200 duplicate. Migration `20260418180000_round5_bokun_dedup`.
+- **HTTP retry assente su 429/5xx**: fetch singolo, failure network o 503 rimbalzava come fatale. Fix: wrapper con backoff esponenziale (3 attempt, `Retry-After` onorato, cap 10s).
+- **Logger leak `upstreamBody`**: full response body Bokun finiva nei log anche con PII. Fix: redact `*.upstreamBody`/`*.responseBody` in pino + troncamento 500 char prima del log.
+- **Webhook `NextResponse.json` per errore non configurato**: inconsistente con resto del route. Fix: `throw new AppError("WEBHOOK_NOT_CONFIGURED", ..., 500)` → `withErrorHandler` fa il resto.
+- **`importBokunBooking` tornava solo `string`**: caller faceva `findUnique` extra per leggere `boatId/startDate/endDate`. Fix: ritorna `ImportedBokunBooking` con tutti i campi necessari al fan-out.
+
+### Deferred (Plan 4+/5)
+- **CRITICA**: Webhook body `bookingId` trusted — signer Bokun firma solo gli header, non il body. Con replay di un set firmato valido + sostituzione body, un attaccante può forzare import di booking arbitrari. Da verificare sui doc API Bokun se esiste `x-bokun-booking-id` firmato; altrimenti aggiungere header custom con body hash.
+- **ALTA**: Replay protection timestamp (±5min window) non presente. Dedup via `ProcessedBokunEvent` copre i replay finché il signature cambia; aggiungere finestra temporale sul `x-bokun-date` in Plan 4.
+- **ALTA**: PII in `BokunBooking.rawPayload` (firstName, email, phone, country, passengers) non redacted. Retention cron Plan 3 non la anonimizza. Fix GDPR: whitelist fields prima del save o column-level encryption. Plan 5.
+- **ALTA**: `numPeople`/`totalPrice` non validati vs `capacityMax` o range minimo. Bokun buggato o attaccante via #1 può scrivere `totalPrice=0` o `numPeople=999`. Serve Zod schema stretto su `getBokunBooking`.
+- **ALTA**: `capacityMax` ignora booking attivi per SOCIAL_BOATING/BOAT_SHARED — finding pre-esistente. `bokun-availability-worker` pusha 0 o max senza contare i posti residui. Plan 4.
+- **ALTA**: `scheduleBokunPricingSync` esiste ma nessun caller lo invoca: admin HotDayRule CRUD mancante. Dead code fino a Plan 5.
+- **MEDIA**: Rate limit + origin check su `/api/webhooks/bokun` e `/api/cron/bokun-reconciliation`. Plan 4.
+- **MEDIA**: Test adapter/worker mancanti (`importBokunBooking`, worker job handlers, webhook route integration). Solo `mapStatus` + `signer` + `verifier` testati oggi.
+- **MEDIA**: Decimal precision in `bokun-pricing-worker`: `amount.toNumber()` + integer in DB. Passare stringa Decimal a Bokun e salvare `toFixed(2)`.
+- **BASSA**: Queue router per canale (`sync.bokun` vs `sync.boataround`) per non far iterare ogni worker su ogni job. Plan 4.
+- **BASSA**: Rotazione `BOKUN_WEBHOOK_SECRET_NEXT` per zero-downtime key rotation.
+
 ## Plan roadmap
 
 1. ✅ Plan 1 — DB + Backend foundation (completato)
 2. ✅ Plan 2 — Sito + Stripe + OTP (completato + audit fixes)
-3. ⏳ Plan 3 — Bokun integration
+3. ✅ Plan 3 — Bokun integration (completato + round 5 audit fixes)
 4. ⏳ Plan 4 — Charter integrations (Boataround, SamBoat iCal, Click&Boat, Nautal email)
 5. ⏳ Plan 5 — Dashboard admin
 6. ⏳ Plan 6 — Weather + notifiche + E2E

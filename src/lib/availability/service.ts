@@ -14,7 +14,15 @@ export interface UpdateAvailabilityInput {
   skipFanOut?: boolean;
 }
 
-const SELF_ECHO_WINDOW_SECONDS = 120;
+/**
+ * Finestra di self-echo detection. Deve coprire la latenza piu' lunga
+ * prevedibile di un roundtrip OTA: DB → fan-out → provider upstream →
+ * webhook di ritorno. Bokun agisce come hub (Viator/GYG) e i loro webhook
+ * possono ritardare diversi minuti. 10 minuti e' il compromesso: abbastanza
+ * per evitare loop, non cosi' lungo da mascherare update legittimi dallo
+ * stesso canale su date diverse (la comparazione e' per-cella).
+ */
+const SELF_ECHO_WINDOW_SECONDS = 600;
 
 /**
  * Namespace per advisory lock sull'availability. Serializza update concorrenti

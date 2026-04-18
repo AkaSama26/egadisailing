@@ -27,6 +27,9 @@ const REDACT_PATHS = [
   "*.stripePaymentIntentId",
   "*.stripeChargeId",
   "*.rawPayload",
+  // Upstream bodies possono contenere PII / segreti — redacted e troncati.
+  "*.upstreamBody",
+  "*.responseBody",
 ];
 
 /**

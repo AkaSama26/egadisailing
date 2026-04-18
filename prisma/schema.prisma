@@ -397,6 +397,18 @@ model ProcessedStripeEvent {
   @@index([eventType, processedAt])
 }
 
+/// Event-level idempotency per webhook Bokun. Bokun non espone un event.id
+/// canonico: usiamo hash(topic|bookingId|timestamp|signature) come chiave.
+/// Se vediamo lo stesso event due volte (retry upstream, replay), il secondo
+/// insert fallisce con P2002 e la route ritorna 200 early.
+model ProcessedBokunEvent {
+  eventId     String   @id
+  topic       String
+  processedAt DateTime @default(now())
+
+  @@index([topic, processedAt])
+}
+
 // ═══════════════════════════════════════════════════════════
 // NOTES
 // ═══════════════════════════════════════════════════════════
