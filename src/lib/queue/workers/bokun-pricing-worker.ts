@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { createWorker } from "@/lib/queue";
+import { createWorker, registerWorker } from "@/lib/queue";
 import { upsertBokunPriceOverride } from "@/lib/bokun/pricing";
 import { isBokunConfigured } from "@/lib/bokun";
 import { db } from "@/lib/db";
@@ -20,7 +20,7 @@ interface PricingJob {
  * manuale se il markup cambia).
  */
 export function startBokunPricingWorker() {
-  return createWorker<PricingJob>(
+  const worker = createWorker<PricingJob>(
     "sync",
     async (job) => {
       if (job.name !== "pricing.bokun.sync") return;
@@ -64,6 +64,8 @@ export function startBokunPricingWorker() {
         },
       });
     },
-    2,
+    { concurrency: 2, limiter: { max: 5, duration: 1000 } },
   );
+  registerWorker(worker);
+  return worker;
 }

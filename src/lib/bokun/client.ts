@@ -11,7 +11,9 @@ export type BokunHttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 const MAX_RETRIES = 3;
 const RETRY_BASE_MS = 500;
+const RETRY_JITTER_MS = 500;
 const UPSTREAM_BODY_PREVIEW_CHARS = 500;
+const REQUEST_TIMEOUT_MS = 15_000;
 
 export class BokunClient {
   constructor(private config: BokunClientConfig) {}
@@ -31,6 +33,9 @@ export class BokunClient {
         method,
         headers: requestHeaders,
         body: body !== undefined ? JSON.stringify(body) : undefined,
+        // Timeout hard: senza questo, un hang Bokun tiene un worker occupato
+        // indefinitamente e satura la queue.
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       };
 
       const url = `${this.config.apiUrl}${pathAndQuery}`;
@@ -91,8 +96,13 @@ export class BokunClient {
   }
 }
 
+/**
+ * Backoff esponenziale con jitter random per evitare thundering herd quando
+ * N worker vedono simultaneamente un 429/5xx e ritentano nello stesso
+ * millisecondo. Il jitter e' uniformemente distribuito in [0, RETRY_JITTER_MS].
+ */
 function backoffMs(attempt: number): number {
-  return RETRY_BASE_MS * 2 ** attempt;
+  return RETRY_BASE_MS * 2 ** attempt + Math.random() * RETRY_JITTER_MS;
 }
 
 function parseRetryAfter(header: string | null): number | null {

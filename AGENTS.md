@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 completati + 5 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out). Plan 4-6 da implementare.
+**Stato**: Plan 1 + Plan 2 + Plan 3 completati + 6 round di audit applicati (code quality, security, concurrency, refactoring, production readiness, UX, integration, meta-review, performance, GDPR, edge cases, testing gap, supply chain, business logic, API contract, documentation, Bokun race/dedup/fan-out, Bokun SSRF/retention/failure modes/observability). Plan 4-6 da implementare.
 
 **Test suite**: 47 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers.
 
@@ -222,6 +222,62 @@ Quattro audit paralleli (security/integration/concurrency/code quality) hanno tr
 - **MEDIA**: Decimal precision in `bokun-pricing-worker`: `amount.toNumber()` + integer in DB. Passare stringa Decimal a Bokun e salvare `toFixed(2)`.
 - **BASSA**: Queue router per canale (`sync.bokun` vs `sync.boataround`) per non far iterare ogni worker su ogni job. Plan 4.
 - **BASSA**: Rotazione `BOKUN_WEBHOOK_SECRET_NEXT` per zero-downtime key rotation.
+
+## Round 6 audit — deferred + chaos + observability (fix applicati)
+
+Quattro audit paralleli (deferred deep-dive/failure modes/observability/test gap).
+
+### Critiche fixate
+- **SSRF path-traversal via `bookingId`** (nuovo): `String(body.bookingId)` interpolato in `/booking.json/booking/${id}` senza regex o `encodeURIComponent`. Un body firmato + replay con `bookingId="../activity.json/123"` avrebbe pivotato a endpoint arbitrari autenticati. Fix: `bokunBookingIdSchema` Zod (`/^[A-Za-z0-9_-]{1,64}$/`) + `encodeURIComponent` in `getBokunBooking`. `src/lib/bokun/schemas.ts`, `src/lib/bokun/bookings.ts`.
+- **Response validation mancante**: `getBokunBooking` tornava any, `numPeople`/`totalPrice` non validati → DB pollution. Fix: `bokunBookingResponseSchema` Zod con range check (numPeople 1..100, totalPrice 0..1M). `searchBokunBookings` drop silenzioso con warn log su booking malformati.
+- **Rate limit webhook + cron Bokun**: nessun cap. Fix: `enforceRateLimit` 60/min per IP sul webhook (PRIMA della verifica HMAC, CPU-bound), 10/min sul cron (secret leak → DoS limitato). Scopes: `BOKUN_WEBHOOK_IP`, `BOKUN_CRON_IP`.
+- **Reconciliation cron overrun/multi-replica**: node-cron multi-pod fires 2x + run > 5min sovrascrive cursore. Fix: `tryAcquireSessionAdvisoryLock(db, "cron", "bokun_reconciliation")` con `try/finally` release → single-flight cross-replica.
+- **ProcessedBokunEvent retention mancante**: crescita infinita (1k/day = 365k/y). Fix: delete > 30g nel cron retention.
+- **PII in `rawPayload` (GDPR minimization)**: `buildSafeRawPayload` salva solo id/productId/status/channelName/date/numPeople/price/currency — niente firstName/lastName/email/phone/passengers dettagli (vivono su `Customer` con policy anonymization). Retention cron ri-redige vecchi payload dopo 90g con marker `_redacted:true` idempotent.
+- **No SIGTERM handler → job loss su redeploy**: `register-workers.ts` registra `process.on("SIGTERM"|"SIGINT")` che chiude workers/Redis/DB pulito con hard timeout 15s. `registerWorker()` helper accumula Worker instance in globalThis per lo shutdown.
+- **BokunClient retry senza jitter + no timeout**: thundering herd a retry 2/3 + hang infinito possibile. Fix: `Math.random() * 500` jitter + `AbortSignal.timeout(15_000)` su ogni request.
+- **BullMQ worker senza limiter**: 20 celle changed in burst = 20 POST simultanei → 429. Fix: `{ concurrency, limiter: { max, duration } }` su availability (10/s) e pricing (5/s) workers.
+- **Logger leak `err.meta`**: Prisma P2002 ritorna `meta.target: ["email"]` con valori originali. Fix: aggiunto `*.meta` e `err.meta` a `REDACT_PATHS` pino.
+- **Webhook HMAC invalid log insufficiente**: impossibile distinguere attacco da rotation misconfig. Fix: log `{ ip, userAgent, signaturePrefix: sig.slice(0,8), topic }` su fail.
+- **`instrumentation.ts` no try/catch**: errore boot crashava tutto il processo Next. Fix: try/catch per-componente (scheduler, workers) con `logger.fatal` → degraded mode invece di crash loop.
+- **Healthcheck shallow cieco su BullMQ + canali**: `?deep=1` variant include queue job counts + `ChannelSyncStatus` (503 se RED o failed > 100). Shallow resta per liveness probe (deve restare 200 anche con Bokun RED → DIRECT booking continua).
+- **Retention cron silently swallows errors**: fallimenti parziali ritornavano 200. Fix: array `errors[]` + response 207 con lista se qualcosa fallisce.
+
+### Deferred (Plan 4+/5)
+- **CRITICA**: Webhook body `bookingId` non firmato (signer Bokun copre solo header). Mitigato da SSRF fix + rate-limit, ma teoricamente un attaccante con header firmato leakato puo' forzare import on-demand di qualsiasi booking del vendor. Risolvibile solo se Bokun espone `x-bokun-booking-id` firmato.
+- **ALTA**: Replay timestamp window (±5min su `x-bokun-date`) non implementata — dedup `ProcessedBokunEvent` copre replay con stessa signature, ma rifirma Bokun cambia eventId.
+- **ALTA**: `blockDates`/`releaseDates` N+1 outside transaction: 7 giorni seriali. Failover Postgres al giorno 4/7 lascia drift permanente. Fix: batch raw SQL `INSERT ... ON CONFLICT` + single-range fan-out. Plan 4+.
+- **ALTA**: Outbox pattern reale per fan-out: se Redis cade dopo commit DB, il fan-out e' perso senza recovery. Reconciliation cron non ri-fa fan-out dello stato DB→celle. Plan 4+.
+- **ALTA**: Multi-replica leader election (BullMQ repeatable job) per sostituire node-cron — advisory lock copre overrun, non ancora concurrency multi-pod al fire-time.
+- **ALTA**: `bokun-availability-worker` non rilegge DB prima di pushare su Bokun — ordine fuori sequenza su concurrency=3 puo' scrivere stato stale. Coalescenza jobId copre il caso "stessa cella", ma servizi diversi sulla stessa boat-date sono separati.
+- **ALTA**: `customer.upsert` dentro tx race su email unique normalizzata (P2002 solo su `bokunBookingId` gestito). Plan 4+.
+- **MEDIA**: Sentry wiring (`SENTRY_DSN` commentato in `.env.example`). Serve init in `instrumentation.ts` + `withErrorHandler` 500 branch capture.
+- **MEDIA**: `ChannelSyncLog` append-only: oggi `lastError` sovrascritto → storico incident perso.
+- **MEDIA**: Runbook gaps — "Bokun API giu' > 1h", "webhook HMAC fail burst", "reconciliation RED > 1h", GDPR SAR export, incident post-mortem template.
+- **MEDIA**: Funnel conversion metrics (PI created → CONFIRMED → timeout) + Stripe webhook latency tracking.
+- **MEDIA**: `requestId` non propagato ai `logger.info/warn/error` business — solo `reqLogger` locale al wrapper. Serve AsyncLocalStorage.
+- **MEDIA**: `sendConfirmationEmail` silent failure post-booking: accodare a BullMQ con retry + dead-letter (oggi solo `.catch(log)`).
+- **MEDIA**: `balance-reminders` reset `balanceReminderSentAt=null` su errore → doppio invio possibile con Brevo intermittente.
+- **BASSA**: Queue router per canale (`sync.bokun` vs `sync.boataround`) — oggi ogni worker itera ogni job.
+- **BASSA**: `err.stack` troncato a 2000 char (gia' applicato), ma `err` intero ancora loggato altrove.
+- **BASSA**: Rotazione `BOKUN_WEBHOOK_SECRET_NEXT` zero-downtime.
+- **BASSA**: No pino `base: { release: GIT_SHA }` per correlare log a release.
+- **BASSA**: Cron scheduler self-fetch HTTP a `APP_URL` — preferibile chiamata handler diretta.
+
+### Test coverage gap (infra mancante)
+Top 10 gap da colmare pre-go-live (ordine di rischio):
+1. `importBokunBooking` path completo (L) — integration con prisma test-db
+2. Webhook Bokun route integration (L) — HMAC reject/dedup/topic
+3. Reconciliation cron pagination+clock-skew (M)
+4. `availability/service.ts` advisory lock + self-echo 600s (L)
+5. `booking/create-direct.ts` server-side invariants (M)
+6. Stripe webhook triple dedup + amount mismatch (M)
+7. `BokunClient` retry/timeout (S, quick win)
+8. `booking/confirm.ts` idempotency gate (M)
+9. Bokun workers capacityMax/markup (M)
+10. `sync-availability`+`fan-out` helper (S)
+
+Infra necessaria: pglite/testcontainers, ioredis-mock, @playwright/test, vitest setup. Rimandata a Plan 6.
 
 ## Plan roadmap
 

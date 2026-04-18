@@ -18,6 +18,7 @@ const DEFAULT_WORKER_CONCURRENCY = 5;
 const globalForQueue = globalThis as unknown as {
   __redis__?: IORedis;
   __queues__?: Map<string, Queue>;
+  __workers__?: Worker[];
 };
 
 export function getRedisConnection(): IORedis {
@@ -51,22 +52,55 @@ export function createQueue<T = unknown>(name: string): Queue<T> {
   });
 }
 
+export interface WorkerOptions {
+  concurrency?: number;
+  /**
+   * Rate limiter per il worker: cappa N job per finestra di `duration` ms.
+   * Utile per non martellare i canali upstream (Bokun 429).
+   */
+  limiter?: { max: number; duration: number };
+}
+
 export function createWorker<T = unknown>(
   name: string,
   processor: Processor<T>,
-  concurrency = DEFAULT_WORKER_CONCURRENCY,
+  concurrencyOrOptions: number | WorkerOptions = DEFAULT_WORKER_CONCURRENCY,
 ): Worker<T> {
+  const options: WorkerOptions =
+    typeof concurrencyOrOptions === "number"
+      ? { concurrency: concurrencyOrOptions }
+      : concurrencyOrOptions;
   const worker = new Worker<T>(name, processor, {
     connection: getRedisConnection(),
-    concurrency,
+    concurrency: options.concurrency ?? DEFAULT_WORKER_CONCURRENCY,
+    limiter: options.limiter,
   });
   worker.on("failed", (job, err) =>
-    logger.error({ jobId: job?.id, jobName: name, err }, "Job failed"),
+    // Stack troncato per non inondare i log: 5 retry * 200 linee = 1k per job.
+    logger.error(
+      {
+        jobId: job?.id,
+        jobName: name,
+        errCode: (err as { code?: string }).code,
+        errMessage: err.message,
+        errStack: err.stack?.slice(0, 2000),
+      },
+      "Job failed",
+    ),
   );
   worker.on("completed", (job) =>
     logger.debug({ jobId: job.id, jobName: name }, "Job completed"),
   );
   return worker;
+}
+
+export function getRegisteredWorkers(): Worker[] {
+  if (!globalForQueue.__workers__) globalForQueue.__workers__ = [];
+  return globalForQueue.__workers__;
+}
+
+export function registerWorker(worker: Worker): void {
+  getRegisteredWorkers().push(worker);
 }
 
 export function createQueueEvents(name: string): QueueEvents {

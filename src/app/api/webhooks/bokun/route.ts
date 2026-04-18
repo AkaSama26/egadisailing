@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { verifyBokunWebhook } from "@/lib/bokun/webhook-verifier";
 import { getBokunBooking } from "@/lib/bokun/bookings";
+import { bokunWebhookBodySchema } from "@/lib/bokun/schemas";
 import { importBokunBooking } from "@/lib/bokun/adapters/booking";
 import { syncBookingAvailability } from "@/lib/bokun/sync-availability";
 import { db } from "@/lib/db";
@@ -11,13 +11,11 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
 import { AppError, UnauthorizedError, ValidationError } from "@/lib/errors";
+import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
+import { enforceRateLimit } from "@/lib/rate-limit/service";
+import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 
 export const runtime = "nodejs";
-
-const webhookBodySchema = z.object({
-  timestamp: z.string().optional(),
-  bookingId: z.union([z.number(), z.string()]),
-});
 
 const HANDLED_TOPICS = new Set([
   "bookings/create",
@@ -25,10 +23,30 @@ const HANDLED_TOPICS = new Set([
   "bookings/cancel",
 ]);
 
+/**
+ * Webhook Bokun — rate-limited per IP (60 req/min) a defense-in-depth contro
+ * burst/DoS sulla verifica HMAC. Idempotency via `ProcessedBokunEvent`
+ * (insert-first: P2002 → 200 duplicate silenzioso).
+ *
+ * Log diagnostici su HMAC invalid: ip, ua, signature prefix — per distinguere
+ * attacco da rotazione secret mal configurata senza leakare la signature completa.
+ */
 export const POST = withErrorHandler(async (req: Request) => {
   if (!env.BOKUN_WEBHOOK_SECRET) {
     throw new AppError("WEBHOOK_NOT_CONFIGURED", "Bokun webhook not configured", 500);
   }
+
+  const ip = getClientIp(req.headers);
+  const userAgent = getUserAgent(req.headers);
+
+  // Rate-limit PRIMA della verifica HMAC — la verifica stessa e' CPU-bound
+  // (HMAC compute) e vogliamo cappare gli attacchi brute-force cheap.
+  await enforceRateLimit({
+    identifier: ip,
+    scope: RATE_LIMIT_SCOPES.BOKUN_WEBHOOK_IP,
+    limit: 60,
+    windowSeconds: 60,
+  });
 
   const headers: Record<string, string> = {};
   req.headers.forEach((value, key) => {
@@ -36,7 +54,16 @@ export const POST = withErrorHandler(async (req: Request) => {
   });
 
   if (!verifyBokunWebhook(headers, env.BOKUN_WEBHOOK_SECRET)) {
-    logger.warn({ topic: headers["x-bokun-topic"] }, "Bokun webhook HMAC invalid");
+    const signature = headers["x-bokun-hmac"] ?? headers["x-bokun-signature"] ?? "";
+    logger.warn(
+      {
+        topic: headers["x-bokun-topic"],
+        ip,
+        userAgent,
+        signaturePrefix: signature.slice(0, 8),
+      },
+      "Bokun webhook HMAC invalid",
+    );
     throw new UnauthorizedError("Invalid signature");
   }
 
@@ -44,7 +71,7 @@ export const POST = withErrorHandler(async (req: Request) => {
   if (!topic) throw new ValidationError("Missing x-bokun-topic header");
 
   const rawBody = await req.json().catch(() => null);
-  const body = webhookBodySchema.parse(rawBody);
+  const body = bokunWebhookBodySchema.parse(rawBody);
 
   // Idempotency: hash(topic|bookingId|timestamp|signature) come eventId.
   // Bokun non fornisce un event.id esplicito, ma la combinazione e' unica
@@ -76,7 +103,7 @@ export const POST = withErrorHandler(async (req: Request) => {
     logger.warn({ topic }, "Bokun webhook topic unhandled, forcing import+sync");
   }
 
-  const bokunBooking = await getBokunBooking(String(body.bookingId));
+  const bokunBooking = await getBokunBooking(body.bookingId);
   const imported = await importBokunBooking(bokunBooking);
   await syncBookingAvailability(imported);
 

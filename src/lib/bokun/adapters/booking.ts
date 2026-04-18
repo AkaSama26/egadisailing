@@ -51,7 +51,12 @@ export async function importBokunBooking(
   const netStr = booking.netAmount ? new Decimal(booking.netAmount).toFixed(2) : null;
   const startDate = parseIsoDay(booking.startDate.slice(0, 10));
   const endDate = parseIsoDay((booking.endDate ?? booking.startDate).slice(0, 10));
-  const rawPayload = booking as unknown as Prisma.InputJsonValue;
+
+  // GDPR minimization: salviamo SOLO i campi business-essenziali; PII
+  // (firstName/lastName/email/phone/passengers) vive gia' su `Customer` che
+  // ha policy di anonymization dedicata. Il retention cron ri-redige
+  // eventuali payload storici con la stessa whitelist dopo 90 giorni.
+  const rawPayload = buildSafeRawPayload(booking);
 
   try {
     const result = await db.$transaction(async (tx) => {
@@ -186,6 +191,26 @@ const BOKUN_STATUS_MAP: Record<string, BookingStatus> = {
   CART: "PENDING",
   QUOTE: "PENDING",
 };
+
+function buildSafeRawPayload(booking: BokunBookingSummary): Prisma.InputJsonValue {
+  return {
+    id: booking.id,
+    confirmationCode: booking.confirmationCode,
+    productConfirmationCode: booking.productConfirmationCode,
+    productId: booking.productId,
+    status: booking.status,
+    channelName: booking.channelName,
+    startDate: booking.startDate,
+    endDate: booking.endDate,
+    numPeople: booking.numPeople,
+    totalPrice: booking.totalPrice,
+    currency: booking.currency,
+    commissionAmount: booking.commissionAmount,
+    netAmount: booking.netAmount,
+    paymentStatus: booking.paymentStatus,
+    passengerCount: booking.passengers?.length,
+  };
+}
 
 export function mapStatus(bokunStatus: string): BookingStatus {
   const s = bokunStatus.toUpperCase();

@@ -18,13 +18,17 @@ export interface BokunBookingSummary {
     firstName: string;
     lastName: string;
     email: string;
-    phoneNumber?: string;
-    country?: string;
-    language?: string;
+    phoneNumber?: string | null;
+    country?: string | null;
+    language?: string | null;
   };
-  passengers?: Array<{ firstName?: string; lastName?: string; numPeople?: number }>;
+  passengers?: Array<{
+    firstName?: string | null;
+    lastName?: string | null;
+    numPeople?: number;
+  }>;
   numPeople?: number;
   paymentStatus?: string;
-  commissionAmount?: number;
-  netAmount?: number;
+  commissionAmount?: number | null;
+  netAmount?: number | null;
 }

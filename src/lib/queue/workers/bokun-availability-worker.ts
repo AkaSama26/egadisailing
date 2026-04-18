@@ -1,4 +1,4 @@
-import { createWorker } from "@/lib/queue";
+import { createWorker, registerWorker } from "@/lib/queue";
 import { updateBokunAvailability } from "@/lib/bokun/availability";
 import { isBokunConfigured } from "@/lib/bokun";
 import { db } from "@/lib/db";
@@ -16,7 +16,7 @@ interface AvailabilityJob {
  * Push su Bokun con `capacityMax` del servizio se AVAILABLE, 0 se BLOCKED.
  */
 export function startBokunAvailabilityWorker() {
-  return createWorker<AvailabilityJob>(
+  const worker = createWorker<AvailabilityJob>(
     "sync",
     async (job) => {
       if (job.name !== "availability.update") return;
@@ -45,6 +45,10 @@ export function startBokunAvailabilityWorker() {
         });
       }
     },
-    3,
+    // Limiter: max 10 POST/sec verso Bokun per evitare 429. Concurrency=3
+    // mantiene il throughput su job di canali diversi quando verranno aggiunti.
+    { concurrency: 3, limiter: { max: 10, duration: 1000 } },
   );
+  registerWorker(worker);
+  return worker;
 }

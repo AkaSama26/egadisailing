@@ -34,3 +34,37 @@ export async function acquireTxAdvisoryLock(
   const key = computeAdvisoryLockKey(namespace, ...parts);
   await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(${key})`);
 }
+
+/**
+ * Tenta (non bloccante) di acquisire un advisory lock di SESSIONE — non
+ * rilasciato in automatico al commit, va rilasciato esplicitamente con
+ * `releaseSessionAdvisoryLock`. Ritorna true se acquisito, false se un altro
+ * processo lo tiene gia'.
+ *
+ * Uso tipico: anti-overrun per cron endpoint single-flight cross-replica.
+ *
+ * IMPORTANTE: `pg_try_advisory_lock` e' session-scoped, quindi le repliche
+ * Next devono condividere la stessa connessione Postgres (Prisma singleton
+ * per processo — OK) e il lock persiste finche' la connessione non muore.
+ * Usare SEMPRE con try/finally per rilasciare anche su errore.
+ */
+export async function tryAcquireSessionAdvisoryLock(
+  db: { $queryRawUnsafe: <T>(sql: string) => Promise<T> },
+  namespace: string,
+  ...parts: string[]
+): Promise<boolean> {
+  const key = computeAdvisoryLockKey(namespace, ...parts);
+  const rows = await db.$queryRawUnsafe<Array<{ pg_try_advisory_lock: boolean }>>(
+    `SELECT pg_try_advisory_lock(${key})`,
+  );
+  return rows[0]?.pg_try_advisory_lock === true;
+}
+
+export async function releaseSessionAdvisoryLock(
+  db: { $executeRawUnsafe: (sql: string) => Promise<unknown> },
+  namespace: string,
+  ...parts: string[]
+): Promise<void> {
+  const key = computeAdvisoryLockKey(namespace, ...parts);
+  await db.$executeRawUnsafe(`SELECT pg_advisory_unlock(${key})`);
+}

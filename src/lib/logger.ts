@@ -30,6 +30,9 @@ const REDACT_PATHS = [
   // Upstream bodies possono contenere PII / segreti — redacted e troncati.
   "*.upstreamBody",
   "*.responseBody",
+  // Prisma error.meta puo' contenere valori PII (target delle unique, ecc).
+  "*.meta",
+  "err.meta",
 ];
 
 /**

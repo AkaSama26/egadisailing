@@ -7,8 +7,14 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { addHours } from "@/lib/dates";
-import { CHANNELS } from "@/lib/channels";
+import { CHANNELS, RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
+import { getClientIp } from "@/lib/http/client-ip";
+import { enforceRateLimit } from "@/lib/rate-limit/service";
+import {
+  tryAcquireSessionAdvisoryLock,
+  releaseSessionAdvisoryLock,
+} from "@/lib/db/advisory-lock";
 
 export const runtime = "nodejs";
 
@@ -18,34 +24,55 @@ const MAX_PAGES = 20; // safety cap: 2000 bookings/run
 // nostro server e Bokun. Senza buffer, eventi con updatedAt == now() esatto
 // possono essere persi tra un run e il successivo.
 const CLOCK_SKEW_BUFFER_MS = 30_000;
+const LOCK_NAMESPACE = "cron";
+const LOCK_KEY = "bokun_reconciliation";
 
 /**
  * Cron ogni 5 minuti che importa bookings Bokun aggiornati dopo l'ultimo
  * sync noto — fallback per webhook persi.
  *
+ * Anti-overrun: acquisisce un advisory session lock `cron:bokun_reconciliation`.
+ * Se un run precedente e' ancora in corso (overrun >5min) o un'altra replica
+ * Next sta eseguendo, skippiamo senza bloccare. Garantisce single-flight
+ * cross-replica.
+ *
+ * Rate-limit: 10 req/min per IP (un cron legittimo fa 12 req/ora, l'attacco
+ * con secret leakato viene cappato).
+ *
  * `updatedSince` letto da `ChannelSyncStatus`. Se assente o `lastSyncAt`
  * vecchio > 1h, fallback a ultimi 60 minuti per evitare backfill massivo.
  *
- * Il `nextSince` salvato su ChannelSyncStatus e' `runStartedAt - 30s`
- * (clock skew buffer): eventi con updatedAt entro la finestra marginale
- * vengono riletti al prossimo run, idempotent grazie al dedup su
- * `bokunBookingId` nell'adapter.
+ * Il `nextSince` salvato e' `runStartedAt - 30s` (clock skew buffer):
+ * eventi con updatedAt entro la finestra marginale vengono riletti al
+ * prossimo run, idempotent grazie al dedup su `bokunBookingId` nell'adapter.
  */
 export const GET = withErrorHandler(async (req: Request) => {
   requireBearerSecret(req, env.CRON_SECRET);
+  await enforceRateLimit({
+    identifier: getClientIp(req.headers),
+    scope: RATE_LIMIT_SCOPES.BOKUN_CRON_IP,
+    limit: 10,
+    windowSeconds: 60,
+  });
 
   if (!isBokunConfigured()) {
     return NextResponse.json({ skipped: "bokun_not_configured" });
   }
 
-  const runStartedAt = new Date();
-  const syncStatus = await db.channelSyncStatus.findUnique({
-    where: { channel: CHANNELS.BOKUN },
-  });
-  const hourAgo = addHours(runStartedAt, -1);
-  const since = syncStatus?.lastSyncAt ?? hourAgo;
+  const locked = await tryAcquireSessionAdvisoryLock(db, LOCK_NAMESPACE, LOCK_KEY);
+  if (!locked) {
+    logger.warn("Bokun reconciliation skipped: another run in progress");
+    return NextResponse.json({ skipped: "concurrent_run" });
+  }
 
+  const runStartedAt = new Date();
   try {
+    const syncStatus = await db.channelSyncStatus.findUnique({
+      where: { channel: CHANNELS.BOKUN },
+    });
+    const hourAgo = addHours(runStartedAt, -1);
+    const since = syncStatus?.lastSyncAt ?? hourAgo;
+
     let imported = 0;
     let failed = 0;
     let totalHits = 0;
@@ -67,7 +94,14 @@ export const GET = withErrorHandler(async (req: Request) => {
           imported++;
         } catch (err) {
           failed++;
-          logger.error({ err, bokunBookingId: b.id }, "importBokunBooking failed");
+          logger.error(
+            {
+              bokunBookingId: b.id,
+              errorCode: (err as { code?: string }).code,
+              errorMessage: (err as Error).message,
+            },
+            "importBokunBooking failed",
+          );
         }
       }
 
@@ -80,6 +114,7 @@ export const GET = withErrorHandler(async (req: Request) => {
     }
 
     const nextSince = new Date(runStartedAt.getTime() - CLOCK_SKEW_BUFFER_MS);
+    const durationMs = Date.now() - runStartedAt.getTime();
     await db.channelSyncStatus.upsert({
       where: { channel: CHANNELS.BOKUN },
       update: {
@@ -95,7 +130,12 @@ export const GET = withErrorHandler(async (req: Request) => {
       },
     });
 
-    return NextResponse.json({ imported, failed, totalHits, pages: page - 1 });
+    logger.info(
+      { imported, failed, totalHits, pages: page - 1, durationMs, since: since.toISOString() },
+      "Bokun reconciliation run completed",
+    );
+
+    return NextResponse.json({ imported, failed, totalHits, pages: page - 1, durationMs });
   } catch (err) {
     logger.error({ err }, "Bokun reconciliation failed");
     await db.channelSyncStatus.upsert({
@@ -108,5 +148,9 @@ export const GET = withErrorHandler(async (req: Request) => {
       },
     });
     throw err;
+  } finally {
+    await releaseSessionAdvisoryLock(db, LOCK_NAMESPACE, LOCK_KEY).catch((err) => {
+      logger.error({ err }, "Failed to release Bokun reconciliation lock");
+    });
   }
 });
