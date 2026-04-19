@@ -169,10 +169,10 @@ export default async function BookingDetailPage({
             Importo €
             <input
               name="amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              placeholder="0.00"
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9]+([.,][0-9]{1,2})?"
+              placeholder="0,00"
               required
               className="block border px-3 py-2 rounded text-sm w-28"
             />

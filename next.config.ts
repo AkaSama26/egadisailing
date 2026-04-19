@@ -46,8 +46,11 @@ const nextConfig: NextConfig = {
       // R15-SEC-A1: admin NON deve mai essere framable (clickjacking admin
       // compromesso via XSS su public page) + NON deve essere cached da
       // CDN/reverse-proxy/browser (PII cliente + confirmationCode).
+      // R15-REG-SEC-A1: escludiamo /admin/login (pagina pubblica, no PII;
+      // dev HMR+iframe tooling beneficia di regime rilassato). La login
+      // resta protetta dalle default SAMEORIGIN + headers globali.
       {
-        source: "/admin/:path*",
+        source: "/admin/((?!login$|login/).*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },

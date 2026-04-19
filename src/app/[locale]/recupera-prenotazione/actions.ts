@@ -24,6 +24,11 @@ export interface RequestOtpState {
   status: "idle" | "sent" | "error";
   message?: string;
   email?: string;
+  /** R15-REG-UX-12: timestamp monotono di invio, serve al client come dep
+   *  di `useEffect` per resettare il cooldown ANCHE al reinvio stessa email
+   *  (senza, `useActionState` ritorna nuova reference ma React deps `status`+
+   *  `email` sono `Object.is` identici → effect non scatta → cooldown rotto). */
+  sentAt?: number;
 }
 
 export async function requestOtp(
@@ -70,7 +75,7 @@ export async function requestOtp(
       throw err;
     }
 
-    return { status: "sent", email };
+    return { status: "sent", email, sentAt: Date.now() };
   } catch (err) {
     return {
       status: "error",

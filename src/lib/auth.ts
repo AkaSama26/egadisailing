@@ -9,7 +9,12 @@ import { db } from "./db";
 // email sono admin misurando wall-clock della response login.
 // Usiamo cost=10 come il nostro seed; il valore del password qui
 // e' irrilevante — serve solo perche' bcrypt impieghi tempo simile.
-const DUMMY_HASH_PROMISE = hash("dummy-timing-equalizer-password", 10);
+// R15-REG-SEC-A3: `.catch()` fallback su stringa invalid → compare ritorna
+// false deterministico. Senza, un bcryptjs broken al boot propagava reject
+// → ogni login con user inesistente throwava invece di ritornare null.
+const DUMMY_HASH_PROMISE = hash("dummy-timing-equalizer-password", 10).catch(
+  () => "$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidinv",
+);
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [

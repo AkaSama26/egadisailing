@@ -26,10 +26,14 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (reqState.status === "sent") {
+    // R15-REG-UX-12: deps su `sentAt` monotono. Un reinvio stessa email
+    // genera nuovo sentAt server-side → React vede deps cambiate → effect
+    // scatta → cooldown reset. Prima, deps `[status, email]` erano
+    // Object.is stabili al reinvio → effect non scattava → cooldown rotto.
+    if (reqState.status === "sent" && reqState.sentAt) {
       setCooldown(RESEND_COOLDOWN_S);
     }
-  }, [reqState.status, reqState.email]);
+  }, [reqState.status, reqState.sentAt]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -40,9 +44,17 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
   // R15-UX-13: una volta che il codice e' stato inviato, l'email viene
   // lock-ata nel form di verifica. Cambiare email senza ri-richiedere OTP
   // farebbe lookup con email != quella che ha ricevuto il codice → "codice
-  // non valido" confusionario. Link "Cambia email" resetta il flow.
+  // non valido" confusionario.
+  //
+  // R15-REG-UX-13: mostriamo l'email ORIGINALE digitata (`email` state
+  // client) invece di `reqState.email` (normalizzata server-side:
+  // `Mario+Promo@Gmail.com` → `mario@gmail.com`). Il lookup backend applica
+  // comunque `normalizeEmail` → match garantito, ma l'utente vede quello
+  // che ha scritto e non si confonde.
   const otpSent = reqState.status === "sent";
-  const verifyEmail = otpSent ? reqState.email! : email;
+  // Email originale digitata dall'utente (anche post-invio); il lookup
+  // backend applica normalizeEmail in modo equivalente.
+  const verifyEmail = email;
   const canResend = !reqPending && cooldown === 0;
 
   return (

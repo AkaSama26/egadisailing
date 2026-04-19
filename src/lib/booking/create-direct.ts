@@ -157,37 +157,10 @@ export async function createPendingDirectBooking(
       });
     }
 
-    // Pre-check 2: nessun Booking attivo overlapping (PENDING o CONFIRMED)
-    // da qualsiasi canale (DIRECT, BOKUN, charter platforms).
-    //
-    // Senza questo: durante il checkout DIRECT il BoatAvailability non e'
-    // ancora BLOCKED (viene bloccato solo dopo Stripe webhook), quindi un
-    // webhook Bokun concorrente passa il check #1 e crea un secondo Booking
-    // sulla stessa slot. Il DB accetta perche' manca l'exclusion constraint
-    // `EXCLUDE USING gist (boatId, daterange, status)` — aggiunta in backlog.
-    const overlappingBookings = await tx.booking.findMany({
-      where: {
-        boatId: service.boatId,
-        status: { in: ["PENDING", "CONFIRMED"] },
-        // Range overlap: NOT (existing.end < new.start OR existing.start > new.end)
-        startDate: { lte: endDay },
-        endDate: { gte: startDay },
-      },
-      select: { id: true, source: true, confirmationCode: true },
-    });
-    if (overlappingBookings.length > 0) {
-      throw new ConflictError("Dates not available (overlapping active booking)", {
-        conflictingBookings: overlappingBookings.map((b) => ({
-          code: b.confirmationCode,
-          source: b.source,
-        })),
-      });
-    }
-
-    // Upsert customer. NON sovrascriviamo firstName/lastName alla seconda
-    // prenotazione stessa email: il cliente ha gia' ricevuto email con il
-    // nome originale, tenerlo stabile. Aggiorniamo solo campi non-critici
-    // (phone/nationality/language se forniti).
+    // Upsert customer PRIMA del pre-check #2 per permettere retry self-booking.
+    // NON sovrascriviamo firstName/lastName alla seconda prenotazione stessa
+    // email: il cliente ha gia' ricevuto email con il nome originale, tenerlo
+    // stabile. Aggiorniamo solo campi non-critici (phone/nationality/language).
     const customer = await tx.customer.upsert({
       where: { email: emailLower },
       update: {
@@ -204,6 +177,50 @@ export async function createPendingDirectBooking(
         language: input.customer.language,
       },
     });
+
+    // Pre-check 2: nessun Booking attivo overlapping (PENDING o CONFIRMED)
+    // da qualsiasi canale (DIRECT, BOKUN, charter platforms).
+    //
+    // Senza questo: durante il checkout DIRECT il BoatAvailability non e'
+    // ancora BLOCKED (viene bloccato solo dopo Stripe webhook), quindi un
+    // webhook Bokun concorrente passa il check #1 e crea un secondo Booking
+    // sulla stessa slot. Il DB accetta perche' manca l'exclusion constraint
+    // `EXCLUDE USING gist (boatId, daterange, status)` — aggiunta in backlog.
+    //
+    // R15-REG-UX-1: escludiamo PENDING dello stesso customer creati <30min
+    // fa. Scenario: primo tentativo pagamento Stripe fallisce con
+    // card_declined terminale, cliente clicca "Usa un altro metodo" → wizard
+    // ri-crea PI → senza questa whitelist il PENDING del primo tentativo
+    // verrebbe visto come conflitto, il cliente resta stuck fino al
+    // pending-gc cron (30min). Il vecchio PENDING scadra' normalmente.
+    const retryWindowStart = new Date(Date.now() - 30 * 60 * 1000);
+    const overlappingBookings = await tx.booking.findMany({
+      where: {
+        boatId: service.boatId,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        // Range overlap: NOT (existing.end < new.start OR existing.start > new.end)
+        startDate: { lte: endDay },
+        endDate: { gte: startDay },
+        // R15-REG-UX-1 retry window exclusion
+        NOT: {
+          AND: [
+            { customerId: customer.id },
+            { status: "PENDING" },
+            { source: "DIRECT" },
+            { createdAt: { gte: retryWindowStart } },
+          ],
+        },
+      },
+      select: { id: true, source: true, confirmationCode: true },
+    });
+    if (overlappingBookings.length > 0) {
+      throw new ConflictError("Dates not available (overlapping active booking)", {
+        conflictingBookings: overlappingBookings.map((b) => ({
+          code: b.confirmationCode,
+          source: b.source,
+        })),
+      });
+    }
 
     const created = await tx.booking.create({
       data: {

@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 15 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 16 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
 
 **Test suite**: 106 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment (incluso NaN/null guard + partial data).
 
@@ -796,6 +796,54 @@ Tre audit paralleli. Focus su quick wins ≤2h ciascuno (niente cross-OTA refact
 - **Logout redirect locale-aware** (R15-UX-14): oggi `redirect('/it/recupera')` anche per `/en` users.
 - **DB dynamic content per-locale** (R15-UX-30, R11 i18n-C2): `Boat.name`/`Service.name` single string. JSON o BoatTranslation table.
 - **Success page poll per "processing" status** (R15-UX-11): SEPA/bonifico users hanno "Pagamento in elaborazione" stale senza refresh.
+
+### Test: 106 passing (invariato). Typecheck clean. Build OK.
+
+## Round 16 audit — regression R15 + operational resilience + capacity/cost (fix applicati)
+
+Tre audit paralleli. **1 CRITICA grave scoperta**: il fix R15-UX-1 (Stripe retry recovery) era un placebo completo perche' il pre-check overlap R7 vedeva il PENDING del primo tentativo come conflitto → ogni retry post-`card_declined` falliva con 409 "Dates not available" → cliente bloccato 30min. Applicati 8 fix regression + salvati 2 docs operational/capacity.
+
+### Critiche fixate
+- **R15-REG-UX-1 Stripe retry placebo**: `createPendingDirectBooking` pre-check #2 overlap escludeva solo se era "stesso booking" ma non aveva logica. Un cliente con carta rifiutata che cliccava "Usa un altro metodo" vedeva ConflictError citante il PROPRIO PENDING come conflitto. Fix: customer upsert MOVED prima del check + retry-window exclusion `NOT (customerId=self.id AND status=PENDING AND source=DIRECT AND createdAt>=30min-ago)`. Il vecchio PENDING scadra' col cron pending-gc.
+- **R15-REG-UX-12 OTP cooldown placebo**: `useEffect` deps `[reqState.status, reqState.email]` erano `Object.is` identiche al reinvio stessa email → timer non ripartiva → bottone "Reinvia" cliccabile subito → 429 grezzo. Fix: `sentAt: Date.now()` monotono nel RequestOtpState server-side + deps `[status, sentAt]` client → ogni invio forza re-render effect.
+- **R15-REG-UX-22 parseFloat dead code**: `<input type="number">` rifiuta virgola client-side (Chrome/FF/Safari) → `.replace(",", ".")` server era no-op. Fix: 3 input migrati a `type="text" inputMode="decimal" pattern="[0-9]+([.,][0-9]{1,2})?"` — ora il browser accetta virgola e il server la normalizza.
+
+### Alte fixate
+- **R15-REG-SEC-A1 regex substring**: `/localhost|127\.0\.0\.1|0\.0\.0\.0/i` matchava `staging.localhost-test.com` o `mylocalhost-app.it` in prod legit → deploy impossibile. Fix: parse URL → hostname exact compare contro set `FORBIDDEN_HOSTS = {localhost, 127.0.0.1, 0.0.0.0, ::1}`. Supporta origin con/senza protocol.
+- **R15-REG-REG-6 Stripe SDK timeout**: default 80s + 2 retry = worst-case 4min per call → pending-gc hangato oltre lease TTL 5min → double-cancel. Fix: `timeout: 10_000, maxNetworkRetries: 1` nel singleton Stripe → worst-case 22s.
+- **R15-REG-UX-13 email normalize visible**: post-invio OTP il form verify mostrava `reqState.email` normalizzato server-side (`Mario+Tag@Gmail.com` → `mario@gmail.com`) → utente confuso "perche' tutto minuscolo?". Fix: mostra originale digitato (state client); il lookup backend applica comunque normalizeEmail → match garantito.
+
+### Medie fixate
+- **R15-REG-SEC-A3 DUMMY_HASH reject**: se `bcrypt.hash()` failasse al boot (WASM binding broken), promise rejected → ogni login con user inesistente throwava invece di `return null`. Fix: `.catch(() => "$2a$10$invalid...")` fallback → compare ritorna sempre false deterministico.
+- **R15-REG-SEC-A1 /admin/login exclude**: headers `X-Frame-Options: DENY` su `/admin/login` bloccava dev HMR tooling + pagina è pubblica no-PII. Fix: pattern `/admin/((?!login$|login/).*)` esclude login; headers globali SAMEORIGIN restano.
+
+### Documenti operativi creati
+- **`docs/runbook/operational-playbook.md`**: DR playbook 6 scenari (VPS loss, Postgres corruption, Redis OOM, Stripe rotation, Bokun API down, Prisma migrate error) + monitoring setup (UptimeRobot/BetterStack + script bash `monitor.sh` + Telegram alert) + first-week runbook Day-0 cutover checklist + Day 1-7 observations.
+- **`docs/runbook/capacity-planning.md`**: quantitative throughput analysis Ferragosto week (100 booking/day × 7gg) + bottleneck #1 Postgres pool exhaustion a 7-10 WEEK concurrent + storage projection 12 mesi (~30MB core) + cost projection (TCO €43,500/anno, 90% Stripe+Bokun fees, infra solo €180/anno) + top 5 ottimizzazioni ROI ≤1gg.
+
+### Deferred (capacity+resilience top items per Plan 7)
+**CRITICA prima di alta stagione 2026**:
+- **PgBouncer sidecar + DATABASE_POOL_MAX=30**: obbligatorio per evitare pool exhaustion sabato Ferragosto. 0.5gg. Rischio medio-alto (advisory-lock richiede session-pool, serve dual DATABASE_URL).
+- **Batch `blockDates` INSERT ON CONFLICT** (R3 deferred): WEEK booking tx 7→1, latency 1.5s→200ms, pool peak -40%. 0.5gg.
+
+**ALTA**:
+- **BullMQ `/api/metrics/queue` endpoint + alert** `failed > 20` / `waiting > 500`: MTTR upstream incidents da "cliente lamentela" a <10min. 0.5gg.
+- **Brevo digest + auto-fallback counter**: evita 429 Ferragosto extreme (340 email/day vs 300 free). 0.5gg.
+- **Stripe events reconciliation cron** (R2 multi-round deferred): legge `/v1/events` last N days + replay mancanti. Senza, webhook perso = booking non confermato in DB.
+- **Outbox pattern reale fan-out** (R6): se Redis cade dopo commit DB, fan-out perso.
+- **PITR Postgres** (pgBackRest): oggi RPO 24h → ridurre a 15min con WAL shipping.
+- **MAINTENANCE_MODE flag**: per DR-4 Stripe sospeso, mostrare landing "prenotazioni telefoniche" invece di form rotto.
+- **Sentry wiring** (multi-round deferred): grep log insufficient per troubleshooting serio Day 1-7.
+- **CSP Report-Only** (R15 deferred).
+- **Webhook secret rotation zero-downtime** (R15 deferred).
+- **iCal feed per-boat token** (R8+R15 deferred).
+- **Cross-OTA double-booking** (R14 design doc, 6-8h).
+- **Hardcode italiano massiccio** (~1.5gg refactor i18n).
+
+**MEDIA**:
+- Redis cache layer pre-DB weather (riduce latency homepage).
+- AsyncLocalStorage requestId propagation.
+- Customer trigram index per admin search.
 
 ### Test: 106 passing (invariato). Typecheck clean. Build OK.
 

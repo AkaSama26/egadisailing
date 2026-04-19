@@ -100,9 +100,9 @@ export default async function PrezziPage() {
           <input name="endDate" type="date" className="border rounded px-2 py-1 text-sm" required />
           <input
             name="pricePerPerson"
-            type="number"
-            step="0.01"
-            min="0.01"
+            type="text"
+            inputMode="decimal"
+            pattern="[0-9]+([.,][0-9]{1,2})?"
             placeholder="€/pax"
             className="border rounded px-2 py-1 text-sm"
             required
@@ -213,8 +213,9 @@ export default async function PrezziPage() {
           />
           <input
             name="multiplier"
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
+            pattern="[0-9]+([.,][0-9]{1,2})?"
             defaultValue="1.25"
             className="border rounded px-2 py-1 text-sm"
             required

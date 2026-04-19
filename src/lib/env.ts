@@ -125,17 +125,35 @@ function loadEnv() {
     ) {
       throw new Error("CRON_SECRET must be changed and >= 32 chars in production");
     }
-    // R15-SEC-A1: SERVER_ACTIONS_ALLOWED_ORIGINS obbligatorio in prod +
-    // mai puntare a localhost/127.0.0.1 (dev leak misconfig). Senza, Next
-    // accetta l'origine del Host header → CSRF-like se proxy mal configurato.
-    const allowedOrigins = parsed.data.SERVER_ACTIONS_ALLOWED_ORIGINS;
-    if (!allowedOrigins || allowedOrigins.trim().length === 0) {
+    // R15-SEC-A1 + R15-REG-SEC-A1: SERVER_ACTIONS_ALLOWED_ORIGINS obbligatorio
+    // in prod + mai puntare a localhost/127.0.0.1 (dev leak misconfig). Senza,
+    // Next accetta l'origine del Host header → CSRF-like se proxy mal
+    // configurato. Parse entries + exact hostname match — la regex substring
+    // precedente falsava `mylocalhost.com` o `staging.localhost-test.it`.
+    const allowedOriginsRaw = parsed.data.SERVER_ACTIONS_ALLOWED_ORIGINS;
+    if (!allowedOriginsRaw || allowedOriginsRaw.trim().length === 0) {
       throw new Error("SERVER_ACTIONS_ALLOWED_ORIGINS required in production");
     }
-    if (/localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(allowedOrigins)) {
-      throw new Error(
-        "SERVER_ACTIONS_ALLOWED_ORIGINS must not contain localhost/127.0.0.1 in production",
-      );
+    const origins = allowedOriginsRaw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (origins.length === 0) {
+      throw new Error("SERVER_ACTIONS_ALLOWED_ORIGINS contains no valid origins in production");
+    }
+    const FORBIDDEN_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
+    for (const origin of origins) {
+      let host = origin;
+      try {
+        host = new URL(origin.includes("://") ? origin : `https://${origin}`).hostname;
+      } catch {
+        // non-URL: trattalo come hostname bare
+      }
+      if (FORBIDDEN_HOSTS.has(host.toLowerCase())) {
+        throw new Error(
+          `SERVER_ACTIONS_ALLOWED_ORIGINS must not contain localhost/127.0.0.1 in production (got: ${origin})`,
+        );
+      }
     }
   }
 
