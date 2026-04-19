@@ -10,7 +10,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 **Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 19 round di audit applicati. **VERDICT Round 18 consolidated: STOP audit, SHIFT delivery.** Round 19 ha trovato 1 CRITICA regressione reale in R18 (currency CHECK rompe Bokun non-EUR) + 2 bug reali + 1 BLOCKER WCAG legale — applicati. Pilot launch target 20 maggio 2026.
 
-**Test suite**: 106 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment (incluso NaN/null guard + partial data).
+**Test suite**: 110 test (`npm test`) = 106 unit pure + **4 integration A1** (stripe-webhook-handler su pglite+msw+ioredis-mock, 4 scenari R13/R10/R11 Reg-C2). Setup integration: `docker compose up -d postgres && createdb egadisailing_test && DATABASE_URL=".../egadisailing_test" prisma migrate deploy`. Helpers in `tests/helpers/`. Scripts `npm run test:unit` / `test:integration` / `test` (entrambi). Vedi `docs/runbook/testing-roadmap.md` per roadmap Tier A residui (13 test, ~60h).
 
 ## Stack
 

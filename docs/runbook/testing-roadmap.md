@@ -1,6 +1,38 @@
 # Testing Roadmap Pre-Go-Live
 
-Generato dall'audit Round 17. Stato test: **106 unit pure functions**, zero integration, zero E2E.
+Generato dall'audit Round 17. Stato test: **106 unit pure functions** + **4 integration A1 (stripe-webhook-handler)**, zero E2E.
+
+**Update 2026-04-19**: infra integration test setup completato (pglite non compatibile con @prisma/adapter-pg → pivot a Postgres reale via Docker su DB separato `egadisailing_test`). Primo test A1 (webhook-handler) implementato con 4 scenari critici.
+
+## Setup integration test (una tantum)
+
+```bash
+# 1. Postgres docker running
+npm run docker:up
+
+# 2. Crea test DB
+docker compose exec -T postgres psql -U egadisailing -d postgres \
+  -c "CREATE DATABASE egadisailing_test;"
+
+# 3. Apply migrations al test DB
+DATABASE_URL="postgresql://egadisailing:$POSTGRES_PASSWORD@127.0.0.1:5432/egadisailing_test" \
+  npx prisma migrate deploy
+
+# 4. Run all tests
+npm test
+
+# Split:
+npm run test:unit         # solo src/**/*.test.ts
+npm run test:integration  # solo tests/integration/**
+```
+
+Helpers test condivisi in `tests/helpers/`:
+- `test-db.ts` — PrismaClient pointed a `egadisailing_test` + reset TRUNCATE
+- `redis-mock.ts` — ioredis-mock singleton per BullMQ + rate-limit + lease
+- `msw-server.ts` — intercept HTTP outbound (Brevo/Turnstile/Open-Meteo)
+- `setup.ts` — vitest setupFile caricato auto (dotenv .env)
+
+**Caveat**: Stripe SDK usa http/https nativo, msw non lo intercetta — mockare `@/lib/stripe/payment-intents` direttamente con `vi.mock()`.
 
 ## Inventario test esistenti
 

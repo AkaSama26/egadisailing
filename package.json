@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:unit": "vitest run src",
+    "test:integration": "vitest run tests/integration",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
@@ -57,6 +59,7 @@
     "seed": "tsx prisma/seed.mts"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.4.1",
     "@tailwindcss/postcss": "^4",
     "@types/mailparser": "^3.4.6",
     "@types/node": "^20",
@@ -66,6 +69,8 @@
     "dotenv": "^17.4.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "ioredis-mock": "^8.13.1",
+    "msw": "^2.13.4",
     "prisma": "^7.7.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
