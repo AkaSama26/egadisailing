@@ -26,6 +26,7 @@
     "@base-ui/react": "^1.4.0",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "@sentry/nextjs": "^10.49.0",
     "@stripe/react-stripe-js": "^6.2.0",
     "@stripe/stripe-js": "^9.2.0",
     "bcryptjs": "^3.0.3",

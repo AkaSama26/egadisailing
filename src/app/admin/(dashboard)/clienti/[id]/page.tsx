@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
+import { SubmitButton } from "@/components/admin/submit-button";
+import { anonymizeCustomerAction } from "./actions";
 
 export default async function ClienteDetailPage({
   params,
@@ -24,6 +26,16 @@ export default async function ClienteDetailPage({
   const totalSpent = customer.bookings
     .filter((b) => b.status !== "CANCELLED" && b.status !== "REFUNDED")
     .reduce((acc, b) => acc.plus(b.totalPrice.toString()), new Decimal(0));
+
+  // Customer e' gia' stato anonymized? Non mostriamo piu' il bottone.
+  const isAnonymized =
+    customer.email.startsWith("anon-") && customer.email.endsWith("@deleted.local");
+  // Customer ha booking futuri attivi? Il button e' disabled (helper throws).
+  const hasActiveFutureBookings = customer.bookings.some(
+    (b) =>
+      (b.status === "PENDING" || b.status === "CONFIRMED") &&
+      b.startDate >= new Date(),
+  );
 
   return (
     <div className="space-y-6">
@@ -48,6 +60,41 @@ export default async function ClienteDetailPage({
           value={customer.createdAt.toLocaleDateString("it-IT")}
         />
       </section>
+
+      {/* GDPR art. 17 section — solo se customer non gia' anonymized */}
+      {!isAnonymized && (
+        <section className="bg-white rounded-xl border border-red-200 p-5">
+          <h2 className="font-bold text-red-900 mb-2">Dati personali — GDPR</h2>
+          <p className="text-sm text-slate-600 mb-3">
+            Richiesta di cancellazione (art. 17 GDPR). Mantiene il record per
+            audit fiscale 10 anni (art. 2220 c.c.) ma rimuove email, nome,
+            cognome, telefono, nazionalità, lingua e dati dei consensi.
+            <strong> L'operazione e' irreversibile.</strong>
+          </p>
+          {hasActiveFutureBookings ? (
+            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+              Questo cliente ha prenotazioni future PENDING/CONFIRMED. Cancella
+              o rimborsa prima le prenotazioni attive, poi potrai anonimizzare.
+            </p>
+          ) : (
+            <form action={anonymizeCustomerAction.bind(null, customer.id)}>
+              <SubmitButton
+                className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
+                confirmMessage={`ATTENZIONE: anonimizzazione irreversibile di ${customer.firstName} ${customer.lastName}. Confermi?`}
+              >
+                Anonimizza (GDPR art. 17)
+              </SubmitButton>
+            </form>
+          )}
+        </section>
+      )}
+
+      {isAnonymized && (
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-600">
+          Cliente anonimizzato (GDPR art. 17). Dati PII mascherati, record
+          preservato per retention fiscale.
+        </div>
+      )}
 
       <section className="bg-white rounded-xl border p-5">
         <h2 className="font-bold text-slate-900 mb-3">Storico prenotazioni</h2>

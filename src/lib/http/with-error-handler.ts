@@ -46,6 +46,14 @@ export function withErrorHandler<H extends Handler>(handler: H): H {
         );
       }
       reqLogger.error({ err }, "Unhandled route error");
+      // Sentry capture (no-op se DSN non configurato). Tag con requestId per
+      // correlazione log.
+      try {
+        const { captureError } = await import("@/lib/sentry/init");
+        captureError(err, { requestId });
+      } catch {
+        /* Sentry non inizializzato — skip silenzioso */
+      }
       return NextResponse.json(
         { error: { code: "INTERNAL_ERROR", requestId } },
         { status: 500, headers: { "x-request-id": requestId } },

@@ -59,6 +59,11 @@ const envSchema = z.object({
   // Cron
   CRON_SECRET: z.string().default("dev-cron-please-change"),
 
+  // Sentry (observability) — optional in dev, active prod quando DSN settato.
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_ENVIRONMENT: z.string().optional(),
+  SENTRY_RELEASE: z.string().optional(),
+
   // Bokun (Plan 3)
   BOKUN_API_URL: z.string().url().default("https://api.bokuntest.com"),
   BOKUN_VENDOR_ID: z.string().optional(),
