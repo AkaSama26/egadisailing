@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 13 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 14 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
 
 **Test suite**: 106 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment (incluso NaN/null guard + partial data).
 
@@ -710,6 +710,45 @@ Blocker #1 e' **consegna legal copy dal cliente**: senza, GDPR art.13-14 rende o
 - Bokun+Boataround unit test integration con pglite ancora deferred (Round 7 gap).
 
 ### Test: 106 passing (era 103 Round 12→13, +3 NaN/null/Infinity). Typecheck clean, build OK.
+
+## Round 14 audit — regression R13 + cross-OTA design + foundation hardening (fix applicati)
+
+Tre audit paralleli. Sintesi: **1 CRITICA vera** (R13-C1 era placebo — dispatcher false-positive) + 3 ALTA regression + 1 CRITICA foundation (PII leak nei log). Il cross-OTA double-booking richiede sessione dedicata (6-8h) — design doc completo in `docs/` come deferred noto.
+
+### Critiche fixate
+- **Dispatcher false-positive regrediva completamente R13-C1** (R14-REG-C1): `sendTelegramMessage`/`sendEmail` ritornavano `void` e swallow-avano errori internamente. Il pattern `.then(() => true, () => false)` in dispatcher interpretava "promise resolved" come "delivered" → con `TELEGRAM_BOT_TOKEN` non configurato (stato attuale!), `telegramOk=true` sempre → `anyOk=true` falso positivo → weather cron scriveva `weatherLastAlertedAt` senza aver consegnato l'alert. **R13-C1 era un placebo**. Fix: signature boolean vera (`true` = delivered 2xx, `false` = skip/error) in telegram.ts + brevo.ts + `anyOk = emailOk || telegramOk` (no branch `anyRequested ? : true`).
+- **PII leak nei log** (R14-Area1-CRITICA): `logger.info({ email: parsed.email })` in contact form + `sendEmail({to:...})` in Brevo + `error.body: errorBody` raw in Brevo 4xx → email in chiaro su stdout/CloudWatch. Fix: `REDACT_PATHS` esteso con `*.email`, `*.to`, `*.customerEmail`, `*.firstName`, `*.lastName`, `*.phone`, `*.ipAddress`, `*.body`, `*.context.to`. Brevo 4xx body → parse JSON `code`+`message[0..120]` invece di raw text. Contact form log solo `subject`.
+- **Booking overlap check seq-scan** (R14-Area3-CRITICA): query pre-check in `createPendingDirectBooking` filtrava `boatId + status IN + startDate range` ma gli indici esistenti (`(source,status)`, `(startDate)`, `(status,startDate)`) non matchavano il prefix. Postgres bitmap-scan su `@@index([startDate])` con filter in-memory → 500ms+ in alta stagione con 5k booking. Fix: `@@index([boatId, status, startDate])` + `@@index([status, source, createdAt])` per pending-gc. Migration `20260421100000_r14_performance_indexes`.
+
+### Alte fixate
+- **ConsentRecord IP/UA non anonymized** (R14-REG-A3, GDPR blocker): `anonymizeCustomer` mask-ava solo `Customer` ma `ConsentRecord.ipAddress` + `userAgent` (dati personali GDPR art. 4(1)) rimanevano linkabili al customerId. Fix: `db.$transaction` con update sia Customer che `consentRecord.updateMany({where:{customerId}, data:{ipAddress:null, userAgent:null}})`.
+- **Stale cache weather unbounded** (R14-REG-A2): `readStaleCache` serviva qualsiasi forecast fino a 14gg di età (retention cutoff). In alta stagione con Open-Meteo giù 4gg, un risk-assessment riceveva dati di 2 settimane fa, totalmente scorrelati dal meteo attuale. Fix: `fetchedAt > now - 48h` bound. Oltre, throw `ExternalServiceError` degraded mode.
+- **Pending-GC no pagination** (R14-REG-A4): `take: 200` singolo batch + Redis outage prolungata → backlog 1000+ PENDING accumulati, GC clearava solo 200/run = zombie slot permanenti. Fix: cursor pagination con `BATCH_SIZE=200` × `MAX_BATCHES=20` = 4000/run cap + warn log al cap.
+- **Cron multi-replica senza lease** (R14-Area2): `balance-reminders` (07:00), `retention` (03:00) fires su ogni pod. Balance claim-then-do dedupliea l'email effettiva ma intanto 2 link Stripe venivano creati. Retention genera log noise + carico DB raddoppiato. Fix: `tryAcquireLease("cron:balance-reminders"/"cron:retention")` TTL 10-15min + rate-limit `BALANCE_REMINDERS_CRON_IP`/`RETENTION_CRON_IP` globale. `bokun-reconciliation` gia' aveva lease da R6.
+- **Retention index gap** (R14-Area3-ALTA): `deleteMany({where:{expiresAt: lt}})` su `BookingRecoverySession` era seq-scan (solo `@@index([email])`). Analogo per `ProcessedStripeEvent/Bokun/Boataround.processedAt`. Fix: `@@index([expiresAt])` + `@@index([processedAt])` ovunque (migration condivisa).
+
+### Medie fixate
+- **Stampede fallback throw generic** (R14-REG-M1): `throw new Error("weather_forecast_unavailable")` impediva a `withErrorHandler` di mappare 503. Fix: `ExternalServiceError("OpenMeteo", "forecast_unavailable_cold_start")` → 503 coerente + admin UI potra' renderizzare placeholder invece di 500.
+- **`cancelPaymentIntent` "processing" rejected da Stripe API** (R14-REG-M2): Stripe 400 su cancel in `processing`. Inclusione nel whitelist causava tentativi inutili + catch silenzioso in pending-gc per ogni async-payment durante 3DS. Fix: rimosso `"processing"` dal `cancelable` array.
+
+### Deferred (Plan 7+)
+**CRITICA blocker richiede sessione dedicata (6-8h)**:
+- **Cross-OTA double-booking detection + ManualAlert + admin UI** (R14-Scenario B): design doc completo prodotto nell'audit. Due webhook legit Bokun+Boataround per stesso boat/date creano 2 Booking CONFIRMED senza alert. Fix richiede: (1) helper `detectCrossChannelConflicts(tx, {boatId, dateRange, selfSource})` dentro advisory lock; (2) `recordDoubleBookingIncident` che emette N `ManualAlert` + `dispatchNotification`; (3) patch import Bokun/Boataround/Charter con filter `service.type in [CABIN_CHARTER, BOAT_EXCLUSIVE]` (escludi SOCIAL_BOATING); (4) patch `updateAvailability` preserve-first-winner `lockedByBookingId`; (5) template `DOUBLE_BOOKING_DETECTED`; (6) admin UI banner `/admin/prenotazioni/[id]` con resolve action; (7) backfill script SQL groupBy per identificare double-booking esistenti; (8) integration test pglite.
+
+**ALTA deferred**:
+- **R14-REG-M3 Stripe `onChargeRefunded` retry storm su booking hard-deleted**: lookup fallback se Payment e Booking entrambi assenti → return silenzioso invece di throw.
+- **R14-Area1-ALTA retention cron `{err}` SQL statement leak**: helper `logError(err, msg, ctx?)` centralizzato che logga `{errCode, errMessage, errStack.slice(0,2000)}`. Apply globale.
+- **R14-Area2-CRITICA rolling deploy prisma migrate race**: init container o advisory lock Postgres pre-migrate. Infra docker-compose.prod.yml.
+- **R14-Area2-ALTA healthcheck green durante boot senza workers**: expose `globalForWorkers.__workersRegistered__` in deep check.
+- **R14-Area2-ALTA SIGTERM drain pattern**: `worker.pause()` + `getActiveCount()` polling invece di `worker.close()` timeout hard.
+- **R14-Area3-ALTA Customer search ILIKE sequence scan**: pg_trgm GIN index (richiede raw SQL `CREATE EXTENSION`).
+- **R14-Area4-ALTA AsyncLocalStorage requestId propagation**: oggi `reqLogger` child locale al withErrorHandler, business logic non correlabile. Fix: `AsyncLocalStorage` + `logger mixin` auto-inject + worker job payload con `parentRequestId`.
+- **R14-Area4-MEDIA Pino `base: { release: GIT_SHA }`** per correlare log a release.
+- **R14-Area4-MEDIA Stripe webhook latency `x-stripe-timestamp`** tracking.
+- **R14-Area4-MEDIA metric: "domain.event" convention** nei logger.info business-critical per grep-ability.
+- **R14-REG-B2 anonymize idempotency heuristic email prefix/suffix**: sostituire con `Customer.anonymizedAt DateTime?` column.
+
+### Test: 106 passing (invariato — fix non tocca test). Typecheck clean, build OK.
 
 ## Plan roadmap
 

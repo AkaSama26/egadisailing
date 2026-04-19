@@ -71,11 +71,13 @@ export async function refundPayment(chargeId: string, amountCents?: number) {
 export async function cancelPaymentIntent(paymentIntentId: string) {
   try {
     const pi = await stripe().paymentIntents.retrieve(paymentIntentId);
+    // R14-REG-M2: Stripe API rejects cancel in "processing" state (400).
+    // Includerlo causava tentativi inutili + pollution log per ogni
+    // async-payment che attraversava il cutoff pending-gc durante 3DS.
     const cancelable = [
       "requires_payment_method",
       "requires_confirmation",
       "requires_action",
-      "processing",
       "requires_capture",
     ];
     if (!cancelable.includes(pi.status)) {

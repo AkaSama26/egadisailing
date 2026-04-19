@@ -45,17 +45,27 @@ export async function anonymizeCustomer(
   }
 
   const maskedEmail = `anon-${customerId}@deleted.local`;
-  await db.customer.update({
-    where: { id: customerId },
-    data: {
-      email: maskedEmail,
-      firstName: "ANONIMO",
-      lastName: "",
-      phone: null,
-      nationality: null,
-      language: null,
-      notes: null,
-    },
+  // R14-REG-A3: mask customer + ConsentRecord.ipAddress/userAgent nella
+  // stessa tx. IP address e' personal data GDPR art. 4(1). ConsentRecord
+  // sopravvive 10y per audit fiscale, ma IP/UA non sono necessari per la
+  // prova del consenso → mask on anonymize.
+  await db.$transaction(async (tx) => {
+    await tx.customer.update({
+      where: { id: customerId },
+      data: {
+        email: maskedEmail,
+        firstName: "ANONIMO",
+        lastName: "",
+        phone: null,
+        nationality: null,
+        language: null,
+        notes: null,
+      },
+    });
+    await tx.consentRecord.updateMany({
+      where: { customerId },
+      data: { ipAddress: null, userAgent: null },
+    });
   });
 
   await auditLog({

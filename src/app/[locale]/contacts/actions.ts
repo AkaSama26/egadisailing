@@ -94,7 +94,7 @@ export async function sendContactMessage(
       textContent: `Da: ${parsed.name} <${parsed.email}>\n${parsed.message}`,
     });
 
-    logger.info({ email: parsed.email, subject: parsed.subject }, "Contact message sent");
+    logger.info({ subject: parsed.subject }, "Contact message sent");
 
     return {
       status: "sent",

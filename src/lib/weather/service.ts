@@ -5,6 +5,7 @@ import { parseIsoDay, toUtcDay } from "@/lib/dates";
 import { fetchOpenMeteoForecast, type OpenMeteoForecast } from "./open-meteo";
 import { assessRisk, type WeatherRisk } from "./risk-assessment";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
+import { ExternalServiceError } from "@/lib/errors";
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
 const LOCATION_KEY = "trapani-38.0176,12.5365";
@@ -50,9 +51,21 @@ async function readFreshCache(): Promise<OpenMeteoForecast[] | null> {
  * rileggono la cache appena popolata. Il TTL del lease (30s) e' short
  * perche' il fetch Open-Meteo impiega ~2-3s in condizioni normali.
  */
+const STALE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+
+/**
+ * R14-REG-A2: stale cache bounded a 48h + date futuribili. Senza bound,
+ * `readStaleCache` poteva servire forecast vecchi fino a 14gg (retention
+ * cron), totalmente scorrelati dal meteo reale. Meglio throw che servire
+ * dati obsoleti per un risk assessment.
+ */
 async function readStaleCache(): Promise<OpenMeteoForecast[] | null> {
   const stale = await db.weatherForecastCache.findMany({
-    where: { locationKey: LOCATION_KEY, source: SOURCE },
+    where: {
+      locationKey: LOCATION_KEY,
+      source: SOURCE,
+      fetchedAt: { gt: new Date(Date.now() - STALE_MAX_AGE_MS) },
+    },
     orderBy: { date: "asc" },
   });
   if (stale.length === 0) return null;
@@ -81,7 +94,7 @@ async function getForecastFromCacheOrFetch(): Promise<OpenMeteoForecast[]> {
       logger.warn({ staleCount: stale.length }, "Weather: serving stale cache (stampede fallback)");
       return stale;
     }
-    throw new Error("weather_forecast_unavailable");
+    throw new ExternalServiceError("OpenMeteo", "forecast_unavailable_cold_start");
   }
 
   try {

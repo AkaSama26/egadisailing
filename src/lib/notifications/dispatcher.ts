@@ -47,42 +47,43 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
   const wantEmail = event.channels.includes("EMAIL");
   const wantTelegram = event.channels.includes("TELEGRAM") && !!rendered.telegram;
 
-  const emailP = wantEmail
+  // R14-REG-C1: `sendEmail` e `sendTelegramMessage` ora ritornano boolean
+  // (true = delivered upstream 2xx, false = skip silenzioso / fail). Prima
+  // usavamo `.then(()=>true)` che settava true anche sul dev-skip branch,
+  // rendendo `anyOk=true` sempre true con TELEGRAM_BOT_TOKEN unset (attuale
+  // stato) → weather cron scriveva marker dedup senza alert consegnato.
+  const emailP: Promise<boolean> = wantEmail
     ? sendEmail({
         to: env.ADMIN_EMAIL,
         subject: rendered.subject,
         htmlContent: rendered.html,
-      }).then(
-        () => true,
-        (err: unknown) => {
-          logger.error(
-            { err: (err as Error).message, type: event.type },
-            "Email notification failed",
-          );
-          return false;
-        },
-      )
+      }).catch((err: unknown) => {
+        logger.error(
+          { err: (err as Error).message, type: event.type },
+          "Email notification failed",
+        );
+        return false;
+      })
     : Promise.resolve(false);
 
-  const telegramP = wantTelegram
-    ? sendTelegramMessage(rendered.telegram!).then(
-        () => true,
-        (err: unknown) => {
-          logger.error(
-            { err: (err as Error).message, type: event.type },
-            "Telegram notification failed",
-          );
-          return false;
-        },
-      )
+  const telegramP: Promise<boolean> = wantTelegram
+    ? sendTelegramMessage(rendered.telegram!).catch((err: unknown) => {
+        logger.error(
+          { err: (err as Error).message, type: event.type },
+          "Telegram notification failed",
+        );
+        return false;
+      })
     : Promise.resolve(false);
 
   const [emailOk, telegramOk] = await Promise.all([emailP, telegramP]);
-  const anyRequested = wantEmail || wantTelegram;
+  // R14-REG-C1: se nessun canale richiesto `anyOk=false` — il caller (es.
+  // weather-check) NON deve marcare "dispatched" quando l'evento aveva
+  // `channels: []`.
   return {
     emailOk,
     telegramOk,
-    anyOk: anyRequested ? emailOk || telegramOk : true,
+    anyOk: emailOk || telegramOk,
     skipped: false,
   };
 }

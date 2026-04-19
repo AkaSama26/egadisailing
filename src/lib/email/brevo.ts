@@ -15,21 +15,24 @@ export interface SendEmailOptions {
 /**
  * Invia email transazionale via Brevo REST API.
  *
- * Failure-safe per design: in dev senza API key logga e prosegue.
- * In production rilancia ExternalServiceError (il chiamante decide se bloccare).
+ * Failure-safe per design: in dev senza API key logga e prosegue (ritorna
+ * `false`). In production rilancia ExternalServiceError (il chiamante
+ * decide se bloccare).
+ *
+ * R14-REG-C1: ritorna `boolean` (true = consegnato a Brevo 2xx, false =
+ * dev skip). `throw` invece di `return false` solo in prod con errori
+ * upstream effettivi — cosi' il dispatcher distingue skip da fail e il
+ * caller non marca falsi "anyOk=true".
  */
-export async function sendEmail(opts: SendEmailOptions): Promise<void> {
+export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
   if (!env.BREVO_API_KEY) {
     // In production, env.ts ha gia' enforced la presenza della key quindi
     // arriveremo qui solo se mancante. Fail loud invece di silent-skip.
     if (env.NODE_ENV === "production") {
       throw new ExternalServiceError("Brevo", "BREVO_API_KEY not configured");
     }
-    logger.warn(
-      { to: opts.to, subject: opts.subject },
-      "BREVO_API_KEY not set in dev — skipping email send",
-    );
-    return;
+    logger.warn({ subject: opts.subject }, "BREVO_API_KEY not set in dev — skipping email send");
+    return false;
   }
 
   try {
@@ -55,18 +58,31 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
     });
 
     if (!res.ok) {
+      // R14-Area1-ALTA: body Brevo 4xx spesso include l'email destinataria
+      // e estratti del contenuto — niente raw body nel log. Solo status +
+      // primo codice/messaggio JSON se presente.
       const errorBody = await res.text().catch(() => "");
+      let code: string | undefined;
+      try {
+        const parsed = JSON.parse(errorBody) as { code?: string; message?: string };
+        code = parsed.code ?? parsed.message?.slice(0, 120);
+      } catch {
+        code = errorBody.slice(0, 120);
+      }
       logger.error(
-        { status: res.status, body: errorBody, to: opts.to },
+        { status: res.status, brevoCode: code },
         "Brevo send failed",
       );
-      throw new ExternalServiceError("Brevo", `send failed (${res.status})`, { to: opts.to });
+      throw new ExternalServiceError("Brevo", `send failed (${res.status})`);
     }
 
-    logger.info({ to: opts.to, subject: opts.subject }, "Email sent");
+    // R14-Area1-CRITICA: niente email in chiaro nei log. Subject OK (non-PII
+    // per template admin/customer generici).
+    logger.info({ subject: opts.subject }, "Email sent");
+    return true;
   } catch (err) {
     if (err instanceof ExternalServiceError) throw err;
-    logger.error({ err, to: opts.to }, "Brevo sendEmail failed");
-    throw new ExternalServiceError("Brevo", "sendEmail failed", { to: opts.to });
+    logger.error({ err: (err as Error).message }, "Brevo sendEmail failed");
+    throw new ExternalServiceError("Brevo", "sendEmail failed");
   }
 }

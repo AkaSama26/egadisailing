@@ -45,57 +45,73 @@ export const GET = withErrorHandler(async (req: Request) => {
 
   try {
     const cutoff = new Date(Date.now() - PENDING_MAX_AGE_MS);
-    const candidates = await db.booking.findMany({
-      where: {
-        status: "PENDING",
-        source: "DIRECT",
-        createdAt: { lt: cutoff },
-      },
-      include: { directBooking: true },
-      take: 200,
-    });
+    const BATCH_SIZE = 200;
+    const MAX_BATCHES = 20; // cap hard: 4000 booking/run, oltre serve admin intervention
 
+    let totalScanned = 0;
     let cancelled = 0;
     let piCancelled = 0;
     const errors: Array<{ bookingId: string; error: string }> = [];
 
-    for (const b of candidates) {
-      try {
-        const pi = b.directBooking?.stripePaymentIntentId;
-        if (pi) {
-          // Stripe `cancelPaymentIntent` e' idempotente sui status non-cancelable
-          // (returna l'intent esistente senza errore se gia' succeeded/canceled).
-          const res = await cancelPaymentIntent(pi).catch((err) => {
-            logger.warn(
-              { err: (err as Error).message, pi, bookingId: b.id },
-              "Pending GC: cancel PI skipped (likely already terminal)",
-            );
-            return null;
+    // R14-REG-A4: cursor pagination. Redis outage prolungata puo' accumulare
+    // 1000+ PENDING oltre cutoff; senza loop il GC clearava solo 200/run
+    // lasciando zombie slot LOCKED.
+    for (let batchIdx = 0; batchIdx < MAX_BATCHES; batchIdx++) {
+      const batch = await db.booking.findMany({
+        where: {
+          status: "PENDING",
+          source: "DIRECT",
+          createdAt: { lt: cutoff },
+        },
+        include: { directBooking: true },
+        orderBy: { createdAt: "asc" },
+        take: BATCH_SIZE,
+      });
+      if (batch.length === 0) break;
+      totalScanned += batch.length;
+
+      for (const b of batch) {
+        try {
+          const pi = b.directBooking?.stripePaymentIntentId;
+          if (pi) {
+            const res = await cancelPaymentIntent(pi).catch((err) => {
+              logger.warn(
+                { err: (err as Error).message, bookingId: b.id },
+                "Pending GC: cancel PI skipped (likely already terminal)",
+              );
+              return null;
+            });
+            if (res) piCancelled++;
+          }
+
+          const claim = await db.booking.updateMany({
+            where: { id: b.id, status: "PENDING" },
+            data: { status: "CANCELLED" },
           });
-          if (res) piCancelled++;
+          if (claim.count === 0) continue;
+
+          await releaseDates(b.boatId, b.startDate, b.endDate, CHANNELS.DIRECT);
+          cancelled++;
+        } catch (err) {
+          errors.push({ bookingId: b.id, error: (err as Error).message });
+          logger.error({ err: (err as Error).message, bookingId: b.id }, "Pending GC iteration failed");
         }
+      }
 
-        // Claim-then-do: updateMany su PENDING → 0 se altro processo ha gia'
-        // transitato lo stato (webhook Stripe succeeded arrivato late).
-        const claim = await db.booking.updateMany({
-          where: { id: b.id, status: "PENDING" },
-          data: { status: "CANCELLED" },
-        });
-        if (claim.count === 0) continue;
-
-        await releaseDates(b.boatId, b.startDate, b.endDate, CHANNELS.DIRECT);
-        cancelled++;
-      } catch (err) {
-        errors.push({ bookingId: b.id, error: (err as Error).message });
-        logger.error({ err, bookingId: b.id }, "Pending GC iteration failed");
+      if (batch.length < BATCH_SIZE) break;
+      if (batchIdx === MAX_BATCHES - 1) {
+        logger.warn(
+          { totalScanned, cutoffMinutes: PENDING_MAX_AGE_MS / 60000 },
+          "Pending GC hit MAX_BATCHES cap — backlog not drained, will continue next run",
+        );
       }
     }
 
     logger.info(
-      { scanned: candidates.length, cancelled, piCancelled, errors: errors.length },
+      { scanned: totalScanned, cancelled, piCancelled, errors: errors.length },
       "Pending GC cron completed",
     );
-    return NextResponse.json({ scanned: candidates.length, cancelled, piCancelled, errors });
+    return NextResponse.json({ scanned: totalScanned, cancelled, piCancelled, errors });
   } finally {
     await releaseLease(lease);
   }

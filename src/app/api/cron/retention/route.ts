@@ -5,8 +5,14 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { addDays } from "@/lib/dates";
 import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
+import { enforceRateLimit } from "@/lib/rate-limit/service";
+import { RATE_LIMIT_SCOPES } from "@/lib/channels";
+import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 
 export const runtime = "nodejs";
+
+const LEASE_NAME = "cron:retention";
+const LEASE_TTL_SECONDS = 15 * 60;
 
 /**
  * Cron giornaliero di data retention — GDPR art. 5.1.e (storage limitation).
@@ -28,6 +34,21 @@ export const runtime = "nodejs";
  */
 export const GET = withErrorHandler(async (req: Request) => {
   requireBearerSecret(req, env.CRON_SECRET);
+  await enforceRateLimit({
+    identifier: "global",
+    scope: RATE_LIMIT_SCOPES.RETENTION_CRON_IP,
+    limit: 10,
+    windowSeconds: 60,
+  });
+
+  // R14-Area2: lease cross-replica. Retention deleteMany non ha side
+  // effect pericolosi in doppio (delete idempotente), ma genera log noise
+  // + carico DB raddoppiato per nulla.
+  const lease = await tryAcquireLease(LEASE_NAME, LEASE_TTL_SECONDS);
+  if (!lease) {
+    logger.warn("Retention skipped: another run in progress");
+    return NextResponse.json({ skipped: "concurrent_run" });
+  }
 
   const now = new Date();
   const thirtyDaysAgo = addDays(now, -30);
@@ -221,11 +242,15 @@ export const GET = withErrorHandler(async (req: Request) => {
     logger.error({ err }, "AuditLog retention cleanup failed");
   }
 
-  const payload = { ...results, errors };
-  if (errors.length > 0) {
-    logger.warn(payload, "Data retention cleanup completed with partial failures");
-    return NextResponse.json(payload, { status: 207 });
+  try {
+    const payload = { ...results, errors };
+    if (errors.length > 0) {
+      logger.warn(payload, "Data retention cleanup completed with partial failures");
+      return NextResponse.json(payload, { status: 207 });
+    }
+    logger.info(payload, "Data retention cleanup completed");
+    return NextResponse.json(payload);
+  } finally {
+    await releaseLease(lease);
   }
-  logger.info(payload, "Data retention cleanup completed");
-  return NextResponse.json(payload);
 });

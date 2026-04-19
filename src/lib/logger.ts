@@ -30,9 +30,24 @@ const REDACT_PATHS = [
   // Upstream bodies possono contenere PII / segreti — redacted e troncati.
   "*.upstreamBody",
   "*.responseBody",
+  "*.body",
   // Prisma error.meta puo' contenere valori PII (target delle unique, ecc).
   "*.meta",
   "err.meta",
+  // R14-Area1: PII GDPR art. 4(1) — mai in chiaro nei log aggregati.
+  "*.email",
+  "*.to",
+  "*.customerEmail",
+  "*.recipientEmail",
+  "*.customer.email",
+  "*.firstName",
+  "*.lastName",
+  "*.customerName",
+  "*.phone",
+  "*.ipAddress",
+  "*.ip",
+  "*.context.to",
+  "*.context.email",
 ];
 
 /**

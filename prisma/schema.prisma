@@ -282,6 +282,12 @@ model Booking {
   @@index([startDate])
   @@index([status, startDate])
   @@index([customerId])
+  // R14-Area3: compound per overlap check in createPendingDirectBooking
+  // (filter boatId + status IN + range startDate). Prima senza questo
+  // index Postgres seq-scan su @@index([startDate]).
+  @@index([boatId, status, startDate])
+  // Per pending-gc query (status=PENDING AND source=DIRECT AND createdAt<cutoff).
+  @@index([status, source, createdAt])
 }
 
 model DirectBooking {
@@ -398,6 +404,7 @@ model ProcessedStripeEvent {
   processedAt DateTime @default(now())
 
   @@index([eventType, processedAt])
+  @@index([processedAt])
 }
 
 /// Event-level idempotency per webhook Bokun. Bokun non espone un event.id
@@ -410,6 +417,7 @@ model ProcessedBokunEvent {
   processedAt DateTime @default(now())
 
   @@index([topic, processedAt])
+  @@index([processedAt])
 }
 
 /// Event-level idempotency per webhook Boataround. `eventId =
@@ -421,6 +429,7 @@ model ProcessedBoataroundEvent {
   processedAt DateTime @default(now())
 
   @@index([eventType, processedAt])
+  @@index([processedAt])
 }
 
 /// Dedup per email processate dal cron charter (Plan 4). Key = sha256
@@ -565,6 +574,7 @@ model BookingRecoverySession {
   revokedAt DateTime?
 
   @@index([email])
+  @@index([expiresAt])
 }
 
 model RateLimitEntry {
