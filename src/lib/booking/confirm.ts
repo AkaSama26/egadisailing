@@ -112,9 +112,18 @@ export async function confirmDirectBookingAfterPayment(params: {
     return transitioned;
   });
 
-  // blockDates SOLO se questo e' il primo a confermare (no double-block su
-  // webhook retry / balance payment).
-  if (statusChanged) {
+  // R20-A1-3: blockDates sempre chiamato (NON gated su `statusChanged`).
+  // Scenario race risolto: webhook1 tx commit → crash PRIMA di blockDates.
+  // webhook2 retry Stripe: findFirst stripeChargeId matcha Payment gia'
+  // creato → return false → `statusChanged=false` → slot restava AVAILABLE
+  // mentre booking CONFIRMED → overbook possibile. Ora blockDates e'
+  // idempotente via self-echo window + noChange shortcut in
+  // updateAvailability (Round 8 fix), quindi sempre-chiama e' safe.
+  //
+  // Per BALANCE payment: statusChanged=false perche' booking era gia'
+  // CONFIRMED, ma blockDates su slot gia' BLOCKED → noChange → no-op,
+  // ok.
+  if (booking.status === "CONFIRMED" || statusChanged) {
     await blockDates(
       booking.boatId,
       booking.startDate,

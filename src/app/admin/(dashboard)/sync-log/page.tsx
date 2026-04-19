@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { syncQueue } from "@/lib/queue";
 import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
 import { resolveAlertAction } from "./actions";
+import { formatItDay } from "@/lib/dates";
 
 /**
  * Admin view: stato sync real-time.
@@ -119,7 +120,7 @@ export default async function SyncLogPage() {
                 <span className="flex-1 min-w-0">
                   <strong>{a.channel}</strong> · {a.action} · boat{" "}
                   <code className="text-xs">{a.boatId}</code> ·{" "}
-                  {a.date.toLocaleDateString("it-IT")}
+                  {formatItDay(a.date)}
                   {a.notes && (
                     <span className="block text-xs text-slate-500 mt-1">{a.notes}</span>
                   )}

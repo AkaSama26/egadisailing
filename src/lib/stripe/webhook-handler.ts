@@ -1,4 +1,5 @@
 import type Stripe from "stripe";
+import { Prisma } from "@/generated/prisma/client";
 import { confirmDirectBookingAfterPayment } from "@/lib/booking/confirm";
 import { sendEmail } from "@/lib/email/brevo";
 import { bookingConfirmationTemplate } from "@/lib/email/templates/booking-confirmation";
@@ -9,6 +10,8 @@ import { toCents, formatEur, formatEurCents } from "@/lib/pricing/cents";
 import { parseBookingMetadata } from "./metadata";
 import { ValidationError } from "@/lib/errors";
 import { dispatchNotification } from "@/lib/notifications/dispatcher";
+import { formatItDay } from "@/lib/dates";
+import { bookingWithDetailsInclude } from "@/lib/booking/queries";
 
 /**
  * Handler dei webhook Stripe.
@@ -58,8 +61,9 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
       data: { eventId: event.id, eventType: event.type },
     });
   } catch (err) {
-    const message = (err as Error).message ?? "";
-    if (message.includes("Unique constraint") || message.includes("P2002")) {
+    // R20-A1-2: check robusto su Prisma error code invece di string match
+    // sul message (che poteva cambiare tra versioni Prisma).
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       logger.info({ eventId: event.id }, "Event already marked processed by another worker");
       return;
     }
@@ -233,7 +237,7 @@ async function notifyNewBooking(bookingId: string, source: string): Promise<void
 async function sendConfirmationEmail(bookingId: string, paidCents: number): Promise<void> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    include: { customer: true, service: true, directBooking: true },
+    include: bookingWithDetailsInclude,
   });
   if (!booking) return;
 
@@ -241,7 +245,7 @@ async function sendConfirmationEmail(bookingId: string, paidCents: number): Prom
     customerName: `${booking.customer.firstName} ${booking.customer.lastName}`,
     confirmationCode: booking.confirmationCode,
     serviceName: booking.service.name,
-    startDate: booking.startDate.toLocaleDateString("it-IT"),
+    startDate: formatItDay(booking.startDate),
     numPeople: booking.numPeople,
     totalPrice: formatEur(booking.totalPrice),
     paidAmount: formatEurCents(paidCents),

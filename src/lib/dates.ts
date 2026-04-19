@@ -98,3 +98,23 @@ export function addDays(d: Date, days: number): Date {
 export function addHours(d: Date, hours: number): Date {
   return new Date(d.getTime() + hours * 60 * 60 * 1000);
 }
+
+/**
+ * Format date a "gg/mm/yyyy" locale IT, **timezone Europe/Rome esplicito**.
+ *
+ * R20-A3: `.toLocaleDateString("it-IT")` senza `timeZone` usa il TZ del
+ * processo node, che in Docker prod e' UTC mentre il utente italiano vede
+ * Europe/Rome. Una Date UTC midnight (es. 2026-04-07T00:00Z) formattata a
+ * UTC → "7/4/2026", a Europe/Rome (UTC+2 in estate) → ancora 7 aprile OK,
+ * ma una Date 2026-04-07T22:00Z (user input CEST 00:00 del 8 aprile)
+ * formattata UTC → "7/4/2026", Europe/Rome → "8/4/2026". Timezone esplicito
+ * garantisce consistenza.
+ */
+export function formatItDay(d: Date): string {
+  return new Intl.DateTimeFormat("it-IT", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}

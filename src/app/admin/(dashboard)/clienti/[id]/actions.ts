@@ -2,17 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { anonymizeCustomer } from "@/lib/gdpr/anonymize-customer";
-import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
-
-async function requireAdmin(): Promise<{ userId: string }> {
-  const session = await auth();
-  if (!session?.user?.id) throw new UnauthorizedError();
-  if (session.user.role !== "ADMIN") throw new ForbiddenError();
-  return { userId: session.user.id };
-}
 
 /**
  * GDPR art. 17 — richiesta di cancellazione dati. Non facciamo hard-delete

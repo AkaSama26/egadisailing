@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { toCents } from "@/lib/pricing/cents";
 import { buildBookingMetadata } from "@/lib/stripe/metadata";
+import { bookingWithDetailsInclude } from "@/lib/booking/queries";
 
 /**
  * Crea un Stripe Checkout Session per il saldo di una DirectBooking.
@@ -13,7 +14,7 @@ import { buildBookingMetadata } from "@/lib/stripe/metadata";
 export async function createBalancePaymentLink(bookingId: string): Promise<string> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    include: { customer: true, service: true, directBooking: true },
+    include: bookingWithDetailsInclude,
   });
   if (!booking || !booking.directBooking) {
     throw new NotFoundError("DirectBooking", bookingId);

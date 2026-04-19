@@ -12,9 +12,14 @@ import { CHANNELS } from "@/lib/channels";
 
 export const runtime = "nodejs";
 
+import { PENDING_GC_TTL_MS } from "@/lib/booking/constants";
+
 const LEASE_NAME = "cron:pending-gc";
 const LEASE_TTL_SECONDS = 5 * 60;
-const PENDING_MAX_AGE_MS = 30 * 60 * 1000; // 30min — oltre questa soglia il booking e' abbandonato
+// R20-A1-1: cutoff a 45min (da 30min) per creare buffer 30min rispetto alla
+// DIRECT_RETRY_WINDOW_MS (15min). Evita race retry-window vs GC concorrente
+// al bordo 30min quando cliente clicca "Usa altro metodo" al 29:59.
+const PENDING_MAX_AGE_MS = PENDING_GC_TTL_MS;
 // R15-REG-6: soft-timeout per non superare il lease TTL. Ogni iteration:
 // cancelPaymentIntent (1-3s Stripe API) + releaseDates (7 days × fan-out).
 // 4min cap lascia 1min di margine per rilasciare il lease pulito.

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { formatItDay } from "@/lib/dates";
 import {
   upsertPricingPeriod,
   upsertHotDayRule,
@@ -45,8 +46,8 @@ export default async function PrezziPage() {
                   <td className="p-2">{p.service.name}</td>
                   <td className="p-2">{p.label}</td>
                   <td className="p-2 tabular-nums">{p.year}</td>
-                  <td className="p-2">{p.startDate.toLocaleDateString("it-IT")}</td>
-                  <td className="p-2">{p.endDate.toLocaleDateString("it-IT")}</td>
+                  <td className="p-2">{formatItDay(p.startDate)}</td>
+                  <td className="p-2">{formatItDay(p.endDate)}</td>
                   <td className="p-2 text-right tabular-nums font-mono">
                     {formatEur(p.pricePerPerson.toString())}
                   </td>
@@ -133,8 +134,8 @@ export default async function PrezziPage() {
               <div className="flex-1 min-w-0">
                 <div className="font-medium">{r.name}</div>
                 <div className="text-xs text-slate-500">
-                  {r.dateRangeStart.toLocaleDateString("it-IT")} →{" "}
-                  {r.dateRangeEnd.toLocaleDateString("it-IT")} · ×{r.multiplier.toString()} · round
+                  {formatItDay(r.dateRangeStart)} →{" "}
+                  {formatItDay(r.dateRangeEnd)} · ×{r.multiplier.toString()} · round
                   €{r.roundTo} · priority {r.priority}
                   {r.weekdays.length > 0 && ` · weekdays ${r.weekdays.join(",")}`}
                 </div>

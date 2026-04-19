@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatEur } from "@/lib/pricing/cents";
+import { formatItDay } from "@/lib/dates";
 
 export interface BookingRow {
   id: string;
@@ -47,7 +48,7 @@ export function BookingTable({ rows }: { rows: BookingRow[] }) {
                   {r.confirmationCode}
                 </Link>
               </td>
-              <td className="p-3">{r.startDate.toLocaleDateString("it-IT")}</td>
+              <td className="p-3">{formatItDay(r.startDate)}</td>
               <td className="p-3">{r.serviceName}</td>
               <td className="p-3">
                 <div className="font-medium">{r.customerName}</div>

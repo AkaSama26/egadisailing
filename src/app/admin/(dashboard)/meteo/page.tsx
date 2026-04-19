@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { addDays } from "@/lib/dates";
+import { formatItDay } from "@/lib/dates";
 
 export default async function MeteoPage() {
   const now = new Date();
@@ -53,7 +54,7 @@ export default async function MeteoPage() {
                     </Link>
                     {" · "}
                     {b.service.name} · {b.boat.name} ·{" "}
-                    <span className="text-slate-500">{b.startDate.toLocaleDateString("it-IT")}</span>
+                    <span className="text-slate-500">{formatItDay(b.startDate)}</span>
                   </div>
                   <div className="text-xs text-slate-600 shrink-0">
                     {fcData ? (

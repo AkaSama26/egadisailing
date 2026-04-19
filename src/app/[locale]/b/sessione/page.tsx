@@ -6,6 +6,7 @@ import { getBookingSession } from "@/lib/session/verify";
 import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
 import { LogoutButton } from "./logout-button";
+import { formatItDay } from "@/lib/dates";
 
 const STATUS_LABEL: Record<string, string> = {
   CONFIRMED: "Confermata",
@@ -79,7 +80,7 @@ export default async function SessionePage({
                 </span>
               </div>
               <p>
-                {b.startDate.toLocaleDateString("it-IT")} · {b.numPeople} persone
+                {formatItDay(b.startDate)} · {b.numPeople} persone
               </p>
               <p>
                 Totale {formatEur(total)} · Pagato {formatEur(paid)}

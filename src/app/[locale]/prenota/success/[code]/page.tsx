@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { formatEur } from "@/lib/pricing/cents";
 import { normalizeConfirmationCode } from "@/lib/booking/helpers";
+import { formatItDay } from "@/lib/dates";
 
 export default async function BookingSuccessPage({
   params,
@@ -35,7 +36,7 @@ export default async function BookingSuccessPage({
               Codice: <strong className="text-black">{booking.confirmationCode}</strong>
             </p>
             <p>
-              {booking.service.name} · {booking.startDate.toLocaleDateString("it-IT")}
+              {booking.service.name} · {formatItDay(booking.startDate)}
             </p>
             <p>
               Totale: <strong className="text-black">{formatEur(booking.totalPrice)}</strong>

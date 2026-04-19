@@ -11,6 +11,8 @@ import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-han
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
+import { formatItDay } from "@/lib/dates";
+import { bookingWithDetailsInclude } from "@/lib/booking/queries";
 
 export const runtime = "nodejs";
 
@@ -60,7 +62,7 @@ export const GET = withErrorHandler(async (req: Request) => {
           balanceReminderSentAt: null,
         },
       },
-      include: { customer: true, service: true, directBooking: true },
+      include: bookingWithDetailsInclude,
     });
 
     const results: Array<{ bookingId: string; sent: boolean; error?: string }> = [];
@@ -81,7 +83,7 @@ export const GET = withErrorHandler(async (req: Request) => {
           customerName: `${b.customer.firstName} ${b.customer.lastName}`,
           confirmationCode: b.confirmationCode,
           serviceName: b.service.name,
-          startDate: b.startDate.toLocaleDateString("it-IT"),
+          startDate: formatItDay(b.startDate),
           balanceAmount: formatEur(b.directBooking!.balanceAmount!),
           paymentLinkUrl: link,
         });

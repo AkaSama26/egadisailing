@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
 import { refundPayment, cancelPaymentIntent } from "@/lib/stripe/payment-intents";
 import { releaseDates } from "@/lib/availability/service";
@@ -11,20 +11,8 @@ import { CHANNELS } from "@/lib/channels";
 import { createManualAlert, type ManualAlertChannel } from "@/lib/charter/manual-alerts";
 import { dispatchNotification } from "@/lib/notifications/dispatcher";
 import { logger } from "@/lib/logger";
-import {
-  ForbiddenError,
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-} from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
-
-async function requireAdmin(): Promise<{ userId: string }> {
-  const session = await auth();
-  if (!session?.user?.id) throw new UnauthorizedError();
-  if (session.user.role !== "ADMIN") throw new ForbiddenError();
-  return { userId: session.user.id };
-}
 
 /**
  * Admin action: cancella una prenotazione + refund Stripe dei payments

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { formatItDay } from "@/lib/dates";
 import {
   cancelBooking,
   addBookingNote,
@@ -76,7 +77,7 @@ export default async function BookingDetailPage({
           <Row label="Barca" value={booking.boat.name} />
           <Row
             label="Date"
-            value={`${booking.startDate.toLocaleDateString("it-IT")} → ${booking.endDate.toLocaleDateString("it-IT")}`}
+            value={`${formatItDay(booking.startDate)} → ${formatItDay(booking.endDate)}`}
           />
           <Row label="Persone" value={String(booking.numPeople)} />
           <Row label="Totale" value={formatEur(booking.totalPrice.toString())} />
@@ -138,7 +139,7 @@ export default async function BookingDetailPage({
                   </span>
                   {p.processedAt && (
                     <span className="text-xs text-slate-400 ml-2">
-                      {p.processedAt.toLocaleDateString("it-IT")}
+                      {formatItDay(p.processedAt)}
                     </span>
                   )}
                 </span>

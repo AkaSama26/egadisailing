@@ -2,24 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
 import { blockDates, releaseDates } from "@/lib/availability/service";
 import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
 import { CHANNELS } from "@/lib/channels";
-import {
-  ForbiddenError,
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-} from "@/lib/errors";
-
-async function requireAdmin(): Promise<{ userId: string }> {
-  const session = await auth();
-  if (!session?.user?.id) throw new UnauthorizedError();
-  if (session.user.role !== "ADMIN") throw new ForbiddenError();
-  return { userId: session.user.id };
-}
+import { NotFoundError, ValidationError } from "@/lib/errors";
 
 const MAX_MANUAL_RANGE_DAYS = 90;
 

@@ -3,22 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
 import { scheduleBokunPricingSync } from "@/lib/pricing/bokun-sync";
 import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
-import {
-  ForbiddenError,
-  UnauthorizedError,
-  ValidationError,
-} from "@/lib/errors";
-
-async function requireAdmin(): Promise<{ userId: string }> {
-  const session = await auth();
-  if (!session?.user?.id) throw new UnauthorizedError();
-  if (session.user.role !== "ADMIN") throw new ForbiddenError();
-  return { userId: session.user.id };
-}
+import { ValidationError } from "@/lib/errors";
 
 export interface UpsertPricingPeriodInput {
   id?: string;

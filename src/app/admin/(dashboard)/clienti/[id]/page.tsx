@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { anonymizeCustomerAction } from "./actions";
+import { formatItDay } from "@/lib/dates";
 
 export default async function ClienteDetailPage({
   params,
@@ -57,7 +58,7 @@ export default async function ClienteDetailPage({
         <Row label="Speso totale (netto refund)" value={formatEur(totalSpent)} />
         <Row
           label="Cliente dal"
-          value={customer.createdAt.toLocaleDateString("it-IT")}
+          value={formatItDay(customer.createdAt)}
         />
       </section>
 
@@ -118,7 +119,7 @@ export default async function ClienteDetailPage({
                   <span>{b.service.name}</span>
                   {" · "}
                   <span className="text-slate-500">
-                    {b.startDate.toLocaleDateString("it-IT")}
+                    {formatItDay(b.startDate)}
                   </span>
                 </div>
                 <div className="shrink-0 flex items-center gap-3 tabular-nums">

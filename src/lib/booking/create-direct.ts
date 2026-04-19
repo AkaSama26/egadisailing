@@ -6,6 +6,7 @@ import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
 import { deriveEndDate, generateConfirmationCode } from "./helpers";
+import { DIRECT_RETRY_WINDOW_MS } from "./constants";
 
 export interface ConsentInput {
   privacyAccepted: boolean;
@@ -192,8 +193,10 @@ export async function createPendingDirectBooking(
     // card_declined terminale, cliente clicca "Usa un altro metodo" → wizard
     // ri-crea PI → senza questa whitelist il PENDING del primo tentativo
     // verrebbe visto come conflitto, il cliente resta stuck fino al
-    // pending-gc cron (30min). Il vecchio PENDING scadra' normalmente.
-    const retryWindowStart = new Date(Date.now() - 30 * 60 * 1000);
+    // pending-gc cron (45min). Il vecchio PENDING scadra' normalmente.
+    // R20-A1-1: retry-window 15min stretta (era 30min) per buffer 30min
+    // rispetto al GC cutoff 45min — evita race al bordo.
+    const retryWindowStart = new Date(Date.now() - DIRECT_RETRY_WINDOW_MS);
     const overlappingBookings = await tx.booking.findMany({
       where: {
         boatId: service.boatId,
