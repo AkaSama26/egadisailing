@@ -3,12 +3,9 @@
 import { useState } from "react";
 import { StripePaymentForm } from "./stripe-payment-form";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
+import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 
 type Step = "date" | "people" | "customer" | "payment" | "success";
-
-// Versione della privacy+T&C attualmente in vigore. Sincronizzare con
-// EFFECTIVE_DATE/POLICY_VERSION nelle pagine /privacy e /terms se aggiornate.
-const POLICY_VERSION = "1.0";
 
 interface Props {
   locale: string;
@@ -82,7 +79,7 @@ export function BookingWizard(props: Props) {
           consent: {
             privacyAccepted: consentPrivacy,
             termsAccepted: consentTerms,
-            policyVersion: POLICY_VERSION,
+            policyVersion: CURRENT_POLICY_VERSION,
           },
         }),
       });

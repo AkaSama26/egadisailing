@@ -35,7 +35,11 @@ model AuditLog {
   userAgent String?
   timestamp DateTime @default(now())
 
-  user User? @relation(fields: [userId], references: [id])
+  // R18-Prisma NOTE: SetNull esplicito documentato come intent — migration
+  // DDL `ALTER TABLE AuditLog DROP CONSTRAINT ... ADD CONSTRAINT ... ON DELETE SET NULL`
+  // deferred Plan 7 quando admin user CRUD viene implementato. Oggi l'unico
+  // admin seed non viene mai cancellato, quindi NoAction default e' safe.
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([entity, entityId])
   @@index([userId, timestamp])
@@ -260,7 +264,6 @@ model Booking {
   totalPrice       Decimal       @db.Decimal(10, 2)
   currency         String        @default("EUR")
   status           BookingStatus @default(PENDING)
-  weatherGuarantee Boolean       @default(false)
   notes            String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -288,6 +291,9 @@ model Booking {
   @@index([boatId, status, startDate])
   // Per pending-gc query (status=PENDING AND source=DIRECT AND createdAt<cutoff).
   @@index([status, source, createdAt])
+  // R18-Prisma: reconciliation cron Bokun legge (source=BOKUN, externalRef=id)
+  // — prima seq-scan su `source,status` compound con filter post.
+  @@index([source, externalRef])
 }
 
 model DirectBooking {
@@ -296,7 +302,6 @@ model DirectBooking {
   depositAmount             Decimal?        @db.Decimal(10, 2)
   balanceAmount             Decimal?        @db.Decimal(10, 2)
   stripePaymentIntentId     String?         @unique
-  cancellationPolicyApplied String?
   balanceReminderSentAt     DateTime?
   balancePaidAt             DateTime?
 

@@ -9,16 +9,13 @@ import { withErrorHandler } from "@/lib/http/with-error-handler";
 import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { ValidationError } from "@/lib/errors";
 import { env } from "@/lib/env";
+import { ACCEPTED_POLICY_VERSIONS } from "@/lib/legal/policy-version";
 
 export const runtime = "nodejs";
 
-// R17-SEC-#10: policyVersion e' deciso server-side e sincronizzato con il
-// contenuto delle pagine /privacy, /terms, /cookie-policy. Aggiornare
-// questo enum OGNI volta che si modifica il testo legale. Bump semver
-// (1.0 → 1.1 per modifiche minor, 2.0 per material). Un attaccante che
-// forgia policyVersion arbitraria indebolisce la prova del consenso
-// GDPR art. 7.3 in un contenzioso.
-const ACCEPTED_POLICY_VERSIONS = ["1.0"] as const;
+// R17-SEC-#10 + R18-REG-ALTA: policyVersion deciso server-side, importato
+// da singola source-of-truth `src/lib/legal/policy-version.ts` (allineato
+// con pagine /privacy, /terms e wizard client).
 
 const schema = z.object({
   serviceId: z.string().min(1).max(100),

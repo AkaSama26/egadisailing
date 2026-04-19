@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 17 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 18 round di audit applicati. **VERDICT Round 18 consolidated: STOP audit, SHIFT delivery.** Pilot launch target 20 maggio 2026. Plan 6 E2E Playwright + Sentry deferred a sessione delivery dedicata.
 
 **Test suite**: 106 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment (incluso NaN/null guard + partial data).
 
@@ -890,6 +890,74 @@ Tre audit R17. **1 CRITICA SEC scoperta**: JWT forge trivial senza DB user looku
 - BullMQ metrics endpoint + alert (0.5gg)
 
 ### Test: 106 passing. Typecheck clean. Build OK.
+
+## Round 18 audit — regression R17 + Prisma schema + go-live consolidated (fix applicati + STOP audit verdict)
+
+Tre audit R18. Verdict consolidated **stop audit → shift delivery**. Quick wins applicati come ultima iterazione prima del delivery mode. Documenti go-live assessment + testing roadmap pronti per il team delivery.
+
+### Critiche + Alte fixate
+- **CharterBooking.rawPayload retention redaction** (R18-Prisma-CRITICA GDPR): identico pattern BokunBooking (R8), ma mancante. PII email parser charter sopravvivevano 10y legali senza whitelist redaction. Fix: branch analogo in `retention/route.ts` con 90g cutoff + whitelist business fields + `_redacted:true` marker.
+- **AuditLog PII redaction on anonymizeCustomer** (R18-Prisma-ALTA GDPR): art. 17 erasure mascherava Customer+ConsentRecord ma lasciava audit log 24mo con `before.email`/`after.firstName`. Fix: `tx.auditLog.updateMany({where:{entity:"Customer",entityId}, data:{before:{_redacted:true}, after:{_redacted:true}}})` in stessa tx.
+- **POLICY_VERSION duplicato in 4 file** (R17-REG-ALTA): privacy page, terms page, wizard client, payment-intent schema — 4 costanti `"1.0"` scollegate. Primo bump legal rompeva wizard silenziosamente. Fix: singola source-of-truth `src/lib/legal/policy-version.ts` con `CURRENT_POLICY_VERSION`, `ACCEPTED_POLICY_VERSIONS`, `EFFECTIVE_DATE` + bump protocol documentato.
+- **`confirm.ts` P2002 catch** (R17-REG-ALTA): post R17-SEC-#3 `stripePaymentIntentId @unique`, edge case webhook retry con PI riassociato poteva far throw P2002 → webhook fail → Stripe loop. Fix: try/catch attorno `directBooking.update` con log warn + skip su P2002.
+- **Prisma schema cleanup** (R18-Prisma): migration `20260421160000_r18_schema_cleanup` — drop dead fields `Booking.weatherGuarantee` + `DirectBooking.cancellationPolicyApplied` (0 reference runtime). CHECK constraints: `numPeople >= 0`, `totalPrice >= 0`, `currency='EUR'`, `Payment.amount >= 0`, `PricingPeriod.pricePerPerson > 0`, `HotDayRule.multiplier > 0`. Index `Booking(source, externalRef)` partial per reconciliation cron.
+
+### Go-live consolidated verdict
+
+Dopo 17 round audit + 18° di consolidation:
+- **Codice production-ready funzionalmente** (core transazionale 8+/10)
+- **Non lo e' legalmente** (GDPR 2/10 — ConsentRecord + legal pages mancanti) 
+- **Non lo e' infrastrutturalmente** (3/10 — no docker-compose.prod, Caddy, backup, CI/CD)
+- **Non lo e' testabilmente** (3/10 — 106 unit pure, zero integration/E2E)
+
+**5 hard blocker Tier-1** (nessun bypass possibile):
+1. Turnstile widget client non renderizzato (1 gg)
+2. GDPR ConsentRecord + checkbox wizard (3 gg + copy legale cliente)
+3. Legal pages /privacy /terms /cookie-policy (1 gg + copy legale cliente)
+4. Infra deploy completa (docker-compose.prod + Caddy + backup + CI/CD) (4 gg)
+5. Admin actions legacy rewrite (1 gg)
+
+**Totale ~10 gg eng + 1.5 gg cliente (legal copy + DNS).** Long-pole reale = legal copy, non codice.
+
+**Raccomandazione**: Scenario C Pilot Launch 20 maggio 2026 con feature flag limit 10 booking/day W1, 30 W2, full W3. Rollback < 5min se incident grave. Sentry + daily KPI review come early-warning.
+
+### Audit diminishing returns quantificati
+
+Pattern ultimi round (R14-R17):
+- R14 ha trovato 1 CRITICA regressione in R13 (dispatcher placebo fix R13-C1)
+- R15 ha trovato 1 CRITICA regressione in R15 proprio (Stripe retry placebo post-fix)
+- R16 ha trovato regressioni in R15 (OTP cooldown placebo, parseFloat dead code)
+- R17 ha trovato 1 CRITICA **nuova** (JWT forge) + regressioni R16
+- R18 ha trovato 1 CRITICA regressione R16 (`/admin` bare header) + 2 CRITICA GDPR NON-regression (CharterBooking retention, AuditLog PII on anonymize)
+
+Proiezione R19-R20 realistica: 60% placebo fix R18, 30% regressione R17-R18, 0% nuovo architetturale. **ROI testing infra 10x maggiore**.
+
+### Documenti finali creati
+- **`docs/runbook/operational-playbook.md`** (R16): DR 6 scenari + monitoring + first-week runbook
+- **`docs/runbook/capacity-planning.md`** (R16): throughput Ferragosto, bottleneck #1 pool Postgres, TCO €43,500/anno
+- **`docs/runbook/testing-roadmap.md`** (R17): Tier A 14 test (10gg) + Tier B 13 test (7gg) + infra 16h + esempio webhook-handler.test.ts copy-paste
+- **`docs/runbook/go-live-assessment.md`** (R18): state-of-art 18 round, 5 hard blocker, scenario C pilot launch 20 maggio 2026
+
+### Deferred critica Tier-2+ (documentati multi-round)
+- **Supply chain `lucide-react@^1.8.0` typosquat** (R4 + R17-SEC-#12): refactor 1-2gg, 37 file.
+- **Cross-OTA double-booking** (R14 design doc, 6-8h).
+- **Exclusion constraint Booking no-overlap** (R7 + R14, 1gg con data audit).
+- **Hardcode italiano massiccio** (R11 + R15-UX-28, 1.5gg refactor i18n).
+- **CSP Report-Only** (R15-SEC-A1, 2h).
+- **Webhook secret rotation zero-downtime** (R15-SEC-A4, 2h).
+- **iCal feed per-boat token** (R8 + R15-SEC-A2, 4h).
+- **DMARC/SPF/DKIM verify charter email** (R8, 2gg + cliente).
+- **Tier A integration test implementation** (testing-roadmap.md, 10gg).
+- **PgBouncer + POOL_MAX=30** (R16 capacity, 0.5gg, obbligatorio pre-Ferragosto).
+- **Batch `blockDates` INSERT ON CONFLICT** (R3 + R16 capacity, 0.5gg).
+- **Sentry wiring** (R6 + R12 + R18 go-live, 0.5gg obbligatorio pre-launch).
+- **Admin step-up auth destructive actions** (R10 + R17, 1gg).
+- **anonymizeCustomer flow wiring admin UI** (R14, 1gg).
+- **AuditLog.userId `ON DELETE SET NULL` ALTER TABLE** (R18, 0.1gg quando admin user CRUD Plan 7).
+
+### Test: 106 passing. Typecheck clean. Build OK.
+
+**Delivery-mode raccomandato da Round 19 in poi**. Audit futuri solo su area specifica post-incident reale, non round-completi orizzontali.
 
 ## Plan roadmap
 

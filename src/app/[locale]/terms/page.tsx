@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { CURRENT_POLICY_VERSION, EFFECTIVE_DATE } from "@/lib/legal/policy-version";
 
 export async function generateMetadata({
   params,
@@ -16,16 +17,13 @@ export async function generateMetadata({
   });
 }
 
-const EFFECTIVE_DATE = "18 aprile 2026";
-const POLICY_VERSION = "1.0";
-
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-white py-24 px-6">
       <article className="max-w-3xl mx-auto prose prose-slate">
         <h1 className="text-3xl font-bold text-slate-900">Termini e Condizioni</h1>
         <p className="text-sm text-slate-500">
-          Versione {POLICY_VERSION} · In vigore dal {EFFECTIVE_DATE}
+          Versione {CURRENT_POLICY_VERSION} · In vigore dal {EFFECTIVE_DATE}
         </p>
 
         <div className="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">

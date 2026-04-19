@@ -66,6 +66,16 @@ export async function anonymizeCustomer(
       where: { customerId },
       data: { ipAddress: null, userAgent: null },
     });
+    // R18-ALTA: AuditLog.before/after JSON possono contenere PII dal customer
+    // (es. updateCustomer con email nel after). Retention 24mo significa che
+    // post-anonymize il dato anagrafico sopravvive 2 anni nei log. Art. 17
+    // erasure richiede rimozione da TUTTI i sistemi. Mask con sentinel
+    // `_redacted: true` preserve la riga audit (audit trail continuity) ma
+    // cancella il contenuto PII.
+    await tx.auditLog.updateMany({
+      where: { entity: "Customer", entityId: customerId },
+      data: { before: { _redacted: true }, after: { _redacted: true } },
+    });
   });
 
   await auditLog({

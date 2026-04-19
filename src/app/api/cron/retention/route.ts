@@ -28,6 +28,7 @@ const LEASE_TTL_SECONDS = 15 * 60;
  * - WeatherForecastCache               → delete dopo 14 giorni
  * - AuditLog                           → delete dopo 24 mesi (bilanciato con antifraud/compliance)
  * - BokunBooking.rawPayload            → redacted PII dopo 90 giorni
+ * - CharterBooking.rawPayload          → redacted PII dopo 90 giorni (R18)
  * - Booking e Customer: retention 10 anni (art. 2220 c.c.) gestiti separatamente
  *
  * Auth: Bearer CRON_SECRET (timing-safe).
@@ -67,6 +68,7 @@ export const GET = withErrorHandler(async (req: Request) => {
     boataroundEventDeleted: 0,
     charterEmailDeleted: 0,
     bokunPayloadRedacted: 0,
+    charterPayloadRedacted: 0,
     weatherCacheDeleted: 0,
     auditLogDeleted: 0,
   };
@@ -218,6 +220,63 @@ export const GET = withErrorHandler(async (req: Request) => {
   } catch (err) {
     errors.push("bokunPayload");
     logger.error({ err }, "Bokun rawPayload redaction failed");
+  }
+
+  // R18-CRITICA: CharterBooking.rawPayload contiene PII analoga a BokunBooking
+  // (firstName/lastName/email/phone persiti dall'email parser o webhook
+  // Boataround). Retention 90g uguale. Senza questo, PII sopravvivono 10y
+  // legali fino al hard-delete Booking → violazione art. 5.1.c minimization
+  // + art. 5.1.e storage limitation.
+  try {
+    const BATCH = 500;
+    const MAX_BATCHES = 20;
+    let batchIdx = 0;
+    let lastId: string | null = null;
+    while (batchIdx < MAX_BATCHES) {
+      const rows: Array<{ bookingId: string; rawPayload: unknown }> =
+        await db.charterBooking.findMany({
+          where: {
+            booking: { createdAt: { lt: ninetyDaysAgo } },
+            ...(lastId ? { bookingId: { gt: lastId } } : {}),
+          },
+          select: { bookingId: true, rawPayload: true },
+          orderBy: { bookingId: "asc" },
+          take: BATCH,
+        });
+      if (rows.length === 0) break;
+      batchIdx++;
+      lastId = rows[rows.length - 1].bookingId;
+      for (const row of rows) {
+        const payload = row.rawPayload as Record<string, unknown>;
+        if (payload && typeof payload === "object" && payload._redacted === true) continue;
+        // Whitelist: preserva solo campi business non-PII per audit.
+        const redacted = {
+          _redacted: true,
+          platform: payload?.platform ?? null,
+          platformBookingRef: payload?.platformBookingRef ?? null,
+          status: payload?.status ?? null,
+          startDate: payload?.startDate ?? null,
+          endDate: payload?.endDate ?? null,
+          numPeople: typeof payload?.numPeople === "number" ? payload.numPeople : null,
+          totalPriceCents: typeof payload?.totalPriceCents === "number" ? payload.totalPriceCents : null,
+          currency: payload?.currency ?? null,
+        };
+        await db.charterBooking.update({
+          where: { bookingId: row.bookingId },
+          data: { rawPayload: redacted },
+        });
+        results.charterPayloadRedacted++;
+      }
+    }
+    if (batchIdx >= MAX_BATCHES) {
+      logger.warn(
+        { batches: batchIdx, redacted: results.charterPayloadRedacted },
+        "Charter rawPayload redaction hit MAX_BATCHES — backlog remains",
+      );
+    }
+  } catch (err) {
+    errors.push("charterPayload");
+    logger.error({ err }, "Charter rawPayload redaction failed");
   }
 
   try {

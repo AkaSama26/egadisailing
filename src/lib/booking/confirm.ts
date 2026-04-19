@@ -61,10 +61,29 @@ export async function confirmDirectBookingAfterPayment(params: {
         updateData.balancePaidAt = new Date();
       }
       if (Object.keys(updateData).length > 0) {
-        await tx.directBooking.update({
-          where: { bookingId: booking.id },
-          data: updateData,
-        });
+        // R18-REG: dopo R17-SEC-#3 (stripePaymentIntentId @unique partial),
+        // uno scenario edge (es. wizard-refresh race + Stripe resend PI id
+        // riassociato a booking diverso per idempotency-key upstream) puo'
+        // triggerare P2002. In quel caso: il PI gia' appartiene a un altro
+        // booking → skippa l'update DirectBooking ma completa booking/Payment
+        // in quanto la triple-dedup ProcessedStripeEvent ci garantisce
+        // eventualmente di processare solo 1 webhook net.
+        try {
+          await tx.directBooking.update({
+            where: { bookingId: booking.id },
+            data: updateData,
+          });
+        } catch (err: unknown) {
+          const e = err as { code?: string };
+          if (e.code === "P2002") {
+            logger.warn(
+              { bookingId: booking.id },
+              "DirectBooking stripePaymentIntentId collision (P2002) — skipping update",
+            );
+          } else {
+            throw err;
+          }
+        }
       }
     }
 
