@@ -295,7 +295,7 @@ model DirectBooking {
   paymentSchedule           PaymentSchedule
   depositAmount             Decimal?        @db.Decimal(10, 2)
   balanceAmount             Decimal?        @db.Decimal(10, 2)
-  stripePaymentIntentId     String?
+  stripePaymentIntentId     String?         @unique
   cancellationPolicyApplied String?
   balanceReminderSentAt     DateTime?
   balancePaidAt             DateTime?

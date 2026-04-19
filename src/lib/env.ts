@@ -149,7 +149,10 @@ function loadEnv() {
       } catch {
         // non-URL: trattalo come hostname bare
       }
-      if (FORBIDDEN_HOSTS.has(host.toLowerCase())) {
+      // R16-REG-M2: Node URL.hostname preserva brackets per IPv6 ("[::1]")
+      // → non matcherebbe FORBIDDEN_HOSTS "::1" bare. Normalizza strip brackets.
+      const normalizedHost = host.toLowerCase().replace(/^\[|\]$/g, "");
+      if (FORBIDDEN_HOSTS.has(normalizedHost)) {
         throw new Error(
           `SERVER_ACTIONS_ALLOWED_ORIGINS must not contain localhost/127.0.0.1 in production (got: ${origin})`,
         );

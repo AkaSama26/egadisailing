@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 16 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 17 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
 
 **Test suite**: 106 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment (incluso NaN/null guard + partial data).
 
@@ -846,6 +846,50 @@ Tre audit paralleli. **1 CRITICA grave scoperta**: il fix R15-UX-1 (Stripe retry
 - Customer trigram index per admin search.
 
 ### Test: 106 passing (invariato). Typecheck clean. Build OK.
+
+## Round 17 audit — regression R16 + testing roadmap + red-team penetration (fix applicati)
+
+Tre audit R17. **1 CRITICA SEC scoperta**: JWT forge trivial senza DB user lookup in session callback — AUTH_SECRET leak = admin takeover. Altri 5 security findings blocker go-live. Applicati 10 fix + 1 doc testing roadmap.
+
+### Critiche fixate
+- **JWT forge + no DB user lookup** (R17-SEC-#2): session callback derivava `role` da `token.role` senza verificare che `User` esistesse nel DB. Attaccante con AUTH_SECRET leak → forgia JWT `{role:"ADMIN", sub:"anything"}` offline → middleware verifica solo firma → admin takeover completo. Fix: `session` callback fa `db.user.findUnique({where:{id:token.sub}})` + ri-deriva `role` fresco dal DB (revoca ADMIN→USER immediate invece di aspettare 8h expiry). User non trovato → `session.user = undefined` → layout check force redirect login. Costo: +1 DB roundtrip per request admin (~5ms PK index).
+- **`/admin` bare dashboard non protetto** (R16-REG-C1): pattern `/admin/((?!login$|login/).*)` richiede slash dopo `/admin` → non matchava la dashboard home (KPI+booking). Perdita X-Frame DENY + Cache-Control no-store. Fix: 2 entry separate `source: "/admin"` + `source: "/admin/((?!login$|login/).*)"`.
+- **Unbounded `startDate` flood attack** (R17-SEC-#1): attaccante con Turnstile token + IP rotation → flood `/api/payment-intent` con `startDate=2099` → Stripe PI quota + DB bloat + iCal feed esplode. Fix: Zod `.refine((d) => d <= now+2y)` cap.
+- **Admin login no rate-limit** (R17-SEC-#13): bcrypt compare 150ms = 400 tentativi/min brute-force password. Fix: `enforceRateLimit` in `authorize` — 10/15min IP + 5/hour email.
+- **policyVersion client-supplied** (R17-SEC-#10): attaccante forgia `policyVersion:"v-fake"` → ConsentRecord salvato con versione inesistente → GDPR art. 7.3 onere prova indebolito in contenzioso. Fix: `z.enum(ACCEPTED_POLICY_VERSIONS)` server-side. Aggiornare ad ogni modifica legal copy.
+- **`DirectBooking.stripePaymentIntentId` non-unique** (R17-SEC-#3): retry wizard (client-side refresh) creava 2 PENDING booking + 2 PaymentIntent per stesso customer/slot. Cliente paga entrambi → double charge. Fix: `@unique` partial index WHERE NOT NULL. Migration `20260421150000_r17_pi_unique`. Prossimo step (Plan 7): idempotency-key client-side per garantire 1 PI per wizard session.
+- **Rate-limit fail-open universale** (R17-SEC-#5): durante Redis outage ogni rate-limit bypassato → OTP email bomb, PI flood, brute-force admin. Fix: `failOpen: boolean` opt in `RateLimitConfig`. Default `true` (webhook upstream). Applicato `failOpen: false` a `/api/payment-intent` (IP+email) e admin login (IP+email). Su Redis down: throw `ExternalServiceError 503` invece di passare.
+
+### Alte fixate
+- **DUMMY_HASH fallback malformed** (R16-REG-A1): catch fallback `$2a$10$invalid...` non era valido bcrypt → `compare` poteva throw "Invalid salt version". Fix: valido hash precomputato offline `$2b$10$CwTycUXWue0Thq9StjUM0uJ8N5rnk8J5oeKqyRwPLaP5K8jqKJhc.` (hash reale di "x").
+- **Stripe SDK timeout 10s insufficiente** (R16-REG-A2): p99 refund 5-8s + retry → fail legittimo. Fix: 15s + 1 retry = worst-case 32s, ancora sotto webhook 30s+ e pending-gc lease 5min.
+- **IPv6 brackets non normalizzati** (R16-REG-M2): Node `URL.hostname` preserva `"[::1]"` brackets → mismatch con `FORBIDDEN_HOSTS` set `"::1"` bare → bypass silenzioso se admin configura `"[::1]"` in SERVER_ACTIONS_ALLOWED_ORIGINS. Fix: `.replace(/^\[|\]$/g, "")` normalize prima del set lookup.
+
+### Documenti operativi creati
+- **`docs/runbook/testing-roadmap.md`**: inventario 106 test esistenti (tutti pure). Tier A 14 test ~66h (10gg) + Tier B 13 test ~50h (7gg) + setup infra 16h. Timeline: 15gg un dev full-time, 8gg 2-dev paralleli. Esempio A1 `webhook-handler.test.ts` template copy-paste ready con 3 scenari (R13 out-of-order, R10+R11 auto-refund, idempotency). Dipendenza bloccante B6: fixture email anonymized dal cliente.
+
+### Deferred (Plan 7+ blocker/hardening)
+**CRITICA go-live**:
+- **Supply chain `lucide-react@^1.8.0` typosquat** (R17-SEC-#12, Round 4 noto): pacchetto 1.x su npmjs.org **non è la libreria ufficiale Lucide** (autore diverso). 37+ file import. Rischio malware browser bundle + server. Migration a `^0.540.0` ufficiale. Effort: 1-2 gg refactor + npm audit CI block.
+- **Turnstile token replay** (R17-SEC-#7): single-use enforcement server-side mancante. Se Cloudflare loosy-enforce sotto carico, stesso token usato N volte per spam. Fix: Redis SETNX dedup `turnstile:${sha256(token)}` TTL 5min.
+- **`getClientIp` trusted proxy guard** (R17-SEC-#8): senza socket origin check, attaccante bypassa Cloudflare con direct-to-origin + spoof header. Fix: env `TRUSTED_PROXY_IPS` CIDR + check socket remote IP. Deployment: firewall blocca origin direct access.
+
+**ALTA deferred**:
+- **Admin step-up auth** (R17-SEC-#11, R10 noted): destructive actions >€X richiedono password re-entry. JWT-theft blast radius limitation.
+- **pending-gc TOCTOU** (R17-SEC-#4): race tra cron update CANCELLED e webhook confirm su stesso booking. Fix: webhook handler usa `updateMany({where:{status:"PENDING"}})` + se count=0 → booking già CANCELLED → trigger auto-refund path.
+- **Customer session revocation UI** (R17-SEC-#6): `/b/sessione/devices` + revoke-all post-email-change. GDPR hygiene.
+- **Sliding-window rate limiter** (R17-SEC-#9): fixed-window attuale vulnerabile a boundary burst 2× limit.
+
+**Da testing roadmap**:
+- Implementation Tier A 14 test ~10gg 1 dev — **obbligatorio confidence go-live** secondo audit R13 verdict.
+- Infra setup pglite + ioredis-mock + msw + Playwright + GitHub Actions CI — 16h.
+
+**Da capacity planning R16**:
+- PgBouncer + POOL_MAX=30 (0.5gg obbligatorio per Ferragosto)
+- Batch `blockDates` INSERT ON CONFLICT (0.5gg)
+- BullMQ metrics endpoint + alert (0.5gg)
+
+### Test: 106 passing. Typecheck clean. Build OK.
 
 ## Plan roadmap
 

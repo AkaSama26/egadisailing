@@ -49,6 +49,18 @@ const nextConfig: NextConfig = {
       // R15-REG-SEC-A1: escludiamo /admin/login (pagina pubblica, no PII;
       // dev HMR+iframe tooling beneficia di regime rilassato). La login
       // resta protetta dalle default SAMEORIGIN + headers globali.
+      // R16-REG-C1: il pattern `/admin/((?!login$|login/).*)` richiede
+      // almeno uno slash dopo `/admin`, quindi NON matchava `/admin` bare
+      // (dashboard home con KPI+booking imminenti). Doppia entry copre
+      // entrambi senza matchare /admin/login.
+      {
+        source: "/admin",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Cache-Control", value: "private, no-store, must-revalidate" },
+        ],
+      },
       {
         source: "/admin/((?!login$|login/).*)",
         headers: [

@@ -1,5 +1,5 @@
 import { getRedisConnection } from "@/lib/queue";
-import { RateLimitError } from "@/lib/errors";
+import { ExternalServiceError, RateLimitError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /**
@@ -23,6 +23,16 @@ export interface RateLimitConfig {
   scope: string;
   limit: number;
   windowSeconds: number;
+  /**
+   * R17-SEC-#5: policy su Redis timeout/down.
+   *  - `true` (default): fail-open, log warn, request passa. Usare per
+   *    webhook upstream (Bokun/Stripe) dove perdere l'evento e' peggio
+   *    del rischio abuso.
+   *  - `false`: fail-closed, throw ExternalServiceError → 503. Usare per
+   *    endpoint pubblici sensibili (OTP, payment-intent, admin login)
+   *    dove bypass = email bomb/PI flood/brute-force.
+   */
+  failOpen?: boolean;
 }
 
 export interface RateLimitCheck {
@@ -113,8 +123,15 @@ export async function enforceRateLimit(config: RateLimitConfig): Promise<void> {
       ),
     ]);
   } catch (err) {
-    // Fail-open: meglio un rate-limit bypass temporaneo durante outage
-    // Redis che un webhook Bokun/Stripe perso per timeout.
+    // R17-SEC-#5: default fail-open (webhook upstream) ma caller puo'
+    // richiedere fail-closed via `failOpen: false` (endpoint pubblici sensibili).
+    if (config.failOpen === false) {
+      logger.error(
+        { err, scope: config.scope, identifier: config.identifier },
+        "Rate limit check failed — BLOCKING request (fail-closed per scope policy)",
+      );
+      throw new ExternalServiceError("RateLimit", "rate_limit_check_unavailable");
+    }
     logger.warn(
       { err, scope: config.scope, identifier: config.identifier },
       "Rate limit check failed — allowing request (fail-open)",

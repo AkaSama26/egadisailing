@@ -12,9 +12,27 @@ import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
+// R17-SEC-#10: policyVersion e' deciso server-side e sincronizzato con il
+// contenuto delle pagine /privacy, /terms, /cookie-policy. Aggiornare
+// questo enum OGNI volta che si modifica il testo legale. Bump semver
+// (1.0 → 1.1 per modifiche minor, 2.0 per material). Un attaccante che
+// forgia policyVersion arbitraria indebolisce la prova del consenso
+// GDPR art. 7.3 in un contenzioso.
+const ACCEPTED_POLICY_VERSIONS = ["1.0"] as const;
+
 const schema = z.object({
   serviceId: z.string().min(1).max(100),
-  startDate: z.string().datetime(),
+  // R17-SEC-#1: cap a 2 anni nel futuro. Senza, attaccante floodava PI
+  // con startDate 2099 → Stripe quota fee + DB bloat.
+  startDate: z
+    .string()
+    .datetime()
+    .refine((v) => {
+      const d = new Date(v);
+      const maxFuture = new Date();
+      maxFuture.setUTCFullYear(maxFuture.getUTCFullYear() + 2);
+      return d <= maxFuture;
+    }, "startDate oltre 2 anni nel futuro"),
   numPeople: z.number().int().min(1).max(50),
   customer: z.object({
     email: z.string().email().max(320),
@@ -34,7 +52,7 @@ const schema = z.object({
   consent: z.object({
     privacyAccepted: z.literal(true),
     termsAccepted: z.literal(true),
-    policyVersion: z.string().min(1).max(16),
+    policyVersion: z.enum(ACCEPTED_POLICY_VERSIONS),
   }),
 });
 
@@ -47,6 +65,7 @@ export const POST = withErrorHandler(async (req: Request) => {
     scope: "PAYMENT_INTENT_IP_HOUR",
     limit: 10,
     windowSeconds: 3600,
+    failOpen: false, // R17-SEC-#5: endpoint pubblico sensibile, no bypass su Redis down
   });
 
   const body = await req.json();
@@ -68,6 +87,7 @@ export const POST = withErrorHandler(async (req: Request) => {
     scope: "PAYMENT_INTENT_EMAIL_HOUR",
     limit: 5,
     windowSeconds: 3600,
+    failOpen: false, // R17-SEC-#5
   });
 
   const booking = await createPendingDirectBooking({
