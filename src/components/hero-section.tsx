@@ -192,10 +192,13 @@ export function HeroSection() {
 
   return (
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-[#071934] select-none">
-      {/* ---- Background video ---- */}
-      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      {/* ---- Background video (decorative) ---- */}
+      {/* R19-A11y 1.1.1: aria-hidden + tabIndex=-1 perche' decorativo (muted
+          loop). No captions richieste. */}
       <video
         ref={videoRef}
+        aria-hidden="true"
+        tabIndex={-1}
         autoPlay
         muted
         loop

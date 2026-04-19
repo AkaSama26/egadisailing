@@ -168,7 +168,10 @@ export async function importBoataroundBooking(
           endDate,
           numPeople: 1,
           totalPrice: totalPriceStr,
-          currency: booking.currency,
+          // R19-REG-CRITICA-1: sistema EUR-only a livello DB. Valuta upstream
+          // preservata in rawPayload per audit. Vedi comment in
+          // bokun/adapters/booking.ts per motivazione.
+          currency: "EUR",
           status,
           charterBooking: {
             create: {

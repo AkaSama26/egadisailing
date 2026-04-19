@@ -35,10 +35,10 @@ model AuditLog {
   userAgent String?
   timestamp DateTime @default(now())
 
-  // R18-Prisma NOTE: SetNull esplicito documentato come intent — migration
-  // DDL `ALTER TABLE AuditLog DROP CONSTRAINT ... ADD CONSTRAINT ... ON DELETE SET NULL`
-  // deferred Plan 7 quando admin user CRUD viene implementato. Oggi l'unico
-  // admin seed non viene mai cancellato, quindi NoAction default e' safe.
+  // R19-REG-MEDIA-1 NOTE: FK ha `ON DELETE SET NULL` nel DB dal migration
+  // iniziale 20260418080924_v2_platform_foundation. Il `onDelete: SetNull`
+  // esplicito qui matcha la realta' DB (nessun drift). Admin user delete
+  // in futuro preservera' audit trail con userId null.
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([entity, entityId])

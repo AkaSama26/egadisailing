@@ -143,7 +143,14 @@ export async function importBokunBooking(
           // violare CHECK downstream.
           numPeople: booking.numPeople && booking.numPeople > 0 ? booking.numPeople : 1,
           totalPrice: totalPriceStr,
-          currency: booking.currency,
+          // R19-REG-CRITICA-1: forziamo 'EUR' app-level perche' il sistema e'
+          // EUR-only. Bokun hub puo' forwarded valute diverse da OTA US-based
+          // (Viator/GYG con USD/GBP). La currency upstream resta in
+          // `rawPayload.currency` per audit; il `totalPrice` Bokun e' gia'
+          // convertito a EUR da Bokun stesso (o accettiamo il valore come EUR
+          // nominale — verificare con cliente). Senza questo override: 23514
+          // constraint violation in produzione al primo ordine non-EUR.
+          currency: "EUR",
           status,
           bokunBooking: {
             create: {

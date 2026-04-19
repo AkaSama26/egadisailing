@@ -11,6 +11,7 @@ import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { logger } from "@/lib/logger";
 import { ValidationError } from "@/lib/errors";
+import { normalizeEmail } from "@/lib/email-normalize";
 
 const schema = z.object({
   name: z.string().min(2).max(120).regex(/^[^<>]*$/, "Caratteri non ammessi"),
@@ -66,7 +67,8 @@ export async function sendContactMessage(
       windowSeconds: 3600,
     });
     await enforceRateLimit({
-      identifier: parsed.email.toLowerCase(),
+      // R19-TechDebt-Bug: normalizeEmail invariant #17 (Gmail alias dedup).
+      identifier: normalizeEmail(parsed.email),
       scope: RATE_LIMIT_SCOPES.CONTACT_FORM_EMAIL,
       limit: 3,
       windowSeconds: 3600,

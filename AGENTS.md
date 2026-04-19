@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 18 round di audit applicati. **VERDICT Round 18 consolidated: STOP audit, SHIFT delivery.** Pilot launch target 20 maggio 2026. Plan 6 E2E Playwright + Sentry deferred a sessione delivery dedicata.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 19 round di audit applicati. **VERDICT Round 18 consolidated: STOP audit, SHIFT delivery.** Round 19 ha trovato 1 CRITICA regressione reale in R18 (currency CHECK rompe Bokun non-EUR) + 2 bug reali + 1 BLOCKER WCAG legale — applicati. Pilot launch target 20 maggio 2026.
 
 **Test suite**: 106 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment (incluso NaN/null guard + partial data).
 
@@ -958,6 +958,60 @@ Proiezione R19-R20 realistica: 60% placebo fix R18, 30% regressione R17-R18, 0% 
 ### Test: 106 passing. Typecheck clean. Build OK.
 
 **Delivery-mode raccomandato da Round 19 in poi**. Audit futuri solo su area specifica post-incident reale, non round-completi orizzontali.
+
+## Round 19 audit — regression R18 + tech debt + WCAG 2.1 AA (fix applicati)
+
+Tre audit R19 con approccio tattico (non piu' orizzontale come R1-R17). **1 CRITICA reale scoperta** (bug introdotto da R18 che rompe Bokun in prod) + 2 bug reali tech-debt + 1 BLOCKER WCAG legale EAA 2025.
+
+### Critiche + ALTA fixate
+- **R18-REG-CRITICA-1 currency CHECK rompe Bokun non-EUR**: `ALTER TABLE Booking ADD CONSTRAINT chk_booking_currency_eur CHECK (currency = 'EUR')` in R18 rigettava webhook Bokun/Boataround con valute USD/GBP (OTA US-based via Viator/GetYourGuide) → 23514 check_violation → webhook 500 → Bokun retry loop → **booking Bokun non-EUR persi silently in prod** → double-booking downstream garantito. Fix: migration `20260421170000_r19_currency_relax` drop constraint vecchio + nuovo `length(currency)=3 AND upper` permissivo. Adapters Bokun+Boataround forzano `currency: "EUR"` app-level (sistema EUR-only), original preservata in `rawPayload` per audit.
+- **R19-TechDebt-Bug `.toLowerCase()` vs `normalizeEmail()`** (invariant #17 bypass): `/api/payment-intent/route.ts` rate-limit email + `contacts/actions.ts` rate-limit contact form usavano `.toLowerCase()` invece di `normalizeEmail()` → bot bypassava limite con `mario+1@gmail.com`, `mario+2@gmail.com`... ma normalize → `mario@gmail.com` tutti stesso bucket. Fix applicato.
+- **R18-REG-ALTA confirm.ts updateMany safe** (P2002 in tx Postgres): catch P2002 dentro `$transaction` lasciava sessione pg in state 25P02 failed → payment.create successivo fallisce → rollback totale. Fix: `updateMany where OR: [{stripePaymentIntentId:null}, {=params.PI}]` evita P2002 by design. BALANCE PI non sovrascrive piu' DEPOSIT PI (R18-REG-ALTA-2 fix — attach solo se currently null).
+- **R19-A11y BLOCKER skip-to-content link**: WCAG 2.4.1 level A obbligatorio EAA 2025 turismo (sanzioni €40k IT). Zero presenza in `[locale]/layout.tsx` → tutti utenti tastiera/SR tabbavano nav+lang-switcher+CTA su ogni pagina. Fix: `<a href="#main" sr-only focus:not-sr-only>` + `<main id="main">`.
+
+### Quick wins fixati
+- **R19-A11y video hero `aria-hidden="true"` + `tabIndex={-1}`**: rimosso `eslint-disable-next-line jsx-a11y/media-has-caption` — video decorativo (muted loop) ora correttamente escluso SR.
+- **R19-A11y `aria-label` "Scopri di più su ${title}"**: 5 link landing-sections con stesso text "Scopri di più" ora distinti per SR.
+- **R19-A11y `cursor-pointer` rimosso da polaroid decorative**: sed-replace 4 occorrenze in landing-sections (polaroid non-interattive, cursor pointer violava WCAG 1.3.1 "info suggested by presentation").
+- **R19-REG-MEDIA-2 `ACCEPTED_POLICY_VERSIONS` array manuale**: era `[CURRENT_POLICY_VERSION]` derivato → bump di CURRENT rompeva retrocompat. Ora `["1.0"]` manuale con commento protocol bump.
+- **R19-REG-MEDIA-1 schema comment AuditLog.userId corretto**: il DB ha già `ON DELETE SET NULL` dal migration iniziale (nessun drift). Commento R18 fuorviante ("Plan 7 deferred") aggiornato.
+- **R19-TechDebt drop dead UI wrappers**: `src/components/ui/{dialog,select,table}.tsx` eliminati (0 consumer) — bundle slim.
+
+### Lucide-react verify — non e' typosquat
+**Round 4 + R17-SEC-#12 erano sbagliati.** `lucide-react@^1.8.0` verificato via `npm view`: maintainer Eric Fennis (creator lucide.dev), repo ufficiale. La libreria e' passata a 1.x major (info datata "linea 0.x" in AGENTS). Nessun fix richiesto, nessun refactor 37 file.
+
+### Deferred da Round 19 (delivery-bound, non audit)
+**CRITICA BLOCKER WCAG 2.1 AA EAA 2025** (~7.5gg totali effort):
+- Form wizard senza `<label htmlFor>` vere (WCAG 3.3.2, placeholder-as-label) — refactor 1gg
+- BookingSearch hero: finti input come `<button>` sub-A11y — 0.5gg
+- Language-switcher senza keyboard nav (Arrow/Esc/focus-trap) — 0.5gg
+- Contrast text-white/40|50|60|70 sotto 4.5:1 su dark bg (multi-pagina) — 0.5gg design sweep
+- Status badge `/b/sessione` solo-colore (1.4.1 fail) — 15min
+- Heading hierarchy landing h1→h3 skip — 30min
+- Wizard recap/review step pre-payment (3.3.4 legal/financial) — 1gg
+- Suite `@axe-core/playwright` CI — 1gg
+- Testing manuale screen reader + dichiarazione AGID — 1gg
+
+**ALTA Tech debt**:
+- 4 `@ts-nocheck` legacy pages (page.tsx, boats, experiences, experiences/[slug]) — 8h blocker per `noUnusedLocals` activation
+- 4 tsconfig strict flag ON (`noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `noFallthroughCasesInSwitch`) — 4h post-nocheck cleanup
+- Consolidare `requireAdmin()` in `src/lib/auth/require-admin.ts` (oggi 5 copie) — 30min
+- 25 i18n key orphan namespace about+contacts — migrare pagine o drop — 8h (blocker `/en`)
+- hero.mp4 8.2MB offload CDN — 2h
+
+**ALTA Regression/security residua R18-R19**:
+- AuditLog cross-entity PII on anonymizeCustomer (entity="Booking" contiene customerEmail non mascherato) — 0.5gg, JSON path query Postgres
+- Long functions refactor (createPendingDirectBooking 283 righe, handleStripeEvent 354 righe) — 2gg estrarre helpers (facilita testing)
+- Landing-sections 739 righe hardcoded IT decomposizione + i18n — 1.5gg (R11 blocker /en)
+
+### Audit strategy forward
+R19 ha confermato pattern R18 (diminishing returns con regressioni introdotte dai fix stessi). **R20+ SCONSIGLIATI** se non per:
+- Post-incident reale in area specifica
+- Post-delivery blocker per area non ancora scavata (es. admin content review, email deliverability end-to-end)
+
+Priorita' ora: **testing infra + Tier A integration test + 5 hard blocker go-live (Turnstile client, GDPR, infra deploy, admin legacy, anonymize).**
+
+### Test: 106 passing. Typecheck clean. Build OK.
 
 ## Plan roadmap
 

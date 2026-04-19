@@ -10,6 +10,7 @@ import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { ValidationError } from "@/lib/errors";
 import { env } from "@/lib/env";
 import { ACCEPTED_POLICY_VERSIONS } from "@/lib/legal/policy-version";
+import { normalizeEmail } from "@/lib/email-normalize";
 
 export const runtime = "nodejs";
 
@@ -80,7 +81,10 @@ export const POST = withErrorHandler(async (req: Request) => {
   }
 
   await enforceRateLimit({
-    identifier: input.customer.email.toLowerCase(),
+    // R19-TechDebt-Bug: normalizeEmail invariant #17 (Gmail alias dedup).
+    // Prima `.toLowerCase()` permetteva a bot di usare `mario+1@gmail.com`,
+    // `mario+2@gmail.com`... come bucket diversi → bypass rate-limit email.
+    identifier: normalizeEmail(input.customer.email),
     scope: "PAYMENT_INTENT_EMAIL_HOUR",
     limit: 5,
     windowSeconds: 3600,

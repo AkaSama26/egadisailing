@@ -53,37 +53,47 @@ export async function confirmDirectBookingAfterPayment(params: {
     }
 
     if (booking.directBooking) {
-      const updateData: Record<string, unknown> = {};
-      if (booking.directBooking.stripePaymentIntentId !== params.stripePaymentIntentId) {
-        updateData.stripePaymentIntentId = params.stripePaymentIntentId;
-      }
+      // R19-REG-ALTA: usiamo updateMany con OR clause invece di update+catch
+      // P2002. Motivo: un P2002 dentro `$transaction` mette la sessione pg in
+      // failed state (25P02) → ogni query successiva fallisce → rollback
+      // totale anche se volevamo solo skip. updateMany con where
+      // `OR: [{stripePaymentIntentId:null}, {=params.PI}]` non puo' mai
+      // violare unique (modifica solo righe compatibili) → nessun P2002 →
+      // tx prosegue pulita.
+      // R19-REG-ALTA-2: NON sovrascrivere PI esistente (BALANCE PI diverso
+      // dal DEPOSIT PI). Il DEPOSIT PI resta source of truth; il link al
+      // BALANCE PI si ricava da Payment[type=BALANCE].stripeChargeId.
+      const directUpdateData: Record<string, unknown> = {};
       if (params.paymentType === "BALANCE") {
-        updateData.balancePaidAt = new Date();
+        directUpdateData.balancePaidAt = new Date();
       }
-      if (Object.keys(updateData).length > 0) {
-        // R18-REG: dopo R17-SEC-#3 (stripePaymentIntentId @unique partial),
-        // uno scenario edge (es. wizard-refresh race + Stripe resend PI id
-        // riassociato a booking diverso per idempotency-key upstream) puo'
-        // triggerare P2002. In quel caso: il PI gia' appartiene a un altro
-        // booking → skippa l'update DirectBooking ma completa booking/Payment
-        // in quanto la triple-dedup ProcessedStripeEvent ci garantisce
-        // eventualmente di processare solo 1 webhook net.
-        try {
+      // Attach stripePaymentIntentId SOLO se currently null (primo attach).
+      const res = await tx.directBooking.updateMany({
+        where: {
+          bookingId: booking.id,
+          OR: [
+            { stripePaymentIntentId: null },
+            { stripePaymentIntentId: params.stripePaymentIntentId },
+          ],
+        },
+        data: {
+          ...directUpdateData,
+          stripePaymentIntentId: params.stripePaymentIntentId,
+        },
+      });
+      if (res.count === 0) {
+        // Il booking ha gia' un PI diverso attaccato (DEPOSIT flow BALANCE
+        // webhook, o race). Apply solo balancePaidAt senza toccare PI.
+        if (Object.keys(directUpdateData).length > 0) {
           await tx.directBooking.update({
             where: { bookingId: booking.id },
-            data: updateData,
+            data: directUpdateData,
           });
-        } catch (err: unknown) {
-          const e = err as { code?: string };
-          if (e.code === "P2002") {
-            logger.warn(
-              { bookingId: booking.id },
-              "DirectBooking stripePaymentIntentId collision (P2002) — skipping update",
-            );
-          } else {
-            throw err;
-          }
         }
+        logger.info(
+          { bookingId: booking.id, incomingPI: params.stripePaymentIntentId },
+          "DirectBooking PI already attached (likely BALANCE webhook) — preserved original",
+        );
       }
     }
 

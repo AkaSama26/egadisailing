@@ -357,9 +357,10 @@ function ExperienceRow({
 
         <Link
           href={`/${locale}/experiences/${service.id}`}
+          aria-label={`Scopri di più su ${content.title}`}
           className="inline-flex items-center gap-2 text-white font-medium hover:gap-3 transition-all"
         >
-          Scopri di più <ArrowRight className="h-4 w-4" />
+          Scopri di più <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </ScrollSection>
 
@@ -373,7 +374,7 @@ function ExperienceRow({
           return (
             <motion.div
               key={i}
-              className="absolute cursor-pointer"
+              className="absolute"
               style={{
                 left: `${layout.x}%`,
                 top: `${layout.y}%`,
@@ -513,7 +514,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
               ].map((p, i) => (
                 <motion.div
                   key={i}
-                  className="absolute cursor-pointer"
+                  className="absolute"
                   style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
                   initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
                   whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
@@ -541,7 +542,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
               ].map((p, i) => (
                 <motion.div
                   key={i}
-                  className="absolute cursor-pointer"
+                  className="absolute"
                   style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
                   initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
                   whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
@@ -587,7 +588,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
               ].map((p, i) => (
                 <motion.div
                   key={i}
-                  className="absolute cursor-pointer"
+                  className="absolute"
                   style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
                   initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
                   whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
