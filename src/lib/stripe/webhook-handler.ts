@@ -285,7 +285,17 @@ async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
     where: { stripeChargeId: charge.id },
     include: { booking: true },
   });
-  if (!payment) return;
+  // R13-ALTA: se charge.refunded arriva PRIMA di payment_intent.succeeded
+  // (rare network race Stripe workers), il Payment non esiste ancora. Se
+  // ritornassimo silenziosamente, l'evento finirebbe in ProcessedStripeEvent
+  // e il refund verrebbe perso → slot CONFIRMED + BLOCKED senza rimborso.
+  // Throw → Stripe retry fino a 3 giorni; al retry il succeeded avra' gia'
+  // creato il Payment.
+  if (!payment) {
+    throw new ValidationError(
+      "Payment not found for refund (likely out-of-order Stripe webhook); retry will resolve",
+    );
+  }
   if (payment.status === "REFUNDED") return;
 
   // Full refund se `amount_refunded === amount`. Partial refund: NON

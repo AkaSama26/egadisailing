@@ -8,9 +8,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 12 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 13 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
 
-**Test suite**: 103 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment.
+**Test suite**: 106 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment (incluso NaN/null guard + partial data).
 
 ## Stack
 
@@ -660,6 +660,56 @@ Tre audit paralleli (regression Plan 6, notification abuse + GDPR, deployment re
 - **BASSA — Weather unit tests `missingAxes`**: 8 test assessRisk non coprono NaN / Infinity / undefined. Aggiungere fixture "forecast con wind NaN" → risk MEDIUM + reason contiene "dati parziali".
 
 ### Test: 103 passing (era 95 Round 8→12, +8 da Plan 6). Typecheck clean, build OK.
+
+## Round 13 audit — regression R12 + integration edge cases + pre-go-live (fix applicati)
+
+Tre audit paralleli post-Round 12. Sintesi: 3 CRITICA correctness + 4 ALTA regression + 4 CRITICA integration (2 fixate in codice, 2 deferred blockers). Il pre-go-live verdict e' **NO-GO** con 2.5-3 settimane per chiudere infra/legal/E2E.
+
+### Critiche fixate
+- **Alert dedup race weather cron** (R13-C1): `dispatchNotification` aveva signature `void` e swallow-a errori Brevo/Telegram internamente → il marker `weatherLastAlertedAt` veniva updated ANCHE su fail silenzioso → domani il cron skippa → **alert loss perpetuo** durante Brevo outage. Fix: `DispatchResult { emailOk, telegramOk, anyOk, skipped }` + il cron updata il marker solo se `anyOk=true`; altrimenti logga warn + push in `errors[]` per diagnosi admin.
+- **Rate-limit scope spoofabile** (R13-C2): `WEATHER_CRON_IP` per-IP permetteva a un attaccante con CRON_SECRET leakato di spooffare `X-Forwarded-For` per ogni request → bucket rate-limit diverso → 1000 req/s → Open-Meteo ban quota. Fix: Bearer **prima** del rate-limit + `identifier: "global"` (bucket unico) → cap hard 10/min totali sul cron.
+- **Risk assessment `waveHeightM == null` silent LOW** (R13-C3+A3): quando marine API Open-Meteo e' down (`waveHeights=[]` → null), il fix Round 12 flaggava `missingAxes` solo per NaN, non per null. Giornata con vento 20 km/h + onde reali 3m + marine down → **LOW silenzioso**, admin non riceve alert. Fix: `wave == null || !Number.isFinite(wave)` flagga sempre missing axis. Test updated + 3 nuovi test (NaN wind, Infinity rain, EXTREME + null-wave non downgraded).
+- **Stripe `onChargeRefunded` race out-of-order** (R13-ALTA): se `charge.refunded` arriva PRIMA di `payment_intent.succeeded` (network jitter Stripe workers), il Payment non esiste → `return` silenzioso + marker ProcessedStripeEvent → refund perso, Stripe non ritenta. Fix: throw `ValidationError` con messaggio esplicativo → Stripe retry fino a 3gg, al retry il Payment sara' creato.
+- **Redis lease ownership bug** (R13-A1): `releaseLease(name)` faceva `redis.del` senza token check → un leader slow oltre TTL cancellava il lease del successore (Redlock anti-pattern). Fix: `tryAcquireLease` ritorna `LeaseHandle { name, token:UUID }`; `releaseLease(handle)` usa Lua script atomico `if GET==ARGV then DEL else 0`. Pattern Redlock-lite.
+- **Redis lease hang su Redis down** (R13-I): `redis.set(...)` con `maxRetriesPerRequest: null` (BullMQ req) si queueava in memoria durante outage → webhook hung per minuti. Fix: `Promise.race` con timeout 2s + fail-open con log warn (cron run senza protezione concurrent > webhook hang).
+
+### Alte fixate
+- **Weather cache stampede fallback deteriore** (R13-A2): se il leader crasha durante upsert e il TTL lease 30s non e' ancora scaduto, i follower polano 3s e poi "procedevano senza lease" → 6+ fetch Open-Meteo paralleli (regrediva il fix R12-C6). Fix: dopo STAMPEDE_MAX_WAITS esausto, `readStaleCache()` → se presente ritorna degraded, altrimenti throw. No thundering herd.
+
+### Operational fixate
+- **PENDING booking GC cron**: `/api/cron/pending-gc` ogni 15min (sfasato 3min da reconciliation/parser). Scan booking PENDING DIRECT > 30min → `cancelPaymentIntent` Stripe (idempotente) + `updateMany` CANCELLED + `releaseDates`. Previene zombie slot LOCKED che bloccano clienti legittimi via pre-check overlapping Round 7 (alta stagione: 50 booking/giorno × 30% abbandono checkout = 15 zombie/giorno senza GC).
+- **`anonymizeCustomer` GDPR art. 17 helper** (`src/lib/gdpr/anonymize-customer.ts`): mask email → `anon-{id}@deleted.local` + firstName=`"ANONIMO"` + lastName="" + phone/nationality/language/notes null. Idempotent + guard su active future booking. Audit log `ANONYMIZE`. Callable da admin UI (Plan 5 CRUD + Plan 7 self-service `/b/sessione`).
+
+### Deferred (Plan 7+ / blocker pre-go-live)
+**CRITICA BLOCKER** (non scritti in codice questa sessione):
+- **Bokun + Boataround cross-OTA double-booking** (R13-Scenario B): due webhook legit stesso boat/date da OTA diversi passano dedup indipendente e creano 2 Booking + 2 `blockDates` sulla stessa cella. `lockedByBookingId` punta solo al primo. Nessun `ManualAlert` emesso. Fix richiede: estendere `importBokunBooking`/`importBoataroundBooking` a rilevare overlap con `source != self` + emettere `createManualAlert`. Refactor ~1gg.
+- **iCal cache 15min → portali esterni double-booking** (R13-Scenario D): `cache-control: public, max-age=900` serve stale per 15min dopo `blockDates`. Airbnb/SamBoat consumer vede slot AVAILABLE e conferma altro cliente. Fix: `max-age=60` + ETag basato su `max(updatedAt)` BoatAvailability + 304 support. Breaking change per consumer (potrebbe richiedere comunicazione).
+- **Weather alert immediato su webhook Bokun/Boataround** (R13-Scenario E): admin scopre risk EXTREME solo al cron del giorno dell'uscita. Fix: post-`syncBookingAvailability` nei webhook, chiamare `getWeatherForDate` per `startDate ≤ today+7` e dispatch immediato se HIGH/EXTREME + set `weatherLastAlertedRisk` per dedup col cron.
+- **Partial Stripe dashboard refund + full admin cancel** (R13-Scenario H): admin rimborsa 100€ via dashboard Stripe → Payment REFUNDED. Poi admin full-cancel → `cancelBooking` filter `status === "SUCCEEDED"` skippa → residuo 400€ MAI rimborsato. Fix: considerare Payment REFUNDED con `amount > sum(REFUND children)` o leggere `amount_refunded` da Stripe API.
+- **GDPR anonymize flow wiring** (R13-Scenario G): helper creato ma admin UI non ancora espone il button; Data Subject Rights endpoint self-service `/b/sessione` pending Plan 7.
+
+**ALTA**:
+- **Admin cancel mid-checkout UX** (R13-Scenario F): cliente vede "Something went wrong" generico Stripe. Serve `/api/booking/[code]/status` poll client-side + messaggio dedicato.
+- **Bokun availability worker 6×POST per job** (R13-Scenario A): limiter `{max:10,duration:1000}` e' per-job ma il worker loop esegue 1 POST per service (3 boat × 6 service = 18 POST per job). Alta stagione burst 429. Fix: limiter a livello client `updateBokunAvailability`.
+- **Boataround reconciliation cron**: analogo a Bokun, manca. Webhook persi → drift permanente.
+- **Brevo replyTo zero integration coverage** (R13-A5): shape OK vs docs v3, ma zero test contro Brevo sandbox. Rischio regressione futura.
+
+### Pre-go-live verdict (audit 3)
+**NO-GO** attualmente. Stima realistica **2.5-3 settimane** per launch commerciale LIVE:
+- **W1** — Cliente/Legal: copy privacy/terms/cookie definitivo (placeholder esplicito oggi, ConsentRecord su testo non vincolante). Dev parallelo: `docker-compose.prod.yml` + Caddyfile + Sentry wiring + Stripe reconciliation cron + idempotency-key `/api/payment-intent`.
+- **W2** — Dev: 2 Playwright smoke (booking direct + Bokun webhook). UptimeRobot + Telegram alert. Rotazione secrets LIVE. CI GitHub Actions (lint+typecheck+test+build). Disable parser email non-DKIM-verified o feature-flag.
+- **W3** — Staging su VPS identico a prod + restore drill DB + Stripe LIVE test 1€ + onboarding KYC Stripe + go-live con rollback pronto.
+
+Blocker #1 e' **consegna legal copy dal cliente**: senza, GDPR art.13-14 rende ogni ConsentRecord non vincolante.
+
+### Deferred correctness + tech debt (non-blocker)
+- **Commit message drift**: il commit R12 affermava "8 test nuovi" — era falso (nessun test file modificato). Evitare claim quantitativi senza diff.
+- **Weather unit tests R12-A1**: missingAxes test aggiunti ora Round 13 (copertura null/NaN/Infinity).
+- **`.env.example` `docker-compose.prod.yml`**: nominato multi-round, non esiste nel repo. Blocker infra ovviamente.
+- **Admin cancel Telegram escalation policy**: oggi solo EMAIL per NEW_BOOKING_*/BOOKING_CANCELLED, TELEGRAM solo per WEATHER_ALERT. Plan 7.
+- Bokun+Boataround unit test integration con pglite ancora deferred (Round 7 gap).
+
+### Test: 106 passing (era 103 Round 12→13, +3 NaN/null/Infinity). Typecheck clean, build OK.
 
 ## Plan roadmap
 

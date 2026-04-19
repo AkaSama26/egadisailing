@@ -58,8 +58,27 @@ describe("assessRisk", () => {
     expect(r.risk).toBe("MEDIUM");
   });
 
-  it("null wave height treated as 0", () => {
+  it("null wave height (marine API down) escalates to MEDIUM with partial-data reason", () => {
     const r = assessRisk(fc({ waveHeightM: null }));
-    expect(r.risk).toBe("LOW");
+    expect(r.risk).toBe("MEDIUM");
+    expect(r.reasons.some((x) => /dati parziali/.test(x))).toBe(true);
+    expect(r.reasons.some((x) => /onde/.test(x))).toBe(true);
+  });
+
+  it("NaN wind flagged as partial data (defense vs malformed Open-Meteo payload)", () => {
+    const r = assessRisk(fc({ windSpeedKmh: Number.NaN }));
+    expect(r.risk).toBe("MEDIUM");
+    expect(r.reasons.some((x) => /vento/.test(x))).toBe(true);
+  });
+
+  it("Infinity precipitation flagged as partial data", () => {
+    const r = assessRisk(fc({ precipitationProbability: Number.POSITIVE_INFINITY }));
+    expect(r.risk).toBe("MEDIUM");
+    expect(r.reasons.some((x) => /pioggia/.test(x))).toBe(true);
+  });
+
+  it("real risk never downgraded by missing axis", () => {
+    const r = assessRisk(fc({ windSpeedKmh: 60, waveHeightM: null }));
+    expect(r.risk).toBe("EXTREME");
   });
 });

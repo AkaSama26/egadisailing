@@ -47,8 +47,8 @@ export const GET = withErrorHandler(async (req: Request) => {
     return NextResponse.json({ skipped: "imap_not_configured" });
   }
 
-  const leased = await tryAcquireLease(LEASE_NAME, LEASE_TTL_SECONDS);
-  if (!leased) {
+  const lease = await tryAcquireLease(LEASE_NAME, LEASE_TTL_SECONDS);
+  if (!lease) {
     logger.warn("Charter email parser skipped: another run in progress");
     return NextResponse.json({ skipped: "concurrent_run" });
   }
@@ -148,8 +148,6 @@ export const GET = withErrorHandler(async (req: Request) => {
       durationMs,
     });
   } finally {
-    await releaseLease(LEASE_NAME).catch((err) =>
-      logger.warn({ err }, "Failed to release email parser lease (TTL will recover)"),
-    );
+    await releaseLease(lease);
   }
 });

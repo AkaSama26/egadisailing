@@ -50,21 +50,38 @@ async function readFreshCache(): Promise<OpenMeteoForecast[] | null> {
  * rileggono la cache appena popolata. Il TTL del lease (30s) e' short
  * perche' il fetch Open-Meteo impiega ~2-3s in condizioni normali.
  */
+async function readStaleCache(): Promise<OpenMeteoForecast[] | null> {
+  const stale = await db.weatherForecastCache.findMany({
+    where: { locationKey: LOCATION_KEY, source: SOURCE },
+    orderBy: { date: "asc" },
+  });
+  if (stale.length === 0) return null;
+  return stale.map((r) => r.forecast as unknown as OpenMeteoForecast);
+}
+
 async function getForecastFromCacheOrFetch(): Promise<OpenMeteoForecast[]> {
   const cached = await readFreshCache();
   if (cached) return cached;
 
-  const leased = await tryAcquireLease(FETCH_LEASE_NAME, FETCH_LEASE_TTL_SECONDS);
-  if (!leased) {
+  const lease = await tryAcquireLease(FETCH_LEASE_NAME, FETCH_LEASE_TTL_SECONDS);
+  if (!lease) {
     // Altro processo sta fetchando. Poll la cache brevemente.
     for (let i = 0; i < STAMPEDE_MAX_WAITS; i++) {
       await new Promise((r) => setTimeout(r, STAMPEDE_WAIT_MS));
       const after = await readFreshCache();
       if (after) return after;
     }
-    // Lease attivo ma cache ancora vuota → procedi senza lease (edge case,
-    // es. fetch upstream lento). Se Open-Meteo e' giu' il catch prende stale.
-    logger.warn("Weather fetch lease held by another process but cache still empty; proceeding");
+    // R13-A2: il leader non ha scritto cache entro 3s (crash, Open-Meteo
+    // lento, OOM). Invece di partire tutti insieme a fetchare (regredendo
+    // il fix stampede), ritorniamo stale se presente o throw. Evita
+    // thundering herd di 6+ follower verso Open-Meteo.
+    logger.warn("Weather fetch lease held but cache still empty after polling");
+    const stale = await readStaleCache();
+    if (stale) {
+      logger.warn({ staleCount: stale.length }, "Weather: serving stale cache (stampede fallback)");
+      return stale;
+    }
+    throw new Error("weather_forecast_unavailable");
   }
 
   try {
@@ -92,24 +109,17 @@ async function getForecastFromCacheOrFetch(): Promise<OpenMeteoForecast[]> {
     return fetched;
   } catch (err) {
     // Fallback: usa cache stale se presente (meglio dati vecchi che niente).
-    const stale = await db.weatherForecastCache.findMany({
-      where: { locationKey: LOCATION_KEY, source: SOURCE },
-      orderBy: { date: "asc" },
-    });
-    if (stale.length > 0) {
+    const stale = await readStaleCache();
+    if (stale) {
       logger.warn(
         { err: (err as Error).message, staleCount: stale.length },
         "OpenMeteo unreachable — serving stale cache",
       );
-      return stale.map((r) => r.forecast as unknown as OpenMeteoForecast);
+      return stale;
     }
     throw err;
   } finally {
-    if (leased) {
-      await releaseLease(FETCH_LEASE_NAME).catch((err) =>
-        logger.warn({ err: (err as Error).message }, "Failed to release weather fetch lease"),
-      );
-    }
+    await releaseLease(lease);
   }
 }
 

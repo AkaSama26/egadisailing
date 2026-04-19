@@ -1,6 +1,25 @@
+import { randomUUID } from "node:crypto";
 import { getRedisConnection } from "@/lib/queue";
+import { logger } from "@/lib/logger";
 
 const LEASE_KEY_PREFIX = "lease:";
+const ACQUIRE_TIMEOUT_MS = 2_000;
+
+// Lua script server-side (Redis scripting, non JavaScript eval) che rilascia
+// il lease SOLO se il token matcha l'owner. Previene il caso "leader slow
+// oltre TTL cancella il lease del successore". Pattern Redlock-lite.
+const RELEASE_SCRIPT = [
+  'if redis.call("GET", KEYS[1]) == ARGV[1] then',
+  '  return redis.call("DEL", KEYS[1])',
+  "else",
+  "  return 0",
+  "end",
+].join("\n");
+
+export interface LeaseHandle {
+  name: string;
+  token: string;
+}
 
 /**
  * Lease distribuito single-flight su Redis.
@@ -12,21 +31,60 @@ const LEASE_KEY_PREFIX = "lease:";
  * atomic, multi-replica safe e ha TTL auto-release built-in (se il processo
  * crasha, il lease si libera al TTL).
  *
- * @returns true se il lease e' stato acquisito, false altrimenti.
+ * R13-A1: lease con token random (non pid condiviso) + release via Lua
+ * atomico che verifica ownership. Previene il caso "leader oltre TTL
+ * rilascia il lease del successore" che regrediva il fix single-flight.
+ *
+ * R13-I: `Promise.race` con timeout 2s + fail-open su Redis down. Meglio
+ * una cron run senza protezione concurrent che un webhook hung per minuti.
+ *
+ * @returns LeaseHandle se acquisito o fail-open, null se un altro owner valido
+ *   detiene il lease.
  */
-export async function tryAcquireLease(name: string, ttlSeconds: number): Promise<boolean> {
+export async function tryAcquireLease(
+  name: string,
+  ttlSeconds: number,
+): Promise<LeaseHandle | null> {
   const redis = getRedisConnection();
-  const result = await redis.set(
-    `${LEASE_KEY_PREFIX}${name}`,
-    String(process.pid),
-    "EX",
-    ttlSeconds,
-    "NX",
-  );
-  return result === "OK";
+  const token = randomUUID();
+  try {
+    const result = await Promise.race([
+      redis.set(`${LEASE_KEY_PREFIX}${name}`, token, "EX", ttlSeconds, "NX"),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), ACQUIRE_TIMEOUT_MS)),
+    ]);
+    if (result === null) {
+      logger.warn({ name }, "Redis lease acquire timeout (fail-open, proceeding without lock)");
+      return { name, token };
+    }
+    if (result === "OK") {
+      return { name, token };
+    }
+    return null;
+  } catch (err) {
+    logger.warn(
+      { name, err: (err as Error).message },
+      "Redis lease acquire failed (fail-open, proceeding without lock)",
+    );
+    return { name, token };
+  }
 }
 
-export async function releaseLease(name: string): Promise<void> {
+/**
+ * Rilascia il lease solo se il token corrisponde (il leader originale e'
+ * ancora il proprietario). Su Redis down: no-op silenzioso, il TTL originale
+ * libera comunque il lease.
+ */
+export async function releaseLease(handle: LeaseHandle): Promise<void> {
   const redis = getRedisConnection();
-  await redis.del(`${LEASE_KEY_PREFIX}${name}`);
+  try {
+    await Promise.race([
+      redis.eval(RELEASE_SCRIPT, 1, `${LEASE_KEY_PREFIX}${handle.name}`, handle.token),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), ACQUIRE_TIMEOUT_MS)),
+    ]);
+  } catch (err) {
+    logger.warn(
+      { name: handle.name, err: (err as Error).message },
+      "Redis lease release failed (TTL will recover)",
+    );
+  }
 }

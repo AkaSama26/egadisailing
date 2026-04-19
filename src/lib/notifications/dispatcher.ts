@@ -19,50 +19,72 @@ interface RenderedTemplate {
   telegram?: string;
 }
 
+export interface DispatchResult {
+  emailOk: boolean;
+  telegramOk: boolean;
+  /** true se almeno un canale richiesto ha avuto successo. */
+  anyOk: boolean;
+  /** true se il template non esiste (no-op) — il caller puo' ignorare. */
+  skipped: boolean;
+}
+
 /**
  * Dispatcher centrale notifiche admin. Route il `NotificationEvent` al
  * template giusto + invia sui canali richiesti (EMAIL/TELEGRAM).
  *
  * Failure policy: ogni canale e' try/catch indipendente → un canale failed
- * non blocca l'altro. Email e' best-effort (Brevo down fallisce tutto il
- * task ma il caller logga).
+ * non blocca l'altro. Ritorna `DispatchResult` per permettere ai caller
+ * (es. weather cron alert dedup) di distinguere "dispatched" da "failed"
+ * invece di affidarsi al void (R13-C1).
  */
-export async function dispatchNotification(event: NotificationEvent): Promise<void> {
+export async function dispatchNotification(event: NotificationEvent): Promise<DispatchResult> {
   const rendered = renderTemplate(event);
   if (!rendered) {
     logger.warn({ type: event.type }, "No template for notification type, skipping");
-    return;
+    return { emailOk: false, telegramOk: false, anyOk: false, skipped: true };
   }
 
-  const ops: Promise<unknown>[] = [];
+  const wantEmail = event.channels.includes("EMAIL");
+  const wantTelegram = event.channels.includes("TELEGRAM") && !!rendered.telegram;
 
-  if (event.channels.includes("EMAIL")) {
-    ops.push(
-      sendEmail({
+  const emailP = wantEmail
+    ? sendEmail({
         to: env.ADMIN_EMAIL,
         subject: rendered.subject,
         htmlContent: rendered.html,
-      }).catch((err) =>
-        logger.error(
-          { err: (err as Error).message, type: event.type },
-          "Email notification failed",
-        ),
-      ),
-    );
-  }
+      }).then(
+        () => true,
+        (err: unknown) => {
+          logger.error(
+            { err: (err as Error).message, type: event.type },
+            "Email notification failed",
+          );
+          return false;
+        },
+      )
+    : Promise.resolve(false);
 
-  if (event.channels.includes("TELEGRAM") && rendered.telegram) {
-    ops.push(
-      sendTelegramMessage(rendered.telegram).catch((err) =>
-        logger.error(
-          { err: (err as Error).message, type: event.type },
-          "Telegram notification failed",
-        ),
-      ),
-    );
-  }
+  const telegramP = wantTelegram
+    ? sendTelegramMessage(rendered.telegram!).then(
+        () => true,
+        (err: unknown) => {
+          logger.error(
+            { err: (err as Error).message, type: event.type },
+            "Telegram notification failed",
+          );
+          return false;
+        },
+      )
+    : Promise.resolve(false);
 
-  await Promise.all(ops);
+  const [emailOk, telegramOk] = await Promise.all([emailP, telegramP]);
+  const anyRequested = wantEmail || wantTelegram;
+  return {
+    emailOk,
+    telegramOk,
+    anyOk: anyRequested ? emailOk || telegramOk : true,
+    skipped: false,
+  };
 }
 
 function renderTemplate(event: NotificationEvent): RenderedTemplate | null {

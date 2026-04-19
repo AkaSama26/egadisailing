@@ -69,8 +69,12 @@ export function assessRisk(
     reasons.push(`vento ${Math.round(wind)}km/h moderato`);
   }
 
-  const wave = forecast.waveHeightM ?? 0;
-  if (forecast.waveHeightM !== null && !Number.isFinite(wave)) {
+  // R13-C3+A3: `== null` copre sia null (marine API down) che undefined
+  // (JSON cached pre-marine feature). In entrambi i casi flagghiamo
+  // missingAxes — silent LOW su giornata con 3m di onde reali sarebbe
+  // l'incidente peggiore possibile.
+  const wave = forecast.waveHeightM;
+  if (wave == null || !Number.isFinite(wave)) {
     missingAxes.push("onde");
   } else if (wave >= thresholds.waveMHigh) {
     level = escalate(level, "HIGH");

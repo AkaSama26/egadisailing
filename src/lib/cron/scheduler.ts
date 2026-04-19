@@ -97,5 +97,22 @@ export function startCronScheduler(): void {
     { timezone: "Europe/Rome" },
   );
 
+  // PENDING booking GC: ogni 15 min (sfasato di 3 min da Bokun/parser).
+  // Cancella booking PENDING > 30min + PaymentIntent Stripe + release
+  // availability per non zombificare slot dopo abbandono checkout.
+  cron.schedule("3-59/15 * * * *", async () => {
+    try {
+      const url = `${env.APP_URL}/api/cron/pending-gc`;
+      const res = await fetch(url, {
+        headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+      });
+      if (!res.ok) {
+        logger.warn({ status: res.status }, "pending-gc cron non-2xx");
+      }
+    } catch (err) {
+      logger.error({ err }, "pending-gc cron fetch failed");
+    }
+  });
+
   logger.info("Cron scheduler started");
 }

@@ -6,7 +6,6 @@ import { addDays, toUtcDay } from "@/lib/dates";
 import { getWeatherForDate } from "@/lib/weather/service";
 import { dispatchNotification } from "@/lib/notifications/dispatcher";
 import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
-import { getClientIp } from "@/lib/http/client-ip";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
@@ -32,16 +31,20 @@ const ALERT_RESEND_THROTTLE_MS = 24 * 60 * 60 * 1000; // 24h tra re-alert per st
  * Multi-replica safety: Redis lease single-flight (R12-C1 audit abuse).
  */
 export const GET = withErrorHandler(async (req: Request) => {
+  // R13-C2: Bearer PRIMA del rate-limit (difesa-in-profondita' contro
+  // X-Forwarded-For spoofing). Il rate-limit globale qui sotto protegge
+  // Open-Meteo anche se il CRON_SECRET leakasse: e' un cap hard al numero
+  // totale di fetch/min, non per-IP (che era aggirabile spooffando header).
+  requireBearerSecret(req, env.CRON_SECRET);
   await enforceRateLimit({
-    identifier: getClientIp(req.headers),
+    identifier: "global",
     scope: RATE_LIMIT_SCOPES.WEATHER_CRON_IP,
     limit: 10,
     windowSeconds: 60,
   });
-  requireBearerSecret(req, env.CRON_SECRET);
 
-  const leased = await tryAcquireLease(LEASE_NAME, LEASE_TTL_SECONDS);
-  if (!leased) {
+  const lease = await tryAcquireLease(LEASE_NAME, LEASE_TTL_SECONDS);
+  if (!lease) {
     logger.warn("Weather check skipped: another run in progress");
     return NextResponse.json({ skipped: "concurrent_run" });
   }
@@ -83,7 +86,7 @@ export const GET = withErrorHandler(async (req: Request) => {
           continue;
         }
 
-        await dispatchNotification({
+        const dispatchResult = await dispatchNotification({
           type: "WEATHER_ALERT",
           channels: ["EMAIL", "TELEGRAM"],
           payload: {
@@ -96,14 +99,26 @@ export const GET = withErrorHandler(async (req: Request) => {
           },
         });
 
-        await db.booking.update({
-          where: { id: b.id },
-          data: {
-            weatherLastAlertedRisk: w.risk,
-            weatherLastAlertedAt: now,
-          },
-        });
-        alertCount++;
+        // R13-C1: marker dedup SOLO se almeno un canale ha consegnato.
+        // Se tutti i canali falliscono (Brevo 5xx + Telegram down), domani
+        // il cron dovra' re-alertare invece di bloccarsi 24h credendo
+        // di aver notificato.
+        if (dispatchResult.anyOk) {
+          await db.booking.update({
+            where: { id: b.id },
+            data: {
+              weatherLastAlertedRisk: w.risk,
+              weatherLastAlertedAt: now,
+            },
+          });
+          alertCount++;
+        } else {
+          errors.push({ bookingId: b.id, error: "all notification channels failed" });
+          logger.warn(
+            { bookingId: b.id, risk: w.risk },
+            "Weather alert dispatch failed on all channels, marker not updated",
+          );
+        }
       } catch (err) {
         errors.push({ bookingId: b.id, error: (err as Error).message });
         logger.error({ err, bookingId: b.id }, "Weather check for booking failed");
@@ -121,8 +136,6 @@ export const GET = withErrorHandler(async (req: Request) => {
       errors,
     });
   } finally {
-    await releaseLease(LEASE_NAME).catch((err) =>
-      logger.warn({ err }, "Failed to release weather-check lease (TTL will recover)"),
-    );
+    await releaseLease(lease);
   }
 });
