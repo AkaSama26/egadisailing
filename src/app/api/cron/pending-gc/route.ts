@@ -15,6 +15,10 @@ export const runtime = "nodejs";
 const LEASE_NAME = "cron:pending-gc";
 const LEASE_TTL_SECONDS = 5 * 60;
 const PENDING_MAX_AGE_MS = 30 * 60 * 1000; // 30min — oltre questa soglia il booking e' abbandonato
+// R15-REG-6: soft-timeout per non superare il lease TTL. Ogni iteration:
+// cancelPaymentIntent (1-3s Stripe API) + releaseDates (7 days × fan-out).
+// 4min cap lascia 1min di margine per rilasciare il lease pulito.
+const RUN_BUDGET_MS = 4 * 60 * 1000;
 
 /**
  * Cron ogni 15 min: trova booking PENDING > 30min → cancel PaymentIntent
@@ -43,6 +47,7 @@ export const GET = withErrorHandler(async (req: Request) => {
     return NextResponse.json({ skipped: "concurrent_run" });
   }
 
+  const startedAt = Date.now();
   try {
     const cutoff = new Date(Date.now() - PENDING_MAX_AGE_MS);
     const BATCH_SIZE = 200;
@@ -56,7 +61,17 @@ export const GET = withErrorHandler(async (req: Request) => {
     // R14-REG-A4: cursor pagination. Redis outage prolungata puo' accumulare
     // 1000+ PENDING oltre cutoff; senza loop il GC clearava solo 200/run
     // lasciando zombie slot LOCKED.
+    // R15-REG-6: soft-timeout. Con 200 iter × 2-5s ciascuna potremmo superare
+    // il lease TTL (5min) → un altro pod parte e double-cancella. Break al
+    // budget anche se batch pieni restano.
     for (let batchIdx = 0; batchIdx < MAX_BATCHES; batchIdx++) {
+      if (Date.now() - startedAt > RUN_BUDGET_MS) {
+        logger.warn(
+          { totalScanned, elapsedMs: Date.now() - startedAt },
+          "Pending GC stopped at RUN_BUDGET_MS to avoid lease expiry",
+        );
+        break;
+      }
       const batch = await db.booking.findMany({
         where: {
           status: "PENDING",

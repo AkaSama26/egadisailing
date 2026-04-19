@@ -71,7 +71,7 @@ export default async function PrezziPage() {
               label: String(fd.get("label")),
               startDate: String(fd.get("startDate")),
               endDate: String(fd.get("endDate")),
-              pricePerPerson: parseFloat(String(fd.get("pricePerPerson"))),
+              pricePerPerson: parseFloat(String(fd.get("pricePerPerson")).replace(",", ".")),
               year: parseInt(String(fd.get("year")), 10),
             });
           }}
@@ -184,7 +184,7 @@ export default async function PrezziPage() {
               dateRangeStart: String(fd.get("dateRangeStart")),
               dateRangeEnd: String(fd.get("dateRangeEnd")),
               weekdays,
-              multiplier: parseFloat(String(fd.get("multiplier"))),
+              multiplier: parseFloat(String(fd.get("multiplier")).replace(",", ".")),
               roundTo: parseInt(String(fd.get("roundTo")), 10),
               priority: parseInt(String(fd.get("priority")), 10),
               active: fd.get("active") === "on",

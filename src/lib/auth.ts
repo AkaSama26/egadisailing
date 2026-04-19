@@ -1,7 +1,15 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import { db } from "./db";
+
+// R15-SEC-A3: dummy hash precomputato per timing-equalize il path
+// "user non esiste". Senza, `findUnique` + early return ~5ms vs
+// findUnique + bcrypt compare ~150ms → attaccante enumera quali
+// email sono admin misurando wall-clock della response login.
+// Usiamo cost=10 come il nostro seed; il valore del password qui
+// e' irrilevante — serve solo perche' bcrypt impieghi tempo simile.
+const DUMMY_HASH_PROMISE = hash("dummy-timing-equalizer-password", 10);
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -20,14 +28,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email as string },
         });
 
-        if (!user) return null;
+        // R15-SEC-A3: eseguiamo SEMPRE bcrypt compare, anche quando user
+        // non esiste, per evitare user enumeration timing attack.
+        const hashToCheck = user?.passwordHash ?? (await DUMMY_HASH_PROMISE);
+        const isValid = await compare(credentials.password as string, hashToCheck);
 
-        const isValid = await compare(
-          credentials.password as string,
-          user.passwordHash
-        );
-
-        if (!isValid) return null;
+        if (!user || !isValid) return null;
 
         return {
           id: user.id,

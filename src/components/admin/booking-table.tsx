@@ -23,16 +23,17 @@ export function BookingTable({ rows }: { rows: BookingRow[] }) {
   return (
     <div className="bg-white rounded-xl border overflow-x-auto">
       <table className="w-full text-sm">
+        <caption className="sr-only">Elenco prenotazioni</caption>
         <thead className="bg-slate-50 text-slate-600">
           <tr>
-            <th className="text-left p-3">Codice</th>
-            <th className="text-left p-3">Data</th>
-            <th className="text-left p-3">Servizio</th>
-            <th className="text-left p-3">Cliente</th>
-            <th className="text-left p-3">Source</th>
-            <th className="text-right p-3">Totale</th>
-            <th className="text-right p-3">Pagato</th>
-            <th className="text-left p-3">Status</th>
+            <th scope="col" className="text-left p-3">Codice</th>
+            <th scope="col" className="text-left p-3">Data</th>
+            <th scope="col" className="text-left p-3">Servizio</th>
+            <th scope="col" className="text-left p-3">Cliente</th>
+            <th scope="col" className="text-left p-3">Source</th>
+            <th scope="col" className="text-right p-3">Totale</th>
+            <th scope="col" className="text-right p-3">Pagato</th>
+            <th scope="col" className="text-left p-3">Status</th>
           </tr>
         </thead>
         <tbody>

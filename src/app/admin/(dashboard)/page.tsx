@@ -80,7 +80,11 @@ export default async function DashboardHome() {
       {pendingAlerts.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-red-800">🚨 Alert manuali ({pendingAlerts.length})</h2>
+            <h2 className="font-bold text-red-800 flex items-center gap-2">
+              <AlertTriangle className="size-5" aria-hidden="true" />
+              <span className="sr-only">Attenzione:</span>
+              Alert manuali ({pendingAlerts.length})
+            </h2>
             <Link href="/admin/sync-log" className="text-red-700 hover:underline text-sm font-medium">
               Vai al registro
             </Link>

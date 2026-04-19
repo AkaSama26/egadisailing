@@ -167,6 +167,31 @@ find /backups -name "egadisailing-*.sql.gz" -mtime +30 -delete
 - [ ] Security headers attivi (Caddyfile)
 - [ ] `.env` non finisce in Docker image (check `.dockerignore`)
 
+## Migration timing e write-lock
+
+**Deploy durante low-traffic window** (mattina IT, evita 07:00-09:00 per i cron,
+evita sera venerdi/sabato alta stagione). `prisma migrate deploy` esegue ogni
+`CREATE INDEX` in transazione senza `CONCURRENTLY` → SHARE lock sulla tabella
+blocca tutti gli INSERT/UPDATE per la durata del build. Per `Booking` con
+10k+ righe un compound index puo' richiedere 10-30s, durante i quali:
+
+- `createPendingDirectBooking` aspetta → HTTP timeout 30s lato client → conversion loss
+- Stripe webhook retry (ok con exponential backoff)
+- Bokun/Boataround webhook retry
+
+**Se la migration aggiunge index su tabella >5k righe**, split manuale:
+
+1. Applica solo le migration schema (no new index) via `prisma migrate deploy`
+2. Esegui `CREATE INDEX CONCURRENTLY` manualmente via psql separato (non bloccante)
+3. Registra la migration "come applicata" con `prisma migrate resolve --applied <name>`
+
+Esempio:
+```bash
+psql "$DATABASE_URL" -c 'CREATE INDEX CONCURRENTLY IF NOT EXISTS "Booking_boatId_status_startDate_idx" ON "Booking"("boatId","status","startDate");'
+```
+
+Documenta ogni migration "heavy" nel corpo del commit.
+
 ## Rollback
 
 Se il deploy rompe la prod:

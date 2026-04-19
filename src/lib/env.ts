@@ -125,6 +125,18 @@ function loadEnv() {
     ) {
       throw new Error("CRON_SECRET must be changed and >= 32 chars in production");
     }
+    // R15-SEC-A1: SERVER_ACTIONS_ALLOWED_ORIGINS obbligatorio in prod +
+    // mai puntare a localhost/127.0.0.1 (dev leak misconfig). Senza, Next
+    // accetta l'origine del Host header → CSRF-like se proxy mal configurato.
+    const allowedOrigins = parsed.data.SERVER_ACTIONS_ALLOWED_ORIGINS;
+    if (!allowedOrigins || allowedOrigins.trim().length === 0) {
+      throw new Error("SERVER_ACTIONS_ALLOWED_ORIGINS required in production");
+    }
+    if (/localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(allowedOrigins)) {
+      throw new Error(
+        "SERVER_ACTIONS_ALLOWED_ORIGINS must not contain localhost/127.0.0.1 in production",
+      );
+    }
   }
 
   return parsed.data;

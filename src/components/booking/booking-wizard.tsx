@@ -161,6 +161,14 @@ export function BookingWizard(props: Props) {
           confirmationCode={intent.confirmationCode}
           amountCents={intent.amountCents}
           onSuccess={() => setStep("success")}
+          onRetryNeeded={() => {
+            // R15-UX-1: errore Stripe terminale (card_declined ecc). Il
+            // clientSecret non e' piu' utilizzabile; torniamo allo step
+            // customer per ricreare PI con nuovo metodo di pagamento.
+            setIntent(null);
+            setTurnstileToken(null);
+            setStep("customer");
+          }}
         />
       )}
 

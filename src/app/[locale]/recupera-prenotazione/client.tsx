@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import {
   requestOtp,
@@ -11,6 +11,7 @@ import {
 
 const initialRequest: RequestOtpState = { status: "idle" };
 const initialVerify: VerifyOtpState = { status: "idle" };
+const RESEND_COOLDOWN_S = 60;
 
 export interface RecuperaPrenotazioneClientProps {
   turnstileSiteKey: string;
@@ -20,11 +21,38 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
   const [reqState, requestAction, reqPending] = useActionState(requestOtp, initialRequest);
   const [verState, verifyAction, verPending] = useActionState(verifyOtpAndLogin, initialVerify);
   const [email, setEmail] = useState("");
+  // R15-UX-12: cooldown 60s dopo invio OTP per evitare spam click → 429
+  // grezzo. Il timer parte al cambio di `reqState` a "sent".
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (reqState.status === "sent") {
+      setCooldown(RESEND_COOLDOWN_S);
+    }
+  }, [reqState.status, reqState.email]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => setCooldown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
+
+  // R15-UX-13: una volta che il codice e' stato inviato, l'email viene
+  // lock-ata nel form di verifica. Cambiare email senza ri-richiedere OTP
+  // farebbe lookup con email != quella che ha ricevuto il codice → "codice
+  // non valido" confusionario. Link "Cambia email" resetta il flow.
+  const otpSent = reqState.status === "sent";
+  const verifyEmail = otpSent ? reqState.email! : email;
+  const canResend = !reqPending && cooldown === 0;
 
   return (
     <div>
       <form action={requestAction} className="space-y-3 mb-6">
+        <label className="block text-sm font-medium" htmlFor="req-email">
+          Email della prenotazione
+        </label>
         <input
+          id="req-email"
           name="email"
           type="email"
           placeholder="tu@email.com"
@@ -36,10 +64,16 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
         />
         {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} />}
         <button
-          disabled={reqPending}
+          disabled={!canResend}
           className="w-full py-3 rounded-full bg-[#d97706] text-white font-bold disabled:opacity-50"
         >
-          {reqPending ? "Invio..." : "Invia codice"}
+          {reqPending
+            ? "Invio..."
+            : cooldown > 0
+              ? `Reinvia tra ${cooldown}s`
+              : otpSent
+                ? "Reinvia codice"
+                : "Invia codice"}
         </button>
         {reqState.status === "sent" && (
           <div
@@ -65,15 +99,25 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
 
       <h2 className="text-lg font-semibold mb-3">Inserisci il codice</h2>
       <form action={verifyAction} className="space-y-3">
+        <label className="block text-sm font-medium" htmlFor="ver-email">
+          Email
+        </label>
         <input
+          id="ver-email"
           name="email"
           type="email"
           placeholder="tu@email.com"
           required
-          defaultValue={reqState.email ?? email}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+          value={verifyEmail}
+          readOnly={otpSent}
+          onChange={(e) => !otpSent && setEmail(e.target.value)}
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 read-only:bg-gray-50 read-only:text-gray-600"
         />
+        <label className="block text-sm font-medium" htmlFor="ver-code">
+          Codice a 6 cifre
+        </label>
         <input
+          id="ver-code"
           name="code"
           inputMode="numeric"
           pattern="\d{6}"

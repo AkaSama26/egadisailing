@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Egadisailing Platform V2 — Agent handbook
 
-**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 14 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
+**Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 15 round di audit applicati. Plan 6 E2E Playwright + Sentry deferred a sessione dedicata.
 
 **Test suite**: 106 unit test pure (`npm test`) su pricing/dates/html-escape/metadata/advisory-lock/email-normalize/booking helpers/bokun signer+verifier+adapter/boataround verifier/email-parser extractor/iCal formatter/weather risk-assessment (incluso NaN/null guard + partial data).
 
@@ -749,6 +749,55 @@ Tre audit paralleli. Sintesi: **1 CRITICA vera** (R13-C1 era placebo — dispatc
 - **R14-REG-B2 anonymize idempotency heuristic email prefix/suffix**: sostituire con `Customer.anonymizedAt DateTime?` column.
 
 ### Test: 106 passing (invariato — fix non tocca test). Typecheck clean, build OK.
+
+## Round 15 audit — regression R14 + frontend UX + security #2 (fix applicati)
+
+Tre audit paralleli. Focus su quick wins ≤2h ciascuno (niente cross-OTA refactor).
+
+### Critiche fixate
+- **Login bcrypt timing attack** (R15-SEC-A3): `if (!user) return null` prima del bcrypt compare → 5ms vs 150ms + user enumeration admin via wall-clock. Fix: dummy hash pre-computato + sempre esegue compare (`src/lib/auth.ts`).
+- **X-Frame admin clickjackable + cached da proxy** (R15-SEC-A1): `X-Frame-Options: SAMEORIGIN` permetteva public→admin frame. Fix: override per `/admin/:path*` con `DENY` + `CSP: frame-ancestors 'none'` + `Cache-Control: private, no-store, must-revalidate`.
+- **OG default image file INESISTENTE**: `layout.tsx` + `metadata.ts` linkavano `/og-default.jpg` che non esisteva nel filesystem → tutte le condivisioni social (WhatsApp, FB, LinkedIn) mostravano 404. Fix: generato 1200×630 da `hero-poster.webp` via ffmpeg crop+scale.
+- **Stripe clientSecret terminal state retry impossibile** (R15-UX-1): card_declined/expired_card → stesso clientSecret ri-confirmato → Stripe rifiuta → cliente abbandona. Fix: `TERMINAL_STRIPE_ERROR_CODES` set + bottone "Usa un altro metodo" che chiama `onRetryNeeded` → wizard setta `setIntent(null)` + `setTurnstileToken(null)` + torna allo step customer per ricreare PI.
+- **OTP no cooldown + email desync post-invio** (R15-UX-12+13): utente spam "Invia codice" → 429 grezzo; cambiare email nel form verify dopo invio OTP → lookup con email diversa → "codice non valido" confusionario. Fix: `useEffect` timer 60s con label `"Reinvia tra Xs"`. Email del verify form `readOnly` quando `reqState.status === "sent"`, bound a `reqState.email`.
+
+### Alte fixate
+- **env.ts refine `SERVER_ACTIONS_ALLOWED_ORIGINS` prod** (R15-SEC-A1): required + reject se contiene `localhost`/`127.0.0.1`/`0.0.0.0`. Previene misconfig CSRF-like in staging/prod.
+- **Pending-GC lease TTL vs batch budget** (R15-REG-6): 200 × MAX_BATCHES=20 worst case puo' superare 5min lease TTL → un altro pod parte e double-cancella. Fix: `RUN_BUDGET_MS=4min` soft-timeout + break warn log.
+- **CREATE INDEX sync write-lock Booking** (R15-REG-10): migration compound indexes non-CONCURRENTLY blocca SHARE lock scritture 10-30s durante deploy = checkout timeout + conversion loss. Documentato in `docs/runbook/deployment.md` nuova sezione "Migration timing e write-lock" con playbook `CREATE INDEX CONCURRENTLY` via psql esterno + `prisma migrate resolve --applied`.
+- **parseFloat "10,50" silent precision loss** (R15-UX-22): browser IT accetta virgola → `parseFloat("10,50") = 10` centesimi silently dropped nelle Server Action admin. Fix: `.replace(",", ".")` pre-parse in `registerManualPayment`, `upsertPricingPeriod`, `upsertHotDayRule`.
+- **Emoji 🚨 screen reader** (R15-UX-20): SR pronunciava "emoji sirena". Fix: `<AlertTriangle aria-hidden="true"/>` + `<span className="sr-only">Attenzione:</span>`.
+- **Table WCAG 1.3.1** (R15-UX-21): `<th>` senza `scope="col"` + niente `<caption>`. Fix: BookingTable aggiunto `scope="col"` + `<caption className="sr-only">`.
+
+### Deferred (Plan 7+ richiedono sessione dedicata)
+**CRITICA blocker**:
+- **Cross-OTA double-booking** (R14 Round design doc, ancora aperto, 6-8h): helper detectCrossChannelConflicts + recordDoubleBookingIncident + patch import adapters + template DOUBLE_BOOKING_DETECTED + admin UI banner + backfill SQL + integration test.
+- **Hardcode italiano massiccio** (R11 i18n-C1, R15-UX-28): about/contacts/boats/experiences/islands/landing-sections + booking-wizard + recupera-prenotazione + stripe-payment-form + b/sessione status labels tutti IT hardcoded. `/en` utenti vedono mix IT+EN → conversion 0. ~1.5 gg refactor.
+
+**ALTA deferred**:
+- **CSP Report-Only + allowlist Stripe/Turnstile/Open-Meteo** (R15-SEC-A1): 2h setup in `next.config.ts` con reportUri per 1 settimana di telemetry prima di enforce. XSS defense-in-depth standard.
+- **Webhook secret rotation zero-downtime** (R15-SEC-A4): `BOKUN_WEBHOOK_SECRET_NEXT`/`BOATAROUND_WEBHOOK_SECRET_NEXT` env + verifier try primary → fallback secondary. Incident response abilitato senza perdita webhook.
+- **iCal feed per-boat token** (R8+R15-SEC-A2, 4h): migration `Boat.icalFeedToken` nullable + route `/api/ical/[boatId]/[token]` + admin UI CRUD per rotation. Chiude leak competitor intelligence.
+- **Wizard state persistence sessionStorage + form wrap** (R15-UX-2+5): `<form onSubmit>` ogni step + sessionStorage save/restore (escluso clientSecret e consent). Salva ~5% conversion mobile tab kill.
+- **Admin toast feedback post-action** (R15-UX-18, R10 UX-C4): convert Server Action a pattern `useActionState` + return `{ok,message}` + `useEffect` `toast.success/error`. Elimina double-entry pagamenti.
+- **Wizard progress indicator** (R15-UX-3, R2 deferred): Stepper con `aria-current="step"`. +5-10% checkout completion.
+- **Labels visibili wizard** (R15-UX-6, WCAG 3.3.2): European Accessibility Act 2025 per turismo. Fix placeholder→label.
+- **Step PeopleStep minPaying validation** (R15-UX-7): SOCIAL_BOATING min 11 pax non validato client → POST 400 "minPaying required" confusionario.
+- **Date max + availability check client** (R15-UX-4): endpoint GET availability + disabled-dates calendar.
+- **JSON-LD `Product` schema per service + Organization** (R15-UX-34): Google rich snippets price/rating.
+- **Hero video `preload="metadata"` + intersection observer** (R15-UX-35): Core Web Vitals mobile 3G.
+
+**MEDIA deferred**:
+- **DATABASE_URL password log-safe** (R15-SEC-A4): env.ts parse + redact helper.
+- **Weather stale null → dispatch SYNC_FAILURE** (R15-REG-8): 50h Open-Meteo outage → silent throw. Admin alert mancante.
+- **Retention cron post-acquire block structure** (R15-REG-1): cosmetic refactor per consistency altri cron.
+- **Admin time formatting `"it-IT"` hardcoded** (R15-UX-26): helper `formatDateIt(d)` centralizzato.
+- **Admin filtri prenotazioni range date + search customer** (R15-UX-23): oggi solo source+status, admin deve drillare Clienti.
+- **Logout redirect locale-aware** (R15-UX-14): oggi `redirect('/it/recupera')` anche per `/en` users.
+- **DB dynamic content per-locale** (R15-UX-30, R11 i18n-C2): `Boat.name`/`Service.name` single string. JSON o BoatTranslation table.
+- **Success page poll per "processing" status** (R15-UX-11): SEPA/bonifico users hanno "Pagamento in elaborazione" stale senza refresh.
+
+### Test: 106 passing (invariato). Typecheck clean. Build OK.
 
 ## Plan roadmap
 

@@ -24,6 +24,10 @@ interface Props {
   confirmationCode: string;
   amountCents: number;
   onSuccess: () => void;
+  /** Chiamato quando il PaymentIntent e' in stato terminale non-retryable
+   *  (`card_declined`, `expired_card`). Il wizard deve ricreare un nuovo
+   *  PaymentIntent per permettere un secondo tentativo. R15-UX-1. */
+  onRetryNeeded?: () => void;
 }
 
 export function StripePaymentForm(props: Props) {
@@ -49,10 +53,24 @@ export function StripePaymentForm(props: Props) {
   );
 }
 
-function InnerForm({ locale, amountCents, confirmationCode, onSuccess }: Props) {
+// R15-UX-1: Stripe error types che rendono il PaymentIntent inutilizzabile
+// per retry. Dopo questi, bisogna ricreare un nuovo PaymentIntent — lo
+// stesso clientSecret NON puo' essere ri-confirmato.
+const TERMINAL_STRIPE_ERROR_CODES = new Set([
+  "payment_intent_authentication_failure",
+  "payment_intent_payment_attempt_failed",
+  "card_declined",
+  "expired_card",
+  "incorrect_cvc",
+  "processing_error",
+  "incorrect_number",
+]);
+
+function InnerForm({ locale, amountCents, confirmationCode, onSuccess, onRetryNeeded }: Props) {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
+  const [terminalError, setTerminalError] = useState(false);
   const [processing, setProcessing] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -71,6 +89,12 @@ function InnerForm({ locale, amountCents, confirmationCode, onSuccess }: Props) 
 
     if (stripeError) {
       setError(stripeError.message ?? "Errore pagamento");
+      // R15-UX-1: se l'errore e' terminale, il clientSecret non e' piu' usabile.
+      // Esponiamo "Usa un altro metodo" che resetta il wizard per ricreare PI.
+      const code = stripeError.code ?? "";
+      if (TERMINAL_STRIPE_ERROR_CODES.has(code)) {
+        setTerminalError(true);
+      }
       setProcessing(false);
     } else {
       onSuccess();
@@ -85,15 +109,27 @@ function InnerForm({ locale, amountCents, confirmationCode, onSuccess }: Props) 
       </p>
       <PaymentElement />
       {error && (
-        <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>
+        <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm" role="alert">
+          {error}
+        </div>
       )}
-      <button
-        type="submit"
-        disabled={!stripe || processing}
-        className="w-full py-3 rounded-full bg-[#d97706] text-white font-bold disabled:opacity-50"
-      >
-        {processing ? "In elaborazione..." : `Paga €${(amountCents / 100).toFixed(2)}`}
-      </button>
+      {terminalError && onRetryNeeded ? (
+        <button
+          type="button"
+          onClick={onRetryNeeded}
+          className="w-full py-3 rounded-full bg-gray-900 text-white font-bold"
+        >
+          Usa un altro metodo di pagamento
+        </button>
+      ) : (
+        <button
+          type="submit"
+          disabled={!stripe || processing}
+          className="w-full py-3 rounded-full bg-[#d97706] text-white font-bold disabled:opacity-50"
+        >
+          {processing ? "In elaborazione..." : `Paga €${(amountCents / 100).toFixed(2)}`}
+        </button>
+      )}
     </form>
   );
 }

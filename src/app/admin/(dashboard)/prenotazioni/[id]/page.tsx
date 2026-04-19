@@ -151,9 +151,13 @@ export default async function BookingDetailPage({
         <form
           action={async (fd) => {
             "use server";
+            // R15-UX-22: browser IT accetta virgola come separatore decimale,
+            // ma parseFloat("10,50")=10 (centesimi silently persi). Normalizza
+            // prima di parse.
+            const rawAmount = String(fd.get("amount") ?? "").replace(",", ".");
             await registerManualPayment({
               bookingId: booking.id,
-              amountEur: parseFloat(String(fd.get("amount") ?? "")),
+              amountEur: parseFloat(rawAmount),
               method: fd.get("method") as "CASH" | "BANK_TRANSFER",
               type: fd.get("type") as "DEPOSIT" | "BALANCE" | "FULL",
               note: fd.get("note") ? String(fd.get("note")) : undefined,

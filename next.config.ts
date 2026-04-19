@@ -43,6 +43,17 @@ const nextConfig: NextConfig = {
             : []),
         ],
       },
+      // R15-SEC-A1: admin NON deve mai essere framable (clickjacking admin
+      // compromesso via XSS su public page) + NON deve essere cached da
+      // CDN/reverse-proxy/browser (PII cliente + confirmationCode).
+      {
+        source: "/admin/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Cache-Control", value: "private, no-store, must-revalidate" },
+        ],
+      },
     ];
   },
 };
