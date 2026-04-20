@@ -266,6 +266,299 @@ describe("handleStripeEvent — integration", () => {
     expect(payments[0].stripeChargeId).toBe("ch_success");
   });
 
+  it("happy path: PENDING → succeeded → CONFIRMED + Payment + blockDates + confirmation email", async () => {
+    const { booking, boat } = await seedBooking("PENDING");
+    const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
+    const { sendEmail } = await import("@/lib/email/brevo");
+    const { dispatchNotification } = await import("@/lib/notifications/dispatcher");
+
+    const event = makeEvent("payment_intent.succeeded", {
+      id: "pi_happy",
+      amount_received: 40000,
+      latest_charge: "ch_happy",
+      metadata: {
+        bookingId: booking.id,
+        confirmationCode: booking.confirmationCode,
+        paymentType: "FULL",
+      },
+    });
+
+    await handleStripeEvent(event);
+
+    // Booking PENDING → CONFIRMED.
+    const after = await db.booking.findUniqueOrThrow({ where: { id: booking.id } });
+    expect(after.status).toBe("CONFIRMED");
+
+    // Payment SUCCEEDED creato con amount e charge id.
+    const payments = await db.payment.findMany({ where: { bookingId: booking.id } });
+    expect(payments).toHaveLength(1);
+    expect(payments[0].status).toBe("SUCCEEDED");
+    expect(payments[0].type).toBe("FULL");
+    expect(payments[0].stripeChargeId).toBe("ch_happy");
+    expect(payments[0].amount.toString()).toBe("400");
+
+    // BoatAvailability BLOCKED per la data del booking.
+    const cells = await db.boatAvailability.findMany({
+      where: { boatId: boat.id },
+    });
+    expect(cells.length).toBeGreaterThanOrEqual(1);
+    expect(cells[0].status).toBe("BLOCKED");
+    expect(cells[0].lockedByBookingId).toBe(booking.id);
+
+    // Email confermazione inviata al cliente.
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "mario@example.com",
+        subject: expect.stringContaining(booking.confirmationCode),
+      }),
+    );
+
+    // Notification admin dispatched (NEW_BOOKING_DIRECT).
+    expect(dispatchNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "NEW_BOOKING_DIRECT",
+      }),
+    );
+
+    // ProcessedStripeEvent marker inserito post-success.
+    const marker = await db.processedStripeEvent.findUnique({
+      where: { eventId: event.id },
+    });
+    expect(marker).not.toBeNull();
+  });
+
+  it("R23-S-CRITICA-2: charge.refunded partial → sibling REFUND row, original resta SUCCEEDED", async () => {
+    const { booking } = await seedBooking("CONFIRMED");
+    // Seed Payment originale SUCCEEDED (simulated webhook succeeded gia' processato).
+    await db.payment.create({
+      data: {
+        bookingId: booking.id,
+        amount: "400.00",
+        type: "FULL",
+        method: "STRIPE",
+        status: "SUCCEEDED",
+        stripeChargeId: "ch_partial",
+        processedAt: new Date(),
+      },
+    });
+
+    const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
+    const refundEvent = makeEvent("charge.refunded", {
+      id: "ch_partial",
+      amount: 40000,
+      amount_refunded: 15000, // 150€ su 400€ = partial
+      refunds: { data: [{ id: "re_partial_1" }] },
+    });
+
+    await handleStripeEvent(refundEvent);
+
+    // Sibling REFUND Payment creato con amount_refunded + stripeRefundId.
+    const payments = await db.payment.findMany({
+      where: { bookingId: booking.id },
+      orderBy: { createdAt: "asc" },
+    });
+    expect(payments).toHaveLength(2);
+
+    const original = payments.find((p) => p.type === "FULL");
+    const refund = payments.find((p) => p.type === "REFUND");
+    expect(original).toBeDefined();
+    expect(refund).toBeDefined();
+
+    // Partial refund: original resta SUCCEEDED (non REFUNDED).
+    expect(original?.status).toBe("SUCCEEDED");
+
+    // Sibling REFUND con stripeRefundId popolato + status REFUNDED +
+    // stripeChargeId=null (per non violare unique originale).
+    expect(refund?.status).toBe("REFUNDED");
+    expect(refund?.stripeRefundId).toBe("re_partial_1");
+    expect(refund?.stripeChargeId).toBeNull();
+    expect(refund?.amount.toString()).toBe("150");
+
+    // Booking resta CONFIRMED (partial refund = cliente viene).
+    const bookingAfter = await db.booking.findUniqueOrThrow({
+      where: { id: booking.id },
+    });
+    expect(bookingAfter.status).toBe("CONFIRMED");
+  });
+
+  it("R23-S-CRITICA-2: charge.refunded full → original REFUNDED + booking REFUNDED", async () => {
+    const { booking } = await seedBooking("CONFIRMED");
+    await db.payment.create({
+      data: {
+        bookingId: booking.id,
+        amount: "400.00",
+        type: "FULL",
+        method: "STRIPE",
+        status: "SUCCEEDED",
+        stripeChargeId: "ch_full",
+        processedAt: new Date(),
+      },
+    });
+
+    const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
+    const refundEvent = makeEvent("charge.refunded", {
+      id: "ch_full",
+      amount: 40000,
+      amount_refunded: 40000, // full
+      refunds: { data: [{ id: "re_full_1" }] },
+    });
+
+    await handleStripeEvent(refundEvent);
+
+    const payments = await db.payment.findMany({
+      where: { bookingId: booking.id },
+      orderBy: { createdAt: "asc" },
+    });
+    expect(payments).toHaveLength(2);
+
+    const original = payments.find((p) => p.type === "FULL");
+    const refund = payments.find((p) => p.type === "REFUND");
+
+    // Full refund: sia original che booking transitano a REFUNDED.
+    expect(original?.status).toBe("REFUNDED");
+    expect(refund?.status).toBe("REFUNDED");
+
+    const bookingAfter = await db.booking.findUniqueOrThrow({
+      where: { id: booking.id },
+    });
+    expect(bookingAfter.status).toBe("REFUNDED");
+  });
+
+  it("R23-S-CRITICA-2: webhook replay stesso refundId → idempotent skip", async () => {
+    const { booking } = await seedBooking("CONFIRMED");
+    await db.payment.create({
+      data: {
+        bookingId: booking.id,
+        amount: "400.00",
+        type: "FULL",
+        method: "STRIPE",
+        status: "SUCCEEDED",
+        stripeChargeId: "ch_replay",
+        processedAt: new Date(),
+      },
+    });
+
+    const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
+    const refundEvent1 = makeEvent(
+      "charge.refunded",
+      {
+        id: "ch_replay",
+        amount: 40000,
+        amount_refunded: 10000,
+        refunds: { data: [{ id: "re_replay" }] },
+      },
+      "evt_replay_1",
+    );
+    const refundEvent2 = makeEvent(
+      "charge.refunded",
+      {
+        id: "ch_replay",
+        amount: 40000,
+        amount_refunded: 10000,
+        refunds: { data: [{ id: "re_replay" }] },
+      },
+      "evt_replay_2", // event.id diverso ma refund.id uguale
+    );
+
+    await handleStripeEvent(refundEvent1);
+    await handleStripeEvent(refundEvent2);
+
+    // Idempotency via `stripeRefundId` unique — solo 1 sibling REFUND.
+    const refunds = await db.payment.findMany({
+      where: { bookingId: booking.id, type: "REFUND" },
+    });
+    expect(refunds).toHaveLength(1);
+  });
+
+  it("R24-S-ALTA-1: payment_intent.canceled → PENDING → CANCELLED + releaseDates", async () => {
+    const { booking, boat } = await seedBooking("PENDING");
+    // Seed cell BLOCKED come se fosse stato committato.
+    await db.boatAvailability.create({
+      data: {
+        boatId: boat.id,
+        date: new Date("2026-07-15"),
+        status: "BLOCKED",
+        lockedByBookingId: booking.id,
+      },
+    });
+
+    const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
+    const canceledEvent = makeEvent("payment_intent.canceled", {
+      id: "pi_canceled",
+      metadata: {
+        bookingId: booking.id,
+        confirmationCode: booking.confirmationCode,
+        paymentType: "FULL",
+      },
+    });
+
+    await handleStripeEvent(canceledEvent);
+
+    // Booking PENDING → CANCELLED.
+    const after = await db.booking.findUniqueOrThrow({
+      where: { id: booking.id },
+    });
+    expect(after.status).toBe("CANCELLED");
+
+    // BoatAvailability rilasciata (AVAILABLE + lockedByBookingId=null).
+    const cell = await db.boatAvailability.findUniqueOrThrow({
+      where: {
+        boatId_date: { boatId: boat.id, date: new Date("2026-07-15") },
+      },
+    });
+    expect(cell.status).toBe("AVAILABLE");
+    expect(cell.lockedByBookingId).toBeNull();
+  });
+
+  it("R24-S-ALTA-3: payment_intent.payment_failed terminal (card_declined) → cleanup PENDING", async () => {
+    const { booking } = await seedBooking("PENDING");
+    const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
+
+    const failedEvent = makeEvent("payment_intent.payment_failed", {
+      id: "pi_failed_terminal",
+      last_payment_error: { code: "card_declined", message: "Card declined" },
+      metadata: {
+        bookingId: booking.id,
+        confirmationCode: booking.confirmationCode,
+        paymentType: "FULL",
+      },
+    });
+
+    await handleStripeEvent(failedEvent);
+
+    // Booking PENDING → CANCELLED (card_declined = terminal).
+    const after = await db.booking.findUniqueOrThrow({
+      where: { id: booking.id },
+    });
+    expect(after.status).toBe("CANCELLED");
+  });
+
+  it("R24-S-ALTA-3: payment_failed NON-terminal (authentication_required) → booking resta PENDING", async () => {
+    const { booking } = await seedBooking("PENDING");
+    const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
+
+    const failedEvent = makeEvent("payment_intent.payment_failed", {
+      id: "pi_failed_nonterminal",
+      last_payment_error: {
+        code: "authentication_required",
+        message: "Need 3DS",
+      },
+      metadata: {
+        bookingId: booking.id,
+        confirmationCode: booking.confirmationCode,
+        paymentType: "FULL",
+      },
+    });
+
+    await handleStripeEvent(failedEvent);
+
+    // Non-terminal: cliente puo' retry stesso PI → booking resta PENDING.
+    const after = await db.booking.findUniqueOrThrow({
+      where: { id: booking.id },
+    });
+    expect(after.status).toBe("PENDING");
+  });
+
   it("R10-BL-C3 + R11-Reg-C2: succeeded su booking CANCELLED → auto-refund Payment REFUND senza P2002", async () => {
     const { booking } = await seedBooking("CANCELLED");
 
