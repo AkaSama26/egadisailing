@@ -79,46 +79,63 @@ export default async function CalendarioPage({ searchParams }: Props) {
         <p className="text-sm text-slate-500">Nessuna barca configurata.</p>
       )}
 
+      {/* R26-A3-H1: pre-bucket per (boatId, dateIso) in O(N+M) invece
+          di O(boats × days × bookings). Ferragosto 3 boats × 31 days ×
+          100 bookings = 9.3k linear scans per render → blocking 200-500ms.
+          Con map bucket scende a <10ms. */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {boats.map((boat) => {
-          const days: DayCell[] = [];
-          for (let i = 0; i < firstWeekday; i++) {
-            days.push({
-              date: monthStart,
-              bookings: [],
-              status: "AVAILABLE",
-              isPadding: true,
-            });
+        {(() => {
+          // Availability map: key `${boatId}|${dateIso}`
+          const availMap = new Map<string, (typeof availability)[number]>();
+          for (const a of availability) {
+            availMap.set(`${a.boatId}|${a.date.toISOString().slice(0, 10)}`, a);
           }
-          for (let d = 1; d <= daysInMonth; d++) {
-            const date = new Date(Date.UTC(year, month - 1, d));
-            const dateKey = date.toISOString().slice(0, 10);
-            const avail = availability.find(
-              (a) => a.boatId === boat.id && a.date.toISOString().slice(0, 10) === dateKey,
-            );
-            const dayBookings = bookings.filter(
-              (b) =>
-                b.boatId === boat.id &&
-                b.startDate.getTime() <= date.getTime() &&
-                b.endDate.getTime() >= date.getTime(),
-            );
-            days.push({
-              date,
-              bookings: dayBookings.map((b) => ({
-                id: b.id,
-                source: b.source,
-                serviceName: b.service.name,
-                confirmationCode: b.confirmationCode,
-              })),
-              status: avail?.status ?? "AVAILABLE",
-            });
+          // Bookings indexed by boatId → list, per-boat scan resta ma evita
+          // `.filter` su TUTTI i bookings di tutte le boats.
+          const bookingsByBoat = new Map<string, typeof bookings>();
+          for (const b of bookings) {
+            const list = bookingsByBoat.get(b.boatId) ?? [];
+            list.push(b);
+            bookingsByBoat.set(b.boatId, list);
           }
-          return (
-            <div key={boat.id} className="bg-white rounded-xl border p-5">
-              <CalendarGrid days={days} boatName={boat.name} />
-            </div>
-          );
-        })}
+          return boats.map((boat) => {
+            const days: DayCell[] = [];
+            const boatBookings = bookingsByBoat.get(boat.id) ?? [];
+            for (let i = 0; i < firstWeekday; i++) {
+              days.push({
+                date: monthStart,
+                bookings: [],
+                status: "AVAILABLE",
+                isPadding: true,
+              });
+            }
+            for (let d = 1; d <= daysInMonth; d++) {
+              const date = new Date(Date.UTC(year, month - 1, d));
+              const dateKey = date.toISOString().slice(0, 10);
+              const avail = availMap.get(`${boat.id}|${dateKey}`);
+              const dayMs = date.getTime();
+              const dayBookings = boatBookings.filter(
+                (b) =>
+                  b.startDate.getTime() <= dayMs && b.endDate.getTime() >= dayMs,
+              );
+              days.push({
+                date,
+                bookings: dayBookings.map((b) => ({
+                  id: b.id,
+                  source: b.source,
+                  serviceName: b.service.name,
+                  confirmationCode: b.confirmationCode,
+                })),
+                status: avail?.status ?? "AVAILABLE",
+              });
+            }
+            return (
+              <div key={boat.id} className="bg-white rounded-xl border p-5">
+                <CalendarGrid days={days} boatName={boat.name} />
+              </div>
+            );
+          });
+        })()}
       </div>
 
       <div className="bg-white rounded-xl border p-4 text-xs text-slate-600 space-y-1">

@@ -20,6 +20,9 @@ function getStripe(): Promise<Stripe | null> {
 
 interface Props {
   locale: string;
+  /** R26-A1-A4: canonical APP_URL per Stripe return_url — evita drift da
+   *  `window.location.origin` se utente arriva da host non-canonical. */
+  appUrl: string;
   clientSecret: string;
   confirmationCode: string;
   amountCents: number;
@@ -66,7 +69,7 @@ const TERMINAL_STRIPE_ERROR_CODES = new Set([
   "incorrect_number",
 ]);
 
-function InnerForm({ locale, amountCents, confirmationCode, onSuccess, onRetryNeeded }: Props) {
+function InnerForm({ locale, appUrl, amountCents, confirmationCode, onSuccess, onRetryNeeded }: Props) {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +85,9 @@ function InnerForm({ locale, amountCents, confirmationCode, onSuccess, onRetryNe
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/${locale}/prenota/success/${confirmationCode}`,
+        // R26-A1-A4: canonical APP_URL (server-side) per Stripe return_url.
+        // `window.location.origin` era fragile (staging via IP, proxy misconfig).
+        return_url: `${appUrl}/${locale}/prenota/success/${confirmationCode}`,
       },
       redirect: "if_required",
     });

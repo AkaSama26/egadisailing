@@ -28,16 +28,16 @@ export default function AdminError({
           L'operazione non è andata a buon fine. Se il problema persiste,
           contatta il team tech indicando l'ID di correlazione.
         </p>
-        <div className="rounded bg-slate-50 border text-xs font-mono p-3 space-y-1">
-          <p className="text-slate-600 break-words">
-            <strong>Messaggio:</strong> {error.message}
-          </p>
-          {error.digest && (
+        {/* R26-A1-M2: NON mostrare `error.message` raw — Prisma errors
+            leak schema interno (es. "Unique constraint failed on stripePaymentIntentId").
+            Solo digest per correlazione log lato admin support. */}
+        {error.digest && (
+          <div className="rounded bg-slate-50 border text-xs font-mono p-3">
             <p className="text-slate-500">
-              <strong>Digest:</strong> {error.digest}
+              <strong>ID correlazione:</strong> {error.digest}
             </p>
-          )}
-        </div>
+          </div>
+        )}
         <div className="flex gap-2">
           <button
             onClick={() => reset()}

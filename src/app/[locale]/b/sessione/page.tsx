@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Decimal from "decimal.js";
@@ -7,6 +8,11 @@ import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
 import { LogoutButton } from "./logout-button";
 import { formatItDay } from "@/lib/dates";
+
+// R26-A1-A5: PII area — noindex defense-in-depth oltre robots.txt. Bot che
+// ignora robots.txt (o config error serve la pagina con slug indexable)
+// non deve produrre cache snapshot con email + confirmation codes.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 const STATUS_LABEL: Record<string, string> = {
   CONFIRMED: "Confermata",

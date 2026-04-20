@@ -11,6 +11,33 @@ interface AvailabilityJob {
   data: AvailabilityUpdateJobPayload;
 }
 
+// R26-A3-M4: in-memory cache dei Service per boatId. Worker lancia
+// `services.findMany` per job (limiter 10/s + concurrency=3 = fino a
+// 18000/hr DB roundtrip). Services cambiano molto raramente (solo via
+// admin mutate su `/admin/prezzi` + `/admin/servizi`). Cache 15min
+// riduce >99% carico DB. In caso di cambio service (nuovo bokunProductId),
+// la stale vede fino a 15min → accettabile (admin puo' forzare restart worker).
+interface ServiceCacheEntry {
+  services: Array<{ id: string; bokunProductId: string | null; capacityMax: number }>;
+  expiresAt: number;
+}
+const SERVICE_CACHE_TTL_MS = 15 * 60 * 1000;
+const serviceCacheByBoat = new Map<string, ServiceCacheEntry>();
+
+async function getServicesForBoat(boatId: string) {
+  const cached = serviceCacheByBoat.get(boatId);
+  if (cached && cached.expiresAt > Date.now()) return cached.services;
+  const services = await db.service.findMany({
+    where: { boatId, bokunProductId: { not: null } },
+    select: { id: true, bokunProductId: true, capacityMax: true },
+  });
+  serviceCacheByBoat.set(boatId, {
+    services,
+    expiresAt: Date.now() + SERVICE_CACHE_TTL_MS,
+  });
+  return services;
+}
+
 /**
  * Worker BullMQ: consuma job "availability.update" con targetChannel=BOKUN.
  * Push su Bokun con `capacityMax` del servizio se AVAILABLE, 0 se BLOCKED.
@@ -53,10 +80,8 @@ export function startBokunAvailabilityWorker() {
       });
       const effectiveStatus = current?.status ?? data.status;
 
-      // Trova tutti i Service mappati a questo boatId con bokunProductId settato
-      const services = await db.service.findMany({
-        where: { boatId: data.boatId, bokunProductId: { not: null } },
-      });
+      // R26-A3-M4: cached 15min per boatId (Services mutano raramente).
+      const services = await getServicesForBoat(data.boatId);
 
       for (const service of services) {
         const spots = effectiveStatus === "AVAILABLE" ? service.capacityMax : 0;

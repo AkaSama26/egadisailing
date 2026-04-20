@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
 import { env } from "@/lib/env";
 import { RecuperaPrenotazioneClient } from "./client";
+
+// R26-A1-A5: auth-adjacent page, noindex defense-in-depth oltre robots.txt.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function RecuperaPrenotazionePage() {
   return (

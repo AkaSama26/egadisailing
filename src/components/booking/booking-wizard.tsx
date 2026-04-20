@@ -1,11 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StripePaymentForm } from "./stripe-payment-form";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 
 type Step = "date" | "people" | "customer" | "payment" | "success";
+
+// R26-A1-C1: sessionStorage persistence per evitare conversion loss su tab-kill
+// (iOS Safari sospende background tab ~30s), refresh accidentale, navigazione
+// back/forward. Chiavi derivate dal serviceId per supportare wizard aperti
+// contemporaneamente su servizi diversi. Escludiamo clientSecret (Stripe PI
+// single-use), turnstileToken (expiry 5min), consent (legal: l'utente deve
+// reaccettare se ricarica) — persistiamo SOLO dati "innocui" input.
+interface PersistedState {
+  step: Step;
+  startDate: string;
+  numPeople: number;
+  customer: Customer;
+}
+
+function storageKey(serviceId: string): string {
+  return `wizard-draft:${serviceId}`;
+}
+
+function loadDraft(serviceId: string): Partial<PersistedState> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(storageKey(serviceId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "object" || !parsed) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(serviceId: string, data: PersistedState): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(storageKey(serviceId), JSON.stringify(data));
+  } catch {
+    /* storage full / disabled */
+  }
+}
+
+function clearDraft(serviceId: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(storageKey(serviceId));
+  } catch {
+    /* ignore */
+  }
+}
 
 interface Props {
   locale: string;
@@ -17,6 +65,12 @@ interface Props {
   defaultPaymentSchedule: "FULL" | "DEPOSIT_BALANCE";
   defaultDepositPercentage: number | null;
   turnstileSiteKey: string;
+  /** R26-A1-A4: canonical APP_URL server-side per Stripe return_url.
+   *  `window.location.origin` sarebbe l'host del request — se l'utente
+   *  arriva via IP staging o host non-canonical (misconfig Caddy), Stripe
+   *  ritornerebbe a quell'host che poi potrebbe non matchare
+   *  SERVER_ACTIONS_ALLOWED_ORIGINS. */
+  appUrl: string;
 }
 
 interface Customer {
@@ -29,19 +83,27 @@ interface Customer {
 }
 
 export function BookingWizard(props: Props) {
-  const [step, setStep] = useState<Step>("date");
+  // R26-A1-C1: restore da sessionStorage al mount. Escludiamo "payment"/"success"
+  // step — post-PI vogliamo sempre re-prompt per sicurezza (PI one-shot).
+  const draft = typeof window !== "undefined" ? loadDraft(props.serviceId) : null;
+  const restoredStep: Step =
+    draft?.step === "people" || draft?.step === "customer" ? draft.step : "date";
+
+  const [step, setStep] = useState<Step>(restoredStep);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [numPeople, setNumPeople] = useState(1);
-  const [customer, setCustomer] = useState<Customer>({
-    email: "",
-    firstName: "",
-    lastName: "",
-    phone: "",
-    nationality: "IT",
-    language: "it",
-  });
+  const [startDate, setStartDate] = useState(draft?.startDate ?? "");
+  const [numPeople, setNumPeople] = useState<number>(draft?.numPeople ?? 1);
+  const [customer, setCustomer] = useState<Customer>(
+    draft?.customer ?? {
+      email: "",
+      firstName: "",
+      lastName: "",
+      phone: "",
+      nationality: "IT",
+      language: "it",
+    },
+  );
   const [intent, setIntent] = useState<{
     confirmationCode: string;
     clientSecret: string;
@@ -49,8 +111,20 @@ export function BookingWizard(props: Props) {
     totalCents: number;
   } | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // R26-A1-C2: `turnstileResetKey` cambia ogni `onRetryNeeded` → TurnstileWidget
+  // vede una key diversa → remount forzato → widget re-challenge. Senza,
+  // il widget retainerebbe token expired/used + `setTurnstileToken(null)`
+  // lato state non puliva il widget visibile → cliente vede "solved" ma
+  // server rifiuta.
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [consentPrivacy, setConsentPrivacy] = useState(false);
   const [consentTerms, setConsentTerms] = useState(false);
+
+  // R26-A1-C1: persist draft ad ogni change di step/input.
+  useEffect(() => {
+    if (step === "payment" || step === "success") return;
+    saveDraft(props.serviceId, { step, startDate, numPeople, customer });
+  }, [props.serviceId, step, startDate, numPeople, customer]);
 
   async function createIntent() {
     setError(null);
@@ -70,7 +144,11 @@ export function BookingWizard(props: Props) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           serviceId: props.serviceId,
-          startDate: new Date(startDate).toISOString(),
+          // R26-A1-A2: manda raw ISO day `"YYYY-MM-DD"`. Il server applica
+          // `parseDateLikelyLocalDay` (invariant #16). `new Date(ISO).toISOString()`
+          // era fragile: funzionava per date pure ma un futuro switch a
+          // `datetime-local` input introdurrebbe TZ silent shift.
+          startDate,
           numPeople,
           customer,
           paymentSchedule: props.defaultPaymentSchedule,
@@ -169,6 +247,7 @@ export function BookingWizard(props: Props) {
           onNext={() => void createIntent()}
           loading={loading}
           turnstileSiteKey={props.turnstileSiteKey}
+          turnstileResetKey={turnstileResetKey}
           onTurnstileToken={setTurnstileToken}
           onTurnstileExpired={() => setTurnstileToken(null)}
           consentPrivacy={consentPrivacy}
@@ -181,16 +260,22 @@ export function BookingWizard(props: Props) {
       {step === "payment" && intent && (
         <StripePaymentForm
           locale={props.locale}
+          appUrl={props.appUrl}
           clientSecret={intent.clientSecret}
           confirmationCode={intent.confirmationCode}
           amountCents={intent.amountCents}
-          onSuccess={() => setStep("success")}
+          onSuccess={() => {
+            clearDraft(props.serviceId);
+            setStep("success");
+          }}
           onRetryNeeded={() => {
             // R15-UX-1: errore Stripe terminale (card_declined ecc). Il
             // clientSecret non e' piu' utilizzabile; torniamo allo step
             // customer per ricreare PI con nuovo metodo di pagamento.
+            // R26-A1-C2: bump turnstileResetKey → remount widget → re-challenge.
             setIntent(null);
             setTurnstileToken(null);
+            setTurnstileResetKey((k) => k + 1);
             setStep("customer");
           }}
         />
@@ -309,6 +394,7 @@ function CustomerStep({
   onNext,
   loading,
   turnstileSiteKey,
+  turnstileResetKey,
   onTurnstileToken,
   onTurnstileExpired,
   consentPrivacy,
@@ -323,6 +409,7 @@ function CustomerStep({
   onNext: () => void;
   loading: boolean;
   turnstileSiteKey: string;
+  turnstileResetKey: number;
   onTurnstileToken: (token: string) => void;
   onTurnstileExpired: () => void;
   consentPrivacy: boolean;
@@ -401,6 +488,9 @@ function CustomerStep({
       </div>
       {turnstileSiteKey && (
         <TurnstileWidget
+          // R26-A1-C2: key cambia su onRetryNeeded → remount forzato →
+          // widget re-challenge Cloudflare (evita token stale post-cardDeclined).
+          key={turnstileResetKey}
           siteKey={turnstileSiteKey}
           onToken={onTurnstileToken}
           onExpired={onTurnstileExpired}

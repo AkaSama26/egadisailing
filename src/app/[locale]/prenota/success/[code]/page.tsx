@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { formatEur } from "@/lib/pricing/cents";
 import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 import { formatItDay } from "@/lib/dates";
+
+// R26-A1-A5: pagina post-payment con PII (confirmation code + email link).
+// noindex defense-in-depth.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function BookingSuccessPage({
   params,

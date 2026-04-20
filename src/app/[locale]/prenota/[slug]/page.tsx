@@ -35,6 +35,7 @@ export default async function BookingPage({
           defaultPaymentSchedule={service.defaultPaymentSchedule}
           defaultDepositPercentage={service.defaultDepositPercentage}
           turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+          appUrl={env.APP_URL}
         />
       </div>
     </div>

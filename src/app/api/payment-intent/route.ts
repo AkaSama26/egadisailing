@@ -22,15 +22,19 @@ const schema = z.object({
   serviceId: z.string().min(1).max(100),
   // R17-SEC-#1: cap a 2 anni nel futuro. Senza, attaccante floodava PI
   // con startDate 2099 → Stripe quota fee + DB bloat.
+  // R26-A1-A2: accetta ISO-day (`"YYYY-MM-DD"` da <input type="date">) OR
+  // full datetime (back-compat) — il server delega a `parseDateLikelyLocalDay`
+  // per normalizzazione consistente Europe/Rome. Invariante #16.
   startDate: z
     .string()
-    .datetime()
+    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "startDate must be ISO date or datetime")
     .refine((v) => {
       const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return false;
       const maxFuture = new Date();
       maxFuture.setUTCFullYear(maxFuture.getUTCFullYear() + 2);
       return d <= maxFuture;
-    }, "startDate oltre 2 anni nel futuro"),
+    }, "startDate oltre 2 anni nel futuro o invalida"),
   numPeople: z.number().int().min(1).max(50),
   customer: z.object({
     email: z.string().email().max(320),

@@ -20,7 +20,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  auditLogs AuditLog[]
+  auditLogs      AuditLog[]
+  // R26-A2-5/A2-7: inverse relations per FK aggiunti in migration
+  // 20260421180000_r26_schema_hardening (onDelete: SetNull).
+  bookingNotes   BookingNote[] @relation("BookingNoteAuthor")
+  resolvedAlerts ManualAlert[] @relation("ManualAlertResolver")
 }
 
 model AuditLog {
@@ -227,7 +231,9 @@ model Customer {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  bookings Booking[]
+  bookings        Booking[]
+  // R26-A2-4: FK inverse (onDelete: SetNull in migration).
+  consentRecords  ConsentRecord[]
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -280,6 +286,9 @@ model Booking {
   payments       Payment[]
   bookingNotes   BookingNote[]
   tripCrew       TripCrew[]
+  // R26-A2-4/A2-7: inverse relations per FK aggiunti (onDelete: SetNull).
+  consentRecords ConsentRecord[]
+  manualAlerts   ManualAlert[]
 
   @@index([source, status])
   @@index([startDate])
@@ -327,6 +336,11 @@ model ConsentRecord {
   acceptedAt      DateTime @default(now())
   ipAddress       String?
   userAgent       String?
+
+  // R26-A2-4: FK onDelete SetNull — preserva row storica (GDPR audit
+  // trail 10y) anche se Customer/Booking vengono hard-deleted in futuro.
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  booking  Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
 
   @@index([customerId])
   @@index([bookingId])
@@ -458,16 +472,21 @@ enum ManualAlertStatus {
 
 model ManualAlert {
   id             String            @id @default(cuid())
-  channel        String            // CLICKANDBOAT | NAUTAL
+  channel        String            // CLICKANDBOAT | NAUTAL | CROSS_OTA_DOUBLE_BOOKING
   boatId         String
   date           DateTime          @db.Date
-  action         String            // BLOCK | UNBLOCK
+  action         String            // BLOCK | UNBLOCK | REVIEW
   status         ManualAlertStatus @default(PENDING)
   bookingId      String?
   notes          String?
   createdAt      DateTime          @default(now())
   resolvedAt     DateTime?
   resolvedByUserId String?
+
+  // R26-A2-7: FK onDelete SetNull — alert rimane visibile storico anche
+  // se booking/user cancellato, audit trail continuity.
+  booking        Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  resolvedBy     User?    @relation("ManualAlertResolver", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([channel, date])
@@ -486,6 +505,10 @@ model BookingNote {
   updatedAt DateTime @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  // R26-A2-5: FK author onDelete SetNull — se User deletato in futuro,
+  // BookingNote preservata per audit trail (authorId orphan fino a
+  // retention, allineato pattern AuditLog.userId).
+  author  User?   @relation("BookingNoteAuthor", fields: [authorId], references: [id], onDelete: SetNull)
 }
 
 // ═══════════════════════════════════════════════════════════
