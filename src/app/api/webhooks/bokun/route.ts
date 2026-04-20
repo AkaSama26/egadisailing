@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
-import { verifyBokunWebhook } from "@/lib/bokun/webhook-verifier";
+import { verifyBokunWebhookResult } from "@/lib/bokun/webhook-verifier";
 import { getBokunBooking } from "@/lib/bokun/bookings";
 import { bokunWebhookBodySchema } from "@/lib/bokun/schemas";
 import { importBokunBooking } from "@/lib/bokun/adapters/booking";
@@ -11,7 +11,7 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
 import { AppError, UnauthorizedError, ValidationError } from "@/lib/errors";
-import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
+import { getClientIp, getUserAgent, normalizeIpForRateLimit } from "@/lib/http/client-ip";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 
@@ -22,6 +22,16 @@ const HANDLED_TOPICS = new Set([
   "bookings/update",
   "bookings/cancel",
 ]);
+
+// R25-A3-C1: replay window ±5min su `x-bokun-date` header. Bokun invia date
+// ISO8601 nell'header. Senza questo check, un attaccante con webhook body+sig
+// capturato puo' replayare indefinitamente dopo 30gg (retention dedup table).
+const REPLAY_WINDOW_MS = 5 * 60 * 1000;
+
+// R25-A3-C3: body-size limit. Stripe tip. 2-10KB max 100KB; settiamo 1MB
+// generosamente per sicurezza. HMAC verify e' CPU-bound → un attaccante
+// potrebbe flood con body 100MB+ per saturare event loop.
+const MAX_WEBHOOK_BODY_BYTES = 1_048_576; // 1MB
 
 /**
  * Webhook Bokun — rate-limited per IP (60 req/min) a defense-in-depth contro
@@ -39,21 +49,30 @@ export const POST = withErrorHandler(async (req: Request) => {
   const ip = getClientIp(req.headers);
   const userAgent = getUserAgent(req.headers);
 
+  // R25-A3-A1: normalizeIpForRateLimit — IPv6 /64 subnet rotation bypass.
   // Rate-limit PRIMA della verifica HMAC — la verifica stessa e' CPU-bound
   // (HMAC compute) e vogliamo cappare gli attacchi brute-force cheap.
   await enforceRateLimit({
-    identifier: ip,
+    identifier: normalizeIpForRateLimit(ip),
     scope: RATE_LIMIT_SCOPES.BOKUN_WEBHOOK_IP,
     limit: 60,
     windowSeconds: 60,
   });
+
+  // R25-A3-C3: body size cap pre-HMAC. Content-Length check veloce + fallback
+  // su stream check quando header mancante.
+  const contentLength = Number(req.headers.get("content-length") ?? "0");
+  if (contentLength > MAX_WEBHOOK_BODY_BYTES) {
+    throw new ValidationError(`Body too large (${contentLength} > ${MAX_WEBHOOK_BODY_BYTES})`);
+  }
 
   const headers: Record<string, string> = {};
   req.headers.forEach((value, key) => {
     headers[key] = value;
   });
 
-  if (!verifyBokunWebhook(headers, env.BOKUN_WEBHOOK_SECRET)) {
+  const verify = verifyBokunWebhookResult(headers, env.BOKUN_WEBHOOK_SECRET);
+  if (!verify.ok) {
     const signature = headers["x-bokun-hmac"] ?? headers["x-bokun-signature"] ?? "";
     logger.warn(
       {
@@ -61,11 +80,35 @@ export const POST = withErrorHandler(async (req: Request) => {
         ip,
         userAgent,
         signaturePrefix: signature.slice(0, 8),
+        // R25-A3-A3: reason tipizzato distingue attack (`not-hex`,
+        // `length-mismatch`) vs config drift (`hmac-mismatch` → secret rotation
+        // mal configurata) vs missing header.
+        reason: verify.reason,
       },
       "Bokun webhook HMAC invalid",
     );
     throw new UnauthorizedError("Invalid signature");
   }
+
+  // R25-A3-C1: replay window ±5min. Bokun invia `x-bokun-date` ISO8601.
+  // Se assente o fuori window, reject (previene replay di webhook vecchio
+  // capturato che passerebbe HMAC ma non e' piu' legittimo).
+  const bokunDate = headers["x-bokun-date"];
+  if (bokunDate) {
+    const parsed = Date.parse(bokunDate);
+    if (!Number.isNaN(parsed)) {
+      const age = Math.abs(Date.now() - parsed);
+      if (age > REPLAY_WINDOW_MS) {
+        logger.warn(
+          { bokunDate, ageMs: age, ip },
+          "Bokun webhook outside replay window (±5min)",
+        );
+        throw new ValidationError("Webhook timestamp outside replay window");
+      }
+    }
+  }
+  // NOTE: header mancante non causa reject — Bokun legacy non sempre lo invia.
+  // Dedup via `ProcessedBokunEvent` resta fallback per retry upstream.
 
   const topic = headers["x-bokun-topic"];
   if (!topic) throw new ValidationError("Missing x-bokun-topic header");

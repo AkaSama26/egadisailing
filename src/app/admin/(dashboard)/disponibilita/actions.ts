@@ -60,8 +60,13 @@ export async function manualBlockRange(
     },
   });
 
+  // R25-A2-M5: revalidate anche /admin + /admin/prenotazioni perche' il
+  // block influenza KPI disponibilita' imminenti e la booking list (slot
+  // non piu' bookable).
   revalidatePath("/admin/disponibilita");
   revalidatePath("/admin/calendario");
+  revalidatePath("/admin");
+  revalidatePath("/admin/prenotazioni");
 }
 
 export async function manualReleaseRange(

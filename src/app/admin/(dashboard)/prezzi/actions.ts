@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
 import { scheduleBokunPricingSync } from "@/lib/pricing/bokun-sync";
 import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
+import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { ValidationError } from "@/lib/errors";
 
 export interface UpsertPricingPeriodInput {
@@ -39,24 +40,6 @@ export async function upsertPricingPeriod(input: UpsertPricingPeriodInput): Prom
     throw new ValidationError("year out of range 2020-2100");
   }
 
-  // Prevent overlap con altri period dello stesso servizio — `quotePrice`
-  // usa findFirst orderBy startDate e sarebbe non-deterministico sul giorno
-  // di overlap (Round 10 BL-A3, finding pre-esistente R4).
-  const overlap = await db.pricingPeriod.findFirst({
-    where: {
-      serviceId: input.serviceId,
-      ...(input.id ? { id: { not: input.id } } : {}),
-      startDate: { lte: end },
-      endDate: { gte: start },
-    },
-    select: { id: true, label: true, startDate: true, endDate: true },
-  });
-  if (overlap) {
-    throw new ValidationError(
-      `Overlap con period "${overlap.label}" (${overlap.startDate.toISOString().slice(0, 10)} → ${overlap.endDate.toISOString().slice(0, 10)})`,
-    );
-  }
-
   const data = {
     serviceId: input.serviceId,
     label: input.label.trim(),
@@ -66,9 +49,33 @@ export async function upsertPricingPeriod(input: UpsertPricingPeriodInput): Prom
     year: input.year,
   };
 
-  const result = input.id
-    ? await db.pricingPeriod.update({ where: { id: input.id }, data })
-    : await db.pricingPeriod.create({ data });
+  // R25-A2-A4: overlap check + write in singola tx con advisory lock
+  // per-serviceId. Prima check era fuori tx → race: 2 admin che creano
+  // period overlapping contemporaneamente entrambi passavano il check
+  // (neither exists yet) + entrambi create → `quotePrice` findFirst
+  // non-deterministico sul giorno di overlap.
+  const result = await db.$transaction(async (tx) => {
+    await acquireTxAdvisoryLock(tx, "pricing-period", input.serviceId);
+
+    const overlap = await tx.pricingPeriod.findFirst({
+      where: {
+        serviceId: input.serviceId,
+        ...(input.id ? { id: { not: input.id } } : {}),
+        startDate: { lte: end },
+        endDate: { gte: start },
+      },
+      select: { id: true, label: true, startDate: true, endDate: true },
+    });
+    if (overlap) {
+      throw new ValidationError(
+        `Overlap con period "${overlap.label}" (${overlap.startDate.toISOString().slice(0, 10)} → ${overlap.endDate.toISOString().slice(0, 10)})`,
+      );
+    }
+
+    return input.id
+      ? await tx.pricingPeriod.update({ where: { id: input.id }, data })
+      : await tx.pricingPeriod.create({ data });
+  });
 
   await auditLog({
     userId,

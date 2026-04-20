@@ -258,6 +258,22 @@ export const GET = withErrorHandler(async (req: Request) => {
       durationMs,
     });
   } catch (err) {
+    // R25-A1-M1: stale cursor wedge. Se il persisted cursor punta a un event
+    // id > ~30d (Stripe retention limit), `events.list({starting_after:...})`
+    // throws `resource_missing`. Senza clear, ogni run seguente si wedgia
+    // sullo stesso error per 7gg (TTL Redis key). Fix: detect 404 →
+    // clear cursor → RED → next run partira' da `since` fresh senza cursor.
+    const stripeErr = err as { code?: string; type?: string; statusCode?: number };
+    const isResourceMissing =
+      stripeErr.code === "resource_missing" ||
+      (stripeErr.statusCode === 404 && stripeErr.type === "StripeInvalidRequestError");
+    if (isResourceMissing) {
+      logger.warn(
+        { err },
+        "Stripe reconciliation: stale cursor detected → clearing Redis continuation",
+      );
+      await redis.del(CURSOR_REDIS_KEY).catch(() => null);
+    }
     logger.error({ err }, "Stripe reconciliation failed");
     await db.channelSyncStatus.upsert({
       where: { channel: CHANNEL_KEY },

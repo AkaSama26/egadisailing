@@ -10,8 +10,9 @@ import { toCents } from "@/lib/pricing/cents";
 import { CHANNELS } from "@/lib/channels";
 import { createManualAlert, type ManualAlertChannel } from "@/lib/charter/manual-alerts";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
+import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { logger } from "@/lib/logger";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
 
 /**
@@ -24,6 +25,27 @@ import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
 export async function cancelBooking(bookingId: string): Promise<void> {
   const { userId } = await requireAdmin();
 
+  // R25-A2-C1: Redis lease per-bookingId previene race concorrente (admin A
+  // + admin B 2 tab sullo stesso booking). Senza, entrambi iterano payments
+  // + chiamano Stripe refund → primo succede, secondo riceve
+  // `charge_already_refunded` → ValidationError → booking stuck CONFIRMED
+  // con charge effettivamente rimborsato in Stripe. TTL 2min copre il run
+  // worst-case (Stripe p99 8s × N payments + DB writes).
+  const lease = await tryAcquireLease(`admin-cancel:${bookingId}`, 2 * 60);
+  if (!lease) {
+    throw new ConflictError(
+      "Cancellazione gia' in corso su questo booking — attendere 2 minuti",
+    );
+  }
+
+  try {
+    await doCancelBooking(bookingId, userId);
+  } finally {
+    await releaseLease(lease);
+  }
+}
+
+async function doCancelBooking(bookingId: string, userId: string | undefined): Promise<void> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {

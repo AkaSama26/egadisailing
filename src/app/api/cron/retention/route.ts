@@ -23,8 +23,13 @@ const LEASE_TTL_SECONDS = 15 * 60;
  * - BookingRecoverySession scadute     → delete dopo 90 giorni
  * - RateLimitEntry con window chiusa   → delete dopo 7 giorni
  * - ProcessedStripeEvent               → delete dopo 60 giorni (Stripe retry max 30g)
- * - ProcessedBokunEvent                → delete dopo 30 giorni
- * - ProcessedBoataroundEvent           → delete dopo 30 giorni
+ * - ProcessedBokunEvent                → delete dopo 365 giorni (R25-A3-C1:
+ *                                         dedup replay-proof window esteso —
+ *                                         webhook replay vecchio con payload
+ *                                         capturato bypassa dedup solo dopo 1y;
+ *                                         abbinato a replay window ±5min su
+ *                                         x-bokun-date header)
+ * - ProcessedBoataroundEvent           → delete dopo 365 giorni (R25-A3-C2)
  * - ProcessedCharterEmail              → delete dopo 90 giorni
  * - WeatherForecastCache               → delete dopo 14 giorni
  * - AuditLog                           → delete dopo 24 mesi (bilanciato con antifraud/compliance)
@@ -55,6 +60,7 @@ export const GET = withErrorHandler(async (req: Request) => {
   const now = new Date();
   const thirtyDaysAgo = addDays(now, -30);
   const ninetyDaysAgo = addDays(now, -90);
+  const threeSixtyFiveDaysAgo = addDays(now, -365);
   const sevenDaysAgo = addDays(now, -7);
   const sixtyDaysAgo = addDays(now, -60);
   const fourteenDaysAgo = addDays(now, -14);
@@ -123,9 +129,13 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   try {
+    // R25-A3-C1: 365d dedup window (era 30d). Combinato con replay window
+    // ±5min su x-bokun-date nel webhook route, un payload capturato non
+    // puo' piu' essere replayato > 5min dopo l'emissione originale.
+    // Storage: 64-byte hash × 1k events/day × 365d = ~23MB/y, trascurabile.
     results.bokunEventDeleted = (
       await db.processedBokunEvent.deleteMany({
-        where: { processedAt: { lt: thirtyDaysAgo } },
+        where: { processedAt: { lt: threeSixtyFiveDaysAgo } },
       })
     ).count;
   } catch (err) {
@@ -134,9 +144,10 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   try {
+    // R25-A3-C2: same 365d window di Bokun per consistenza replay defense.
     results.boataroundEventDeleted = (
       await db.processedBoataroundEvent.deleteMany({
-        where: { processedAt: { lt: thirtyDaysAgo } },
+        where: { processedAt: { lt: threeSixtyFiveDaysAgo } },
       })
     ).count;
   } catch (err) {

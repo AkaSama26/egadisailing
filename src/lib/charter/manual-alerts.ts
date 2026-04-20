@@ -91,10 +91,20 @@ export async function createManualAlert(input: CreateManualAlertInput): Promise<
 }
 
 export async function resolveManualAlert(id: string, userId?: string): Promise<void> {
-  await db.manualAlert.update({
-    where: { id },
+  // R25-A2-A3: updateMany con claim su status=PENDING per evitare race
+  // concorrente (2 admin clickano "Risolvi" sullo stesso alert). Senza
+  // questo, entrambi flippano status → 2 AuditLog righe per lo stesso
+  // business event + `resolvedByUserId`/`resolvedAt` last-write-wins. Audit
+  // compliance ambiguo. Con updateMany + count==1 guard, solo il primo
+  // vince + audit log scritto.
+  const result = await db.manualAlert.updateMany({
+    where: { id, status: "PENDING" },
     data: { status: "RESOLVED", resolvedAt: new Date(), resolvedByUserId: userId },
   });
+  if (result.count === 0) {
+    logger.info({ id }, "ManualAlert already resolved — skipping audit");
+    return;
+  }
   // Audit log Round 10 Int-A1: tracciare chi/quando chiude un alert.
   // L'import circolare e' evitato con dynamic import (manualAlerts e' chiamato
   // da audit-adjacent paths).

@@ -1,15 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { resolveManualAlert } from "@/lib/charter/manual-alerts";
-import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
 
 export async function resolveAlertAction(id: string): Promise<void> {
-  const session = await auth();
-  if (!session?.user?.id) throw new UnauthorizedError();
-  if (session.user.role !== "ADMIN") throw new ForbiddenError();
-  await resolveManualAlert(id, session.user.id);
+  // R25-A2-M4: usa helper condiviso invece di inline auth check — drift
+  // prevention. Tutti gli altri admin actions (R20-A3) usano requireAdmin.
+  const { userId } = await requireAdmin();
+  await resolveManualAlert(id, userId);
   revalidatePath("/admin/sync-log");
   revalidatePath("/admin");
 }

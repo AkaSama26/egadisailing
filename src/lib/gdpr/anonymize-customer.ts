@@ -79,6 +79,28 @@ export async function anonymizeCustomer(
       where: { entity: "Customer", entityId: customerId },
       data: { before: { _redacted: true }, after: { _redacted: true } },
     });
+    // R25-A2-A2: AuditLog cross-entity — le righe entity="Booking" referenziate
+    // da questo customer contengono customerName/email nel payload (es.
+    // cancelBooking audit). Senza questa redaction, PII sopravvive 24mo in
+    // audit anche post-art.17 erasure.
+    const customerBookings = await tx.booking.findMany({
+      where: { customerId },
+      select: { id: true },
+    });
+    const bookingIds = customerBookings.map((b) => b.id);
+    if (bookingIds.length > 0) {
+      await tx.auditLog.updateMany({
+        where: { entity: "Booking", entityId: { in: bookingIds } },
+        data: { before: { _redacted: true }, after: { _redacted: true } },
+      });
+      // R25-A2-A1: BookingNote contiene free-form admin text con frequenti
+      // PII (cellulare, IBAN, dati sanitari "allergia"). Redact content su
+      // anonymize, preserva authorId + timestamp per audit trail integrity.
+      await tx.bookingNote.updateMany({
+        where: { bookingId: { in: bookingIds } },
+        data: { note: "[redacted GDPR art.17]" },
+      });
+    }
   });
 
   await auditLog({

@@ -10,15 +10,21 @@ import crypto from "node:crypto";
  * 4. HMAC-SHA256 con `secret`, output hex
  * 5. Confronta con header `x-bokun-hmac` (timing-safe)
  *
- * Restituisce false in caso di: signature mancante, lunghezza disallineata,
- * hmac non valido. Loggato dal caller (non qui — no log su secret material).
+ * Ritorna esito tipato (non boolean) per permettere al caller di distinguere
+ * brute-force attack (signature malformata) vs config drift (length mismatch)
+ * vs HMAC genuino sbagliato. R25-A3-A3: catch-all mascherava il signale
+ * operations.
  */
-export function verifyBokunWebhook(
+export type BokunVerifyResult =
+  | { ok: true }
+  | { ok: false; reason: "missing" | "not-hex" | "length-mismatch" | "hmac-mismatch" };
+
+export function verifyBokunWebhookResult(
   headers: Record<string, string | string[] | undefined>,
   secret: string,
-): boolean {
+): BokunVerifyResult {
   const received = headerValue(headers, "x-bokun-hmac");
-  if (!received) return false;
+  if (!received) return { ok: false, reason: "missing" };
 
   const bokunHeaders: Array<[string, string]> = [];
   for (const [key, value] of Object.entries(headers)) {
@@ -34,14 +40,32 @@ export function verifyBokunWebhook(
   const stringToSign = bokunHeaders.map(([k, v]) => `${k}=${v}`).join("&");
   const computed = crypto.createHmac("sha256", secret).update(stringToSign).digest("hex");
 
-  try {
-    const receivedBuf = Buffer.from(received, "hex");
-    const computedBuf = Buffer.from(computed, "hex");
-    if (receivedBuf.length !== computedBuf.length) return false;
-    return crypto.timingSafeEqual(receivedBuf, computedBuf);
-  } catch {
-    return false;
+  // R25-A3-A3: check hex format explicit invece di affidarsi al catch di
+  // `Buffer.from(..., "hex")`. Buffer.from con hex invalid non throws — ritorna
+  // buffer troncato o vuoto → length-mismatch ambiguous. Regex esplicita.
+  if (!/^[0-9a-fA-F]+$/.test(received)) {
+    return { ok: false, reason: "not-hex" };
   }
+
+  const receivedBuf = Buffer.from(received, "hex");
+  const computedBuf = Buffer.from(computed, "hex");
+  if (receivedBuf.length !== computedBuf.length) {
+    return { ok: false, reason: "length-mismatch" };
+  }
+  return crypto.timingSafeEqual(receivedBuf, computedBuf)
+    ? { ok: true }
+    : { ok: false, reason: "hmac-mismatch" };
+}
+
+/**
+ * Wrapper boolean per retrocompatibilita' con caller esistenti. Nuovi
+ * caller dovrebbero usare `verifyBokunWebhookResult` per logging ricco.
+ */
+export function verifyBokunWebhook(
+  headers: Record<string, string | string[] | undefined>,
+  secret: string,
+): boolean {
+  return verifyBokunWebhookResult(headers, secret).ok;
 }
 
 function headerValue(
