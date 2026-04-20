@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { addDays, toUtcDay } from "@/lib/dates";
+import { addDays, parseDateLikelyLocalDay } from "@/lib/dates";
 import { getWeatherForDate } from "@/lib/weather/service";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
@@ -51,7 +51,14 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   try {
-    const today = toUtcDay(new Date());
+    // R22-A4-CRITICA-1: `toUtcDay(new Date())` usava day UTC → ai margini
+    // (cron manuale ore 00:30 Rome CEST = 22:30 UTC ieri) il cron saltava
+    // booking di oggi Italia. `Booking.startDate` e' salvato via
+    // `parseDateLikelyLocalDay` (UTC midnight del day Europe/Rome) quindi
+    // il lower bound deve usare lo stesso format per evitare drift.
+    // In orario nominale (07:15 Rome) i due coincidono; fix difensivo per
+    // cron manuale / DST boundary / replica multi-timezone.
+    const today = parseDateLikelyLocalDay(new Date());
     const weekEnd = addDays(today, 7);
 
     const bookings = await db.booking.findMany({

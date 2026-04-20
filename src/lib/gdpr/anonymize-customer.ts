@@ -55,7 +55,10 @@ export async function anonymizeCustomer(
       data: {
         email: maskedEmail,
         firstName: "ANONIMO",
-        lastName: "",
+        // R22-A1-ALTA-5: `lastName: ""` rompe UI admin (template `${firstName}
+        // ${lastName}`.trim() → "ANONIMO" + trailing space) e Schema DB richiede
+        // varchar. Sentinel "UTENTE" leggibile + consistente con firstName.
+        lastName: "UTENTE",
         phone: null,
         nationality: null,
         language: null,

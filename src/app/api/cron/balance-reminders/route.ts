@@ -6,7 +6,7 @@ import { balanceReminderTemplate } from "@/lib/email/templates/balance-reminder"
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { formatEur } from "@/lib/pricing/cents";
-import { toUtcDay, addDays } from "@/lib/dates";
+import { parseDateLikelyLocalDay, addDays } from "@/lib/dates";
 import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
@@ -48,7 +48,10 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   try {
-    const today = toUtcDay(new Date());
+    // R22-A4-CRITICA-1: `parseDateLikelyLocalDay(new Date())` invece di
+    // `toUtcDay` → allinea con `Booking.startDate` stored come UTC midnight
+    // del day Europe/Rome. Evita drift ai margini (cron 00:30 Rome vs UTC).
+    const today = parseDateLikelyLocalDay(new Date());
     const sevenDaysFrom = addDays(today, 7);
     const eightDaysFrom = addDays(today, 8);
 

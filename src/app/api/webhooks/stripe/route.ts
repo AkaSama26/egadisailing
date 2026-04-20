@@ -3,17 +3,26 @@ import { stripe } from "@/lib/stripe/server";
 import { handleStripeEvent } from "@/lib/stripe/webhook-handler";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/http/with-error-handler";
+import { AppError, ValidationError } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
-export async function POST(req: Request) {
+// R22-A3-ALTA-1: wrap in `withErrorHandler` per x-request-id correlation +
+// envelope coerente `{error:{code,...}}`. Stripe retry policy: 500 → retry,
+// 4xx → no retry. Handler idempotente via `ProcessedStripeEvent` quindi retry
+// e' safe. `ValidationError` (400) usato per missing/invalid signature —
+// Stripe non ritenta (giustamente, il bug e' upstream). `AppError(500)` per
+// config mancante → retry accettabile. Qualsiasi altro throw diventa 500
+// generico via `withErrorHandler` → retry Stripe.
+export const POST = withErrorHandler(async (req: Request) => {
   const signature = req.headers.get("stripe-signature");
   if (!signature) {
-    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+    throw new ValidationError("Missing stripe-signature header");
   }
   if (!env.STRIPE_WEBHOOK_SECRET) {
     logger.error("STRIPE_WEBHOOK_SECRET not configured");
-    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+    throw new AppError("WEBHOOK_NOT_CONFIGURED", "Stripe webhook not configured", 500);
   }
 
   const body = await req.text();
@@ -22,7 +31,7 @@ export async function POST(req: Request) {
     event = stripe().webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     logger.error({ err }, "Stripe webhook signature invalid");
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    throw new ValidationError("Invalid stripe signature");
   }
 
   try {
@@ -30,7 +39,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true });
   } catch (err) {
     logger.error({ err, type: event.type }, "Stripe webhook handler error");
-    // 500 triggera retry di Stripe — handler e' idempotente via ProcessedStripeEvent
-    return NextResponse.json({ error: "Handler failed" }, { status: 500 });
+    // Re-throw → withErrorHandler mappa a 500 generico → Stripe ritenta.
+    // Handler idempotente via ProcessedStripeEvent, retry sicuro.
+    throw err;
   }
-}
+});

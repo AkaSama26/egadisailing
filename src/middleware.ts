@@ -36,6 +36,11 @@ export default async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    // R22-A3-MEDIA-2: `/admin/:path*` NON matcha `/admin` bare (solo
+    // `/admin/X`). Senza `/admin` esplicito, una request a `/admin` bypassa
+    // il middleware guard — il layout RSC ne gestisce il check, ma
+    // defense-in-depth vuole il middleware su ogni path admin.
+    "/admin",
     "/admin/:path*",
     "/((?!api|_next|_vercel|.*\\..*).*)",
   ],

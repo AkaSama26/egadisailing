@@ -75,6 +75,14 @@ export async function sendContactMessage(
     });
 
     const userAgent = getUserAgent(h);
+    // R22-A2-MEDIA-3: IP + User-Agent rimossi dal body email. Inbox contatti
+    // e' condivisa (info@egadisailing.com) quindi inviare IP del cliente
+    // in chiaro a tutti gli agenti che leggono e' disproportionate per GDPR.
+    // IP+UA restano nei log server per antifraud (retention 90g art. 6(1)(f)).
+    logger.info(
+      { subject: parsed.subject, ip, userAgent: userAgent ?? "n/a" },
+      "Contact message metadata (server-side only)",
+    );
     const html = `
       <h2>Nuovo messaggio dal sito</h2>
       <p><strong>Da:</strong> ${escapeHtml(parsed.name)} &lt;${escapeHtml(parsed.email)}&gt;</p>
@@ -82,11 +90,6 @@ export async function sendContactMessage(
       <p><strong>Oggetto:</strong> ${escapeHtml(parsed.subject)}</p>
       <hr/>
       <p style="white-space: pre-wrap">${escapeHtml(parsed.message)}</p>
-      <hr/>
-      <p style="font-size: 12px; color: #888">
-        IP: ${escapeHtml(ip)}<br/>
-        User-Agent: ${escapeHtml(userAgent ?? "n/a")}
-      </p>
     `;
 
     await sendEmail({
@@ -94,6 +97,9 @@ export async function sendContactMessage(
       subject: `[Contatti] ${parsed.subject}`,
       htmlContent: html,
       textContent: `Da: ${parsed.name} <${parsed.email}>\n${parsed.message}`,
+      // R22-A4-ALTA-1: Reply → cliente. Senza questo override, Reply va al
+      // sender stesso (info@) → loop o bisogna copia/incollare from-line.
+      replyTo: { email: parsed.email, name: parsed.name },
     });
 
     logger.info({ subject: parsed.subject }, "Contact message sent");

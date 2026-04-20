@@ -10,6 +10,11 @@ export interface NewBookingPayload {
   totalPrice: string;
 }
 
+// R22-A2-MEDIA-1: strip \r\n da user-input per plain text fallback.
+function safePlain(s: string): string {
+  return s.replace(/[\r\n]+/g, " ").trim();
+}
+
 export function newBookingTemplate(payload: NewBookingPayload) {
   const subject = `Nuova prenotazione ${payload.source} · ${payload.confirmationCode}`;
   const html = `
@@ -19,6 +24,15 @@ export function newBookingTemplate(payload: NewBookingPayload) {
     <p>${escapeHtml(payload.serviceName)} · ${escapeHtml(payload.startDate)}</p>
     <p><strong>Totale:</strong> ${escapeHtml(payload.totalPrice)}</p>
   `;
+  // R22-A2-ALTA-1: plain text fallback obbligatorio (Gmail SPAM score,
+  // Apple Mail only-HTML warning, screen reader admin leggibile).
+  const text = [
+    `Nuova prenotazione ${safePlain(payload.source)}`,
+    safePlain(payload.confirmationCode),
+    `${safePlain(payload.customerName)} · ${payload.numPeople} pax`,
+    `${safePlain(payload.serviceName)} · ${safePlain(payload.startDate)}`,
+    `Totale: ${safePlain(payload.totalPrice)}`,
+  ].join("\n");
   const telegram = `<b>Nuova prenotazione ${escapeHtml(payload.source)}</b>\n${escapeHtml(payload.confirmationCode)}\n${escapeHtml(payload.customerName)} · ${payload.numPeople} pax\n${escapeHtml(payload.serviceName)} · ${escapeHtml(payload.startDate)}\n<b>${escapeHtml(payload.totalPrice)}</b>`;
-  return { subject, html, telegram };
+  return { subject, html, text, telegram };
 }

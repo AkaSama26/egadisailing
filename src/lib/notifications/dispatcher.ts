@@ -16,6 +16,9 @@ import type { NotificationEvent } from "./events";
 interface RenderedTemplate {
   subject: string;
   html: string;
+  /** R22-A2-ALTA-1: plain text fallback. Migliora deliverability (SPAM
+   *  score Gmail/Outlook), screen reader, client email legacy. */
+  text?: string;
   telegram?: string;
 }
 
@@ -71,6 +74,7 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
         to: env.ADMIN_EMAIL,
         subject: rendered.subject,
         htmlContent: rendered.html,
+        textContent: rendered.text,
       }).catch((err: unknown) => {
         logger.error(
           { err: (err as Error).message, type: event.type },
