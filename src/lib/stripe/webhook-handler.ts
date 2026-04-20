@@ -9,7 +9,7 @@ import { logger } from "@/lib/logger";
 import { toCents, formatEur, formatEurCents } from "@/lib/pricing/cents";
 import { parseBookingMetadata } from "./metadata";
 import { ValidationError } from "@/lib/errors";
-import { dispatchNotification } from "@/lib/notifications/dispatcher";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import { formatItDay } from "@/lib/dates";
 import { bookingWithDetailsInclude } from "@/lib/booking/queries";
 
@@ -221,7 +221,7 @@ async function notifyNewBooking(bookingId: string, source: string): Promise<void
   if (!booking) return;
   await dispatchNotification({
     type: "NEW_BOOKING_DIRECT",
-    channels: ["EMAIL"],
+    channels: defaultNotificationChannels(),
     payload: {
       source,
       confirmationCode: booking.confirmationCode,

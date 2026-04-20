@@ -9,7 +9,7 @@ import { releaseDates } from "@/lib/availability/service";
 import { toCents } from "@/lib/pricing/cents";
 import { CHANNELS } from "@/lib/channels";
 import { createManualAlert, type ManualAlertChannel } from "@/lib/charter/manual-alerts";
-import { dispatchNotification } from "@/lib/notifications/dispatcher";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import { logger } from "@/lib/logger";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
@@ -150,10 +150,12 @@ export async function cancelBooking(bookingId: string): Promise<void> {
   });
 
   // Plan 6 Task 8: notify admin su cancel (audit backup + Telegram).
+  // R21-A1-ALTA-1: channels env-aware — include TELEGRAM se configurato per
+  // escalation rapida (cancel = evento business critico con refund €X).
   try {
     await dispatchNotification({
       type: "BOOKING_CANCELLED",
-      channels: ["EMAIL"],
+      channels: defaultNotificationChannels(),
       payload: {
         confirmationCode: booking.confirmationCode,
         customerName: `${booking.customer?.firstName ?? ""} ${booking.customer?.lastName ?? ""}`.trim() || "n/a",
@@ -221,6 +223,10 @@ export async function registerManualPayment(input: RegisterPaymentInput): Promis
   if (input.amountEur > 1_000_000) {
     throw new ValidationError("Importo fuori range (max 1.000.000€)");
   }
+  // R21-A3-MEDIA-5: cap length note per evitare bloat DB + CSV export issue.
+  if (input.note && input.note.length > 2000) {
+    throw new ValidationError("Nota max 2000 caratteri");
+  }
   const amountCents = toCents(input.amountEur);
 
   await db.$transaction(async (tx) => {
@@ -230,7 +236,7 @@ export async function registerManualPayment(input: RegisterPaymentInput): Promis
     // Round 10 BL-C4.
     const booking = await tx.booking.findUnique({
       where: { id: input.bookingId },
-      select: { id: true, status: true, source: true },
+      select: { id: true, status: true, source: true, totalPrice: true },
     });
     if (!booking) {
       throw new ValidationError("Booking non trovato");
@@ -245,6 +251,38 @@ export async function registerManualPayment(input: RegisterPaymentInput): Promis
     if (input.type === "BALANCE" && booking.source !== "DIRECT") {
       throw new ValidationError(
         "Il tipo BALANCE richiede un booking DIRECT con DirectBooking associato",
+      );
+    }
+    // R21-A1-MEDIA-2: FULL su non-DIRECT significa "pagato intero cash" su
+    // booking OTA — pagamento upstream gia' gestito da Viator/GYG → revenue
+    // fantasma nei KPI. Se serve registrare cash-on-boat per booking Bokun
+    // meglio DEPOSIT (pre-pagamento parziale semantica accettata).
+    if (input.type === "FULL" && booking.source !== "DIRECT") {
+      throw new ValidationError(
+        `Il tipo FULL richiede booking DIRECT (OTA gestisce il pagamento upstream). Per ${booking.source} usa DEPOSIT.`,
+      );
+    }
+    // R21-A1-MEDIA-1: check overflow somma pagamenti non-REFUND vs totalPrice.
+    // Previene errori di inserimento (admin scrive 1000 invece di 100) →
+    // contabilita' inconsistente senza alert.
+    const existingPaymentsAgg = await tx.payment.aggregate({
+      where: {
+        bookingId: input.bookingId,
+        status: "SUCCEEDED",
+        type: { in: ["DEPOSIT", "BALANCE", "FULL"] },
+      },
+      _sum: { amount: true },
+    });
+    const alreadyPaidCents = existingPaymentsAgg._sum.amount
+      ? toCents(existingPaymentsAgg._sum.amount)
+      : 0;
+    const totalCents = toCents(booking.totalPrice);
+    // Tolleranza ±1 cent per arrotondamenti Decimal. Hard-fail su scostamenti
+    // significativi — l'admin deve riconciliare manualmente.
+    if (alreadyPaidCents + amountCents > totalCents + 1) {
+      throw new ValidationError(
+        `Importo eccede totale booking: gia' pagati €${(alreadyPaidCents / 100).toFixed(2)} su €${(totalCents / 100).toFixed(2)}. ` +
+          `Importo massimo registrabile: €${((totalCents - alreadyPaidCents) / 100).toFixed(2)}.`,
       );
     }
 

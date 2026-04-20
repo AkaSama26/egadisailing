@@ -29,6 +29,20 @@ export interface DispatchResult {
 }
 
 /**
+ * R21-A1-ALTA-1: helper centrale per scegliere canali notifica in base
+ * alla config env. Se `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` sono
+ * settati, include TELEGRAM + EMAIL (escalation rapida per admin). Se no,
+ * solo EMAIL (fallback). Cosi' nuovi event types dispatcheranno di default
+ * dove e' effettivamente consegnabile senza if-chain in ogni caller.
+ */
+export function defaultNotificationChannels(): Array<"EMAIL" | "TELEGRAM"> {
+  if (env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
+    return ["EMAIL", "TELEGRAM"];
+  }
+  return ["EMAIL"];
+}
+
+/**
  * Dispatcher centrale notifiche admin. Route il `NotificationEvent` al
  * template giusto + invia sui canali richiesti (EMAIL/TELEGRAM).
  *

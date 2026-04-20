@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { CURRENT_POLICY_VERSION, EFFECTIVE_DATE } from "@/lib/legal/policy-version";
+import { env } from "@/lib/env";
 
 export async function generateMetadata({
   params,
@@ -25,10 +26,13 @@ export default function PrivacyPolicyPage() {
           Versione {CURRENT_POLICY_VERSION} · In vigore dal {EFFECTIVE_DATE}
         </p>
 
-        <div className="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
-          <strong>Nota:</strong> questa privacy policy e' un placeholder strutturale. Il testo
-          definitivo va fornito dal cliente / consulente legale prima del go-live.
-        </div>
+        {env.NODE_ENV !== "production" && (
+          <div className="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
+            <strong>Nota (dev/staging):</strong> questa privacy policy e' un placeholder
+            strutturale. Il testo definitivo va fornito dal cliente / consulente legale prima
+            del go-live produzione.
+          </div>
+        )}
 
         <h2>1. Titolare del trattamento</h2>
         <p>

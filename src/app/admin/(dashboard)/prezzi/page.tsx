@@ -217,7 +217,7 @@ export default async function PrezziPage() {
             type="text"
             inputMode="decimal"
             pattern="[0-9]+([.,][0-9]{1,2})?"
-            defaultValue="1.25"
+            placeholder="es. 1.5 (+50%)"
             className="border rounded px-2 py-1 text-sm"
             required
           />

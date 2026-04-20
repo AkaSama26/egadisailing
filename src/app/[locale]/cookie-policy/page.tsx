@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { EFFECTIVE_DATE } from "@/lib/legal/policy-version";
+import { env } from "@/lib/env";
 
 export async function generateMetadata({
   params,
@@ -16,8 +18,6 @@ export async function generateMetadata({
   });
 }
 
-const EFFECTIVE_DATE = "18 aprile 2026";
-
 export default function CookiePolicyPage() {
   return (
     <div className="min-h-screen bg-white py-24 px-6">
@@ -25,10 +25,12 @@ export default function CookiePolicyPage() {
         <h1 className="text-3xl font-bold text-slate-900">Cookie Policy</h1>
         <p className="text-sm text-slate-500">In vigore dal {EFFECTIVE_DATE}</p>
 
-        <div className="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
-          <strong>Nota:</strong> testo placeholder. Aggiornare con cookie banner finale (es.
-          Iubenda / Cookiebot) al go-live.
-        </div>
+        {env.NODE_ENV !== "production" && (
+          <div className="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
+            <strong>Nota (dev/staging):</strong> testo placeholder. Aggiornare con cookie banner
+            finale (es. Iubenda / Cookiebot) al go-live produzione.
+          </div>
+        )}
 
         <h2>Cosa sono i cookie</h2>
         <p>

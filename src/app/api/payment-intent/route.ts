@@ -37,7 +37,14 @@ const schema = z.object({
     // Escape HTML-dangerous chars: riducono rischio XSS nei template email
     firstName: z.string().min(1).max(100).regex(/^[^<>]*$/, "Invalid chars"),
     lastName: z.string().min(1).max(100).regex(/^[^<>]*$/, "Invalid chars"),
-    phone: z.string().max(30).optional(),
+    // R21-A3-ALTA-1: regex phone — permette solo digits + `+`, spazi, parentesi,
+    // trattino, punto. Previene injection futura se phone finisce in template
+    // HTML/WhatsApp URL. Max 30 per uniformita' con altri limiti.
+    phone: z
+      .string()
+      .max(30)
+      .regex(/^[+\d\s()\-.]{0,30}$/, "Numero telefono non valido")
+      .optional(),
     nationality: z.string().length(2).optional(),
     language: z.string().max(8).optional(),
   }),

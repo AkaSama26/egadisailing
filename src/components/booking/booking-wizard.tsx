@@ -85,7 +85,34 @@ export function BookingWizard(props: Props) {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error?.message ?? "Errore creazione prenotazione");
+        // R21-A2-ALTA-1: messaggi localizzati IT per status comuni invece del
+        // raw `err.message` inglese dal server. Sempre esponiamo `requestId`
+        // (prefix 8 char) per correlazione log/support.
+        const requestId: string | undefined = body?.error?.requestId;
+        const idSuffix = requestId ? ` [ID: ${requestId.slice(0, 8)}]` : "";
+        if (res.status === 429) {
+          const retry = body?.error?.retryAfterSeconds;
+          throw new Error(
+            retry
+              ? `Troppe richieste. Riprova tra ${retry}s.${idSuffix}`
+              : `Troppe richieste, riprova tra qualche minuto.${idSuffix}`,
+          );
+        }
+        if (res.status === 409) {
+          throw new Error(
+            `Queste date non sono piu' disponibili. Prova a sceglierne altre.${idSuffix}`,
+          );
+        }
+        if (res.status >= 500) {
+          throw new Error(
+            `Problema tecnico momentaneo. Riprova tra qualche minuto o scrivici a info@egadisailing.com.${idSuffix}`,
+          );
+        }
+        // Default (400/403/404 non intercettati sopra): usa messaggio server
+        // (gia' italiano per i ValidationError dei nostri schemas Zod).
+        throw new Error(
+          (body?.error?.message ?? "Errore creazione prenotazione") + idSuffix,
+        );
       }
       const body = await res.json();
       const payload = body.data ?? body; // tolleranza per envelope old/new
