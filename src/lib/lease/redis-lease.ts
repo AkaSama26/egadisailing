@@ -41,6 +41,14 @@ export interface LeaseHandle {
  * @returns LeaseHandle se acquisito o fail-open, null se un altro owner valido
  *   detiene il lease.
  */
+// R26-P3 (test-found regression): sentinel per distinguere timeout (Redis
+// down, fail-open) da NX-fail (key exists, fail-closed con return null).
+// `Promise.race` con entrambi return `null` era ambiguo → fail-open scattava
+// anche quando un altro owner detentava il lease → 2 admin concurrent cancel
+// entrambi proseguivano → double refund race. Integration test
+// `admin-concurrency.test.ts` ha esposto il bug con 2 refund calls invece di 1.
+const TIMEOUT_SENTINEL = Symbol("redis-lease-timeout");
+
 export async function tryAcquireLease(
   name: string,
   ttlSeconds: number,
@@ -48,17 +56,21 @@ export async function tryAcquireLease(
   const redis = getRedisConnection();
   const token = randomUUID();
   try {
-    const result = await Promise.race([
+    const result = await Promise.race<string | null | typeof TIMEOUT_SENTINEL>([
       redis.set(`${LEASE_KEY_PREFIX}${name}`, token, "EX", ttlSeconds, "NX"),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), ACQUIRE_TIMEOUT_MS)),
+      new Promise((resolve) => setTimeout(() => resolve(TIMEOUT_SENTINEL), ACQUIRE_TIMEOUT_MS)),
     ]);
-    if (result === null) {
+    if (result === TIMEOUT_SENTINEL) {
+      // Redis unresponsive: fail-open per evitare di hangare webhook/cron.
+      // Accettiamo race concurrent come trade-off per availability.
       logger.warn({ name }, "Redis lease acquire timeout (fail-open, proceeding without lock)");
       return { name, token };
     }
     if (result === "OK") {
       return { name, token };
     }
+    // `null` da SET NX = key gia' esiste, un altro owner detiene il lease.
+    // Fail-closed — ritorniamo null, caller gestira' come ConflictError.
     return null;
   } catch (err) {
     logger.warn(

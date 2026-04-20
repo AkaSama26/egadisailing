@@ -10,6 +10,11 @@ export default defineConfig({
     // Integration test possono essere piu' lenti (Postgres startup, msw)
     testTimeout: 30_000,
     globals: false,
+    // R26-P3: integration test condividono `egadisailing_test` Postgres DB
+    // → truncate + create in parallelo cross-file causava constraint
+    // violations. File-level sequential per integration/; unit test sono
+    // pure functions quindi non regrediscono in perf significativa.
+    fileParallelism: false,
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "src") },
