@@ -58,6 +58,10 @@ vi.mock("@/lib/notifications/dispatcher", () => ({
     anyOk: true,
     skipped: false,
   }),
+  // R21-P2-ALTA: mock new export introdotto in commit 1002624.
+  // Senza, il webhook-handler crashava al require() mock-gated → swallow in
+  // try/catch di notifyNewBooking → test pass ma notification path testato 0.
+  defaultNotificationChannels: vi.fn().mockReturnValue(["EMAIL"]),
 }));
 
 let db: Awaited<ReturnType<typeof setupTestDb>>;

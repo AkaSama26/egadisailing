@@ -4,7 +4,7 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { addDays, toUtcDay } from "@/lib/dates";
 import { getWeatherForDate } from "@/lib/weather/service";
-import { dispatchNotification } from "@/lib/notifications/dispatcher";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
@@ -89,7 +89,7 @@ export const GET = withErrorHandler(async (req: Request) => {
 
         const dispatchResult = await dispatchNotification({
           type: "WEATHER_ALERT",
-          channels: ["EMAIL", "TELEGRAM"],
+          channels: defaultNotificationChannels(),
           payload: {
             confirmationCode: b.confirmationCode,
             customerName: `${b.customer.firstName} ${b.customer.lastName}`.trim(),
