@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { syncQueue } from "@/lib/queue";
+import { getQueue, ALL_QUEUE_NAMES } from "@/lib/queue";
 import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
 import { resolveAlertAction } from "./actions";
 import { formatItDay } from "@/lib/dates";
@@ -11,9 +11,20 @@ import { formatItDay } from "@/lib/dates";
  * Leggiamo direttamente dalla BullMQ queue + tabelle dedup (ProcessedBokun/
  * Boataround/Email) + AuditLog.
  */
-interface QueueStatusInfo {
+interface QueueBreakdown {
+  queueName: string;
   counts: { waiting: number; active: number; delayed: number; failed: number; completed: number };
-  failedJobs: Array<{ id: string; failedReason: string; name: string; attemptsMade: number }>;
+}
+interface QueueStatusInfo {
+  totals: { waiting: number; active: number; delayed: number; failed: number; completed: number };
+  breakdown: QueueBreakdown[];
+  failedJobs: Array<{
+    id: string;
+    failedReason: string;
+    name: string;
+    queue: string;
+    attemptsMade: number;
+  }>;
   reachable: true;
 }
 interface QueueStatusUnreachable {
@@ -23,25 +34,48 @@ interface QueueStatusUnreachable {
 
 async function loadQueueStatus(): Promise<QueueStatusInfo | QueueStatusUnreachable> {
   try {
-    const q = syncQueue();
-    const [counts, failed] = await Promise.all([
-      q.getJobCounts("waiting", "active", "delayed", "failed", "completed"),
-      q.getFailed(0, 9),
-    ]);
+    // R23-Q-CRITICA-1: aggregate cross-queue + breakdown per-queue visibile
+    // all'admin per diagnosticare "quale canale e' indietro".
+    const perQueue = await Promise.all(
+      ALL_QUEUE_NAMES.map(async (queueName) => {
+        const q = getQueue(queueName);
+        const [counts, failed] = await Promise.all([
+          q.getJobCounts("waiting", "active", "delayed", "failed", "completed"),
+          q.getFailed(0, 4),
+        ]);
+        return {
+          queueName,
+          counts: {
+            waiting: counts.waiting ?? 0,
+            active: counts.active ?? 0,
+            delayed: counts.delayed ?? 0,
+            failed: counts.failed ?? 0,
+            completed: counts.completed ?? 0,
+          },
+          failedJobs: failed.map((j) => ({
+            id: String(j.id),
+            failedReason: (j.failedReason ?? "").slice(0, 300),
+            name: j.name,
+            queue: queueName,
+            attemptsMade: j.attemptsMade,
+          })),
+        };
+      }),
+    );
+    const totals = perQueue.reduce(
+      (acc, q) => ({
+        waiting: acc.waiting + q.counts.waiting,
+        active: acc.active + q.counts.active,
+        delayed: acc.delayed + q.counts.delayed,
+        failed: acc.failed + q.counts.failed,
+        completed: acc.completed + q.counts.completed,
+      }),
+      { waiting: 0, active: 0, delayed: 0, failed: 0, completed: 0 },
+    );
     return {
-      counts: {
-        waiting: counts.waiting ?? 0,
-        active: counts.active ?? 0,
-        delayed: counts.delayed ?? 0,
-        failed: counts.failed ?? 0,
-        completed: counts.completed ?? 0,
-      },
-      failedJobs: failed.map((j) => ({
-        id: String(j.id),
-        failedReason: (j.failedReason ?? "").slice(0, 300),
-        name: j.name,
-        attemptsMade: j.attemptsMade,
-      })),
+      totals,
+      breakdown: perQueue.map(({ queueName, counts }) => ({ queueName, counts })),
+      failedJobs: perQueue.flatMap((q) => q.failedJobs).slice(0, 10),
       reachable: true,
     };
   } catch (err) {
@@ -65,20 +99,39 @@ export default async function SyncLogPage() {
       <h1 className="text-3xl font-bold text-slate-900">Sync & Log</h1>
 
       <section className="bg-white rounded-xl border p-5">
-        <h2 className="font-bold text-slate-900 mb-3">BullMQ queue · sync</h2>
+        <h2 className="font-bold text-slate-900 mb-3">BullMQ queue · totali</h2>
         {queueStatus.reachable ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-              <QueueStat label="Waiting" value={queueStatus.counts.waiting} />
-              <QueueStat label="Active" value={queueStatus.counts.active} />
-              <QueueStat label="Delayed" value={queueStatus.counts.delayed} />
+              <QueueStat label="Waiting" value={queueStatus.totals.waiting} />
+              <QueueStat label="Active" value={queueStatus.totals.active} />
+              <QueueStat label="Delayed" value={queueStatus.totals.delayed} />
               <QueueStat
                 label="Failed"
-                value={queueStatus.counts.failed}
-                tone={queueStatus.counts.failed > 100 ? "alert" : undefined}
+                value={queueStatus.totals.failed}
+                tone={queueStatus.totals.failed > 100 ? "alert" : undefined}
               />
-              <QueueStat label="Completed" value={queueStatus.counts.completed} />
+              <QueueStat label="Completed" value={queueStatus.totals.completed} />
             </div>
+            <details className="mt-4">
+              <summary className="text-sm font-semibold text-slate-700 cursor-pointer">
+                Breakdown per queue
+              </summary>
+              <ul className="mt-2 text-xs font-mono space-y-1">
+                {queueStatus.breakdown.map((b) => (
+                  <li key={b.queueName} className="flex gap-3 border-l-2 border-slate-200 pl-2 py-1">
+                    <span className="text-slate-700 font-semibold w-48 shrink-0">{b.queueName}</span>
+                    <span>W:{b.counts.waiting}</span>
+                    <span>A:{b.counts.active}</span>
+                    <span>D:{b.counts.delayed}</span>
+                    <span className={b.counts.failed > 0 ? "text-red-600 font-bold" : ""}>
+                      F:{b.counts.failed}
+                    </span>
+                    <span>C:{b.counts.completed}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
             {queueStatus.failedJobs.length > 0 && (
               <details className="mt-4">
                 <summary className="text-sm font-semibold text-slate-700 cursor-pointer">
@@ -88,7 +141,7 @@ export default async function SyncLogPage() {
                   {queueStatus.failedJobs.map((j) => (
                     <li key={j.id} className="border-l-2 border-red-200 pl-2 py-1">
                       <div className="text-slate-700">
-                        <strong>{j.name}</strong> · id {j.id} · attempts {j.attemptsMade}
+                        <strong>{j.name}</strong> · {j.queue} · id {j.id} · attempts {j.attemptsMade}
                       </div>
                       <div className="text-red-600 break-words">{j.failedReason}</div>
                     </li>

@@ -76,11 +76,16 @@ export function createWorker<T = unknown>(
     limiter: options.limiter,
   });
   worker.on("failed", (job, err) =>
-    // Stack troncato per non inondare i log: 5 retry * 200 linee = 1k per job.
+    // R23-Q-ALTA-3: `name` e' il queueName (closure outer), non il job.name.
+    // Distinguiamo i due nei log per poter diagnosticare: jobName = tipo
+    // processore (availability.update / pricing.bokun.sync), queueName =
+    // code dedicata. Stack troncato: 5 retry * 200 linee = 1k per job.
     logger.error(
       {
         jobId: job?.id,
-        jobName: name,
+        jobName: job?.name,
+        queueName: name,
+        attemptsMade: job?.attemptsMade,
         errCode: (err as { code?: string }).code,
         errMessage: err.message,
         errStack: err.stack?.slice(0, 2000),
@@ -89,7 +94,10 @@ export function createWorker<T = unknown>(
     ),
   );
   worker.on("completed", (job) =>
-    logger.debug({ jobId: job.id, jobName: name }, "Job completed"),
+    logger.debug(
+      { jobId: job.id, jobName: job.name, queueName: name },
+      "Job completed",
+    ),
   );
   return worker;
 }
@@ -121,9 +129,46 @@ export function getQueue<T = unknown>(name: string): Queue<T> {
   return q as Queue<T>;
 }
 
-/** Queue principale per il fan-out di sync verso i canali esterni. */
+/**
+ * R23-Q-CRITICA-1: queue names dedicate per worker target. Prima i 4 worker
+ * subscrivevano tutti a "sync" → BullMQ round-robin assegna il job a UN
+ * SOLO worker; i 3 non-matching ritornavano `undefined` = **completed
+ * silenzioso** = job silently dropped 75% delle volte. Con queue dedicate
+ * per target, ogni worker vede solo i suoi job (no early-return drop).
+ */
+export const QUEUE_NAMES = {
+  AVAIL_BOKUN: "sync:avail:bokun",
+  AVAIL_BOATAROUND: "sync:avail:boataround",
+  /** CLICKANDBOAT + NAUTAL (email-only) → manual alert */
+  AVAIL_MANUAL: "sync:avail:manual",
+  PRICING_BOKUN: "sync:pricing:bokun",
+} as const;
+
+/** Lista queue attive per aggregate metrics (health + admin sync-log). */
+export const ALL_QUEUE_NAMES: readonly string[] = Object.values(QUEUE_NAMES);
+
+/** Queue per fan-out availability verso BOKUN API. */
+export function availBokunQueue(): Queue<SyncJob> {
+  return getQueue<SyncJob>(QUEUE_NAMES.AVAIL_BOKUN);
+}
+/** Queue per fan-out availability verso BOATAROUND API. */
+export function availBoataroundQueue(): Queue<SyncJob> {
+  return getQueue<SyncJob>(QUEUE_NAMES.AVAIL_BOATAROUND);
+}
+/** Queue per fan-out availability verso CLICKANDBOAT/NAUTAL (manual alert). */
+export function availManualQueue(): Queue<SyncJob> {
+  return getQueue<SyncJob>(QUEUE_NAMES.AVAIL_MANUAL);
+}
+/** Queue per pricing sync verso BOKUN. */
+export function pricingBokunQueue(): Queue<SyncJob> {
+  return getQueue<SyncJob>(QUEUE_NAMES.PRICING_BOKUN);
+}
+
+/** @deprecated usa le per-channel. Mantenuto per non rompere caller legacy
+ *  — torna la queue BOKUN-availability (choice arbitraria per back-compat
+ *  health check / test). Rimuovere quando tutti i caller migrati. */
 export function syncQueue(): Queue<SyncJob> {
-  return getQueue<SyncJob>("sync");
+  return availBokunQueue();
 }
 
 export type { SyncJob, JobType };

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
-import { getRedisConnection, syncQueue } from "@/lib/queue";
+import { getRedisConnection, getQueue, ALL_QUEUE_NAMES } from "@/lib/queue";
 import { logger } from "@/lib/logger";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
 
@@ -54,14 +54,35 @@ async function checkRedis(): Promise<CheckResult> {
 
 async function checkQueue(): Promise<QueueStatus> {
   try {
-    const counts = await syncQueue().getJobCounts("waiting", "active", "failed", "delayed");
-    const failed = counts.failed ?? 0;
+    // R23-Q-CRITICA-1: aggregate su tutte le queue dedicate (BOKUN/BOATAROUND/
+    // MANUAL availability + BOKUN pricing). Shallow health ora vede somma
+    // waiting/active/failed — admin vedra' breakdown per queue in /admin/sync-log.
+    const perQueue = await Promise.all(
+      ALL_QUEUE_NAMES.map(async (qn) => {
+        const c = await getQueue(qn).getJobCounts("waiting", "active", "failed", "delayed");
+        return {
+          waiting: c.waiting ?? 0,
+          active: c.active ?? 0,
+          failed: c.failed ?? 0,
+          delayed: c.delayed ?? 0,
+        };
+      }),
+    );
+    const sum = perQueue.reduce(
+      (acc, c) => ({
+        waiting: acc.waiting + c.waiting,
+        active: acc.active + c.active,
+        failed: acc.failed + c.failed,
+        delayed: acc.delayed + c.delayed,
+      }),
+      { waiting: 0, active: 0, failed: 0, delayed: 0 },
+    );
     return {
-      ok: failed < QUEUE_FAILED_THRESHOLD,
-      waiting: counts.waiting ?? 0,
-      active: counts.active ?? 0,
-      failed,
-      delayed: counts.delayed ?? 0,
+      ok: sum.failed < QUEUE_FAILED_THRESHOLD,
+      waiting: sum.waiting,
+      active: sum.active,
+      failed: sum.failed,
+      delayed: sum.delayed,
     };
   } catch (err) {
     return { ok: false, waiting: 0, active: 0, failed: 0, delayed: 0, error: (err as Error).message };

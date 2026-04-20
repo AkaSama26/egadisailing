@@ -68,19 +68,22 @@ export async function refundPayment(chargeId: string, amountCents?: number) {
  * Stripe webhook `payment_intent.succeeded` dopo la cancellazione DB
  * (Round 10 BL-C3).
  */
+/**
+ * R23-S-ALTA-2: blacklist invertita invece di whitelist di cancelable
+ * states. La whitelist hardcoded (requires_*) si spezza silenziosamente
+ * se Stripe aggiunge un nuovo stato intermedio: la mitigation R10 BL-C3
+ * (cancel PRIMA del DB cancel per race) dipende da questa funzione
+ * riuscire sugli stati "cancelable". Blacklist copre solo gli stati
+ * terminali documentati da Stripe: `succeeded`, `canceled`, `processing`
+ * (quest'ultimo non cancellabile per definizione — R14-REG-M2).
+ * Fonte: https://docs.stripe.com/api/payment_intents/object#payment_intent_object-status
+ */
+const NON_CANCELABLE_PI_STATUSES = new Set(["succeeded", "canceled", "processing"]);
+
 export async function cancelPaymentIntent(paymentIntentId: string) {
   try {
     const pi = await stripe().paymentIntents.retrieve(paymentIntentId);
-    // R14-REG-M2: Stripe API rejects cancel in "processing" state (400).
-    // Includerlo causava tentativi inutili + pollution log per ogni
-    // async-payment che attraversava il cutoff pending-gc durante 3DS.
-    const cancelable = [
-      "requires_payment_method",
-      "requires_confirmation",
-      "requires_action",
-      "requires_capture",
-    ];
-    if (!cancelable.includes(pi.status)) {
+    if (NON_CANCELABLE_PI_STATUSES.has(pi.status)) {
       logger.info({ paymentIntentId, status: pi.status }, "PI not cancelable, skipping");
       return pi;
     }

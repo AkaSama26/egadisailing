@@ -28,10 +28,32 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-vi.mock("@/lib/queue", () => ({
-  getRedisConnection: () => installRedisMock(),
-  syncQueue: () => ({ add: vi.fn().mockResolvedValue({ id: "job-mock" }) }),
-}));
+vi.mock("@/lib/queue", () => {
+  const mockQueue = () => ({ add: vi.fn().mockResolvedValue({ id: "job-mock" }) });
+  return {
+    getRedisConnection: () => installRedisMock(),
+    // R23-Q-CRITICA-1: queue split per-channel. Tutti i helper ritornano
+    // una mock add.
+    syncQueue: mockQueue,
+    availBokunQueue: mockQueue,
+    availBoataroundQueue: mockQueue,
+    availManualQueue: mockQueue,
+    pricingBokunQueue: mockQueue,
+    getQueue: mockQueue,
+    QUEUE_NAMES: {
+      AVAIL_BOKUN: "sync:avail:bokun",
+      AVAIL_BOATAROUND: "sync:avail:boataround",
+      AVAIL_MANUAL: "sync:avail:manual",
+      PRICING_BOKUN: "sync:pricing:bokun",
+    },
+    ALL_QUEUE_NAMES: [
+      "sync:avail:bokun",
+      "sync:avail:boataround",
+      "sync:avail:manual",
+      "sync:pricing:bokun",
+    ],
+  };
+});
 
 // Mock Stripe helpers invece di msw (Stripe SDK usa http/https diretto, non
 // fetch — msw v2 in Node intercetta fetch ma non sempre HTTP low-level SDK).

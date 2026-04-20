@@ -1,9 +1,9 @@
-import { createWorker, registerWorker } from "@/lib/queue";
+import { createWorker, registerWorker, QUEUE_NAMES } from "@/lib/queue";
 import { updateBokunAvailability } from "@/lib/bokun/availability";
 import { isBokunConfigured } from "@/lib/bokun";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { CHANNELS } from "@/lib/channels";
+import { parseIsoDay } from "@/lib/dates";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
 
 interface AvailabilityJob {
@@ -17,11 +17,20 @@ interface AvailabilityJob {
  */
 export function startBokunAvailabilityWorker() {
   const worker = createWorker<AvailabilityJob>(
-    "sync",
+    QUEUE_NAMES.AVAIL_BOKUN,
     async (job) => {
-      if (job.name !== "availability.update") return;
+      // R23-Q-CRITICA-1: queue dedicata — no early-return drop. Manteniamo
+      // il check name come guard-rail (producer potrebbe evolvere, ma non
+      // deve droppare silente: log+throw per visibilita').
+      if (job.name !== "availability.update") {
+        logger.warn(
+          { jobName: job.name, queue: QUEUE_NAMES.AVAIL_BOKUN },
+          "Unexpected job name on Bokun availability queue",
+        );
+        return;
+      }
       const { data } = job.data;
-      if (!data || data.targetChannel !== CHANNELS.BOKUN) return;
+      if (!data) return;
 
       if (!isBokunConfigured()) {
         logger.warn(
@@ -31,13 +40,26 @@ export function startBokunAvailabilityWorker() {
         return;
       }
 
+      // R23-Q-CRITICA-2: re-read DB prima di push upstream. jobId coalescence
+      // agisce solo su job waiting/delayed — una volta active, un nuovo
+      // enqueue con stesso jobId non sostituisce. Burst su stessa cella con
+      // concurrency=3 → ordine non deterministico → data.status stale.
+      // Leggiamo lo stato corrente DB per vincere sempre il "last write" DB.
+      const current = await db.boatAvailability.findUnique({
+        where: {
+          boatId_date: { boatId: data.boatId, date: parseIsoDay(data.date) },
+        },
+        select: { status: true },
+      });
+      const effectiveStatus = current?.status ?? data.status;
+
       // Trova tutti i Service mappati a questo boatId con bokunProductId settato
       const services = await db.service.findMany({
         where: { boatId: data.boatId, bokunProductId: { not: null } },
       });
 
       for (const service of services) {
-        const spots = data.status === "AVAILABLE" ? service.capacityMax : 0;
+        const spots = effectiveStatus === "AVAILABLE" ? service.capacityMax : 0;
         await updateBokunAvailability({
           productId: service.bokunProductId!,
           date: data.date,

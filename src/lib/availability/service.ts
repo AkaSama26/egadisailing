@@ -89,11 +89,25 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
       return { shouldFanOut: false };
     }
 
+    // R23-B-ALTA-1: preserve first-winner `lockedByBookingId`. Se la cella
+    // e' gia' BLOCKED con lockedByBookingId=A (booking DIRECT confirm) e
+    // poi un webhook cross-OTA fuori dalla self-echo window 600s arriva con
+    // status=BLOCKED e lockedByBookingId=B, SENZA preserve A verrebbe
+    // sovrascritto da B → un admin cancel di B rilascia la cella AVAILABLE
+    // → A e' CONFIRMED ma slot libero → double-book successivo.
+    // Regola: quando il BLOCCO resta attivo (BLOCKED in + BLOCKED out) e
+    // current ha gia' un lockedByBookingId, lo preserviamo. Su transizione
+    // AVAILABLE lo clear come before.
+    const preservedLockedBy =
+      input.status === "BLOCKED" && current?.lockedByBookingId
+        ? current.lockedByBookingId
+        : (input.lockedByBookingId ?? null);
+
     await tx.boatAvailability.upsert({
       where: { boatId_date: { boatId: input.boatId, date: dateOnly } },
       update: {
         status: input.status,
-        lockedByBookingId: input.lockedByBookingId ?? null,
+        lockedByBookingId: preservedLockedBy,
         lastSyncedSource: input.sourceChannel,
         lastSyncedAt: new Date(),
       },

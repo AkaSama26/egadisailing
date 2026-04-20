@@ -46,6 +46,12 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
     case "payment_intent.payment_failed":
       await onPaymentIntentFailed(event.data.object);
       break;
+    case "payment_intent.canceled":
+      // R23-S-ALTA-1: Stripe auto-cancel PI dopo 24h requires_payment_method
+      // + admin manual cancel via cancelPaymentIntent helper. Senza questo
+      // handler il booking restava PENDING fino al cron pending-gc (30min+).
+      await onPaymentIntentCanceled(event.data.object);
+      break;
     case "charge.refunded":
       await onChargeRefunded(event.data.object);
       break;
@@ -264,24 +270,160 @@ async function sendConfirmationEmail(bookingId: string, paidCents: number): Prom
   });
 }
 
+/**
+ * Set di error code Stripe **terminal** (no recovery): cliente deve
+ * riprovare con metodo diverso. I non-terminal (authentication_required,
+ * insufficient_funds su test card) possono riprovare stesso PI.
+ */
+const TERMINAL_PI_ERROR_CODES = new Set([
+  "card_declined",
+  "expired_card",
+  "incorrect_cvc",
+  "generic_decline",
+  "lost_card",
+  "stolen_card",
+  "pickup_card",
+  "fraudulent",
+]);
+
 async function onPaymentIntentFailed(pi: Stripe.PaymentIntent): Promise<void> {
-  // Tolerant metadata parsing: se il PI era orfano (no booking), logga e basta.
+  let metadata;
   try {
-    const metadata = parseBookingMetadata(pi.metadata);
-    logger.warn(
-      {
-        bookingId: metadata.bookingId,
-        paymentType: metadata.paymentType,
-        lastPaymentError: pi.last_payment_error?.message,
-      },
-      "Payment intent failed",
-    );
+    metadata = parseBookingMetadata(pi.metadata);
   } catch {
     logger.warn(
       { piId: pi.id, lastPaymentError: pi.last_payment_error?.message },
       "Payment intent failed without bookingId metadata",
     );
+    return;
   }
+
+  const errorCode = pi.last_payment_error?.code;
+  const isTerminal = errorCode ? TERMINAL_PI_ERROR_CODES.has(errorCode) : false;
+
+  logger.warn(
+    {
+      bookingId: metadata.bookingId,
+      paymentType: metadata.paymentType,
+      errorCode,
+      isTerminal,
+      lastPaymentError: pi.last_payment_error?.message,
+    },
+    "Payment intent failed",
+  );
+
+  // R23-S-ALTA-3: solo terminal errors triggerano cleanup PENDING.
+  // Non-terminal (authentication_required, processing_error) → il cliente
+  // puo' retry stesso PI. Terminal → cliente deve nuovo PI (R15-UX-1
+  // flow), vecchio booking non recuperabile → release slot subito invece
+  // di aspettare pending-gc 30min.
+  if (!isTerminal) return;
+
+  // Solo DEPOSIT/FULL triggerano PENDING cleanup — BALANCE PI failure
+  // lascia booking CONFIRMED (cliente ha gia' pagato deposit).
+  if (metadata.paymentType === "BALANCE") return;
+
+  try {
+    const result = await db.booking.updateMany({
+      where: { id: metadata.bookingId, status: "PENDING" },
+      data: { status: "CANCELLED" },
+    });
+    if (result.count === 0) {
+      logger.info(
+        { bookingId: metadata.bookingId },
+        "Booking not PENDING, skipping cleanup on PI failed",
+      );
+      return;
+    }
+    const booking = await db.booking.findUnique({
+      where: { id: metadata.bookingId },
+      select: { boatId: true, startDate: true, endDate: true, source: true },
+    });
+    if (booking) {
+      const { releaseDates } = await import("@/lib/availability/service");
+      const { CHANNELS } = await import("@/lib/channels");
+      await releaseDates(
+        booking.boatId,
+        booking.startDate,
+        booking.endDate,
+        CHANNELS.DIRECT,
+      );
+    }
+    logger.info(
+      { bookingId: metadata.bookingId, errorCode },
+      "PENDING booking cleaned up after terminal PI failure",
+    );
+  } catch (err) {
+    logger.error(
+      { err, bookingId: metadata.bookingId },
+      "Failed to cleanup PENDING after PI failure — pending-gc will catch",
+    );
+  }
+}
+
+/**
+ * R23-S-ALTA-1: gestore `payment_intent.canceled`. Stripe emette questo
+ * evento quando:
+ *  - il PI raggiunge 24h in `requires_payment_method` (auto-cancel Stripe)
+ *  - admin chiama `cancelPaymentIntent` via R10 BL-C3 flow
+ * In entrambi i casi il booking PENDING deve essere CANCELLED + slot rilasciato.
+ */
+async function onPaymentIntentCanceled(pi: Stripe.PaymentIntent): Promise<void> {
+  let metadata;
+  try {
+    metadata = parseBookingMetadata(pi.metadata);
+  } catch {
+    logger.info({ piId: pi.id }, "PI canceled without booking metadata — ignored");
+    return;
+  }
+
+  // BALANCE PI cancellato: booking resta CONFIRMED (deposit gia' pagato).
+  // Solo DEPOSIT/FULL triggerano cleanup.
+  if (metadata.paymentType === "BALANCE") {
+    logger.info(
+      { bookingId: metadata.bookingId, piId: pi.id },
+      "BALANCE PI canceled — booking resta CONFIRMED",
+    );
+    return;
+  }
+
+  const result = await db.booking.updateMany({
+    where: { id: metadata.bookingId, status: "PENDING" },
+    data: { status: "CANCELLED" },
+  });
+  if (result.count === 0) {
+    logger.info(
+      { bookingId: metadata.bookingId },
+      "Booking not PENDING on PI canceled (already CANCELLED/CONFIRMED)",
+    );
+    return;
+  }
+
+  const booking = await db.booking.findUnique({
+    where: { id: metadata.bookingId },
+    select: { boatId: true, startDate: true, endDate: true },
+  });
+  if (booking) {
+    try {
+      const { releaseDates } = await import("@/lib/availability/service");
+      const { CHANNELS } = await import("@/lib/channels");
+      await releaseDates(
+        booking.boatId,
+        booking.startDate,
+        booking.endDate,
+        CHANNELS.DIRECT,
+      );
+    } catch (err) {
+      logger.error(
+        { err, bookingId: metadata.bookingId },
+        "releaseDates failed on PI canceled",
+      );
+    }
+  }
+  logger.info(
+    { bookingId: metadata.bookingId, piId: pi.id },
+    "PENDING booking cancelled on PI canceled",
+  );
 }
 
 async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
@@ -300,21 +442,68 @@ async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
       "Payment not found for refund (likely out-of-order Stripe webhook); retry will resolve",
     );
   }
-  if (payment.status === "REFUNDED") return;
 
-  // Full refund se `amount_refunded === amount`. Partial refund: NON
-  // rilasciamo availability (il cliente sta ancora venendo).
+  // R23-S-CRITICA-2 / R23-B-CRITICA-1: dual-write pattern (come admin
+  // cancelBooking). Overwrite `Payment.status=REFUNDED` + `stripeRefundId`
+  // sull'originale causava:
+  //  1. revenue per mese retroattivo (groupBy status=SUCCEEDED esclude il
+  //     mese originale → audit fiscale art. 2220 c.c. rotto)
+  //  2. `stripeRefundId` sovrascritto su partial refund multipli → solo
+  //     il primo refundId persistito, il secondo perso
+  //  3. mismatch con cancelBooking admin path che crea REFUND sibling rows
+  // Ora: (a) insert sibling Payment(type=REFUND) idempotent via unique
+  // stripeRefundId, (b) update original→REFUNDED **solo** su full refund
+  // (partial lascia SUCCEEDED), (c) update booking→REFUNDED solo full.
+
+  const refund = charge.refunds?.data[0];
+  const refundId = refund?.id;
+  const refundAmountCents = charge.amount_refunded; // total refunded on charge
   const isFullRefund = charge.amount_refunded === charge.amount;
 
+  // Idempotency: se sibling REFUND con stesso stripeRefundId esiste, webhook
+  // replay. Skip senza throw — dedup ProcessedStripeEvent gia' gestisce
+  // event replay, questo copre partial refund multipli con stesso refund.
+  if (refundId) {
+    const existingRefund = await db.payment.findUnique({
+      where: { stripeRefundId: refundId },
+    });
+    if (existingRefund) {
+      logger.info(
+        { refundId, paymentId: payment.id },
+        "Refund already recorded — idempotent skip",
+      );
+      return;
+    }
+  }
+
   await db.$transaction(async (tx) => {
-    await tx.payment.update({
-      where: { id: payment.id },
+    // (a) sibling REFUND row — audit fiscale per mese del rimborso.
+    //     `stripeChargeId` NULL per evitare unique collision con original.
+    await tx.payment.create({
       data: {
+        bookingId: payment.bookingId,
+        amount: (refundAmountCents / 100).toFixed(2),
+        currency: payment.currency,
+        type: "REFUND",
+        method: "STRIPE",
         status: "REFUNDED",
-        stripeRefundId: charge.refunds?.data[0]?.id,
+        stripeChargeId: null,
+        stripeRefundId: refundId,
+        note: `Stripe refund of charge ${charge.id}${isFullRefund ? " (full)" : " (partial)"}`,
+        processedAt: new Date(),
       },
     });
 
+    // (b) update original **solo** full refund. Partial → originale resta
+    //     SUCCEEDED (il cliente ha ancora valore residuo).
+    if (isFullRefund && payment.status !== "REFUNDED") {
+      await tx.payment.update({
+        where: { id: payment.id },
+        data: { status: "REFUNDED" },
+      });
+    }
+
+    // (c) booking → REFUNDED solo full refund.
     if (isFullRefund && payment.booking.status !== "REFUNDED") {
       await tx.booking.update({
         where: { id: payment.bookingId },

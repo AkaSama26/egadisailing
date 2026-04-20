@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { createWorker, registerWorker } from "@/lib/queue";
+import { createWorker, registerWorker, QUEUE_NAMES } from "@/lib/queue";
 import { upsertBokunPriceOverride } from "@/lib/bokun/pricing";
 import { isBokunConfigured } from "@/lib/bokun";
 import { db } from "@/lib/db";
@@ -21,9 +21,16 @@ interface PricingJob {
  */
 export function startBokunPricingWorker() {
   const worker = createWorker<PricingJob>(
-    "sync",
+    QUEUE_NAMES.PRICING_BOKUN,
     async (job) => {
-      if (job.name !== "pricing.bokun.sync") return;
+      // R23-Q-CRITICA-1: queue dedicata — no early-return drop.
+      if (job.name !== "pricing.bokun.sync") {
+        logger.warn(
+          { jobName: job.name, queue: QUEUE_NAMES.PRICING_BOKUN },
+          "Unexpected job name on Bokun pricing queue",
+        );
+        return;
+      }
       const { data } = job.data;
       if (!data) return;
 

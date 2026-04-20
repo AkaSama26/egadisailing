@@ -1,5 +1,6 @@
-import { createWorker, registerWorker } from "@/lib/queue";
+import { createWorker, registerWorker, QUEUE_NAMES } from "@/lib/queue";
 import { createManualAlert } from "@/lib/charter/manual-alerts";
+import { logger } from "@/lib/logger";
 import { CHANNELS } from "@/lib/channels";
 import { parseIsoDay } from "@/lib/dates";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
@@ -17,12 +18,25 @@ interface AvailabilityJob {
  */
 export function startManualAlertWorker() {
   const worker = createWorker<AvailabilityJob>(
-    "sync",
+    QUEUE_NAMES.AVAIL_MANUAL,
     async (job) => {
-      if (job.name !== "availability.update") return;
+      // R23-Q-CRITICA-1: queue dedicata — no early-return drop.
+      if (job.name !== "availability.update") {
+        logger.warn(
+          { jobName: job.name, queue: QUEUE_NAMES.AVAIL_MANUAL },
+          "Unexpected job name on manual alert queue",
+        );
+        return;
+      }
       const { data } = job.data;
       if (!data) return;
+      // Sanity guard: fan-out routing only enqueues CLICKANDBOAT/NAUTAL here,
+      // un payload diverso significa producer bug — log+skip invece di drop.
       if (data.targetChannel !== CHANNELS.CLICKANDBOAT && data.targetChannel !== CHANNELS.NAUTAL) {
+        logger.warn(
+          { targetChannel: data.targetChannel, queue: QUEUE_NAMES.AVAIL_MANUAL },
+          "Unexpected targetChannel on manual alert queue",
+        );
         return;
       }
 
@@ -34,7 +48,10 @@ export function startManualAlertWorker() {
         bookingId: data.originBookingId,
       });
     },
-    { concurrency: 3 },
+    // R23-Q-ALTA-2: concurrency=1 — createManualAlert fa advisory lock,
+    // concurrency=3 serialize inutile + scaricava pool Prisma + SIGTERM
+    // timeout risk con 3 active jobs.
+    { concurrency: 1 },
   );
   registerWorker(worker);
   return worker;

@@ -1,9 +1,8 @@
-import { createWorker, registerWorker } from "@/lib/queue";
+import { createWorker, registerWorker, QUEUE_NAMES } from "@/lib/queue";
 import { updateBoataroundAvailability } from "@/lib/boataround/availability";
 import { isBoataroundConfigured } from "@/lib/boataround/client";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { CHANNELS } from "@/lib/channels";
 import { parseIsoDay } from "@/lib/dates";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
 
@@ -18,11 +17,18 @@ interface AvailabilityJob {
  */
 export function startBoataroundAvailabilityWorker() {
   const worker = createWorker<AvailabilityJob>(
-    "sync",
+    QUEUE_NAMES.AVAIL_BOATAROUND,
     async (job) => {
-      if (job.name !== "availability.update") return;
+      // R23-Q-CRITICA-1: queue dedicata — no early-return drop.
+      if (job.name !== "availability.update") {
+        logger.warn(
+          { jobName: job.name, queue: QUEUE_NAMES.AVAIL_BOATAROUND },
+          "Unexpected job name on Boataround availability queue",
+        );
+        return;
+      }
       const { data } = job.data;
-      if (!data || data.targetChannel !== CHANNELS.BOATAROUND) return;
+      if (!data) return;
 
       if (!isBoataroundConfigured()) {
         logger.warn(

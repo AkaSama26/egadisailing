@@ -1,4 +1,4 @@
-import { syncQueue } from "@/lib/queue";
+import { pricingBokunQueue } from "@/lib/queue";
 import { db } from "@/lib/db";
 import { isoDay } from "@/lib/dates";
 import { quotePrice } from "./service";
@@ -31,7 +31,9 @@ export async function scheduleBokunPricingSync(options: {
     return;
   }
 
-  const queue = syncQueue();
+  // R23-Q-CRITICA-1: queue dedicata per pricing. Shared "sync" queue faceva
+  // round-robin drop.
+  const queue = pricingBokunQueue();
   for (const service of services) {
     for (const date of options.dates) {
       const day = isoDay(date);

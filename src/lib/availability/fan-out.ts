@@ -1,6 +1,11 @@
-import { syncQueue } from "@/lib/queue";
-import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
-import { CHANNEL_SYNC_MODE, FAN_OUT_CHANNELS, SYNC_MODE, type Channel } from "@/lib/channels";
+import {
+  availBokunQueue,
+  availBoataroundQueue,
+  availManualQueue,
+} from "@/lib/queue";
+import type { Queue } from "bullmq";
+import type { AvailabilityUpdateJobPayload, Job as SyncJob } from "@/lib/queue/types";
+import { CHANNEL_SYNC_MODE, CHANNELS, FAN_OUT_CHANNELS, SYNC_MODE, type Channel } from "@/lib/channels";
 import { logger } from "@/lib/logger";
 
 export interface FanOutOptions {
@@ -9,6 +14,26 @@ export interface FanOutOptions {
   status: "AVAILABLE" | "BLOCKED" | "PARTIALLY_BOOKED";
   sourceChannel: string;
   originBookingId?: string;
+}
+
+/**
+ * R23-Q-CRITICA-1: queue dedicata per channel. Shared `"sync"` queue era
+ * round-robin distributed tra 4 worker → job silently dropped dal worker
+ * sbagliato (early-return = completed successful in BullMQ). Ora ogni
+ * target va nella propria queue consumata da un solo worker type.
+ */
+function queueForChannel(channel: Channel): Queue<SyncJob> | null {
+  switch (channel) {
+    case CHANNELS.BOKUN:
+      return availBokunQueue();
+    case CHANNELS.BOATAROUND:
+      return availBoataroundQueue();
+    case CHANNELS.CLICKANDBOAT:
+    case CHANNELS.NAUTAL:
+      return availManualQueue();
+    default:
+      return null;
+  }
 }
 
 /**
@@ -28,9 +53,14 @@ export async function fanOutAvailability(opts: FanOutOptions): Promise<void> {
     (ch) => ch !== sourceAsChannel && CHANNEL_SYNC_MODE[ch] !== SYNC_MODE.ICAL,
   );
 
-  const queue = syncQueue();
-  await Promise.all(
+  // R23-Q-MEDIA-4: Promise.allSettled → partial enqueue visibile invece di
+  // "Fan-out enqueue failed" generico che nasconde quale target ha fallito.
+  const results = await Promise.allSettled(
     targets.map((targetChannel) => {
+      const queue = queueForChannel(targetChannel);
+      if (!queue) {
+        return Promise.reject(new Error(`No queue for channel ${targetChannel}`));
+      }
       const payload: AvailabilityUpdateJobPayload = {
         boatId: opts.boatId,
         date: opts.date,
@@ -49,13 +79,34 @@ export async function fanOutAvailability(opts: FanOutOptions): Promise<void> {
     }),
   );
 
-  logger.info(
-    {
-      boatId: opts.boatId,
-      date: opts.date,
-      targets,
-      source: opts.sourceChannel,
-    },
-    "Availability fan-out queued",
-  );
+  const succeeded: Channel[] = [];
+  const failed: Array<{ channel: Channel; error: string }> = [];
+  results.forEach((res, idx) => {
+    const ch = targets[idx];
+    if (res.status === "fulfilled") succeeded.push(ch);
+    else failed.push({ channel: ch, error: (res.reason as Error).message });
+  });
+
+  if (failed.length > 0) {
+    logger.error(
+      {
+        boatId: opts.boatId,
+        date: opts.date,
+        succeeded,
+        failed,
+        source: opts.sourceChannel,
+      },
+      "Availability fan-out partial failure",
+    );
+  } else {
+    logger.info(
+      {
+        boatId: opts.boatId,
+        date: opts.date,
+        targets: succeeded,
+        source: opts.sourceChannel,
+      },
+      "Availability fan-out queued",
+    );
+  }
 }
