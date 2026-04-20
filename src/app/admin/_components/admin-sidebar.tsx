@@ -37,7 +37,7 @@ const navItems = [
   { href: "/admin/canali", label: "Canali", icon: Plug },
   { href: "/admin/meteo", label: "Meteo", icon: CloudSun },
   { href: "/admin/sync-log", label: "Sync & Log", icon: Activity },
-  { href: "/admin/impostazioni", label: "Impostazioni", icon: Settings },
+  { href: "/admin/impostazioni", label: "Informazioni", icon: Settings },
 ];
 
 export function AdminSidebar() {

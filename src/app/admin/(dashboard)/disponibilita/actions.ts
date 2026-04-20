@@ -45,6 +45,35 @@ export async function manualBlockRange(
   const { userId } = await requireAdmin();
   const { start, end, boatName } = await validateRange(boatId, startDateIso, endDateIso);
 
+  // R26-P4 (audit double-book Agent 1 #11): symmetric overlap guard con
+  // manualReleaseRange. Prima manualBlockRange consentiva block su slot
+  // con Booking CONFIRMED attivo — preserveLockedBy mitigava (first
+  // winner protetto) ma admin poteva nascondere inavvertitamente slot
+  // venduti. Con guard: block manuale su booking attivo richiede esplicita
+  // cancellazione prima.
+  const overlapWhere = {
+    boatId,
+    status: { in: ["PENDING" as const, "CONFIRMED" as const] },
+    startDate: { lte: end },
+    endDate: { gte: start },
+  };
+  const overlappingBookings = await db.booking.findMany({
+    where: overlapWhere,
+    select: { confirmationCode: true, source: true, status: true },
+    take: 10,
+  });
+  if (overlappingBookings.length > 0) {
+    const refs = overlappingBookings
+      .map((b) => `${b.confirmationCode} (${b.source}, ${b.status})`)
+      .join(", ");
+    throw new ValidationError(
+      `Impossibile bloccare: ${overlappingBookings.length} booking attivo/i nel range. Cancellarli prima. Codici: ${refs}`,
+      {
+        overlappingSample: overlappingBookings.map((b) => b.confirmationCode),
+      },
+    );
+  }
+
   await blockDates(boatId, start, end, CHANNELS.DIRECT);
 
   await auditLog({

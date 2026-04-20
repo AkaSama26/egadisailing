@@ -85,10 +85,10 @@ stripe events list --type payment_intent.succeeded --created[gte]=$(date -d '7 d
 # Healthcheck deep (richiede Bearer CRON_SECRET):
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/health?deep=1
 # Admin dashboard /admin/sync-log mostra breakdown per-queue (R23 split:
-# sync:avail:bokun, sync:avail:boataround, sync:avail:manual, sync:pricing:bokun).
+# sync.avail.bokun, sync.avail.boataround, sync.avail.manual, sync.pricing.bokun).
 docker compose logs -f app | grep "bullmq\|queue\|Job failed"
-redis-cli -a $REDIS_PASSWORD LLEN 'bull:sync:avail:bokun:waiting'
-redis-cli -a $REDIS_PASSWORD LLEN 'bull:sync:avail:boataround:failed'
+redis-cli -a $REDIS_PASSWORD LLEN 'bull:sync.avail.bokun:waiting'
+redis-cli -a $REDIS_PASSWORD LLEN 'bull:sync.avail.boataround:failed'
 ```
 
 **Azione**:

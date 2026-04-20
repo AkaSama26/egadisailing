@@ -15,7 +15,15 @@ const intlMiddleware = createIntlMiddleware(routing);
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+  // R26-P3 dev-test found: tutto `/admin*` bypassa il next-intl middleware.
+  // Senza questo, `/admin/login` cadeva su intlMiddleware → redirect a
+  // `/it/admin/login` (locale prepend) → 404. Admin dashboard + login sono
+  // sempre in italiano, no i18n routing.
+  if (pathname.startsWith("/admin")) {
+    if (pathname === "/admin/login") {
+      // Login page pubblica — no auth check, ma comunque fuori da i18n.
+      return NextResponse.next();
+    }
     const token = await getToken({
       req,
       // Round 11 B3: fallback a AUTH_SECRET (preferred v5) per migrazione

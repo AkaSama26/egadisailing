@@ -135,13 +135,19 @@ export function getQueue<T = unknown>(name: string): Queue<T> {
  * SOLO worker; i 3 non-matching ritornavano `undefined` = **completed
  * silenzioso** = job silently dropped 75% delle volte. Con queue dedicate
  * per target, ogni worker vede solo i suoi job (no early-return drop).
+ *
+ * R26-P3 dev-runtime: BullMQ rifiuta queue names con `:` (`Queue name cannot
+ * contain :`) perche' usa `:` come separator per le sue key Redis interne
+ * (bull:queueName:waiting, bull:queueName:active, ...). Dot notation usata
+ * invece di `:` (es. `sync.avail.bokun`). L'admin `/admin/sync-log` era
+ * unreachable con l'errore visibile.
  */
 export const QUEUE_NAMES = {
-  AVAIL_BOKUN: "sync:avail:bokun",
-  AVAIL_BOATAROUND: "sync:avail:boataround",
+  AVAIL_BOKUN: "sync.avail.bokun",
+  AVAIL_BOATAROUND: "sync.avail.boataround",
   /** CLICKANDBOAT + NAUTAL (email-only) → manual alert */
-  AVAIL_MANUAL: "sync:avail:manual",
-  PRICING_BOKUN: "sync:pricing:bokun",
+  AVAIL_MANUAL: "sync.avail.manual",
+  PRICING_BOKUN: "sync.pricing.bokun",
 } as const;
 
 /** Lista queue attive per aggregate metrics (health + admin sync-log). */

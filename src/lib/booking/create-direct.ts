@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { quotePrice } from "@/lib/pricing/service";
 import { toCents, fromCents } from "@/lib/pricing/cents";
 import { toUtcDay, isoDay, parseDateLikelyLocalDay } from "@/lib/dates";
@@ -192,40 +193,87 @@ export async function createPendingDirectBooking(
     // sulla stessa slot. Il DB accetta perche' manca l'exclusion constraint
     // `EXCLUDE USING gist (boatId, daterange, status)` — aggiunta in backlog.
     //
-    // R15-REG-UX-1: escludiamo PENDING dello stesso customer creati <30min
-    // fa. Scenario: primo tentativo pagamento Stripe fallisce con
-    // card_declined terminale, cliente clicca "Usa un altro metodo" → wizard
-    // ri-crea PI → senza questa whitelist il PENDING del primo tentativo
-    // verrebbe visto come conflitto, il cliente resta stuck fino al
-    // pending-gc cron (45min). Il vecchio PENDING scadra' normalmente.
-    // R20-A1-1: retry-window 15min stretta (era 30min) per buffer 30min
-    // rispetto al GC cutoff 45min — evita race al bordo.
+    // R26-P4 (audit double-book Agent 1 #4b): retry-window refactored.
+    // Prima escludeva PENDING stesso customer silent → 2 clienti reali che
+    // condividono email (famiglia/azienda) upsert stesso Customer.id →
+    // entrambi passano pre-check → entrambi pagano → 2 CONFIRMED stesso slot.
+    // Ora: cancelliamo ATOMICAMENTE il vecchio PENDING dentro la tx, poi
+    // creiamo il nuovo. Invariante: al piu' 1 PENDING attivo per (customer,
+    // slot). Se il vecchio PI e' ancora in-flight (requires_action, processing),
+    // NON cancelliamo (il 2° request e' un utente diverso, non un retry) → il
+    // nuovo insert fallira' comunque via exclusion constraint DB (R26-P4
+    // migration 20260421190000) + ConflictError visibile.
     const retryWindowStart = new Date(Date.now() - DIRECT_RETRY_WINDOW_MS);
-    const overlappingBookings = await tx.booking.findMany({
+
+    // Step 1: trova TUTTI i booking overlapping PENDING/CONFIRMED.
+    const allConflicts = await tx.booking.findMany({
       where: {
         boatId: service.boatId,
         status: { in: ["PENDING", "CONFIRMED"] },
-        // Range overlap: NOT (existing.end < new.start OR existing.start > new.end)
         startDate: { lte: endDay },
         endDate: { gte: startDay },
-        // R15-REG-UX-1 retry window exclusion
-        NOT: {
-          AND: [
-            { customerId: customer.id },
-            { status: "PENDING" },
-            { source: "DIRECT" },
-            { createdAt: { gte: retryWindowStart } },
-          ],
-        },
       },
-      select: { id: true, source: true, confirmationCode: true },
+      include: { directBooking: true },
     });
-    if (overlappingBookings.length > 0) {
+
+    // Step 2: partitio — "ownRetriable" sono i propri PENDING recenti con
+    // PI in stato terminal-failure (card_declined, canceled). Altri sono
+    // blocker. Una PI ancora "processing" o "requires_action" (es. 3DS
+    // in corso) significa che un PAGAMENTO REALE e' in flight: NON
+    // autorizziamo retry, e' un utente diverso → blocker.
+    const ownRetriable: typeof allConflicts = [];
+    const blockers: typeof allConflicts = [];
+    for (const c of allConflicts) {
+      const isOwnRecent =
+        c.customerId === customer.id &&
+        c.status === "PENDING" &&
+        c.source === "DIRECT" &&
+        c.createdAt >= retryWindowStart;
+      if (!isOwnRecent) {
+        blockers.push(c);
+        continue;
+      }
+      // Proprio PENDING recente — determina se e' un retry vero (PI
+      // fallito) o 2° utente stessa email (PI attivo).
+      // Senza PI: gia' abbandonato (es. client crashed pre-PI). Safe to cancel.
+      // Con PI noto e terminal: safe to cancel.
+      // Altrimenti (PI sconosciuto + pending): blocker (serve attesa del
+      // webhook payment_failed o del pending-gc).
+      //
+      // Proxy semplice: se DirectBooking.stripePaymentIntentId e' null o
+      // se c'e' un Payment FAILED per questo booking, e' retriable.
+      // Altrimenti tratta come blocker.
+      const hasFailedPayment = await tx.payment.findFirst({
+        where: { bookingId: c.id, status: "FAILED" },
+        select: { id: true },
+      });
+      const hasStripePi = c.directBooking?.stripePaymentIntentId != null;
+      if (hasFailedPayment || !hasStripePi) {
+        ownRetriable.push(c);
+      } else {
+        // PI noto + nessun FAILED record: potrebbe essere in-flight. Tratta
+        // come blocker per sicurezza. Il pending-gc (45min) sblocca se
+        // abbandonato.
+        blockers.push(c);
+      }
+    }
+
+    if (blockers.length > 0) {
       throw new ConflictError("Dates not available (overlapping active booking)", {
-        conflictingBookings: overlappingBookings.map((b) => ({
+        conflictingBookings: blockers.map((b) => ({
           code: b.confirmationCode,
           source: b.source,
         })),
+      });
+    }
+
+    // Step 3: cancella atomicamente i propri PENDING retriabili. Questo
+    // libera la tx per il nuovo insert senza conflict constraint DB.
+    // PI cleanup (cancelPaymentIntent) lo faremo post-commit best-effort.
+    if (ownRetriable.length > 0) {
+      await tx.booking.updateMany({
+        where: { id: { in: ownRetriable.map((r) => r.id) }, status: "PENDING" },
+        data: { status: "CANCELLED" },
       });
     }
 
@@ -274,13 +322,33 @@ export async function createPendingDirectBooking(
       },
     });
 
-    return created;
+    return {
+      created,
+      cancelledPiIds: ownRetriable
+        .map((r) => r.directBooking?.stripePaymentIntentId)
+        .filter((pi): pi is string => !!pi),
+    };
   });
+
+  // R26-P4: post-commit best-effort cancel dei PI del vecchio PENDING appena
+  // cancellato (dentro tx). Se Stripe e' giu' o il PI e' gia' terminale,
+  // cancelPaymentIntent degrada silenzioso (pattern R14-REG-M2). Il
+  // pending-gc cron copre i casi dove questa cleanup fallisce.
+  for (const piId of result.cancelledPiIds) {
+    void import("@/lib/stripe/payment-intents")
+      .then(({ cancelPaymentIntent }) => cancelPaymentIntent(piId))
+      .catch((err) => {
+        logger.warn(
+          { err: (err as Error).message, piId },
+          "Retry-cancel PI failed (pending-gc will retry)",
+        );
+      });
+  }
 
   const upfrontCents = input.paymentSchedule === "DEPOSIT_BALANCE" ? depositCents : totalCents;
 
   return {
-    bookingId: result.id,
+    bookingId: result.created.id,
     confirmationCode,
     totalAmountCents: totalCents,
     depositAmountCents: depositCents,

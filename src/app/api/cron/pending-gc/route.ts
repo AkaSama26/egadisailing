@@ -128,11 +128,64 @@ export const GET = withErrorHandler(async (req: Request) => {
       }
     }
 
+    // R26-P4 (audit double-book Agent 1 #5-tail): recovery drift
+    // cleanup. Se il cron e' crashato tra `updateMany CANCELLED` e
+    // `releaseDates`, la cella resta BLOCKED con lockedByBookingId che
+    // punta a un booking CANCELLED → slot unbookable permanentemente +
+    // customer legittimo bloccato. Qui rileviamo questa drift e releasee.
+    // Stesso pattern: BoatAvailability BLOCKED + lockedByBooking.status
+    // IN (CANCELLED, REFUNDED).
+    let driftReleased = 0;
+    try {
+      const orphans = await db.boatAvailability.findMany({
+        where: {
+          status: "BLOCKED",
+          lockedByBookingId: { not: null },
+          lockedByBooking: {
+            status: { in: ["CANCELLED", "REFUNDED"] },
+          },
+        },
+        select: { boatId: true, date: true },
+        take: 200,
+      });
+      for (const o of orphans) {
+        try {
+          await releaseDates(o.boatId, o.date, o.date, CHANNELS.DIRECT);
+          driftReleased++;
+        } catch (err) {
+          logger.warn(
+            { err: (err as Error).message, boatId: o.boatId, date: o.date },
+            "Drift release failed, will retry next run",
+          );
+        }
+      }
+      if (orphans.length > 0) {
+        logger.info(
+          { orphans: orphans.length, released: driftReleased },
+          "Pending GC: drift BLOCKED+CANCELLED cells recovered",
+        );
+      }
+    } catch (err) {
+      logger.error({ err: (err as Error).message }, "Drift scan failed");
+    }
+
     logger.info(
-      { scanned: totalScanned, cancelled, piCancelled, errors: errors.length },
+      {
+        scanned: totalScanned,
+        cancelled,
+        piCancelled,
+        driftReleased,
+        errors: errors.length,
+      },
       "Pending GC cron completed",
     );
-    return NextResponse.json({ scanned: totalScanned, cancelled, piCancelled, errors });
+    return NextResponse.json({
+      scanned: totalScanned,
+      cancelled,
+      piCancelled,
+      driftReleased,
+      errors,
+    });
   } finally {
     await releaseLease(lease);
   }

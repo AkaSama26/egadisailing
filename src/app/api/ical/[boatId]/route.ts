@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import crypto from "node:crypto";
+import { db } from "@/lib/db";
 import { generateBoatIcal } from "@/lib/ical/generator";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
 import { getClientIp } from "@/lib/http/client-ip";
@@ -10,11 +12,14 @@ export const runtime = "nodejs";
 /**
  * GET /api/ical/[boatId] — feed iCal RFC5545 pubblico.
  *
- * Rate-limit 30 req/min per IP: i portali iCal (SamBoat/Airbnb) polling
- * tipico 1-2 req/ora, 30/min e' abbondante + protegge da scraping.
+ * Rate-limit 30 req/min per IP.
  *
- * Cache 15 min (in-browser + reverse proxy). Il BoatAvailability cambia
- * raramente — 15 min di staleness e' accettabile per il channel sync.
+ * R26-P4 (audit double-book Agent 2 Scenario 3 / R13-D): cache ridotta da
+ * 15min → 60s + ETag basato su `max(BoatAvailability.updatedAt)` per-boat.
+ * Consumer iCal (SamBoat, Airbnb, Google Calendar) che supportano
+ * If-None-Match ricevono 304 Not Modified invece di re-parsare → traffico
+ * quasi identico ma staleness window ridotta a ~60s. Riduce double-booking
+ * Airbnb-style (cliente vede slot libero 15min dopo che l'abbiamo bloccato).
  */
 export const GET = withErrorHandler(async (req: Request, ...args: unknown[]) => {
   const ctx = args[0] as { params: Promise<{ boatId: string }> };
@@ -27,13 +32,43 @@ export const GET = withErrorHandler(async (req: Request, ...args: unknown[]) => 
   });
 
   const { boatId } = await ctx.params;
-  const ical = await generateBoatIcal(boatId);
 
+  // ETag: hash di max(BoatAvailability.updatedAt) + boatId. Cambia su
+  // qualsiasi update cella → consumer invalidano cache immediatamente.
+  const latest = await db.boatAvailability.aggregate({
+    where: { boatId },
+    _max: { updatedAt: true },
+  });
+  const lastModified = latest._max.updatedAt ?? new Date(0);
+  const etag = `"${crypto
+    .createHash("sha1")
+    .update(`${boatId}:${lastModified.toISOString()}`)
+    .digest("base64url")
+    .slice(0, 16)}"`;
+
+  // If-None-Match: consumer conforme (Airbnb, Google Cal) invia ETag
+  // precedente → 304 Not Modified → niente body + cache validation.
+  const ifNoneMatch = req.headers.get("if-none-match");
+  if (ifNoneMatch === etag) {
+    return new NextResponse(null, {
+      status: 304,
+      headers: {
+        etag,
+        "cache-control": "public, max-age=60, must-revalidate",
+      },
+    });
+  }
+
+  const ical = await generateBoatIcal(boatId);
   return new NextResponse(ical, {
     status: 200,
     headers: {
       "content-type": "text/calendar; charset=utf-8",
-      "cache-control": "public, max-age=900",
+      // max-age=60 + must-revalidate → consumer rivalida ogni minuto.
+      // Staleness window effettiva con ETag: ~60s.
+      "cache-control": "public, max-age=60, must-revalidate",
+      etag,
+      "last-modified": lastModified.toUTCString(),
       "content-disposition": `attachment; filename="${boatId}.ics"`,
     },
   });

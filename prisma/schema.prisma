@@ -198,6 +198,10 @@ model BoatAvailability {
   createdAt         DateTime           @default(now())
 
   boat Boat @relation(fields: [boatId], references: [id])
+  // R26-P4: FK onDelete SetNull. Orphan pointer prima era possibile
+  // (lockedByBookingId → Booking.id senza vincolo). Ora hard-delete
+  // Booking libera il lock automatic.
+  lockedByBooking Booking? @relation("LockedByBooking", fields: [lockedByBookingId], references: [id], onDelete: SetNull)
 
   @@unique([boatId, date])
   @@index([status])
@@ -289,6 +293,8 @@ model Booking {
   // R26-A2-4/A2-7: inverse relations per FK aggiunti (onDelete: SetNull).
   consentRecords ConsentRecord[]
   manualAlerts   ManualAlert[]
+  // R26-P4: inverse per BoatAvailability.lockedByBookingId FK.
+  lockedCells    BoatAvailability[] @relation("LockedByBooking")
 
   @@index([source, status])
   @@index([startDate])

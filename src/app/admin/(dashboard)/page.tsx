@@ -16,7 +16,6 @@ export default async function DashboardHome() {
     upcomingCount,
     balancesAgg,
     pendingAlerts,
-    channelStatuses,
   ] = await Promise.all([
     db.payment.aggregate({
       where: {
@@ -41,14 +40,10 @@ export default async function DashboardHome() {
       _sum: { balanceAmount: true },
     }),
     listPendingManualAlerts(),
-    db.channelSyncStatus.findMany({
-      orderBy: { channel: "asc" },
-    }),
   ]);
 
   const revenueDec = new Decimal(revenueAgg._sum.amount?.toString() ?? "0");
   const balancesDec = new Decimal(balancesAgg._sum.balanceAmount?.toString() ?? "0");
-  const anyRed = channelStatuses.some((c) => c.healthStatus === "RED");
 
   return (
     <div className="space-y-6">
@@ -105,34 +100,6 @@ export default async function DashboardHome() {
         </div>
       )}
 
-      <div
-        className={`bg-white rounded-xl border p-5 ${anyRed ? "border-red-200" : "border-slate-200"}`}
-      >
-        <h2 className="font-bold mb-3 text-slate-900">Channel health</h2>
-        {channelStatuses.length === 0 ? (
-          <p className="text-sm text-slate-500">Nessun canale ancora sincronizzato.</p>
-        ) : (
-          <div className="flex gap-2 flex-wrap">
-            {channelStatuses.map((c) => {
-              const tone =
-                c.healthStatus === "GREEN"
-                  ? "bg-emerald-100 text-emerald-800"
-                  : c.healthStatus === "YELLOW"
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-red-100 text-red-800";
-              return (
-                <span
-                  key={c.channel}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${tone}`}
-                  title={c.lastError ?? ""}
-                >
-                  {c.channel} · {c.healthStatus}
-                </span>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

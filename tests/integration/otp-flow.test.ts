@@ -32,16 +32,16 @@ vi.mock("@/lib/queue", () => ({
   pricingBokunQueue: () => ({ add: vi.fn() }),
   getQueue: () => ({ add: vi.fn() }),
   QUEUE_NAMES: {
-    AVAIL_BOKUN: "sync:avail:bokun",
-    AVAIL_BOATAROUND: "sync:avail:boataround",
-    AVAIL_MANUAL: "sync:avail:manual",
-    PRICING_BOKUN: "sync:pricing:bokun",
+    AVAIL_BOKUN: "sync.avail.bokun",
+    AVAIL_BOATAROUND: "sync.avail.boataround",
+    AVAIL_MANUAL: "sync.avail.manual",
+    PRICING_BOKUN: "sync.pricing.bokun",
   },
   ALL_QUEUE_NAMES: [
-    "sync:avail:bokun",
-    "sync:avail:boataround",
-    "sync:avail:manual",
-    "sync:pricing:bokun",
+    "sync.avail.bokun",
+    "sync.avail.boataround",
+    "sync.avail.manual",
+    "sync.pricing.bokun",
   ],
 }));
 

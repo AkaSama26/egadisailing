@@ -33,16 +33,16 @@ vi.mock("@/lib/queue", () => ({
   pricingBokunQueue: () => ({ add: vi.fn() }),
   getQueue: () => ({ add: vi.fn() }),
   QUEUE_NAMES: {
-    AVAIL_BOKUN: "sync:avail:bokun",
-    AVAIL_BOATAROUND: "sync:avail:boataround",
-    AVAIL_MANUAL: "sync:avail:manual",
-    PRICING_BOKUN: "sync:pricing:bokun",
+    AVAIL_BOKUN: "sync.avail.bokun",
+    AVAIL_BOATAROUND: "sync.avail.boataround",
+    AVAIL_MANUAL: "sync.avail.manual",
+    PRICING_BOKUN: "sync.pricing.bokun",
   },
   ALL_QUEUE_NAMES: [
-    "sync:avail:bokun",
-    "sync:avail:boataround",
-    "sync:avail:manual",
-    "sync:pricing:bokun",
+    "sync.avail.bokun",
+    "sync.avail.boataround",
+    "sync.avail.manual",
+    "sync.pricing.bokun",
   ],
 }));
 
@@ -194,27 +194,33 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     );
   });
 
-  it("R20-A1-1 retry-window: stesso customer entro 44min puo' ricreare PENDING", async () => {
+  it("R20-A1-1 retry-window: stesso customer entro 44min → auto-cancel del vecchio PENDING", async () => {
     await seedServiceSocial();
     const { createPendingDirectBooking } = await import(
       "@/lib/booking/create-direct"
     );
 
-    // Primo tentativo.
+    // Primo tentativo (nessun PI ancora attach-ato dal wizard).
     const r1 = await createPendingDirectBooking(baseInput());
     expect(r1.bookingId).toBeDefined();
 
     // Secondo tentativo stesso customer, stesso slot, subito dopo
-    // (simulating card_declined retry flow).
+    // (simulating card_declined retry flow). R26-P4: il vecchio PENDING
+    // senza PI e' ownRetriable → atomically cancelled in tx.
     const r2 = await createPendingDirectBooking(baseInput());
     expect(r2.bookingId).toBeDefined();
     expect(r2.bookingId).not.toBe(r1.bookingId);
 
-    // 2 booking PENDING attivi (vecchio sara' GC'd).
+    // 1 solo PENDING attivo (il nuovo); il vecchio e' CANCELLED.
     const pending = await db.booking.count({
       where: { customerId: { not: undefined }, status: "PENDING" },
     });
-    expect(pending).toBe(2);
+    expect(pending).toBe(1);
+    const oldBooking = await db.booking.findUnique({
+      where: { id: r1.bookingId },
+      select: { status: true },
+    });
+    expect(oldBooking?.status).toBe("CANCELLED");
   });
 
   it("advisory lock: 2 richieste concorrenti → solo 1 crea, altro ConflictError", async () => {

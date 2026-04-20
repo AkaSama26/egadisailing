@@ -37,16 +37,16 @@ vi.mock("@/lib/queue", () => ({
   pricingBokunQueue: () => ({ add: pricingBokunAdd }),
   getQueue: () => ({ add: vi.fn() }),
   QUEUE_NAMES: {
-    AVAIL_BOKUN: "sync:avail:bokun",
-    AVAIL_BOATAROUND: "sync:avail:boataround",
-    AVAIL_MANUAL: "sync:avail:manual",
-    PRICING_BOKUN: "sync:pricing:bokun",
+    AVAIL_BOKUN: "sync.avail.bokun",
+    AVAIL_BOATAROUND: "sync.avail.boataround",
+    AVAIL_MANUAL: "sync.avail.manual",
+    PRICING_BOKUN: "sync.pricing.bokun",
   },
   ALL_QUEUE_NAMES: [
-    "sync:avail:bokun",
-    "sync:avail:boataround",
-    "sync:avail:manual",
-    "sync:pricing:bokun",
+    "sync.avail.bokun",
+    "sync.avail.boataround",
+    "sync.avail.manual",
+    "sync.pricing.bokun",
   ],
 }));
 
@@ -80,12 +80,83 @@ async function seedBoat(id = "avail-boat") {
   });
 }
 
+// R26-P4: BoatAvailability.lockedByBookingId ora ha FK → Booking.id.
+// Test che usavano id fake ("bookingA") ora richiedono un vero Booking row.
+// Helper: crea service + customer + booking reale + ritorna l'id.
+async function seedBooking(
+  boatId: string,
+  opts: { id?: string; source?: "DIRECT" | "BOKUN"; date?: Date } = {},
+): Promise<string> {
+  const bookingId = opts.id ?? `bk-${Math.random().toString(36).slice(2, 10)}`;
+  const service = await db.service.upsert({
+    where: { id: `svc-${boatId}` },
+    create: {
+      id: `svc-${boatId}`,
+      boatId,
+      name: "S",
+      type: "SOCIAL_BOATING",
+      durationType: "FULL_DAY",
+      durationHours: 8,
+      capacityMax: 20,
+      defaultPaymentSchedule: "FULL",
+      active: true,
+    },
+    update: {},
+  });
+  const customer = await db.customer.create({
+    data: {
+      email: `c-${Math.random().toString(36).slice(2)}@ex.com`,
+      firstName: "C",
+      lastName: "X",
+    },
+  });
+  await db.booking.create({
+    data: {
+      id: bookingId,
+      confirmationCode: `AV${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      source: opts.source ?? "DIRECT",
+      customerId: customer.id,
+      serviceId: service.id,
+      boatId,
+      startDate: opts.date ?? new Date("2026-07-15"),
+      endDate: opts.date ?? new Date("2026-07-15"),
+      numPeople: 2,
+      totalPrice: "200.00",
+      status: "CONFIRMED",
+    },
+  });
+  return bookingId;
+}
+
 describe("R23-B-ALTA-1: preserve lockedByBookingId first-winner", () => {
   it("BLOCKED owner=A → BLOCKED owner=B cross-channel → preserva A", async () => {
     const boat = await seedBoat();
     const { updateAvailability } = await import("@/lib/availability/service");
-
     const date = new Date("2026-07-15");
+
+    // R26-P4: FK boatAvailability.lockedByBookingId → Booking.id richiede
+    // bookingId esistenti. Creiamo A CONFIRMED, B CANCELLED (per bypassare
+    // exclusion constraint sul range overlapping).
+    const bookingA = await seedBooking(boat.id, { source: "DIRECT", date });
+    const bookingBId = `bk-b-${Math.random().toString(36).slice(2, 8)}`;
+    const customerB = await db.customer.create({
+      data: { email: "b@ex.com", firstName: "B", lastName: "X" },
+    });
+    await db.booking.create({
+      data: {
+        id: bookingBId,
+        confirmationCode: `BKB${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
+        source: "BOKUN",
+        customerId: customerB.id,
+        serviceId: `svc-${boat.id}`,
+        boatId: boat.id,
+        startDate: date,
+        endDate: date,
+        numPeople: 2,
+        totalPrice: "200.00",
+        status: "CANCELLED", // CANCELLED → exclusion constraint non applica
+      },
+    });
 
     // Step 1: DIRECT blocca con bookingA.
     await updateAvailability({
@@ -93,18 +164,17 @@ describe("R23-B-ALTA-1: preserve lockedByBookingId first-winner", () => {
       date,
       status: "BLOCKED",
       sourceChannel: "DIRECT",
-      lockedByBookingId: "bookingA",
+      lockedByBookingId: bookingA,
     });
 
-    // Step 2: BOKUN webhook cross-OTA stesso slot con bookingB (fuori
-    // self-echo window di 600s — DIRECT source diverso da BOKUN quindi
-    // self-echo non trigga, ma preserveLockedBy R23-B-ALTA-1 deve stop).
+    // Step 2: BOKUN cross-OTA tenta di sovrascrivere con bookingB.
+    // preserveLockedBy R23-B-ALTA-1 deve mantenere A.
     await updateAvailability({
       boatId: boat.id,
       date,
       status: "BLOCKED",
       sourceChannel: "BOKUN",
-      lockedByBookingId: "bookingB",
+      lockedByBookingId: bookingBId,
     });
 
     const cell = await db.boatAvailability.findUnique({
@@ -112,20 +182,21 @@ describe("R23-B-ALTA-1: preserve lockedByBookingId first-winner", () => {
     });
     expect(cell?.status).toBe("BLOCKED");
     // First-winner preservato — owner resta bookingA.
-    expect(cell?.lockedByBookingId).toBe("bookingA");
+    expect(cell?.lockedByBookingId).toBe(bookingA);
   });
 
   it("BLOCKED → AVAILABLE clear lockedByBookingId (admin release)", async () => {
     const boat = await seedBoat();
     const { updateAvailability } = await import("@/lib/availability/service");
     const date = new Date("2026-07-15");
+    const bookingA = await seedBooking(boat.id, { source: "DIRECT", date });
 
     await updateAvailability({
       boatId: boat.id,
       date,
       status: "BLOCKED",
       sourceChannel: "DIRECT",
-      lockedByBookingId: "bookingA",
+      lockedByBookingId: bookingA,
     });
     await updateAvailability({
       boatId: boat.id,
@@ -151,7 +222,8 @@ describe("R23-Q-CRITICA-1: fan-out route per-channel queue", () => {
     const start = new Date("2026-07-15");
     const end = new Date("2026-07-15");
 
-    await blockDates(boat.id, start, end, "DIRECT", "bookingX");
+    const bookingX = await seedBooking(boat.id, { date: start });
+    await blockDates(boat.id, start, end, "DIRECT", bookingX);
 
     // 1 day × 3 non-iCal channels = 3 job enqueues (BOKUN, BOATAROUND, MANUAL).
     // SAMBOAT e' ICAL → filtered out upstream (fan-out.ts:29).
@@ -168,8 +240,9 @@ describe("R23-Q-CRITICA-1: fan-out route per-channel queue", () => {
 
     const start = new Date("2026-07-11"); // sabato
     const end = new Date("2026-07-17"); // venerdi successivo (7 giorni)
+    const bookingWeek = await seedBooking(boat.id, { date: start });
 
-    await blockDates(boat.id, start, end, "DIRECT", "bookingWeek");
+    await blockDates(boat.id, start, end, "DIRECT", bookingWeek);
 
     // Verifica: 7 celle BoatAvailability create in singola tx.
     const cells = await db.boatAvailability.findMany({
@@ -179,7 +252,7 @@ describe("R23-Q-CRITICA-1: fan-out route per-channel queue", () => {
     expect(cells).toHaveLength(7);
     for (const c of cells) {
       expect(c.status).toBe("BLOCKED");
-      expect(c.lockedByBookingId).toBe("bookingWeek");
+      expect(c.lockedByBookingId).toBe(bookingWeek);
     }
 
     // Fan-out: 7 giorni × 3 queue non-iCal = 21 job totali
@@ -195,13 +268,14 @@ describe("R5 self-echo window 600s prevents ping-pong", () => {
     const boat = await seedBoat();
     const { updateAvailability } = await import("@/lib/availability/service");
     const date = new Date("2026-07-15");
+    const b1 = await seedBooking(boat.id, { source: "BOKUN", date });
 
     await updateAvailability({
       boatId: boat.id,
       date,
       status: "BLOCKED",
       sourceChannel: "BOKUN",
-      lockedByBookingId: "b1",
+      lockedByBookingId: b1,
     });
     // Reset counters DOPO il primo update.
     vi.clearAllMocks();
@@ -212,7 +286,7 @@ describe("R5 self-echo window 600s prevents ping-pong", () => {
       date,
       status: "BLOCKED",
       sourceChannel: "BOKUN",
-      lockedByBookingId: "b1",
+      lockedByBookingId: b1,
     });
 
     // Nessun fan-out al secondo update (self-echo).
