@@ -7,8 +7,15 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
+  // R23-L-CAPACITY: preferisci DATABASE_URL_POOLED se settato (PgBouncer
+  // transaction-pool). Migrations/advisory-locks restano su DATABASE_URL
+  // (session-pool richiesto — PgBouncer transaction-mode rompe
+  // pg_advisory_xact_lock cross-statement). In prod il runtime usa il
+  // pooler, i cron di migration usano il direct. Se il pooler non e'
+  // configurato, fallback a direct DATABASE_URL.
+  const runtimeUrl = process.env.DATABASE_URL_POOLED ?? process.env.DATABASE_URL;
   const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: runtimeUrl,
     max: Number(process.env.DATABASE_POOL_MAX ?? 20),
     idleTimeoutMillis: 30_000,
     // Statement-level timeout: previene query runaway (deadlock, full scan

@@ -1,0 +1,82 @@
+# Caddyfile per egadisailing — reverse proxy + auto-TLS + security headers.
+#
+# Caddy emette automaticamente certificati Let's Encrypt al primo request
+# HTTPS. Assicurarsi che il DNS A/AAAA del dominio punti al server PRIMA
+# di avviare: altrimenti challenge ACME fallisce (rate-limit ACME 5/week).
+#
+# Environment da settare in .env prima di `docker compose up`:
+#   APP_DOMAIN=egadisailing.com
+#   ACME_EMAIL=ops@egadisailing.com  (per Let's Encrypt renewal notice)
+
+{
+	email {env.ACME_EMAIL}
+	# Global options
+	admin off
+	# Prod: rate-limit ACME via staging issuer during initial deploy testing:
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{env.APP_DOMAIN} {
+	# Redirect www → apex
+	@www host www.{env.APP_DOMAIN}
+	redir @www https://{env.APP_DOMAIN}{uri} permanent
+
+	encode zstd gzip
+
+	# Security headers (defense-in-depth sopra quelli di Next.js).
+	header {
+		# HSTS 2 anni + subdomains + preload (rimuovere preload solo se
+		# necessario — reversibile solo dopo 6 mesi).
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		# R22 COOP: Stripe popup 3DS richiede allow-popups.
+		Cross-Origin-Opener-Policy same-origin-allow-popups
+		X-Permitted-Cross-Domain-Policies none
+		# Remove Server header
+		-Server
+	}
+
+	# Client max body size: no big uploads in this app.
+	request_body {
+		max_size 2MB
+	}
+
+	# Block common probe paths (log noise).
+	@probe path /.env /.git/* /wp-admin/* /phpMyAdmin/*
+	respond @probe 404
+
+	# Reverse proxy to Next.js app container.
+	reverse_proxy app:3000 {
+		# Real client IP for rate-limit + Turnstile validation.
+		# Trusted_proxies lista deve essere restrittiva — solo la rete Docker
+		# interna per evitare X-Forwarded-For spoofing.
+		trusted_proxies private_ranges
+
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-Proto https
+
+		# Retry su 502/503/504 (app restart) max 2x.
+		lb_try_duration 10s
+		lb_try_interval 250ms
+
+		# Health check diretto al backend.
+		health_uri /api/health
+		health_interval 30s
+		health_timeout 5s
+		health_status 2xx
+	}
+
+	# Log formato JSON per aggregator esterno (Loki/Datadog).
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 100mb
+			roll_keep 5
+			roll_keep_for 168h
+		}
+		format json
+		level INFO
+	}
+}

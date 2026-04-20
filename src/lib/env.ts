@@ -12,7 +12,20 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(["trace", "debug", "info", "warn", "error", "fatal"]).optional(),
 
   // Database
+  // DATABASE_URL: connessione primary — usata per MIGRATION (prisma migrate
+  // deploy) e advisory locks (richiedono session-pool, non transaction-pool
+  // PgBouncer). In prod configurare questo puntando a Postgres direct.
   DATABASE_URL: z.string().url(),
+  // DATABASE_URL_POOLED: opzionale in prod — connessione via PgBouncer
+  // transaction-pool per ridurre pool exhaustion sotto picco (Ferragosto
+  // 100+ booking/day). Se settato, Prisma runtime lo usa per query normali
+  // via `PRISMA_DATABASE_URL` override. Migrations e advisory locks
+  // continuano a passare da DATABASE_URL primary. Setup:
+  //   1. Deploy PgBouncer sidecar con pool_mode=transaction, pool_size=30
+  //   2. Settare DATABASE_URL_POOLED="postgres://user:pass@pgbouncer:6432/db"
+  //   3. DATABASE_URL resta direct connection per migrations
+  // R16 capacity planning: obbligatorio pre-Ferragosto 2026.
+  DATABASE_URL_POOLED: z.string().url().optional(),
 
   // Redis
   REDIS_URL: z.string().url(),

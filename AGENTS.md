@@ -1024,6 +1024,43 @@ Priorita' ora: **testing infra + Tier A integration test + 5 hard blocker go-liv
 
 Piani dettagliati in `docs/superpowers/plans/2026-04-17-plan-*.md`.
 
+## Launch-prep sprint (post-R23)
+
+Stato post-R23 audit + delivery phase (shift raccomandato R18-R19).
+
+### DONE (contrariamente a quanto listato come deferred nei round audit)
+- **Turnstile widget client**: renderizzato in `src/components/turnstile/turnstile-widget.tsx`, wirato in `booking-wizard.tsx` + `recupera-prenotazione/client.tsx`. R9 deferred e' stale.
+- **Sentry wiring**: `src/lib/sentry/init.ts` + `src/instrumentation.ts` + `withErrorHandler` captureError branch. R6/R12/R16/R18 deferred e' stale. Attivare via `SENTRY_DSN` env.
+- **ConsentRecord + legal pages + wizard checkbox**: model Prisma presente, written in `create-direct.ts:265`, `/privacy /terms /cookie-policy` pages esistono in IT+EN. Copy legale e' placeholder → blocker esterno cliente.
+- **anonymizeCustomer admin UI**: button + action wirato in `src/app/admin/(dashboard)/clienti/[id]/{page,actions}.tsx`. R14 deferred stale.
+- **Admin @ts-nocheck cleanup**: zero residui in `src/app/admin/**`. Plan 5 cleanup completato.
+
+### DONE (R23 launch-prep — commit post-R23 P2)
+- **Stripe events reconciliation cron** (`/api/cron/stripe-reconciliation`, ogni 15min sfasato 7min): legge `/v1/events` ultimi 3gg, replaya via `handleStripeEvent` idempotent via `ProcessedStripeEvent`. Fallback per webhook endpoint down > finestra retry Stripe (3gg). Cursore in `ChannelSyncStatus` con key `STRIPE_EVENTS_RECONCILIATION`, avanza solo se `failed==0`. Scope rate-limit `STRIPE_CRON_IP`. Multi-round deferred (R2/R13/R16) — chiuso.
+- **Batch `blockDates`/`releaseDates` single-tx** (R3+R16 capacity): estratto `changeDatesBatch` helper con 1 connessione, advisory lock sequenziali dentro stessa tx. Trade-off latency 1.4s vs 200ms parallel accettato per evitare pool exhaustion Ferragosto (R16 bottleneck #1). Self-echo + noChange + preservedLockedBy R23-B-ALTA-1 preservati per-day.
+- **PgBouncer support**: `DATABASE_URL_POOLED` env opzionale in `env.ts` + `.env.example`. `db.ts` usa runtime URL pooled se settato, fallback a direct. Migrations e advisory locks continuano su DATABASE_URL direct (tx-scoped advisory OK con pool_mode=transaction). PgBouncer container in `docker-compose.prod.yml`.
+- **Infra deploy scaffolding**: `docker-compose.prod.yml` (postgres + pgbouncer + redis + app + caddy + backup sidecar). `Caddyfile` con auto-TLS + security headers + health check + trusted_proxies private_ranges (anti X-Forwarded-For spoofing). `docker/backup.sh` pg_dump + S3 upload + retention pruning. `.github/workflows/ci.yml` (typecheck + test + build + npm audit). Multi-round deferred — chiuso scaffolding.
+
+### ANCORA DEFERRED (blocker reali)
+- **Boataround reconciliation cron** (analogo Stripe/Bokun): da scrivere. Senza, webhook Boataround persi = drift permanente.
+- **Outbox pattern reale** per fan-out post-commit (R6): oggi best-effort, Redis down = fan-out perso.
+- **Cross-OTA double-booking detection** (R14 design doc, 6-8h): Bokun+Boataround webhook legit su stesso slot senza alert.
+- **Exclusion constraint Postgres** `Booking(boatId, daterange, status)` (R7): difesa DB-level vs double-booking. Richiede `btree_gist` extension + raw migration.
+- **Tier A integration test suite** (R17 testing-roadmap): 10-14gg 1-dev pre-go-live.
+- **Hardcode italiano massiccio** (R11 i18n-C1): `/en` non utilizzabile → conversion 0 per EN users. ~1.5gg refactor.
+- **WCAG 2.1 AA EAA 2025** (R19 BLOCKER legale turismo): ~7.5gg totali, sanzioni €40k IT.
+- **Legal copy definitivo** dal cliente (privacy, terms, cookie): BLOCKER esterno.
+- **DMARC/SPF/DKIM verification charter email** (R8): Plan 4 email parser non verifica, bypass spoofing.
+- **Stripe LIVE onboarding KYC** cliente: blocker esterno.
+- **Staging VPS + restore drill**: blocker infra operativo.
+
+### Non più audit round: delivery focus
+R24+ SCONSIGLIATI fino a incident reale. Lavoro residuo e' principalmente:
+- consegna copy legale cliente → legal pages live
+- staging + prod VPS cutover
+- testing integration implementation (roadmap R17)
+- i18n EN refactor landing
+
 ## Setup rapido per nuova sessione
 
 ```bash

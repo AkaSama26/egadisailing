@@ -8,6 +8,7 @@
 export const LEASE_KEYS = {
   WEATHER_CHECK: "cron:weather-check",
   BOKUN_RECONCILIATION: "cron:bokun-reconciliation",
+  STRIPE_RECONCILIATION: "cron:stripe-reconciliation",
   EMAIL_PARSER: "cron:email-parser",
   PENDING_GC: "cron:pending-gc",
   BALANCE_REMINDERS: "cron:balance-reminders",

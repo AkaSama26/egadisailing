@@ -1,0 +1,192 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # No port exposure in prod — only accessible via compose network.
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB required}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  # R16 capacity: PgBouncer sidecar per ridurre pool exhaustion Ferragosto.
+  # pool_mode=transaction → Prisma runtime via questo per query normali.
+  # Migrations/advisory-locks continuano da DATABASE_URL direct su postgres.
+  pgbouncer:
+    image: edoburu/pgbouncer:1.23.1
+    restart: unless-stopped
+    environment:
+      DATABASES_HOST: postgres
+      DATABASES_PORT: 5432
+      DATABASES_USER: ${POSTGRES_USER}
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASES_DBNAME: ${POSTGRES_DB}
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: 30
+      MAX_CLIENT_CONN: 200
+      AUTH_TYPE: scram-sha-256
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?REDIS_PASSWORD required}
+      - --protected-mode
+      - "yes"
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - "everysec"
+      - --maxmemory-policy
+      - "noeviction"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  app:
+    # Build from repo root using Dockerfile. Replace with a pinned registry
+    # image (ghcr.io/...) once CI publishes builds.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # DATABASE_URL direct (migrations + advisory locks require session-pool).
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # DATABASE_URL_POOLED via PgBouncer — runtime queries only.
+      DATABASE_URL_POOLED: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}
+      DATABASE_POOL_MAX: "30"
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      APP_URL: ${APP_URL:?APP_URL required}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET required}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?required}
+      SERVER_ACTIONS_ALLOWED_ORIGINS: ${SERVER_ACTIONS_ALLOWED_ORIGINS:?required}
+      CRON_SECRET: ${CRON_SECRET:?CRON_SECRET required}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:?required}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:?required}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:?required}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:?required}
+      BREVO_API_KEY: ${BREVO_API_KEY:?required}
+      BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL:-noreply@egadisailing.com}
+      BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-Egadisailing}
+      BREVO_REPLY_TO: ${BREVO_REPLY_TO}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:?required}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?required}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@egadisailing.com}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      SENTRY_DSN: ${SENTRY_DSN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_RELEASE: ${SENTRY_RELEASE}
+      BOKUN_VENDOR_ID: ${BOKUN_VENDOR_ID}
+      BOKUN_ACCESS_KEY: ${BOKUN_ACCESS_KEY}
+      BOKUN_SECRET_KEY: ${BOKUN_SECRET_KEY}
+      BOKUN_WEBHOOK_SECRET: ${BOKUN_WEBHOOK_SECRET}
+      BOKUN_API_URL: ${BOKUN_API_URL:-https://api.bokun.io}
+      BOKUN_PRICE_MARKUP: ${BOKUN_PRICE_MARKUP:-1.15}
+      BOATAROUND_API_URL: ${BOATAROUND_API_URL}
+      BOATAROUND_API_TOKEN: ${BOATAROUND_API_TOKEN}
+      BOATAROUND_WEBHOOK_SECRET: ${BOATAROUND_WEBHOOK_SECRET}
+      IMAP_HOST: ${IMAP_HOST}
+      IMAP_PORT: ${IMAP_PORT:-993}
+      IMAP_USER: ${IMAP_USER}
+      IMAP_PASSWORD: ${IMAP_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - internal
+      - web
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - web
+
+  # pg_dump sidecar → offsite S3/B2 compatible bucket. Runs daily at 02:30.
+  # Configure via .env: BACKUP_S3_BUCKET, BACKUP_S3_ENDPOINT, BACKUP_S3_KEY,
+  # BACKUP_S3_SECRET, BACKUP_RETENTION_DAYS (default 30).
+  backup:
+    image: alpine:3.20
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
+      BACKUP_S3_KEY: ${BACKUP_S3_KEY}
+      BACKUP_S3_SECRET: ${BACKUP_S3_SECRET}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+    volumes:
+      - ./docker/backup.sh:/backup.sh:ro
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache postgresql-client aws-cli coreutils
+        crond -f -d 8 &
+        echo "30 2 * * * /backup.sh" | crontab -
+        crond -f
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+  redis_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge
+  web:
+    driver: bridge

@@ -97,6 +97,23 @@ export function startCronScheduler(): void {
     { timezone: "Europe/Rome" },
   );
 
+  // Stripe events reconciliation: ogni 15 min (sfasato di 7 min da Bokun).
+  // Fallback per webhook persi: legge `/v1/events` degli ultimi 3gg e
+  // replaya via `handleStripeEvent` (idempotent via ProcessedStripeEvent).
+  cron.schedule("7-59/15 * * * *", async () => {
+    try {
+      const url = `${env.APP_URL}/api/cron/stripe-reconciliation`;
+      const res = await fetch(url, {
+        headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+      });
+      if (!res.ok) {
+        logger.warn({ status: res.status }, "stripe-reconciliation cron non-2xx");
+      }
+    } catch (err) {
+      logger.error({ err }, "stripe-reconciliation cron fetch failed");
+    }
+  });
+
   // PENDING booking GC: ogni 15 min (sfasato di 3 min da Bokun/parser).
   // Cancella booking PENDING > 30min + PaymentIntent Stripe + release
   // availability per non zombificare slot dopo abbandono checkout.

@@ -157,21 +157,123 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
 }
 
 /**
- * Blocca un range di date consecutive per una barca.
+ * R23-L-CAPACITY (R3 + R16 deferred): batch `blockDates`/`releaseDates` in
+ * UNA sola transazione invece di N TX parallele via `Promise.all`.
  *
- * W1-perf: esegue gli `updateAvailability` in **parallelo** (`Promise.all`)
- * invece di sequenziale. Ogni giorno mantiene la propria transazione
- * atomica con advisory lock serializzato per-cella (zero rischio
- * double-booking). Benefici:
- *  - WEEK booking (7 giorni): latency ~1.4s → ~200ms (7x speedup)
- *  - Riduce hold-time connection pool in fascia picco (pool da 20→15 attive)
- *  - Fan-out resta per-day (deterministic jobId coalesce nel worker)
+ * Before (fino a R23): 7 giorni WEEK → 7 connessioni Prisma consumate
+ * simultaneamente. Pool size=20 reggeva ~2 WEEK booking concurrent in
+ * Ferragosto prima di pool-exhaustion (R16 capacity analysis).
  *
- * Errore a meta' (es. 3/7 giorni falliti): lo stato DB resta coerente per
- * ogni giorno (atomicita' per-cella), ma il caller potrebbe vedere un
- * booking con availability parzialmente settata. Reconciliation cron Plan
- * 3+ recupera eventualmente. Accettabile per il nostro dominio.
+ * Now: 1 connessione, advisory lock acquisiti sequenzialmente within
+ * la stessa tx (stessa session Postgres → pg_advisory_xact_lock sono
+ * no-op se gia' held). Stesso `updateAvailability` logic (self-echo,
+ * noChange, preservedLockedBy) per-day dentro il loop.
+ *
+ * Trade-off: latency ~1.4s (sequential 7×200ms) vs ~200ms (parallel).
+ * Accettiamo perche': (1) il caller `createPendingDirectBooking` gia'
+ * fa una tx propria con advisory lock boat-level quindi l'ordine e'
+ * serializzato globalmente, (2) pool pressure e' il vero bottleneck
+ * Ferragosto, (3) fan-out (7 enqueue BullMQ) resta dopo commit.
  */
+async function changeDatesBatch(
+  boatId: string,
+  startDate: Date,
+  endDate: Date,
+  sourceChannel: string,
+  status: AvailabilityStatus,
+  lockedByBookingId?: string,
+): Promise<void> {
+  const days = eachUtcDayInclusive(startDate, endDate);
+  const fanOutTargets: Array<{
+    dayIso: string;
+    effectiveLockedBy: string | null;
+  }> = [];
+
+  await db.$transaction(async (tx) => {
+    for (const date of days) {
+      const dateOnly = toUtcDay(date);
+      const dayIso = isoDay(dateOnly);
+
+      await acquireTxAdvisoryLock(tx, AVAILABILITY_LOCK_NAMESPACE, boatId, dayIso);
+
+      const current = await tx.boatAvailability.findUnique({
+        where: { boatId_date: { boatId, date: dateOnly } },
+      });
+
+      // Self-echo detection
+      if (current?.lastSyncedSource === sourceChannel && current.lastSyncedAt) {
+        const ageSeconds = (Date.now() - current.lastSyncedAt.getTime()) / 1000;
+        if (ageSeconds < SELF_ECHO_WINDOW_SECONDS) {
+          logger.debug(
+            { boatId, date: dayIso, source: sourceChannel },
+            "Self-echo detected in batch, skipping day",
+          );
+          continue;
+        }
+      }
+
+      // noChange optimization
+      const noChange =
+        current?.status === status &&
+        (current?.lockedByBookingId ?? null) === (lockedByBookingId ?? null);
+      if (noChange) {
+        await tx.boatAvailability.update({
+          where: { boatId_date: { boatId, date: dateOnly } },
+          data: {
+            lastSyncedSource: sourceChannel,
+            lastSyncedAt: new Date(),
+          },
+        });
+        continue;
+      }
+
+      // R23-B-ALTA-1: preserve first-winner lockedByBookingId su BLOCKED→BLOCKED.
+      const preservedLockedBy =
+        status === "BLOCKED" && current?.lockedByBookingId
+          ? current.lockedByBookingId
+          : (lockedByBookingId ?? null);
+
+      await tx.boatAvailability.upsert({
+        where: { boatId_date: { boatId, date: dateOnly } },
+        update: {
+          status,
+          lockedByBookingId: preservedLockedBy,
+          lastSyncedSource: sourceChannel,
+          lastSyncedAt: new Date(),
+        },
+        create: {
+          boatId,
+          date: dateOnly,
+          status,
+          lockedByBookingId: lockedByBookingId ?? null,
+          lastSyncedSource: sourceChannel,
+          lastSyncedAt: new Date(),
+        },
+      });
+
+      fanOutTargets.push({ dayIso, effectiveLockedBy: preservedLockedBy });
+    }
+  });
+
+  // Fan-out POST-commit (outbox-lite): come updateAvailability single-cell.
+  for (const target of fanOutTargets) {
+    try {
+      await fanOutAvailability({
+        boatId,
+        date: target.dayIso,
+        status,
+        sourceChannel,
+        originBookingId: target.effectiveLockedBy ?? undefined,
+      });
+    } catch (err) {
+      logger.error(
+        { err, boatId, date: target.dayIso, source: sourceChannel },
+        "Fan-out enqueue failed in batch — reconciliation cron will recover",
+      );
+    }
+  }
+}
+
 export async function blockDates(
   boatId: string,
   startDate: Date,
@@ -179,18 +281,7 @@ export async function blockDates(
   sourceChannel: string,
   lockedByBookingId?: string,
 ): Promise<void> {
-  const days = eachUtcDayInclusive(startDate, endDate);
-  await Promise.all(
-    days.map((date) =>
-      updateAvailability({
-        boatId,
-        date,
-        status: "BLOCKED",
-        sourceChannel,
-        lockedByBookingId,
-      }),
-    ),
-  );
+  await changeDatesBatch(boatId, startDate, endDate, sourceChannel, "BLOCKED", lockedByBookingId);
 }
 
 export async function releaseDates(
@@ -199,15 +290,5 @@ export async function releaseDates(
   endDate: Date,
   sourceChannel: string,
 ): Promise<void> {
-  const days = eachUtcDayInclusive(startDate, endDate);
-  await Promise.all(
-    days.map((date) =>
-      updateAvailability({
-        boatId,
-        date,
-        status: "AVAILABLE",
-        sourceChannel,
-      }),
-    ),
-  );
+  await changeDatesBatch(boatId, startDate, endDate, sourceChannel, "AVAILABLE");
 }
