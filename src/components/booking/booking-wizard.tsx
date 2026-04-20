@@ -315,39 +315,71 @@ function CustomerStep({
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">I tuoi dati</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        required
-        className="w-full px-4 py-3 rounded-lg border border-gray-300"
-        value={value.email}
-        onChange={(e) => onChange({ ...value, email: e.target.value })}
-      />
-      <div className="grid grid-cols-2 gap-3">
+      {/* R19 WCAG 3.3.2 label visibility: placeholder-as-label era
+           non-conforme (scompare al focus, screen reader incerto su quale
+           campo). Ora label esplicita + aria-required. EAA 2025 blocker
+           per settore turismo. */}
+      <div>
+        <label htmlFor="wizard-email" className="block text-sm font-medium mb-1">
+          Email
+        </label>
         <input
-          type="text"
-          placeholder="Nome"
+          id="wizard-email"
+          type="email"
+          placeholder="mario@esempio.it"
           required
-          className="px-4 py-3 rounded-lg border border-gray-300"
-          value={value.firstName}
-          onChange={(e) => onChange({ ...value, firstName: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Cognome"
-          required
-          className="px-4 py-3 rounded-lg border border-gray-300"
-          value={value.lastName}
-          onChange={(e) => onChange({ ...value, lastName: e.target.value })}
+          aria-required="true"
+          autoComplete="email"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+          value={value.email}
+          onChange={(e) => onChange({ ...value, email: e.target.value })}
         />
       </div>
-      <input
-        type="tel"
-        placeholder="Telefono (opzionale)"
-        className="w-full px-4 py-3 rounded-lg border border-gray-300"
-        value={value.phone}
-        onChange={(e) => onChange({ ...value, phone: e.target.value })}
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="wizard-first-name" className="block text-sm font-medium mb-1">
+            Nome
+          </label>
+          <input
+            id="wizard-first-name"
+            type="text"
+            required
+            aria-required="true"
+            autoComplete="given-name"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300"
+            value={value.firstName}
+            onChange={(e) => onChange({ ...value, firstName: e.target.value })}
+          />
+        </div>
+        <div>
+          <label htmlFor="wizard-last-name" className="block text-sm font-medium mb-1">
+            Cognome
+          </label>
+          <input
+            id="wizard-last-name"
+            type="text"
+            required
+            aria-required="true"
+            autoComplete="family-name"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300"
+            value={value.lastName}
+            onChange={(e) => onChange({ ...value, lastName: e.target.value })}
+          />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="wizard-phone" className="block text-sm font-medium mb-1">
+          Telefono <span className="text-gray-500 font-normal">(opzionale)</span>
+        </label>
+        <input
+          id="wizard-phone"
+          type="tel"
+          autoComplete="tel"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+          value={value.phone}
+          onChange={(e) => onChange({ ...value, phone: e.target.value })}
+        />
+      </div>
       {turnstileSiteKey && (
         <TurnstileWidget
           siteKey={turnstileSiteKey}

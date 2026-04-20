@@ -8,6 +8,11 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { blockDates, releaseDates } from "@/lib/availability/service";
 import { CHANNELS, type Channel } from "@/lib/channels";
 import { toUtcDay, parseDateLikelyLocalDay } from "@/lib/dates";
+import {
+  detectCrossChannelConflicts,
+  recordDoubleBookingIncident,
+  type CrossChannelConflict,
+} from "@/lib/booking/cross-channel-conflicts";
 import type {
   CharterPlatform,
   ExtractedCharterBooking,
@@ -70,6 +75,9 @@ export async function importCharterBooking(
 
   const totalPriceStr = fromCents(input.totalAmountCents).toFixed(2);
 
+  // R14 cross-OTA: conflitti rilevati dentro tx + recorded post-commit.
+  let detectedConflicts: CrossChannelConflict[] = [];
+
   try {
     const result = await db.$transaction(async (tx) => {
       const existing = await tx.charterBooking.findUnique({
@@ -122,27 +130,15 @@ export async function importCharterBooking(
         },
       });
 
-      const overlappingDirect = await tx.booking.findFirst({
-        where: {
-          boatId: input.boatId,
-          status: { in: ["PENDING", "CONFIRMED"] },
-          source: "DIRECT",
-          startDate: { lte: input.endDate },
-          endDate: { gte: input.startDate },
-        },
-        select: { id: true, confirmationCode: true },
+      // R14 cross-OTA detection cross-source (incluso BOKUN/BOATAROUND/
+      // charter platforms). Charter ha gia' committato upstream → warn +
+      // ManualAlert post-commit per admin review.
+      detectedConflicts = await detectCrossChannelConflicts(tx, {
+        boatId: input.boatId,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        selfSource: input.platform,
       });
-      if (overlappingDirect) {
-        logger.warn(
-          {
-            platform: input.platform,
-            platformBookingRef: input.platformBookingRef,
-            directBookingId: overlappingDirect.id,
-            directCode: overlappingDirect.confirmationCode,
-          },
-          "Charter booking overlaps with active DIRECT booking — admin review needed",
-        );
-      }
 
       const created = await tx.booking.create({
         data: {
@@ -210,6 +206,20 @@ export async function importCharterBooking(
       },
       `Charter booking ${result.mode}`,
     );
+
+    // R14 cross-OTA post-commit incident recording.
+    if (result.mode === "created" && detectedConflicts.length > 0) {
+      await recordDoubleBookingIncident({
+        newBookingId: result.booking.id,
+        newSource: input.platform,
+        newConfirmationCode: `${input.platform.slice(0, 2)}-${input.platformBookingRef}`,
+        boatId: result.booking.boatId,
+        startDate: result.booking.startDate,
+        endDate: result.booking.endDate,
+        conflicts: detectedConflicts,
+      });
+    }
+
     return {
       bookingId: result.booking.id,
       boatId: result.booking.boatId,

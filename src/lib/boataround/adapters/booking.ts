@@ -6,6 +6,11 @@ import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { parseIsoDay } from "@/lib/dates";
+import {
+  detectCrossChannelConflicts,
+  recordDoubleBookingIncident,
+  type CrossChannelConflict,
+} from "@/lib/booking/cross-channel-conflicts";
 import type { BoataroundBookingResponse } from "../schemas";
 
 export interface ImportedBoataroundBooking {
@@ -92,6 +97,9 @@ export async function importBoataroundBooking(
   const endDate = parseIsoDay(booking.endDate.slice(0, 10));
   const rawPayload = buildSafeRawPayload(booking);
 
+  // R14 cross-OTA: conflitti rilevati dentro tx + recorded post-commit.
+  let detectedConflicts: CrossChannelConflict[] = [];
+
   try {
     const result = await db.$transaction(async (tx) => {
       const existing = await tx.charterBooking.findUnique({
@@ -132,29 +140,15 @@ export async function importBoataroundBooking(
         },
       });
 
-      // Race detection cross-channel (Round 7 finding): se c'e' gia' un
-      // DIRECT PENDING sulla stessa barca/range, log warn. Boataround ha
-      // committato upstream, non possiamo rigettare qui.
-      const overlappingDirect = await tx.booking.findFirst({
-        where: {
-          boatId: boat.id,
-          status: { in: ["PENDING", "CONFIRMED"] },
-          source: "DIRECT",
-          startDate: { lte: endDate },
-          endDate: { gte: startDate },
-        },
-        select: { id: true, confirmationCode: true, status: true },
+      // R14 cross-OTA detection (cross-source inclusi BOKUN + charter, non
+      // solo DIRECT). Boataround confermata upstream → warn + ManualAlert
+      // post-commit per admin action.
+      detectedConflicts = await detectCrossChannelConflicts(tx, {
+        boatId: boat.id,
+        startDate,
+        endDate,
+        selfSource: "BOATAROUND",
       });
-      if (overlappingDirect) {
-        logger.warn(
-          {
-            boataroundBookingId: booking.id,
-            directBookingId: overlappingDirect.id,
-            directCode: overlappingDirect.confirmationCode,
-          },
-          "Boataround booking overlaps with active DIRECT booking — admin review needed",
-        );
-      }
 
       const created = await tx.booking.create({
         data: {
@@ -195,6 +189,20 @@ export async function importBoataroundBooking(
       },
       `Boataround booking ${result.mode}`,
     );
+
+    // R14 cross-OTA post-commit incident recording.
+    if (result.mode === "created" && detectedConflicts.length > 0) {
+      await recordDoubleBookingIncident({
+        newBookingId: result.booking.id,
+        newSource: "BOATAROUND",
+        newConfirmationCode: `BR-${booking.id}`,
+        boatId: result.booking.boatId,
+        startDate: result.booking.startDate,
+        endDate: result.booking.endDate,
+        conflicts: detectedConflicts,
+      });
+    }
+
     return {
       bookingId: result.booking.id,
       boatId: result.booking.boatId,

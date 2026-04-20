@@ -11,6 +11,10 @@ import {
   bookingCancelledTemplate,
   type BookingCancelledPayload,
 } from "./templates/booking-cancelled";
+import {
+  doubleBookingTemplate,
+  type DoubleBookingPayload,
+} from "./templates/double-booking";
 import type { NotificationEvent } from "./events";
 
 interface RenderedTemplate {
@@ -116,6 +120,8 @@ function renderTemplate(event: NotificationEvent): RenderedTemplate | null {
       return weatherAlertTemplate(event.payload as unknown as WeatherAlertPayload);
     case "BOOKING_CANCELLED":
       return bookingCancelledTemplate(event.payload as unknown as BookingCancelledPayload);
+    case "DOUBLE_BOOKING_DETECTED":
+      return doubleBookingTemplate(event.payload as unknown as DoubleBookingPayload);
     // PAYMENT_FAILED + SYNC_FAILURE: template generici stub, non-blocking
     default:
       return null;

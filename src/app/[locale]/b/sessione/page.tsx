@@ -15,6 +15,15 @@ const STATUS_LABEL: Record<string, string> = {
   REFUNDED: "Rimborsata",
 };
 
+// R19 WCAG 1.4.1: info non puo' essere trasmessa solo da colore. Icona
+// testuale + aria-label per screen reader distingue oltre al bg color.
+const STATUS_ICON: Record<string, string> = {
+  CONFIRMED: "✓",
+  PENDING: "⏱",
+  CANCELLED: "✕",
+  REFUNDED: "↩",
+};
+
 export default async function SessionePage({
   params,
 }: {
@@ -65,17 +74,20 @@ export default async function SessionePage({
                   <p className="text-gray-600 text-sm">Codice {b.confirmationCode}</p>
                 </div>
                 <span
+                  role="status"
+                  aria-label={`Stato prenotazione: ${STATUS_LABEL[b.status] ?? b.status}`}
                   className={[
-                    "px-3 py-1 rounded-full text-xs font-semibold",
+                    "px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1",
                     b.status === "CONFIRMED"
                       ? "bg-emerald-100 text-emerald-800"
                       : b.status === "PENDING"
                         ? "bg-amber-100 text-amber-800"
                         : b.status === "CANCELLED"
-                          ? "bg-gray-100 text-gray-600"
-                          : "bg-red-100 text-red-700",
+                          ? "bg-gray-100 text-gray-700"
+                          : "bg-red-100 text-red-800",
                   ].join(" ")}
                 >
+                  <span aria-hidden="true">{STATUS_ICON[b.status] ?? ""}</span>
                   {STATUS_LABEL[b.status] ?? b.status}
                 </span>
               </div>

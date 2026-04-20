@@ -6,6 +6,11 @@ import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { parseIsoDay } from "@/lib/dates";
+import {
+  detectCrossChannelConflicts,
+  recordDoubleBookingIncident,
+  type CrossChannelConflict,
+} from "@/lib/booking/cross-channel-conflicts";
 import type { BokunBookingSummary } from "../types";
 
 export interface ImportedBokunBooking {
@@ -58,6 +63,9 @@ export async function importBokunBooking(
   // eventuali payload storici con la stessa whitelist dopo 90 giorni.
   const rawPayload = buildSafeRawPayload(booking);
 
+  // R14 cross-OTA: conflitti rilevati dentro la tx + recorded post-commit.
+  let detectedConflicts: CrossChannelConflict[] = [];
+
   try {
     const result = await db.$transaction(async (tx) => {
       // findUnique dentro la tx: serializza con l'upsert successivo
@@ -84,32 +92,18 @@ export async function importBokunBooking(
         return { booking: updated, mode: "updated" as const };
       }
 
-      // Race-detection: c'e' un Booking DIRECT PENDING overlapping sulla
-       // stessa boat? Se si, due canali hanno prenotato la stessa slot.
-       // Bokun e' gia' confermata upstream, non possiamo rigettare qui; logghiamo
-       // warn per azione admin (cancel+refund del PENDING DIRECT). Plan 5
-       // aggiungera' auto-cancel del PENDING + stripe.paymentIntents.cancel.
-      const overlappingDirect = await tx.booking.findFirst({
-        where: {
-          boatId: service.boatId,
-          status: { in: ["PENDING", "CONFIRMED"] },
-          source: "DIRECT",
-          startDate: { lte: endDate },
-          endDate: { gte: startDate },
-        },
-        select: { id: true, confirmationCode: true, status: true },
+      // R14 cross-OTA detection: cerca conflicts cross-source (non solo
+      // DIRECT). Bokun e' gia' confermata upstream quindi non possiamo
+      // rigettare; il caller (post-commit) emettera' ManualAlert +
+      // notification admin per decidere quale cancellare.
+      // Boat-exclusive only: SOCIAL_BOATING e' tour condiviso (feature,
+      // non bug). Filter applicato dentro detectCrossChannelConflicts.
+      detectedConflicts = await detectCrossChannelConflicts(tx, {
+        boatId: service.boatId,
+        startDate,
+        endDate,
+        selfSource: "BOKUN",
       });
-      if (overlappingDirect) {
-        logger.warn(
-          {
-            bokunBookingId: String(booking.id),
-            directBookingId: overlappingDirect.id,
-            directCode: overlappingDirect.confirmationCode,
-            directStatus: overlappingDirect.status,
-          },
-          "Bokun booking overlaps with active DIRECT booking — admin review needed",
-        );
-      }
 
       const customer = await tx.customer.upsert({
         where: { email: emailLower },
@@ -176,6 +170,22 @@ export async function importBokunBooking(
       },
       `Bokun booking ${result.mode}`,
     );
+
+    // R14: post-commit double-booking incident recording. Non nella tx
+    // perche' fa side-effect rete (dispatch notification) + ManualAlert
+    // ha la sua advisory lock.
+    if (result.mode === "created" && detectedConflicts.length > 0) {
+      await recordDoubleBookingIncident({
+        newBookingId: result.booking.id,
+        newSource: "BOKUN",
+        newConfirmationCode: booking.confirmationCode,
+        boatId: result.booking.boatId,
+        startDate: result.booking.startDate,
+        endDate: result.booking.endDate,
+        conflicts: detectedConflicts,
+      });
+    }
+
     return {
       bookingId: result.booking.id,
       boatId: result.booking.boatId,

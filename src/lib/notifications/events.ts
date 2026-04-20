@@ -5,7 +5,8 @@ export type NotificationType =
   | "BOOKING_CANCELLED"
   | "PAYMENT_FAILED"
   | "SYNC_FAILURE"
-  | "WEATHER_ALERT";
+  | "WEATHER_ALERT"
+  | "DOUBLE_BOOKING_DETECTED";
 
 export type NotificationChannel = "EMAIL" | "TELEGRAM";
 
@@ -27,4 +28,7 @@ export const CHANNEL_DEFAULTS: Record<NotificationType, NotificationChannel[]> =
   PAYMENT_FAILED: ["EMAIL"],
   SYNC_FAILURE: ["EMAIL", "TELEGRAM"],
   WEATHER_ALERT: ["EMAIL", "TELEGRAM"],
+  // Double-booking e' evento urgente (cliente stopped/embarassment rischio) —
+  // TELEGRAM attivo se configurato per escalation rapida.
+  DOUBLE_BOOKING_DETECTED: ["EMAIL", "TELEGRAM"],
 };
