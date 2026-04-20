@@ -10,12 +10,12 @@ import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-han
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { LEASE_KEYS } from "@/lib/lease/keys";
+import { getRedisConnection } from "@/lib/queue";
 
 export const runtime = "nodejs";
 
 const LEASE_NAME = LEASE_KEYS.STRIPE_RECONCILIATION;
-// Cron gira ogni 15 min (schedulato in src/lib/cron/scheduler.ts). Lease
-// copre il run worst-case: 7gg × ~100 eventi × ~150ms handler = ~105s.
+// Cron gira ogni 15 min. Lease copre worst-case multi-page drain sessione.
 const LEASE_TTL_SECONDS = 10 * 60;
 
 // Eventi di cui ci importa per il reconciliation. Filtrare upstream evita
@@ -29,39 +29,51 @@ const RECONCILED_EVENT_TYPES = [
 
 // Quanto indietro andiamo al primo run (senza cursore) o se il cursore e'
 // troppo vecchio (gap di deployment). 3gg copre il worst-case retry window
-// di Stripe (che e' 3gg) senza re-processare storia infinita.
+// di Stripe senza re-processare storia infinita. Stripe retention events ≈ 30gg.
 const INITIAL_LOOKBACK_MS = 3 * 24 * 60 * 60 * 1000;
+// R24-P2-LOW: Stripe events retention e' ~30gg — se il cursore e' stuck
+// oltre questa finestra, events.list non ritorna piu' quei record.
+// Cap preventivo a 28gg: se `since` e' piu' vecchio, ri-ancoriamo a now-28d
+// + alert amministratore. Evita silent data gap sul cursore dimenticato.
+const MAX_LOOKBACK_MS = 28 * 24 * 60 * 60 * 1000;
 
-// Safety cap: 100 pages × 100 eventi = 10k eventi/run massimo. Se hit,
-// il run successivo continua dal cursore aggiornato progressivamente.
+// Safety cap per-run: 100 pages × 100 eventi = 10k eventi/run. Se hit + hasMore
+// il backlog continua al prossimo run via `starting_after` persistito in Redis.
 const PAGE_SIZE = 100;
 const MAX_PAGES = 100;
 
 const CHANNEL_KEY = "STRIPE_EVENTS_RECONCILIATION";
+// R24-P2-CRITICA: cursore `starting_after` persistito cross-run via Redis.
+// Stripe events.list ritorna desc (newest first). `starting_after` walks
+// deeper (older) within a run ma RESETTA per-query — senza cross-run
+// persistence, backlog > MAX_PAGES*PAGE_SIZE (10k) mai raggiunto (pagination
+// sempre restart da newest). Redis key TTL = 7gg per auto-clear in caso
+// di bug + idempotency naturalmente copre via ProcessedStripeEvent.
+const CURSOR_REDIS_KEY = "stripe-reconciliation:starting-after";
+const CURSOR_REDIS_TTL_SEC = 7 * 24 * 60 * 60;
 
 /**
  * Cron Stripe events reconciliation — fallback per webhook persi.
  *
- * Scenario critico: il webhook endpoint del sito va giu' per outage (Caddy
- * crash, deploy rolling, DNS flap) → Stripe ritenta 3gg ma dopo X failure
- * consecutivi marca l'endpoint come "degraded" e riduce il rate. Se il
- * fix supera la finestra retry, l'evento e' perso → Payment non creato,
+ * Scenario critico: webhook endpoint down per outage (Caddy crash, deploy
+ * rolling, DNS flap) → Stripe ritenta 3gg poi marca endpoint degraded.
+ * Se il fix supera retry window, l'evento e' perso → Payment non creato,
  * Booking PENDING per sempre, soldi ricevuti ma cliente non confermato.
  *
- * Questo cron legge `/v1/events` dal cursore precedente, filtra per i
- * type rilevanti, e chiama `handleStripeEvent` che e' idempotente via
- * `ProcessedStripeEvent` (duplicati skip silente).
+ * Cursori:
+ *  - `since` (ChannelSyncStatus.lastSyncAt): lower bound temporal query
+ *  - `startingAfter` (Redis): continuation Stripe cursor cross-run per
+ *    drenare backlog > MAX_PAGES incrementalmente
  *
- * Anti-overrun: Redis lease single-flight 10min TTL (auto-liberation).
- * Rate-limit: 10/min per IP (secret leak cap).
- * Cursore: salvato in `ChannelSyncStatus.lastSyncAt` con channel key
- * `STRIPE_EVENTS_RECONCILIATION`. Iniziale = 3gg (Stripe retry window).
+ * Flow:
+ *  - Run completo (pages < MAX_PAGES): clear Redis cursor + advance
+ *    `since` a maxEventCreated-1 → reset per next run partendo da newest.
+ *  - Hit MAX_PAGES: save last event id in Redis, NON avanza since →
+ *    next run continua dallo stesso punto older nella stessa window.
+ *  - failed > 0: non avanza (retry idempotent via ProcessedStripeEvent).
  */
 export const GET = withErrorHandler(async (req: Request) => {
   requireBearerSecret(req, env.CRON_SECRET);
-  // R24-A1-C2: `identifier: "global"` come tutti gli altri cron protetti
-  // (R13-C2 pattern). `getClientIp` era spoofabile via X-Forwarded-For
-  // rotation in caso di CRON_SECRET leakato.
   await enforceRateLimit({
     identifier: "global",
     scope: RATE_LIMIT_SCOPES.STRIPE_CRON_IP,
@@ -80,31 +92,40 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   const runStartedAt = new Date();
+  const redis = getRedisConnection();
+
   try {
     const syncStatus = await db.channelSyncStatus.findUnique({
       where: { channel: CHANNEL_KEY },
     });
     const initialLookback = new Date(runStartedAt.getTime() - INITIAL_LOOKBACK_MS);
-    // Cursore in secondi epoch per Stripe events.list
-    const since = syncStatus?.lastSyncAt ?? initialLookback;
+    const maxLookback = new Date(runStartedAt.getTime() - MAX_LOOKBACK_MS);
+    let since = syncStatus?.lastSyncAt ?? initialLookback;
+    // R24-P2-LOW: cap su since vecchio > 28gg (Stripe retention ~30gg).
+    // Oltre questa finestra events.list ritorna nulla → silent gap. Ri-ancoriamo
+    // + warn admin.
+    if (since < maxLookback) {
+      logger.warn(
+        { originalSince: since.toISOString(), cappedTo: maxLookback.toISOString() },
+        "Stripe reconciliation cursor > 28d — capping (Stripe retention limit)",
+      );
+      since = maxLookback;
+    }
     const sinceEpoch = Math.floor(since.getTime() / 1000);
+
+    // R24-P2-CRITICA: leggi cursor continuation da run precedente se presente.
+    const persistedCursor = await redis.get(CURSOR_REDIS_KEY).catch(() => null);
 
     let totalFetched = 0;
     let replayed = 0;
     let skippedAlreadyProcessed = 0;
     let failed = 0;
     let pages = 0;
-    let startingAfter: string | undefined = undefined;
+    let startingAfter: string | undefined = persistedCursor ?? undefined;
     let hasMore = true;
-    // Stripe events.list ritorna eventi in ORDINE DESCENDENTE (newest→oldest).
-    // R24-A1-C1: traccio SIA max (newest) SIA min (oldest) visto. Al MAX_PAGES
-    // cap (backlog enorme), il cursore deve avanzare a `minEventCreated - 1`
-    // invece del max — altrimenti gli eventi OLDER non processati in questo
-    // run vengono saltati permanentemente. Con un backlog 15k eventi + MAX_PAGES
-    // 100 (10k processati), 5k eventi dal T+run-3gg a T+max_processed sarebbero
-    // persi.
     let maxEventCreated = sinceEpoch;
     let minEventCreated: number | null = null;
+    let lastEventIdThisRun: string | undefined = undefined;
 
     const stripeClient = stripe();
 
@@ -118,18 +139,13 @@ export const GET = withErrorHandler(async (req: Request) => {
       totalFetched += response.data.length;
 
       for (const event of response.data) {
-        if (event.created > maxEventCreated) {
-          maxEventCreated = event.created;
-        }
+        if (event.created > maxEventCreated) maxEventCreated = event.created;
         if (minEventCreated === null || event.created < minEventCreated) {
           minEventCreated = event.created;
         }
         if (!RECONCILED_EVENT_TYPES.includes(event.type)) {
           continue;
         }
-        // Fast-path: se gia' processato skip senza invocare handler (evita
-        // query DB ridondanti nei side-effect del handler che fa comunque
-        // il check iniziale).
         const existing = await db.processedStripeEvent.findUnique({
           where: { eventId: event.id },
           select: { eventId: true },
@@ -160,54 +176,51 @@ export const GET = withErrorHandler(async (req: Request) => {
       }
 
       hasMore = response.has_more;
-      if (hasMore && response.data.length > 0) {
-        startingAfter = response.data[response.data.length - 1].id;
+      if (response.data.length > 0) {
+        lastEventIdThisRun = response.data[response.data.length - 1].id;
+      }
+      if (hasMore && lastEventIdThisRun) {
+        startingAfter = lastEventIdThisRun;
       }
     }
 
     const hitMaxPages = pages >= MAX_PAGES && hasMore;
     if (hitMaxPages) {
       logger.warn(
-        { pages, totalFetched, minEventCreated },
-        "Stripe reconciliation hit MAX_PAGES cap — backlog remains",
+        { pages, totalFetched, minEventCreated, lastEventIdThisRun },
+        "Stripe reconciliation hit MAX_PAGES cap — backlog will continue next run",
       );
     }
 
-    // R24-A1-C1: cursore avanzamento. Stripe events.list default desc
-    // (newest first). Pagination complete = tutti gli eventi fino a `since`
-    // sono stati visti; si puo' avanzare al maxEventCreated.
-    //
-    // Cap hit (hitMaxPages + hasMore): abbiamo processato solo il segment
-    // NEWEST del backlog. Gli eventi OLDER del minEventCreated NON sono
-    // raggiungibili con `starting_after` da zero al prossimo run (stripe
-    // riparte da newest). Se avanzassimo il cursore gli eventi vecchi
-    // sarebbero persi permanentemente.
-    //
-    // Strategia safety: NON avanzare cursore + healthStatus YELLOW +
-    // logger.warn. Il prossimo run ri-processera' stesso segment (dedup
-    // via ProcessedStripeEvent = no side-effect doppio) + vedra' nuovi
-    // eventi. Admin deve aumentare MAX_PAGES se il warn persiste > 1h
-    // (indica backlog reale — probabile outage prolungato).
+    // R24-P2-CRITICA: gestione cursor cross-run per backlog drain.
+    // - hitMaxPages: persist `lastEventIdThisRun` in Redis, NON advance since
+    //   → next run continua dallo stesso punto older.
+    // - failed > 0 (no cap): non advance since (idempotent retry).
+    // - Run completo (no cap, no fail): clear Redis cursor + advance since.
     let nextSince: Date;
-    if (failed > 0 || hitMaxPages) {
-      // No-advance: retry al prossimo run.
+    if (failed > 0 && !hitMaxPages) {
       nextSince = since;
-    } else if (maxEventCreated > sinceEpoch) {
-      // Run completo: avanza al piu' recente visto. -1s perche' Stripe gte
-      // e' inclusivo; dedup via ProcessedStripeEvent copre l'overlap.
-      nextSince = new Date((maxEventCreated - 1) * 1000);
+    } else if (hitMaxPages && lastEventIdThisRun) {
+      await redis
+        .set(CURSOR_REDIS_KEY, lastEventIdThisRun, "EX", CURSOR_REDIS_TTL_SEC)
+        .catch((err) => logger.error({ err }, "Failed to persist cursor"));
+      nextSince = since; // Mantieni lower bound per continuare stesso window
     } else {
-      // Nessun evento in questo run: cursore invariato.
-      nextSince = since;
+      // Run completo: clear continuation + advance since.
+      await redis.del(CURSOR_REDIS_KEY).catch(() => null);
+      if (maxEventCreated > sinceEpoch) {
+        nextSince = new Date((maxEventCreated - 1) * 1000);
+      } else {
+        nextSince = since;
+      }
     }
 
     const durationMs = Date.now() - runStartedAt.getTime();
-    // R24-A1-C1: YELLOW anche su hitMaxPages per allertare l'admin al backlog.
     const status: "GREEN" | "YELLOW" = failed === 0 && !hitMaxPages ? "GREEN" : "YELLOW";
     const errMsg = failed > 0
       ? `${failed} replays failed`
       : hitMaxPages
-        ? `MAX_PAGES cap hit — backlog remains, increase MAX_PAGES or retry`
+        ? `MAX_PAGES cap — backlog drain continues next run`
         : null;
     await db.channelSyncStatus.upsert({
       where: { channel: CHANNEL_KEY },
@@ -227,6 +240,8 @@ export const GET = withErrorHandler(async (req: Request) => {
         skippedAlreadyProcessed,
         failed,
         pages,
+        hitMaxPages,
+        continuationPersisted: hitMaxPages,
         durationMs,
         since: since.toISOString(),
       },
@@ -239,6 +254,7 @@ export const GET = withErrorHandler(async (req: Request) => {
       skippedAlreadyProcessed,
       failed,
       pages,
+      hitMaxPages,
       durationMs,
     });
   } catch (err) {

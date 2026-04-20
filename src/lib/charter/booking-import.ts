@@ -188,7 +188,11 @@ export async function importCharterBooking(
         channel,
         result.booking.id,
       );
-    } else if (result.mode === "cancelled" || result.booking.status === "CANCELLED") {
+    } else if (result.mode === "cancelled") {
+      // R24-P2-MEDIA: solo su transizione CONFIRMED→CANCELLED.
+      // `mode==="skipped" && status==="CANCELLED"` (email cancellazione
+      // replay su booking gia' cancellato) scatenava fan-out inutile —
+      // idempotent via self-echo ma sprecava job BullMQ + log noise.
       await releaseDates(
         result.booking.boatId,
         result.booking.startDate,

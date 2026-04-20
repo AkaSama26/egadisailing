@@ -28,11 +28,18 @@ export function getUserAgent(headers: Headers): string | null {
 export function normalizeIpForRateLimit(ip: string): string {
   if (!ip || ip === "unknown") return ip;
 
-  // IPv4 (contains dot, no colon): ritorna invariato.
+  // R24-P2-ALTA: IPv4-mapped IPv6 `::ffff:1.2.3.4` (dual-stack proxy) → estrai
+  // IPv4 e ritorna per-IP (come IPv4 nativo). Senza questo, il check
+  // "has dot + no colon" fallisce (contiene both) → expandIpv6 regex rejecta
+  // (dots) → fallback raw → stesso client da dual-stack vede bucket diverso
+  // dal suo IPv4 pure.
+  const mappedMatch = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (mappedMatch) return mappedMatch[1];
+
+  // IPv4 puro (contains dot, no colon): ritorna invariato.
   if (ip.includes(".") && !ip.includes(":")) return ip;
 
   // IPv6: estrai /64 prefix (primi 4 hextet = 64 bit).
-  // Expand :: notation first.
   const expanded = expandIpv6(ip);
   if (!expanded) return ip; // fallback: malformed
   const hextets = expanded.split(":");
