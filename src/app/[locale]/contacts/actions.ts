@@ -75,6 +75,12 @@ export async function sendContactMessage(
     });
 
     const userAgent = getUserAgent(h);
+    // R22-P2-MEDIA-1: strip \r\n / control chars da parsed per plain text
+    // (Brevo SMTP bridge puo' corrompere MIME con header injection se il
+    // message contiene sequenze \r\n Subject:). Zod gia' blocca <>, ma
+    // \r\n non e' coperto.
+    const safePlain = (s: string) =>
+      s.replace(/[\r\n]+/g, " ").replace(/[\u0000-\u001F]/g, " ").trim();
     // R22-A2-MEDIA-3: IP + User-Agent rimossi dal body email. Inbox contatti
     // e' condivisa (info@egadisailing.com) quindi inviare IP del cliente
     // in chiaro a tutti gli agenti che leggono e' disproportionate per GDPR.
@@ -96,7 +102,7 @@ export async function sendContactMessage(
       to: env.BREVO_SENDER_EMAIL, // info@egadisailing.com (stesso sender)
       subject: `[Contatti] ${parsed.subject}`,
       htmlContent: html,
-      textContent: `Da: ${parsed.name} <${parsed.email}>\n${parsed.message}`,
+      textContent: `Da: ${safePlain(parsed.name)} <${safePlain(parsed.email)}>\n${parsed.message.replace(/\r\n/g, "\n")}`,
       // R22-A4-ALTA-1: Reply → cliente. Senza questo override, Reply va al
       // sender stesso (info@) → loop o bisogna copia/incollare from-line.
       replyTo: { email: parsed.email, name: parsed.name },

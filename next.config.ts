@@ -73,6 +73,10 @@ const nextConfig: NextConfig = {
           // ignora `Cache-Control: no-store` e cacha comunque se non vede
           // `Pragma: no-cache`. Belt-and-suspenders per reti aziendali cliente.
           { key: "Pragma", value: "no-cache" },
+          // R22-P2-MEDIA-4: admin non ha popup Stripe 3DS, quindi
+          // `same-origin` strict (no `-allow-popups`) riduce surface Spectre
+          // side-channel. Override globale che usa `same-origin-allow-popups`.
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
         ],
       },
       {
@@ -82,6 +86,7 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
           { key: "Cache-Control", value: "private, no-store, must-revalidate" },
           { key: "Pragma", value: "no-cache" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
         ],
       },
       // R22-A3-BASSA-2: `/admin/login` pubblica ma sensibile (form password).

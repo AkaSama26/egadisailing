@@ -105,7 +105,11 @@ export async function createPendingDirectBooking(
   // Normalizza startDate al giorno di calendario Europe/Rome (risolve
   // off-by-one: 2026-04-07 digitato dal cliente e' 2026-04-06T22:00Z).
   const startDay = parseDateLikelyLocalDay(input.startDate);
-  if (startDay.getTime() < toUtcDay(new Date()).getTime()) {
+  // R22-P2-MEDIA-2: `parseDateLikelyLocalDay(new Date())` invece di
+  // `toUtcDay` → entrambi gli operandi sono day Europe/Rome. Fix 00:30
+  // Rome CEST edge case (22:30 UTC ieri) dove `toUtcDay(now)` = ieri ma
+  // il cliente italiano pensa "oggi".
+  if (startDay.getTime() < parseDateLikelyLocalDay(new Date()).getTime()) {
     throw new ValidationError("startDate must not be in the past");
   }
 

@@ -7,7 +7,7 @@ import { fromCents } from "@/lib/pricing/cents";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { blockDates, releaseDates } from "@/lib/availability/service";
 import { CHANNELS, type Channel } from "@/lib/channels";
-import { toUtcDay } from "@/lib/dates";
+import { toUtcDay, parseDateLikelyLocalDay } from "@/lib/dates";
 import type {
   CharterPlatform,
   ExtractedCharterBooking,
@@ -278,7 +278,10 @@ function validateCharterInput(input: ImportCharterInput): void {
     );
   }
 
-  const today = toUtcDay(new Date());
+  // R22-P2-MEDIA-2: parseDateLikelyLocalDay allinea con day Europe/Rome
+  // (stesso frame di start=parseDateLikelyLocalDay). Evita off-by-one a
+  // mezzanotte Rome quando l'email arriva cross-TZ.
+  const today = parseDateLikelyLocalDay(new Date());
   const daysFromNow = Math.round((start.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
   if (daysFromNow < -7) {
     throw new ValidationError("Charter startDate too far in the past", {
