@@ -58,8 +58,19 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
       where: { boatId_date: { boatId: input.boatId, date: dateOnly } },
     });
 
-    // Self-echo detection (dentro la transazione: TOCTOU-safe)
-    if (current?.lastSyncedSource === input.sourceChannel && current.lastSyncedAt) {
+    // Self-echo detection (dentro la transazione: TOCTOU-safe).
+    // R26-P3-TEST-FOUND-CRITICA: self-echo deve scattare SOLO se lo stato
+    // target coincide con quello corrente (= echo vero). Prima scattava su
+    // qualsiasi write stesso-source entro 600s → rompeva flussi legittimi
+    // come "admin booking DIRECT 10:00 → admin cancel DIRECT 10:05" → release
+    // saltata → cella stuck BLOCKED. Test
+    // `availability-service.test.ts > BLOCKED → AVAILABLE clear` ha esposto.
+    if (
+      current?.lastSyncedSource === input.sourceChannel &&
+      current.lastSyncedAt &&
+      current.status === input.status &&
+      (current.lockedByBookingId ?? null) === (input.lockedByBookingId ?? null)
+    ) {
       const ageSeconds = (Date.now() - current.lastSyncedAt.getTime()) / 1000;
       if (ageSeconds < SELF_ECHO_WINDOW_SECONDS) {
         logger.debug(
@@ -200,8 +211,14 @@ async function changeDatesBatch(
         where: { boatId_date: { boatId, date: dateOnly } },
       });
 
-      // Self-echo detection
-      if (current?.lastSyncedSource === sourceChannel && current.lastSyncedAt) {
+      // R26-P3-TEST-FOUND-CRITICA: self-echo solo se stato target uguale
+      // al corrente (vedi updateAvailability single-row per motivazione).
+      if (
+        current?.lastSyncedSource === sourceChannel &&
+        current.lastSyncedAt &&
+        current.status === status &&
+        (current.lockedByBookingId ?? null) === (lockedByBookingId ?? null)
+      ) {
         const ageSeconds = (Date.now() - current.lastSyncedAt.getTime()) / 1000;
         if (ageSeconds < SELF_ECHO_WINDOW_SECONDS) {
           logger.debug(
