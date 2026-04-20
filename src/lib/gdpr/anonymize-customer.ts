@@ -49,6 +49,10 @@ export async function anonymizeCustomer(
   // stessa tx. IP address e' personal data GDPR art. 4(1). ConsentRecord
   // sopravvive 10y per audit fiscale, ma IP/UA non sono necessari per la
   // prova del consenso → mask on anonymize.
+  // R25-P2-ALTA: timeout 30s (default Prisma 5s) per coprire power-customer
+  // con 500+ bookings × N auditLog row + notes. Se superato, anonymize
+  // rollback silent → GDPR art.17 non applicato. 30s worst-case 5000 updates
+  // batch-200 su index compound = ~8s real.
   await db.$transaction(async (tx) => {
     await tx.customer.update({
       where: { id: customerId },
@@ -88,20 +92,26 @@ export async function anonymizeCustomer(
       select: { id: true },
     });
     const bookingIds = customerBookings.map((b) => b.id);
-    if (bookingIds.length > 0) {
+    // R25-P2-ALTA: chunk updates su bookingIds > 200 per evitare large
+    // SQL IN clause (driver Postgres node-pg limite ~32k params). Un
+    // customer con 1000+ bookings andrebbe in errore "too many parameters"
+    // senza chunking.
+    const BATCH_SIZE = 200;
+    for (let i = 0; i < bookingIds.length; i += BATCH_SIZE) {
+      const batch = bookingIds.slice(i, i + BATCH_SIZE);
       await tx.auditLog.updateMany({
-        where: { entity: "Booking", entityId: { in: bookingIds } },
+        where: { entity: "Booking", entityId: { in: batch } },
         data: { before: { _redacted: true }, after: { _redacted: true } },
       });
       // R25-A2-A1: BookingNote contiene free-form admin text con frequenti
       // PII (cellulare, IBAN, dati sanitari "allergia"). Redact content su
       // anonymize, preserva authorId + timestamp per audit trail integrity.
       await tx.bookingNote.updateMany({
-        where: { bookingId: { in: bookingIds } },
+        where: { bookingId: { in: batch } },
         data: { note: "[redacted GDPR art.17]" },
       });
     }
-  });
+  }, { timeout: 30_000, maxWait: 10_000 });
 
   await auditLog({
     userId: opts.actorUserId,

@@ -113,8 +113,20 @@ export const POST = withErrorHandler(async (req: Request) => {
   const topic = headers["x-bokun-topic"];
   if (!topic) throw new ValidationError("Missing x-bokun-topic header");
 
-  const rawBody = await req.json().catch(() => null);
-  const body = bokunWebhookBodySchema.parse(rawBody);
+  // R25-P2-ALTA: body-size post-read check (content-length missing case) —
+  // stesso pattern di boataround/stripe routes. Senza, upstream con
+  // missing `content-length` buffera tutto prima dell'enforcement.
+  const bodyBuf = Buffer.from(await req.arrayBuffer());
+  if (bodyBuf.byteLength > MAX_WEBHOOK_BODY_BYTES) {
+    throw new ValidationError("Body too large");
+  }
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(bodyBuf.toString("utf8"));
+  } catch {
+    parsedJson = null;
+  }
+  const body = bokunWebhookBodySchema.parse(parsedJson);
 
   // Idempotency: hash(topic|bookingId|timestamp|signature) come eventId.
   // Bokun non fornisce un event.id esplicito, ma la combinazione e' unica
