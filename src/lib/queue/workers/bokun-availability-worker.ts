@@ -14,14 +14,19 @@ interface AvailabilityJob {
 // R26-A3-M4: in-memory cache dei Service per boatId. Worker lancia
 // `services.findMany` per job (limiter 10/s + concurrency=3 = fino a
 // 18000/hr DB roundtrip). Services cambiano molto raramente (solo via
-// admin mutate su `/admin/prezzi` + `/admin/servizi`). Cache 15min
-// riduce >99% carico DB. In caso di cambio service (nuovo bokunProductId),
-// la stale vede fino a 15min → accettabile (admin puo' forzare restart worker).
+// admin mutate su `/admin/prezzi` + `/admin/servizi`).
+//
+// R27-CRIT-1: TTL ridotto da 15min → 60s. Con TTL 15min, se admin cambia
+// `Service.bokunProductId` via /admin/servizi, il worker continuava a
+// pushare `availabilityCount=0` sul productId VECCHIO per 15min → il
+// prodotto NUOVO su Bokun/Viator/GYG restava AVAILABLE → double-booking
+// garantito in finestra post-mutate. 60s riduce finestra a <1min +
+// impatto DB trascurabile (limiter 10/s × 60s = max 600 roundtrip/min).
 interface ServiceCacheEntry {
   services: Array<{ id: string; bokunProductId: string | null; capacityMax: number }>;
   expiresAt: number;
 }
-const SERVICE_CACHE_TTL_MS = 15 * 60 * 1000;
+const SERVICE_CACHE_TTL_MS = 60 * 1000;
 const serviceCacheByBoat = new Map<string, ServiceCacheEntry>();
 
 async function getServicesForBoat(boatId: string) {

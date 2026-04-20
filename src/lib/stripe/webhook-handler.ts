@@ -55,6 +55,17 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
     case "charge.refunded":
       await onChargeRefunded(event.data.object);
       break;
+    case "charge.dispute.created":
+    case "charge.dispute.updated":
+    case "charge.dispute.closed":
+      // R27-CRIT-4: chargeback/dispute. Senza handler, l'evento finiva in
+      // `default` log + marker → admin NON notificato → slot BLOCKED per
+      // 30gg di dispute window senza possibilita' di rivendere. GDPR art.
+      // 33 + perdita revenue €500-2000/caso. Ora notify sincrono admin +
+      // log persistente (no release automatico: dispute potrebbe essere
+      // winnable).
+      await onChargeDispute(event.data.object as Stripe.Dispute, event.type);
+      break;
     default:
       logger.debug({ type: event.type }, "Unhandled stripe event");
   }
@@ -440,9 +451,16 @@ async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   // stripeRefundId, (b) update original→REFUNDED **solo** su full refund
   // (partial lascia SUCCEEDED), (c) update booking→REFUNDED solo full.
 
+  // R27-CRIT-5: `charge.amount_refunded` e' CUMULATIVO. Su partial refund
+  // multipli (admin fa 3 refund €50 + €100 + €100 via dashboard Stripe),
+  // l'event emesso ad ogni operazione portava a sibling REFUND scritti con
+  // il TOTALE cumulativo (50, 150, 250) invece del delta (50, 100, 100) →
+  // KPI finanza double-count. Ora leggiamo l'amount del singolo refund dal
+  // refund object associato all'event (Stripe Events API: in charge.refunded
+  // il nuovo refund e' il primo di `refunds.data`, sorted newest first).
   const refund = charge.refunds?.data[0];
   const refundId = refund?.id;
-  const refundAmountCents = charge.amount_refunded; // total refunded on charge
+  const refundAmountCents = refund?.amount ?? charge.amount_refunded;
   const isFullRefund = charge.amount_refunded === charge.amount;
 
   // Idempotency: se sibling REFUND con stesso stripeRefundId esiste, webhook
@@ -529,4 +547,85 @@ async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
     },
     "Payment refunded",
   );
+}
+
+/**
+ * R27-CRIT-4: chargeback handler. Stripe emette `charge.dispute.created`
+ * quando la banca del cliente apre una contestazione (carta rubata, prodotto
+ * non ricevuto, frode). L'evento triggera:
+ *  - notify admin sincrono (email + telegram se configurato)
+ *  - log persistente via audit log per tracking response deadline
+ *  - NO release automatico: il booking potrebbe essere legit (winnable),
+ *    rilasciare lo slot aprirebbe a prenotazione duplicata mentre la
+ *    disputa e' in corso.
+ *
+ * Quando la disputa si chiude come "lost", Stripe emette `charge.refunded`
+ * (gia' gestito) che propaga il refund normale + releaseDates.
+ */
+async function onChargeDispute(
+  dispute: Stripe.Dispute,
+  eventType: string,
+): Promise<void> {
+  const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+  if (!chargeId) {
+    logger.warn({ disputeId: dispute.id }, "Dispute without charge reference — skipped");
+    return;
+  }
+
+  const payment = await db.payment.findFirst({
+    where: { stripeChargeId: chargeId },
+    include: {
+      booking: {
+        include: {
+          customer: { select: { firstName: true, lastName: true, email: true } },
+          service: { select: { name: true } },
+        },
+      },
+    },
+  });
+  if (!payment) {
+    logger.warn(
+      { disputeId: dispute.id, chargeId },
+      "Dispute on unknown charge — likely booking deleted or never imported",
+    );
+    return;
+  }
+
+  const evidenceDueBy = dispute.evidence_details?.due_by
+    ? new Date(dispute.evidence_details.due_by * 1000).toISOString()
+    : null;
+
+  logger.error(
+    {
+      disputeId: dispute.id,
+      chargeId,
+      bookingId: payment.bookingId,
+      confirmationCode: payment.booking.confirmationCode,
+      disputeStatus: dispute.status,
+      disputeReason: dispute.reason,
+      disputeAmountCents: dispute.amount,
+      eventType,
+      evidenceDueBy,
+    },
+    "STRIPE DISPUTE — admin action required",
+  );
+
+  try {
+    await dispatchNotification({
+      type: "PAYMENT_FAILED",
+      channels: defaultNotificationChannels(),
+      payload: {
+        confirmationCode: payment.booking.confirmationCode,
+        customerName:
+          `${payment.booking.customer?.firstName ?? ""} ${payment.booking.customer?.lastName ?? ""}`.trim() ||
+          "n/a",
+        serviceName: payment.booking.service?.name ?? "n/a",
+        startDate: payment.booking.startDate.toISOString().slice(0, 10),
+        amount: formatEurCents(dispute.amount),
+        reason: `DISPUTE ${eventType.replace("charge.dispute.", "")} · reason=${dispute.reason} · status=${dispute.status}${evidenceDueBy ? ` · evidence_due=${evidenceDueBy}` : ""}`,
+      },
+    });
+  } catch (err) {
+    logger.warn({ err, disputeId: dispute.id }, "Dispute notification failed (non-blocking)");
+  }
 }

@@ -60,6 +60,32 @@ export async function refundPayment(chargeId: string, amountCents?: number) {
 }
 
 /**
+ * R27-CRIT-3: legge lo stato charge upstream per calcolare il residuo
+ * non ancora rimborsato. Senza questo, `cancelBooking` rimborsava il
+ * charge originale via `refunds.create({charge})` (Stripe fa residual
+ * di default OK) MA l'app creava un sibling REFUND con `amount = p.amount`
+ * intero → audit finanza double-count di eventuali partial refund
+ * gia' eseguiti da admin via dashboard Stripe.
+ *
+ * Ritorna `{ totalCents, refundedCents, residualCents }`; il caller
+ * rimborsa + registra sibling solo per il residuo.
+ */
+export async function getChargeRefundState(
+  chargeId: string,
+): Promise<{ totalCents: number; refundedCents: number; residualCents: number }> {
+  try {
+    const charge = await stripe().charges.retrieve(chargeId);
+    const totalCents = charge.amount;
+    const refundedCents = charge.amount_refunded;
+    const residualCents = Math.max(totalCents - refundedCents, 0);
+    return { totalCents, refundedCents, residualCents };
+  } catch (err) {
+    logger.error({ err, chargeId }, "Stripe getChargeRefundState failed");
+    throw new ExternalServiceError("Stripe", "getChargeRefundState failed");
+  }
+}
+
+/**
  * Cancella un PaymentIntent se ancora in stato cancellabile (requires_*).
  * Idempotent: se Stripe ritorna uno status finale (succeeded/canceled),
  * ritorna l'intent senza modificarlo.

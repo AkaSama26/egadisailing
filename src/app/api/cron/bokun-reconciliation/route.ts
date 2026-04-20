@@ -93,7 +93,14 @@ export const GET = withErrorHandler(async (req: Request) => {
       for (const b of result.bookings) {
         try {
           const ours = await importBokunBooking(b);
-          await syncBookingAvailability(ours);
+          // R27-CRIT-6: skip fan-out quando l'import e' stato "skipped"
+          // (status terminale locale preserva admin-cancel). Senza questa
+          // guardia il cron re-chiamava `blockDates` → ri-BLOCCA cella su
+          // booking gia' CANCELLED admin lato → admin-cancel visibilmente
+          // "non funziona" + ManualAlert per cancel upstream non recepito.
+          if (ours.mode !== "skipped") {
+            await syncBookingAvailability(ours);
+          }
           imported++;
         } catch (err) {
           failed++;

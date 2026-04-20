@@ -55,10 +55,19 @@ const refundPaymentMock = vi.fn().mockResolvedValue({ id: "re_mocked", status: "
 const cancelPaymentIntentMock = vi
   .fn()
   .mockResolvedValue({ id: "pi_mocked", status: "canceled" });
+// R27-CRIT-3: `getChargeRefundState` ritorna il residuo non ancora rimborsato
+// via `stripe.charges.retrieve`. Mock default: intero charge come residuo
+// (nessun partial refund upstream) → rimborsa tutto il Payment.
+const getChargeRefundStateMock = vi.fn().mockResolvedValue({
+  totalCents: 20000,
+  refundedCents: 0,
+  residualCents: 20000,
+});
 vi.mock("@/lib/stripe/payment-intents", () => ({
   refundPayment: refundPaymentMock,
   cancelPaymentIntent: cancelPaymentIntentMock,
   createPaymentIntent: vi.fn(),
+  getChargeRefundState: getChargeRefundStateMock,
 }));
 
 vi.mock("@/lib/email/brevo", () => ({

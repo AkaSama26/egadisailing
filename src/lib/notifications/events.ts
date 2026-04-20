@@ -25,7 +25,10 @@ export const CHANNEL_DEFAULTS: Record<NotificationType, NotificationChannel[]> =
   NEW_BOOKING_BOKUN: ["EMAIL"],
   NEW_BOOKING_CHARTER: ["EMAIL"],
   BOOKING_CANCELLED: ["EMAIL"],
-  PAYMENT_FAILED: ["EMAIL"],
+  // R27-CRIT-4: chargeback/dispute Stripe sono business-critical (revenue
+  // loss €500-2000/caso + deadline 7gg per evidence). Escalation TELEGRAM
+  // se configurato.
+  PAYMENT_FAILED: ["EMAIL", "TELEGRAM"],
   SYNC_FAILURE: ["EMAIL", "TELEGRAM"],
   WEATHER_ALERT: ["EMAIL", "TELEGRAM"],
   // Double-booking e' evento urgente (cliente stopped/embarassment rischio) —

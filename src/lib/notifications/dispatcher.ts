@@ -15,6 +15,10 @@ import {
   doubleBookingTemplate,
   type DoubleBookingPayload,
 } from "./templates/double-booking";
+import {
+  paymentFailedTemplate,
+  type PaymentFailedPayload,
+} from "./templates/payment-failed";
 import type { NotificationEvent } from "./events";
 
 interface RenderedTemplate {
@@ -122,7 +126,9 @@ function renderTemplate(event: NotificationEvent): RenderedTemplate | null {
       return bookingCancelledTemplate(event.payload as unknown as BookingCancelledPayload);
     case "DOUBLE_BOOKING_DETECTED":
       return doubleBookingTemplate(event.payload as unknown as DoubleBookingPayload);
-    // PAYMENT_FAILED + SYNC_FAILURE: template generici stub, non-blocking
+    case "PAYMENT_FAILED":
+      return paymentFailedTemplate(event.payload as unknown as PaymentFailedPayload);
+    // SYNC_FAILURE: template non ancora implementato, non-blocking
     default:
       return null;
   }

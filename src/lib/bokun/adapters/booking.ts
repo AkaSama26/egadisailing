@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { parseIsoDay } from "@/lib/dates";
+import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import {
   detectCrossChannelConflicts,
   recordDoubleBookingIncident,
@@ -19,6 +20,11 @@ export interface ImportedBokunBooking {
   startDate: Date;
   endDate: Date;
   status: BookingStatus;
+  // R27-CRIT-6: caller (webhook route / reconciliation cron) puo' usare
+  // `mode` per saltare fan-out quando il booking e' gia' terminale
+  // (CANCELLED/REFUNDED) e non c'e' stato cambio — evita re-blockDates
+  // che sovrascrive admin-cancel o burn quota API Bokun su duplicati.
+  mode?: "created" | "updated" | "skipped";
 }
 
 /**
@@ -68,14 +74,48 @@ export async function importBokunBooking(
 
   try {
     const result = await db.$transaction(async (tx) => {
-      // findUnique dentro la tx: serializza con l'upsert successivo
-      // sotto lo stesso lock implicito del bokunBookingId unique index.
+      // R27-CRIT-2: advisory lock per-bokunBookingId serializza import concorrenti
+      // sullo stesso booking. Senza, `findUnique` + `update` soffrivano race
+      // out-of-order: webhook CANCEL committava T+600ms → webhook CREATE in
+      // flight committava T+1200ms → findUnique trovava CANCEL → branch update
+      // riscriveva status=CONFIRMED sopra → slot phantom (DB BLOCKED, Bokun
+      // upstream CANCELLED). pg_advisory_xact_lock forza sequenzializzazione:
+      // CANCEL aspetta CREATE o viceversa.
+      await acquireTxAdvisoryLock(tx, "bokun-booking", String(booking.id));
+
+      // findUnique dentro la tx + sotto advisory lock: serializza import
+      // concorrenti + degrado P2002 catch below resta come safety net.
       const existing = await tx.bokunBooking.findUnique({
         where: { bokunBookingId: String(booking.id) },
         include: { booking: true },
       });
 
       if (existing) {
+        // Optimistic guard R27-CRIT-2: se lo status corrente e' "piu' terminale"
+        // del nuovo (CANCELLED/REFUNDED arrivati prima di CONFIRMED out-of-order),
+        // skip l'update. Preserve il cancel admin + ordering upstream Bokun.
+        const TERMINAL = new Set<BookingStatus>(["CANCELLED", "REFUNDED"]);
+        if (TERMINAL.has(existing.booking.status) && !TERMINAL.has(status)) {
+          logger.warn(
+            {
+              bokunBookingId: String(booking.id),
+              existingStatus: existing.booking.status,
+              incomingStatus: status,
+            },
+            "Bokun import: skipping non-terminal update on terminal booking (out-of-order protection)",
+          );
+          return {
+            booking: {
+              id: existing.booking.id,
+              boatId: existing.booking.boatId,
+              startDate: existing.booking.startDate,
+              endDate: existing.booking.endDate,
+              status: existing.booking.status,
+            },
+            mode: "skipped" as const,
+          };
+        }
+
         const updated = await tx.booking.update({
           where: { id: existing.bookingId },
           data: {
@@ -192,6 +232,7 @@ export async function importBokunBooking(
       startDate: result.booking.startDate,
       endDate: result.booking.endDate,
       status: result.booking.status,
+      mode: result.mode,
     };
   } catch (err) {
     // P2002 = concurrent insert race sulla unique bokunBookingId.
@@ -212,6 +253,7 @@ export async function importBokunBooking(
         startDate: row.booking.startDate,
         endDate: row.booking.endDate,
         status: row.booking.status,
+        mode: "updated",
       };
     }
     throw err;

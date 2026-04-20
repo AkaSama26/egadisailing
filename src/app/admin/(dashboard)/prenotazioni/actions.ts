@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
-import { refundPayment, cancelPaymentIntent } from "@/lib/stripe/payment-intents";
+import { refundPayment, cancelPaymentIntent, getChargeRefundState } from "@/lib/stripe/payment-intents";
+import { fromCents } from "@/lib/pricing/cents";
 import { releaseDates } from "@/lib/availability/service";
 import { toCents } from "@/lib/pricing/cents";
 import { CHANNELS } from "@/lib/channels";
@@ -80,12 +81,35 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
   // Round 10 BL-M4: se un refund fallisce, NON marchiamo CANCELLED — admin
   // riprova. Senza questo, il booking finiva CANCELLED con charge ancora
   // addebitato al cliente.
+  //
+  // R27-CRIT-3: check pre-refund `charges.retrieve.amount_refunded` per calcolare
+  // il RESIDUO. Prima del fix, se admin aveva gia' rimborsato €50 dalla
+  // dashboard Stripe, il webhook creava sibling REFUND €50 + admin-cancel
+  // creava altro sibling REFUND €400 (full amount) → audit finanza
+  // double-count €50. Ora rimborso + sibling record solo sul residuo.
   const refundErrors: Array<{ paymentId: string; message: string }> = [];
   let refundsSucceeded = 0;
   for (const p of booking.payments) {
     if (p.status === "SUCCEEDED" && p.stripeChargeId && p.type !== "REFUND") {
       try {
-        const ref = await refundPayment(p.stripeChargeId);
+        const state = await getChargeRefundState(p.stripeChargeId);
+        if (state.residualCents <= 0) {
+          // Nothing left to refund: charge gia' completamente rimborsato via
+          // dashboard / altro webhook. Marca il Payment come REFUNDED ma
+          // non creare sibling (gia' esiste dal webhook che ha registrato).
+          await db.payment.update({
+            where: { id: p.id },
+            data: { status: "REFUNDED" },
+          });
+          logger.info(
+            { paymentId: p.id, chargeId: p.stripeChargeId, refundedCents: state.refundedCents },
+            "Admin cancel: charge fully refunded upstream, marking Payment REFUNDED only",
+          );
+          refundsSucceeded++;
+          continue;
+        }
+        const ref = await refundPayment(p.stripeChargeId, state.residualCents);
+        const residualAmountStr = fromCents(state.residualCents).toFixed(2);
         await db.$transaction(async (tx) => {
           await tx.payment.update({
             where: { id: p.id },
@@ -95,16 +119,16 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
           // audit fiscale (revenue mese originale non cambia retroattivamente),
           // ma SENZA stripeChargeId/stripeRefundId che sono @unique sul
           // Payment originale gia' updated sopra. Riferimento preservato
-          // in `note` per correlation audit.
+          // in `note` per correlation audit. R27-CRIT-3: amount = residuo.
           await tx.payment.create({
             data: {
               bookingId: booking.id,
-              amount: p.amount.toString(),
+              amount: residualAmountStr,
               type: "REFUND",
               method: p.method,
               status: "REFUNDED",
               processedAt: new Date(),
-              note: `Refund admin-cancel · paymentId=${p.id} · charge=${p.stripeChargeId} · refund=${ref.id}`,
+              note: `Refund admin-cancel · paymentId=${p.id} · charge=${p.stripeChargeId} · refund=${ref.id} · residual=${residualAmountStr}`,
             },
           });
         });
