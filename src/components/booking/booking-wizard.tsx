@@ -83,27 +83,23 @@ interface Customer {
 }
 
 export function BookingWizard(props: Props) {
-  // R26-A1-C1: restore da sessionStorage al mount. Escludiamo "payment"/"success"
-  // step — post-PI vogliamo sempre re-prompt per sicurezza (PI one-shot).
-  const draft = typeof window !== "undefined" ? loadDraft(props.serviceId) : null;
-  const restoredStep: Step =
-    draft?.step === "people" || draft?.step === "customer" ? draft.step : "date";
-
-  const [step, setStep] = useState<Step>(restoredStep);
+  // R26-A1-C1: initial state SSR-safe (match server HTML) — se il `useState`
+  // initializer leggesse sessionStorage (client-only), React 19 hydration
+  // mismatch perche' server rendera diverse attr `value=` / step diverso.
+  // Restore in useEffect post-mount (client-side only, no hydration conflict).
+  const [step, setStep] = useState<Step>("date");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [startDate, setStartDate] = useState(draft?.startDate ?? "");
-  const [numPeople, setNumPeople] = useState<number>(draft?.numPeople ?? 1);
-  const [customer, setCustomer] = useState<Customer>(
-    draft?.customer ?? {
-      email: "",
-      firstName: "",
-      lastName: "",
-      phone: "",
-      nationality: "IT",
-      language: "it",
-    },
-  );
+  const [startDate, setStartDate] = useState("");
+  const [numPeople, setNumPeople] = useState<number>(1);
+  const [customer, setCustomer] = useState<Customer>({
+    email: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+    nationality: "IT",
+    language: "it",
+  });
   const [intent, setIntent] = useState<{
     confirmationCode: string;
     clientSecret: string;
@@ -119,12 +115,34 @@ export function BookingWizard(props: Props) {
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [consentPrivacy, setConsentPrivacy] = useState(false);
   const [consentTerms, setConsentTerms] = useState(false);
+  // R26-P2-CRITICA: tracciamo se restore completato per gate save su dirty.
+  // Senza, la prima saveDraft post-mount viene invocata con default vuoti
+  // prima che il restore giunga → sovrascrive il draft salvato precedente.
+  const [hydrated, setHydrated] = useState(false);
 
-  // R26-A1-C1: persist draft ad ogni change di step/input.
+  // R26-A1-C1 + R26-P2-CRITICA: restore in useEffect client-side per evitare
+  // hydration mismatch. Dopo restore marca `hydrated=true` → save effect puo'
+  // procedere senza sovrascrivere draft precedente con stati default.
   useEffect(() => {
+    const d = loadDraft(props.serviceId);
+    if (d) {
+      if (d.step === "people" || d.step === "customer") setStep(d.step);
+      if (typeof d.startDate === "string") setStartDate(d.startDate);
+      if (typeof d.numPeople === "number") setNumPeople(d.numPeople);
+      if (d.customer && typeof d.customer === "object") {
+        setCustomer((prev) => ({ ...prev, ...d.customer }));
+      }
+    }
+    setHydrated(true);
+  }, [props.serviceId]);
+
+  // R26-A1-C1: persist draft ad ogni change. Skip finche' hydrated=false
+  // (R26-P2-CRITICA: altrimenti overrite draft esistente con defaults).
+  useEffect(() => {
+    if (!hydrated) return;
     if (step === "payment" || step === "success") return;
     saveDraft(props.serviceId, { step, startDate, numPeople, customer });
-  }, [props.serviceId, step, startDate, numPeople, customer]);
+  }, [hydrated, props.serviceId, step, startDate, numPeople, customer]);
 
   async function createIntent() {
     setError(null);

@@ -1,9 +1,17 @@
--- R26-A2-1: Payment.currency CHECK constraint (allineato con Booking
--- R19 pattern). Stripe multi-currency o admin bulk-insert con stringa
+-- R26-A2-1 + R26-P2-ALTA: Payment.currency CHECK constraint (allineato con
+-- Booking R19 pattern). Stripe multi-currency o admin bulk-insert con stringa
 -- invalida → formatEur NaN downstream. 3-char ISO 4217 upper forza.
+-- `NOT VALID` = no scan delle righe esistenti (zero-downtime su prod con
+-- >10k Payment). `VALIDATE CONSTRAINT` dopo ALTER scansiona + fallisce solo
+-- se esiste riga invalid — admin puo' fixarla + ri-eseguire VALIDATE.
+-- In questo progetto pre-launch il DB e' vuoto, VALIDATE passa; in prod
+-- con dati legacy il DBA fa il migration e VALIDATE off-hour.
 ALTER TABLE "Payment"
   ADD CONSTRAINT "chk_payment_currency_iso4217"
-  CHECK (length(currency) = 3 AND currency = upper(currency));
+  CHECK (length(currency) = 3 AND currency = upper(currency))
+  NOT VALID;
+ALTER TABLE "Payment"
+  VALIDATE CONSTRAINT "chk_payment_currency_iso4217";
 
 -- R26-A3-H2: pg_trgm GIN index per customer search ILIKE. Senza, admin
 -- `/admin/clienti` con 5k+ customer = seq-scan 200-400ms per search,
