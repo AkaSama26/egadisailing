@@ -221,13 +221,22 @@ function DateStep({
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Scegli la data</h2>
-      <input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-3 rounded-lg border border-gray-300"
-        min={new Date().toISOString().slice(0, 10)}
-      />
+      {/* R24-A1-#13 WCAG 3.3.2: label esplicita per `date` input. */}
+      <div>
+        <label htmlFor="wizard-date" className="block text-sm font-medium mb-1">
+          Data di partenza
+        </label>
+        <input
+          id="wizard-date"
+          type="date"
+          required
+          aria-required="true"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+          min={new Date().toISOString().slice(0, 10)}
+        />
+      </div>
       <button
         onClick={onNext}
         disabled={!value}
@@ -255,15 +264,25 @@ function PeopleStep({
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Quante persone?</h2>
-      <input
-        type="number"
-        min={1}
-        max={capacityMax}
-        value={value}
-        onChange={(e) => onChange(Math.max(1, Math.min(capacityMax, parseInt(e.target.value, 10) || 1)))}
-        className="w-full px-4 py-3 rounded-lg border border-gray-300"
-      />
-      <p className="text-sm text-gray-600">Massimo {capacityMax} persone</p>
+      {/* R24-A1-#13 WCAG 3.3.2: label + aria-describedby per max hint. */}
+      <div>
+        <label htmlFor="wizard-people" className="block text-sm font-medium mb-1">
+          Numero persone
+        </label>
+        <input
+          id="wizard-people"
+          type="number"
+          min={1}
+          max={capacityMax}
+          required
+          aria-required="true"
+          aria-describedby="wizard-people-hint"
+          value={value}
+          onChange={(e) => onChange(Math.max(1, Math.min(capacityMax, parseInt(e.target.value, 10) || 1)))}
+          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+        />
+      </div>
+      <p id="wizard-people-hint" className="text-sm text-gray-600">Massimo {capacityMax} persone</p>
       <div className="flex gap-3">
         <button
           onClick={onBack}

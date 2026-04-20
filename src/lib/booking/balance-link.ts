@@ -31,10 +31,19 @@ export async function createBalancePaymentLink(bookingId: string): Promise<strin
     paymentType: "BALANCE",
   });
 
+  // R24-A3-C2 (reclassified ALTA): expires_at limita l'URL. Default Stripe
+  // Checkout 24h → cliente forwarda email "paga tu" a familiare → terzi
+  // aprono link + pagano con propria carta → Payment SUCCEEDED su booking
+  // altrui → refund mess operativo. 6h e' compromesso: cliente ha finestra
+  // ragionevole per pagare same-day, ma ridotto forwarding abuse window.
+  // Stripe min = 30min from now, max = 24h from now.
+  const expiresAt = Math.floor(Date.now() / 1000) + 6 * 60 * 60; // 6h
+
   const session = await stripe().checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],
     customer_email: booking.customer.email,
+    expires_at: expiresAt,
     line_items: [
       {
         quantity: 1,

@@ -208,7 +208,13 @@ export async function importCharterBooking(
     );
 
     // R14 cross-OTA post-commit incident recording.
-    if (result.mode === "created" && detectedConflicts.length > 0) {
+    // R24-A1-A4: un import charter CANCELLED (email di disdetta al primo
+    // ingest) non deve emettere alert — non e' un booking attivo.
+    if (
+      result.mode === "created" &&
+      result.booking.status !== "CANCELLED" &&
+      detectedConflicts.length > 0
+    ) {
       await recordDoubleBookingIncident({
         newBookingId: result.booking.id,
         newSource: input.platform,

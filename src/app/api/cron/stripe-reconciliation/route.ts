@@ -7,7 +7,6 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
-import { getClientIp } from "@/lib/http/client-ip";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { LEASE_KEYS } from "@/lib/lease/keys";
@@ -60,8 +59,11 @@ const CHANNEL_KEY = "STRIPE_EVENTS_RECONCILIATION";
  */
 export const GET = withErrorHandler(async (req: Request) => {
   requireBearerSecret(req, env.CRON_SECRET);
+  // R24-A1-C2: `identifier: "global"` come tutti gli altri cron protetti
+  // (R13-C2 pattern). `getClientIp` era spoofabile via X-Forwarded-For
+  // rotation in caso di CRON_SECRET leakato.
   await enforceRateLimit({
-    identifier: getClientIp(req.headers),
+    identifier: "global",
     scope: RATE_LIMIT_SCOPES.STRIPE_CRON_IP,
     limit: 10,
     windowSeconds: 60,
@@ -94,10 +96,15 @@ export const GET = withErrorHandler(async (req: Request) => {
     let pages = 0;
     let startingAfter: string | undefined = undefined;
     let hasMore = true;
-    // Traccio il timestamp piu' alto visto: il prossimo cursore deve essere
-    // >= di questo per non riprocessare (paginazione Stripe e' desc so il
-    // primo batch ha il piu' recente — ma per sicurezza tracco max esplicito).
+    // Stripe events.list ritorna eventi in ORDINE DESCENDENTE (newest→oldest).
+    // R24-A1-C1: traccio SIA max (newest) SIA min (oldest) visto. Al MAX_PAGES
+    // cap (backlog enorme), il cursore deve avanzare a `minEventCreated - 1`
+    // invece del max — altrimenti gli eventi OLDER non processati in questo
+    // run vengono saltati permanentemente. Con un backlog 15k eventi + MAX_PAGES
+    // 100 (10k processati), 5k eventi dal T+run-3gg a T+max_processed sarebbero
+    // persi.
     let maxEventCreated = sinceEpoch;
+    let minEventCreated: number | null = null;
 
     const stripeClient = stripe();
 
@@ -113,6 +120,9 @@ export const GET = withErrorHandler(async (req: Request) => {
       for (const event of response.data) {
         if (event.created > maxEventCreated) {
           maxEventCreated = event.created;
+        }
+        if (minEventCreated === null || event.created < minEventCreated) {
+          minEventCreated = event.created;
         }
         if (!RECONCILED_EVENT_TYPES.includes(event.type)) {
           continue;
@@ -155,38 +165,58 @@ export const GET = withErrorHandler(async (req: Request) => {
       }
     }
 
-    if (pages >= MAX_PAGES) {
-      logger.warn({ pages, totalFetched }, "Stripe reconciliation hit MAX_PAGES cap");
+    const hitMaxPages = pages >= MAX_PAGES && hasMore;
+    if (hitMaxPages) {
+      logger.warn(
+        { pages, totalFetched, minEventCreated },
+        "Stripe reconciliation hit MAX_PAGES cap — backlog remains",
+      );
     }
 
-    // Cursore salvato: avanza solo se abbiamo visto eventi piu' recenti.
-    // Se `failed > 0` NON avanziamo il cursore: il prossimo run riprovera'.
-    // Questo e' una scelta di safety — preferiamo ri-processare qualche
-    // evento gia' andato OK (idempotent) piuttosto che perderne uno.
+    // R24-A1-C1: cursore avanzamento. Stripe events.list default desc
+    // (newest first). Pagination complete = tutti gli eventi fino a `since`
+    // sono stati visti; si puo' avanzare al maxEventCreated.
+    //
+    // Cap hit (hitMaxPages + hasMore): abbiamo processato solo il segment
+    // NEWEST del backlog. Gli eventi OLDER del minEventCreated NON sono
+    // raggiungibili con `starting_after` da zero al prossimo run (stripe
+    // riparte da newest). Se avanzassimo il cursore gli eventi vecchi
+    // sarebbero persi permanentemente.
+    //
+    // Strategia safety: NON avanzare cursore + healthStatus YELLOW +
+    // logger.warn. Il prossimo run ri-processera' stesso segment (dedup
+    // via ProcessedStripeEvent = no side-effect doppio) + vedra' nuovi
+    // eventi. Admin deve aumentare MAX_PAGES se il warn persiste > 1h
+    // (indica backlog reale — probabile outage prolungato).
     let nextSince: Date;
-    if (failed === 0 && maxEventCreated > sinceEpoch) {
-      // Avanza a 1s prima del piu' recente visto: Stripe `created[gte]`
-      // inclusivo, il prossimo run ri-vedra' il piu' recente ma saltera'
-      // via dedup.
+    if (failed > 0 || hitMaxPages) {
+      // No-advance: retry al prossimo run.
+      nextSince = since;
+    } else if (maxEventCreated > sinceEpoch) {
+      // Run completo: avanza al piu' recente visto. -1s perche' Stripe gte
+      // e' inclusivo; dedup via ProcessedStripeEvent copre l'overlap.
       nextSince = new Date((maxEventCreated - 1) * 1000);
     } else {
-      // Mantieni cursore se failed>0 o nessun evento nuovo.
+      // Nessun evento in questo run: cursore invariato.
       nextSince = since;
     }
 
     const durationMs = Date.now() - runStartedAt.getTime();
+    // R24-A1-C1: YELLOW anche su hitMaxPages per allertare l'admin al backlog.
+    const status: "GREEN" | "YELLOW" = failed === 0 && !hitMaxPages ? "GREEN" : "YELLOW";
+    const errMsg = failed > 0
+      ? `${failed} replays failed`
+      : hitMaxPages
+        ? `MAX_PAGES cap hit — backlog remains, increase MAX_PAGES or retry`
+        : null;
     await db.channelSyncStatus.upsert({
       where: { channel: CHANNEL_KEY },
-      update: {
-        lastSyncAt: nextSince,
-        healthStatus: failed === 0 ? "GREEN" : "YELLOW",
-        lastError: failed > 0 ? `${failed} replays failed` : null,
-      },
+      update: { lastSyncAt: nextSince, healthStatus: status, lastError: errMsg },
       create: {
         channel: CHANNEL_KEY,
         lastSyncAt: nextSince,
-        healthStatus: failed === 0 ? "GREEN" : "YELLOW",
-        lastError: failed > 0 ? `${failed} replays failed` : null,
+        healthStatus: status,
+        lastError: errMsg,
       },
     });
 

@@ -131,27 +131,33 @@ export async function recordDoubleBookingIncident(input: RecordIncidentInput): P
     "Cross-OTA double-booking detected",
   );
 
-  // ManualAlert per ogni conflitto (admin UI lista tutti i problemi).
-  // Usa unique channel "CROSS_OTA_DOUBLE_BOOKING" per distinguere dagli
-  // alert sync-based (CLICKANDBOAT/NAUTAL).
+  // R24-A1-A5: SINGOLO ManualAlert aggregato con tutti i conflitti in `notes`.
+  // Prima il loop creava N alert separati, ma il partial unique index
+  // `ManualAlert(channel, boatId, date, action) WHERE status=PENDING`
+  // (migration 20260418220000) faceva fallire gli insert 2..N con P2002 →
+  // alert persi silent, admin vedeva solo il primo conflict. Un alert
+  // aggregato elenca tutti i conflitti nel notes + partial unique garantisce
+  // idempotency su retry webhook.
   const dayKey = input.startDate;
-  for (const conflict of input.conflicts) {
-    try {
-      // Insert diretto (no advisory lock qui: ogni conflict e' unique
-      // per-bookingId nel notes). Dedup via findFirst + partial unique
-      // index su (channel, boatId, date, action) WHERE status=PENDING.
-      const existing = await db.manualAlert.findFirst({
-        where: {
-          channel: "CROSS_OTA_DOUBLE_BOOKING",
-          boatId: input.boatId,
-          date: dayKey,
-          action: "REVIEW",
-          status: "PENDING",
-          bookingId: input.newBookingId,
-        },
-        select: { id: true },
-      });
-      if (existing) continue;
+  try {
+    const existing = await db.manualAlert.findFirst({
+      where: {
+        channel: "CROSS_OTA_DOUBLE_BOOKING",
+        boatId: input.boatId,
+        date: dayKey,
+        action: "REVIEW",
+        status: "PENDING",
+        bookingId: input.newBookingId,
+      },
+      select: { id: true },
+    });
+    if (!existing) {
+      const conflictsList = input.conflicts
+        .map(
+          (c, i) =>
+            `  ${i + 1}. ${c.source} ${c.confirmationCode} (${c.status})`,
+        )
+        .join("\n");
       await db.manualAlert.create({
         data: {
           channel: "CROSS_OTA_DOUBLE_BOOKING",
@@ -161,16 +167,21 @@ export async function recordDoubleBookingIncident(input: RecordIncidentInput): P
           bookingId: input.newBookingId,
           notes:
             `Nuovo booking ${input.newConfirmationCode} (${input.newSource}) ` +
-            `overlappa con ${conflict.confirmationCode} (${conflict.source}, ${conflict.status}). ` +
-            `Decidere quale cancellare + rimborsare.`,
+            `overlappa con ${input.conflicts.length} booking cross-source:\n` +
+            `${conflictsList}\n` +
+            `Decidere quale cancellare + rimborsare + cancellare upstream sul panel OTA.`,
         },
       });
-    } catch (err) {
-      logger.error(
-        { err, newBookingId: input.newBookingId, conflictId: conflict.id },
-        "Failed to create ManualAlert for double-booking incident",
-      );
     }
+  } catch (err) {
+    logger.error(
+      {
+        err,
+        newBookingId: input.newBookingId,
+        conflictCount: input.conflicts.length,
+      },
+      "Failed to create ManualAlert for double-booking incident",
+    );
   }
 
   // Dispatch notification (fail-safe: ogni canale try/catch indipendente

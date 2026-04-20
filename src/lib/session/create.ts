@@ -21,6 +21,22 @@ export async function createBookingSession(
   ip: string | null,
   userAgent: string | null,
 ): Promise<void> {
+  // R24-A2-C2: rotazione session su new login. Prima di emettere S2,
+  // revoca S1 (se cookie presente). Principio "new auth invalidates old":
+  // se S1 e' stato leaked (cookie stealing, shared device, logout dimenticato
+  // su public kiosk), la nuova auth deve chiuderla server-side. Senza
+  // questo, S1 resta valida fino al TTL 7d anche se l'utente ha fatto un
+  // nuovo login.
+  const store = await cookies();
+  const existingToken = store.get(BOOKING_SESSION_COOKIE)?.value;
+  if (existingToken) {
+    const existingHash = hashToken(existingToken);
+    await db.bookingRecoverySession.updateMany({
+      where: { tokenHash: existingHash, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
   const rawToken = crypto.randomBytes(32).toString("base64url");
   const tokenHash = hashToken(rawToken);
   const expiresAt = new Date(Date.now() + SESSION_LIFETIME_MS);
@@ -29,7 +45,6 @@ export async function createBookingSession(
     data: { email, tokenHash, ipAddress: ip, userAgent, expiresAt },
   });
 
-  const store = await cookies();
   store.set({
     name: BOOKING_SESSION_COOKIE,
     value: rawToken,

@@ -60,19 +60,35 @@ export async function requestOtp(
 
     await enforceOtpRequestLimit(email, ip);
 
-    const { code, otpId } = await createOtp(email, ip);
-    try {
-      await sendOtpEmail(email, code);
-    } catch (err) {
-      // Email fallita: invalida l'OTP appena creato per evitare che l'utente
-      // sia bloccato (rate-limit consumato) con codice fantasma.
-      await db.bookingRecoveryOtp
-        .update({
-          where: { id: otpId },
-          data: { expiresAt: new Date() },
-        })
-        .catch(() => {});
-      throw err;
+    // R24-A2-M1: email bomb prevention. Sender API attacker-controlled:
+    // con 3 req/h email + 30 req/day IP (single IP), attacker puo'
+    // bombardare 30 email-bombing vittime/giorno via sendOtpEmail anche
+    // se la email non ha Customer. Fix: check customer existence BEFORE
+    // createOtp+sendOtpEmail. Constant-time delay per evitare enumeration
+    // side-channel (timing difference tra "customer exists" vs "non
+    // exists").
+    const customer = await db.customer.findUnique({ where: { email } });
+
+    if (customer) {
+      const { code, otpId } = await createOtp(email, ip);
+      try {
+        await sendOtpEmail(email, code);
+      } catch (err) {
+        // Email fallita: invalida l'OTP appena creato per evitare che l'utente
+        // sia bloccato (rate-limit consumato) con codice fantasma.
+        await db.bookingRecoveryOtp
+          .update({
+            where: { id: otpId },
+            data: { expiresAt: new Date() },
+          })
+          .catch(() => {});
+        throw err;
+      }
+    } else {
+      // Non leak l'assenza del customer: aspetta ~200ms (tempo comparabile
+      // a createOtp + sendOtpEmail) prima di ritornare "sent" al client.
+      // L'utente vede sempre lo stesso messaggio → no enumeration.
+      await new Promise((r) => setTimeout(r, 200));
     }
 
     return { status: "sent", email, sentAt: Date.now() };

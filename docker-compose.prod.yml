@@ -75,8 +75,12 @@ services:
       NODE_ENV: production
       # DATABASE_URL direct (migrations + advisory locks require session-pool).
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # R24-A1-C3: `pgbouncer=true` disabilita prepared statements server-side
+      # — PgBouncer transaction-pool non garantisce che la stessa sessione
+      # fisica gestisca statement esteso protocol (prepare + execute). Senza
+      # questa flag, `pg: prepared statement "s0" already exists` sotto carico.
       # DATABASE_URL_POOLED via PgBouncer — runtime queries only.
-      DATABASE_URL_POOLED: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}
+      DATABASE_URL_POOLED: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}?pgbouncer=true
       DATABASE_POOL_MAX: "30"
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       APP_URL: ${APP_URL:?APP_URL required}

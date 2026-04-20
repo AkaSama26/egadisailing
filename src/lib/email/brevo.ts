@@ -4,6 +4,13 @@ import { ExternalServiceError } from "@/lib/errors";
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
+// R24-A3-A1: strip newline + control chars da toName per difesa header
+// injection. Brevo REST dovrebbe gestirlo ma documentazione warn +
+// altri provider (Mailgun, SendGrid) lo hanno avuto come CVE passato.
+function safePlain(s: string): string {
+  return s.replace(/[\r\n]+/g, " ").replace(/[\u0000-\u001F]/g, " ").trim();
+}
+
 export interface SendEmailOptions {
   to: string;
   toName?: string;
@@ -49,7 +56,12 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
       },
       body: JSON.stringify({
         sender: { email: env.BREVO_SENDER_EMAIL, name: env.BREVO_SENDER_NAME },
-        to: [{ email: opts.to, name: opts.toName }],
+        // R24-A3-A1: defense-in-depth anti header-injection. `toName` deriva
+        // da `Customer.firstName + lastName`. Brevo REST accetta JSON quindi
+        // CRLF nel campo non inietta header a livello edge, ma internamente
+        // Brevo costruisce RFC5322 headers — documentazione warn su newline.
+        // safePlain strip \r\n + control chars.
+        to: [{ email: opts.to, name: opts.toName ? safePlain(opts.toName) : undefined }],
         // R12-A3: replyTo dedicato cosi' le risposte cliente non finiscono
         // nel mailbox "noreply". R22-A4-ALTA-1: il caller puo' override
         // (contact form → replyTo = email cliente per abilitare Reply).

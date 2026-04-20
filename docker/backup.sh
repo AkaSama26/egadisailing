@@ -45,16 +45,24 @@ rm -f "$BACKUP_FILE"
 # Retention: delete objects older than BACKUP_RETENTION_DAYS.
 # NOTA: il pruning remoto con aws-cli e' best-effort. Configurare bucket
 # lifecycle policy S3-side per affidabilita' (es. Glacier transition).
-CUTOFF_EPOCH=$(date -u -d "${BACKUP_RETENTION_DAYS} days ago" +%s 2>/dev/null || \
-               date -u -v-${BACKUP_RETENTION_DAYS}d +%s)
+#
+# R24-A1-A7: `date -v` BSD fallback era dead code su Alpine (busybox date
+# supporta ne' GNU -d ne' BSD -v). Il container installa `coreutils` che
+# fornisce GNU date — ci affidiamo a quello. Fail-fast se assente.
+if ! date -u -d "1 day ago" +%s >/dev/null 2>&1; then
+  echo "[backup] ERROR: GNU date (coreutils) required but not found in PATH" >&2
+  exit 1
+fi
+
+CUTOFF_EPOCH=$(date -u -d "${BACKUP_RETENTION_DAYS} days ago" +%s)
 
 echo "[backup] pruning objects older than ${BACKUP_RETENTION_DAYS}d (cutoff epoch ${CUTOFF_EPOCH})"
 aws s3 ls $ENDPOINT_ARG "s3://${BACKUP_S3_BUCKET}/pgdump/${POSTGRES_DB}/" | \
 while read -r line; do
   OBJ_DATE=$(echo "$line" | awk '{print $1" "$2}')
-  OBJ_EPOCH=$(date -u -d "$OBJ_DATE" +%s 2>/dev/null || echo 0)
   OBJ_KEY=$(echo "$line" | awk '{print $4}')
-  if [ "$OBJ_EPOCH" -lt "$CUTOFF_EPOCH" ] && [ -n "$OBJ_KEY" ]; then
+  OBJ_EPOCH=$(date -u -d "$OBJ_DATE" +%s 2>/dev/null || echo 0)
+  if [ "$OBJ_EPOCH" -gt 0 ] && [ "$OBJ_EPOCH" -lt "$CUTOFF_EPOCH" ] && [ -n "$OBJ_KEY" ]; then
     echo "[backup] pruning $OBJ_KEY"
     aws s3 rm $ENDPOINT_ARG "s3://${BACKUP_S3_BUCKET}/pgdump/${POSTGRES_DB}/${OBJ_KEY}"
   fi
