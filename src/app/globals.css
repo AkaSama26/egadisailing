@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+/* R26-P3 dry-run fix: `shadcn/tailwind.css` non e' una libreria npm reale
+   (shadcn/ui e' un CLI copy-paste). Il "@import" silenzioso passava
+   localmente (Turbopack resilient) ma falliva in Docker fresh install
+   con "Can't resolve shadcn/tailwind.css". Rimosso. */
 
 @custom-variant dark (&:is(.dark *));
 
