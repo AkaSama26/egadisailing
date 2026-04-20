@@ -9,10 +9,11 @@ import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-han
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
+import { LEASE_KEYS } from "@/lib/lease/keys";
 
 export const runtime = "nodejs";
 
-const LEASE_NAME = "cron:weather-check";
+const LEASE_NAME = LEASE_KEYS.WEATHER_CHECK;
 const LEASE_TTL_SECONDS = 5 * 60;
 const ALERT_RESEND_THROTTLE_MS = 24 * 60 * 60 * 1000; // 24h tra re-alert per stesso risk
 

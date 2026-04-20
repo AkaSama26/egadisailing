@@ -5,12 +5,13 @@ import { parseIsoDay, toUtcDay } from "@/lib/dates";
 import { fetchOpenMeteoForecast, type OpenMeteoForecast } from "./open-meteo";
 import { assessRisk, type WeatherRisk } from "./risk-assessment";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
+import { LEASE_KEYS } from "@/lib/lease/keys";
 import { ExternalServiceError } from "@/lib/errors";
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
 const LOCATION_KEY = "trapani-38.0176,12.5365";
 const SOURCE = "OPEN_METEO";
-const FETCH_LEASE_NAME = "weather:fetch:trapani";
+const FETCH_LEASE_NAME = LEASE_KEYS.WEATHER_FETCH_TRAPANI;
 const FETCH_LEASE_TTL_SECONDS = 30;
 const STAMPEDE_WAIT_MS = 500;
 const STAMPEDE_MAX_WAITS = 6; // ~3s totali di attesa

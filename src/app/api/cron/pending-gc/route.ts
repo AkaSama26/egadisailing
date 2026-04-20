@@ -9,12 +9,13 @@ import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { cancelPaymentIntent } from "@/lib/stripe/payment-intents";
 import { releaseDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
+import { LEASE_KEYS } from "@/lib/lease/keys";
 
 export const runtime = "nodejs";
 
 import { PENDING_GC_TTL_MS } from "@/lib/booking/constants";
 
-const LEASE_NAME = "cron:pending-gc";
+const LEASE_NAME = LEASE_KEYS.PENDING_GC;
 const LEASE_TTL_SECONDS = 5 * 60;
 // R20-A1-1: cutoff a 45min (da 30min) per creare buffer 30min rispetto alla
 // DIRECT_RETRY_WINDOW_MS (15min). Evita race retry-window vs GC concorrente

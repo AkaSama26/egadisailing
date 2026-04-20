@@ -13,10 +13,11 @@ import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { formatItDay } from "@/lib/dates";
 import { bookingWithDetailsInclude } from "@/lib/booking/queries";
+import { LEASE_KEYS } from "@/lib/lease/keys";
 
 export const runtime = "nodejs";
 
-const LEASE_NAME = "cron:balance-reminders";
+const LEASE_NAME = LEASE_KEYS.BALANCE_REMINDERS;
 const LEASE_TTL_SECONDS = 10 * 60;
 
 /**

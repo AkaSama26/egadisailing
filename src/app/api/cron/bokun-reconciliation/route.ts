@@ -12,6 +12,7 @@ import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-han
 import { getClientIp } from "@/lib/http/client-ip";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
+import { LEASE_KEYS } from "@/lib/lease/keys";
 
 export const runtime = "nodejs";
 
@@ -21,7 +22,10 @@ const MAX_PAGES = 20; // safety cap: 2000 bookings/run
 // nostro server e Bokun. Senza buffer, eventi con updatedAt == now() esatto
 // possono essere persi tra un run e il successivo.
 const CLOCK_SKEW_BUFFER_MS = 30_000;
-const LEASE_NAME = "cron:bokun_reconciliation";
+// R20-P2-MEDIA: uniformato a hyphen (era underscore, drift vs altri 4 cron).
+// Al prossimo deploy il vecchio lease `cron:bokun_reconciliation` in Redis
+// scade via TTL 8min — nessun fix manuale richiesto.
+const LEASE_NAME = LEASE_KEYS.BOKUN_RECONCILIATION;
 // Il cron gira ogni 5min; il lease deve coprire il run normale con margine.
 // TTL auto-libera se il processo crasha (Redis scade, no stale lock).
 const LEASE_TTL_SECONDS = 8 * 60;

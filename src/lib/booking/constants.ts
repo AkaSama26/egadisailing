@@ -13,4 +13,17 @@
  * durante il quale il primo PENDING non e' ancora GC'd ma non matcha il filter retry.
  */
 export const PENDING_GC_TTL_MS = 45 * 60 * 1000;
-export const DIRECT_RETRY_WINDOW_MS = 15 * 60 * 1000;
+/**
+ * Finestra retry per escludere own-PENDING dal check overlap.
+ * 44min: un minuto sotto `PENDING_GC_TTL_MS` (45min).
+ *
+ * R20-P2-BASSA: era 15min → creava "limbo UX" 15-45min in cui cliente vedeva
+ * "dates not available" per il proprio PENDING vecchio. Con 44min il limbo
+ * residuo e' 1min (PENDING tra 44-45min): al limite GC cancella prima del
+ * retry → query overlap non matcha piu' → retry OK.
+ *
+ * Race residua al bordo 44-45min gestita dal GC claim pattern
+ * `updateMany status=PENDING → CANCELLED` count=0 se webhook succeeded
+ * concorrente ha gia' transitato lo stato.
+ */
+export const DIRECT_RETRY_WINDOW_MS = 44 * 60 * 1000;

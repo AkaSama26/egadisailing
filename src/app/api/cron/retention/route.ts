@@ -8,10 +8,11 @@ import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-han
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
+import { LEASE_KEYS } from "@/lib/lease/keys";
 
 export const runtime = "nodejs";
 
-const LEASE_NAME = "cron:retention";
+const LEASE_NAME = LEASE_KEYS.RETENTION;
 const LEASE_TTL_SECONDS = 15 * 60;
 
 /**

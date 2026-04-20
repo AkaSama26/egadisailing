@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { LEASE_KEYS } from "@/lib/lease/keys";
 import {
   imapConfigFromEnv,
   fetchUnseenEmails,
@@ -19,7 +20,10 @@ import { db } from "@/lib/db";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const LEASE_NAME = "cron:email_parser";
+// R20-P2-MEDIA: uniformato a hyphen (era underscore, drift vs altri cron).
+// Al prossimo deploy il vecchio lease `cron:email_parser` in Redis scade
+// via TTL 8min — nessun fix manuale richiesto.
+const LEASE_NAME = LEASE_KEYS.EMAIL_PARSER;
 const LEASE_TTL_SECONDS = 8 * 60;
 
 /**
