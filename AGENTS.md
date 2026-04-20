@@ -10,7 +10,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 **Stato**: Plan 1 + Plan 2 + Plan 3 + Plan 4 + Plan 5 + Plan 6 (weather + notifications core) completati + 19 round di audit applicati. **VERDICT Round 18 consolidated: STOP audit, SHIFT delivery.** Round 19 ha trovato 1 CRITICA regressione reale in R18 (currency CHECK rompe Bokun non-EUR) + 2 bug reali + 1 BLOCKER WCAG legale — applicati. Pilot launch target 20 maggio 2026.
 
-**Test suite**: 110 test (`npm test`) = 106 unit pure + **4 integration A1** (stripe-webhook-handler su pglite+msw+ioredis-mock, 4 scenari R13/R10/R11 Reg-C2). Setup integration: `docker compose up -d postgres && createdb egadisailing_test && DATABASE_URL=".../egadisailing_test" prisma migrate deploy`. Helpers in `tests/helpers/`. Scripts `npm run test:unit` / `test:integration` / `test` (entrambi). Vedi `docs/runbook/testing-roadmap.md` per roadmap Tier A residui (13 test, ~60h).
+**Test suite**: **177 test** (`npm test`) = ~106 unit pure + **~71 integration** su Postgres real + ioredis-mock. File integration in `tests/integration/`:
+- `stripe-webhook-handler.test.ts` (11 scenari: happy path, dual-write refund partial+full, idempotency, canceled, payment_failed terminal+non-terminal, auto-refund race, marker atomicity)
+- `admin-concurrency.test.ts` (3: cancelBooking race, resolveManualAlert, upsertPricingPeriod)
+- `availability-service.test.ts` (5: preserveLockedBy, release clear, fan-out routing, WEEK batch, self-echo 600s)
+- `booking-creation.test.ts` (7: happy path, overlap pre-check, retry-window, advisory lock race, GDPR consent, capacity, past date)
+- `bokun-webhook.test.ts` (7: HMAC reason-typed, replay window ±5min, body-size cap, dedup)
+- `boataround-webhook.test.ts` (8: base64 HMAC, body.timestamp replay, multi-value sig reject, separator-safe hash)
+- `stripe-reconciliation.test.ts` (6: cursor cross-run via Redis, MAX_PAGES, 404 resource_missing clear, 28d cap, filter non-reconciled)
+- `otp-flow.test.ts` (8: email bomb prevention non-customer, session rotation, atomic verify claim, TOO_MANY_ATTEMPTS, expired)
+- `cron-pending-gc.test.ts` (7: 45min cutoff, source filter, Stripe error tolerance, lease concurrency, Bearer)
+- `cron-balance-reminders.test.ts` (9: 7gg window, schedule filter, send fail reset, Bearer)
+
+Setup integration: `docker compose up -d postgres && createdb egadisailing_test && DATABASE_URL=".../egadisailing_test" prisma migrate deploy`. Helpers in `tests/helpers/`. Scripts `npm run test:unit` / `test:integration` / `test`. Vedi `docs/runbook/testing-roadmap.md` (note: contiene count obsoleti pre-R26-P3).
 
 ## Stack
 
@@ -21,7 +33,7 @@ Prisma client viene generato in `src/generated/prisma/` — importare da lì, no
 ## Architettura chiave — leggere prima di scrivere codice
 
 - **DB locale = master** della disponibilità. Ogni source (sito, Bokun, charter platforms) scrive sul DB e il cambio viene propagato via `SyncQueue` (BullMQ) a tutti gli altri canali.
-- **Anti-loop**: `BoatAvailability.lastSyncedSource` + `lastSyncedAt` (window 120s). Self-echo detection e' DENTRO la transazione di upsert (TOCTOU-safe).
+- **Anti-loop**: `BoatAvailability.lastSyncedSource` + `lastSyncedAt` (window 600s, estesa da 120s in R5 per OTA hub). Self-echo detection e' DENTRO la transazione di upsert (TOCTOU-safe). R26-P3 fix: trigger solo su target-state uguale al corrente (= echo vero), NON su legit state-change stesso source (admin book+cancel entro 10min non e' echo).
 - **Advisory lock Postgres** (`pg_advisory_xact_lock`) per serializzare update concorrenti sulla stessa cella (boatId, date) → no double booking.
 - **Outbox-lite**: `updateAvailability` committa PRIMA di accodare il fan-out. Se crasha tra commit e enqueue, la consistency DB è salva; reconciliation cron (Plan 3+) recupera.
 - **Rate limit** è su Redis (INCR atomico), NON piu' sul DB. `RateLimitEntry` nel DB esiste solo per audit persistente.

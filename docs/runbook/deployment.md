@@ -1,27 +1,43 @@
 # Deployment runbook
 
+**Stato**: deployment 100% container-based post-R23 launch-prep. Tutti i
+pezzi (app + postgres + pgbouncer + redis + caddy + backup sidecar) sono
+orchestrati da `docker-compose.prod.yml` al root repo. Il deploy e'
+`docker compose -f docker-compose.prod.yml up -d --build` + fill di `.env`.
+
 ## Architettura target
 
 ```
-Internet → Cloudflare (DNS + TLS + Turnstile)
+Internet → Cloudflare (DNS + optional proxy + Turnstile)
           ↓
-     Nginx/Caddy (reverse proxy, TLS termination)
+     Caddy container (auto-TLS Let's Encrypt, security headers, health probe)
           ↓
-     next-app container (Node 20+, Next.js 16)
+     app container (Next.js 16 standalone, Node 22, entrypoint migrate deploy)
           ↓
-     ├─ Postgres container (bind 127.0.0.1:5432)
-     └─ Redis container (bind 127.0.0.1:6379, requirepass, AOF)
+     ├─ pgbouncer container (transaction-pool 30 conn → postgres direct)
+     ├─ postgres container (no-port-expose, pgdata volume)
+     └─ redis container (no-port-expose, AOF everysec, requirepass)
+
+     + backup sidecar (pg_dump cron 02:30 UTC → S3-compatible bucket)
 ```
 
-## Pre-requisiti go-live
+**Note capacity**: app runtime usa `DATABASE_URL_POOLED` (via pgbouncer
+transaction-mode, `?pgbouncer=true` flag obbligatorio per disabilitare
+prepared statements server-side). Migrations + advisory locks usano
+`DATABASE_URL` direct (session pool required).
 
-- VPS con Docker + Docker Compose v2 (2GB RAM min, 4GB raccomandato)
-- Dominio con Cloudflare DNS (TLS + Turnstile)
-- Account Stripe live mode con webhook configurato
-- Account Brevo con sender verificato (SPF/DKIM)
-- Account Bokun (se Plan 3 attivo)
+## Pre-requisiti
 
-## Fase 1 — Setup VPS
+- VPS con Docker + Docker Compose v2 (4GB RAM min, 8GB raccomandato)
+- Dominio DNS → IP VPS (A/AAAA). Cloudflare DNS-only inizialmente
+  (challenge HTTP-01 Let's Encrypt funziona anche con proxy off)
+- Account Stripe live mode + webhook endpoint
+- Account Brevo sender verificato (SPF + DKIM DNS records)
+- Account Cloudflare Turnstile (sitekey + secret)
+- Opzionale: Sentry DSN, Bokun/Boataround credentials, Telegram bot
+- Bucket S3-compatible per backup (AWS S3, Backblaze B2, Wasabi)
+
+## Fase 1 — VPS setup
 
 ```bash
 # Installa Docker (Ubuntu/Debian)
@@ -31,141 +47,188 @@ usermod -aG docker ubuntu
 # Clona repo
 git clone git@github.com:AkaSama26/egadisailing.git
 cd egadisailing
+git checkout main
+```
 
-# Setup env
+## Fase 2 — Configurare `.env`
+
+```bash
 cp .env.example .env
-# Genera secret:
-echo "NEXTAUTH_SECRET=$(openssl rand -base64 32)" >> .env
-echo "POSTGRES_PASSWORD=$(openssl rand -hex 32)" >> .env
-echo "REDIS_PASSWORD=$(openssl rand -hex 32)" >> .env
-echo "CRON_SECRET=$(openssl rand -hex 32)" >> .env
-# Compilare a mano le restanti: STRIPE_*, BREVO_*, TURNSTILE_*, SEED_ADMIN_PASSWORD
+
+# Genera secret robusti (richiesti da env.ts validation):
+cat >> .env <<EOF
+POSTGRES_USER=egadisailing
+POSTGRES_DB=egadisailing
+POSTGRES_PASSWORD=$(openssl rand -hex 32)
+REDIS_PASSWORD=$(openssl rand -hex 32)
+NEXTAUTH_SECRET=$(openssl rand -base64 48)
+CRON_SECRET=$(openssl rand -hex 32)
+SEED_ADMIN_PASSWORD=$(openssl rand -base64 24)
+
+# Domain-specific
+APP_URL=https://egadisailing.com
+NEXTAUTH_URL=https://egadisailing.com
+APP_DOMAIN=egadisailing.com
+SERVER_ACTIONS_ALLOWED_ORIGINS=egadisailing.com,www.egadisailing.com
+ACME_EMAIL=ops@egadisailing.com
+
+# External services — fill manually
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...   # da Fase 5
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+BREVO_API_KEY=xkeysib-...
+BREVO_SENDER_EMAIL=noreply@egadisailing.com
+BREVO_REPLY_TO=info@egadisailing.com
+TURNSTILE_SITE_KEY=0x4...
+TURNSTILE_SECRET_KEY=0x4...
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4...
+ADMIN_EMAIL=admin@egadisailing.com
+
+# Opzionali — commentare se non usati
+# SENTRY_DSN=https://...ingest.sentry.io/...
+# TELEGRAM_BOT_TOKEN=...
+# TELEGRAM_CHAT_ID=...
+# BOKUN_VENDOR_ID=...
+# BOKUN_ACCESS_KEY=...
+# BOKUN_SECRET_KEY=...
+# BOKUN_WEBHOOK_SECRET=...
+# BOATAROUND_API_TOKEN=...
+# BOATAROUND_WEBHOOK_SECRET=...
+# IMAP_HOST=...
+# IMAP_USER=...
+# IMAP_PASSWORD=...
+
+# Backup S3 (obbligatorio per backup sidecar)
+BACKUP_S3_BUCKET=egadisailing-prod-backups
+BACKUP_S3_ENDPOINT=https://s3.eu-central-1.amazonaws.com
+BACKUP_S3_KEY=AKIA...
+BACKUP_S3_SECRET=...
+BACKUP_RETENTION_DAYS=30
+EOF
+
+# Rivedi file .env prima di startup:
+cat .env | grep -v PASSWORD  # verifica che non contenga placeholder
 ```
 
-## Fase 2 — Database
+## Fase 3 — DNS + primo startup
 
 ```bash
-docker compose up -d postgres redis
-sleep 5
-npx prisma migrate deploy
-npx prisma db seed  # prima volta soltanto
+# Punta DNS A record a IP VPS (TTL basso inizialmente 300s).
+# Attendi propagazione (dig +short egadisailing.com).
+
+# Primo avvio: build image + start tutto.
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Verifica:
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs app | tail -50
+
+# Caddy emette cert Let's Encrypt al primo HTTPS request — pre-caricalo:
+curl -v https://egadisailing.com/api/health
+# Prima volta puo' richiedere 30-60s per ACME challenge. Logs:
+docker compose -f docker-compose.prod.yml logs caddy | grep -i "cert\|acme"
 ```
 
-**Stampa admin password alla fine** — salvala. Dopo il primo seed rimuovi `SEED_ADMIN_PASSWORD` dall'.env per rotation manuale via admin UI.
+**Migrations**: entrypoint (`docker/entrypoint.sh`) esegue `prisma migrate
+deploy` automaticamente prima di avviare Next. Se fallisce il container
+app resta down con exit code 1.
 
-## Fase 3 — Build app
-
+**Seed admin**: `SEED_ADMIN_PASSWORD` viene raccolto al primo migrate +
+stampa admin login a console. Verifica con:
 ```bash
-npm ci
-npx prisma generate
-npm run build
+docker compose -f docker-compose.prod.yml logs app | grep -i "admin\|seed"
 ```
+Una volta ricevuto login, rimuovi `SEED_ADMIN_PASSWORD` da `.env` +
+restart app per chiuderlo. Rotation successiva via admin UI
+(`/admin/impostazioni`).
 
-## Fase 4 — Reverse proxy + TLS
+## Fase 4 — Stripe webhook
 
-**Con Caddy** (raccomandato per semplicita' — auto-TLS):
-
-`/etc/caddy/Caddyfile`:
-```
-egadisailing.com, www.egadisailing.com {
-    reverse_proxy 127.0.0.1:3000
-    encode gzip
-    header {
-        Strict-Transport-Security "max-age=31536000"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
-        Referrer-Policy "strict-origin-when-cross-origin"
-    }
-}
-```
-
-```bash
-systemctl enable --now caddy
-```
-
-## Fase 5 — App as systemd service
-
-`/etc/systemd/system/egadisailing.service`:
-```
-[Unit]
-Description=Egadisailing Next.js app
-After=docker.service network-online.target
-Requires=docker.service
-
-[Service]
-Type=simple
-User=ubuntu
-WorkingDirectory=/home/ubuntu/egadisailing
-EnvironmentFile=/home/ubuntu/egadisailing/.env
-ExecStart=/usr/bin/npm start
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-systemctl enable --now egadisailing
-```
-
-## Fase 6 — Stripe webhook
-
-1. Vai su Stripe dashboard → Developers → Webhooks → Add endpoint
+1. Stripe dashboard → Developers → Webhooks → Add endpoint
 2. URL: `https://egadisailing.com/api/webhooks/stripe`
-3. Events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `checkout.session.completed`
-4. Copia il signing secret → `STRIPE_WEBHOOK_SECRET` in .env
-5. Riavvia app
-6. Test: `stripe trigger payment_intent.succeeded` dal CLI
+3. Events (minimum set handleStripeEvent supporta):
+   - `payment_intent.succeeded`
+   - `payment_intent.payment_failed`
+   - `payment_intent.canceled` (R24-S-ALTA-1)
+   - `charge.refunded`
+4. Copia signing secret → `STRIPE_WEBHOOK_SECRET` in `.env`
+5. Restart app: `docker compose -f docker-compose.prod.yml restart app`
+6. Test: `stripe trigger payment_intent.succeeded` → verifica log +
+   ProcessedStripeEvent row. Oppure dashboard → Resend test event.
 
-## Fase 7 — Uptime monitor
+Fallback per webhook persi: cron `stripe-reconciliation` ogni 15min replaya
+eventi `/v1/events` ultimi 3gg (R24-P2 cursor cross-run via Redis).
 
-Configurare un monitor esterno (UptimeRobot, BetterStack, Pingdom) su:
-- `GET https://egadisailing.com/api/health` → 200
-- Interval: 5 min
-- Alert: email + Telegram se >= 2 check consecutivi falliscono
+## Fase 5 — Uptime + monitoring esterno
 
-## Fase 8 — Backup automatico
+- UptimeRobot / BetterStack / Pingdom su `GET https://egadisailing.com/api/health` (shallow, 200/503)
+- Interval 5min, alert email + Telegram se 2+ fail consecutivi
+- Deep health con Bearer: `GET /api/health?deep=1` (richiede CRON_SECRET)
+- Opzionale: Sentry DSN in `.env` → `SENTRY_DSN` attiva auto-capture di
+  500 error via `withErrorHandler` (R24-P2 wiring pre-esistente)
 
-Cron job sulla VPS (`/etc/cron.daily/pg-backup`):
+## Fase 6 — Backup sidecar
+
+Il container `backup` in `docker-compose.prod.yml` esegue `docker/backup.sh`
+automaticamente ogni giorno 02:30 UTC. Richiede env:
+- `BACKUP_S3_BUCKET`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_KEY`, `BACKUP_S3_SECRET`
+- `BACKUP_RETENTION_DAYS` (default 30)
+
+Verifica:
 ```bash
-#!/bin/bash
-set -e
-DUMP="/backups/egadisailing-$(date +\%F).sql.gz"
-docker compose -f /home/ubuntu/egadisailing/docker-compose.yml exec -T postgres \
-  pg_dump -U egadisailing egadisailing | gzip > "$DUMP"
-# Upload offsite (rclone to B2/S3)
-rclone copy "$DUMP" b2:egadisailing-backups/
-# Keep last 30 local
-find /backups -name "egadisailing-*.sql.gz" -mtime +30 -delete
+docker compose -f docker-compose.prod.yml logs backup | tail -20
+# Dopo un run atteso (o forza manuale):
+docker compose -f docker-compose.prod.yml exec backup /backup.sh
+# Lista oggetti in bucket:
+aws s3 ls s3://egadisailing-prod-backups/pgdump/egadisailing/
+```
+
+**Test restore drill consigliato mensilmente**:
+```bash
+# Scarica dump + restore in DB staging separato per verifica integrita'.
+aws s3 cp s3://.../pgdump/egadisailing/TIMESTAMP.sql.gz ./restore.sql.gz
+gunzip -c restore.sql.gz | docker compose exec -T postgres psql -U egadisailing -d egadisailing_test
 ```
 
 ## Rolling update (zero-downtime)
 
-1. `git pull origin main` sulla VPS
-2. `npm ci && npx prisma generate`
-3. **Se ci sono migrazioni nuove**: `npx prisma migrate deploy` (expand-only — no drop columns in stessa release)
-4. `npm run build`
-5. `systemctl restart egadisailing`
-6. Verifica: `curl -s https://egadisailing.com/api/health | jq`
+```bash
+cd /home/ubuntu/egadisailing
+git pull origin main
 
-**Per breaking schema changes**: usa pattern expand/contract su due release.
+# Rebuild + restart app (migrations applicate automaticamente
+# dall'entrypoint pre-start). Postgres/Redis/Caddy non toccati.
+docker compose -f docker-compose.prod.yml up -d --build app
+
+# Verifica health post-deploy:
+curl -s https://egadisailing.com/api/health | jq
+docker compose -f docker-compose.prod.yml logs app | tail -30
+```
+
+**Per breaking schema changes**: expand/contract su due release (mai
+rimuovere colonne nella stessa release che le rende obsolete).
 
 ## Checklist go-live
 
 - [ ] DNS punta alla VPS (egadisailing.com + www.)
-- [ ] TLS attivo (`curl -I https://egadisailing.com`)
+- [ ] Caddy ha emesso TLS valido (`curl -vI https://egadisailing.com 2>&1 | grep -i cert`)
 - [ ] `/api/health` ritorna 200 con db+redis ok
-- [ ] Stripe webhook configurato e test trigger funziona
-- [ ] Brevo sender verificato (inviare email di conferma test)
-- [ ] Turnstile site key prod non e' dummy
-- [ ] Admin login funziona
-- [ ] Test booking end-to-end (modalita' test Stripe)
+- [ ] `/api/health?deep=1` con Bearer CRON_SECRET: queue + channels GREEN
+- [ ] Stripe webhook configurato + test trigger funziona (log
+      "Stripe event received" + ProcessedStripeEvent row)
+- [ ] Brevo sender verificato (SPF + DKIM DNS) + test email reached
+- [ ] Turnstile widget visibile sul wizard + recupera-prenotazione
+- [ ] Admin login funziona (+ rimosso SEED_ADMIN_PASSWORD da .env)
+- [ ] Test booking end-to-end con Stripe test mode
 - [ ] Cron scheduler attivo (log "Cron scheduler started")
-- [ ] Backup giornaliero configurato
-- [ ] Uptime monitor configurato
-- [ ] Security headers attivi (Caddyfile)
-- [ ] `.env` non finisce in Docker image (check `.dockerignore`)
+- [ ] Backup sidecar invia primo dump a S3 (check log backup container)
+- [ ] Uptime monitor esterno configurato
+- [ ] Sentry DSN configurato (o documentato come deferred)
+- [ ] Caddyfile security headers visibili in response (`curl -I`)
+- [ ] `.env` NON in Docker image (check `.dockerignore` + image layer size)
+- [ ] `SERVER_ACTIONS_ALLOWED_ORIGINS` set + non include `localhost`
+      (R15-SEC-A1 env.ts refuse startup altrimenti)
 
 ## Migration timing e write-lock
 
