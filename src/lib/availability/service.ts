@@ -49,7 +49,7 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
   const dateOnly = toUtcDay(input.date);
   const dayIso = isoDay(dateOnly);
 
-  const { shouldFanOut } = await db.$transaction(async (tx) => {
+  const { shouldFanOut, effectiveLockedBy } = await db.$transaction(async (tx) => {
     // Advisory lock transazionale: rilasciato auto al commit/rollback.
     await acquireTxAdvisoryLock(tx, AVAILABILITY_LOCK_NAMESPACE, input.boatId, dayIso);
 
@@ -86,7 +86,10 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
           lastSyncedAt: new Date(),
         },
       });
-      return { shouldFanOut: false };
+      return {
+        shouldFanOut: false,
+        effectiveLockedBy: current?.lockedByBookingId ?? null,
+      };
     }
 
     // R23-B-ALTA-1: preserve first-winner `lockedByBookingId`. Se la cella
@@ -121,7 +124,10 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
       },
     });
 
-    return { shouldFanOut: !input.skipFanOut };
+    return {
+      shouldFanOut: !input.skipFanOut,
+      effectiveLockedBy: preservedLockedBy,
+    };
   });
 
   // Fan-out POST-commit (outbox-lite): se Redis e' giu' logghiamo e andiamo
@@ -134,7 +140,12 @@ export async function updateAvailability(input: UpdateAvailabilityInput): Promis
         date: dayIso,
         status: input.status,
         sourceChannel: input.sourceChannel,
-        originBookingId: input.lockedByBookingId,
+        // R23-P2-MEDIA-1: propaga il `lockedByBookingId` effettivo (post
+        // preservation) invece dell'input. Se preservedLockedBy=A (first
+        // winner) mentre input.lockedByBookingId=B (tentativo seconda
+        // cross-OTA), il fan-out upstream e audit downstream vedono A
+        // (owner reale della cella) — consistency con il DB.
+        originBookingId: effectiveLockedBy ?? undefined,
       });
     } catch (err) {
       logger.error(

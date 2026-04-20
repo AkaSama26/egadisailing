@@ -323,42 +323,59 @@ async function onPaymentIntentFailed(pi: Stripe.PaymentIntent): Promise<void> {
   // lascia booking CONFIRMED (cliente ha gia' pagato deposit).
   if (metadata.paymentType === "BALANCE") return;
 
-  try {
-    const result = await db.booking.updateMany({
-      where: { id: metadata.bookingId, status: "PENDING" },
+  await cleanupPendingAfterPiFailure(metadata.bookingId, { errorCode, reason: "pi_failed" });
+}
+
+/**
+ * R23-P2-ALTA-1: cleanup helper condiviso tra `onPaymentIntentFailed` e
+ * `onPaymentIntentCanceled`. Gestisce il drift scenario: primo attempt
+ * fa updateMany (PENDING→CANCELLED) + releaseDates throw (Redis down).
+ * Su retry Stripe, updateMany ritornerebbe count=0 (gia' CANCELLED) →
+ * releaseDates verrebbe skippato → slot BLOCKED permanente (pending-gc
+ * scansiona solo status=PENDING, non recupera).
+ *
+ * Soluzione: leggiamo il booking prima; se PENDING transition; se gia'
+ * CANCELLED (da prior attempt) ri-chiamiamo releaseDates comunque —
+ * l'operazione e' idempotente (updateAvailability AVAILABLE su cella
+ * gia' AVAILABLE e' no-op). Re-throw sugli errori → Stripe retry
+ * continuera' finche' il cleanup completo va a buon fine.
+ */
+async function cleanupPendingAfterPiFailure(
+  bookingId: string,
+  ctx: { errorCode?: string | null; reason: string },
+): Promise<void> {
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: { id: true, status: true, boatId: true, startDate: true, endDate: true },
+  });
+  if (!booking) {
+    logger.warn({ bookingId }, "Booking not found for PI cleanup — ignored");
+    return;
+  }
+  // CONFIRMED or REFUNDED: skip (altro flow ha gia' agito su di lui).
+  if (booking.status === "CONFIRMED" || booking.status === "REFUNDED") {
+    logger.info(
+      { bookingId, status: booking.status },
+      "Booking not cancelable for PI cleanup (already CONFIRMED/REFUNDED)",
+    );
+    return;
+  }
+  // Transition PENDING → CANCELLED se applicabile (idempotent: se gia'
+  // CANCELLED, updateMany count=0 senza errore).
+  if (booking.status === "PENDING") {
+    await db.booking.updateMany({
+      where: { id: bookingId, status: "PENDING" },
       data: { status: "CANCELLED" },
     });
-    if (result.count === 0) {
-      logger.info(
-        { bookingId: metadata.bookingId },
-        "Booking not PENDING, skipping cleanup on PI failed",
-      );
-      return;
-    }
-    const booking = await db.booking.findUnique({
-      where: { id: metadata.bookingId },
-      select: { boatId: true, startDate: true, endDate: true, source: true },
-    });
-    if (booking) {
-      const { releaseDates } = await import("@/lib/availability/service");
-      const { CHANNELS } = await import("@/lib/channels");
-      await releaseDates(
-        booking.boatId,
-        booking.startDate,
-        booking.endDate,
-        CHANNELS.DIRECT,
-      );
-    }
-    logger.info(
-      { bookingId: metadata.bookingId, errorCode },
-      "PENDING booking cleaned up after terminal PI failure",
-    );
-  } catch (err) {
-    logger.error(
-      { err, bookingId: metadata.bookingId },
-      "Failed to cleanup PENDING after PI failure — pending-gc will catch",
-    );
   }
+  // releaseDates sempre — idempotent, recovery-safe su retry Stripe.
+  const { releaseDates } = await import("@/lib/availability/service");
+  const { CHANNELS } = await import("@/lib/channels");
+  await releaseDates(booking.boatId, booking.startDate, booking.endDate, CHANNELS.DIRECT);
+  logger.info(
+    { bookingId, ...ctx },
+    "Booking cleanup completed after PI failure/cancel",
+  );
 }
 
 /**
@@ -387,43 +404,11 @@ async function onPaymentIntentCanceled(pi: Stripe.PaymentIntent): Promise<void> 
     return;
   }
 
-  const result = await db.booking.updateMany({
-    where: { id: metadata.bookingId, status: "PENDING" },
-    data: { status: "CANCELLED" },
+  // R23-P2-ALTA-1: usa helper condiviso (drift-safe).
+  await cleanupPendingAfterPiFailure(metadata.bookingId, {
+    errorCode: pi.id,
+    reason: "pi_canceled",
   });
-  if (result.count === 0) {
-    logger.info(
-      { bookingId: metadata.bookingId },
-      "Booking not PENDING on PI canceled (already CANCELLED/CONFIRMED)",
-    );
-    return;
-  }
-
-  const booking = await db.booking.findUnique({
-    where: { id: metadata.bookingId },
-    select: { boatId: true, startDate: true, endDate: true },
-  });
-  if (booking) {
-    try {
-      const { releaseDates } = await import("@/lib/availability/service");
-      const { CHANNELS } = await import("@/lib/channels");
-      await releaseDates(
-        booking.boatId,
-        booking.startDate,
-        booking.endDate,
-        CHANNELS.DIRECT,
-      );
-    } catch (err) {
-      logger.error(
-        { err, bookingId: metadata.bookingId },
-        "releaseDates failed on PI canceled",
-      );
-    }
-  }
-  logger.info(
-    { bookingId: metadata.bookingId, piId: pi.id },
-    "PENDING booking cancelled on PI canceled",
-  );
 }
 
 async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
