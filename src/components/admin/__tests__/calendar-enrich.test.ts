@@ -54,4 +54,46 @@ describe("enrichDayCells", () => {
     expect(day15.status).toBe("BLOCKED");
     expect(day15.isAdminBlock).toBe(true);
   });
+
+  it("booking multi-day appare su tutti i giorni del range", () => {
+    const result = enrichDayCells({
+      boats: [{ id: "boat-1", name: "T" }],
+      bookings: [
+        {
+          id: "bk-1",
+          confirmationCode: "ABC123",
+          source: "DIRECT",
+          status: "CONFIRMED",
+          boatId: "boat-1",
+          startDate: new Date(Date.UTC(2026, 6, 10)),
+          endDate: new Date(Date.UTC(2026, 6, 12)),
+          service: { name: "Cabin Charter" },
+          customer: { firstName: "Mario", lastName: "Rossi" },
+        },
+      ],
+      availability: [],
+      auditLogs: [],
+      monthStart: new Date(Date.UTC(2026, 6, 1)),
+      monthEnd: new Date(Date.UTC(2026, 6, 31)),
+    });
+    const days = result.get("boat-1")!;
+    const day9 = days.find((d) => d.dateIso === "2026-07-09")!;
+    const day10 = days.find((d) => d.dateIso === "2026-07-10")!;
+    const day11 = days.find((d) => d.dateIso === "2026-07-11")!;
+    const day12 = days.find((d) => d.dateIso === "2026-07-12")!;
+    const day13 = days.find((d) => d.dateIso === "2026-07-13")!;
+    expect(day9.bookings).toHaveLength(0);
+    expect(day10.bookings).toHaveLength(1);
+    expect(day11.bookings).toHaveLength(1);
+    expect(day12.bookings).toHaveLength(1);
+    expect(day13.bookings).toHaveLength(0);
+    expect(day10.bookings[0]).toMatchObject({
+      id: "bk-1",
+      confirmationCode: "ABC123",
+      source: "DIRECT",
+      status: "CONFIRMED",
+      serviceName: "Cabin Charter",
+      customerName: "Mario Rossi",
+    });
+  });
 });
