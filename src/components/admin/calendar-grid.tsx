@@ -1,3 +1,5 @@
+import type { DayCellEnriched } from "@/app/admin/(dashboard)/calendario/enrich";
+
 export interface DayCellBooking {
   id: string;
   source: string;
@@ -21,7 +23,15 @@ const sourceColors: Record<string, string> = {
   NAUTAL: "bg-rose-100 text-rose-800",
 };
 
-export function CalendarGrid({ days, boatName }: { days: DayCell[]; boatName: string }) {
+export interface CalendarGridProps {
+  days: DayCell[];
+  boatName: string;
+  boatId?: string;
+  onDayClick?: (dateIso: string) => void;
+  enrichedByDate?: Map<string, DayCellEnriched>;
+}
+
+export function CalendarGrid({ days, boatName, boatId, onDayClick }: CalendarGridProps) {
   return (
     <div>
       <h2 className="font-bold text-slate-900 mb-3">{boatName}</h2>
@@ -36,33 +46,65 @@ export function CalendarGrid({ days, boatName }: { days: DayCell[]; boatName: st
             return <div key={i} className="aspect-square bg-slate-50/40 rounded" />;
           }
           const dayNum = day.date.getUTCDate();
+          const dateIso = day.date.toISOString().slice(0, 10);
+          const cellId = boatId ? `cell-${boatId}-${dateIso}` : undefined;
           const bg =
             day.status === "BLOCKED"
               ? "bg-red-50 border-red-200"
               : day.status === "PARTIALLY_BOOKED"
                 ? "bg-amber-50 border-amber-200"
                 : "bg-white border-slate-200";
-          return (
-            <div
-              key={i}
-              className={`aspect-square border rounded p-1 flex flex-col ${bg}`}
-            >
+          const isInteractive = !!onDayClick;
+          const interactiveCls = isInteractive
+            ? "cursor-pointer hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500"
+            : "";
+
+          const content = (
+            <>
               <div className="text-slate-600 text-[11px] font-medium">{dayNum}</div>
               <div className="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
                 {day.bookings.slice(0, 3).map((b) => (
                   <span
                     key={b.id}
-                    className={`px-1 rounded text-[9px] truncate ${sourceColors[b.source] ?? "bg-slate-100 text-slate-700"}`}
+                    className={`px-1 rounded text-[9px] truncate ${
+                      sourceColors[b.source] ?? "bg-slate-100 text-slate-700"
+                    }`}
                     title={`${b.confirmationCode} · ${b.serviceName}`}
                   >
                     {b.source.slice(0, 3)}
                   </span>
                 ))}
                 {day.bookings.length > 3 && (
-                  <span className="text-[9px] text-slate-500">+{day.bookings.length - 3}</span>
+                  <span className="text-[9px] text-slate-500">
+                    +{day.bookings.length - 3}
+                  </span>
                 )}
               </div>
-            </div>
+            </>
+          );
+
+          if (!isInteractive) {
+            return (
+              <div
+                key={i}
+                id={cellId}
+                className={`aspect-square border rounded p-1 flex flex-col ${bg}`}
+              >
+                {content}
+              </div>
+            );
+          }
+          return (
+            <button
+              key={i}
+              id={cellId}
+              type="button"
+              onClick={() => onDayClick?.(dateIso)}
+              className={`aspect-square border rounded p-1 flex flex-col text-left ${bg} ${interactiveCls}`}
+              aria-label={`${dayNum} — ${day.status}, ${day.bookings.length} prenotazioni`}
+            >
+              {content}
+            </button>
           );
         })}
       </div>
