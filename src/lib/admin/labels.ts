@@ -71,6 +71,20 @@ export const SERVICE_TYPE_LABEL: Record<string, string> = {
   BOAT_EXCLUSIVE: "Barca esclusiva",
 };
 
+/** Health status cross-channel (ChannelSyncStatus.healthStatus). */
+export const HEALTH_STATUS_LABEL: Record<string, string> = {
+  GREEN: "Operativo",
+  YELLOW: "Attenzione",
+  RED: "Errore",
+};
+
+/** Mode di sync canale (CHANNEL_SYNC_MODE). */
+export const CHANNEL_SYNC_MODE_LABEL: Record<string, string> = {
+  API: "API bidirezionale",
+  ICAL: "iCal (polling)",
+  EMAIL: "Email (parser)",
+};
+
 /** Helper: ritorna la label tradotta se esiste, altrimenti il valore raw. */
 export function labelOrRaw<T extends string>(
   map: Record<string, string>,

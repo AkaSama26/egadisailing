@@ -50,25 +50,25 @@ export default async function DashboardHome() {
       <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="Revenue del mese" value={formatEur(revenueDec)} icon={Euro} />
+        <KpiCard label="Entrate del mese" value={formatEur(revenueDec)} icon={Euro} />
         <KpiCard
           label="Prenotazioni del mese"
           value={String(bookingsCount)}
           icon={Calendar}
-          hint="CONFIRMED + PENDING"
+          hint="Confermate + In attesa"
         />
         <KpiCard
           label="Uscite future"
           value={String(upcomingCount)}
           icon={Clock}
-          hint="CONFIRMED con startDate futura"
+          hint="Confermate con data successiva a oggi"
         />
         <KpiCard
           label="Saldi pendenti"
           value={formatEur(balancesDec)}
           icon={AlertTriangle}
           tone={balancesDec.gt(0) ? "warn" : "default"}
-          hint="DEPOSIT_BALANCE non ancora saldati"
+          hint="Acconto versato, saldo ancora da incassare"
         />
       </div>
 

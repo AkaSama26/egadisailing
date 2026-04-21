@@ -1,12 +1,11 @@
 import { db } from "@/lib/db";
 import { CHANNEL_SYNC_MODE, type Channel } from "@/lib/channels";
-
-const MODE_LABEL: Record<string, string> = {
-  API: "API bidirezionale",
-  ICAL: "iCal pull",
-  EMAIL: "Email parser",
-  INTERNAL: "Interno (sito)",
-};
+import {
+  BOOKING_SOURCE_LABEL,
+  HEALTH_STATUS_LABEL,
+  CHANNEL_SYNC_MODE_LABEL,
+  labelOrRaw,
+} from "@/lib/admin/labels";
 
 export default async function CanaliPage() {
   const channels = await db.channelSyncStatus.findMany({ orderBy: { channel: "asc" } });
@@ -28,13 +27,15 @@ export default async function CanaliPage() {
             <div key={c.channel} className="bg-white rounded-xl border p-5">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h2 className="font-bold text-slate-900">{c.channel}</h2>
+                  <h2 className="font-bold text-slate-900">
+                    {labelOrRaw(BOOKING_SOURCE_LABEL, c.channel)}
+                  </h2>
                   <p className="text-xs text-slate-500">
-                    Mode: {mode ? MODE_LABEL[mode] : "-"}
+                    Modalità: {mode ? labelOrRaw(CHANNEL_SYNC_MODE_LABEL, mode) : "-"}
                   </p>
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusClass}`}>
-                  {c.healthStatus}
+                  {labelOrRaw(HEALTH_STATUS_LABEL, c.healthStatus)}
                 </span>
               </div>
               <p className="text-sm text-slate-600">

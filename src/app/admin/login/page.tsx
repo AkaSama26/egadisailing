@@ -18,41 +18,88 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
+      // Gestione esaustiva dei fallimenti:
+      //  - result undefined → network error / signIn throw silenziato
+      //  - result.error settato → credentials mismatch / user bloccato
+      //  - result.ok false senza error → edge NextAuth
+      if (!result) {
+        setLoading(false);
+        setError(
+          "Errore di connessione. Riprova tra qualche secondo o verifica la tua rete.",
+        );
+        return;
+      }
+      if (result.error || result.ok === false) {
+        setLoading(false);
+        // Per sicurezza (anti email-enumeration) non distinguiamo "email non
+        // esistente" da "password errata" — messaggio unificato.
+        if (
+          result.error === "CredentialsSignin" ||
+          result.error === "Configuration"
+        ) {
+          setError(
+            "Credenziali non valide. Verifica email e password e riprova.",
+          );
+        } else {
+          setError(
+            `Login non riuscito: ${result.error ?? "motivo sconosciuto"}. Contatta l'amministratore se il problema persiste.`,
+          );
+        }
+        return;
+      }
+
+      // Round 11 Reg-A2: previene redirect loop per utenti con role != ADMIN.
+      // Se domani l'enum User.role ammette VIEWER/EDITOR, o un bug DB-side
+      // cambia il role, la redirect a /admin viene rimbalzata dal middleware
+      // su /admin/login → loop. Fail-fast qui con messaggio esplicito.
+      const session = await getSession();
+      if (!session) {
+        setLoading(false);
+        setError(
+          "Sessione non creata dopo il login. Ricarica la pagina e riprova.",
+        );
+        return;
+      }
+      if (session.user?.role !== "ADMIN") {
+        setLoading(false);
+        setError(
+          "Accesso negato: il tuo account non ha i permessi di amministratore.",
+        );
+        return;
+      }
+
+      // Successo: mostra feedback visivo + redirect dopo breve delay cosi'
+      // il messaggio e' percepibile (250ms e' sotto la soglia di frustrazione
+      // ma sufficiente per essere notato).
+      setSuccess(`Accesso effettuato come ${session.user.email ?? "admin"}. Reindirizzamento...`);
+      setTimeout(() => {
+        router.push("/admin");
+        router.refresh();
+      }, 400);
+    } catch (err) {
       setLoading(false);
-      setError("Email o password non validi");
-      return;
+      setError(
+        err instanceof Error
+          ? `Errore imprevisto: ${err.message}`
+          : "Errore imprevisto durante il login. Riprova o ricarica la pagina.",
+      );
     }
-
-    // Round 11 Reg-A2: previene redirect loop per utenti con role != ADMIN.
-    // Se domani l'enum User.role ammette VIEWER/EDITOR, o un bug DB-side
-    // cambia il role, la redirect a /admin viene rimbalzata dal middleware
-    // su /admin/login → loop. Fail-fast qui con messaggio esplicito.
-    const session = await getSession();
-    if (session?.user?.role !== "ADMIN") {
-      setLoading(false);
-      setError("Accesso negato: ruolo amministratore richiesto.");
-      // Non facciamo signOut automatico per non perdere il session JWT in caso
-      // di glitch transitorio; l'admin puo' riprovare o contattare tech.
-      return;
-    }
-
-    setLoading(false);
-    router.push("/admin");
-    router.refresh();
   }
 
   return (
@@ -77,7 +124,7 @@ export default function LoginPage() {
                     Accedi alla dashboard di gestione
                   </p>
                 </div>
-                <Field>
+                <Field suppressHydrationWarning>
                   <FieldLabel htmlFor="email">Email</FieldLabel>
                   <Input
                     id="email"
@@ -86,9 +133,11 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    autoComplete="email"
+                    suppressHydrationWarning
                   />
                 </Field>
-                <Field>
+                <Field suppressHydrationWarning>
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <Input
                     id="password"
@@ -96,14 +145,35 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
+                    suppressHydrationWarning
                   />
                 </Field>
                 {error && (
-                  <p className="text-sm text-destructive text-center">{error}</p>
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  >
+                    {error}
+                  </div>
+                )}
+                {success && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
+                  >
+                    {success}
+                  </div>
                 )}
                 <Field>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Accesso in corso..." : "Accedi"}
+                  <Button type="submit" className="w-full" disabled={loading || !!success}>
+                    {success
+                      ? "Reindirizzamento..."
+                      : loading
+                        ? "Accesso in corso..."
+                        : "Accedi"}
                   </Button>
                 </Field>
               </FieldGroup>

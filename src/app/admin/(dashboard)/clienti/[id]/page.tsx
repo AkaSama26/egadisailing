@@ -75,8 +75,9 @@ export default async function ClienteDetailPage({
           </p>
           {hasActiveFutureBookings ? (
             <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-              Questo cliente ha prenotazioni future PENDING/CONFIRMED. Cancella
-              o rimborsa prima le prenotazioni attive, poi potrai anonimizzare.
+              Questo cliente ha prenotazioni future in attesa o confermate.
+              Cancella o rimborsa prima le prenotazioni attive, poi potrai
+              anonimizzare.
             </p>
           ) : (
             <form action={anonymizeCustomerAction.bind(null, customer.id)}>

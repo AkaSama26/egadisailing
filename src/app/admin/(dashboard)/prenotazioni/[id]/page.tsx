@@ -90,7 +90,7 @@ export default async function BookingDetailPage({
           <form action={cancelAction}>
             <SubmitButton
               className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700"
-              confirmMessage={`Confermi la cancellazione di ${booking.confirmationCode}?\n\nVerranno rimborsati tutti i pagamenti SUCCEEDED su Stripe e rilasciate le date sul calendario. Operazione irreversibile.`}
+              confirmMessage={`Confermi la cancellazione di ${booking.confirmationCode}?\n\nVerranno rimborsati tutti i pagamenti completati su Stripe e rilasciate le date sul calendario. Operazione irreversibile.`}
               pendingLabel="Annullamento in corso..."
             >
               Cancella + refund

@@ -2,6 +2,40 @@
 
 Procedure per incidenti comuni in produzione.
 
+## Admin dashboard: password manager extensions compatibility
+
+**Sintomo**: admin segnala che cliccando sulle celle del calendario (o su
+elementi interattivi simili) non succede nulla, oppure il modal si apre e
+si chiude immediatamente. Login potrebbe mostrare hydration error in
+console.
+
+**Causa**: estensioni password manager (ProtonPass, LastPass, 1Password,
+Bitwarden) iniettano overlay DOM (`<protonpass-control-*>`, attributi
+`data-lpignore`, `style="padding-right:40px"`) che:
+1. Rompono React hydration (server HTML != client DOM post-injection)
+2. Intercettano eventi click del mouse su form e a volte su tutta la
+   pagina authenticated
+
+**Workaround admin**:
+- **Test rapido**: apri una finestra in Incognito (Ctrl+Shift+N/P) — le
+  estensioni sono disabilitate. Se il problema sparisce → e' un'estensione.
+- **Fix permanente**: escludi `localhost` (dev) / il dominio prod dalla
+  password manager extension. Il panel admin non ha altri form di tipo
+  "password" oltre a login, quindi l'estensione non serve sulle altre
+  pagine.
+
+**Fix codice gia' applicato** (R30-UX):
+- `<Field suppressHydrationWarning>` + `<Input suppressHydrationWarning>`
+  sui 2 input login → React ignora mismatch DOM da extensions
+- `autoComplete="email"` / `autoComplete="current-password"` sui field
+  login → hint corretto al browser + password manager
+
+**NON fix**:
+- Disabilitare password manager nel codice (non e' possibile cross-browser
+  in modo affidabile, e andrebbe contro UX utente)
+- Usare `data-lpignore` / `data-1p-ignore` / `data-form-type="other"`:
+  ogni extension ha un markup diverso e il supporto e' inconsistente
+
 ## PENDING booking stuck (>1h)
 
 **Sintomo**: un booking con `status=PENDING` piu' vecchio di 1 ora.

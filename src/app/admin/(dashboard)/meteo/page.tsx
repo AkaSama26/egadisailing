@@ -28,7 +28,7 @@ export default async function MeteoPage() {
       </p>
 
       <section className="bg-white rounded-xl border p-5">
-        <h2 className="font-bold text-slate-900 mb-3">Uscite CONFIRMED</h2>
+        <h2 className="font-bold text-slate-900 mb-3">Uscite confermate</h2>
         {bookings.length === 0 ? (
           <p className="text-sm text-slate-500">Nessuna uscita nei prossimi 7 giorni.</p>
         ) : (
