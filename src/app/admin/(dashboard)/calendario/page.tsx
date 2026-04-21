@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { CalendarGrid, type DayCell } from "@/components/admin/calendar-grid";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { manualBlockRange, manualReleaseRange } from "./actions";
+import { enrichDayCells } from "./enrich";
 
 interface Props {
   searchParams: Promise<{ month?: string; year?: string }>;
@@ -22,7 +23,7 @@ export default async function CalendarioPage({ searchParams }: Props) {
   // 0=Mon, 6=Sun — griglia europea.
   const firstWeekday = (monthStart.getUTCDay() + 6) % 7;
 
-  const [boats, bookings, availability] = await Promise.all([
+  const [boats, bookings, availability, auditLogs] = await Promise.all([
     db.boat.findMany({ orderBy: { name: "asc" } }),
     db.booking.findMany({
       where: {
@@ -33,18 +34,51 @@ export default async function CalendarioPage({ searchParams }: Props) {
       select: {
         id: true,
         source: true,
+        status: true,
         confirmationCode: true,
         boatId: true,
         startDate: true,
         endDate: true,
         service: { select: { name: true } },
+        customer: { select: { firstName: true, lastName: true } },
       },
     }),
     db.boatAvailability.findMany({
       where: { date: { gte: monthStart, lte: monthEnd } },
-      select: { boatId: true, date: true, status: true },
+      select: {
+        boatId: true,
+        date: true,
+        status: true,
+        lockedByBookingId: true,
+      },
+    }),
+    // Batch audit logs MANUAL_BLOCK per arricchire le celle admin-block
+    // con reason + blockedAt. Finestra 90gg indietro: la maggior parte dei
+    // blocchi recenti e' entro questa finestra; oltre scade retention.
+    db.auditLog.findMany({
+      where: {
+        action: "MANUAL_BLOCK",
+        entity: "Boat",
+        timestamp: {
+          gte: new Date(monthStart.getTime() - 90 * 24 * 60 * 60 * 1000),
+        },
+      },
+      select: { entityId: true, after: true, timestamp: true },
+      orderBy: { timestamp: "desc" },
+      take: 500,
     }),
   ]);
+
+  const enriched = enrichDayCells({
+    boats,
+    bookings,
+    availability,
+    auditLogs,
+    monthStart,
+    monthEnd,
+  });
+  // TODO Chunk 2: pass `enriched` to CalendarClient for interactive grid.
+  void enriched;
 
   const prev = month === 1 ? { m: 12, y: year - 1 } : { m: month - 1, y: year };
   const next = month === 12 ? { m: 1, y: year + 1 } : { m: month + 1, y: year };
