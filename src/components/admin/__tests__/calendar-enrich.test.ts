@@ -96,4 +96,65 @@ describe("enrichDayCells", () => {
       customerName: "Mario Rossi",
     });
   });
+
+  it("admin-block arricchito con reason + blockedAt da AuditLog", () => {
+    const blockedAt = new Date("2026-06-28T10:00:00Z");
+    const result = enrichDayCells({
+      boats: [{ id: "boat-1", name: "T" }],
+      bookings: [],
+      availability: [
+        {
+          boatId: "boat-1",
+          date: new Date(Date.UTC(2026, 6, 15)),
+          status: "BLOCKED",
+          lockedByBookingId: null,
+        },
+      ],
+      auditLogs: [
+        {
+          entityId: "boat-1",
+          after: {
+            boatName: "T",
+            startDate: "2026-07-15",
+            endDate: "2026-07-15",
+            reason: "manutenzione motore",
+          },
+          timestamp: blockedAt,
+        },
+      ],
+      monthStart: new Date(Date.UTC(2026, 6, 1)),
+      monthEnd: new Date(Date.UTC(2026, 6, 31)),
+    });
+    const day15 = result.get("boat-1")!.find((d) => d.dateIso === "2026-07-15")!;
+    expect(day15.adminBlockInfo?.reason).toBe("manutenzione motore");
+    expect(day15.adminBlockInfo?.blockedAt).toBe(blockedAt.toISOString());
+  });
+
+  it("admin-block con reason redatto mostra solo blockedAt", () => {
+    const blockedAt = new Date("2026-06-28T10:00:00Z");
+    const result = enrichDayCells({
+      boats: [{ id: "boat-1", name: "T" }],
+      bookings: [],
+      availability: [
+        {
+          boatId: "boat-1",
+          date: new Date(Date.UTC(2026, 6, 15)),
+          status: "BLOCKED",
+          lockedByBookingId: null,
+        },
+      ],
+      auditLogs: [
+        {
+          entityId: "boat-1",
+          after: { _redacted: true }, // retention cron marker
+          timestamp: blockedAt,
+        },
+      ],
+      monthStart: new Date(Date.UTC(2026, 6, 1)),
+      monthEnd: new Date(Date.UTC(2026, 6, 31)),
+    });
+    const day15 = result.get("boat-1")!.find((d) => d.dateIso === "2026-07-15")!;
+    expect(day15.adminBlockInfo?.reason).toBeUndefined();
+    expect(day15.adminBlockInfo?.blockedAt).toBe(blockedAt.toISOString());
+  });
 });
