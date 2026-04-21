@@ -4,7 +4,10 @@ import { quotePrice } from "@/lib/pricing/service";
 import { toCents, fromCents } from "@/lib/pricing/cents";
 import { toUtcDay, parseDateLikelyLocalDay } from "@/lib/dates";
 import { acquireAvailabilityRangeLock } from "@/lib/db/advisory-lock";
-import { isBoatExclusiveServiceType } from "@/lib/booking/cross-channel-conflicts";
+import {
+  isBoatExclusiveServiceType,
+  BOAT_EXCLUSIVE_SERVICE_TYPES,
+} from "@/lib/booking/cross-channel-conflicts";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
 import { deriveEndDate, generateConfirmationCode } from "./helpers";
@@ -228,9 +231,7 @@ export async function createPendingDirectBooking(
     //
     // Aligned con pattern Bokun/Boataround/Charter adapter + cross-channel-
     // conflicts helper (gia' usavano filter service.type IN boat-exclusive).
-    const isNewBoatExclusive = ["CABIN_CHARTER", "BOAT_EXCLUSIVE"].includes(
-      service.type,
-    );
+    const isNewBoatExclusive = isBoatExclusiveServiceType(service.type);
     const allConflicts = await tx.booking.findMany({
       where: {
         boatId: service.boatId,
@@ -241,7 +242,7 @@ export async function createPendingDirectBooking(
         // (permettiamo cohabitation). Se exclusive, NO filter (tutti).
         ...(isNewBoatExclusive
           ? {}
-          : { service: { is: { type: { in: ["CABIN_CHARTER", "BOAT_EXCLUSIVE"] } } } }),
+          : { service: { is: { type: { in: [...BOAT_EXCLUSIVE_SERVICE_TYPES] } } } }),
       },
       include: { directBooking: true },
     });

@@ -1,4 +1,4 @@
-import { emailLayout, escapeHtml, safeUrl } from "./_layout";
+import { emailLayout, escapeHtml } from "./_layout";
 
 // R29-#2: template customer "overbooking apology" — hooked in
 // cancelBooking quando il booking cancellato ha un ManualAlert
@@ -7,12 +7,23 @@ import { emailLayout, escapeHtml, safeUrl } from "./_layout";
 // cancelled" senza contesto → reputation damage + rischio legale
 // (doppia vendita). Ora: scusa formale + refund info +
 // date alternative + contatto diretto WhatsApp/email.
+//
+// R29-AUDIT-FIX-UX: refund channel condizionale. Prima il template
+// diceva "5-10 giorni sulla tua carta" hardcoded → grammar rotta per
+// customer cash/bonifico (che non ha carta). Ora:
+//   - refundChannel="stripe" → "5-10 giorni sulla tua carta"
+//   - refundChannel="offline" → "ti contatteremo per il rimborso via bonifico"
+export type RefundChannel = "stripe" | "offline";
+
 export interface OverbookingApologyData {
   customerName: string;
   confirmationCode: string;
   serviceName: string;
   startDate: string;
+  /** Importo formattato (es. "€400,00") solo se refundChannel="stripe".
+   *  Per "offline", il testo e' generico — non usare questo campo. */
   refundAmount: string;
+  refundChannel: RefundChannel;
   contactEmail: string;
   contactPhone?: string;
   bookingUrl: string;
@@ -23,6 +34,21 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
   const phoneLine = data.contactPhone
     ? `<p><strong>Telefono/WhatsApp:</strong> <a href="tel:${escapeHtml(data.contactPhone)}">${escapeHtml(data.contactPhone)}</a></p>`
     : "";
+
+  const refundHtml =
+    data.refundChannel === "stripe"
+      ? `<p>
+          <strong>Rimborso processato:</strong> ${escapeHtml(data.refundAmount)} —
+          vedrai l'importo rientrare sulla tua carta entro 5-10 giorni lavorativi,
+          a seconda della tua banca.
+        </p>`
+      : `<p>
+          <strong>Rimborso:</strong> il pagamento era avvenuto offline (contanti
+          o bonifico). Ti contatteremo entro 24 ore via email o telefono per
+          concordare il bonifico di rimborso, oppure per offrirti il credito
+          utilizzabile su una data alternativa.
+        </p>`;
+
   const html = emailLayout({
     heading: `Ci dispiace sinceramente, ${escapeHtml(data.customerName)}`,
     bodyHtml: `
@@ -36,11 +62,7 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
       <p>
         Questo e' un nostro errore e ce ne assumiamo la piena responsabilita'.
       </p>
-      <p>
-        <strong>Rimborso processato:</strong> ${escapeHtml(data.refundAmount)} —
-        vedrai l'importo rientrare sulla tua carta entro 5-10 giorni lavorativi,
-        a seconda della tua banca.
-      </p>
+      ${refundHtml}
       <h3 style="margin-top:24px">Come possiamo rimediare</h3>
       <p>
         Siamo a tua disposizione per trovare una data alternativa. Contattaci
@@ -50,24 +72,29 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
       <p><strong>Email diretta:</strong> <a href="mailto:${escapeHtml(data.contactEmail)}">${escapeHtml(data.contactEmail)}</a></p>
       ${phoneLine}
       <p style="color: #6b7280; font-size: 14px; margin-top:24px">
-        Se vuoi verificare lo stato del rimborso o consultare i dettagli, puoi
-        usare il link di recupero qui sotto.
+        Per consultare i dettagli della prenotazione, puoi usare il link qui
+        sotto.
       </p>
     `,
-    ctaText: "Verifica stato rimborso",
+    ctaText: "Dettagli prenotazione",
     ctaUrl: data.bookingUrl,
   });
+
+  const refundText =
+    data.refundChannel === "stripe"
+      ? `Rimborso processato: ${data.refundAmount} (5-10 giorni lavorativi sulla tua carta).`
+      : `Rimborso: pagamento avvenuto offline (contanti/bonifico). Ti contatteremo entro 24 ore per concordare il bonifico di rimborso o il credito per una data alternativa.`;
 
   const text = `${data.customerName}, ci dispiace.
 
 A causa di un problema di sincronizzazione tra i nostri canali, la prenotazione ${data.confirmationCode} per ${data.serviceName} del ${data.startDate} e' stata annullata.
 
-Rimborso processato: ${data.refundAmount} (5-10 giorni lavorativi sulla tua carta).
+${refundText}
 
 Contattaci per trovare una data alternativa:
 Email: ${data.contactEmail}${data.contactPhone ? `\nTelefono/WhatsApp: ${data.contactPhone}` : ""}
 
-Verifica stato: ${data.bookingUrl}`;
+Dettagli: ${data.bookingUrl}`;
 
   return { subject, html, text };
 }

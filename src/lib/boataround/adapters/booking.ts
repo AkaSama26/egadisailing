@@ -13,6 +13,7 @@ import {
 import {
   detectCrossChannelConflicts,
   recordDoubleBookingIncident,
+  BOAT_EXCLUSIVE_SERVICE_TYPES,
   type CrossChannelConflict,
 } from "@/lib/booking/cross-channel-conflicts";
 import type { BoataroundBookingResponse } from "../schemas";
@@ -87,7 +88,7 @@ export async function importBoataroundBooking(
   const service = await db.service.findFirst({
     where: {
       boatId: boat.id,
-      type: { in: ["CABIN_CHARTER", "BOAT_EXCLUSIVE"] },
+      type: { in: [...BOAT_EXCLUSIVE_SERVICE_TYPES] },
       active: true,
     },
     orderBy: { priority: "desc" },

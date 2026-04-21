@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { formatItDay } from "@/lib/dates";
+import { BOAT_EXCLUSIVE_SERVICE_TYPES } from "@/lib/booking/cross-channel-conflicts";
 import {
   cancelBooking,
   addBookingNote,
@@ -42,7 +43,7 @@ export default async function BookingDetailPage({
       source: { not: booking.source },
       startDate: { lte: booking.endDate },
       endDate: { gte: booking.startDate },
-      service: { is: { type: { in: ["CABIN_CHARTER", "BOAT_EXCLUSIVE"] } } },
+      service: { is: { type: { in: [...BOAT_EXCLUSIVE_SERVICE_TYPES] } } },
     },
     select: {
       id: true,

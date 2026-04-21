@@ -249,10 +249,10 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
     const eligibleForApology =
       crossOtaAlert && booking.customer?.email && (refundedCentsTotal > 0 || hasCompletedPayment);
     if (eligibleForApology && booking.customer?.email) {
-      const refundLine =
-        refundedCentsTotal > 0
-          ? formatEurCents(refundedCentsTotal)
-          : "da processare offline — ti contatteremo via email/telefono";
+      // R29-AUDIT-FIX-UX: refund channel condizionale. Stripe → "5-10 giorni
+      // sulla carta". Offline → "ti contatteremo per bonifico". Prima il
+      // template era hardcoded "sulla tua carta" anche per customer cash.
+      const refundChannel = refundedCentsTotal > 0 ? "stripe" : "offline";
       const tpl = overbookingApologyTemplate({
         customerName:
           `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
@@ -260,7 +260,8 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
         confirmationCode: booking.confirmationCode,
         serviceName: booking.service?.name ?? "la tua esperienza",
         startDate: booking.startDate.toISOString().slice(0, 10),
-        refundAmount: refundLine,
+        refundAmount: refundedCentsTotal > 0 ? formatEurCents(refundedCentsTotal) : "",
+        refundChannel,
         contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
         contactPhone: env.CONTACT_PHONE,
         bookingUrl: `${env.APP_URL}/b/sessione`,

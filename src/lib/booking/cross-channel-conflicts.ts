@@ -86,7 +86,7 @@ export async function detectCrossChannelConflicts(
       endDate: { gte: input.startDate },
       service: {
         is: {
-          type: { in: ["CABIN_CHARTER", "BOAT_EXCLUSIVE"] },
+          type: { in: [...BOAT_EXCLUSIVE_SERVICE_TYPES] },
         },
       },
     },

@@ -65,6 +65,16 @@ export async function acquireAvailabilityRangeLock(
   startDate: Date,
   endDate: Date,
 ): Promise<void> {
+  // R29-AUDIT-FIX-INVARIANT: guard esplicito contro end < start. Senza
+  // questo, eachUtcDayInclusive ritornava 0 giorni silenziosamente → 0
+  // lock acquisiti → serializzazione cross-adapter saltata. Oggi tutti i
+  // callsite validano upstream (Zod schemas, deriveEndDate) ma una drift
+  // futura potrebbe introdurre silent bug. Throw esplicito.
+  if (endDate.getTime() < startDate.getTime()) {
+    throw new Error(
+      `acquireAvailabilityRangeLock: endDate (${endDate.toISOString()}) < startDate (${startDate.toISOString()})`,
+    );
+  }
   // eachUtcDayInclusive ritorna gia' ordinato ASC via iterator.
   for (const day of eachUtcDayInclusive(startDate, endDate)) {
     await acquireTxAdvisoryLock(tx, "availability", boatId, isoDay(day));
