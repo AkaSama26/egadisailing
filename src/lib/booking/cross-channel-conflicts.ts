@@ -7,6 +7,19 @@ import {
   defaultNotificationChannels,
 } from "@/lib/notifications/dispatcher";
 
+// R29-AUDIT-FIX2: helper per decidere se un service type richiede
+// serializzazione cross-adapter. Tours condivisi (SOCIAL_BOATING 20 posti,
+// BOAT_SHARED 12 posti) NON hanno bisogno del lock "availability" perche'
+// cohabitation e' feature, non bug.
+export const BOAT_EXCLUSIVE_SERVICE_TYPES = [
+  "CABIN_CHARTER",
+  "BOAT_EXCLUSIVE",
+] as const;
+
+export function isBoatExclusiveServiceType(type: string): boolean {
+  return (BOAT_EXCLUSIVE_SERVICE_TYPES as readonly string[]).includes(type);
+}
+
 /**
  * R14 cross-OTA double-booking detection helper.
  *
@@ -225,26 +238,11 @@ export async function recordDoubleBookingIncident(input: RecordIncidentInput): P
         },
         "DOUBLE_BOOKING_DETECTED notification NOT DELIVERED — admin manual escalation required",
       );
-      // Marker su ManualAlert per admin futuri che guardano la riga.
-      // Non blocca se la write fallisce (gia' sotto try).
-      await db.manualAlert
-        .updateMany({
-          where: {
-            channel: "CROSS_OTA_DOUBLE_BOOKING",
-            boatId: input.boatId,
-            date: dayKey,
-            bookingId: input.newBookingId,
-            status: "PENDING",
-          },
-          data: {
-            notes: {
-              // append-safe: Prisma non supporta string concat nativo, ricarico + riscrivo
-            } as never,
-          },
-        })
-        .catch(() => null);
-      // Best-effort: rileggo + prepend tag [NOTIFICATION_FAILED] nelle notes
-      // cosi' admin che apre sync-log vede subito lo stato.
+      // R29-AUDIT-FIX4: rileggo l'alert + prepend tag [NOTIFICATION_FAILED]
+      // nelle notes. Admin che apre sync-log vede subito lo stato.
+      // Idempotency guard: se il prefix gia' presente (retry), skip per
+      // evitare accumulo infinito.
+      const NOTIFICATION_FAILED_PREFIX = "[⚠ NOTIFICATION_FAILED";
       const alert = await db.manualAlert.findFirst({
         where: {
           channel: "CROSS_OTA_DOUBLE_BOOKING",
@@ -255,12 +253,12 @@ export async function recordDoubleBookingIncident(input: RecordIncidentInput): P
         },
         select: { id: true, notes: true },
       });
-      if (alert) {
+      if (alert && !alert.notes?.startsWith(NOTIFICATION_FAILED_PREFIX)) {
         await db.manualAlert
           .update({
             where: { id: alert.id },
             data: {
-              notes: `[⚠ NOTIFICATION_FAILED — admin non notificato via email/telegram]\n${alert.notes ?? ""}`,
+              notes: `${NOTIFICATION_FAILED_PREFIX} — admin non notificato via email/telegram]\n${alert.notes ?? ""}`,
             },
           })
           .catch((err) =>

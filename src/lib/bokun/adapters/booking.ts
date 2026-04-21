@@ -5,12 +5,16 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { parseIsoDay, eachUtcDayInclusive, isoDay } from "@/lib/dates";
-import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
+import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
+import {
+  acquireTxAdvisoryLock,
+  acquireAvailabilityRangeLock,
+} from "@/lib/db/advisory-lock";
 import { createManualAlert } from "@/lib/charter/manual-alerts";
 import {
   detectCrossChannelConflicts,
   recordDoubleBookingIncident,
+  isBoatExclusiveServiceType,
   type CrossChannelConflict,
 } from "@/lib/booking/cross-channel-conflicts";
 import type { BokunBookingSummary } from "../types";
@@ -88,22 +92,15 @@ export async function importBokunBooking(
 
   try {
     const result = await db.$transaction(async (tx) => {
-      // R29-#1: advisory lock "availability" per (boatId, startDay) condiviso
-      // cross-adapter (DIRECT + Bokun + Boataround + Charter + blockDates).
-      // Serializza la CREAZIONE di booking stesso slot tra canali diversi
-      // → chiude la race 0-50ms dove 2 webhook concorrenti vedevano
-      // detectCrossChannelConflicts=[] (READ COMMITTED non rivela tx
-      // gemella in flight) → 2 CONFIRMED senza alert.
-      // Namespace allineato a create-direct.ts + availability/service.ts
-      // per avere UN SEMAFORO UNICO per tutto quello che tocca lo slot.
-      // Post-commit blockDates acquisisce lo stesso lock → tx seriale ma
-      // non deadlock (l'adapter tx ha gia' rilasciato).
-      await acquireTxAdvisoryLock(
-        tx,
-        "availability",
-        service.boatId,
-        isoDay(startDate),
-      );
+      // R29-#1 + R29-AUDIT-FIX1/2: advisory lock "availability" per TUTTI
+      // i giorni nel range [startDate, endDate]. Chiude race 0-50ms cross-
+      // adapter. Skip per SHARED services (SOCIAL_BOATING/BOAT_SHARED):
+      // cohabitation e' feature, non bug.
+      // Multi-day fix: prima lockava solo startDay → 2 booking con
+      // startDate diverse ma range overlapping saltavano il lock.
+      if (isBoatExclusiveServiceType(service.type)) {
+        await acquireAvailabilityRangeLock(tx, service.boatId, startDate, endDate);
+      }
 
       // R27-CRIT-2: advisory lock per-bokunBookingId serializza import concorrenti
       // sullo stesso booking. Senza, `findUnique` + `update` soffrivano race

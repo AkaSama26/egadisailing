@@ -7,8 +7,11 @@ import { fromCents } from "@/lib/pricing/cents";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { blockDates, releaseDates } from "@/lib/availability/service";
 import { CHANNELS, type Channel } from "@/lib/channels";
-import { toUtcDay, parseDateLikelyLocalDay, isoDay } from "@/lib/dates";
-import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
+import { toUtcDay, parseDateLikelyLocalDay } from "@/lib/dates";
+import {
+  acquireTxAdvisoryLock,
+  acquireAvailabilityRangeLock,
+} from "@/lib/db/advisory-lock";
 import {
   detectCrossChannelConflicts,
   recordDoubleBookingIncident,
@@ -81,16 +84,10 @@ export async function importCharterBooking(
 
   try {
     const result = await db.$transaction(async (tx) => {
-      // R29-#1: advisory lock "availability" per (boatId, startDay) condiviso
-      // cross-adapter. Chiude race 0-50ms tra cron email-parser concorrente
-      // e webhook. Namespace allineato a create-direct.ts + Bokun/Boataround
-      // adapter + availability/service.ts → UN SEMAFORO UNICO per slot.
-      await acquireTxAdvisoryLock(
-        tx,
-        "availability",
-        input.boatId,
-        isoDay(input.startDate),
-      );
+      // R29-#1 + R29-AUDIT-FIX1: lock "availability" per TUTTI i giorni nel
+      // range [startDate, endDate]. Charter import filtra service boat-exclusive
+      // upstream (line 67) quindi lock sempre necessario.
+      await acquireAvailabilityRangeLock(tx, input.boatId, input.startDate, input.endDate);
       // R29-#1b: lock per-platformBookingRef (parser + re-run cron).
       await acquireTxAdvisoryLock(
         tx,

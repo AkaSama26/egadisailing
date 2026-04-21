@@ -2,8 +2,9 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { quotePrice } from "@/lib/pricing/service";
 import { toCents, fromCents } from "@/lib/pricing/cents";
-import { toUtcDay, isoDay, parseDateLikelyLocalDay } from "@/lib/dates";
-import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
+import { toUtcDay, parseDateLikelyLocalDay } from "@/lib/dates";
+import { acquireAvailabilityRangeLock } from "@/lib/db/advisory-lock";
+import { isBoatExclusiveServiceType } from "@/lib/booking/cross-channel-conflicts";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
 import { deriveEndDate, generateConfirmationCode } from "./helpers";
@@ -142,10 +143,14 @@ export async function createPendingDirectBooking(
   const emailLower = normalizeEmail(input.customer.email);
 
   const result = await db.$transaction(async (tx) => {
-    // Advisory lock sulla barca per serializzare i payment-intent concorrenti
-    // sullo stesso startDay. Stesso namespace di availability/service.ts per
-    // serializzare anche vs blockDates concorrenti.
-    await acquireTxAdvisoryLock(tx, "availability", service.boatId, isoDay(startDay));
+    // R29-AUDIT-FIX1/2: lock "availability" range-based (tutti i giorni del
+    // booking, ordinati ASC). Skip per SHARED services (SOCIAL_BOATING /
+    // BOAT_SHARED): cohabitation legittima, lock-per-giorno serializzerebbe
+    // 20 clienti stesso tour artificialmente. Exclusive (CABIN_CHARTER /
+    // BOAT_EXCLUSIVE): lock richiesto per serializzare cross-adapter concorrenti.
+    if (isBoatExclusiveServiceType(service.type)) {
+      await acquireAvailabilityRangeLock(tx, service.boatId, startDay, endDay);
+    }
 
     // Pre-check 1: nessuna cella BoatAvailability BLOCKED nel range.
     // Questo intercetta booking CONFIRMED (che fanno blockDates) e blocchi

@@ -238,7 +238,21 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
       },
       select: { id: true },
     });
-    if (crossOtaAlert && booking.customer?.email && refundedCentsTotal > 0) {
+    // R29-AUDIT-FIX5: apology parte ANCHE per pagamenti non-Stripe (cash/
+    // bonifico), non solo su refundedCentsTotal>0. Prima il guard escludeva
+    // clienti CONFIRMED che avevano pagato via BANK_TRANSFER/CASH — loro
+    // non hanno refund Stripe istantaneo ma meritano comunque l'apology
+    // con testo "Ti contatteremo per il rimborso offline".
+    const hasCompletedPayment = booking.payments.some(
+      (p) => p.status === "SUCCEEDED" && p.type !== "REFUND",
+    );
+    const eligibleForApology =
+      crossOtaAlert && booking.customer?.email && (refundedCentsTotal > 0 || hasCompletedPayment);
+    if (eligibleForApology && booking.customer?.email) {
+      const refundLine =
+        refundedCentsTotal > 0
+          ? formatEurCents(refundedCentsTotal)
+          : "da processare offline — ti contatteremo via email/telefono";
       const tpl = overbookingApologyTemplate({
         customerName:
           `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
@@ -246,7 +260,7 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
         confirmationCode: booking.confirmationCode,
         serviceName: booking.service?.name ?? "la tua esperienza",
         startDate: booking.startDate.toISOString().slice(0, 10),
-        refundAmount: formatEurCents(refundedCentsTotal),
+        refundAmount: refundLine,
         contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
         contactPhone: env.CONTACT_PHONE,
         bookingUrl: `${env.APP_URL}/b/sessione`,

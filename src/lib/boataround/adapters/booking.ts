@@ -5,8 +5,11 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { parseIsoDay, isoDay } from "@/lib/dates";
-import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
+import { parseIsoDay } from "@/lib/dates";
+import {
+  acquireTxAdvisoryLock,
+  acquireAvailabilityRangeLock,
+} from "@/lib/db/advisory-lock";
 import {
   detectCrossChannelConflicts,
   recordDoubleBookingIncident,
@@ -103,11 +106,11 @@ export async function importBoataroundBooking(
 
   try {
     const result = await db.$transaction(async (tx) => {
-      // R29-#1: advisory lock "availability" per (boatId, startDay) condiviso
-      // cross-adapter. Chiude race 0-50ms concurrent webhook Bokun+Boataround
-      // stesso slot che altrimenti skip-avano detectCrossChannelConflicts
-      // (entrambe tx invisibili l'una all'altra in READ COMMITTED pre-commit).
-      await acquireTxAdvisoryLock(tx, "availability", boat.id, isoDay(startDate));
+      // R29-#1 + R29-AUDIT-FIX1: lock "availability" per TUTTI i giorni nel
+      // range [startDate, endDate] in ordine ascendente (deadlock-safe).
+      // Boataround importa solo boat-exclusive (service filter upstream),
+      // quindi skip-condition non serve: lock sempre.
+      await acquireAvailabilityRangeLock(tx, boat.id, startDate, endDate);
       // R29-#1b: lock per-platformBookingRef (Bokun ha bokun-booking, mancava
       // simmetrico Boataround) → race webhook duplicato concorrente.
       await acquireTxAdvisoryLock(tx, "boataround-booking", booking.id);

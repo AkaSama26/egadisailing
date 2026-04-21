@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { eachUtcDayInclusive, isoDay } from "@/lib/dates";
 
 /**
  * Genera una chiave bigint 63-bit deterministica per Postgres advisory locks.
@@ -39,3 +40,33 @@ export async function acquireTxAdvisoryLock(
 // pg (max=20) fa atterrare acquire e release su connessioni diverse,
 // rendendo l'`pg_advisory_unlock` un no-op silenzioso. Per lock cross-request
 // usare `src/lib/lease/redis-lease.ts` (SETNX + TTL, multi-replica safe).
+
+/**
+ * R29-AUDIT-FIX1: acquisisce advisory lock "availability" per TUTTI i giorni
+ * nel range [startDate, endDate] inclusivi, in ordine ascendente.
+ *
+ * Prima: R29 lockava solo `isoDay(startDate)` — un booking multi-day (Bokun
+ * lun-dom) e un booking overlapping ma con startDate diversa (Boataround
+ * mar-lun) acquisivano chiavi diverse → entrambi passavano pre-check
+ * `detectCrossChannelConflicts` pre-commit (READ COMMITTED non vede tx
+ * gemella) → race 0-50ms aperta.
+ *
+ * Ora: lock ogni giorno singolarmente. Se 2 range overlappano, almeno
+ * un giorno e' in comune → lock shared → serializzazione garantita.
+ * Ordine ascendente previene deadlock (lock ordering consistente).
+ *
+ * Use SOLO per boat-exclusive services (CABIN_CHARTER/BOAT_EXCLUSIVE).
+ * Per SHARED (SOCIAL_BOATING/BOAT_SHARED) il lock e' overhead inutile
+ * (cohabitation legittima).
+ */
+export async function acquireAvailabilityRangeLock(
+  tx: { $executeRawUnsafe: (sql: string) => Promise<unknown> },
+  boatId: string,
+  startDate: Date,
+  endDate: Date,
+): Promise<void> {
+  // eachUtcDayInclusive ritorna gia' ordinato ASC via iterator.
+  for (const day of eachUtcDayInclusive(startDate, endDate)) {
+    await acquireTxAdvisoryLock(tx, "availability", boatId, isoDay(day));
+  }
+}
