@@ -1,4 +1,4 @@
-import type { DayCellEnriched } from "@/app/admin/(dashboard)/calendario/enrich";
+import { AVAILABILITY_STATUS_LABEL, labelOrRaw } from "@/lib/admin/labels";
 
 export interface DayCellBooking {
   id: string;
@@ -28,7 +28,6 @@ export interface CalendarGridProps {
   boatName: string;
   boatId?: string;
   onDayClick?: (dateIso: string) => void;
-  enrichedByDate?: Map<string, DayCellEnriched>;
 }
 
 export function CalendarGrid({ days, boatName, boatId, onDayClick }: CalendarGridProps) {
@@ -101,7 +100,7 @@ export function CalendarGrid({ days, boatName, boatId, onDayClick }: CalendarGri
               type="button"
               onClick={() => onDayClick?.(dateIso)}
               className={`aspect-square border rounded p-1 flex flex-col text-left ${bg} ${interactiveCls}`}
-              aria-label={`${dayNum} — ${day.status}, ${day.bookings.length} prenotazioni`}
+              aria-label={`${dayNum} — ${labelOrRaw(AVAILABILITY_STATUS_LABEL, day.status)}, ${day.bookings.length} prenotazioni`}
             >
               {content}
             </button>
