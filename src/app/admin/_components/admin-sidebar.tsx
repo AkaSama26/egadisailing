@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   ListChecks,
   Calendar,
-  CalendarX,
   Coins,
   Boxes,
   Users,
@@ -20,15 +19,14 @@ import {
 } from "lucide-react";
 
 /**
- * Sidebar admin — 13 sezioni Plan 5. Rotte in italiano (spec V2).
- * `active` matching: `/admin` esatto (dashboard home) + prefix-match
- * per sottorotte (es. `/admin/prenotazioni/[id]`).
+ * Sidebar admin — 12 sezioni (R29: Disponibilità unificata in Calendario).
+ * Rotte in italiano (spec V2). `active` matching: `/admin` esatto
+ * (dashboard home) + prefix-match per sottorotte.
  */
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/prenotazioni", label: "Prenotazioni", icon: ListChecks },
   { href: "/admin/calendario", label: "Calendario", icon: Calendar },
-  { href: "/admin/disponibilita", label: "Disponibilità", icon: CalendarX },
   { href: "/admin/prezzi", label: "Prezzi", icon: Coins },
   { href: "/admin/servizi", label: "Servizi", icon: Boxes },
   { href: "/admin/clienti", label: "Clienti", icon: Users },

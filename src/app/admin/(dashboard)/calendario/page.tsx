@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { CalendarGrid, type DayCell } from "@/components/admin/calendar-grid";
+import { SubmitButton } from "@/components/admin/submit-button";
+import { manualBlockRange, manualReleaseRange } from "./actions";
 
 interface Props {
   searchParams: Promise<{ month?: string; year?: string }>;
@@ -130,8 +132,9 @@ export default async function CalendarioPage({ searchParams }: Props) {
               });
             }
             return (
-              <div key={boat.id} className="bg-white rounded-xl border p-5">
+              <div key={boat.id} className="bg-white rounded-xl border p-5 space-y-4">
                 <CalendarGrid days={days} boatName={boat.name} />
+                <ManualAvailabilityActions boatId={boat.id} boatName={boat.name} />
               </div>
             );
           });
@@ -148,6 +151,128 @@ export default async function CalendarioPage({ searchParams }: Props) {
         <p className="mt-2">Fino a 3 booking per cella; oltre mostra "+N".</p>
       </div>
     </div>
+  );
+}
+
+/**
+ * Form collapsibile per blocco/rilascio manuale range date. Unificato qui
+ * (prima era pagina separata `/admin/disponibilita`) per evitare context-
+ * switch admin: vedi calendario → agisci sullo stesso boat senza navigare.
+ */
+function ManualAvailabilityActions({
+  boatId,
+  boatName,
+}: {
+  boatId: string;
+  boatName: string;
+}) {
+  return (
+    <details className="border-t pt-3 -mx-5 px-5 group">
+      <summary className="cursor-pointer text-sm font-medium text-slate-700 select-none list-none flex items-center justify-between hover:text-slate-900">
+        <span>Azioni manuali (blocca / rilascia range)</span>
+        <span className="text-xs text-slate-400 group-open:rotate-180 transition-transform">
+          ▼
+        </span>
+      </summary>
+      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <form
+          action={async (fd) => {
+            "use server";
+            await manualBlockRange(
+              boatId,
+              String(fd.get("startDate")),
+              String(fd.get("endDate")),
+              String(fd.get("reason") ?? ""),
+            );
+          }}
+          className="space-y-2 p-3 border rounded-lg bg-red-50/40 border-red-200"
+        >
+          <h3 className="font-semibold text-red-800 text-sm">Blocca range</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs">
+              Da
+              <input
+                name="startDate"
+                type="date"
+                className="block w-full border rounded px-2 py-1 text-sm"
+                required
+              />
+            </label>
+            <label className="text-xs">
+              A
+              <input
+                name="endDate"
+                type="date"
+                className="block w-full border rounded px-2 py-1 text-sm"
+                required
+              />
+            </label>
+          </div>
+          <input
+            name="reason"
+            placeholder="Motivo (manutenzione, ferie...)"
+            maxLength={500}
+            className="w-full border rounded px-2 py-1 text-sm"
+          />
+          <SubmitButton
+            className="w-full bg-red-600 text-white rounded py-1.5 text-sm font-medium hover:bg-red-700"
+            confirmMessage={`Confermi il blocco del range su ${boatName}? Verranno bloccate le date su tutti i canali esterni.`}
+            pendingLabel="Blocco in corso..."
+          >
+            Blocca
+          </SubmitButton>
+        </form>
+
+        <form
+          action={async (fd) => {
+            "use server";
+            await manualReleaseRange(
+              boatId,
+              String(fd.get("startDate")),
+              String(fd.get("endDate")),
+            );
+          }}
+          className="space-y-2 p-3 border rounded-lg bg-emerald-50/40 border-emerald-200"
+        >
+          <h3 className="font-semibold text-emerald-800 text-sm">Rilascia range</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs">
+              Da
+              <input
+                name="startDate"
+                type="date"
+                className="block w-full border rounded px-2 py-1 text-sm"
+                required
+              />
+            </label>
+            <label className="text-xs">
+              A
+              <input
+                name="endDate"
+                type="date"
+                className="block w-full border rounded px-2 py-1 text-sm"
+                required
+              />
+            </label>
+          </div>
+          <p className="text-xs text-slate-500">
+            Rende disponibili le date (bloccato se ci sono booking attivi).
+          </p>
+          <SubmitButton
+            className="w-full bg-emerald-600 text-white rounded py-1.5 text-sm font-medium hover:bg-emerald-700"
+            confirmMessage={`Confermi il rilascio del range su ${boatName}?`}
+            pendingLabel="Rilascio in corso..."
+          >
+            Rilascia
+          </SubmitButton>
+        </form>
+      </div>
+      <p className="mt-3 text-xs text-slate-500">
+        Le azioni propagano a tutti i canali esterni (Bokun, Boataround) e
+        creano alert manuali per Click&Boat / Nautal. Il feed iCal SamBoat si
+        aggiorna al prossimo poll (cache 60s).
+      </p>
+    </details>
   );
 }
 
