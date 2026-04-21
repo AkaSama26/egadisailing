@@ -188,7 +188,7 @@ describe("handleStripeEvent — integration", () => {
       id: "ch_out_of_order",
       amount: 40000,
       amount_refunded: 40000,
-      refunds: { data: [{ id: "re_out_of_order" }] },
+      refunds: { data: [{ id: "re_out_of_order", amount: 40000, created: 1000 }] },
     });
 
     await expect(handleStripeEvent(refundEvent)).rejects.toThrow(
@@ -347,7 +347,7 @@ describe("handleStripeEvent — integration", () => {
       id: "ch_partial",
       amount: 40000,
       amount_refunded: 15000, // 150€ su 400€ = partial
-      refunds: { data: [{ id: "re_partial_1" }] },
+      refunds: { data: [{ id: "re_partial_1", amount: 15000, created: 2000 }] },
     });
 
     await handleStripeEvent(refundEvent);
@@ -400,7 +400,7 @@ describe("handleStripeEvent — integration", () => {
       id: "ch_full",
       amount: 40000,
       amount_refunded: 40000, // full
-      refunds: { data: [{ id: "re_full_1" }] },
+      refunds: { data: [{ id: "re_full_1", amount: 40000, created: 3000 }] },
     });
 
     await handleStripeEvent(refundEvent);
@@ -445,7 +445,7 @@ describe("handleStripeEvent — integration", () => {
         id: "ch_replay",
         amount: 40000,
         amount_refunded: 10000,
-        refunds: { data: [{ id: "re_replay" }] },
+        refunds: { data: [{ id: "re_replay", amount: 10000, created: 4000 }] },
       },
       "evt_replay_1",
     );
@@ -455,7 +455,7 @@ describe("handleStripeEvent — integration", () => {
         id: "ch_replay",
         amount: 40000,
         amount_refunded: 10000,
-        refunds: { data: [{ id: "re_replay" }] },
+        refunds: { data: [{ id: "re_replay", amount: 10000, created: 4000 }] },
       },
       "evt_replay_2", // event.id diverso ma refund.id uguale
     );

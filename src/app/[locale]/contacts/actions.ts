@@ -65,6 +65,9 @@ export async function sendContactMessage(
       scope: RATE_LIMIT_SCOPES.CONTACT_FORM_IP,
       limit: 3,
       windowSeconds: 3600,
+      // R28-CRIT-3: fail-closed per prevenire spam Brevo durante Redis down
+      // → SMTP reputation damage + quota abuse.
+      failOpen: false,
     });
     await enforceRateLimit({
       // R19-TechDebt-Bug: normalizeEmail invariant #17 (Gmail alias dedup).
@@ -72,6 +75,7 @@ export async function sendContactMessage(
       scope: RATE_LIMIT_SCOPES.CONTACT_FORM_EMAIL,
       limit: 3,
       windowSeconds: 3600,
+      failOpen: false,
     });
 
     const userAgent = getUserAgent(h);

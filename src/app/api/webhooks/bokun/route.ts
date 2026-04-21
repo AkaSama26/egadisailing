@@ -57,6 +57,10 @@ export const POST = withErrorHandler(async (req: Request) => {
     scope: RATE_LIMIT_SCOPES.BOKUN_WEBHOOK_IP,
     limit: 60,
     windowSeconds: 60,
+    // R28-CRIT-3: fail-closed. HMAC verify CPU-bound: durante Redis outage
+    // attaccante con firme random flood 10k req/s → event loop saturation
+    // → cascading failure sito. Bokun retry finche' Redis torna up.
+    failOpen: false,
   });
 
   // R25-A3-C3: body size cap pre-HMAC. Content-Length check veloce + fallback
@@ -137,18 +141,27 @@ export const POST = withErrorHandler(async (req: Request) => {
     .update(`${topic}|${body.bookingId}|${body.timestamp ?? ""}|${signature}`)
     .digest("hex");
 
-  try {
-    await db.processedBokunEvent.create({ data: { eventId, topic } });
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      logger.info({ eventId, topic }, "Bokun webhook duplicate, skipping");
-      return NextResponse.json({ received: true, duplicate: true });
-    }
-    throw err;
+  // R28-CRIT-2: dedup pre-check (read-only) invece di INSERT-first.
+  // Pattern aligned con Stripe webhook-handler. Prima: marker scritto PRIMA
+  // dell'import → se import/sync falliva (Bokun 503 / Redis down / advisory
+  // wait timeout), il route 500 → Bokun retry → dedup trovava il marker →
+  // 200 duplicate → booking MAI importato, perdita permanente. Ora: check
+  // idempotency; se gia' processato, skip. Altrimenti processa + marker al
+  // fondo con P2002 catch (race concurrent retry).
+  const existing = await db.processedBokunEvent.findUnique({
+    where: { eventId },
+    select: { eventId: true },
+  });
+  if (existing) {
+    logger.info({ eventId, topic }, "Bokun webhook duplicate (pre-check)");
+    return NextResponse.json({ received: true, duplicate: true });
   }
 
   if (!topic.startsWith("bookings/")) {
     logger.debug({ topic }, "Bokun webhook topic outside bookings namespace");
+    // Marker write: topic non-bookings non ha side effect pero' mark to
+    // avoid retry storm upstream.
+    await markProcessed(eventId, topic);
     return NextResponse.json({ received: true });
   }
 
@@ -162,5 +175,26 @@ export const POST = withErrorHandler(async (req: Request) => {
   const imported = await importBokunBooking(bokunBooking);
   await syncBookingAvailability(imported);
 
+  // Marker ALLA FINE (solo se import+sync success). Se P2002, un retry
+  // concorrente ha vinto → skip silent. Se altro error, propaga → 500 →
+  // Bokun retry di nuovo (raro: side-effect gia' committati, retry nuovo
+  // import e' no-op via advisory lock + P2002 catch in importBokunBooking).
+  await markProcessed(eventId, topic);
+
   return NextResponse.json({ received: true });
 });
+
+async function markProcessed(eventId: string, topic: string): Promise<void> {
+  try {
+    await db.processedBokunEvent.create({ data: { eventId, topic } });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      logger.info(
+        { eventId, topic },
+        "Bokun marker race (concurrent retry completed first)",
+      );
+      return;
+    }
+    throw err;
+  }
+}

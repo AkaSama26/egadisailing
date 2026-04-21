@@ -33,6 +33,8 @@ export const POST = withErrorHandler(async (req: Request) => {
     scope: RATE_LIMIT_SCOPES.BOATAROUND_WEBHOOK_IP,
     limit: 60,
     windowSeconds: 60,
+    // R28-CRIT-3: fail-closed. HMAC CPU-bound + Redis outage = DoS amplification.
+    failOpen: false,
   });
 
   // R25-A3-C3: body size cap.
@@ -97,21 +99,40 @@ export const POST = withErrorHandler(async (req: Request) => {
     .update(JSON.stringify([body.type, body.bookingId, body.timestamp ?? "", signature]))
     .digest("hex");
 
+  // R28-CRIT-2: dedup pre-check (read-only), marker alla fine. Pattern
+  // aligned con Stripe + Bokun post-R28. Prima: marker INSERT-first → se
+  // getBoataroundBooking o import/sync falliva, retry trovava dedup → 200
+  // duplicate → booking mai importato permanentemente.
+  const existing = await db.processedBoataroundEvent.findUnique({
+    where: { eventId },
+    select: { eventId: true },
+  });
+  if (existing) {
+    logger.info(
+      { eventId, type: body.type },
+      "Boataround webhook duplicate (pre-check)",
+    );
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
+  const bokunBooking = await getBoataroundBooking(body.bookingId);
+  const imported = await importBoataroundBooking(bokunBooking);
+  await syncBookingAvailability(imported);
+
   try {
     await db.processedBoataroundEvent.create({
       data: { eventId, eventType: body.type },
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      logger.info({ eventId, type: body.type }, "Boataround webhook duplicate, skipping");
-      return NextResponse.json({ received: true, duplicate: true });
+      logger.info(
+        { eventId, type: body.type },
+        "Boataround marker race (concurrent retry completed first)",
+      );
+    } else {
+      throw err;
     }
-    throw err;
   }
-
-  const bokunBooking = await getBoataroundBooking(body.bookingId);
-  const imported = await importBoataroundBooking(bokunBooking);
-  await syncBookingAvailability(imported);
 
   return NextResponse.json({ received: true });
 });

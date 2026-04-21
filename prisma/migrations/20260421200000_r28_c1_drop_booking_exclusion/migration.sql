@@ -1,0 +1,32 @@
+-- R28-CRIT-1: drop `booking_no_overlap_active` (R26-P4).
+--
+-- Il constraint bloccava ogni seconda INSERT sulla stessa (boatId, daterange)
+-- con status attivo, senza considerare `service.type`. Rompe il modello
+-- tour condivisi:
+--   - SOCIAL_BOATING (20 posti shared)
+--   - BOAT_SHARED (12 posti shared)
+-- Secondo cliente riceveva 23P01 exclusion_violation invece di normale
+-- capacity-check.
+--
+-- Postgres EXCLUDE USING gist NON supporta subquery nel predicato (non
+-- puo' filtrare boat-exclusive via JOIN con Service). Alternative:
+--   A) colonna denormalizzata Booking.serviceType + trigger BEFORE INSERT
+--      sync da Service — scartata per complessita' manutenzione.
+--   B) drop + pre-check app-level con filter service.type IN boat-exclusive —
+--      scelta (consistente con Bokun/Boataround/Charter adapter che gia'
+--      filtrano type cosi').
+--
+-- Difesa residua contro double-booking boat-exclusive:
+--   1. `acquireTxAdvisoryLock(tx, "availability", boatId, isoDay)` serializza
+--      insert concorrenti stesso slot (tutti i path import usano namespace).
+--   2. Pre-check `booking.findMany` con filter `service.type IN
+--      ('CABIN_CHARTER','BOAT_EXCLUSIVE')` asimmetrico:
+--      - Nuovo EXCLUSIVE → blocca su qualsiasi overlap attivo.
+--      - Nuovo SHARED → blocca solo su exclusive esistente.
+--   3. BoatAvailability.lockedByBookingId preserve-first-winner (R23-B-ALTA-1)
+--      mantiene ownership cross-channel anche a DB overlap ammesso.
+--
+-- btree_gist extension resta installata (potenziale riuso futuro per
+-- PricingPeriod overlap prevention, R4 deferred).
+
+ALTER TABLE "Booking" DROP CONSTRAINT IF EXISTS "booking_no_overlap_active";

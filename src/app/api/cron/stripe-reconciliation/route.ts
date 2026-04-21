@@ -17,6 +17,11 @@ export const runtime = "nodejs";
 const LEASE_NAME = LEASE_KEYS.STRIPE_RECONCILIATION;
 // Cron gira ogni 15 min. Lease copre worst-case multi-page drain sessione.
 const LEASE_TTL_SECONDS = 10 * 60;
+// R28-ALTA-3: soft-timeout per non superare lease TTL. 10k event × 5-8s
+// Stripe handler (refund doppia API call R27) = worst-case ore teoriche.
+// 8min cap lascia 2min margine per cursor persist + finally. Pattern
+// identico pending-gc + bokun-reconciliation RUN_BUDGET_MS.
+const RUN_BUDGET_MS = 8 * 60 * 1000;
 
 // Eventi di cui ci importa per il reconciliation. Filtrare upstream evita
 // di scaricare eventi inutili (customer.*, product.*, invoice.*).
@@ -128,8 +133,24 @@ export const GET = withErrorHandler(async (req: Request) => {
     let lastEventIdThisRun: string | undefined = undefined;
 
     const stripeClient = stripe();
+    let budgetExceeded = false;
 
     while (hasMore && pages < MAX_PAGES) {
+      // R28-ALTA-3: break su budget per evitare overrun lease TTL 10min.
+      if (Date.now() - runStartedAt.getTime() > RUN_BUDGET_MS) {
+        budgetExceeded = true;
+        logger.warn(
+          {
+            pages,
+            totalFetched,
+            replayed,
+            failed,
+            elapsedMs: Date.now() - runStartedAt.getTime(),
+          },
+          "Stripe reconciliation stopped at RUN_BUDGET_MS — backlog continues next run",
+        );
+        break;
+      }
       const response: Stripe.ApiList<Stripe.Event> = await stripeClient.events.list({
         created: { gte: sinceEpoch },
         limit: PAGE_SIZE,
@@ -185,22 +206,31 @@ export const GET = withErrorHandler(async (req: Request) => {
     }
 
     const hitMaxPages = pages >= MAX_PAGES && hasMore;
-    if (hitMaxPages) {
+    // R28-ALTA-3: budget-break e' semanticamente equivalente a hitMaxPages
+    // (abbiamo interrotto il drain, serve continuare al prossimo run). Unifichiamo.
+    const reachedLimit = hitMaxPages || budgetExceeded;
+    if (reachedLimit) {
       logger.warn(
-        { pages, totalFetched, minEventCreated, lastEventIdThisRun },
-        "Stripe reconciliation hit MAX_PAGES cap — backlog will continue next run",
+        {
+          pages,
+          totalFetched,
+          minEventCreated,
+          lastEventIdThisRun,
+          reason: budgetExceeded ? "run_budget" : "max_pages",
+        },
+        "Stripe reconciliation reached limit — backlog will continue next run",
       );
     }
 
-    // R24-P2-CRITICA: gestione cursor cross-run per backlog drain.
-    // - hitMaxPages: persist `lastEventIdThisRun` in Redis, NON advance since
+    // R24-P2-CRITICA + R28-ALTA-3: gestione cursor cross-run per backlog drain.
+    // - reachedLimit + lastEventIdThisRun: persist cursor, NON advance since
     //   → next run continua dallo stesso punto older.
-    // - failed > 0 (no cap): non advance since (idempotent retry).
-    // - Run completo (no cap, no fail): clear Redis cursor + advance since.
+    // - failed > 0 (no limit): non advance since (idempotent retry).
+    // - Run completo (no limit, no fail): clear Redis cursor + advance since.
     let nextSince: Date;
-    if (failed > 0 && !hitMaxPages) {
+    if (failed > 0 && !reachedLimit) {
       nextSince = since;
-    } else if (hitMaxPages && lastEventIdThisRun) {
+    } else if (reachedLimit && lastEventIdThisRun) {
       await redis
         .set(CURSOR_REDIS_KEY, lastEventIdThisRun, "EX", CURSOR_REDIS_TTL_SEC)
         .catch((err) => logger.error({ err }, "Failed to persist cursor"));
@@ -216,11 +246,13 @@ export const GET = withErrorHandler(async (req: Request) => {
     }
 
     const durationMs = Date.now() - runStartedAt.getTime();
-    const status: "GREEN" | "YELLOW" = failed === 0 && !hitMaxPages ? "GREEN" : "YELLOW";
+    const status: "GREEN" | "YELLOW" = failed === 0 && !reachedLimit ? "GREEN" : "YELLOW";
     const errMsg = failed > 0
       ? `${failed} replays failed`
-      : hitMaxPages
-        ? `MAX_PAGES cap — backlog drain continues next run`
+      : reachedLimit
+        ? budgetExceeded
+          ? `RUN_BUDGET_MS cap — backlog drain continues next run`
+          : `MAX_PAGES cap — backlog drain continues next run`
         : null;
     await db.channelSyncStatus.upsert({
       where: { channel: CHANNEL_KEY },

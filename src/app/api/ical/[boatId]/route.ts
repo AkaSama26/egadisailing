@@ -29,6 +29,10 @@ export const GET = withErrorHandler(async (req: Request, ...args: unknown[]) => 
     scope: RATE_LIMIT_SCOPES.ICAL_EXPORT_IP,
     limit: 30,
     windowSeconds: 60,
+    // R28-CRIT-3: fail-closed. Generation costly (DB aggregate + sort +
+    // iCal serialize). Consumer conformi (Google Cal/Airbnb/SamBoat)
+    // retentano o usano cache stale ETag.
+    failOpen: false,
   });
 
   const { boatId } = await ctx.params;

@@ -5,8 +5,9 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { parseIsoDay } from "@/lib/dates";
+import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
+import { createManualAlert } from "@/lib/charter/manual-alerts";
 import {
   detectCrossChannelConflicts,
   recordDoubleBookingIncident,
@@ -71,6 +72,19 @@ export async function importBokunBooking(
 
   // R14 cross-OTA: conflitti rilevati dentro la tx + recorded post-commit.
   let detectedConflicts: CrossChannelConflict[] = [];
+  // R28-ALTA-1: terminal-skip guard hit — se settato, emettiamo
+  // ManualAlert post-commit per riconciliare upstream vs locale.
+  // Wrap in un ref container per evitare il narrowing TypeScript che
+  // riduce a `never` quando il let e' scritto da callback chiusura.
+  interface TerminalSkipInfo {
+    boatId: string;
+    startDate: Date;
+    endDate: Date;
+    bookingId: string;
+    localStatus: BookingStatus;
+    incomingStatus: BookingStatus;
+  }
+  const terminalSkipRef: { value: TerminalSkipInfo | null } = { value: null };
 
   try {
     const result = await db.$transaction(async (tx) => {
@@ -104,6 +118,19 @@ export async function importBokunBooking(
             },
             "Bokun import: skipping non-terminal update on terminal booking (out-of-order protection)",
           );
+          // R28-ALTA-1: segnaliamo al caller che il guard e' stato hit — post-
+          // commit creeremo ManualAlert per riconciliare upstream. Senza, admin
+          // cancel-by-mistake lasciava Bokun upstream CONFIRMED senza alert →
+          // un webhook Boataround successivo non vedeva il booking Bokun
+          // CANCELLED nei conflict → double-booking cross-channel silent.
+          terminalSkipRef.value = {
+            boatId: existing.booking.boatId,
+            startDate: existing.booking.startDate,
+            endDate: existing.booking.endDate,
+            bookingId: existing.booking.id,
+            localStatus: existing.booking.status,
+            incomingStatus: status,
+          };
           return {
             booking: {
               id: existing.booking.id,
@@ -210,6 +237,30 @@ export async function importBokunBooking(
       },
       `Bokun booking ${result.mode}`,
     );
+
+    // R28-ALTA-1: post-commit ManualAlert per terminal-skip hit. Idempotent
+    // via partial unique (channel, boatId, date, action) WHERE status=PENDING.
+    // Multi-day booking → un alert per giorno. Non blocca il flow se fallisce.
+    const skipInfo = terminalSkipRef.value;
+    if (skipInfo) {
+      for (const day of eachUtcDayInclusive(skipInfo.startDate, skipInfo.endDate)) {
+        try {
+          await createManualAlert({
+            channel: "BOKUN",
+            boatId: skipInfo.boatId,
+            date: day,
+            action: "UNBLOCK",
+            bookingId: skipInfo.bookingId,
+            notes: `Booking locale ${skipInfo.localStatus} ma Bokun upstream invia ${skipInfo.incomingStatus}. Verificare Bokun panel: cancellare upstream o ripristinare locale.`,
+          });
+        } catch (err) {
+          logger.warn(
+            { err, bookingId: skipInfo.bookingId, day: day.toISOString() },
+            "Terminal-skip ManualAlert creation failed (non-blocking)",
+          );
+        }
+      }
+    }
 
     // R14: post-commit double-booking incident recording. Non nella tx
     // perche' fa side-effect rete (dispatch notification) + ManualAlert

@@ -1,14 +1,76 @@
+import { env } from "@/lib/env";
+import { ipInCidr, parseTrustedProxies, type CidrRange } from "./trusted-proxy";
+
+// R28-CRIT-4: parse once al boot. Lista CIDR trusted → se X-Forwarded-For
+// e' presente, walk right-to-left skippando hop trusted → primo non-trusted
+// = client vero. Previene spoofing per attaccante che bypassa Caddy/Cloudflare.
+// Default (lista vuota env): loopback + RFC1918 + ULA (copre Docker bridge).
+let trustedCache: CidrRange[] | null = null;
+function getTrusted(): CidrRange[] {
+  if (trustedCache) return trustedCache;
+  trustedCache = parseTrustedProxies(env.TRUSTED_PROXY_IPS);
+  return trustedCache;
+}
+
+// Export per test: invalidate cache dopo cambio env in test runner.
+export function resetTrustedProxiesCacheForTests(): void {
+  trustedCache = null;
+}
+
+function isValidIp(s: string): boolean {
+  // IPv4
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(s)) {
+    return s.split(".").every((p) => {
+      const n = Number(p);
+      return Number.isInteger(n) && n >= 0 && n <= 255;
+    });
+  }
+  // IPv6: permissive check (hex + colon, optional IPv4-mapped suffix).
+  if (/^[0-9a-fA-F:.]+$/.test(s) && s.includes(":")) return true;
+  return false;
+}
+
 /**
- * Extract client IP from request headers, honouring common proxy headers.
- * Order: cf-connecting-ip (Cloudflare) > x-real-ip > x-forwarded-for first hop.
+ * R28-CRIT-4: extract client IP con trust model esplicito.
+ *
+ * Priorita':
+ *  1. `X-Real-IP` (single-value, settato da Caddy con `{remote_host}`)
+ *  2. `CF-Connecting-IP` (single-value, settato da Cloudflare edge)
+ *  3. `X-Forwarded-For`: walk right-to-left skippando hop trusted.
+ *     Primo hop non-trusted = client reale. Se tutti trusted, primo hop
+ *     (back-compat). Se TRUSTED_PROXY_IPS non configurato, usa default
+ *     loopback+RFC1918+ULA (copre container-private networks standard).
+ *
+ * Prevenzione spoofing richiede firewall-level: l'origin app NON deve
+ * accettare connessioni direct (solo via Caddy). Documentato in
+ * docs/runbook/deployment.md.
  */
 export function getClientIp(headers: Headers): string {
-  const cf = headers.get("cf-connecting-ip");
-  if (cf) return cf.trim();
-  const real = headers.get("x-real-ip");
-  if (real) return real.trim();
-  const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
+  const real = headers.get("x-real-ip")?.trim();
+  if (real && isValidIp(real)) return real;
+
+  const cf = headers.get("cf-connecting-ip")?.trim();
+  if (cf && isValidIp(cf)) return cf;
+
+  const xff = headers.get("x-forwarded-for");
+  if (xff) {
+    const hops = xff
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const trusted = getTrusted();
+    // Walk right-to-left: gli hop piu' "vicini al server" sono in fondo
+    // (ultima riga aggiunta dal proxy piu' interno). Il primo hop non-
+    // trusted = client. Se TRUSTED_PROXY_IPS vuoto, default list copre
+    // Docker bridge + loopback → comportamento ragionevole in dev.
+    for (let i = hops.length - 1; i >= 0; i--) {
+      const hop = hops[i];
+      if (!isValidIp(hop)) continue;
+      const isTrusted = trusted.some((cidr) => ipInCidr(hop, cidr));
+      if (!isTrusted) return hop;
+    }
+    return hops[0] ?? "unknown";
+  }
   return "unknown";
 }
 

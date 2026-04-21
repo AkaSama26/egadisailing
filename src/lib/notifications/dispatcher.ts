@@ -19,6 +19,10 @@ import {
   paymentFailedTemplate,
   type PaymentFailedPayload,
 } from "./templates/payment-failed";
+import {
+  syncFailureTemplate,
+  type SyncFailurePayload,
+} from "./templates/sync-failure";
 import type { NotificationEvent } from "./events";
 
 interface RenderedTemplate {
@@ -128,7 +132,8 @@ function renderTemplate(event: NotificationEvent): RenderedTemplate | null {
       return doubleBookingTemplate(event.payload as unknown as DoubleBookingPayload);
     case "PAYMENT_FAILED":
       return paymentFailedTemplate(event.payload as unknown as PaymentFailedPayload);
-    // SYNC_FAILURE: template non ancora implementato, non-blocking
+    case "SYNC_FAILURE":
+      return syncFailureTemplate(event.payload as unknown as SyncFailurePayload);
     default:
       return null;
   }

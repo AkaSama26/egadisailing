@@ -109,6 +109,47 @@ async function seedServiceSocial() {
   return { boat, service };
 }
 
+// R28-CRIT-1: helper per test che assumono conflict-on-overlap.
+// Con SOCIAL_BOATING il pre-check #2 e' asymmetrico (non blocca shared-on-shared),
+// quindi test di retry-window / advisory-lock / overlap devono usare CABIN_CHARTER.
+async function seedServiceExclusive() {
+  const boat = await db.boat.create({
+    data: {
+      id: "b-exclusive",
+      name: "B-excl",
+      type: "TRIMARAN",
+      description: "t",
+      amenities: [],
+      images: [],
+    },
+  });
+  const service = await db.service.create({
+    data: {
+      id: "s-exclusive",
+      boatId: boat.id,
+      name: "Cabin charter",
+      type: "CABIN_CHARTER",
+      durationType: "FULL_DAY",
+      durationHours: 8,
+      capacityMax: 8,
+      minPaying: 1,
+      defaultPaymentSchedule: "FULL",
+      active: true,
+    },
+  });
+  await db.pricingPeriod.create({
+    data: {
+      serviceId: service.id,
+      label: "Test 2026",
+      startDate: new Date("2026-01-01"),
+      endDate: new Date("2026-12-31"),
+      pricePerPerson: "100.00",
+      year: 2026,
+    },
+  });
+  return { boat, service };
+}
+
 const baseInput = (overrides: Record<string, unknown> = {}) => ({
   serviceId: "s-social",
   startDate: new Date("2026-07-15T00:00:00.000Z"),
@@ -129,6 +170,12 @@ const baseInput = (overrides: Record<string, unknown> = {}) => ({
     ipAddress: "1.2.3.4",
     userAgent: "Mozilla/5.0",
   },
+  ...overrides,
+});
+
+const exclusiveInput = (overrides: Record<string, unknown> = {}) => ({
+  ...baseInput(),
+  serviceId: "s-exclusive",
   ...overrides,
 });
 
@@ -162,9 +209,10 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     expect(consents[0].privacyAccepted).toBe(true);
   });
 
-  it("R7 pre-check #2: booking overlap CONFIRMED → ConflictError", async () => {
-    const { service, boat } = await seedServiceSocial();
-    // Seed un booking CONFIRMED esistente stesso slot.
+  it("R7 pre-check #2: booking overlap CONFIRMED → ConflictError (CABIN_CHARTER)", async () => {
+    // R28-CRIT-1: pre-check #2 blocca overlap solo su CABIN_CHARTER/BOAT_EXCLUSIVE;
+    // SOCIAL_BOATING permette cohabitation (capacity-check separato).
+    const { service, boat } = await seedServiceExclusive();
     const customer = await db.customer.create({
       data: { email: "other@example.com", firstName: "O", lastName: "X" },
     });
@@ -189,25 +237,59 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     const { createPendingDirectBooking } = await import(
       "@/lib/booking/create-direct"
     );
-    await expect(createPendingDirectBooking(baseInput())).rejects.toThrow(
+    await expect(createPendingDirectBooking(exclusiveInput())).rejects.toThrow(
       /not available|overlap/i,
     );
   });
 
-  it("R20-A1-1 retry-window: stesso customer entro 44min → auto-cancel del vecchio PENDING", async () => {
-    await seedServiceSocial();
+  it("R28-C1: SOCIAL_BOATING overlap permesso (shared cohabitation)", async () => {
+    const { service, boat } = await seedServiceSocial();
+    const customer = await db.customer.create({
+      data: { email: "other@example.com", firstName: "O", lastName: "X" },
+    });
+    await db.booking.create({
+      data: {
+        confirmationCode: "EXIST002",
+        source: "DIRECT",
+        customerId: customer.id,
+        serviceId: service.id,
+        boatId: boat.id,
+        startDate: new Date("2026-07-15"),
+        endDate: new Date("2026-07-15"),
+        numPeople: 2,
+        totalPrice: "200.00",
+        status: "CONFIRMED",
+        directBooking: {
+          create: { paymentSchedule: "FULL", stripePaymentIntentId: "pi_existing_soc" },
+        },
+      },
+    });
+
+    const { createPendingDirectBooking } = await import(
+      "@/lib/booking/create-direct"
+    );
+    // Cliente nuovo social tour stesso giorno → OK (non più rigettato come pre-R28).
+    const res = await createPendingDirectBooking(baseInput());
+    expect(res.bookingId).toBeDefined();
+  });
+
+  it("R20-A1-1 retry-window: stesso customer entro 44min → auto-cancel del vecchio PENDING (exclusive)", async () => {
+    // R28-CRIT-1: il retry-window partitioning scatta solo quando il pre-check
+    // #2 trova conflitto (CABIN_CHARTER/BOAT_EXCLUSIVE). Per SOCIAL_BOATING il
+    // vecchio PENDING e' "overlap permesso" quindi non entra ne' in blocker
+    // ne' in ownRetriable → 2 PENDING coesistono (valido per social tour).
+    await seedServiceExclusive();
     const { createPendingDirectBooking } = await import(
       "@/lib/booking/create-direct"
     );
 
-    // Primo tentativo (nessun PI ancora attach-ato dal wizard).
-    const r1 = await createPendingDirectBooking(baseInput());
+    const r1 = await createPendingDirectBooking(exclusiveInput());
     expect(r1.bookingId).toBeDefined();
 
     // Secondo tentativo stesso customer, stesso slot, subito dopo
     // (simulating card_declined retry flow). R26-P4: il vecchio PENDING
     // senza PI e' ownRetriable → atomically cancelled in tx.
-    const r2 = await createPendingDirectBooking(baseInput());
+    const r2 = await createPendingDirectBooking(exclusiveInput());
     expect(r2.bookingId).toBeDefined();
     expect(r2.bookingId).not.toBe(r1.bookingId);
 
@@ -223,8 +305,10 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     expect(oldBooking?.status).toBe("CANCELLED");
   });
 
-  it("advisory lock: 2 richieste concorrenti → solo 1 crea, altro ConflictError", async () => {
-    const { service, boat } = await seedServiceSocial();
+  it("advisory lock: 2 richieste concorrenti → solo 1 crea, altro ConflictError (exclusive)", async () => {
+    // R28-CRIT-1: concorrenza con conflict detection richiede CABIN_CHARTER.
+    // Social permette cohabitation → entrambi succedono.
+    const { service, boat } = await seedServiceExclusive();
     const { createPendingDirectBooking } = await import(
       "@/lib/booking/create-direct"
     );
@@ -235,7 +319,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     // contemporaneamente — dovrebbero entrambi superare pre-check #1 ma il
     // pre-check #2 (overlap Booking) detecta l'altro PENDING.
 
-    const inputA = baseInput({
+    const inputA = exclusiveInput({
       customer: {
         email: "a@example.com",
         firstName: "A",
@@ -245,7 +329,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
         language: "it",
       },
     });
-    const inputB = baseInput({
+    const inputB = exclusiveInput({
       customer: {
         email: "b@example.com",
         firstName: "B",

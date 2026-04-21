@@ -71,6 +71,12 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    # R28-CRIT-5: grace period esteso per drain BullMQ workers (25s) +
+    # graceful close (5s) + margine HTTP in-flight Next (10s). Se un job
+    # Bokun e' in retry 22s (15s timeout + 1 retry 7s), il worker finisce
+    # prima del SIGKILL → no stalled recovery → no doppio POST upstream.
+    stop_grace_period: 45s
+    stop_signal: SIGTERM
     environment:
       NODE_ENV: production
       # DATABASE_URL direct (migrations + advisory locks require session-pool).

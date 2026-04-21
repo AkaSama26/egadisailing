@@ -172,8 +172,11 @@ model BokunPriceSync {
   lastError            String?
   createdAt            DateTime  @default(now())
 
+  // R28-CRIT-6: unique su (experienceId, date) per permettere upsert
+  // idempotent dal pricing worker — retry BullMQ / duplicate-enqueue
+  // non duplicano piu' la riga (audit fiscale pulito).
+  @@unique([bokunExperienceId, date])
   @@index([status])
-  @@index([bokunExperienceId, date])
 }
 
 // ═══════════════════════════════════════════════════════════

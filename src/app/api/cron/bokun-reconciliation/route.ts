@@ -29,6 +29,11 @@ const LEASE_NAME = LEASE_KEYS.BOKUN_RECONCILIATION;
 // Il cron gira ogni 5min; il lease deve coprire il run normale con margine.
 // TTL auto-libera se il processo crasha (Redis scade, no stale lock).
 const LEASE_TTL_SECONDS = 8 * 60;
+// R28-ALTA-3: soft-timeout per non superare il lease TTL. 2000 booking worst
+// × 1.5s = 3000s potenzialmente → lease 480s scade mid-run → altro replica
+// prende lease → doppio run concorrente. 6min cap lascia 2min margine per
+// upsert finale + finally. Pattern identico pending-gc RUN_BUDGET_MS.
+const RUN_BUDGET_MS = 6 * 60 * 1000;
 
 /**
  * Cron ogni 5 minuti che importa bookings Bokun aggiornati dopo l'ultimo
@@ -81,8 +86,23 @@ export const GET = withErrorHandler(async (req: Request) => {
     let totalHits = 0;
     let page = 1;
     let hasMore = true;
+    let budgetExceeded = false;
 
     while (hasMore && page <= MAX_PAGES) {
+      // R28-ALTA-3: break su budget per evitare overrun lease TTL.
+      if (Date.now() - runStartedAt.getTime() > RUN_BUDGET_MS) {
+        budgetExceeded = true;
+        logger.warn(
+          {
+            page,
+            imported,
+            failed,
+            elapsedMs: Date.now() - runStartedAt.getTime(),
+          },
+          "Bokun reconciliation stopped at RUN_BUDGET_MS — backlog continues next run",
+        );
+        break;
+      }
       const result = await searchBokunBookings({
         updatedSince: since.toISOString(),
         pageSize: PAGE_SIZE,
@@ -123,20 +143,33 @@ export const GET = withErrorHandler(async (req: Request) => {
       logger.warn({ page, totalHits }, "Bokun reconciliation hit MAX_PAGES cap");
     }
 
-    const nextSince = new Date(runStartedAt.getTime() - CLOCK_SKEW_BUFFER_MS);
+    // R28-ALTA-3: se abbiamo interrotto per budget o failure, NON avanzare
+    // il cursor `since` — il prossimo run ri-legge la stessa finestra
+    // (idempotent via bokunBookingId dedup). Se avanzassimo, i booking
+    // non ancora importati verrebbero persi dalla finestra successiva.
+    const nextSince =
+      budgetExceeded || failed > 0
+        ? since
+        : new Date(runStartedAt.getTime() - CLOCK_SKEW_BUFFER_MS);
     const durationMs = Date.now() - runStartedAt.getTime();
+    const healthStatus = failed === 0 && !budgetExceeded ? "GREEN" : "YELLOW";
+    const lastError = budgetExceeded
+      ? `budget exceeded @ page ${page}, ${imported} imported, ${failed} failed`
+      : failed > 0
+        ? `${failed} imports failed`
+        : null;
     await db.channelSyncStatus.upsert({
       where: { channel: CHANNELS.BOKUN },
       update: {
         lastSyncAt: nextSince,
-        healthStatus: failed === 0 ? "GREEN" : "YELLOW",
-        lastError: failed > 0 ? `${failed} imports failed` : null,
+        healthStatus,
+        lastError,
       },
       create: {
         channel: CHANNELS.BOKUN,
         lastSyncAt: nextSince,
-        healthStatus: failed === 0 ? "GREEN" : "YELLOW",
-        lastError: failed > 0 ? `${failed} imports failed` : null,
+        healthStatus,
+        lastError,
       },
     });
 

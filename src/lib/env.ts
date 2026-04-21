@@ -52,6 +52,15 @@ const envSchema = z.object({
   //   "egadisailing.com,www.egadisailing.com"
   SERVER_ACTIONS_ALLOWED_ORIGINS: z.string().optional(),
 
+  // R28-CRIT-4: CIDR list trusted proxy (comma-separated). Hop presenti
+  // in X-Forwarded-For e matchanti una CIDR di questa lista sono
+  // skippati durante il walk → il primo hop non-trusted e' il client
+  // reale. Se non configurato, fallback a default (loopback + RFC1918 +
+  // ULA IPv6) che copre Docker bridge standard. Senza firewall a livello
+  // infra (blocco porta app direct-to-origin), la trust list NON previene
+  // spoofing. Documentato in docs/runbook/deployment.md.
+  TRUSTED_PROXY_IPS: z.string().optional(),
+
   // Stripe
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_PUBLISHABLE_KEY: z.string().optional(),

@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { parseIsoDay } from "@/lib/dates";
+import { quotePrice } from "@/lib/pricing/service";
+import { NotFoundError } from "@/lib/errors";
 import type { BokunPricingSyncPayload } from "@/lib/queue/types";
 
 interface PricingJob {
@@ -48,11 +50,60 @@ export function startBokunPricingWorker() {
         return;
       }
 
+      // R28-CRIT-6: re-read DB via quotePrice PRIMA del POST Bokun. Prima:
+      // worker usava `data.amount` congelato al momento dell'enqueue. Con
+      // concurrency=2 + dedup jobId, se admin salva 120€ → poi 180€ entro
+      // 200ms, il primo job gia' `active` non veniva sostituito → 2 POST
+      // paralleli con amount diversi → ordine di arrivo upstream non
+      // deterministico → listino Bokun/Viator/GYG mostrava PREZZO VECCHIO.
+      // Revenue loss diretto €60/posto/giorno in alta stagione.
+      //
+      // Ora: rileggiamo PricingPeriod + HotDayRule/Override live dal DB.
+      // Ultimo job eseguito = stato finale pubblicato (eventual consistency).
+      const dateOnly = parseIsoDay(data.date);
+      let quote;
+      try {
+        quote = await quotePrice(data.serviceId, dateOnly, 1);
+      } catch (err) {
+        if (err instanceof NotFoundError) {
+          // PricingPeriod droppato tra enqueue ed execute: skip senza retry
+          // (BullMQ retry non risolve finche' admin non ri-configura). Il
+          // prossimo admin upsert riaccodera' il job.
+          logger.warn(
+            {
+              serviceId: data.serviceId,
+              date: data.date,
+              payloadAmount: data.amount,
+            },
+            "PricingPeriod missing — skipping Bokun price sync",
+          );
+          return;
+        }
+        throw err; // transient DB error → BullMQ retry
+      }
+
       const markup = new Decimal(env.BOKUN_PRICE_MARKUP);
-      const siteAmount = new Decimal(data.amount);
+      const freshAmount = quote.finalPricePerPerson;
       // Arrotonda per eccesso all'euro — Bokun non accetta frazioni di cent
       // diverse da quelle del proprio arrotondamento; integer e' safest.
-      const bokunAmount = siteAmount.mul(markup).toDecimalPlaces(0, Decimal.ROUND_CEIL).toNumber();
+      const bokunAmount = freshAmount
+        .mul(markup)
+        .toDecimalPlaces(0, Decimal.ROUND_CEIL)
+        .toNumber();
+
+      // Diagnostic log: payload diverge dal DB fresh (utile per monitorare
+      // coalescenza sub-ottimale del jobId dedup).
+      if (!freshAmount.equals(new Decimal(data.amount))) {
+        logger.info(
+          {
+            serviceId: data.serviceId,
+            date: data.date,
+            payloadAmount: data.amount,
+            freshAmount: freshAmount.toString(),
+          },
+          "Bokun pricing payload stale — using fresh DB value",
+        );
+      }
 
       const res = await upsertBokunPriceOverride({
         productId: service.bokunProductId,
@@ -60,14 +111,29 @@ export function startBokunPricingWorker() {
         amount: bokunAmount,
       });
 
-      await db.bokunPriceSync.create({
-        data: {
+      // R28-CRIT-6: upsert invece di create. Unique(bokunExperienceId, date)
+      // aggiunto via migration 20260421200500 permette idempotency su retry.
+      await db.bokunPriceSync.upsert({
+        where: {
+          bokunExperienceId_date: {
+            bokunExperienceId: service.bokunProductId,
+            date: dateOnly,
+          },
+        },
+        create: {
           bokunExperienceId: service.bokunProductId,
           bokunPriceOverrideId: res.id,
-          date: parseIsoDay(data.date),
+          date: dateOnly,
           amount: bokunAmount,
           status: "SYNCED",
           syncedAt: new Date(),
+        },
+        update: {
+          bokunPriceOverrideId: res.id,
+          amount: bokunAmount,
+          status: "SYNCED",
+          syncedAt: new Date(),
+          lastError: null,
         },
       });
     },

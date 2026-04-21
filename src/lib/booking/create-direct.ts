@@ -206,12 +206,37 @@ export async function createPendingDirectBooking(
     const retryWindowStart = new Date(Date.now() - DIRECT_RETRY_WINDOW_MS);
 
     // Step 1: trova TUTTI i booking overlapping PENDING/CONFIRMED.
+    //
+    // R28-CRIT-1: filtro asimmetrico per tipo servizio. Il pattern precedente
+    // (pre-R28) bloccava OGNI overlap stessa (boatId, date-range) —
+    // appropriato per boat-exclusive (CABIN_CHARTER/BOAT_EXCLUSIVE) ma ROMPE
+    // il modello tour condivisi (SOCIAL_BOATING 20 posti / BOAT_SHARED 12
+    // posti): secondo cliente riceveva ConflictError invece di passare a
+    // capacity-check normale.
+    //
+    // Logica asimmetrica:
+    //  - Nuovo booking EXCLUSIVE → blocca su QUALSIASI booking attivo stesso
+    //    slot (un cliente che compra la barca intera non puo' coesistere
+    //    con social tour gia' vendibile).
+    //  - Nuovo booking SHARED → blocca solo su booking EXCLUSIVE esistente
+    //    (2 shared stesso slot sono OK: sono letteralmente tour condivisi).
+    //
+    // Aligned con pattern Bokun/Boataround/Charter adapter + cross-channel-
+    // conflicts helper (gia' usavano filter service.type IN boat-exclusive).
+    const isNewBoatExclusive = ["CABIN_CHARTER", "BOAT_EXCLUSIVE"].includes(
+      service.type,
+    );
     const allConflicts = await tx.booking.findMany({
       where: {
         boatId: service.boatId,
         status: { in: ["PENDING", "CONFIRMED"] },
         startDate: { lte: endDay },
         endDate: { gte: startDay },
+        // Se nuovo e' shared, escludiamo altri shared dai conflitti
+        // (permettiamo cohabitation). Se exclusive, NO filter (tutti).
+        ...(isNewBoatExclusive
+          ? {}
+          : { service: { is: { type: { in: ["CABIN_CHARTER", "BOAT_EXCLUSIVE"] } } } }),
       },
       include: { directBooking: true },
     });

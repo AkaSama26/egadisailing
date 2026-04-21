@@ -5,10 +5,19 @@ import { logger } from "@/lib/logger";
 import type { Job as SyncJob, JobType } from "./types";
 
 const JOB_BACKOFF_BASE_MS = 60_000; // 1min → 2min → 4min → 8min → 16min
-const JOB_MAX_ATTEMPTS = 5;
+export const JOB_MAX_ATTEMPTS = 5;
 const JOB_COMPLETED_RETENTION = { count: 1000, age: 7 * 24 * 60 * 60 };
 const JOB_FAILED_RETENTION = { count: 5000 };
 const DEFAULT_WORKER_CONCURRENCY = 5;
+
+// R28-ALTA-4: dedup per SYNC_FAILURE dispatch. Burst di failed job stessa
+// queue + stesso errore (es. Bokun 400 product-not-found su 100 date per
+// boat) → altrimenti 100 email admin in pochi minuti. Dedup window 5min
+// per (queueName, errorCode) in-memory. Multi-replica: ogni pod manda
+// 1x/5min — tollerabile per deploy 1-3 replica (mitigazione Redis SETNX
+// eventualmente futura).
+const SYNC_FAILURE_DEDUP_WINDOW_MS = 5 * 60 * 1000;
+const syncFailureDedup = new Map<string, number>();
 
 /**
  * Singleton Redis via globalThis per sopravvivere all'HMR di Next in dev.
@@ -75,24 +84,61 @@ export function createWorker<T = unknown>(
     concurrency: options.concurrency ?? DEFAULT_WORKER_CONCURRENCY,
     limiter: options.limiter,
   });
-  worker.on("failed", (job, err) =>
+  worker.on("failed", (job, err) => {
     // R23-Q-ALTA-3: `name` e' il queueName (closure outer), non il job.name.
     // Distinguiamo i due nei log per poter diagnosticare: jobName = tipo
     // processore (availability.update / pricing.bokun.sync), queueName =
     // code dedicata. Stack troncato: 5 retry * 200 linee = 1k per job.
+    const errCode = (err as { code?: string }).code;
     logger.error(
       {
         jobId: job?.id,
         jobName: job?.name,
         queueName: name,
         attemptsMade: job?.attemptsMade,
-        errCode: (err as { code?: string }).code,
+        errCode,
         errMessage: err.message,
         errStack: err.stack?.slice(0, 2000),
       },
       "Job failed",
-    ),
-  );
+    );
+
+    // R28-ALTA-4: alert admin su final failure (attempts esauriti). Senza,
+    // DLQ cresceva silente — admin doveva visitare /admin/sync-log per
+    // scoprirla. Con 100+ failed job cross-channel drift garantito.
+    if (!job || job.attemptsMade < JOB_MAX_ATTEMPTS) return;
+    const dedupKey = `${name}|${errCode ?? "unknown"}`;
+    const lastAt = syncFailureDedup.get(dedupKey) ?? 0;
+    if (Date.now() - lastAt < SYNC_FAILURE_DEDUP_WINDOW_MS) return;
+    syncFailureDedup.set(dedupKey, Date.now());
+
+    // Dispatch async fire-and-forget (BullMQ non awaita il callback).
+    // Wrap try/catch per evitare unhandled rejection.
+    void (async () => {
+      try {
+        const { dispatchNotification, defaultNotificationChannels } = await import(
+          "@/lib/notifications/dispatcher"
+        );
+        await dispatchNotification({
+          type: "SYNC_FAILURE",
+          channels: defaultNotificationChannels(),
+          payload: {
+            queueName: name,
+            jobName: job.name,
+            jobId: String(job.id ?? "unknown"),
+            attemptsMade: job.attemptsMade,
+            errorCode: errCode,
+            errorMessage: err.message,
+          },
+        });
+      } catch (dispatchErr) {
+        logger.error(
+          { err: (dispatchErr as Error).message, queueName: name },
+          "SYNC_FAILURE dispatch failed",
+        );
+      }
+    })();
+  });
   worker.on("completed", (job) =>
     logger.debug(
       { jobId: job.id, jobName: job.name, queueName: name },

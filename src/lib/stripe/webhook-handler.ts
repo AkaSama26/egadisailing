@@ -451,33 +451,49 @@ async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   // stripeRefundId, (b) update original→REFUNDED **solo** su full refund
   // (partial lascia SUCCEEDED), (c) update booking→REFUNDED solo full.
 
-  // R27-CRIT-5: `charge.amount_refunded` e' CUMULATIVO. Su partial refund
-  // multipli (admin fa 3 refund €50 + €100 + €100 via dashboard Stripe),
-  // l'event emesso ad ogni operazione portava a sibling REFUND scritti con
-  // il TOTALE cumulativo (50, 150, 250) invece del delta (50, 100, 100) →
-  // KPI finanza double-count. Ora leggiamo l'amount del singolo refund dal
-  // refund object associato all'event (Stripe Events API: in charge.refunded
-  // il nuovo refund e' il primo di `refunds.data`, sorted newest first).
-  const refund = charge.refunds?.data[0];
-  const refundId = refund?.id;
-  const refundAmountCents = refund?.amount ?? charge.amount_refunded;
+  // R27-CRIT-5 + R28-ALTA-2: `charge.amount_refunded` e' CUMULATIVO; `refunds.data`
+  // contiene TUTTI i refund del charge (Stripe Events API). Ordering `data[]`
+  // non e' documentato garantito newest-first → pattern R27 di prendere
+  // `data[0]` era fragile.
+  //
+  // Pattern robusto find-by-not-exists: il NUOVO refund e' quello non ancora
+  // registrato come sibling Payment. Idempotency via unique stripeRefundId.
+  const allRefunds = charge.refunds?.data ?? [];
+  if (allRefunds.length === 0) {
+    throw new ValidationError(
+      "charge.refunded event without refunds.data — malformed payload",
+    );
+  }
+  const chargeRefundIds = allRefunds.map((r) => r.id);
+  const alreadyRecorded = await db.payment.findMany({
+    where: { stripeRefundId: { in: chargeRefundIds } },
+    select: { stripeRefundId: true },
+  });
+  const recordedSet = new Set(
+    alreadyRecorded.map((p) => p.stripeRefundId).filter((id): id is string => !!id),
+  );
+  // Trova il nuovo refund: quello non ancora in DB, piu' recente per created
+  // (deterministico anche se piu' di uno e' pending registration).
+  const newRefund = allRefunds
+    .filter((r) => !recordedSet.has(r.id))
+    .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0];
+  if (!newRefund) {
+    // Webhook replay di event gia' processato — tutti i refund registrati.
+    // ProcessedStripeEvent dedup gia' previene ma defense-in-depth.
+    logger.info(
+      { chargeId: charge.id, refundIds: chargeRefundIds },
+      "charge.refunded replay — all refunds already recorded, skipping",
+    );
+    return;
+  }
+  const refund = newRefund;
+  const refundId = refund.id;
+  const refundAmountCents = refund.amount;
   const isFullRefund = charge.amount_refunded === charge.amount;
 
-  // Idempotency: se sibling REFUND con stesso stripeRefundId esiste, webhook
-  // replay. Skip senza throw — dedup ProcessedStripeEvent gia' gestisce
-  // event replay, questo copre partial refund multipli con stesso refund.
-  if (refundId) {
-    const existingRefund = await db.payment.findUnique({
-      where: { stripeRefundId: refundId },
-    });
-    if (existingRefund) {
-      logger.info(
-        { refundId, paymentId: payment.id },
-        "Refund already recorded — idempotent skip",
-      );
-      return;
-    }
-  }
+  // R28-ALTA-2: idempotency gia' garantita dal find-by-not-exists sopra
+  // (filter `!recordedSet.has(r.id)`). Il check legacy findUnique+return
+  // e' ridondante e aggiungeva 1 query inutile.
 
   await db.$transaction(async (tx) => {
     // (a) sibling REFUND row — audit fiscale per mese del rimborso.
