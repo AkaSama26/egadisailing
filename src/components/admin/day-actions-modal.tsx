@@ -88,7 +88,7 @@ export function DayActionsModal({ boatId, boatName, day, onClose }: DayActionsMo
     >
       <div
         ref={dialogRef}
-        className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-y-auto animate-in zoom-in-95 duration-200"
       >
         {/* Header con data grande + status badge */}
         <header className="flex items-start justify-between gap-4 p-6 border-b bg-gradient-to-b from-slate-50 to-white">
@@ -127,12 +127,9 @@ export function DayActionsModal({ boatId, boatName, day, onClose }: DayActionsMo
           </button>
         </header>
 
-        {/* Body: info + azioni */}
+        {/* Body: info full-width top + azioni in grid 2-col */}
         <div className="p-6 space-y-6">
-          {/* Sezione INFO contestuale */}
           <InfoSection day={day} />
-
-          {/* Sezione AZIONI */}
           <ActionSection boatId={boatId} day={day} />
         </div>
 
@@ -245,19 +242,21 @@ function InfoSection({ day }: { day: DayCellEnriched }) {
 }
 
 /**
- * Sezione azioni: mostra Blocca + Rilascia come card separate verticali,
- * con quick-pick date (oggi, domani, weekend, +7gg) per velocizzare l'input.
- * Form stacked (non grid) per input piu' grandi e leggibili.
+ * Sezione azioni: Blocca + Rilascia in grid 2-col side-by-side (lg+) o
+ * stacked su mobile. Quick-pick date (oggi, domani, weekend, +7gg) per
+ * velocizzare compilazione range.
  */
 function ActionSection({ boatId, day }: { boatId: string; day: DayCellEnriched }) {
   const state = computeActionState(day);
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         Azioni
       </h3>
-      <BlockForm boatId={boatId} day={day} state={state} />
-      <ReleaseForm boatId={boatId} day={day} state={state} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <BlockForm boatId={boatId} day={day} state={state} />
+        <ReleaseForm boatId={boatId} day={day} state={state} />
+      </div>
     </div>
   );
 }
