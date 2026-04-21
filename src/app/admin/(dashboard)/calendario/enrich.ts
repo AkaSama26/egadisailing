@@ -50,17 +50,27 @@ export interface EnrichInput {
 export function enrichDayCells(input: EnrichInput): Map<string, DayCellEnriched[]> {
   const result = new Map<string, DayCellEnriched[]>();
 
+  // Availability map: key `${boatId}|${dateIso}`
+  const availMap = new Map<string, (typeof input.availability)[number]>();
+  for (const a of input.availability) {
+    const key = `${a.boatId}|${a.date.toISOString().slice(0, 10)}`;
+    availMap.set(key, a);
+  }
+
   for (const boat of input.boats) {
     const days: DayCellEnriched[] = [];
     const cursor = new Date(input.monthStart);
     while (cursor.getTime() <= input.monthEnd.getTime()) {
       const dateIso = cursor.toISOString().slice(0, 10);
+      const avail = availMap.get(`${boat.id}|${dateIso}`);
+      const isAdminBlock =
+        !!avail && avail.status === "BLOCKED" && avail.lockedByBookingId === null;
       days.push({
         date: new Date(cursor),
         dateIso,
-        status: "AVAILABLE",
+        status: avail?.status ?? "AVAILABLE",
         bookings: [],
-        isAdminBlock: false,
+        isAdminBlock,
       });
       cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
