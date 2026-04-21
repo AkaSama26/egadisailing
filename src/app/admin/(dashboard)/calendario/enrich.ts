@@ -77,6 +77,15 @@ export function extractAuditBlockInfo(
   return result;
 }
 
+/**
+ * Aggrega boats + availability + bookings + auditLogs in `Map<boatId, DayCellEnriched[]>`.
+ *
+ * Precondizione: `monthStart` e `monthEnd` devono essere timestamp UTC-midnight
+ * (usa `Date.UTC(year, month-1, day)` o `toUtcDay` helper). Input con offset
+ * timezone produce dateIso off-by-one in TZ > UTC (invariant #16 AGENTS).
+ *
+ * Pura: nessun side effect DB/IO. Testabile unit senza mock.
+ */
 export function enrichDayCells(input: EnrichInput): Map<string, DayCellEnriched[]> {
   const result = new Map<string, DayCellEnriched[]>();
 
