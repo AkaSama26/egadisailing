@@ -6,6 +6,10 @@ import {
   BookingStatus,
 } from "@/generated/prisma/enums";
 import { BookingTable, type BookingRow } from "@/components/admin/booking-table";
+import {
+  BOOKING_SOURCE_LABEL,
+  BOOKING_STATUS_LABEL,
+} from "@/lib/admin/labels";
 
 interface Props {
   searchParams: Promise<{ source?: string; status?: string }>;
@@ -72,19 +76,19 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
 
       <div className="space-y-2">
         <div className="flex gap-2 flex-wrap">
-          <span className="text-xs font-semibold text-slate-500 self-center mr-1">SOURCE:</span>
-          <FilterChip href="/admin/prenotazioni" label="Tutte" active={!sourceFilter} />
+          <span className="text-xs font-semibold text-slate-500 self-center mr-1">Canale:</span>
+          <FilterChip href="/admin/prenotazioni" label="Tutti" active={!sourceFilter} />
           {SOURCES.map((s) => (
             <FilterChip
               key={s}
               href={`/admin/prenotazioni?source=${s}${statusFilter ? `&status=${statusFilter}` : ""}`}
-              label={s}
+              label={BOOKING_SOURCE_LABEL[s]}
               active={sourceFilter === s}
             />
           ))}
         </div>
         <div className="flex gap-2 flex-wrap">
-          <span className="text-xs font-semibold text-slate-500 self-center mr-1">STATUS:</span>
+          <span className="text-xs font-semibold text-slate-500 self-center mr-1">Stato:</span>
           <FilterChip
             href={sourceFilter ? `/admin/prenotazioni?source=${sourceFilter}` : "/admin/prenotazioni"}
             label="Tutti"
@@ -94,7 +98,7 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
             <FilterChip
               key={s}
               href={`/admin/prenotazioni?${sourceFilter ? `source=${sourceFilter}&` : ""}status=${s}`}
-              label={s}
+              label={BOOKING_STATUS_LABEL[s]}
               active={statusFilter === s}
             />
           ))}

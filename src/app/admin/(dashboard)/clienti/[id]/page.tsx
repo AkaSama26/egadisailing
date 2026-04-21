@@ -6,6 +6,7 @@ import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { anonymizeCustomerAction } from "./actions";
 import { formatItDay } from "@/lib/dates";
+import { BOOKING_STATUS_LABEL, labelOrRaw } from "@/lib/admin/labels";
 
 export default async function ClienteDetailPage({
   params,
@@ -135,7 +136,7 @@ export default async function ClienteDetailPage({
                             : "text-slate-700"
                     }`}
                   >
-                    {b.status}
+                    {labelOrRaw(BOOKING_STATUS_LABEL, b.status)}
                   </span>
                 </div>
               </li>

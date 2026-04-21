@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
+import { BOOKING_SOURCE_LABEL, labelOrRaw } from "@/lib/admin/labels";
 
 export default async function FinanzaPage() {
   const now = new Date();
@@ -65,12 +66,12 @@ export default async function FinanzaPage() {
       </div>
 
       <section className="bg-white rounded-xl border p-5">
-        <h2 className="font-bold text-slate-900 mb-3">Per source (YTD)</h2>
+        <h2 className="font-bold text-slate-900 mb-3">Per canale (YTD)</h2>
         <ul className="text-sm divide-y divide-slate-100">
           {bySource.map((s) => (
             <li key={s.source} className="flex justify-between py-2">
               <span>
-                <strong>{s.source}</strong> · {s._count} prenotazioni
+                <strong>{labelOrRaw(BOOKING_SOURCE_LABEL, s.source)}</strong> · {s._count} prenotazioni
               </span>
               <span className="tabular-nums font-mono">
                 {formatEur(new Decimal(s._sum.totalPrice?.toString() ?? "0"))}

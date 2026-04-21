@@ -5,6 +5,16 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { formatItDay } from "@/lib/dates";
 import { BOAT_EXCLUSIVE_SERVICE_TYPES } from "@/lib/booking/cross-channel-conflicts";
 import {
+  BOOKING_STATUS_LABEL,
+  BOOKING_SOURCE_LABEL,
+  PAYMENT_STATUS_LABEL,
+  PAYMENT_METHOD_LABEL,
+  PAYMENT_TYPE_LABEL,
+  PAYMENT_SCHEDULE_LABEL,
+  SERVICE_TYPE_LABEL,
+  labelOrRaw,
+} from "@/lib/admin/labels";
+import {
   cancelBooking,
   addBookingNote,
   registerManualPayment,
@@ -70,8 +80,10 @@ export default async function BookingDetailPage({
             Prenotazione <span className="font-mono">{booking.confirmationCode}</span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Source: <strong>{booking.source}</strong> · Status:{" "}
-            <strong className={statusClass(booking.status)}>{booking.status}</strong>
+            Canale: <strong>{labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}</strong> · Stato:{" "}
+            <strong className={statusClass(booking.status)}>
+              {labelOrRaw(BOOKING_STATUS_LABEL, booking.status)}
+            </strong>
           </p>
         </div>
         {canCancel && (
@@ -103,7 +115,7 @@ export default async function BookingDetailPage({
             {conflicts.map((c) => (
               <li key={c.id} className="flex items-center gap-2 flex-wrap">
                 <span className="inline-block px-2 py-0.5 rounded text-xs bg-red-100 font-mono">
-                  {c.source}
+                  {labelOrRaw(BOOKING_SOURCE_LABEL, c.source)}
                 </span>
                 <a
                   href={`/admin/prenotazioni/${c.id}`}
@@ -115,7 +127,7 @@ export default async function BookingDetailPage({
                   · {c.service.name} · {formatItDay(c.startDate)}
                   {c.startDate.getTime() !== c.endDate.getTime() &&
                     ` → ${formatItDay(c.endDate)}`}{" "}
-                  · {c.status}
+                  · {labelOrRaw(BOOKING_STATUS_LABEL, c.status)}
                 </span>
               </li>
             ))}
@@ -131,7 +143,7 @@ export default async function BookingDetailPage({
       {isNonDirect && canCancel && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
           <strong>Attenzione</strong> — questo booking proviene da{" "}
-          <strong>{booking.source}</strong>. La cancellazione qui rilascia l'availability
+          <strong>{labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}</strong>. La cancellazione qui rilascia l'availability
           interna e crea un ManualAlert per ricordarti di cancellare anche sul pannello
           OTA esterno (Bokun UI, Boataround, ecc). L'API release NON cancella il booking
           upstream.
@@ -142,7 +154,7 @@ export default async function BookingDetailPage({
         <section className="bg-white rounded-xl border p-5 space-y-2">
           <h2 className="font-bold text-slate-900">Dettagli</h2>
           <Row label="Servizio" value={booking.service.name} />
-          <Row label="Tipo" value={booking.service.type} />
+          <Row label="Tipo" value={labelOrRaw(SERVICE_TYPE_LABEL, booking.service.type)} />
           <Row label="Barca" value={booking.boat.name} />
           <Row
             label="Date"
@@ -152,12 +164,15 @@ export default async function BookingDetailPage({
           <Row label="Totale" value={formatEur(booking.totalPrice.toString())} />
           {booking.directBooking && (
             <>
-              <Row label="Payment schedule" value={booking.directBooking.paymentSchedule} />
+              <Row
+                label="Tipo pagamento"
+                value={labelOrRaw(PAYMENT_SCHEDULE_LABEL, booking.directBooking.paymentSchedule)}
+              />
               {booking.directBooking.balanceAmount && (
                 <Row
                   label="Saldo"
                   value={`${formatEur(booking.directBooking.balanceAmount.toString())} · ${
-                    booking.directBooking.balancePaidAt ? "pagato" : "pendente"
+                    booking.directBooking.balancePaidAt ? "pagato" : "in attesa"
                   }`}
                 />
               )}
@@ -202,9 +217,11 @@ export default async function BookingDetailPage({
                 className="flex justify-between items-center border-b border-slate-100 pb-1 last:border-0"
               >
                 <span>
-                  <span className="font-medium">{p.type}</span> · {p.method} ·{" "}
+                  <span className="font-medium">{labelOrRaw(PAYMENT_TYPE_LABEL, p.type)}</span>
+                  {" · "}
+                  {labelOrRaw(PAYMENT_METHOD_LABEL, p.method)} ·{" "}
                   <span className={p.status === "SUCCEEDED" ? "text-emerald-700" : "text-slate-500"}>
-                    {p.status}
+                    {labelOrRaw(PAYMENT_STATUS_LABEL, p.status)}
                   </span>
                   {p.processedAt && (
                     <span className="text-xs text-slate-400 ml-2">

@@ -141,9 +141,9 @@ export default async function CalendarioPage({ searchParams }: Props) {
       <div className="bg-white rounded-xl border p-4 text-xs text-slate-600 space-y-1">
         <p className="font-semibold text-slate-900">Legenda:</p>
         <div className="flex gap-3 flex-wrap">
-          <LegendBadge className="bg-red-50 border-red-200">BLOCKED</LegendBadge>
-          <LegendBadge className="bg-amber-50 border-amber-200">PARTIALLY_BOOKED</LegendBadge>
-          <LegendBadge className="bg-white border-slate-200">AVAILABLE</LegendBadge>
+          <LegendBadge className="bg-red-50 border-red-200">Prenotato</LegendBadge>
+          <LegendBadge className="bg-amber-50 border-amber-200">Parzialmente prenotato</LegendBadge>
+          <LegendBadge className="bg-white border-slate-200">Disponibile</LegendBadge>
         </div>
         <p className="mt-2">Fino a 3 booking per cella; oltre mostra "+N".</p>
       </div>
