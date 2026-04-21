@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { CalendarGrid, type DayCell } from "@/components/admin/calendar-grid";
+import { DayActionsModal } from "@/components/admin/day-actions-modal";
 import type { DayCellEnriched } from "./enrich";
 
 export interface CalendarClientProps {
@@ -42,16 +43,12 @@ export function CalendarClient({ boatId, boatName, days, enriched }: CalendarCli
         onDayClick={(dateIso) => setSelectedDateIso(dateIso)}
       />
       {selectedDay && (
-        <div className="p-4 bg-yellow-50 border rounded mt-3 text-sm">
-          Modal placeholder — day: {selectedDay.dateIso}
-          <button
-            type="button"
-            className="ml-2 px-2 py-1 border rounded bg-white text-xs"
-            onClick={() => setSelectedDateIso(null)}
-          >
-            Chiudi
-          </button>
-        </div>
+        <DayActionsModal
+          boatId={boatId}
+          boatName={boatName}
+          day={selectedDay}
+          onClose={() => setSelectedDateIso(null)}
+        />
       )}
     </>
   );

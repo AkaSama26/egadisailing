@@ -83,7 +83,55 @@ export function DayActionsModal({ boatId, boatName, day, onClose }: DayActionsMo
           </button>
         </header>
         <div className="p-4 space-y-4">
-          <p className="text-sm text-slate-500">Modal in costruzione — task 3.2.</p>
+          {day.isAdminBlock && day.adminBlockInfo && (
+            <div className="bg-indigo-50 border-l-4 border-indigo-500 p-3 rounded text-sm">
+              <div className="font-semibold text-indigo-900">Blocco manuale admin</div>
+              {day.adminBlockInfo.reason ? (
+                <div className="text-slate-700 mt-1">Motivo: {day.adminBlockInfo.reason}</div>
+              ) : (
+                <div className="text-slate-500 mt-1 italic">
+                  Motivo non disponibile (rimosso per retention)
+                </div>
+              )}
+              <div className="text-xs text-slate-500 mt-1">
+                Bloccato il {formatItDay(new Date(day.adminBlockInfo.blockedAt))}
+              </div>
+            </div>
+          )}
+
+          {day.bookings.length === 0 && !day.isAdminBlock && (
+            <div className="bg-emerald-50 border border-emerald-200 p-3 rounded text-sm text-emerald-800">
+              ✓ Nessuna prenotazione su questa data
+            </div>
+          )}
+
+          {day.bookings.length > 0 && (
+            <div className="bg-amber-50 border-l-4 border-amber-500 p-3 rounded text-sm">
+              <div className="font-semibold text-amber-900 mb-2">
+                {day.bookings.length}{" "}
+                {day.bookings.length === 1 ? "prenotazione" : "prenotazioni"} su questa data
+              </div>
+              <ul className="space-y-1">
+                {day.bookings.map((b) => (
+                  <li key={b.id} className="flex items-center gap-2 flex-wrap text-xs">
+                    <span className="px-2 py-0.5 rounded bg-white font-mono">
+                      {labelOrRaw(BOOKING_SOURCE_LABEL, b.source)}
+                    </span>
+                    <a
+                      href={`/admin/prenotazioni/${b.id}`}
+                      className="font-mono font-semibold text-blue-700 underline hover:no-underline"
+                    >
+                      {b.confirmationCode}
+                    </a>
+                    <span className="text-slate-600">
+                      · {b.serviceName} · {b.customerName} ·{" "}
+                      {labelOrRaw(BOOKING_STATUS_LABEL, b.status)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
