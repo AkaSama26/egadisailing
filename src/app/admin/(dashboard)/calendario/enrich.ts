@@ -48,7 +48,24 @@ export interface EnrichInput {
 }
 
 export function enrichDayCells(input: EnrichInput): Map<string, DayCellEnriched[]> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  void input;
-  return new Map();
+  const result = new Map<string, DayCellEnriched[]>();
+
+  for (const boat of input.boats) {
+    const days: DayCellEnriched[] = [];
+    const cursor = new Date(input.monthStart);
+    while (cursor.getTime() <= input.monthEnd.getTime()) {
+      const dateIso = cursor.toISOString().slice(0, 10);
+      days.push({
+        date: new Date(cursor),
+        dateIso,
+        status: "AVAILABLE",
+        bookings: [],
+        isAdminBlock: false,
+      });
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+    result.set(boat.id, days);
+  }
+
+  return result;
 }
