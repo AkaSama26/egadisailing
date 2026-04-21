@@ -1,6 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  CalendarCheck,
+  CalendarX,
+  CalendarDays,
+  CheckCircle2,
+  Info,
+  Lock,
+  ExternalLink,
+  AlertTriangle,
+  X,
+} from "lucide-react";
 import type { DayCellEnriched } from "@/app/admin/(dashboard)/calendario/enrich";
 import {
   manualBlockRange,
@@ -58,103 +69,267 @@ export function DayActionsModal({ boatId, boatName, day, onClose }: DayActionsMo
   }, [boatId, day.dateIso]);
 
   const statusLabel = labelOrRaw(AVAILABILITY_STATUS_LABEL, day.status);
+  const statusBadgeClass =
+    day.status === "BLOCKED"
+      ? "bg-red-100 text-red-800 border-red-200"
+      : day.status === "PARTIALLY_BOOKED"
+        ? "bg-amber-100 text-amber-800 border-amber-200"
+        : "bg-emerald-100 text-emerald-800 border-emerald-200";
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="day-actions-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
         ref={dialogRef}
-        className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
       >
-        <header className="flex items-center justify-between p-4 border-b">
-          <div>
-            <h2 id="day-actions-title" className="font-bold text-slate-900">
+        {/* Header con data grande + status badge */}
+        <header className="flex items-start justify-between gap-4 p-6 border-b bg-gradient-to-b from-slate-50 to-white">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+              <CalendarDays className="size-4" aria-hidden="true" />
+              {boatName}
+            </div>
+            <h2
+              id="day-actions-title"
+              className="text-2xl font-bold text-slate-900 leading-tight"
+            >
               {formatItDay(day.date)}
             </h2>
-            <p className="text-xs text-slate-500">
-              {boatName} · {statusLabel}
-            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${statusBadgeClass}`}
+              >
+                {statusLabel}
+              </span>
+              {day.bookings.length > 0 && (
+                <span className="text-xs text-slate-500">
+                  {day.bookings.length}{" "}
+                  {day.bookings.length === 1 ? "prenotazione" : "prenotazioni"}
+                </span>
+              )}
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded hover:bg-slate-100"
+            className="p-2 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             aria-label="Chiudi"
           >
-            ✕
+            <X className="size-5" aria-hidden="true" />
           </button>
         </header>
-        <div className="p-4 space-y-4">
-          {day.isAdminBlock && day.adminBlockInfo && (
-            <div className="bg-indigo-50 border-l-4 border-indigo-500 p-3 rounded text-sm">
-              <div className="font-semibold text-indigo-900">Blocco manuale admin</div>
-              {day.adminBlockInfo.reason ? (
-                <div className="text-slate-700 mt-1">Motivo: {day.adminBlockInfo.reason}</div>
-              ) : (
-                <div className="text-slate-500 mt-1 italic">
-                  Motivo non disponibile (rimosso per retention)
-                </div>
-              )}
-              <div className="text-xs text-slate-500 mt-1">
-                Bloccato il {formatItDay(new Date(day.adminBlockInfo.blockedAt))}
-              </div>
-            </div>
-          )}
 
-          {day.bookings.length === 0 && !day.isAdminBlock && (
-            <div className="bg-emerald-50 border border-emerald-200 p-3 rounded text-sm text-emerald-800">
-              ✓ Nessuna prenotazione su questa data
-            </div>
-          )}
+        {/* Body: info + azioni */}
+        <div className="p-6 space-y-6">
+          {/* Sezione INFO contestuale */}
+          <InfoSection day={day} />
 
-          {day.bookings.length > 0 && (
-            <div className="bg-amber-50 border-l-4 border-amber-500 p-3 rounded text-sm">
-              <div className="font-semibold text-amber-900 mb-2">
-                {day.bookings.length}{" "}
-                {day.bookings.length === 1 ? "prenotazione" : "prenotazioni"} su questa data
-              </div>
-              <ul className="space-y-1">
-                {day.bookings.map((b) => (
-                  <li key={b.id} className="flex items-center gap-2 flex-wrap text-xs">
-                    <span className="px-2 py-0.5 rounded bg-white font-mono">
-                      {labelOrRaw(BOOKING_SOURCE_LABEL, b.source)}
-                    </span>
-                    <a
-                      href={`/admin/prenotazioni/${b.id}`}
-                      className="font-mono font-semibold text-blue-700 underline hover:no-underline"
-                    >
-                      {b.confirmationCode}
-                    </a>
-                    <span className="text-slate-600">
-                      · {b.serviceName} · {b.customerName} ·{" "}
-                      {labelOrRaw(BOOKING_STATUS_LABEL, b.status)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          <ActionForms boatId={boatId} day={day} />
+          {/* Sezione AZIONI */}
+          <ActionSection boatId={boatId} day={day} />
         </div>
+
+        {/* Footer con close button secondary */}
+        <footer className="px-6 py-4 border-t bg-slate-50/50 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all"
+          >
+            Chiudi
+          </button>
+        </footer>
       </div>
     </div>
   );
 }
 
-function ActionForms({ boatId, day }: { boatId: string; day: DayCellEnriched }) {
+function InfoSection({ day }: { day: DayCellEnriched }) {
+  // Admin-block info (indigo) — priorita' alta se presente
+  if (day.isAdminBlock && day.adminBlockInfo) {
+    return (
+      <section className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 size-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+            <Lock className="size-5 text-indigo-700" aria-hidden="true" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-indigo-900">Blocco manuale admin</h3>
+            {day.adminBlockInfo.reason ? (
+              <p className="text-sm text-slate-700 mt-1">
+                <span className="font-medium">Motivo:</span>{" "}
+                {day.adminBlockInfo.reason}
+              </p>
+            ) : (
+              <p className="text-sm text-slate-500 italic mt-1">
+                Motivo non disponibile (rimosso per retention)
+              </p>
+            )}
+            <p className="text-xs text-slate-500 mt-2">
+              Bloccato il {formatItDay(new Date(day.adminBlockInfo.blockedAt))}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Nessuna prenotazione + nessun blocco admin (giorno libero)
+  if (day.bookings.length === 0) {
+    return (
+      <section className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0 size-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+            <CheckCircle2 className="size-5 text-emerald-700" aria-hidden="true" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-emerald-900">Giorno libero</h3>
+            <p className="text-sm text-emerald-800 mt-0.5">
+              Nessuna prenotazione su questa data.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Lista prenotazioni (amber)
+  return (
+    <section className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
+      <div className="flex items-center gap-3 p-4 border-b border-amber-200 bg-amber-100/50">
+        <div className="flex-shrink-0 size-10 rounded-lg bg-amber-100 flex items-center justify-center">
+          <Info className="size-5 text-amber-700" aria-hidden="true" />
+        </div>
+        <h3 className="font-semibold text-amber-900">
+          {day.bookings.length}{" "}
+          {day.bookings.length === 1 ? "prenotazione" : "prenotazioni"} su questa data
+        </h3>
+      </div>
+      <ul className="divide-y divide-amber-200">
+        {day.bookings.map((b) => (
+          <li key={b.id} className="px-4 py-3 hover:bg-amber-100/30 transition-colors">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="px-2 py-0.5 rounded-md bg-white text-xs font-mono font-semibold border border-amber-200">
+                    {labelOrRaw(BOOKING_SOURCE_LABEL, b.source)}
+                  </span>
+                  <a
+                    href={`/admin/prenotazioni/${b.id}`}
+                    className="inline-flex items-center gap-1 text-sm font-mono font-semibold text-blue-700 hover:text-blue-900 hover:underline"
+                  >
+                    {b.confirmationCode}
+                    <ExternalLink className="size-3" aria-hidden="true" />
+                  </a>
+                </div>
+                <p className="text-sm text-slate-700">
+                  {b.serviceName} · {b.customerName}
+                </p>
+              </div>
+              <span className="text-xs font-medium px-2 py-1 rounded-full bg-white border border-slate-200 text-slate-600">
+                {labelOrRaw(BOOKING_STATUS_LABEL, b.status)}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/**
+ * Sezione azioni: mostra Blocca + Rilascia come card separate verticali,
+ * con quick-pick date (oggi, domani, weekend, +7gg) per velocizzare l'input.
+ * Form stacked (non grid) per input piu' grandi e leggibili.
+ */
+function ActionSection({ boatId, day }: { boatId: string; day: DayCellEnriched }) {
   const state = computeActionState(day);
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="space-y-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Azioni
+      </h3>
       <BlockForm boatId={boatId} day={day} state={state} />
       <ReleaseForm boatId={boatId} day={day} state={state} />
+    </div>
+  );
+}
+
+/** Quick-pick buttons che aggiornano startDate/endDate via ref all'input.
+ *  Usa `data-name-ref` come selector (non `name=` HTML perche' entrambi i
+ *  form Blocca/Rilascia usano `name="startDate"` standard per FormData). */
+function QuickDatePicks({
+  startRef,
+  endRef,
+  baseDateIso,
+  disabled,
+}: {
+  startRef: string;
+  endRef: string;
+  baseDateIso: string;
+  disabled?: boolean;
+}) {
+  const setRange = (from: string, to: string) => {
+    const fromInput = document.querySelector<HTMLInputElement>(
+      `input[data-name-ref="${startRef}"]`,
+    );
+    const toInput = document.querySelector<HTMLInputElement>(
+      `input[data-name-ref="${endRef}"]`,
+    );
+    if (fromInput) fromInput.value = from;
+    if (toInput) toInput.value = to;
+  };
+
+  const base = new Date(baseDateIso + "T00:00:00Z");
+  const toIso = (d: Date) => d.toISOString().slice(0, 10);
+  const addDays = (d: Date, n: number) => {
+    const copy = new Date(d);
+    copy.setUTCDate(copy.getUTCDate() + n);
+    return copy;
+  };
+
+  // Weekend piu' vicino (Sab + Dom). Se base e' lun-ven, prende sabato
+  // prossimo. Se base e' sabato o domenica, usa il weekend corrente.
+  const dayOfWeek = base.getUTCDay(); // 0=Dom, 6=Sab
+  const daysToSaturday = dayOfWeek === 6 ? 0 : dayOfWeek === 0 ? 6 : 6 - dayOfWeek;
+  const saturday = addDays(base, daysToSaturday);
+  const sunday = addDays(saturday, 1);
+
+  const picks = [
+    { label: "Oggi", from: baseDateIso, to: baseDateIso },
+    {
+      label: "Domani",
+      from: toIso(addDays(base, 1)),
+      to: toIso(addDays(base, 1)),
+    },
+    { label: "Weekend", from: toIso(saturday), to: toIso(sunday) },
+    {
+      label: "Prossimi 7gg",
+      from: baseDateIso,
+      to: toIso(addDays(base, 6)),
+    },
+  ];
+
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {picks.map((p) => (
+        <button
+          key={p.label}
+          type="button"
+          onClick={() => setRange(p.from, p.to)}
+          disabled={disabled}
+          className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {p.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -168,68 +343,112 @@ function BlockForm({
   day: DayCellEnriched;
   state: ActionState;
 }) {
+  const [pending, setPending] = useState(false);
   return (
     <form
       action={async (fd) => {
-        await manualBlockRange(
-          boatId,
-          String(fd.get("startDate")),
-          String(fd.get("endDate")),
-          String(fd.get("reason") ?? ""),
-        );
+        setPending(true);
+        try {
+          await manualBlockRange(
+            boatId,
+            String(fd.get("startDate")),
+            String(fd.get("endDate")),
+            String(fd.get("reason") ?? ""),
+          );
+        } finally {
+          setPending(false);
+        }
       }}
-      className={`space-y-2 p-3 border rounded-lg ${
+      className={`rounded-xl border p-5 transition-opacity ${
         state.canBlock
-          ? "bg-red-50/40 border-red-200"
+          ? "bg-gradient-to-br from-red-50 to-white border-red-200"
           : "bg-slate-50 border-slate-200 opacity-60"
       }`}
     >
-      <h3 className="font-semibold text-sm text-red-800">Blocca range</h3>
-      <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs">
-          Da
+      <div className="flex items-center gap-3 mb-4">
+        <div className="size-10 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+          <CalendarX className="size-5 text-red-700" aria-hidden="true" />
+        </div>
+        <div>
+          <h4 className="font-semibold text-red-900">Blocca range di date</h4>
+          <p className="text-xs text-red-700/80">
+            Rende lo slot non prenotabile su tutti i canali
+          </p>
+        </div>
+      </div>
+
+      {state.canBlock && (
+        <div className="mb-4">
+          <div className="text-xs font-medium text-slate-500 mb-2">
+            Seleziona rapida:
+          </div>
+          <QuickDatePicks
+            startRef="block-startDate"
+            endRef="block-endDate"
+            baseDateIso={day.dateIso}
+            disabled={!state.canBlock}
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Da</span>
           <input
             name="startDate"
-            type="date"
+            data-name-ref="block-startDate"
             defaultValue={day.dateIso}
-            className="block w-full border rounded px-2 py-1 text-sm"
+            type="date"
+            className="mt-1 block w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-slate-100"
             required
             disabled={!state.canBlock}
           />
         </label>
-        <label className="text-xs">
-          A
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">A</span>
           <input
             name="endDate"
-            type="date"
+            data-name-ref="block-endDate"
             defaultValue={day.dateIso}
-            className="block w-full border rounded px-2 py-1 text-sm"
+            type="date"
+            className="mt-1 block w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-slate-100"
             required
             disabled={!state.canBlock}
           />
         </label>
       </div>
-      <input
-        name="reason"
-        placeholder="Motivo (manutenzione, ferie...)"
-        maxLength={500}
-        className="w-full border rounded px-2 py-1 text-sm"
-        disabled={!state.canBlock}
-      />
+
+      <label className="block mb-3">
+        <span className="text-sm font-medium text-slate-700">Motivo</span>
+        <input
+          name="reason"
+          placeholder="es. manutenzione, ferie, evento privato..."
+          maxLength={500}
+          className="mt-1 block w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-slate-100"
+          disabled={!state.canBlock}
+        />
+      </label>
+
       {state.blockWarning && (
-        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-          ⚠ {state.blockWarning}
+        <div className="flex items-start gap-2 p-3 mb-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+          <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <span>{state.blockWarning}</span>
         </div>
       )}
-      {state.blockDisabledReason && (
-        <div className="text-xs text-slate-500">{state.blockDisabledReason}</div>
+      {state.blockDisabledReason && !state.canBlock && (
+        <div className="flex items-start gap-2 p-3 mb-3 rounded-lg bg-slate-100 text-sm text-slate-600">
+          <Info className="size-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <span>{state.blockDisabledReason}</span>
+        </div>
       )}
+
       <button
         type="submit"
-        disabled={!state.canBlock}
-        className="w-full bg-red-600 text-white rounded py-1.5 text-sm font-medium hover:bg-red-700 disabled:bg-slate-400 disabled:cursor-not-allowed"
+        disabled={!state.canBlock || pending}
+        className="w-full inline-flex items-center justify-center gap-2 bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-red-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
       >
-        Blocca
+        <CalendarX className="size-4" aria-hidden="true" />
+        {pending ? "Blocco in corso..." : "Blocca"}
       </button>
     </form>
   );
@@ -244,55 +463,94 @@ function ReleaseForm({
   day: DayCellEnriched;
   state: ActionState;
 }) {
+  const [pending, setPending] = useState(false);
   return (
     <form
       action={async (fd) => {
-        await manualReleaseRange(
-          boatId,
-          String(fd.get("startDate")),
-          String(fd.get("endDate")),
-        );
+        setPending(true);
+        try {
+          await manualReleaseRange(
+            boatId,
+            String(fd.get("startDate")),
+            String(fd.get("endDate")),
+          );
+        } finally {
+          setPending(false);
+        }
       }}
-      className={`space-y-2 p-3 border rounded-lg ${
+      className={`rounded-xl border p-5 transition-opacity ${
         state.canRelease
-          ? "bg-emerald-50/40 border-emerald-200"
+          ? "bg-gradient-to-br from-emerald-50 to-white border-emerald-200"
           : "bg-slate-50 border-slate-200 opacity-60"
       }`}
     >
-      <h3 className="font-semibold text-sm text-emerald-800">Rilascia range</h3>
-      <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs">
-          Da
+      <div className="flex items-center gap-3 mb-4">
+        <div className="size-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+          <CalendarCheck className="size-5 text-emerald-700" aria-hidden="true" />
+        </div>
+        <div>
+          <h4 className="font-semibold text-emerald-900">Rilascia range</h4>
+          <p className="text-xs text-emerald-700/80">
+            Rende le date di nuovo disponibili su tutti i canali
+          </p>
+        </div>
+      </div>
+
+      {state.canRelease && (
+        <div className="mb-4">
+          <div className="text-xs font-medium text-slate-500 mb-2">
+            Seleziona rapida:
+          </div>
+          <QuickDatePicks
+            startRef="release-startDate"
+            endRef="release-endDate"
+            baseDateIso={day.dateIso}
+            disabled={!state.canRelease}
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Da</span>
           <input
             name="startDate"
-            type="date"
+            data-name-ref="release-startDate"
             defaultValue={day.dateIso}
-            className="block w-full border rounded px-2 py-1 text-sm"
+            type="date"
+            className="mt-1 block w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-slate-100"
             required
             disabled={!state.canRelease}
           />
         </label>
-        <label className="text-xs">
-          A
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">A</span>
           <input
             name="endDate"
-            type="date"
+            data-name-ref="release-endDate"
             defaultValue={day.dateIso}
-            className="block w-full border rounded px-2 py-1 text-sm"
+            type="date"
+            className="mt-1 block w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-slate-100"
             required
             disabled={!state.canRelease}
           />
         </label>
       </div>
-      {state.releaseDisabledReason && (
-        <div className="text-xs text-slate-500">{state.releaseDisabledReason}</div>
+
+      {state.releaseDisabledReason && !state.canRelease && (
+        <div className="flex items-start gap-2 p-3 mb-3 rounded-lg bg-slate-100 text-sm text-slate-600">
+          <Info className="size-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <span>{state.releaseDisabledReason}</span>
+        </div>
       )}
+
       <button
         type="submit"
-        disabled={!state.canRelease}
-        className="w-full bg-emerald-600 text-white rounded py-1.5 text-sm font-medium hover:bg-emerald-700 disabled:bg-slate-400 disabled:cursor-not-allowed"
+        disabled={!state.canRelease || pending}
+        className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-emerald-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
       >
-        Rilascia
+        <CalendarCheck className="size-4" aria-hidden="true" />
+        {pending ? "Rilascio in corso..." : "Rilascia"}
       </button>
     </form>
   );
