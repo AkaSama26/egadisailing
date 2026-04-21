@@ -2,6 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import type { DayCellEnriched } from "@/app/admin/(dashboard)/calendario/enrich";
+import {
+  manualBlockRange,
+  manualReleaseRange,
+} from "@/app/admin/(dashboard)/calendario/actions";
 import { formatItDay } from "@/lib/dates";
 import {
   BOOKING_STATUS_LABEL,
@@ -9,6 +13,11 @@ import {
   AVAILABILITY_STATUS_LABEL,
   labelOrRaw,
 } from "@/lib/admin/labels";
+import { computeActionState, type ActionState } from "./day-actions-state";
+
+// Re-export for convenience (test helper lives in `day-actions-state.ts` —
+// keep split to avoid pulling Next server-actions into vitest transitive graph).
+export { computeActionState, type ActionState };
 
 export interface DayActionsModalProps {
   boatId: string;
@@ -132,8 +141,159 @@ export function DayActionsModal({ boatId, boatName, day, onClose }: DayActionsMo
               </ul>
             </div>
           )}
+
+          <ActionForms boatId={boatId} day={day} />
         </div>
       </div>
     </div>
+  );
+}
+
+function ActionForms({ boatId, day }: { boatId: string; day: DayCellEnriched }) {
+  const state = computeActionState(day);
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <BlockForm boatId={boatId} day={day} state={state} />
+      <ReleaseForm boatId={boatId} day={day} state={state} />
+    </div>
+  );
+}
+
+function BlockForm({
+  boatId,
+  day,
+  state,
+}: {
+  boatId: string;
+  day: DayCellEnriched;
+  state: ActionState;
+}) {
+  return (
+    <form
+      action={async (fd) => {
+        await manualBlockRange(
+          boatId,
+          String(fd.get("startDate")),
+          String(fd.get("endDate")),
+          String(fd.get("reason") ?? ""),
+        );
+      }}
+      className={`space-y-2 p-3 border rounded-lg ${
+        state.canBlock
+          ? "bg-red-50/40 border-red-200"
+          : "bg-slate-50 border-slate-200 opacity-60"
+      }`}
+    >
+      <h3 className="font-semibold text-sm text-red-800">Blocca range</h3>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-xs">
+          Da
+          <input
+            name="startDate"
+            type="date"
+            defaultValue={day.dateIso}
+            className="block w-full border rounded px-2 py-1 text-sm"
+            required
+            disabled={!state.canBlock}
+          />
+        </label>
+        <label className="text-xs">
+          A
+          <input
+            name="endDate"
+            type="date"
+            defaultValue={day.dateIso}
+            className="block w-full border rounded px-2 py-1 text-sm"
+            required
+            disabled={!state.canBlock}
+          />
+        </label>
+      </div>
+      <input
+        name="reason"
+        placeholder="Motivo (manutenzione, ferie...)"
+        maxLength={500}
+        className="w-full border rounded px-2 py-1 text-sm"
+        disabled={!state.canBlock}
+      />
+      {state.blockWarning && (
+        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+          ⚠ {state.blockWarning}
+        </div>
+      )}
+      {state.blockDisabledReason && (
+        <div className="text-xs text-slate-500">{state.blockDisabledReason}</div>
+      )}
+      <button
+        type="submit"
+        disabled={!state.canBlock}
+        className="w-full bg-red-600 text-white rounded py-1.5 text-sm font-medium hover:bg-red-700 disabled:bg-slate-400 disabled:cursor-not-allowed"
+      >
+        Blocca
+      </button>
+    </form>
+  );
+}
+
+function ReleaseForm({
+  boatId,
+  day,
+  state,
+}: {
+  boatId: string;
+  day: DayCellEnriched;
+  state: ActionState;
+}) {
+  return (
+    <form
+      action={async (fd) => {
+        await manualReleaseRange(
+          boatId,
+          String(fd.get("startDate")),
+          String(fd.get("endDate")),
+        );
+      }}
+      className={`space-y-2 p-3 border rounded-lg ${
+        state.canRelease
+          ? "bg-emerald-50/40 border-emerald-200"
+          : "bg-slate-50 border-slate-200 opacity-60"
+      }`}
+    >
+      <h3 className="font-semibold text-sm text-emerald-800">Rilascia range</h3>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-xs">
+          Da
+          <input
+            name="startDate"
+            type="date"
+            defaultValue={day.dateIso}
+            className="block w-full border rounded px-2 py-1 text-sm"
+            required
+            disabled={!state.canRelease}
+          />
+        </label>
+        <label className="text-xs">
+          A
+          <input
+            name="endDate"
+            type="date"
+            defaultValue={day.dateIso}
+            className="block w-full border rounded px-2 py-1 text-sm"
+            required
+            disabled={!state.canRelease}
+          />
+        </label>
+      </div>
+      {state.releaseDisabledReason && (
+        <div className="text-xs text-slate-500">{state.releaseDisabledReason}</div>
+      )}
+      <button
+        type="submit"
+        disabled={!state.canRelease}
+        className="w-full bg-emerald-600 text-white rounded py-1.5 text-sm font-medium hover:bg-emerald-700 disabled:bg-slate-400 disabled:cursor-not-allowed"
+      >
+        Rilascia
+      </button>
+    </form>
   );
 }
