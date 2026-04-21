@@ -186,8 +186,18 @@ export async function recordDoubleBookingIncident(input: RecordIncidentInput): P
 
   // Dispatch notification (fail-safe: ogni canale try/catch indipendente
   // dentro il dispatcher).
+  //
+  // R29-#4: verifica `DispatchResult.anyOk`. Prima: se Brevo+Telegram
+  // entrambi fallivano (Brevo 503 + TELEGRAM_BOT_TOKEN unset), l'admin
+  // NON riceveva alert silenziosamente. Il ManualAlert era salvato ma
+  // l'admin scopriva l'incident solo alla prossima visita dashboard.
+  // Per double-booking questo puo' voler dire cliente arriva al molo
+  // prima che admin reagisca.
+  // Ora: log `fatal` + marker DB su `ManualAlert.notes` se anyOk=false.
+  // Admin log aggregator (Sentry/CloudWatch alarm su level=fatal) avvisa
+  // un canale alternativo (SMS PagerDuty, Opsgenie) per escalation manuale.
   try {
-    await dispatchNotification({
+    const result = await dispatchNotification({
       type: "DOUBLE_BOOKING_DETECTED",
       channels: defaultNotificationChannels(),
       payload: {
@@ -204,10 +214,64 @@ export async function recordDoubleBookingIncident(input: RecordIncidentInput): P
         })),
       },
     });
+    if (!result.anyOk) {
+      logger.fatal(
+        {
+          newBookingId: input.newBookingId,
+          newConfirmationCode: input.newConfirmationCode,
+          emailOk: result.emailOk,
+          telegramOk: result.telegramOk,
+          conflictCount: input.conflicts.length,
+        },
+        "DOUBLE_BOOKING_DETECTED notification NOT DELIVERED — admin manual escalation required",
+      );
+      // Marker su ManualAlert per admin futuri che guardano la riga.
+      // Non blocca se la write fallisce (gia' sotto try).
+      await db.manualAlert
+        .updateMany({
+          where: {
+            channel: "CROSS_OTA_DOUBLE_BOOKING",
+            boatId: input.boatId,
+            date: dayKey,
+            bookingId: input.newBookingId,
+            status: "PENDING",
+          },
+          data: {
+            notes: {
+              // append-safe: Prisma non supporta string concat nativo, ricarico + riscrivo
+            } as never,
+          },
+        })
+        .catch(() => null);
+      // Best-effort: rileggo + prepend tag [NOTIFICATION_FAILED] nelle notes
+      // cosi' admin che apre sync-log vede subito lo stato.
+      const alert = await db.manualAlert.findFirst({
+        where: {
+          channel: "CROSS_OTA_DOUBLE_BOOKING",
+          boatId: input.boatId,
+          date: dayKey,
+          bookingId: input.newBookingId,
+          status: "PENDING",
+        },
+        select: { id: true, notes: true },
+      });
+      if (alert) {
+        await db.manualAlert
+          .update({
+            where: { id: alert.id },
+            data: {
+              notes: `[⚠ NOTIFICATION_FAILED — admin non notificato via email/telegram]\n${alert.notes ?? ""}`,
+            },
+          })
+          .catch((err) =>
+            logger.warn({ err }, "Failed to mark ManualAlert as NOTIFICATION_FAILED"),
+          );
+      }
+    }
   } catch (err) {
-    logger.error(
+    logger.fatal(
       { err, newBookingId: input.newBookingId },
-      "Failed to dispatch DOUBLE_BOOKING_DETECTED notification",
+      "DOUBLE_BOOKING_DETECTED dispatch throw (unexpected) — admin manual escalation required",
     );
   }
 }

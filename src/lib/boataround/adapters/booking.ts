@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { parseIsoDay } from "@/lib/dates";
+import { parseIsoDay, isoDay } from "@/lib/dates";
+import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import {
   detectCrossChannelConflicts,
   recordDoubleBookingIncident,
@@ -102,6 +103,15 @@ export async function importBoataroundBooking(
 
   try {
     const result = await db.$transaction(async (tx) => {
+      // R29-#1: advisory lock "availability" per (boatId, startDay) condiviso
+      // cross-adapter. Chiude race 0-50ms concurrent webhook Bokun+Boataround
+      // stesso slot che altrimenti skip-avano detectCrossChannelConflicts
+      // (entrambe tx invisibili l'una all'altra in READ COMMITTED pre-commit).
+      await acquireTxAdvisoryLock(tx, "availability", boat.id, isoDay(startDate));
+      // R29-#1b: lock per-platformBookingRef (Bokun ha bokun-booking, mancava
+      // simmetrico Boataround) → race webhook duplicato concorrente.
+      await acquireTxAdvisoryLock(tx, "boataround-booking", booking.id);
+
       const existing = await tx.charterBooking.findUnique({
         where: {
           platformName_platformBookingRef: {

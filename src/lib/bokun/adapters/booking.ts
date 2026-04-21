@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
+import { parseIsoDay, eachUtcDayInclusive, isoDay } from "@/lib/dates";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { createManualAlert } from "@/lib/charter/manual-alerts";
 import {
@@ -88,6 +88,23 @@ export async function importBokunBooking(
 
   try {
     const result = await db.$transaction(async (tx) => {
+      // R29-#1: advisory lock "availability" per (boatId, startDay) condiviso
+      // cross-adapter (DIRECT + Bokun + Boataround + Charter + blockDates).
+      // Serializza la CREAZIONE di booking stesso slot tra canali diversi
+      // → chiude la race 0-50ms dove 2 webhook concorrenti vedevano
+      // detectCrossChannelConflicts=[] (READ COMMITTED non rivela tx
+      // gemella in flight) → 2 CONFIRMED senza alert.
+      // Namespace allineato a create-direct.ts + availability/service.ts
+      // per avere UN SEMAFORO UNICO per tutto quello che tocca lo slot.
+      // Post-commit blockDates acquisisce lo stesso lock → tx seriale ma
+      // non deadlock (l'adapter tx ha gia' rilasciato).
+      await acquireTxAdvisoryLock(
+        tx,
+        "availability",
+        service.boatId,
+        isoDay(startDate),
+      );
+
       // R27-CRIT-2: advisory lock per-bokunBookingId serializza import concorrenti
       // sullo stesso booking. Senza, `findUnique` + `update` soffrivano race
       // out-of-order: webhook CANCEL committava T+600ms → webhook CREATE in

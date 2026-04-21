@@ -7,7 +7,8 @@ import { fromCents } from "@/lib/pricing/cents";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { blockDates, releaseDates } from "@/lib/availability/service";
 import { CHANNELS, type Channel } from "@/lib/channels";
-import { toUtcDay, parseDateLikelyLocalDay } from "@/lib/dates";
+import { toUtcDay, parseDateLikelyLocalDay, isoDay } from "@/lib/dates";
+import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import {
   detectCrossChannelConflicts,
   recordDoubleBookingIncident,
@@ -80,6 +81,23 @@ export async function importCharterBooking(
 
   try {
     const result = await db.$transaction(async (tx) => {
+      // R29-#1: advisory lock "availability" per (boatId, startDay) condiviso
+      // cross-adapter. Chiude race 0-50ms tra cron email-parser concorrente
+      // e webhook. Namespace allineato a create-direct.ts + Bokun/Boataround
+      // adapter + availability/service.ts → UN SEMAFORO UNICO per slot.
+      await acquireTxAdvisoryLock(
+        tx,
+        "availability",
+        input.boatId,
+        isoDay(input.startDate),
+      );
+      // R29-#1b: lock per-platformBookingRef (parser + re-run cron).
+      await acquireTxAdvisoryLock(
+        tx,
+        "charter-booking",
+        `${input.platform}:${input.platformBookingRef}`,
+      );
+
       const existing = await tx.charterBooking.findUnique({
         where: {
           platformName_platformBookingRef: {

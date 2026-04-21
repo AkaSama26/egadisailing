@@ -30,9 +30,36 @@ export default async function BookingDetailPage({
   });
   if (!booking) notFound();
 
+  // R29-#3: query booking CONFLITTUALI stessa barca+range+status attivo,
+  // source diversa. Se trovati → banner rosso double-booking con link
+  // cliccabili al sibling. Senza, admin doveva aprire /admin/sync-log,
+  // leggere notes testuali, copiare code e cercare a mano.
+  const conflicts = await db.booking.findMany({
+    where: {
+      id: { not: booking.id },
+      boatId: booking.boatId,
+      status: { in: ["PENDING", "CONFIRMED"] },
+      source: { not: booking.source },
+      startDate: { lte: booking.endDate },
+      endDate: { gte: booking.startDate },
+      service: { is: { type: { in: ["CABIN_CHARTER", "BOAT_EXCLUSIVE"] } } },
+    },
+    select: {
+      id: true,
+      confirmationCode: true,
+      source: true,
+      status: true,
+      startDate: true,
+      endDate: true,
+      service: { select: { name: true } },
+    },
+    take: 5,
+  });
+
   const cancelAction = cancelBooking.bind(null, booking.id);
   const canCancel = booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
   const isNonDirect = booking.source !== "DIRECT";
+  const hasConflicts = conflicts.length > 0;
 
   return (
     <div className="space-y-6">
@@ -58,6 +85,47 @@ export default async function BookingDetailPage({
           </form>
         )}
       </div>
+
+      {hasConflicts && (
+        <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 text-sm text-red-900 space-y-2">
+          <div className="flex items-start gap-2">
+            <span className="font-bold text-base">⚠ DOUBLE-BOOKING RILEVATO</span>
+          </div>
+          <p>
+            Questo booking e' in conflitto con{" "}
+            <strong>{conflicts.length}</strong>{" "}
+            {conflicts.length === 1 ? "altra prenotazione" : "altre prenotazioni"}{" "}
+            sulla stessa barca, stesse date, da canali diversi. Serve azione admin
+            per decidere quale mantenere + rimborsare/notificare l'altro cliente.
+          </p>
+          <ul className="space-y-1 mt-2">
+            {conflicts.map((c) => (
+              <li key={c.id} className="flex items-center gap-2 flex-wrap">
+                <span className="inline-block px-2 py-0.5 rounded text-xs bg-red-100 font-mono">
+                  {c.source}
+                </span>
+                <a
+                  href={`/admin/prenotazioni/${c.id}`}
+                  className="font-mono font-semibold underline hover:no-underline"
+                >
+                  {c.confirmationCode}
+                </a>
+                <span className="text-xs text-red-700">
+                  · {c.service.name} · {formatItDay(c.startDate)}
+                  {c.startDate.getTime() !== c.endDate.getTime() &&
+                    ` → ${formatItDay(c.endDate)}`}{" "}
+                  · {c.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-red-700 mt-2">
+            Se cancelli questo booking da qui, il cliente ricevera' un'email di
+            scuse con informazioni rimborso e contatti diretti (template
+            overbooking apology).
+          </p>
+        </div>
+      )}
 
       {isNonDirect && canCancel && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">

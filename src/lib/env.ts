@@ -72,6 +72,10 @@ const envSchema = z.object({
   BREVO_SENDER_EMAIL: z.string().email().default("noreply@egadisailing.com"),
   BREVO_SENDER_NAME: z.string().default("Egadisailing"),
   BREVO_REPLY_TO: z.string().email().optional(),
+  // R29-#2: contatto cliente per email overbooking apology (WhatsApp /
+  // telefono diretto admin). Opzionale: se unset, email mostra solo
+  // contact email (BREVO_REPLY_TO). Format libero (`+39 xxx xxx xxxx`).
+  CONTACT_PHONE: z.string().optional(),
 
   // Cloudflare Turnstile
   TURNSTILE_SITE_KEY: z.string().optional(),

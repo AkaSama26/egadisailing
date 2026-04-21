@@ -5,7 +5,10 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
 import { refundPayment, cancelPaymentIntent, getChargeRefundState } from "@/lib/stripe/payment-intents";
-import { fromCents } from "@/lib/pricing/cents";
+import { fromCents, formatEurCents } from "@/lib/pricing/cents";
+import { sendEmail } from "@/lib/email/brevo";
+import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
+import { env } from "@/lib/env";
 import { releaseDates } from "@/lib/availability/service";
 import { toCents } from "@/lib/pricing/cents";
 import { CHANNELS } from "@/lib/channels";
@@ -52,7 +55,7 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
     include: {
       payments: true,
       directBooking: true,
-      customer: { select: { firstName: true, lastName: true } },
+      customer: { select: { firstName: true, lastName: true, email: true } },
       service: { select: { name: true } },
     },
   });
@@ -89,6 +92,9 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
   // double-count €50. Ora rimborso + sibling record solo sul residuo.
   const refundErrors: Array<{ paymentId: string; message: string }> = [];
   let refundsSucceeded = 0;
+  // R29-#2: traccia il totale effettivamente rimborsato in questa sessione
+  // per mostrarlo al customer nell'email apology (se scatta).
+  let refundedCentsTotal = 0;
   for (const p of booking.payments) {
     if (p.status === "SUCCEEDED" && p.stripeChargeId && p.type !== "REFUND") {
       try {
@@ -106,6 +112,7 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
             "Admin cancel: charge fully refunded upstream, marking Payment REFUNDED only",
           );
           refundsSucceeded++;
+          refundedCentsTotal += state.refundedCents; // gia' rimborsato upstream
           continue;
         }
         const ref = await refundPayment(p.stripeChargeId, state.residualCents);
@@ -133,6 +140,7 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
           });
         });
         refundsSucceeded++;
+        refundedCentsTotal += state.residualCents;
       } catch (err) {
         const message = (err as Error).message;
         logger.error({ err, paymentId: p.id }, "Refund failed during admin cancel");
@@ -214,6 +222,50 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
     });
   } catch (err) {
     logger.warn({ err, bookingId }, "Cancel notification failed (non-blocking)");
+  }
+
+  // R29-#2: apology email customer se cancel e' causato da double-booking
+  // cross-OTA. Query ManualAlert PENDING/RESOLVED `CROSS_OTA_DOUBLE_BOOKING`
+  // per questo booking. Se esiste → cliente e' perdente dell'incident →
+  // email professionale con refund info + contatti diretti. Senza questo:
+  // cliente riceve solo la standard "booking cancellato" + scopre overbook
+  // arrivando al porto (reputation damage + rischio legale).
+  try {
+    const crossOtaAlert = await db.manualAlert.findFirst({
+      where: {
+        bookingId: booking.id,
+        channel: "CROSS_OTA_DOUBLE_BOOKING",
+      },
+      select: { id: true },
+    });
+    if (crossOtaAlert && booking.customer?.email && refundedCentsTotal > 0) {
+      const tpl = overbookingApologyTemplate({
+        customerName:
+          `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
+          "cliente",
+        confirmationCode: booking.confirmationCode,
+        serviceName: booking.service?.name ?? "la tua esperienza",
+        startDate: booking.startDate.toISOString().slice(0, 10),
+        refundAmount: formatEurCents(refundedCentsTotal),
+        contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+        contactPhone: env.CONTACT_PHONE,
+        bookingUrl: `${env.APP_URL}/b/sessione`,
+      });
+      const delivered = await sendEmail({
+        to: booking.customer.email,
+        subject: tpl.subject,
+        htmlContent: tpl.html,
+        textContent: tpl.text,
+      });
+      if (!delivered) {
+        logger.error(
+          { bookingId, customerEmail: booking.customer.email },
+          "Overbooking apology email failed — admin must contact customer manually",
+        );
+      }
+    }
+  } catch (err) {
+    logger.warn({ err, bookingId }, "Overbooking apology dispatch failed (non-blocking)");
   }
 
   revalidatePath(`/admin/prenotazioni/${bookingId}`);
