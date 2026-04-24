@@ -12,6 +12,51 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+// Task 2.5: mock Stripe + availability + queue + email.
+// vi.hoisted needed because vi.mock factories execute before top-level const init.
+const { refundPaymentMock, getChargeRefundStateMock, releaseDatesMock, blockDatesMock } =
+  vi.hoisted(() => ({
+    refundPaymentMock: vi
+      .fn()
+      .mockResolvedValue({ id: "re_test", status: "succeeded" }),
+    getChargeRefundStateMock: vi.fn().mockResolvedValue({
+      totalCents: 200000,
+      refundedCents: 0,
+      residualCents: 200000,
+    }),
+    releaseDatesMock: vi.fn().mockResolvedValue(undefined),
+    blockDatesMock: vi.fn().mockResolvedValue(undefined),
+  }));
+
+vi.mock("@/lib/stripe/payment-intents", () => ({
+  refundPayment: refundPaymentMock,
+  getChargeRefundState: getChargeRefundStateMock,
+  cancelPaymentIntent: vi.fn(),
+  createPaymentIntent: vi.fn(),
+}));
+
+vi.mock("@/lib/availability/service", () => ({
+  releaseDates: releaseDatesMock,
+  blockDates: blockDatesMock,
+  updateAvailability: vi.fn(),
+}));
+
+vi.mock("@/lib/queue", () => ({
+  getRedisConnection: () => ({ quit: vi.fn() }),
+  syncQueue: () => ({ add: vi.fn() }),
+  availBokunQueue: () => ({ add: vi.fn() }),
+  availBoataroundQueue: () => ({ add: vi.fn() }),
+  availManualQueue: () => ({ add: vi.fn() }),
+  pricingBokunQueue: () => ({ add: vi.fn() }),
+  getQueue: () => ({ add: vi.fn() }),
+  QUEUE_NAMES: { AVAIL_BOKUN: "x", AVAIL_BOATAROUND: "x", AVAIL_MANUAL: "x", PRICING_BOKUN: "x" },
+  ALL_QUEUE_NAMES: [],
+}));
+
+vi.mock("@/lib/email/brevo", () => ({
+  sendEmail: vi.fn().mockResolvedValue(true),
+}));
+
 beforeAll(async () => {
   db = await setupTestDb();
 });
@@ -275,5 +320,61 @@ describe("approveOverride", () => {
 
     const lauraUpdated = await db.booking.findUnique({ where: { id: laura.id } });
     expect(lauraUpdated?.status).toBe("CONFIRMED");
+  });
+
+  it("approva: triggers refund conflict + releaseDates + blockDates newBooking", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000.00", status: "CONFIRMED",
+    });
+    await db.payment.create({
+      data: {
+        bookingId: conflict.id, amount: "2000.00",
+        type: "FULL", method: "STRIPE", status: "SUCCEEDED",
+        stripeChargeId: "ch_test_conflict",
+        processedAt: new Date(),
+      },
+    });
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000.00", status: "PENDING",
+    });
+    const admin = await db.user.create({
+      data: { email: "admin-approve-post@t.com", passwordHash: "x", name: "A", role: "ADMIN" },
+    });
+    const req = await db.$transaction((tx) =>
+      createOverrideRequest(tx, {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        newBookingRevenue: new Decimal("3000"),
+        conflictingRevenueTotal: new Decimal("2000"),
+        dropDeadAt: new Date("2026-07-31"),
+      }),
+    );
+
+    // Reset mocks AFTER seed (seed doesn't call them, but safety)
+    refundPaymentMock.mockClear();
+    releaseDatesMock.mockClear();
+    blockDatesMock.mockClear();
+
+    const { approveOverride } = await import("@/lib/booking/override-request");
+    const result = await approveOverride(req.requestId, admin.id);
+
+    expect(result.approved).toBe(true);
+    expect(result.refundErrors).toEqual([]);
+
+    // Verify conflict booking passed through postCommitCancelBooking
+    expect(refundPaymentMock).toHaveBeenCalledWith("ch_test_conflict", 200000);
+    expect(releaseDatesMock).toHaveBeenCalled();
+
+    // Verify newBooking got blockDates
+    expect(blockDatesMock).toHaveBeenCalled();
+
+    // Verify Payment.status flipped to REFUNDED in DB
+    const refundedPayment = await db.payment.findFirst({
+      where: { bookingId: conflict.id },
+    });
+    expect(refundedPayment?.status).toBe("REFUNDED");
   });
 });

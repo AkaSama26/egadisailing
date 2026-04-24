@@ -10,6 +10,10 @@ import { NotFoundError, ValidationError } from "@/lib/errors";
 import { env } from "@/lib/env";
 import { isUpstreamCancelled } from "./override-reconcile";
 import { computeCancellationRate } from "./cancellation-rate";
+import { logger } from "@/lib/logger";
+import { blockDates } from "@/lib/availability/service";
+import { CHANNELS } from "@/lib/channels";
+import { postCommitCancelBooking } from "./post-commit-cancel";
 
 export interface CreateOverrideRequestInput {
   newBookingId: string;
@@ -222,12 +226,45 @@ export async function approveOverride(
     });
   });
 
-  // Post-commit side-effects: Stripe refund + fan-out + emails
-  // TODO(task-2.5): Stripe refund + releaseDates + blockDates
-  // TODO(task-2.6): email apology loser + conferma winner + audit log
+  // Post-commit side-effects (R10 BL-M4 pattern — no Stripe in DB tx)
+  const refundErrors: Array<{ paymentId: string; message: string }> = [];
+
+  // 1. Per ogni conflict: refund + releaseDates + audit via helper condiviso
+  for (const conflictId of request.conflictingBookingIds) {
+    const cancelResult = await postCommitCancelBooking({
+      bookingId: conflictId,
+      actorUserId: adminUserId,
+      reason: "override_approved",
+    });
+    refundErrors.push(...cancelResult.refundsFailed);
+  }
+
+  // 2. blockDates per newBooking (side-effect unico dell'approve)
+  const newBookingData = await db.booking.findUnique({
+    where: { id: request.newBookingId },
+    select: { boatId: true, startDate: true, endDate: true },
+  });
+  if (newBookingData) {
+    try {
+      await blockDates(
+        newBookingData.boatId,
+        newBookingData.startDate,
+        newBookingData.endDate,
+        CHANNELS.DIRECT,
+        request.newBookingId,
+      );
+    } catch (err) {
+      logger.error(
+        { err, bookingId: request.newBookingId },
+        "approveOverride: blockDates failed",
+      );
+    }
+  }
+
+  // TODO(task-2.6): email apology loser + conferma winner + audit approve
   return {
     approved: true,
-    refundErrors: [], // TODO(task-2.5): popolare con eventuali fail
+    refundErrors,
     emailsSent: 0, // TODO(task-2.6)
     emailsFailed: 0, // TODO(task-2.6)
   };
