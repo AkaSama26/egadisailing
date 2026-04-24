@@ -106,4 +106,15 @@ describe("checkOverrideEligibility", () => {
       expect(result.conflictingBookingIds).toEqual(["b1", "b2", "b3"]);
     }
   });
+
+  it("Decimal precision (€2000.01 vs €2000.00) → override_request", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      newBookingRevenue: new Decimal("2000.01"),
+      conflictingBookings: [
+        { id: "b1", revenue: new Decimal("2000.00"), isAdminBlock: false },
+      ],
+    });
+    expect(result.status).toBe("override_request");
+  });
 });
