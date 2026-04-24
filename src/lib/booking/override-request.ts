@@ -36,6 +36,43 @@ export async function createOverrideRequest(
   tx: Prisma.TransactionClient,
   input: CreateOverrideRequestInput,
 ): Promise<CreateOverrideRequestResult> {
-  // TODO: implement in task 2.2
-  throw new Error("not yet implemented");
+  // Verify newBooking exists and is PENDING
+  const newBooking = await tx.booking.findUnique({
+    where: { id: input.newBookingId },
+    select: { status: true },
+  });
+  if (!newBooking) {
+    throw new Error(`newBookingId ${input.newBookingId} not found`);
+  }
+  if (newBooking.status !== "PENDING") {
+    throw new Error(
+      `newBookingId ${input.newBookingId} not PENDING (is ${newBooking.status})`,
+    );
+  }
+
+  // Derive conflictSourceChannels if not provided (semantically correct default)
+  let conflictSourceChannels = input.conflictSourceChannels;
+  if (!conflictSourceChannels || conflictSourceChannels.length === 0) {
+    const conflicts = await tx.booking.findMany({
+      where: { id: { in: input.conflictingBookingIds } },
+      select: { source: true },
+    });
+    conflictSourceChannels = Array.from(new Set(conflicts.map((c) => c.source)));
+  }
+
+  const request = await tx.overrideRequest.create({
+    data: {
+      newBookingId: input.newBookingId,
+      conflictingBookingIds: input.conflictingBookingIds,
+      conflictSourceChannels,
+      newBookingRevenue: input.newBookingRevenue.toFixed(2),
+      conflictingRevenueTotal: input.conflictingRevenueTotal.toFixed(2),
+      dropDeadAt: input.dropDeadAt,
+      status: "PENDING",
+    },
+    select: { id: true },
+  });
+
+  // Supersede handling: see task 2.3
+  return { requestId: request.id, supersededRequestIds: [] };
 }
