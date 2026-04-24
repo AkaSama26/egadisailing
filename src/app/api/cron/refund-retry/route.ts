@@ -19,6 +19,7 @@ const LEASE_TTL_SECONDS = 10 * 60;
  * Fallimenti ripetuti segnati nei log — manual escalation via admin UI.
  */
 export const POST = withErrorHandler(async (req: Request) => {
+  requireBearerSecret(req, env.CRON_SECRET);
   await enforceRateLimit({
     identifier: "global",
     scope: RATE_LIMIT_SCOPES.REFUND_RETRY_CRON_IP,
@@ -26,7 +27,6 @@ export const POST = withErrorHandler(async (req: Request) => {
     windowSeconds: 60,
     failOpen: true,
   });
-  requireBearerSecret(req, env.CRON_SECRET);
 
   const lease = await tryAcquireLease(LEASE_KEYS.REFUND_RETRY, LEASE_TTL_SECONDS);
   if (!lease) {

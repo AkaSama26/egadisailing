@@ -18,6 +18,7 @@ const LEASE_TTL_SECONDS = 10 * 60;
  * Schedulato ogni ora minuto 15 (sfasato da reminders).
  */
 export const POST = withErrorHandler(async (req: Request) => {
+  requireBearerSecret(req, env.CRON_SECRET);
   await enforceRateLimit({
     identifier: "global",
     scope: RATE_LIMIT_SCOPES.OVERRIDE_DROPDEAD_CRON_IP,
@@ -25,7 +26,6 @@ export const POST = withErrorHandler(async (req: Request) => {
     windowSeconds: 60,
     failOpen: true,
   });
-  requireBearerSecret(req, env.CRON_SECRET);
 
   const lease = await tryAcquireLease(LEASE_KEYS.OVERRIDE_DROPDEAD, LEASE_TTL_SECONDS);
   if (!lease) {

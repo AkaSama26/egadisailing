@@ -24,6 +24,7 @@ const LEASE_TTL_SECONDS = 5 * 60;
  * secondario `reconcileCheckedAt IS NULL` in-query (small dataset <10k).
  */
 export const POST = withErrorHandler(async (req: Request) => {
+  requireBearerSecret(req, env.CRON_SECRET);
   await enforceRateLimit({
     identifier: "global",
     scope: RATE_LIMIT_SCOPES.OVERRIDE_RECONCILE_CRON_IP,
@@ -31,7 +32,6 @@ export const POST = withErrorHandler(async (req: Request) => {
     windowSeconds: 60,
     failOpen: true,
   });
-  requireBearerSecret(req, env.CRON_SECRET);
 
   const lease = await tryAcquireLease(LEASE_KEYS.OVERRIDE_RECONCILE, LEASE_TTL_SECONDS);
   if (!lease) {
