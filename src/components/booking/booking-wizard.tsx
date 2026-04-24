@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { StripePaymentForm } from "./stripe-payment-form";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
+import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
 
 type Step = "date" | "people" | "customer" | "payment" | "success";
 
@@ -115,6 +116,11 @@ export function BookingWizard(props: Props) {
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [consentPrivacy, setConsentPrivacy] = useState(false);
   const [consentTerms, setConsentTerms] = useState(false);
+  const [overrideCheck, setOverrideCheck] = useState<
+    | { status: "idle" }
+    | { status: "checking" }
+    | { status: "blocked"; reason: string; message: string }
+  >({ status: "idle" });
   // R26-P2-CRITICA: tracciamo se restore completato per gate save su dirty.
   // Senza, la prima saveDraft post-mount viene invocata con default vuoti
   // prima che il restore giunga → sovrascrive il draft salvato precedente.
@@ -226,6 +232,58 @@ export function BookingWizard(props: Props) {
     }
   }
 
+  async function handleContinueFromPax() {
+    setOverrideCheck({ status: "checking" });
+    try {
+      const result = await checkOverrideEligibilityAction({
+        serviceId: props.serviceId,
+        startDate: startDate,
+        endDate: startDate, // single-day booking — wizard doesn't yet support range
+        numPax: numPeople,
+      });
+      if (result.status === "blocked") {
+        const reasonMsg =
+          result.reason === "within_15_day_cutoff"
+            ? "Questa data non e' piu' disponibile — troppo vicina all'esperienza (meno di 15 giorni)."
+            : result.reason === "insufficient_revenue"
+            ? "Questa data e' gia' prenotata. Prova un'altra data."
+            : result.reason === "boat_block"
+            ? "Questa data e' stata bloccata dall'amministrazione (manutenzione)."
+            : result.reason === "feature_disabled"
+            ? // Feature flag OFF: comportamento legacy — procediamo allo step
+              // successivo, il controllo vero avverra' al createPendingDirectBooking.
+              null
+            : "Questa data non e' disponibile per questo pacchetto.";
+        if (reasonMsg === null) {
+          // feature disabled → legacy flow, avanza normalmente
+          setOverrideCheck({ status: "idle" });
+          setStep("customer");
+          return;
+        }
+        setOverrideCheck({
+          status: "blocked",
+          reason: result.reason,
+          message: reasonMsg,
+        });
+        return;
+      }
+      // "normal" | "override_request" → avanza step. In override_request il
+      // wizard non mostra nulla di diverso; la conferma "in attesa" arriva via
+      // email dopo createPendingDirectBooking (Task 3.3).
+      setOverrideCheck({ status: "idle" });
+      setStep("customer");
+    } catch (err) {
+      setOverrideCheck({
+        status: "blocked",
+        reason: "unknown",
+        message:
+          err instanceof Error
+            ? `Errore verifica disponibilita': ${err.message}`
+            : "Errore verifica disponibilita'. Riprova.",
+      });
+    }
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-2xl p-8">
       {error && (
@@ -247,13 +305,32 @@ export function BookingWizard(props: Props) {
       )}
 
       {step === "people" && (
-        <PeopleStep
-          capacityMax={props.capacityMax}
-          value={numPeople}
-          onChange={setNumPeople}
-          onBack={() => setStep("date")}
-          onNext={() => setStep("customer")}
-        />
+        <>
+          <PeopleStep
+            capacityMax={props.capacityMax}
+            value={numPeople}
+            onChange={setNumPeople}
+            onBack={() => setStep("date")}
+            onNext={() => void handleContinueFromPax()}
+          />
+          {overrideCheck.status === "checking" && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="text-sm text-gray-600 pt-2"
+            >
+              Verifica disponibilita' in corso...
+            </div>
+          )}
+          {overrideCheck.status === "blocked" && (
+            <div
+              role="alert"
+              className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3 mt-2"
+            >
+              {overrideCheck.message}
+            </div>
+          )}
+        </>
       )}
 
       {step === "customer" && (
