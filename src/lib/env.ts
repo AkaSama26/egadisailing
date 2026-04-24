@@ -101,8 +101,20 @@ const envSchema = z.object({
     .default("1.15")
     .refine((s) => !isNaN(parseFloat(s)) && parseFloat(s) >= 1, "must be a number >= 1.0"),
 
-  // Priority Override (Fase 1) — hard-block soglia cancellation rate per-channel
-  // (§13.10). Se il rate rolling 30gg di un canale supera questa soglia,
+  // Priority Override (Fase 1) — feature flags + soglie cancellation rate.
+  // Rollout graduale: master flag abilita lifecycle DIRECT-vs-DIRECT;
+  // OTA sub-flag abilita workflow admin checklist per conflict OTA.
+  FEATURE_OVERRIDE_ENABLED: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
+  FEATURE_OVERRIDE_OTA_ENABLED: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
+  // Soft warn soglia cancellation rate per-channel (dashboard KPI + admin UI).
+  OVERRIDE_CANCELLATION_RATE_SOFT_WARN: z.coerce.number().min(0).max(1).default(0.03),
+  // Hard-block (§13.10). Se il rate rolling 30gg di un canale supera questa soglia,
   // approveOverride blocca nuovi approve su quel canale finche' non scende.
   OVERRIDE_CANCELLATION_RATE_HARD_BLOCK: z.coerce.number().min(0).max(1).default(0.05),
 
