@@ -446,3 +446,65 @@ describe("approveOverride", () => {
     expect(auditLogs[0]?.userId).toBe(admin.id);
   });
 });
+
+describe("rejectOverride", () => {
+  it("rifiuta: cancella newBooking, refund, email, audit REJECTED", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000.00", status: "PENDING",
+    });
+    await db.payment.create({
+      data: {
+        bookingId: laura.id, amount: "3000.00",
+        type: "FULL", method: "STRIPE", status: "SUCCEEDED",
+        stripeChargeId: "ch_laura_new_reject",
+        processedAt: new Date(),
+      },
+    });
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000.00", status: "CONFIRMED",
+    });
+    const admin = await db.user.create({
+      data: { email: "admin-reject@t.com", passwordHash: "x", name: "A", role: "ADMIN" },
+    });
+    const req = await db.$transaction((tx) =>
+      createOverrideRequest(tx, {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        newBookingRevenue: new Decimal("3000"),
+        conflictingRevenueTotal: new Decimal("2000"),
+        dropDeadAt: new Date("2026-07-31"),
+      }),
+    );
+
+    refundPaymentMock.mockClear();
+    sendEmailMock.mockClear();
+    getChargeRefundStateMock.mockResolvedValueOnce({
+      totalCents: 300000,
+      refundedCents: 0,
+      residualCents: 300000,
+    });
+
+    const { rejectOverride } = await import("@/lib/booking/override-request");
+    const result = await rejectOverride(req.requestId, admin.id, "too aggressive");
+
+    expect(result.rejected).toBe(true);
+    expect(result.refundOk).toBe(true);
+
+    const lauraUpdated = await db.booking.findUnique({ where: { id: laura.id } });
+    expect(lauraUpdated?.status).toBe("CANCELLED");
+
+    // Conflict INVARIATO
+    const conflictUpdated = await db.booking.findUnique({ where: { id: conflict.id } });
+    expect(conflictUpdated?.status).toBe("CONFIRMED");
+
+    expect(refundPaymentMock).toHaveBeenCalledWith("ch_laura_new_reject", 300000);
+
+    const auditLogs = await db.auditLog.findMany({
+      where: { action: "OVERRIDE_REJECTED", entityId: req.requestId },
+    });
+    expect(auditLogs).toHaveLength(1);
+  });
+});

@@ -330,6 +330,102 @@ export async function approveOverride(
   return { approved: true, refundErrors, emailsSent, emailsFailed };
 }
 
+export interface RejectOverrideResult {
+  rejected: true;
+  refundOk: boolean;
+  emailOk: boolean;
+}
+
+/**
+ * Rifiuta un OverrideRequest.
+ * Cancella il newBooking + refund + releaseDates + email al customer.
+ * I conflicting booking NON vengono toccati (restano CONFIRMED — sono "protetti" dal rifiuto).
+ */
+export async function rejectOverride(
+  requestId: string,
+  adminUserId: string,
+  notes?: string,
+): Promise<RejectOverrideResult> {
+  const request = await db.overrideRequest.findUnique({
+    where: { id: requestId },
+    include: {
+      newBooking: {
+        include: {
+          customer: { select: { email: true, firstName: true, lastName: true } },
+          service: { select: { name: true } },
+        },
+      },
+    },
+  });
+  if (!request) throw new NotFoundError("OverrideRequest", requestId);
+  if (request.status !== "PENDING") {
+    throw new ValidationError(
+      `OverrideRequest ${requestId} non è PENDING (stato: ${request.status}).`,
+      { code: "OVERRIDE_REQUEST_NOT_PENDING", requestId, actualStatus: request.status },
+    );
+  }
+
+  // DB tx: update request + cancel newBooking
+  await db.$transaction(async (tx) => {
+    await tx.overrideRequest.update({
+      where: { id: requestId },
+      data: {
+        status: "REJECTED",
+        decidedAt: new Date(),
+        decidedByUserId: adminUserId,
+        decisionNotes: notes,
+      },
+    });
+    await tx.booking.update({
+      where: { id: request.newBookingId },
+      data: { status: "CANCELLED" },
+    });
+  });
+
+  // Post-commit: refund + release + audit via helper condiviso
+  const cancelResult = await postCommitCancelBooking({
+    bookingId: request.newBookingId,
+    actorUserId: adminUserId,
+    reason: "override_rejected",
+  });
+  const refundOk = cancelResult.refundsFailed.length === 0 && cancelResult.releaseOk;
+
+  // Email rejection (inline temporary — USE_IN_CHUNK_4_TASK_4.3)
+  let emailOk = true;
+  if (request.newBooking.customer?.email) {
+    try {
+      const alternatives = await findAlternativeDates(
+        request.newBooking.boatId,
+        request.newBooking.serviceId,
+        request.newBooking.startDate,
+        3,
+      );
+      const altStr = alternatives.map((d) => d.toISOString().slice(0, 10)).join(", ");
+      const delivered = await sendEmail({
+        to: request.newBooking.customer.email,
+        subject: `Prenotazione ${request.newBooking.confirmationCode} non approvata`,
+        htmlContent: `<p>Ci dispiace, la richiesta non è stata approvata. Rimborso in corso (5-10 giorni lavorativi).</p><p>Date alternative disponibili: ${altStr || "contattaci"}.</p>`,
+        textContent: `Ci dispiace, la richiesta non è stata approvata. Rimborso in corso. Date alternative: ${altStr || "contattaci"}.`,
+      });
+      if (!delivered) emailOk = false;
+    } catch (err) {
+      emailOk = false;
+      logger.error({ err, requestId }, "rejectOverride: sendEmail failed");
+    }
+  }
+
+  // Audit log a livello di request (il helper emette audit BOOKING_CANCELLED_BY_OVERRIDE)
+  await auditLog({
+    userId: adminUserId,
+    action: "OVERRIDE_REJECTED",
+    entity: "OverrideRequest",
+    entityId: requestId,
+    after: { newBookingId: request.newBookingId, notes, refundOk, emailOk },
+  });
+
+  return { rejected: true, refundOk, emailOk };
+}
+
 /**
  * Trova N date libere successive per suggerimento rebooking.
  * Scan dei 30 giorni successivi a `aroundDate`, ritorna le prime N senza booking attivi.
