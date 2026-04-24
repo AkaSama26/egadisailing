@@ -113,12 +113,64 @@ describe("createOverrideRequest", () => {
       where: { id: lauraRequest.requestId },
     });
     expect(lauraUpdated?.status).toBe("REJECTED");
-    expect(lauraUpdated?.decisionNotes).toContain("superseded");
+    expect(lauraUpdated?.decisionNotes).toContain("auto-superseded by request");
+    expect(lauraUpdated?.decisionNotes).toContain(sofiaRequest.requestId);
+    expect(lauraUpdated?.decisionNotes).toContain("€7500.00");
 
     const lauraBookingUpdated = await db.booking.findUnique({
       where: { id: laura.id },
     });
     expect(lauraBookingUpdated?.status).toBe("CANCELLED");
+  });
+
+  it("NON supersede richiesta a revenue pari (solo strict greater)", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const conflict = await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "1000.00",
+      status: "CONFIRMED",
+    });
+
+    const laura = await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "2000.00",
+      status: "PENDING",
+    });
+    const lauraRequest = await db.$transaction((tx) =>
+      createOverrideRequest(tx, {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        newBookingRevenue: new Decimal("2000.00"),
+        conflictingRevenueTotal: new Decimal("1000.00"),
+        dropDeadAt: new Date("2026-07-31"),
+      }),
+    );
+
+    // Sofia con STESSO revenue (2000) — NON deve superare Laura
+    const sofia = await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "2000.00",
+      status: "PENDING",
+    });
+    const sofiaRequest = await db.$transaction((tx) =>
+      createOverrideRequest(tx, {
+        newBookingId: sofia.id,
+        conflictingBookingIds: [conflict.id],
+        newBookingRevenue: new Decimal("2000.00"),
+        conflictingRevenueTotal: new Decimal("1000.00"),
+        dropDeadAt: new Date("2026-07-31"),
+      }),
+    );
+
+    expect(sofiaRequest.supersededRequestIds).toEqual([]);
+
+    const lauraUpdated = await db.overrideRequest.findUnique({
+      where: { id: lauraRequest.requestId },
+    });
+    expect(lauraUpdated?.status).toBe("PENDING"); // NOT rejected
   });
 
   it("supersede preserva conflictSourceChannels del request originale (multi-source)", async () => {

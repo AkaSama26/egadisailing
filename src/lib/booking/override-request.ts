@@ -36,10 +36,15 @@ export async function createOverrideRequest(
   tx: Prisma.TransactionClient,
   input: CreateOverrideRequestInput,
 ): Promise<CreateOverrideRequestResult> {
-  // Verify newBooking exists and is PENDING
+  // Verify newBooking exists and is PENDING; load slot fields for supersede overlap query
   const newBooking = await tx.booking.findUnique({
     where: { id: input.newBookingId },
-    select: { status: true },
+    select: {
+      status: true,
+      boatId: true,
+      startDate: true,
+      endDate: true,
+    },
   });
   if (!newBooking) {
     throw new Error(`newBookingId ${input.newBookingId} not found`);
@@ -78,19 +83,14 @@ export async function createOverrideRequest(
   // = newA.start <= newB.end AND newA.end >= newB.start
   const supersededIds: string[] = [];
 
-  const newBookingData = await tx.booking.findUniqueOrThrow({
-    where: { id: input.newBookingId },
-    select: { boatId: true, startDate: true, endDate: true },
-  });
-
   const inferiorRequests = await tx.overrideRequest.findMany({
     where: {
       id: { not: request.id },
       status: "PENDING",
       newBooking: {
-        boatId: newBookingData.boatId,
-        startDate: { lte: newBookingData.endDate },
-        endDate: { gte: newBookingData.startDate },
+        boatId: newBooking.boatId,
+        startDate: { lte: newBooking.endDate },
+        endDate: { gte: newBooking.startDate },
       },
       newBookingRevenue: { lt: input.newBookingRevenue.toFixed(2) },
     },
@@ -102,7 +102,7 @@ export async function createOverrideRequest(
       where: { id: inferior.id },
       data: {
         status: "REJECTED",
-        decisionNotes: "auto-superseded by higher revenue request",
+        decisionNotes: `auto-superseded by request ${request.id} (revenue €${input.newBookingRevenue.toFixed(2)})`,
         decidedAt: new Date(),
       },
     });
