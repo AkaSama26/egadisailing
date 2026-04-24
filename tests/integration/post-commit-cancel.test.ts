@@ -344,4 +344,25 @@ describe("postCommitCancelBooking", () => {
     const reloaded = await db.payment.findUnique({ where: { id: payment.id } });
     expect(reloaded?.status).toBe("REFUNDED");
   });
+
+  it("throws se booking status != CANCELLED (race window guard)", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const booking = await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "2000.00",
+      status: "CONFIRMED", // NOT cancelled
+    });
+
+    const { postCommitCancelBooking } = await import(
+      "@/lib/booking/post-commit-cancel"
+    );
+    await expect(
+      postCommitCancelBooking({
+        bookingId: booking.id,
+        actorUserId: null,
+        reason: "override_rejected",
+      }),
+    ).rejects.toThrow(/status CONFIRMED, expected CANCELLED/);
+  });
 });

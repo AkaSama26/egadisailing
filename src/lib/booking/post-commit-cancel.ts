@@ -41,6 +41,10 @@ import { fromCents } from "@/lib/pricing/cents";
  *    il caller a crearlo nella tx principale (coerente con cancel admin).
  *  - Usa `CHANNELS.DIRECT` per il fan-out release: consistent con admin-cancel
  *    (Round 10 BL-C2 + Int-M3) — un override decision e' source DIRECT.
+ *
+ * PRECONDITION: caller MUST commit `booking.status = CANCELLED` within the same
+ * tx that decided the cancellation. Guard at function head throws if status is
+ * not CANCELLED (fail-fast instead of silent side-effects on race).
  */
 
 export interface PostCommitCancelInput {
@@ -72,6 +76,16 @@ export async function postCommitCancelBooking(
   });
   if (!booking) {
     throw new Error(`postCommitCancelBooking: booking ${input.bookingId} not found`);
+  }
+
+  if (booking.status !== "CANCELLED") {
+    logger.error(
+      { bookingId: booking.id, actualStatus: booking.status, reason: input.reason },
+      "postCommitCancelBooking: booking not CANCELLED — race window detected, skipping side-effects",
+    );
+    throw new Error(
+      `postCommitCancelBooking: booking ${input.bookingId} has status ${booking.status}, expected CANCELLED. Caller must commit CANCELLED before calling.`,
+    );
   }
 
   const result: PostCommitCancelResult = {
