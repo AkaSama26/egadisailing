@@ -1,4 +1,6 @@
+import Decimal from "decimal.js";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { quotePrice } from "@/lib/pricing/service";
 import { toCents, fromCents } from "@/lib/pricing/cents";
@@ -12,6 +14,12 @@ import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
 import { deriveEndDate, generateConfirmationCode } from "./helpers";
 import { DIRECT_RETRY_WINDOW_MS } from "./constants";
+import {
+  checkOverrideEligibility as checkPureEligibility,
+  type OverrideEligibilityResult,
+} from "./override-eligibility";
+import { createOverrideRequest } from "./override-request";
+import { postCommitCancelBooking } from "./post-commit-cancel";
 
 export interface ConsentInput {
   privacyAccepted: boolean;
@@ -50,6 +58,15 @@ export interface CreatedBooking {
   depositAmountCents: number;
   balanceAmountCents: number;
   upfrontAmountCents: number;
+  /**
+   * Set only when FEATURE_OVERRIDE_ENABLED=true AND the booking was created
+   * via the priority override path (conflitti esistenti ma eligibility=override_request).
+   * Consumed by the caller to trigger admin email + wizard "in attesa" UI.
+   */
+  overrideRequest?: {
+    requestId: string;
+    supersededRequestIds: string[];
+  };
 }
 
 /**
@@ -289,13 +306,43 @@ export async function createPendingDirectBooking(
       }
     }
 
+    let overrideEligibility: OverrideEligibilityResult | null = null;
     if (blockers.length > 0) {
-      throw new ConflictError("Dates not available (overlapping active booking)", {
+      if (!env.FEATURE_OVERRIDE_ENABLED) {
+        throw new ConflictError("Dates not available (overlapping active booking)", {
+          conflictingBookings: blockers.map((b) => ({
+            code: b.confirmationCode,
+            source: b.source,
+          })),
+        });
+      }
+      // Defense-in-depth: re-check eligibility inside advisory lock.
+      // The Server Action at wizard "Continua" already did this, but slot state
+      // may have shifted between that call and the $transaction.
+      overrideEligibility = checkPureEligibility({
+        newBookingRevenue: new Decimal(quote.totalPrice.toString()),
         conflictingBookings: blockers.map((b) => ({
-          code: b.confirmationCode,
-          source: b.source,
+          id: b.id,
+          revenue: new Decimal(b.totalPrice.toString()),
+          isAdminBlock: false,
         })),
+        experienceDate: startDay,
+        today: new Date(),
       });
+      if (overrideEligibility.status === "blocked") {
+        throw new ConflictError(
+          `Dates not available (reason=${overrideEligibility.reason})`,
+          {
+            conflictingBookings: blockers.map((b) => ({
+              code: b.confirmationCode,
+              source: b.source,
+            })),
+            overrideReason: overrideEligibility.reason,
+          },
+        );
+      }
+      // status === "override_request" → continue to create Booking (and
+      // OverrideRequest below).
     }
 
     // Step 3: cancella atomicamente i propri PENDING retriabili. Questo
@@ -353,11 +400,27 @@ export async function createPendingDirectBooking(
       },
     });
 
+    let overrideRequestResult: {
+      requestId: string;
+      supersededRequestIds: string[];
+    } | null = null;
+    if (overrideEligibility?.status === "override_request") {
+      overrideRequestResult = await createOverrideRequest(tx, {
+        newBookingId: created.id,
+        conflictingBookingIds: overrideEligibility.conflictingBookingIds,
+        newBookingRevenue: new Decimal(quote.totalPrice.toString()),
+        conflictingRevenueTotal: overrideEligibility.conflictingRevenueTotal,
+        dropDeadAt: overrideEligibility.dropDeadAt,
+        // conflictSourceChannels omesso → createOverrideRequest lo deriva dal DB.
+      });
+    }
+
     return {
       created,
       cancelledPiIds: ownRetriable
         .map((r) => r.directBooking?.stripePaymentIntentId)
         .filter((pi): pi is string => !!pi),
+      overrideRequestResult,
     };
   });
 
@@ -376,6 +439,39 @@ export async function createPendingDirectBooking(
       });
   }
 
+  // Post-commit side-effects per ogni OverrideRequest superseded: il newBooking
+  // associato e' gia' stato marcato CANCELLED nella tx da createOverrideRequest
+  // (supersede block). Qui trigger refund + release + audit via helper condiviso.
+  // Error-tolerant: un fallimento non blocca il booking flow principale (il
+  // nuovo cliente ha gia' il suo PENDING). Manuale recovery via admin se serve.
+  if (
+    result.overrideRequestResult &&
+    result.overrideRequestResult.supersededRequestIds.length > 0
+  ) {
+    for (const supersededId of result.overrideRequestResult.supersededRequestIds) {
+      try {
+        const superseded = await db.overrideRequest.findUnique({
+          where: { id: supersededId },
+          select: { newBookingId: true },
+        });
+        if (superseded) {
+          // postCommitCancelBooking precondition: newBooking.status = CANCELLED,
+          // gia' garantito da createOverrideRequest nella tx principale.
+          await postCommitCancelBooking({
+            bookingId: superseded.newBookingId,
+            actorUserId: null,
+            reason: "override_superseded",
+          });
+        }
+      } catch (err) {
+        logger.error(
+          { err, supersededId },
+          "createPendingDirectBooking: supersede post-commit side-effects failed",
+        );
+      }
+    }
+  }
+
   const upfrontCents = input.paymentSchedule === "DEPOSIT_BALANCE" ? depositCents : totalCents;
 
   return {
@@ -385,5 +481,11 @@ export async function createPendingDirectBooking(
     depositAmountCents: depositCents,
     balanceAmountCents: balanceCents,
     upfrontAmountCents: upfrontCents,
+    overrideRequest: result.overrideRequestResult
+      ? {
+          requestId: result.overrideRequestResult.requestId,
+          supersededRequestIds: result.overrideRequestResult.supersededRequestIds,
+        }
+      : undefined,
   };
 }
