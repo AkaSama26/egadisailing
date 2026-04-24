@@ -6,7 +6,16 @@ export type NotificationType =
   | "PAYMENT_FAILED"
   | "SYNC_FAILURE"
   | "WEATHER_ALERT"
-  | "DOUBLE_BOOKING_DETECTED";
+  | "DOUBLE_BOOKING_DETECTED"
+  // Fase 1 Trimarano — priority override system
+  | "OVERRIDE_REQUESTED"
+  | "OVERRIDE_REMINDER"
+  | "OVERRIDE_APPROVED"
+  | "OVERRIDE_REJECTED"
+  | "OVERRIDE_EXPIRED"
+  | "OVERRIDE_SUPERSEDED"
+  | "OVERRIDE_RECONCILE_FAILED"
+  | "CROSS_CHANNEL_CONFLICT";
 
 export type NotificationChannel = "EMAIL" | "TELEGRAM";
 
@@ -34,4 +43,15 @@ export const CHANNEL_DEFAULTS: Record<NotificationType, NotificationChannel[]> =
   // Double-booking e' evento urgente (cliente stopped/embarassment rischio) —
   // TELEGRAM attivo se configurato per escalation rapida.
   DOUBLE_BOOKING_DETECTED: ["EMAIL", "TELEGRAM"],
+  // Fase 1 Trimarano — priority override system.
+  // Customer-facing (EMAIL only — no telegram broadcast):
+  OVERRIDE_REQUESTED: ["EMAIL"],
+  OVERRIDE_APPROVED: ["EMAIL"],
+  OVERRIDE_REJECTED: ["EMAIL"],
+  OVERRIDE_EXPIRED: ["EMAIL"],
+  OVERRIDE_SUPERSEDED: ["EMAIL"],
+  // Admin-facing (EMAIL + TELEGRAM escalation):
+  OVERRIDE_REMINDER: ["EMAIL"],
+  OVERRIDE_RECONCILE_FAILED: ["EMAIL", "TELEGRAM"],
+  CROSS_CHANNEL_CONFLICT: ["EMAIL", "TELEGRAM"],
 };

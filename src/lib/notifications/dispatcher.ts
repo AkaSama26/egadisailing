@@ -23,6 +23,12 @@ import {
   syncFailureTemplate,
   type SyncFailurePayload,
 } from "./templates/sync-failure";
+import { bookingPendingOverrideConfirmationTemplate } from "@/lib/email/templates/booking-pending-override-confirmation";
+import { overrideApprovedWinnerTemplate } from "@/lib/email/templates/override-approved-winner";
+import { overrideRejectedWinnerTemplate } from "@/lib/email/templates/override-rejected-winner";
+import { overrideExpiredTemplate } from "@/lib/email/templates/override-expired";
+import { overrideSupersededTemplate } from "@/lib/email/templates/override-superseded";
+import { overrideReconcileFailedAdminTemplate } from "@/lib/email/templates/override-reconcile-failed-admin";
 import type { NotificationEvent } from "./events";
 
 interface RenderedTemplate {
@@ -134,6 +140,60 @@ function renderTemplate(event: NotificationEvent): RenderedTemplate | null {
       return paymentFailedTemplate(event.payload as unknown as PaymentFailedPayload);
     case "SYNC_FAILURE":
       return syncFailureTemplate(event.payload as unknown as SyncFailurePayload);
+    case "OVERRIDE_REQUESTED": {
+      const tpl = bookingPendingOverrideConfirmationTemplate(
+        event.payload as unknown as Parameters<typeof bookingPendingOverrideConfirmationTemplate>[0],
+      );
+      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
+    }
+    case "OVERRIDE_APPROVED": {
+      const tpl = overrideApprovedWinnerTemplate(
+        event.payload as unknown as Parameters<typeof overrideApprovedWinnerTemplate>[0],
+      );
+      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
+    }
+    case "OVERRIDE_REJECTED": {
+      const tpl = overrideRejectedWinnerTemplate(
+        event.payload as unknown as Parameters<typeof overrideRejectedWinnerTemplate>[0],
+      );
+      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
+    }
+    case "OVERRIDE_EXPIRED": {
+      const tpl = overrideExpiredTemplate(
+        event.payload as unknown as Parameters<typeof overrideExpiredTemplate>[0],
+      );
+      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
+    }
+    case "OVERRIDE_SUPERSEDED": {
+      const tpl = overrideSupersededTemplate(
+        event.payload as unknown as Parameters<typeof overrideSupersededTemplate>[0],
+      );
+      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
+    }
+    case "OVERRIDE_RECONCILE_FAILED": {
+      const tpl = overrideReconcileFailedAdminTemplate(
+        event.payload as unknown as Parameters<typeof overrideReconcileFailedAdminTemplate>[0],
+      );
+      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
+    }
+    case "OVERRIDE_REMINDER": {
+      // No dedicated template — inline subject + summary for admin escalation.
+      const payload = event.payload as { confirmationCode?: string; level?: number };
+      const subject = `Reminder override PENDING ${payload.confirmationCode ?? "?"}`;
+      return {
+        subject,
+        html: `<p>Override request pending level ${payload.level ?? 1}. Decisione richiesta.</p>`,
+        text: `Override reminder level ${payload.level ?? 1}: ${payload.confirmationCode ?? "?"}`,
+      };
+    }
+    case "CROSS_CHANNEL_CONFLICT": {
+      const payload = event.payload as { boatId?: string; date?: string };
+      return {
+        subject: `ManualAlert: cross-channel conflict`,
+        html: `<p>Cross-channel conflict detected on boat <strong>${payload.boatId ?? "?"}</strong> date ${payload.date ?? "?"}.</p>`,
+        text: `Cross-channel conflict ${payload.boatId ?? "?"} ${payload.date ?? "?"}`,
+      };
+    }
     default:
       return null;
   }
