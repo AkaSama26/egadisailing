@@ -14,6 +14,9 @@ import { logger } from "@/lib/logger";
 import { blockDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
 import { postCommitCancelBooking } from "./post-commit-cancel";
+import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
+import { sendEmail } from "@/lib/email/brevo";
+import { auditLog } from "@/lib/audit/log";
 
 export interface CreateOverrideRequestInput {
   newBookingId: string;
@@ -261,11 +264,95 @@ export async function approveOverride(
     }
   }
 
-  // TODO(task-2.6): email apology loser + conferma winner + audit approve
-  return {
-    approved: true,
-    refundErrors,
-    emailsSent: 0, // TODO(task-2.6)
-    emailsFailed: 0, // TODO(task-2.6)
-  };
+  // 4. Email apology ai loser + audit log (R19 Fix #7: voucher+rebooking via Task 4.6)
+  let emailsSent = 0;
+  let emailsFailed = 0;
+
+  for (const conflictId of request.conflictingBookingIds) {
+    const conflict = await db.booking.findUnique({
+      where: { id: conflictId },
+      include: {
+        customer: { select: { firstName: true, lastName: true, email: true } },
+        service: { select: { name: true } },
+      },
+    });
+    if (!conflict?.customer?.email) continue;
+
+    const alternatives = await findAlternativeDates(
+      conflict.boatId,
+      conflict.serviceId,
+      conflict.startDate,
+      3,
+    );
+    // TODO(task-4.6): passa `alternatives` come rebookingSuggestions + voucherSoftText
+    // al template. Richiede estensione props overbooking-apology.ts.
+    void alternatives;
+
+    const tpl = overbookingApologyTemplate({
+      customerName: `${conflict.customer.firstName} ${conflict.customer.lastName}`.trim() || "cliente",
+      confirmationCode: conflict.confirmationCode,
+      serviceName: conflict.service.name,
+      startDate: conflict.startDate.toISOString().slice(0, 10),
+      refundAmount: `${conflict.totalPrice.toFixed(2)}€`,
+      refundChannel: "stripe",
+      contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+      contactPhone: env.CONTACT_PHONE,
+      bookingUrl: `${env.APP_URL}/b/sessione`,
+    });
+    try {
+      const delivered = await sendEmail({
+        to: conflict.customer.email,
+        subject: tpl.subject,
+        htmlContent: tpl.html,
+        textContent: tpl.text,
+      });
+      delivered ? emailsSent++ : emailsFailed++;
+    } catch (err) {
+      emailsFailed++;
+      logger.error({ err, bookingId: conflictId }, "approveOverride: sendEmail loser failed");
+    }
+  }
+
+  // 5. Audit log
+  await auditLog({
+    userId: adminUserId,
+    action: "OVERRIDE_APPROVED",
+    entity: "OverrideRequest",
+    entityId: requestId,
+    after: {
+      newBookingId: request.newBookingId,
+      conflictCount: request.conflictingBookingIds.length,
+      emailsSent,
+      emailsFailed,
+    },
+  });
+
+  return { approved: true, refundErrors, emailsSent, emailsFailed };
+}
+
+/**
+ * Trova N date libere successive per suggerimento rebooking.
+ * Scan dei 30 giorni successivi a `aroundDate`, ritorna le prime N senza booking attivi.
+ */
+async function findAlternativeDates(
+  boatId: string,
+  _serviceId: string,
+  aroundDate: Date,
+  limit: number,
+): Promise<Date[]> {
+  const results: Date[] = [];
+  for (let i = 1; i <= 30 && results.length < limit; i++) {
+    const candidate = new Date(aroundDate);
+    candidate.setUTCDate(candidate.getUTCDate() + i);
+    const conflicts = await db.booking.count({
+      where: {
+        boatId,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        startDate: { lte: candidate },
+        endDate: { gte: candidate },
+      },
+    });
+    if (conflicts === 0) results.push(candidate);
+  }
+  return results;
 }

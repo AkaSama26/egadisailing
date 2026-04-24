@@ -14,19 +14,25 @@ vi.mock("@/lib/db", () => ({
 
 // Task 2.5: mock Stripe + availability + queue + email.
 // vi.hoisted needed because vi.mock factories execute before top-level const init.
-const { refundPaymentMock, getChargeRefundStateMock, releaseDatesMock, blockDatesMock } =
-  vi.hoisted(() => ({
-    refundPaymentMock: vi
-      .fn()
-      .mockResolvedValue({ id: "re_test", status: "succeeded" }),
-    getChargeRefundStateMock: vi.fn().mockResolvedValue({
-      totalCents: 200000,
-      refundedCents: 0,
-      residualCents: 200000,
-    }),
-    releaseDatesMock: vi.fn().mockResolvedValue(undefined),
-    blockDatesMock: vi.fn().mockResolvedValue(undefined),
-  }));
+const {
+  refundPaymentMock,
+  getChargeRefundStateMock,
+  releaseDatesMock,
+  blockDatesMock,
+  sendEmailMock,
+} = vi.hoisted(() => ({
+  refundPaymentMock: vi
+    .fn()
+    .mockResolvedValue({ id: "re_test", status: "succeeded" }),
+  getChargeRefundStateMock: vi.fn().mockResolvedValue({
+    totalCents: 200000,
+    refundedCents: 0,
+    residualCents: 200000,
+  }),
+  releaseDatesMock: vi.fn().mockResolvedValue(undefined),
+  blockDatesMock: vi.fn().mockResolvedValue(undefined),
+  sendEmailMock: vi.fn().mockResolvedValue(true),
+}));
 
 vi.mock("@/lib/stripe/payment-intents", () => ({
   refundPayment: refundPaymentMock,
@@ -54,7 +60,7 @@ vi.mock("@/lib/queue", () => ({
 }));
 
 vi.mock("@/lib/email/brevo", () => ({
-  sendEmail: vi.fn().mockResolvedValue(true),
+  sendEmail: sendEmailMock,
 }));
 
 beforeAll(async () => {
@@ -376,5 +382,67 @@ describe("approveOverride", () => {
       where: { bookingId: conflict.id },
     });
     expect(refundedPayment?.status).toBe("REFUNDED");
+  });
+
+  it("approva: invia email apology al loser + audit log OVERRIDE_APPROVED", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000.00", status: "CONFIRMED",
+    });
+    await db.payment.create({
+      data: {
+        bookingId: conflict.id, amount: "2000.00",
+        type: "FULL", method: "STRIPE", status: "SUCCEEDED",
+        stripeChargeId: "ch_test_2_6",
+        processedAt: new Date(),
+      },
+    });
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000.00", status: "PENDING",
+    });
+    const admin = await db.user.create({
+      data: { email: "admin-2-6@t.com", passwordHash: "x", name: "A", role: "ADMIN" },
+    });
+    const req = await db.$transaction((tx) =>
+      createOverrideRequest(tx, {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        newBookingRevenue: new Decimal("3000"),
+        conflictingRevenueTotal: new Decimal("2000"),
+        dropDeadAt: new Date("2026-07-31"),
+      }),
+    );
+
+    // Load conflict email for later assertion (seed helper auto-generates)
+    const conflictLoaded = await db.booking.findUnique({
+      where: { id: conflict.id },
+      include: { customer: { select: { email: true } } },
+    });
+    const conflictEmail = conflictLoaded!.customer.email;
+
+    sendEmailMock.mockClear();
+
+    const { approveOverride } = await import("@/lib/booking/override-request");
+    const result = await approveOverride(req.requestId, admin.id);
+
+    expect(result.approved).toBe(true);
+
+    // sendEmail chiamato con email del conflict (loser)
+    expect(sendEmailMock).toHaveBeenCalledWith(expect.objectContaining({
+      to: conflictEmail,
+      subject: expect.stringContaining("scusiamo"),
+    }));
+
+    expect(result.emailsSent).toBe(1);
+    expect(result.emailsFailed).toBe(0);
+
+    // Audit log creato
+    const auditLogs = await db.auditLog.findMany({
+      where: { action: "OVERRIDE_APPROVED", entityId: req.requestId },
+    });
+    expect(auditLogs).toHaveLength(1);
+    expect(auditLogs[0]?.userId).toBe(admin.id);
   });
 });
