@@ -1,10 +1,7 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
-import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
-import { enforceRateLimit } from "@/lib/rate-limit/service";
+import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
-import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { checkOtaReconciliation } from "@/lib/booking/override-reconcile";
 import { dispatchNotification } from "@/lib/notifications/dispatcher";
@@ -12,8 +9,6 @@ import { auditLog } from "@/lib/audit/log";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
-
-const LEASE_TTL_SECONDS = 5 * 60;
 
 /**
  * Cron §8.4: verifica post-approve (+1h) che i conflict OTA siano
@@ -23,21 +18,13 @@ const LEASE_TTL_SECONDS = 5 * 60;
  * R19 Fix #15: usa l'indice `(status, reconcileCheckDue)` con filter
  * secondario `reconcileCheckedAt IS NULL` in-query (small dataset <10k).
  */
-export const POST = withErrorHandler(async (req: Request) => {
-  requireBearerSecret(req, env.CRON_SECRET);
-  await enforceRateLimit({
-    identifier: "global",
+export const POST = withCronGuard(
+  {
     scope: RATE_LIMIT_SCOPES.OVERRIDE_RECONCILE_CRON_IP,
-    limit: 10,
-    windowSeconds: 60,
-    failOpen: true,
-  });
-
-  const lease = await tryAcquireLease(LEASE_KEYS.OVERRIDE_RECONCILE, LEASE_TTL_SECONDS);
-  if (!lease) {
-    return NextResponse.json({ skipped: "already-running" });
-  }
-  try {
+    leaseKey: LEASE_KEYS.OVERRIDE_RECONCILE,
+    leaseTtlSeconds: 5 * 60,
+  },
+  async () => {
     const now = new Date();
     const due = await db.overrideRequest.findMany({
       where: {
@@ -98,10 +85,8 @@ export const POST = withErrorHandler(async (req: Request) => {
       }
     }
     logger.info({ checked, failedCount }, "override-reconcile cron completed");
-    return NextResponse.json({ checked, failed: failedCount });
-  } finally {
-    await releaseLease(lease);
-  }
-});
+    return { checked, failed: failedCount };
+  },
+);
 
 export const GET = POST;

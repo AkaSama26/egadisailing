@@ -1,38 +1,24 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
-import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
-import { enforceRateLimit } from "@/lib/rate-limit/service";
+import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
-import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { refundPayment, getChargeRefundState } from "@/lib/stripe/payment-intents";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
-const LEASE_TTL_SECONDS = 10 * 60;
-
 /**
  * Cron §8.3: retry Payment FAILED con stripeChargeId. Idempotent via
  * getChargeRefundState (R27 pattern). Batch 50/run, ogni 30min.
  * Fallimenti ripetuti segnati nei log — manual escalation via admin UI.
  */
-export const POST = withErrorHandler(async (req: Request) => {
-  requireBearerSecret(req, env.CRON_SECRET);
-  await enforceRateLimit({
-    identifier: "global",
+export const POST = withCronGuard(
+  {
     scope: RATE_LIMIT_SCOPES.REFUND_RETRY_CRON_IP,
-    limit: 10,
-    windowSeconds: 60,
-    failOpen: true,
-  });
-
-  const lease = await tryAcquireLease(LEASE_KEYS.REFUND_RETRY, LEASE_TTL_SECONDS);
-  if (!lease) {
-    return NextResponse.json({ skipped: "already-running" });
-  }
-  try {
+    leaseKey: LEASE_KEYS.REFUND_RETRY,
+    leaseTtlSeconds: 10 * 60,
+  },
+  async () => {
     const cutoff = new Date(Date.now() - 30 * 60 * 1000);
     // Payment non ha updatedAt — usiamo createdAt come cutoff anti-loop
     // (un FAILED appena marcato deve avere tempo di essere verificato).
@@ -77,10 +63,8 @@ export const POST = withErrorHandler(async (req: Request) => {
       }
     }
     logger.info({ retried, recovered, exhausted }, "refund-retry cron completed");
-    return NextResponse.json({ retried, recovered, exhausted });
-  } finally {
-    await releaseLease(lease);
-  }
-});
+    return { retried, recovered, exhausted };
+  },
+);
 
 export const GET = POST;
