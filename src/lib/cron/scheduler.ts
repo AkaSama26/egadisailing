@@ -1,5 +1,4 @@
-import cron from "node-cron";
-import { env } from "@/lib/env";
+import { scheduleCronFetch } from "@/lib/cron/schedule-fetch";
 import { logger } from "@/lib/logger";
 
 const globalForCron = globalThis as unknown as { __cronStarted__?: boolean };
@@ -9,199 +8,41 @@ export function startCronScheduler(): void {
   globalForCron.__cronStarted__ = true;
 
   // Balance reminders: ogni giorno alle 07:00 Europe/Rome
-  cron.schedule(
-    "0 7 * * *",
-    async () => {
-      logger.info("Running balance-reminders cron");
-      try {
-        const url = `${env.APP_URL}/api/cron/balance-reminders`;
-        const res = await fetch(url, {
-          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-        });
-        logger.info({ status: res.status }, "balance-reminders cron response");
-      } catch (err) {
-        logger.error({ err }, "balance-reminders cron fetch failed");
-      }
-    },
-    { timezone: "Europe/Rome" },
-  );
+  scheduleCronFetch("0 7 * * *", "/api/cron/balance-reminders");
 
   // Data retention cleanup: ogni giorno alle 03:00 Europe/Rome (low-traffic).
-  cron.schedule(
-    "0 3 * * *",
-    async () => {
-      logger.info("Running retention cleanup cron");
-      try {
-        const url = `${env.APP_URL}/api/cron/retention`;
-        const res = await fetch(url, {
-          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-        });
-        logger.info({ status: res.status }, "retention cron response");
-      } catch (err) {
-        logger.error({ err }, "retention cron fetch failed");
-      }
-    },
-    { timezone: "Europe/Rome" },
-  );
+  scheduleCronFetch("0 3 * * *", "/api/cron/retention");
 
   // Bokun reconciliation: ogni 5 minuti, fallback per webhook persi.
-  cron.schedule("*/5 * * * *", async () => {
-    try {
-      const url = `${env.APP_URL}/api/cron/bokun-reconciliation`;
-      const res = await fetch(url, {
-        headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-      });
-      if (!res.ok) {
-        logger.warn({ status: res.status }, "bokun-reconciliation cron non-2xx");
-      }
-    } catch (err) {
-      logger.error({ err }, "bokun-reconciliation cron fetch failed");
-    }
-  });
+  scheduleCronFetch("*/5 * * * *", "/api/cron/bokun-reconciliation");
 
   // Charter email parser: ogni 5 minuti (sfasato di 2 min dal Bokun per
   // spalmare carico). Skippa silenzioso se IMAP non configurato.
-  cron.schedule("2-59/5 * * * *", async () => {
-    try {
-      const url = `${env.APP_URL}/api/cron/email-parser`;
-      const res = await fetch(url, {
-        headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-      });
-      if (!res.ok) {
-        logger.warn({ status: res.status }, "email-parser cron non-2xx");
-      }
-    } catch (err) {
-      logger.error({ err }, "email-parser cron fetch failed");
-    }
-  });
+  scheduleCronFetch("2-59/5 * * * *", "/api/cron/email-parser");
 
   // Weather check: ogni mattina 07:15 Europe/Rome (R12-M1: sfasato 15min
   // da balance-reminders per non saturare il worker in-process single-thread
   // e disperdere i picchi di carico Open-Meteo). Alert admin su booking
   // CONFIRMED nei prossimi 7gg con risk HIGH/EXTREME (Plan 6).
-  cron.schedule(
-    "15 7 * * *",
-    async () => {
-      try {
-        const url = `${env.APP_URL}/api/cron/weather-check`;
-        const res = await fetch(url, {
-          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-        });
-        if (!res.ok) {
-          logger.warn({ status: res.status }, "weather-check cron non-2xx");
-        }
-      } catch (err) {
-        logger.error({ err }, "weather-check cron fetch failed");
-      }
-    },
-    { timezone: "Europe/Rome" },
-  );
+  scheduleCronFetch("15 7 * * *", "/api/cron/weather-check");
 
   // Stripe events reconciliation: ogni 15 min (sfasato di 7 min da Bokun).
   // Fallback per webhook persi: legge `/v1/events` degli ultimi 3gg e
   // replaya via `handleStripeEvent` (idempotent via ProcessedStripeEvent).
-  cron.schedule("7-59/15 * * * *", async () => {
-    try {
-      const url = `${env.APP_URL}/api/cron/stripe-reconciliation`;
-      const res = await fetch(url, {
-        headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-      });
-      if (!res.ok) {
-        logger.warn({ status: res.status }, "stripe-reconciliation cron non-2xx");
-      }
-    } catch (err) {
-      logger.error({ err }, "stripe-reconciliation cron fetch failed");
-    }
-  });
+  scheduleCronFetch("7-59/15 * * * *", "/api/cron/stripe-reconciliation");
 
   // PENDING booking GC: ogni 15 min (sfasato di 3 min da Bokun/parser).
   // Cancella booking PENDING > 30min + PaymentIntent Stripe + release
   // availability per non zombificare slot dopo abbandono checkout.
-  cron.schedule("3-59/15 * * * *", async () => {
-    try {
-      const url = `${env.APP_URL}/api/cron/pending-gc`;
-      const res = await fetch(url, {
-        headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-      });
-      if (!res.ok) {
-        logger.warn({ status: res.status }, "pending-gc cron non-2xx");
-      }
-    } catch (err) {
-      logger.error({ err }, "pending-gc cron fetch failed");
-    }
-  });
+  scheduleCronFetch("3-59/15 * * * *", "/api/cron/pending-gc");
 
   // Priority Override Fase 1 — 4 cron sfasati per non saturare worker Next.js.
   // overrideReminders min 0, overrideReconcile ogni 10min (granularita' sotto),
   // overrideDropdead min 15, refundRetry min 10+40.
-
-  cron.schedule(
-    "0 * * * *",
-    async () => {
-      try {
-        const res = await fetch(`${env.APP_URL}/api/cron/override-reminders`, {
-          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-        });
-        if (!res.ok) {
-          logger.warn({ status: res.status }, "override-reminders cron non-2xx");
-        }
-      } catch (err) {
-        logger.error({ err }, "override-reminders cron fetch failed");
-      }
-    },
-    { timezone: "Europe/Rome" },
-  );
-
-  cron.schedule(
-    "*/10 * * * *",
-    async () => {
-      try {
-        const res = await fetch(`${env.APP_URL}/api/cron/override-reconcile`, {
-          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-        });
-        if (!res.ok) {
-          logger.warn({ status: res.status }, "override-reconcile cron non-2xx");
-        }
-      } catch (err) {
-        logger.error({ err }, "override-reconcile cron fetch failed");
-      }
-    },
-    { timezone: "Europe/Rome" },
-  );
-
-  cron.schedule(
-    "15 * * * *",
-    async () => {
-      try {
-        const res = await fetch(`${env.APP_URL}/api/cron/override-dropdead`, {
-          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-        });
-        if (!res.ok) {
-          logger.warn({ status: res.status }, "override-dropdead cron non-2xx");
-        }
-      } catch (err) {
-        logger.error({ err }, "override-dropdead cron fetch failed");
-      }
-    },
-    { timezone: "Europe/Rome" },
-  );
-
-  cron.schedule(
-    "10,40 * * * *",
-    async () => {
-      try {
-        const res = await fetch(`${env.APP_URL}/api/cron/refund-retry`, {
-          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
-        });
-        if (!res.ok) {
-          logger.warn({ status: res.status }, "refund-retry cron non-2xx");
-        }
-      } catch (err) {
-        logger.error({ err }, "refund-retry cron fetch failed");
-      }
-    },
-    { timezone: "Europe/Rome" },
-  );
+  scheduleCronFetch("0 * * * *", "/api/cron/override-reminders");
+  scheduleCronFetch("*/10 * * * *", "/api/cron/override-reconcile");
+  scheduleCronFetch("15 * * * *", "/api/cron/override-dropdead");
+  scheduleCronFetch("10,40 * * * *", "/api/cron/refund-retry");
 
   logger.info("Cron scheduler started");
 }
