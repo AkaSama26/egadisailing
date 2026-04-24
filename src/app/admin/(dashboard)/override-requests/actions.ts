@@ -1,6 +1,5 @@
 "use server";
 
-import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
@@ -9,29 +8,11 @@ import {
   approveOverride,
   rejectOverride,
 } from "@/lib/booking/override-request";
-import type { ConflictSourceChannel } from "@/lib/booking/override-types";
-
-const otaConfirmationSchema = z.object({
-  conflictId: z.string(),
-  conflictBookingId: z.string().optional(),
-  channel: z.string(),
-  externalRef: z.string(),
-  panelOpened: z.boolean(),
-  upstreamCancelled: z.boolean(),
-  refundVerified: z.boolean(),
-  adminDeclared: z.boolean(),
-});
-
-const approveSchema = z.object({
-  requestId: z.string().min(1),
-  notes: z.string().max(500).optional(),
-  otaConfirmations: z.array(otaConfirmationSchema).optional().default([]),
-});
-
-const rejectSchema = z.object({
-  requestId: z.string().min(1),
-  notes: z.string().max(500).optional(),
-});
+import {
+  approveOverrideSchema,
+  rejectOverrideSchema,
+  type ConflictSourceChannel,
+} from "@/lib/booking/override-types";
 
 async function revalidateOverridePaths(requestId: string): Promise<void> {
   revalidatePath(`/admin/override-requests/${requestId}`);
@@ -51,7 +32,7 @@ export async function approveOverrideAction(
       windowSeconds: 60,
       failOpen: false,
     });
-    const input = approveSchema.parse(rawInput);
+    const input = approveOverrideSchema.parse(rawInput);
     const otaConfirmations = input.otaConfirmations.map((c) => ({
       conflictBookingId: c.conflictBookingId ?? c.conflictId,
       channel: c.channel as ConflictSourceChannel,
@@ -86,7 +67,7 @@ export async function rejectOverrideAction(
       windowSeconds: 60,
       failOpen: false,
     });
-    const input = rejectSchema.parse(rawInput);
+    const input = rejectOverrideSchema.parse(rawInput);
     const result = await rejectOverride(input.requestId, userId, input.notes);
     await revalidateOverridePaths(input.requestId);
     return { ok: true, refundOk: result.refundOk, emailOk: result.emailOk };
