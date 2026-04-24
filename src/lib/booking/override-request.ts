@@ -73,6 +73,45 @@ export async function createOverrideRequest(
     select: { id: true },
   });
 
-  // Supersede handling: see task 2.3
-  return { requestId: request.id, supersededRequestIds: [] };
+  // Supersede inferior PENDING requests on overlapping slot + lower revenue.
+  // Overlap: daterange(newA.start, newA.end) overlap daterange(newB.start, newB.end)
+  // = newA.start <= newB.end AND newA.end >= newB.start
+  const supersededIds: string[] = [];
+
+  const newBookingData = await tx.booking.findUniqueOrThrow({
+    where: { id: input.newBookingId },
+    select: { boatId: true, startDate: true, endDate: true },
+  });
+
+  const inferiorRequests = await tx.overrideRequest.findMany({
+    where: {
+      id: { not: request.id },
+      status: "PENDING",
+      newBooking: {
+        boatId: newBookingData.boatId,
+        startDate: { lte: newBookingData.endDate },
+        endDate: { gte: newBookingData.startDate },
+      },
+      newBookingRevenue: { lt: input.newBookingRevenue.toFixed(2) },
+    },
+    include: { newBooking: { select: { id: true } } },
+  });
+
+  for (const inferior of inferiorRequests) {
+    await tx.overrideRequest.update({
+      where: { id: inferior.id },
+      data: {
+        status: "REJECTED",
+        decisionNotes: "auto-superseded by higher revenue request",
+        decidedAt: new Date(),
+      },
+    });
+    await tx.booking.update({
+      where: { id: inferior.newBooking.id },
+      data: { status: "CANCELLED" },
+    });
+    supersededIds.push(inferior.id);
+  }
+
+  return { requestId: request.id, supersededRequestIds: supersededIds };
 }
