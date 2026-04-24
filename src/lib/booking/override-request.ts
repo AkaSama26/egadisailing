@@ -16,6 +16,7 @@ import { CHANNELS } from "@/lib/channels";
 import { postCommitCancelBooking } from "./post-commit-cancel";
 import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
 import { sendEmail } from "@/lib/email/brevo";
+import { dispatchNotification } from "@/lib/notifications/dispatcher";
 import { auditLog } from "@/lib/audit/log";
 import { findAlternativeDates } from "./alternative-dates";
 
@@ -403,27 +404,36 @@ export async function rejectOverride(
   });
   const refundOk = cancelResult.refundsFailed.length === 0 && cancelResult.releaseOk;
 
-  // Email rejection (inline temporary — USE_IN_CHUNK_4_TASK_4.3)
+  // Email rejection via dispatcher (template override-rejected-winner)
   let emailOk = true;
   if (request.newBooking.customer?.email) {
+    const alternatives = await findAlternativeDates(
+      request.newBooking.boatId,
+      request.newBooking.serviceId,
+      request.newBooking.startDate,
+      3,
+    );
     try {
-      const alternatives = await findAlternativeDates(
-        request.newBooking.boatId,
-        request.newBooking.serviceId,
-        request.newBooking.startDate,
-        3,
-      );
-      const altStr = alternatives.map((d) => d.toISOString().slice(0, 10)).join(", ");
-      const delivered = await sendEmail({
-        to: request.newBooking.customer.email,
-        subject: `Prenotazione ${request.newBooking.confirmationCode} non approvata`,
-        htmlContent: `<p>Ci dispiace, la richiesta non è stata approvata. Rimborso in corso (5-10 giorni lavorativi).</p><p>Date alternative disponibili: ${altStr || "contattaci"}.</p>`,
-        textContent: `Ci dispiace, la richiesta non è stata approvata. Rimborso in corso. Date alternative: ${altStr || "contattaci"}.`,
+      const result = await dispatchNotification({
+        type: "OVERRIDE_REJECTED",
+        channels: ["EMAIL"],
+        payload: {
+          customerName:
+            `${request.newBooking.customer.firstName ?? ""} ${request.newBooking.customer.lastName ?? ""}`.trim() ||
+            "cliente",
+          confirmationCode: request.newBooking.confirmationCode,
+          serviceName: request.newBooking.service.name,
+          startDate: request.newBooking.startDate.toISOString().slice(0, 10),
+          refundAmount: request.newBooking.totalPrice.toFixed(2),
+          alternativeDates: alternatives.map((d) => d.toISOString().slice(0, 10)),
+          bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+          contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+        } as unknown as Record<string, unknown>,
       });
-      if (!delivered) emailOk = false;
+      if (!result.emailOk) emailOk = false;
     } catch (err) {
       emailOk = false;
-      logger.error({ err, requestId }, "rejectOverride: sendEmail failed");
+      logger.error({ err, requestId }, "rejectOverride: dispatch OVERRIDE_REJECTED failed");
     }
   }
 
