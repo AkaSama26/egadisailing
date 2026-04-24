@@ -33,6 +33,12 @@ const rejectSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
+async function revalidateOverridePaths(requestId: string): Promise<void> {
+  revalidatePath(`/admin/override-requests/${requestId}`);
+  revalidatePath("/admin/override-requests");
+  revalidatePath("/admin");
+}
+
 export async function approveOverrideAction(
   rawInput: unknown,
 ): Promise<{ ok: true; emailsSent: number; emailsFailed: number; refundErrors: number } | { ok: false; message: string }> {
@@ -56,9 +62,7 @@ export async function approveOverrideAction(
       adminDeclared: c.adminDeclared,
     }));
     const result = await approveOverride(input.requestId, userId, input.notes, otaConfirmations);
-    revalidatePath(`/admin/override-requests/${input.requestId}`);
-    revalidatePath("/admin/override-requests");
-    revalidatePath("/admin");
+    await revalidateOverridePaths(input.requestId);
     return {
       ok: true,
       emailsSent: result.emailsSent,
@@ -84,9 +88,7 @@ export async function rejectOverrideAction(
     });
     const input = rejectSchema.parse(rawInput);
     const result = await rejectOverride(input.requestId, userId, input.notes);
-    revalidatePath(`/admin/override-requests/${input.requestId}`);
-    revalidatePath("/admin/override-requests");
-    revalidatePath("/admin");
+    await revalidateOverridePaths(input.requestId);
     return { ok: true, refundOk: result.refundOk, emailOk: result.emailOk };
   } catch (err) {
     return { ok: false, message: err instanceof Error ? err.message : "Errore sconosciuto" };
