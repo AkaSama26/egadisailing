@@ -89,4 +89,21 @@ describe("checkOverrideEligibility", () => {
       expect(result.dropDeadAt).toEqual(new Date("2026-07-31")); // 2026-08-15 - 15d
     }
   });
+
+  it("multi-conflicting revenue sum (3 booking su stesso slot)", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      newBookingRevenue: new Decimal("8000"),
+      conflictingBookings: [
+        { id: "b1", revenue: new Decimal("2500"), isAdminBlock: false },
+        { id: "b2", revenue: new Decimal("2500"), isAdminBlock: false },
+        { id: "b3", revenue: new Decimal("2500"), isAdminBlock: false },
+      ],
+    });
+    expect(result.status).toBe("override_request");
+    if (result.status === "override_request") {
+      expect(result.conflictingRevenueTotal.toString()).toBe("7500");
+      expect(result.conflictingBookingIds).toEqual(["b1", "b2", "b3"]);
+    }
+  });
 });
