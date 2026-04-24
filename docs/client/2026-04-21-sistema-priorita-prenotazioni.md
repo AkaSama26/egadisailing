@@ -1,23 +1,24 @@
 # Sistema di priorità nelle prenotazioni — proposta
 
-**Documento per discussione con la proprietà. Non è ancora implementato.**
+**Documento per discussione con la proprietà — versione finale post-brainstorm.**
 
-Data: 21 aprile 2026
+Data: 21 aprile 2026 · Aggiornato: 23 aprile 2026 (decisioni finali)
 
 ---
 
 ## 1. Il problema che vogliamo risolvere
 
-Oggi il calendario prenotazioni tratta tutte le esperienze nello stesso modo: "prima
-prenotato = prima servito". Se un cliente prenota un **tour giornaliero condiviso**
-da 120€ a persona per domenica 10 agosto, quella data diventa **non più
-vendibile** per un **Gourmet** da 2000€ o un **Charter** da 7500€.
+Oggi il calendario prenotazioni tratta tutte le esperienze nello stesso modo:
+"prima prenotato = prima servito". Se un cliente prenota un **tour giornaliero
+condiviso** da 120€ a persona per domenica 10 agosto, quella data diventa
+**non più vendibile** per un **Gourmet** da 2000€ o un **Charter** da 7500€.
 
-Questo ci fa perdere soldi: una domenica "bloccata" da un piccolo gruppo social
-può valere molto di più venduta come Gourmet o Charter.
+Una domenica "bloccata" da un piccolo gruppo può valere molto di più venduta
+come Gourmet o Charter. Stima perdita conservativa: **€30-40.000/anno** in
+alta stagione.
 
 **L'idea**: introdurre un sistema di priorità basato sul **valore economico**
-della prenotazione. Se arriva una richiesta che vale di più di quella già
+della prenotazione. Se arriva una richiesta che vale più di quella già
 presente, il sistema permette (con controllo admin) di sovrascriverla.
 
 ---
@@ -33,237 +34,281 @@ presente, il sistema permette (con controllo admin) di sovrascriverla.
 
 ---
 
-## 3. I 4 pacchetti attuali
+## 3. I 3 pacchetti attuali (post-decisione brainstorm)
 
 | Pacchetto | Durata | Capacità | Prezzo base |
 |---|---|---|---|
-| **Gourmet** | 1 giorno intero | 8-10 persone | 2.000€ (bassa stagione) |
-| **Cabin Charter** | 7 giorni | Max 3 cabine × 2 = 6 persone | 2.500€/cabina/settimana |
+| **Gourmet** | 1 giorno intero | 8-10 persone | 2.000€ (bassa) / ~3.000€ (alta) |
 | **Charter** | 3-7 giorni | 6 persone | 7.500€/settimana |
 | **Giornaliero Social** | 1 giorno | 11-20 persone | 120-150€/persona |
 
-Il valore totale varia per stagione, durata effettiva e numero persone. Esempi
-concreti di fatturato:
+> **Cabin Charter rimosso dal catalogo** — operativamente problematico: prenota
+> una settimana senza garantire che tutte le 3 cabine vengano poi vendute,
+> spina nel fianco per gestione operativa e revenue non prevedibile.
+> Gourmet e Charter restano venduti come "barca intera = 1 cliente = 1
+> pagamento".
 
-- Gourmet tipico bassa stagione: 8pax × ~250€ = **~2.000€**
-- Gourmet tipico alta stagione: 10pax × ~300€ = **~3.000€**
-- Cabin Charter 1 settimana pieno: 3 cabine × 2.500€ = **7.500€**
-- Cabin Charter 1 settimana parziale: 1 cabina = **2.500€**
+Esempi di fatturato:
+
+- Gourmet tipico bassa stagione: **~2.000€**
+- Gourmet tipico alta stagione: **~3.000€**
 - Charter 7 giorni: **7.500€**
-- Social 1 giorno con 15 pax: 15 × 130€ = **~1.950€**
-- Social 1 giorno con 20 pax: 20 × 150€ = **~3.000€**
+- Social 1 giorno con 15 pax: **~1.950€**
+- Social 1 giorno con 20 pax: **~3.000€**
 
 ---
 
-## 4. Come funzionerà per il cliente sul sito — passo passo
+## 4. Come funzionerà per il cliente sul sito
+
+**Timing nuovo (decisione brainstorm 2026-04-23)**: il check sulla disponibilità
+avanzata **non** avviene al "Conferma e paga" finale, ma al click **"Continua"**
+dopo aver scelto il numero persone. Questo evita che il cliente compili tutto
+e inserisca la carta solo per scoprire alla fine che la data non è
+disponibile.
 
 ### Scenario: Laura visita il sito il 25 luglio, vuole Gourmet per il 10 agosto
 
-**Step 1** — Laura clicca "Gourmet" nella pagina esperienze.
+**Step 1** — Laura clicca "Gourmet" e sceglie il 10 agosto dal calendario.
 
-**Step 2** — Si apre il calendario. Tutte le date sono **selezionabili** (niente
-date "grigie" che confondono il cliente). Laura clicca 10 agosto.
+**Step 2** — Seleziona 9 persone, clicca **"Continua"**.
 
-**Step 3** — Compila il form: nome, email, 9 persone, dati carta.
-
-**Step 4** — Cliccando "Conferma e paga", il sistema controlla dietro le quinte:
-
-> C'è già una prenotazione su questa data? Se sì, quanto vale?
-> La nuova prenotazione di Laura vale di più?
+**Step 3** — Spinner mentre il sistema controlla:
+> C'è una prenotazione su questa data? Se sì, quanto vale?
 > Siamo a più di 15 giorni dalla data?
 
-In base al risultato, succede una di queste 4 cose:
+A seconda del risultato, succede uno di questi 4 casi.
 
----
+### ✓ Caso A — Data libera
 
-### ✓ Caso A — Data libera (nessun conflitto)
+Wizard prosegue a customer info → pagamento. Laura vede il classico
+"Prenotazione confermata!".
 
-Laura vede:
-> "Pagamento in corso..." → "Prenotazione confermata! Riceverai email con dettagli"
+### ✓ Caso B — Override possibile (data occupata da booking minore)
 
-**Funzionamento normale, come adesso.**
+Esistente: Social 10 agosto, 8 persone, **€960**.
+Nuovo: Laura Gourmet 9 persone, **€2.250**.
 
----
+Revenue nuovo > esistente + 16 giorni > 15 → override eligibile.
 
-### ✓ Caso B — Data occupata da un booking minore, override possibile
+Laura **prosegue normalmente** a customer info e pagamento (non sa di essere
+in override — il sistema è trasparente). Al completamento vede:
 
-Esistente: Social 10 agosto, 8 persone, **€960 fatturato**.
-Nuovo: Laura Gourmet 9 persone, **€2.250** preventivo.
-
-Revenue nuovo (2.250) > revenue esistente (960) + siamo a 16 giorni > 15 → override eligibile.
-
-Laura vede, **prima di pagare**, un messaggio di avviso:
-> ⚠️ **Richiesta di disponibilità**
+> **Prenotazione ricevuta**
 >
-> Questa data è attualmente occupata da un'altra prenotazione. La tua
-> richiesta sarà verificata dal nostro team entro 24 ore. Se approvata, la
-> tua prenotazione sarà confermata. Se rifiutata, riceverai il rimborso
-> completo.
->
-> [Conferma e paga] [Scegli altra data]
+> La tua prenotazione è in attesa di conferma entro 24-72 ore.
+> Riceverai email di conferma o eventuale rimborso.
 
-Se conferma:
-- Laura paga 2.250€
-- Booking creato in stato "IN ATTESA CONFERMA ADMIN"
-- Laura riceve email: "Richiesta ricevuta. Ti contattiamo entro 24h."
-
-Admin riceve alert in dashboard:
+Admin riceve alert dashboard:
 > Nuova richiesta override: Laura (Gourmet €2.250) su 10 agosto.
-> Conflitto con Mario + 7 altri (Social €960).
-> [✓ Approva override] [✗ Rifiuta]
+> Conflitto con Mario + 7 (Social €960).
+> [✓ Approva] [✗ Rifiuta]
 
-Se admin **approva**:
-- Mario + 7 persone cancellate automaticamente
-- Rimborso automatico integrale ai Social
-- Email di scuse inviata: "Ci dispiace, abbiamo dovuto cancellare per [motivo]"
-- Laura riceve email: "Il tuo Gourmet del 10 agosto è confermato!"
+### ✗ Caso C — Data occupata da un booking superiore
 
-Se admin **rifiuta**:
-- Laura riceve rimborso automatico
-- Email: "Ci dispiace, la data non è disponibile. Ti proponiamo: 11 agosto, 17 agosto..."
+Esistente: Charter 5-12 agosto **€7.500**.
+Nuovo: Laura Gourmet 10 agosto **€2.250**.
 
----
+Revenue nuovo < esistente → **bloccato** al click Continua.
 
-### ✗ Caso C — Data occupata da un booking di valore superiore
+Il wizard **torna allo step pax** con banner error rosso inline:
+> ⚠ Siamo spiacenti, data non disponibile per questo pacchetto. Scegli altra
+> data o pacchetto.
 
-Esistente: Charter 5-12 agosto **€7.500** (7 giorni interi).
-Nuovo: Laura Gourmet 10 agosto **€2.250** preventivo.
-
-Revenue nuovo (2.250) < revenue esistente (7.500) → override **non** conviene.
-
-Laura vede al submit:
-> ❌ **Questa data non è disponibile per il Gourmet**
->
-> Un'altra prenotazione di valore superiore è in corso. Non possiamo
-> sostituirla.
->
-> **Date alternative vicine libere:**
->   [13 agosto] [14 agosto] [15 agosto]
->
-> [Scegli altra data]
-
-Nessun addebito, nessuna richiesta all'admin.
-
----
+La data 10 agosto diventa grigia nel calendario (solo per questa sessione).
+Nessun addebito, nessuna email, nessun alert admin.
 
 ### ✗ Caso D — Data troppo vicina (≤ 15 giorni)
 
-Oggi è il 3 agosto, Laura vuole Gourmet per 10 agosto (7 giorni di distanza).
-
-Anche se la data fosse occupata da un Social da 100€, il sistema **non** permette
+Oggi è il 3 agosto, Laura vuole il 10 agosto (7 giorni di distanza). Anche se
+la data fosse occupata da un Social da 100€, il sistema **non** permette
 override: siamo dentro la finestra di protezione 15 giorni.
 
-Laura vede:
-> ❌ **Questa data non è più modificabile**
->
-> Per garantire il servizio ai clienti già prenotati, non modifichiamo il
-> calendario nelle ultime 2 settimane prima della data.
->
-> **Date disponibili vicine:** [20 agosto] [21 agosto] [22 agosto]
+Stesso error banner del Caso C — il cliente esistente è protetto.
 
 ---
 
 ## 5. Come funziona dalla parte dell'amministratore
 
-L'admin ha una nuova pagina in dashboard: **"Richieste priorità"** (badge con
+L'admin ha una nuova pagina in dashboard: **"Richieste priorità"** (con badge
 contatore delle richieste in attesa).
 
-Ogni richiesta mostra:
+### 5.1 Override normale (DIRECT vs DIRECT)
+
+Quando il conflitto è tra due clienti che hanno prenotato direttamente dal
+nostro sito, il workflow è completamente automatico. Ogni richiesta mostra:
 
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠  RICHIESTA PRIORITÀ — Domenica 10 agosto 2026
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Nuovo cliente che vuole prenotare:
-  Laura Bianchi · Gourmet · 9 persone · €2.250
-  Booking #DRC-K8X2B (in attesa di conferma admin)
-  📧 laura@email.com · 📞 +39 333 1234567
-
-Conflitto con:
-  👥 Mario Rossi + 7 altri · Social condiviso · €960
-  8 prenotazioni (Mario, Giulia, Anna, Paolo, Luca, Martina, Davide, Elisa)
-  5 booking da "Sito diretto", 3 da Bokun
+Nuovo cliente:  Laura Bianchi · Gourmet · €2.250
+Conflitto:      Mario Rossi + 7 · Social · €960
+                Sorgente: SITO DIRETTO (8 prenotazioni)
 
 Revenue analysis:
   Guadagno se approvi:  +€1.290 (€2.250 - €960 di rimborso)
-  Finestra override:    ancora 8 giorni prima del blocco (cut-off: 26 luglio)
+  Finestra:             16 giorni prima data (cutoff 26 luglio)
 
 Azioni:
-  [✓ Approva — cancella i Social, conferma Laura]
-  [✗ Rifiuta — rimborsa Laura]
-  [💬 Note: motivo della decisione (opzionale)]
+  [✓ Approva] [✗ Rifiuta] [💬 Nota]
 ```
 
-Admin clicca e il sistema esegue tutto automaticamente:
-- Cancellazione con email di scuse personalizzata per ogni cliente impattato
-- Rimborso Stripe istantaneo
-- Conferma al nuovo cliente
+Admin clicca Approva → il sistema esegue tutto in automatico:
+- Cancellazione booking Mario + 7 persone
+- Rimborso Stripe istantaneo per ognuno
+- Email di scuse personalizzata con voucher
+- Conferma a Laura
+
+### 5.2 E se la prenotazione da scavalcare arriva da Viator/Bokun/SamBoat?
+
+Se il conflitto è con un booking arrivato da un **portale esterno** (Viator
+via Bokun, Boataround, SamBoat, Click&Boat, Nautal), il processo è diverso:
+il rimborso al cliente NON lo facciamo noi, lo fa il portale upstream. Il
+sistema non può chiamare direttamente l'API di cancellazione del portale
+perché conterebbe come "cancellazione lato fornitore", impattando
+negativamente la nostra reputazione e il ranking (Viator penalizza i
+fornitori che cancellano troppo).
+
+**Decisione**: workflow manuale in 4 passi per l'admin.
+
+```
+⚠ OVERRIDE CONTRO VIATOR (via Bokun) — Checklist
+
+Conflitto: Mario Rossi · Social €960 · BK-12345
+
+[ ] 1. Apri Viator extranet (link diretto)
+[ ] 2. Cancella prenotazione #BK-12345 su Viator
+[ ] 3. Verifica che il rimborso €960 sia processato
+[ ] 4. Dichiaro di aver completato manualmente i 3 passi
+
+Stato sync: ⏳ In attesa webhook Bokun (<5 min)
+
+[✓ Approva]  ← disabled finché checkbox + webhook pronti
+[✗ Rifiuta]
+```
+
+**Come funziona**:
+- Admin apre Viator extranet (link diretto dal nostro pannello) e cancella
+- Viator cascada la cancellazione a Bokun
+- Bokun manda webhook al nostro sistema: "questo booking è cancellato"
+- Il nostro sistema aggiorna automaticamente il DB locale
+- Quando le 4 checkbox sono spuntate E il webhook è arrivato, il bottone
+  Approva si abilita
+- Admin clicca Approva → Laura confermata, nessuna email apology noi
+  (già gestita da Viator), nessun refund da parte nostra (già fatto da Viator)
+
+**Rete di sicurezza**: 1 ora dopo l'approve, il sistema interroga Bokun
+automaticamente per verificare che il booking Mario sia davvero cancellato
+upstream (a volte Viator ha bug o l'admin spunta la checkbox senza aver
+cancellato davvero). Se rileva che è ancora attivo → **alert fatal admin** +
+bottone "Retry reconcile" per risolvere.
+
+### 5.3 E se arriva prenotazione da portale mentre noi abbiamo già un cliente diretto?
+
+Scenario opposto: Laura ha già prenotato Gourmet 10 agosto da noi direttamente
+(CONFIRMED, pagato €3.000). Arriva un webhook Viator con nuovo booking Social
+per stessa data (€960).
+
+Il sistema **protegge Laura** di default:
+- Rifiuta automaticamente il booking Viator via API cancel
+- Emette alert urgente all'admin: "Conflitto cross-canale: Viator vuole €960,
+  tu hai €3.000 DIRECT. Che fai?"
+
+Admin decide manualmente:
+- **Default "Protezione Laura"**: nessuna azione richiesta, il sistema ha
+  già rifiutato Viator. Laura resta confermata.
+- **"Revenue wins"** (raro): se Viator vuole €5.000 e Laura solo €2.000, admin
+  può cancellare Laura manualmente dal pannello admin con apology + voucher +
+  refund. Il booking Viator va ri-importato manualmente.
+
+Questo workflow non scala bene alla frequenza alta: se riceviamo > 3 di questi
+alert a settimana, è segnale che qualcosa non va nella sincronizzazione
+(iCal lag, Bokun config errata, ecc.) → admin deve indagare la causa root.
+
+### 5.4 Cancellation Rate: perché serve un limite
+
+I portali esterni (Viator in particolare) tollerano una soglia massima di
+cancellazioni da parte del fornitore (noi). Oltre il **5%** di booking
+cancellati a nostra iniziativa, **Viator ci de-ranka** — ci fa sparire dalle
+prime posizioni dei risultati di ricerca. Questo vale anche per Bokun e
+Boataround.
+
+Il sistema monitora automaticamente il **rolling 30 giorni** di cancellazioni
+per-portale, con due soglie:
+
+- **< 3%**: verde, tutto OK
+- **3% - 5%**: **soft warning** rosso "avvicinandosi limite Viator"
+- **> 5%**: **hard block** — l'admin **non può più approvare override** che
+  coinvolgono quel canale finché il rate non scende (tipicamente 30gg dalle
+  ultime cancellazioni)
+
+Esempio: Viator al 5.1% → admin cerca di approvare nuovo override Viator →
+errore:
+> Impossibile approvare: Viator cancellation rate 5.1%, sopra la soglia
+> 5%. Attendi che scenda prima di approvare nuovi override su Viator.
+
+Le soglie sono configurabili (`OVERRIDE_CANCELLATION_RATE_SOFT_WARN`,
+`OVERRIDE_CANCELLATION_RATE_HARD_BLOCK` in env).
 
 ---
 
-## 6. Esempi di scenari complessi
+## 6. Esempi concreti
 
-### Esempio 1 — Il Charter esclusivo si difende da solo
+### Esempio 1 — Il Charter si difende da solo
 
-Situazione: Charter prenotato per 5-12 agosto (€7.500). Gourmet richiesto per 8
-agosto (€2.000). Revenue Charter > Gourmet → override bloccato.
+Charter prenotato 5-12 agosto (€7.500). Laura vuole Gourmet per 8 agosto
+(€2.000). Revenue Charter > Gourmet → **override bloccato al click
+Continua**.
 
-**Risultato**: Laura vede "non disponibile". Zero intervento admin.
+Laura vede banner rosso, sceglie altra data. Zero intervento admin.
 
 ### Esempio 2 — Il Gourmet scavalca il Social
 
-Situazione: domenica occupata da 8 persone Social (€960). Gourmet famiglia 10
-pax richiesto per stessa domenica (€3.000).
+Domenica occupata da 8 persone Social (€960). Famiglia vuole Gourmet per
+stessa domenica (€3.000).
 
-**Risultato**: override eligibile. 8 Social ricevono email di scuse + rimborso
-automatico. Gourmet confermato. **Profitto netto: +€2.040** (3000 - 960 = 2040).
+Override eligibile → admin riceve alert → approva → 8 Social ricevono email
+apology + rimborso automatico + voucher "2 drink gratis". Gourmet confermato.
+**Profitto netto: +€2.040**.
 
 ### Esempio 3 — Due richieste override contemporanee
 
-Situazione: mercoledì occupato da Social 5 pax (€600). Arrivano
-contemporaneamente:
+Mercoledì occupato da Social 5 pax (€600). Arrivano contemporaneamente:
 - Laura: Gourmet 9pax (€2.250)
 - Sofia: Gourmet 10pax (€3.000)
 
-**Regola proposta**: entrambe vanno in stato "IN ATTESA ADMIN". Admin vede:
-> 2 richieste concorrenti su questa data.
-> [Approva solo Sofia] [Approva solo Laura] [Rifiuta entrambe]
+Sofia ha revenue più alta → il sistema auto-scavalca la richiesta di Laura
+(Laura viene rimborsata automaticamente con email "Richiesta superata da
+offerta di valore superiore. Rimborso in corso."). Sofia diventa la nuova
+richiesta PENDING che aspetta admin. Admin approva o rifiuta Sofia.
 
-Se admin approva Sofia: il Social cancellato (€600 rimborso) + Laura rimborsata
-(€2.250) + Sofia confermata.
+### Esempio 4 — Gourmet scavalca Social da Viator (workflow OTA)
 
-**Problema aperto**: è giusto il comportamento o vuoi che il sistema scelga
-automaticamente la richiesta a revenue maggiore?
+Mario ha prenotato Social 10 agosto tramite Viator (via Bokun). Laura vuole
+Gourmet 10 agosto dal nostro sito.
 
-### Esempio 4 — Multi-day: il Cabin Charter di Mario
+Revenue Gourmet > Social, 20 giorni alla data → override eligibile.
 
-Situazione: Mario prenota 1 cabina Cabin Charter per 5-12 agosto (€2.500).
-Arriva Gourmet per 8 agosto (€3.000 alta stagione).
+Workflow admin:
+1. Alert in dashboard con sezione "Conflitto sorgente: VIATOR (via Bokun)"
+2. Admin apre detail page, vede la **checklist 4-step**:
+   - Apre Viator extranet
+   - Cancella #BK-12345 manualmente su Viator
+   - Verifica che il rimborso sia stato processato da Viator
+   - Spunta la dichiarazione di responsabilità
+3. Nel frattempo Viator cascade a Bokun → webhook `bookings/cancel` arriva
+   a noi → sistema aggiorna DB
+4. Bottone "Approva" si abilita
+5. Admin clicca Approva → Laura confermata, email conferma a Laura
+6. **NON** inviamo email apology a Mario (il suo rapporto è con Viator,
+   rimborso e apology li gestisce Viator)
+7. 1 ora dopo, cron reconciliation verifica automaticamente che Bokun
+   confermi "BK-12345 CANCELLED" → se sì, tutto OK; se no, flag e alert
+   admin "Retry reconcile"
 
-Revenue nuovo > esistente → override eligibile.
-
-**Ma**: approvare significa cancellare l'INTERA settimana Cabin Charter di
-Mario (non solo l'8 agosto). Mario perde 7 giorni di vacanza.
-
-Admin vede l'alert completo: "Approvare scavalca 7 giorni di vacanza di Mario
-(cancellazione totale settimana)". Può decidere consapevolmente.
-
-**Problema etico da discutere con i clienti**: è accettabile cancellare una
-vacanza settimanale già programmata per 1 giorno di Gourmet? Business-wise sì
-(+€500 guadagno), ma rischio recensioni 1-stella alto.
-
-### Esempio 5 — Cabin Charter parzialmente venduto
-
-Situazione: 5-12 agosto, 1 sola cabina venduta a Mario (€2.500). Le altre 2
-cabine sono libere (totali possibili €7.500 non raggiunti).
-
-Arriva richiesta Charter esclusivo (€7.500) per 5-12 agosto.
-
-**Problema aperto**: come calcolare il revenue del Cabin Charter esistente?
-- Opzione A: solo quello **già pagato** (€2.500) → Charter vince
-- Opzione B: quello **potenziale** se tutte le cabine venissero vendute (€7.500) → Charter pari → override bloccato
-- Opzione C: admin decide caso per caso — sistema mostra entrambi i numeri
+Admin ha fatto ~2 minuti di lavoro manuale (aprire Viator, cancellare), il
+resto è automatico.
 
 ---
 
@@ -271,259 +316,121 @@ Arriva richiesta Charter esclusivo (€7.500) per 5-12 agosto.
 
 ### 7.1 Cliente Mario reagisce male alla cancellazione
 
-Mario aveva prenotato il suo Social per festeggiare il compleanno della nonna.
-Riceve email di cancellazione. **Conseguenze possibili**:
-- Recensione negativa su Google / Tripadvisor
-- Chargeback bancario (rifiuto del rimborso perché insoddisfatto)
-- Passaparola negativo
-
-**Soluzioni proposte**:
-- Email di scuse molto curata (già sviluppata) con:
-  - Scuse formali + ammissione dell'errore
-  - Rimborso completo immediato
-  - **Voucher 10-20% di sconto** su prossima prenotazione
-  - Contatto diretto per assistenza (WhatsApp admin)
-- Limitare admin a **max N override/mese** per evitare abuso
-- Tracciare metriche: N recensioni negative / N chargeback dopo override
+Mario cancellato riceve email apology con rimborso immediato + voucher 2
+drink gratis. Rischio recensione negativa mitigato ma non azzerato.
+Compensazione: admin può contattare direttamente via WhatsApp.
 
 ### 7.2 Admin non risponde entro 24h
 
-Laura ha pagato €2.250 ma admin in ferie. Cosa succede?
-
-**Soluzione proposta** (da discutere):
-- Laura vede il booking in "IN ATTESA" indefinitamente
-- Sistema manda promemoria email all'admin ogni 24h
-- **Linea rossa al 15° giorno prima della data**: se admin non ha ancora deciso,
-  sistema auto-rifiuta + rimborso automatico Laura
+Sistema manda promemoria email ogni 24h. Al 15° giorno prima data, il
+sistema **auto-rifiuta** con rimborso automatico al cliente nuovo (il
+cliente esistente è ormai protetto dalla finestra 15gg).
 
 ### 7.3 Revenue calcolato male per stagionalità
 
-Se cambiamo i prezzi stagionali, il sistema deve ricalcolare revenue
-dinamicamente. Problema: il booking esistente ha il suo `totalPrice` fissato al
-momento della prenotazione. Se abbassiamo i prezzi stagionali, il nuovo preventivo
-è più basso del listino originale del booking precedente → override più difficile.
-
-**Soluzione proposta**: sistema usa sempre i prezzi **correnti** per entrambi
-(nuovo e ipotetico del esistente ricalcolato). Da confermare.
+Il sistema usa sempre i prezzi **correnti** per confrontare: prezzo calcolato
+del nuovo booking vs `totalPrice` salvato del booking esistente. Se
+abbassiamo prezzi stagionali, verosimilmente l'override diventa più difficile
+(nuovo booking costa meno del vecchio calcolato a prezzo di listino).
+Comportamento corretto.
 
 ### 7.4 Payment: pre-auth vs full charge
 
-Oggi quando Laura paga, è un **addebito vero**. Se admin rifiuta, serve refund
-(5-10 giorni lavorativi Stripe).
-
-**Alternativa**: pre-autorizzazione Stripe (blocco €2.250, non prelevato). Admin
-approva → si converte in addebito. Admin rifiuta → rilascio pre-auth istantaneo
-(zero tempi bancari).
-
-**Problema**: pre-auth ha limite temporale (7 giorni Stripe). Se admin non decide
-entro 7 giorni, pre-auth scade e bisogna chiedere a Laura di ripagare. Complicato.
-
-**Soluzione pragmatica**: full charge + refund se rifiutato. Laura riceve email
-che spiega chiaramente: "Verrai rimborsata tra 5-10 giorni lavorativi se la
-richiesta non va a buon fine."
+**Scelta**: full charge + refund se rifiutato. Email cliente spiega
+chiaramente "rimborso in 5-10 gg lavorativi se richiesta non approvata". La
+pre-auth ha limiti temporali Stripe (7 giorni) troppo stretti.
 
 ### 7.5 Concorrenza con prenotazioni dei portali esterni
 
-I portali (Bokun, Boataround, etc.) prenotano automaticamente tramite webhook.
-Un portale potrebbe accettare un Social su quella data mentre Laura sta
-compilando la richiesta override.
+Quando arriva una richiesta override, la data viene **bloccata su tutti i
+canali** (fan-out esistente). Nessuna vendita esterna possibile finché admin
+non decide. Sblocco solo al rifiuto.
 
-**Soluzione**: il sistema **riconferma** al submit che la data sia ancora come
-attesa. Se nel frattempo è cambiata (nuovo Social arrivato da Bokun), mostra
-errore "La situazione della data è cambiata. Riprova."
+### 7.6 Amministratore che fa errori (checklist OTA previene)
 
-### 7.6 Amministratore che fa errori
-
-Admin clicca Approva su override "sbagliato" (pensava fosse una data diversa).
-Esistente già cancellato + rimborsato.
-
-**Soluzione proposta**:
-- Dialog di conferma esplicito: "Confermi cancellazione di 8 clienti Social
-  con rimborso €960?"
-- Log dettagliato audit_log con chi ha fatto cosa quando
-- NO possibilità di "annullare override" (operazione irreversibile, il cliente
-  cancellato non si può "ri-prenotare" automaticamente)
+Per override DIRECT: dialog di conferma esplicito prima dell'approve.
+Per override OTA: le 4 checkbox della checklist sono un vincolo che impedisce
+il click accidentale. Log audit completo di ogni azione admin.
 
 ### 7.7 Impatto su sistema Bokun / Boataround / iCal
 
-I portali esterni sanno quando cancelliamo un Social → pubblichiamo la data
-come libera upstream → i portali riaprono le vendite → rischio nuova
-prenotazione Social sulla stessa data da portale esterno MENTRE admin sta
-ancora decidendo il Gourmet.
+- **Override DIRECT→DIRECT**: il fan-out rilascia la data sui portali esterni
+  (iCal export, Bokun API), i portali vedono la data libera e possono
+  riaccettarla (ma resta bloccata al booking Laura che ha vinto).
+- **Override DIRECT→OTA**: admin cancella manualmente sul pannello OTA,
+  Viator/Bokun cascadano a noi via webhook, sistema si aggiorna
+  automaticamente. Questo è il workflow "natural propagation" che scegliamo
+  invece di API cancel dirette (più sicuro, nessun impatto metriche upstream).
+- **Reconciliation cron**: 1h dopo approve, verifichiamo che upstream sia
+  effettivamente CANCELLED. Se no, alert admin.
 
-**Soluzione proposta**: quando arriva richiesta override, la data viene
-**bloccata su tutti i canali** (fan-out esistente). Nessuna vendita esterna
-possibile finché admin non decide. Sblocchi solo al rifiuto.
+### 7.8 Cancellation rate limit raggiunto
 
-### 7.8 Cabin Charter parzialmente venduto (ripreso da §6 Esempio 5)
-
-Se solo 1 cabina su 3 è venduta, la domanda è: il booking esistente "vale"
-€2.500 o €7.500? Il fatturato potenziale è 7.500 ma l'incasso attuale è 2.500.
-
-**Questo è un caso critico** — decisione business necessaria.
+Se Viator ci è al 5.1% ultimi 30gg, admin non può approvare nuovi override
+su Viator finché il rate non scende. Il sistema lo blocca con messaggio
+chiaro. Admin può comunque rifiutare o aspettare.
 
 ---
 
-## 8. Domande che devi decidermi tu (proprietario)
+## 8. Risposte del proprietario alle 12 domande
 
-Queste sono le decisioni che non posso prendere io perché dipendono dalla tua
-filosofia di business, tolleranza al rischio reputazionale, e politica
-commerciale:
+Le 12 domande poste nel brainstorm iniziale sono state tutte risolte:
 
-### 8.1 Cliente al submit — vede il warning prima del pagamento?
+| # | Domanda | Risposta | Motivazione |
+|---|---|---|---|
+| 8.1 | Warning pre-pagamento per cliente? | **A** (paga normalmente, nessun warning) | Trasparenza eccessiva confonderebbe; il cliente non ha bisogno di sapere il backstage. Caso B è gestito automaticamente |
+| 8.2 | Messaggio cliente blocked? | **Generico inline** (al Continua, non post-payment) | Brainstorm 2026-04-23 ha cambiato timing: ora e' banner inline pax step, stesso testo per tutte le reason (blocked = blocked) |
+| 8.3 | Cabin Charter revenue? | **N/A** (Cabin Charter rimosso dal catalogo) | Operativamente problematico: non c'è garanzia di vendere le 3 cabine |
+| 8.4 | Multi-day override accettabile? | **A** (business prevale, admin ha visibilità ALTO IMPATTO badge) | Admin consapevole decide; sistema non auto-approva |
+| 8.5 | Timeout admin a 24h? | **C** (stato limbo fino al 15° giorno pre-data, poi auto-rifiuta) | Protezione equilibrata + notifica admin daily escalation |
+| 8.6 | 2 override simultanei? | **B** (auto-scavalco revenue più alta, altro rimborsato) | Evita overload admin; la regola revenue è già chiara |
+| 8.7 | Cliente perdente cosa offriamo? | **B** (voucher 2 drink gratis a bordo + rebooking 3 date) | Mitiga reputazione senza costo monetario |
+| 8.8 | Limite override/mese? | **D** (nessun limite tecnico ma dashboard mostra contatore + soft warning > 3/mese) | Trasparenza senza vincoli rigidi; auto-regolazione |
+| 8.9 | Chi può approvare? | **A** (solo admin, 1 ruolo) | Multi-ruolo rimandato a Fase 2 |
+| 8.10 | Apertura retroattiva? | **A** (solo booking da oggi) | Rispetto clienti esistenti |
+| 8.11 | Override su boat-block? | **A** (manutenzione priorità assoluta) | Sicurezza non negoziabile |
+| 8.12 | Half-day Fase 2? | Confermato Fase 2 | Motoscafo + half-day brainstorm separato |
 
-Scenario: Laura sta per pagare €2.250 per un Gourmet il 10 agosto. La data ha
-già un Social attivo (override eligibile).
+**Decisioni aggiuntive dal brainstorm 2026-04-23**:
 
-**A**: Paga normalmente, scopre dopo che era in attesa admin (zero warning)
-**B**: Vede modal chiaro "questa data è occupata, richiesta verrà valutata" +
-conferma esplicita prima del pagamento
-**C**: Paga solo 30% deposito (rimborsabile), saldo solo dopo approvazione
-
-**Raccomandazione**: B (trasparenza, commitment chiaro).
-
-### 8.2 Se override NON eligibile, che messaggio vede il cliente?
-
-**A**: Errore generico "Data non disponibile, prova altre date"
-**B**: Errore con date alternative suggerite automaticamente
-**C**: Errore con suggerimento "aumenta n° persone per tentare override"
-**D**: Diverso in base al motivo: "vicina alla data" vs "valore insufficiente"
-
-**Raccomandazione**: D (onestà e chiarezza).
-
-### 8.3 Cabin Charter: revenue esistente quanto vale?
-
-Se solo 1 cabina su 3 è venduta (€2.500 incassato, €7.500 potenziale):
-
-**A**: Usa il **pagato reale** (€2.500) → è facile override da parte del Gourmet
-**B**: Usa il **potenziale pieno** (€7.500) → override quasi impossibile
-**C**: Usa un **mezzo** (media o 50% del potenziale)
-**D**: Admin decide caso per caso (sistema mostra entrambi)
-
-**Nota**: se scegli A, molti Cabin Charter verranno scavalcati; se scegli B,
-quasi nessuno → scelta impatta molto la frequenza override.
-
-### 8.4 Multi-day override è accettabile?
-
-Scenario: Cabin Charter 7 giorni (€2.500) scavalcato da Gourmet 1 giorno (€3.000).
-Mario perde tutta la settimana per €500 di margine.
-
-**A**: SÌ, il business prevale. Mario cancellato + voucher sconto.
-**B**: NO, multi-day è protetto. Override possibile solo su single-day vs single-day.
-**C**: SÌ ma solo se guadagno > N% (es. +30%). Sotto N% bloccato per etica.
-**D**: Sempre admin decide, nessuna regola automatica su multi-day.
-
-### 8.5 Tempo decisione admin — cosa succede al 24° ora?
-
-**A**: Auto-rifiuta dopo 24h (cliente protetto, zero impatto su admin)
-**B**: Auto-approva dopo 24h (cliente nuovo prevale, admin colpevole se non agisce)
-**C**: Stato limbo infinito fino al 15° giorno pre-data → auto-rifiuta
-**D**: Escalation: 24h promemoria email, 48h SMS all'admin, 72h auto-rifiuta
-
-**Raccomandazione**: C (protezione equilibrata) con notifica admin daily.
-
-### 8.6 2 override simultanei stesso slot — chi vince?
-
-Laura €2.250 e Sofia €3.000 entrambe vogliono scavalcare Mario €960.
-
-**A**: Admin vede entrambi e sceglie (decisione umana su bidding de-facto)
-**B**: Sistema auto-sceglie la più alta revenue (€3.000). L'altra rifiutata auto.
-**C**: First-come-first-served (Laura ha cliccato prima di Sofia → Laura vince)
-**D**: Gara entro 2h: entrambe in attesa, sistema alza il vincitore al revenue
-     più alto
-
-**Raccomandazione**: A (admin vede il contesto, niente automatismi su denaro).
-
-### 8.7 Cliente "perdente" — cosa gli offriamo oltre al rimborso?
-
-Mario è stato cancellato. Oltre al rimborso immediato, gli offriamo:
-
-**A**: Niente altro, solo rimborso (rischioso reputazionalmente)
-**B**: Voucher 10% sconto prossima prenotazione (€96 di valore su 960 = 10%)
-**C**: Voucher 20-25% sconto + corsia preferenziale rebooking
-**D**: Rimborso + proposta personalizzata (telefonata dedicata se contatto 
-     admin possibile)
-
-**Raccomandazione**: C (mitiga rischio recensioni, costa poco se override raro).
-
-### 8.8 Limite numerico override/mese
-
-Per evitare che il sistema cancelli 30 clienti/mese in alta stagione:
-
-**A**: Nessun limite, tutti gli override eligibili approvati
-**B**: Max N override/mese (es. 5) → alert se cerchi di superare
-**C**: Max N% clienti impattati/mese (es. 2%) → dinamico in base a volume
-**D**: Nessun limite tecnico ma dashboard admin mostra "N override questo mese"
-     per auto-regolazione
-
-**Raccomandazione**: D (trasparenza senza vincoli hardcoded).
-
-### 8.9 Chi può vedere/approvare gli override?
-
-**A**: Solo tu (proprietario, 1 admin)
-**B**: Tu + N dipendenti autorizzati (oggi User.role="ADMIN" è unico ruolo)
-**C**: Approvazione a 2 mani: admin propone, proprietario conferma (per override
-     grossi > €5.000)
-
-**Nota**: oggi ogni admin ha stessi permessi. Per implementare C serve aggiungere
-ruoli (SENIOR_ADMIN, JUNIOR_ADMIN).
-
-### 8.10 Apertura retroattiva: i booking già esistenti vengono convertiti?
-
-Quando lanciamo la feature, tutti i booking già in DB esistono senza "priorità
-revenue". Come trattiamo:
-
-**A**: Nessuna conversione — la feature vale solo per prenotazioni future da
-     oggi in poi.
-**B**: Backfill — ricalcola revenue di tutti i booking passati, la feature 
-     funziona subito.
-**C**: Ibrido — feature attiva dal giorno 1, ma non consente override sui booking
-     creati **prima** del lancio (protezione retroattiva dei clienti "vecchi").
-
-**Raccomandazione**: C (rispetto reputazione + uncontestable).
-
-### 8.11 Override su boat-block admin manuale
-
-Situazione: admin ha bloccato manualmente la barca per manutenzione.
-Arriva richiesta Gourmet alta-priorità. È più importante la manutenzione o il
-Gourmet?
-
-**A**: Boat-block ha priorità assoluta (no override possibile). Manutenzione
-     è sacra.
-**B**: Revenue decide anche qui: se Gourmet vale più del "costo della
-     manutenzione mancata", admin può approvare.
-**C**: Sempre admin decide. Il sistema mostra alert ma non bloccca.
-
-**Raccomandazione**: A (la manutenzione ha implicazioni di sicurezza).
-
-### 8.12 Half-day (pacchetti mezza giornata) — deferred?
-
-Abbiamo parcheggiato questa domanda. Confermi che:
-- **Fase 1** (subito implementabile): solo pacchetti a giornata intera + multi-day
-- **Fase 2** (futuro prossimo): introduzione mezza-giornata con calendario a slot
-  mattina/pomeriggio?
-
-Oppure pianifichiamo mezza-giornata nella stessa tranche iniziale?
+| Decisione | Scelta | Motivazione |
+|---|---|---|
+| Cabin Charter nel catalogo | **Rimosso** | Revenue non prevedibile, complessità operativa |
+| Timing check cliente | **Al "Continua" post-pax, non post-payment** | Evita che cliente paghi e poi scopra indisponibilità |
+| Workflow OTA (Viator/Bokun) | **Checklist manuale 4-step + natural propagation** | Protegge ranking (niente API cancel lato vendor) |
+| Reverse override (OTA new vs DIRECT existing) | **Protezione cliente DIRECT + ManualAlert** | Non automatico; admin decide caso per caso |
+| Email apology OTA | **NON inviata** (gestisce il portale upstream) | Evita confusione cliente + duplicate |
+| Cancellation rate cap | **3% soft / 5% hard-block** | Viator de-ranka oltre 5% |
+| Reconciliation cron post-approve | **+1h automatica** | Rileva se cancel upstream non è avvenuto |
 
 ---
 
 ## 9. Costi e tempi di implementazione
 
-**Stima tempi tecnici** (solo indicativa, dopo approvazione specifica):
+Stima tempi tecnici dopo aggiornamento brainstorm #2:
 
-- Nuovo modello DB + migrazione: 2-3 giorni
-- Logica revenue + eligibilità override: 2-3 giorni
-- UI admin (pagina richieste override, alert dashboard): 3-4 giorni
-- Email template ("apology" esiste già, "override approvato/rifiutato" nuovi):
-  1-2 giorni
-- Integrazione fan-out esistente per bloccare canali esterni: 1 giorno
-- Testing + edge cases: 3-4 giorni
+- Schema + migration (incluso nuovo status PENDING_RECONCILE_FAILED): 0.5 gg
+- Business logic eligibility + cancellation-rate + reconciliation: 2 gg
+- Server actions admin (approve con OTA checklist + reject): 1 gg
+- Server Action `checkOverrideEligibility` (chiamata dal Continua): 0.5 gg
+- Cron: reminders + dropdead + refund-retry + reconcile OTA: 1 gg
+- UI admin: lista + detail + checklist OTA + polling webhook + KPI cancellation
+  rate: 2.5 gg
+- Sidebar + dashboard KPI integration: 0.5 gg
+- UI cliente wizard (timing Continua + spinner + banner inline + greying):
+  1 gg
+- Email templates × 6: 1 gg
+- Notification events + dispatcher + FATAL branch: 0.5 gg
+- Integration tests: 2 gg
+- Manual QA: 0.5 gg
 
-**Totale**: ~12-17 giorni lavorativi di sviluppo.
+**Totale: ~12 giorni lavorativi** (invariato rispetto al brainstorm #1:
+-2gg per Cabin Charter rimosso, +2gg per workflow OTA + cancellation-rate +
+reconcile cron).
 
 **NON inclusi**:
-- Copywriting legale email customer (scuse, rimborso) → da fornitore legale
-- Formazione admin sul nuovo flusso → 1 sessione da concordare
+- Copywriting legale email customer → da fornitore legale
+- Formazione admin sul workflow OTA (checklist 4-step) → 1 sessione 30min
 
 ---
 
@@ -531,40 +438,65 @@ Oppure pianifichiamo mezza-giornata nella stessa tranche iniziale?
 
 Scenario attuale:
 - Un Social da €960 blocca una domenica che potrebbe valere €3.000 Gourmet
-- Margine perso: **€2.000 a settimana × 20 settimane stagione = €40.000+/anno**
-  (stima conservativa)
+- Margine perso: **~€40.000/anno** stima conservativa
 
 Scenario con feature:
-- Le date high-value NON restano bloccate da low-value
-- Trade-off: rischio 10-20 chargeback/anno × €100 dispute = **€1-2.000/anno**
-- Overhead admin per decisione: ~5 min × N override/mese
-- Rischio reputazione 2-3 recensioni negative/anno
+- Date high-value NON restano bloccate da low-value
+- Trade-off rischio: 10-20 chargeback/anno × €100 = **€1-2.000/anno**
+- Overhead admin: ~5 min × N override/mese per DIRECT, ~10 min per OTA
+  (apertura pannello esterno + cancel manuale)
+- Rischio reputazione: 2-3 recensioni negative/anno mitigato da voucher +
+  rebooking suggestions
 
-**Net impact atteso**: +€35.000+/anno di margine recuperato.
+**Net impact atteso**: **+€35.000+/anno** di margine recuperato.
 
 ---
 
 ## 11. Prossimi passi
 
-1. **Tu leggi il documento** e rispondi alle **12 domande in Sezione 8**
-2. Decidiamo **priorità fase 1** (subito) vs **fase 2** (dopo)
-3. Scrivo la specifica tecnica dettagliata per gli sviluppatori
-4. Produciamo un piano implementativo con tempi precisi
-5. Iniziamo implementazione
-
-Nessuna decisione tecnica è già stata presa: tutto dipende da come vuoi che il
-business si comporti in ognuno di questi scenari.
+1. ✓ Lettura doc — **completata**
+2. ✓ 12 domande — **completate** (brainstorm iniziale + 2026-04-23)
+3. ✓ Spec tecnica — **scritta** (2026-04-21-priority-override-fase1-trimarano-design.md)
+4. ⏳ Plan implementazione — **in corso** (2026-04-21-priority-override-fase1-trimarano-plan.md)
+5. ⏳ Implementazione
 
 ---
 
-## 12. Riepilogo per decisione rapida
+## 12. Sintesi finale decisioni design
 
-Se ti serve rispondere solo le domande urgenti, queste 4 hanno l'impatto più alto
-sul design:
+**Business scope**:
+- Trimarano only, Fase 1
+- 2 pacchetti in scope: **Gourmet** (1 giorno, €2-3k) + **Charter** (3-7gg, €7.5k)
+- Cabin Charter rimosso dal catalogo
+- Social Giornaliero escluso dal catalogo attivo
 
-- **8.1** Warning pre-pagamento per cliente (A/B/C)?
-- **8.3** Cabin Charter: revenue pagato o potenziale (A/B/C/D)?
-- **8.4** Multi-day override permesso (A/B/C/D)?
-- **8.5** Timeout admin: comportamento a 24h e oltre (A/B/C/D)?
+**UX cliente**:
+- Check al click "Continua" post-pax step (prima di customer info + pagamento)
+- 3 scenari server: `normal` / `override_request` / `blocked`
+- `blocked` = banner rosso inline pax step + greying calendario sessione
+- `override_request` = transparent, cliente paga normalmente + email "in attesa"
 
-Le altre 8 possiamo chiuderle in una seconda chiamata.
+**UX admin**:
+- Dashboard: lista richieste PENDING + filtro per sorgente conflitti
+- Detail page con revenue analysis + ALTO IMPATTO badge
+- Per conflict OTA: checklist 4-step (apri / cancella / verifica rimborso /
+  dichiara) + polling webhook sync + Approve disabled finché tutto pronto
+- KPI card cancellation rate per-portale con soglie 3% warn / 5% hard block
+- ManualAlert UI per reverse override (OTA→DIRECT)
+
+**Automazioni**:
+- Cron escalation reminders (24/48/72h)
+- Cron dropdead auto-expire al 15° giorno
+- Cron refund-retry per Stripe failures
+- Cron override-reconcile +1h post-approve OTA (verifica upstream)
+
+**Feature flag**:
+- `FEATURE_OVERRIDE_ENABLED` master (DIRECT-vs-DIRECT)
+- `FEATURE_OVERRIDE_OTA_ENABLED` gating OTA workflow (rollout graduale,
+  2 settimane dopo DIRECT)
+
+**Email**:
+- Apology solo per override DIRECT (non OTA — gestito upstream)
+- Voucher 2 drink gratis + rebooking suggestions 3 date alternative
+
+**Stima**: 12 giorni effort. Ready per implementazione.

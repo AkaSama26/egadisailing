@@ -1,8 +1,8 @@
 # Sistema priorità + override booking — Fase 1 (Trimarano)
 
-**Data**: 2026-04-21
-**Status**: approved (post brainstorm con proprieta', 12 domande decise)
-**Scope**: Trimarano only · 3 pacchetti · full-day/multi-day · no half-day
+**Data**: 2026-04-21 (agg. 2026-04-23 post brainstorm #2)
+**Status**: approved (post brainstorm #1 con proprieta', 12 domande decise; post brainstorm #2 2026-04-23 workflow OTA + Cabin Charter rimosso)
+**Scope**: Trimarano only · 2 pacchetti (Gourmet + Charter) · full-day/multi-day · no half-day
 
 Brainstorm sorgente: discussione sessione 2026-04-21.
 Documento cliente parallelo: `docs/client/2026-04-21-sistema-priorita-prenotazioni.md`.
@@ -32,6 +32,9 @@ e **protezione del cliente** nelle 2 settimane prima della data.
   sono solo label descrittive per ordinamento UI admin
 - Backfill retroattivo booking preesistenti → nessun booking esistente al go-live
 - Override su blocco manutenzione admin → manutenzione ha priorita' assoluta
+- **Cabin Charter Trimarano** → rimosso dal catalogo (operativamente problematico:
+  prenota settimana senza garanzia riempimento 3 cabine, spina nel fianco per
+  gestione operativa e revenue non prevedibile). Rimosso da catalogo, non in scope.
 
 ## 4. Catalogo Trimarano (post-modifica)
 
@@ -39,12 +42,12 @@ e **protezione del cliente** nelle 2 settimane prima della data.
 |---|---|---|---|---|
 | 1 | **Gourmet** | 1 giorno | Fisso gruppo | €2.000 (bassa) / ~€3.000 (alta) |
 | 2 | **Charter** | 3-7 giorni | Fisso settimana | €7.500 (bassa) |
-| 3 | **Cabin Charter** | 7 giorni | €2.500 × N cabine vendute (1-3) | €2.500 / €5.000 / €7.500 |
 
-**Vendita**:
+**Vendita** (entrambi "barca intera = 1 cliente = 1 pagamento"):
 - Gourmet: 1 booking per 1 cliente (paga per il gruppo 8-10 pax)
 - Charter: 1 booking per 1 cliente (paga per il gruppo 6 pax)
-- Cabin Charter: **fino a 3 booking separati** (1 per cabina), ognuno 2 pax
+
+**Cabin Charter rimosso** dal catalogo (vedi §3 Non-goal).
 
 ## 5. Regole di override (decisioni brainstorm)
 
@@ -61,7 +64,6 @@ Dove:
   nuovo pacchetto + data + numPax specificati dal cliente
 - `revenue(existing_conflicting_bookings_sum)` = **somma** dei `totalPrice`
   dei booking attivi (`PENDING|CONFIRMED`) che overlappano la data del nuovo.
-  Per Cabin Charter parzialmente venduto = solo cabine vendute (non potenziale).
 
 ### 5.2 Finestra 15 giorni (cutoff)
 
@@ -104,11 +106,29 @@ Il check avviene al submit.
 
 **Eccezione**: date nel passato + date con boat-block manuale = grey disabled.
 
-### 6.2 Validazione al submit
+### 6.2 Validazione al click "Continua" (post-pax step)
 
-Quando il cliente clicca "Conferma e paga", il server eseguira' il check
-pre-payment (server action in `create-direct.ts` + nuovo helper
-`override-eligibility.ts`):
+**Timing cambiato rispetto al primo brainstorm**: il check eligibility NON
+avviene piu' al "Conferma e paga" finale, ma al click **"Continua"** dopo lo
+step selezione pax (prima che il cliente inserisca i customer info e prima del
+pagamento Stripe). Questo evita il pattern "cliente compila tutto, inserisce
+carta, e solo lì scopre che la data non è disponibile".
+
+**Flusso UX**:
+1. Cliente sceglie pacchetto + data sul calendario
+2. Step pax: seleziona numero persone
+3. Click **"Continua"** → **spinner** mentre il server fa il check eligibility
+4. In base al risultato:
+   - `status: "normal"` → prosegue allo step customer info → pagamento
+   - `status: "override_request"` → prosegue allo step customer info → pagamento
+     (il cliente pagherà normalmente, booking creato PENDING con override)
+   - `status: "blocked"` → **torna allo step pax** con banner error inline in
+     rosso: *"Siamo spiacenti, data non disponibile per questo pacchetto. Scegli
+     altra data o pacchetto."* (il cliente non inserisce dati né paga)
+
+Il check e' implementato via Server Action dedicata (`checkOverrideEligibility`
+in `src/lib/booking/override-actions.ts` o simile) che wrappa il pure helper
+`override-eligibility.ts`:
 
 ```
 Input:
@@ -136,13 +156,14 @@ Output:
 - Admin riceve alert in dashboard
 
 #### Scenario C — Blocked (revenue insufficiente OR ≤ 15gg OR boat-block)
-- `status: "blocked"` → **messaggio pre-payment**: *"Siamo spiacenti, la data
-  non e' piu' disponibile per questo pacchetto"*
+- `status: "blocked"` → **redirect allo step pax** con **error banner inline
+  rosso**: *"Siamo spiacenti, data non disponibile per questo pacchetto. Scegli
+  altra data o pacchetto."* (il cliente non ha ancora inserito dati né pagato)
 - **Greying client-side** della data nel calendario di Laura (sessionStorage,
   persistenza solo di sessione browser — refresh OK, chiusura tab reset)
-- NESSUN addebito Stripe
-- Email automatica con **date alternative libere** (3 prossime bookabili per
-  quel pacchetto) → integrato con template R29
+- NESSUN addebito Stripe (il cliente era prima del customer info step)
+- Nessuna email automatica (non ha lasciato contatti) — il cliente resta nel
+  wizard e puo' scegliere altra data o pacchetto
 
 ### 6.3 2 richieste concorrenti sullo stesso slot
 
@@ -191,6 +212,168 @@ async function hasEqualRevenueCompetitor(request): Promise<boolean> {
 }
 ```
 
+### 6.4 Workflow override contro OTA (DIRECT-new vs OTA-existing)
+
+**Scenario**: Laura prenota DIRECT Gourmet 10 agosto (€3.000). Il conflitto su
+quella data e' un booking OTA (Mario da Viator tramite Bokun, Social €960).
+
+A differenza di un override DIRECT-vs-DIRECT (dove il refund + cancel e'
+interamente automatico via Stripe), un override contro OTA richiede un
+**workflow manuale** perché:
+1. Il pagamento di Mario è sui sistemi Viator (non sul nostro Stripe): non
+   possiamo emettere il rimborso direttamente.
+2. L'azione canonica e' **cancellare sul pannello OTA upstream** (Viator
+   extranet). Bokun via webhook ci propagherà la cancellazione come evento
+   naturale.
+3. Chiamare direttamente `Bokun.cancelBooking()` via API sarebbe **chiamata
+   lato vendor** (noi), non lato cliente: potrebbe violare policy OTA e conta
+   come "supplier-initiated cancellation" nelle metriche Viator (impattando
+   ranking e cancellation rate).
+
+**Decisione**: trust natural propagation. Admin cancel manualmente upstream,
+Viator → cascade a Bokun → webhook a noi → DB update `Mario CANCELLED`
+(idempotente via `ProcessedBokunEvent`).
+
+**Flusso workflow admin** (UI checklist 4 step):
+
+```
+┌────────────────────────────────────────────────────────────┐
+│ ⚠ OVERRIDE CONTRO OTA — CHECKLIST MANUALE                  │
+│                                                            │
+│ Conflitto con booking VIATOR (via Bokun) BK-12345         │
+│ Cliente upstream: Mario Rossi · Social €960               │
+│                                                            │
+│ Passo 1 — Apri il pannello esterno                        │
+│   [ ] Apri Viator extranet                                │
+│       → Link: https://www.viator.com/supplier/...         │
+│                                                            │
+│ Passo 2 — Cancella upstream                               │
+│   [ ] Cancella prenotazione #BK-12345 su Viator           │
+│                                                            │
+│ Passo 3 — Verifica il rimborso                            │
+│   [ ] Rimborso €960 processato da Viator                  │
+│                                                            │
+│ Passo 4 — Dichiarazione di responsabilità                 │
+│   [ ] Confermo di aver completato manualmente tutti i     │
+│       passaggi sul pannello OTA. Ho cancellato, verificato│
+│       il rimborso, e rilascio la data.                    │
+│                                                            │
+│ Stato sync: ⏳ In attesa webhook Bokun `bookings/cancel`  │
+│           (tipicamente < 5 min dal cancel upstream)       │
+│                                                            │
+│ [✓ Approva]  ← disabled finché webhook non arrivato       │
+│ [✗ Rifiuta — rimborsa Laura, nessuna azione OTA]          │
+└────────────────────────────────────────────────────────────┘
+```
+
+**Regole**:
+- Le 4 checkbox devono essere spuntate dall'admin prima che il bottone
+  "Approva" si abiliti.
+- Aggiuntivo: il bottone Approva resta **disabled fino all'arrivo del
+  webhook Bokun** `bookings/cancel` per quel `bokunBookingId`. Il sistema
+  polling UI ogni 15s verifica se il `BokunBooking.status` e' passato a
+  `CANCELLED` nel nostro DB.
+- Quando entrambe le condizioni sono soddisfatte (4 checkbox + webhook
+  arrivato), admin clicca Approva → newBooking passa a CONFIRMED, Laura
+  riceve email di conferma.
+
+**Diagramma sequenza**:
+
+```
+ Admin UI                Sistema               Bokun/Viator
+  │                       │                         │
+  │ click "Apri Viator"   │                         │
+  │ ───────────────────── link esterno ───────────> │
+  │                       │                         │
+  │ [manually cancel on Viator extranet]            │
+  │ ─────────────────────────────────────────────>  │
+  │                       │                   Viator cascades
+  │                       │                   to Bokun API
+  │                       │ <── webhook bookings/cancel ──
+  │                       │   processBokunWebhook
+  │                       │   BokunBooking → CANCELLED
+  │                       │   Booking → CANCELLED
+  │                       │
+  │ [4 checkbox spuntate] │
+  │ [polling detects webhook arrived]               │
+  │                       │
+  │ click "Approva"       │
+  │ ───────────────────>  │
+  │                       │  approveOverride:
+  │                       │   - newBooking CONFIRMED
+  │                       │   - blockDates(DIRECT)
+  │                       │   - email Laura CONFIRMED
+  │                       │   - schedule reconcile cron +1h
+  │                       │   - (nessun refund Mario — già fatto upstream)
+  │                       │   - (nessuna email apology Mario — gestita Viator)
+  │                       │
+  │                       │  +1h → cron reconciliation
+  │                       │   verifica Bokun API search
+  │                       │   upstream status = CANCELLED?
+  │                       │     ✓ OK, nessuna azione
+  │                       │     ✗ flag PENDING_RECONCILE_FAILED + alert admin
+```
+
+**Reconciliation cron post-approve**: 1h dopo `approveOverride` su override
+con conflicting source OTA, il cron `/api/cron/override-reconcile` (§8.4)
+rileggere Bokun API `/booking.json/search?bookingId=...` per ogni conflicting
+booking OTA. Se upstream risulta ancora `CONFIRMED` (il cancel manuale admin
+non e' stato completato correttamente, o Viator non ha cascadato), il sistema
+flagga `OverrideRequest.status = PENDING_RECONCILE_FAILED` + dispatch
+notification admin fatal.
+
+### 6.5 Reverse override (OTA new vs DIRECT existing)
+
+**Scenario**: Laura ha booking DIRECT Gourmet 10 agosto (€3.000, CONFIRMED,
+pagato). Dal webhook Bokun/Boataround/charter email arriva un nuovo booking
+OTA (Mario Viator Social €960) sulla stessa data.
+
+Il sistema **NON** applica override automatico lato OTA. Decisione di design:
+proteggiamo Laura (DIRECT esistente) per default, rifiutiamo il webhook OTA
+via cancel API + emettiamo ManualAlert urgente all'admin.
+
+**Flusso sistema** (automatico, nessuna azione cliente):
+1. Webhook Bokun `bookings/create` arriva, passa validazione HMAC/dedup
+2. `importBokunBooking` rileva overlap con booking DIRECT attivo su stesso
+   boat/date → NON crea il booking localmente in stato CONFIRMED
+3. Invece: chiama `Bokun.cancelBooking(bokunBookingId)` via API (questa è
+   "vendor-initiated" ma giustificata dal fatto che non avremmo mai
+   potuto accettare la prenotazione perché la data era già occupata)
+4. Crea `ManualAlert` urgente admin con:
+   - Tipo: `CROSS_CHANNEL_CONFLICT`
+   - Details: "Nuovo booking Viator BK-12345 (€960) rifiutato: data già
+     occupata da Laura DIRECT DRC-ABCDE (€3.000)"
+   - Action suggerita: "Verifica Viator extranet, conferma rimborso a Mario"
+
+**Admin decide manualmente** cosa fare tramite la UI del ManualAlert:
+- **Default "protezione Laura"**: nessuna azione richiesta — Mario è stato
+  rifiutato automaticamente, il sistema e' in stato coerente
+- **"Revenue wins"** (rara): se business decide che vuole tenere Mario invece
+  di Laura, admin apre la prenotazione di Laura e clicca Cancel con motivo
+  "OTA revenue priority". Email di scuse + voucher + refund Laura. Poi
+  ri-importa Mario manualmente tramite admin action dedicata (oppure lascia
+  che Viator ri-sincronizzi)
+
+**Nota importante**: Laura è sempre pagata e confermata. Il flow non scala
+alla frequenza alta (ogni ManualAlert richiede revisione umana). Se la
+frequenza supera soglia (es. > 3 ManualAlert CROSS_CHANNEL_CONFLICT/settimana),
+il sistema alerta l'admin per valutare se la sincronizzazione iCal/Bokun sta
+funzionando correttamente (i portali non dovrebbero accettare booking su
+date già bloccate upstream).
+
+### 6.6 OTA-new vs OTA-existing (cross-portale)
+
+**Scenario**: Mario ha Viator (via Bokun) Social 10 agosto CONFIRMED. Arriva
+webhook Boataround con nuovo booking Social stesso 10 agosto (multi-OTA
+race a livello di iCal propagation lag).
+
+**Pattern identico a §6.5**: il sistema rifiuta automaticamente il secondo
+webhook (via cancel API verso il portale entrante) + emette `ManualAlert
+CROSS_CHANNEL_CONFLICT` admin. Admin decide protezione primo vs revenue
+wins. Nessun override automatico cross-portale — queste sono
+inconsistenze che richiedono revisione umana e (probabile) fix configurazione
+iCal/Bokun upstream.
+
 ## 7. Flusso admin
 
 ### 7.1 Nuovo panel `/admin/override-requests`
@@ -212,43 +395,99 @@ PENDING. Visibile anche in `/admin` (dashboard home) come KPI.
 │    📧 laura@email.com · 📞 +39 ...                        │
 │                                                            │
 │ ⚠ In conflitto con                                        │
-│    [1] Cabin Charter · Mario Rossi · 5-12 agosto          │
-│        1 cabina su 3 venduta · €2.500 pagati              │
-│        Link: /admin/prenotazioni/DRC-CABIN                │
+│    [1] Charter · Mario Rossi · 5-12 agosto                │
+│        €7.500 pagati                                      │
+│        Link: /admin/prenotazioni/DRC-MARIO                │
+│                                                            │
+│ 🏷  Conflitti sorgente                                    │
+│    [1] Mario Rossi · Charter · 5-12 agosto                │
+│        Sorgente: VIATOR (via Bokun) BK-12345              │
+│        → Richiede workflow manuale OTA (§6.4)             │
 │                                                            │
 │ 💰 Analisi revenue                                        │
 │    Nuovo:                 €3.000                           │
-│    Esistente pagato:      €2.500 (1 cabina venduta)       │
-│    Esistente potenziale:  €7.500 (se tutte 3 vendute)     │
-│    ➜ Delta netto (approvi):  +€500 (3000 - 2500 refund)  │
+│    Esistente pagato:      €7.500                           │
+│    ➜ Delta netto (approvi):  -€4.500 (override NON conviene) │
+│    Status: BLOCKED — revenue insufficiente                │
 │                                                            │
 │ 🗓  Finestra                                              │
 │    Dal today: 16 giorni · Cutoff: 26 luglio               │
 │                                                            │
 │ ⚠ IMPATTO (multi-day)                                     │
-│    Approvi = cancelli 7 giorni di vacanza di Mario        │
+│    Approvi = cancelli 7 giorni di Charter di Mario        │
 │    per 1 giorno di Gourmet. Considerare reputazione.      │
 │                                                            │
 │ [✓ Approva]  [✗ Rifiuta]  [💬 Nota (opzionale)]          │
 └────────────────────────────────────────────────────────────┘
 ```
 
+### 7.1bis Filtri e ordinamento lista
+
+**Filtri aggiuntivi** oltre a status:
+- **Sorgente conflitti**: DIRECT, VIATOR (Bokun), BOATAROUND, SAMBOAT,
+  CLICKANDBOAT, NAUTAL, MULTIPLE (conflitti con source misti)
+- **Impatto**: SINGLE_DAY, MULTI_DAY, ALTO_IMPATTO (auto-flag revenue delta
+  negativo o multi-day scavalcato da single-day)
+
+**Colonna lista**: "Sorgente conflitti" tra "Nuovo cliente" e "Drop-dead".
+
 ### 7.2 Warning "ALTO IMPATTO" (decisione 8.4)
 
-Per override che coinvolgono **multi-day** (Charter o Cabin Charter) scavalcati
+Per override che coinvolgono **multi-day** (Charter 3-7 giorni) scavalcato
 da single-day (Gourmet): badge **⚠ ALTO IMPATTO** rosso sopra l'alert.
 Testo aggiuntivo:
 
 ```
 ⚠ ATTENZIONE
-Approvando cancellerai 7 giorni di Cabin Charter di Mario
-(€2.500 rimborso, impatto reputazionale potenzialmente alto).
-Il Gourmet nuovo guadagna solo €2.250.
-Guadagno netto: -€250.
+Approvando cancellerai 7 giorni di Charter di Mario
+(€7.500 rimborso, impatto reputazionale potenzialmente alto).
+Il Gourmet nuovo guadagna solo €3.000.
+Guadagno netto: -€4.500 → override NON conviene.
 Considera rifiutare.
 ```
 
 Admin vede comunque il bottone Approva — la decisione e' sua.
+
+### 7.2bis Override contro OTA: workflow checklist
+
+Quando almeno un conflicting booking ha `source IN (BOKUN, BOATAROUND,
+SAMBOAT, CLICKANDBOAT, NAUTAL)`, la detail page mostra un blocco workflow
+specifico (vedi §6.4 per flusso completo). Mockup UI:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ 🏷  WORKFLOW OTA — 2 conflicting booking richiedono azione  │
+│                                                              │
+│ ── VIATOR (via Bokun) — BK-12345 ──                         │
+│ Cliente upstream: Mario Rossi · Social €960                 │
+│                                                              │
+│  [ ] Passo 1 — Apri Viator extranet                         │
+│       → https://www.viator.com/supplier/bookings/BK-12345   │
+│  [ ] Passo 2 — Cancella #BK-12345 su Viator                 │
+│  [ ] Passo 3 — Verifica rimborso €960 processato da Viator  │
+│  [ ] Passo 4 — Dichiaro di aver completato i 3 passaggi    │
+│                                                              │
+│ Stato sync: ⏳ Webhook Bokun bookings/cancel non arrivato    │
+│             (polling ogni 15s — tipicamente <5min)          │
+│                                                              │
+│ ── VIATOR (via Bokun) — BK-67890 ──                         │
+│ Cliente upstream: Sofia Bianchi · Social €800               │
+│  [ ] ... (analogo 4 checkbox)                               │
+│                                                              │
+│ ────────────────────────────────────────────────────────── │
+│                                                              │
+│ [✓ Approva] — disabled finché TUTTE le checkbox sono        │
+│               spuntate E TUTTI i webhook Bokun arrivati     │
+│ [✗ Rifiuta] — sempre abilitato (nessuna azione OTA richiesta)│
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Polling UI**: il componente React polla `GET /api/admin/override-requests/[id]/ota-sync-status`
+ogni 15s. L'endpoint ritorna `{ conflictId, bokunBookingId, upstreamStatus }[]`
+basato su query `BokunBooking.findMany({where: {bokunBookingId: in: [...], status: "CANCELLED"}})`.
+Quando tutti i bokunBookingId richiesti risultano CANCELLED nel nostro DB
+(sync via webhook), il bottone Approva si abilita (se anche le 4 checkbox
+per ciascuno sono state spuntate).
 
 ### 7.3 Contatore override/mese + soft warning
 
@@ -271,32 +510,58 @@ Non blocca — admin puo' continuare.
 
 ### 7.4 Azione Approva (click "✓ Approva")
 
-Backend `approveOverride(requestId, adminUserId, notes?)` — pattern aligned con
-R10 BL-M4 (Stripe refund post-commit, non dentro tx):
+Backend `approveOverride(requestId, adminUserId, notes?, otaConfirmations?)`
+— pattern aligned con R10 BL-M4 (Stripe refund post-commit, non dentro tx):
 
-1. **Pre-check** (fuori tx): chiamata a `getChargeRefundState` per ciascun
-   `Payment.stripeChargeId` dei conflicting booking. Se Stripe unreachable
-   → error early, nessun cambiamento DB.
-2. **DB transaction atomic**:
+1. **Pre-check natural propagation OTA**: se la request ha almeno un
+   `conflictSourceChannels` OTA (non-DIRECT), verifica che:
+   a. Tutte le checkbox admin sono state spuntate (parametro
+      `otaConfirmations` contiene 4 bool per ogni conflicting OTA booking)
+   b. Ogni `BokunBooking/BoataroundBooking/CharterBooking` conflicting ha
+      `status = CANCELLED` nel DB locale (webhook gia' arrivato)
+   Se qualsiasi delle due condizioni e' mancante → throw `ValidationError`
+   con motivo chiaro (UI non deve mai permettere l'invio in questo stato,
+   ma il server verifica comunque per difesa-in-profondita').
+2. **Pre-check refund DIRECT** (fuori tx): chiamata a `getChargeRefundState`
+   per ciascun `Payment.stripeChargeId` dei conflicting booking **DIRECT**
+   (non-OTA — i booking OTA non hanno Stripe locale, il refund e' gia' stato
+   fatto upstream dall'admin nel passo 3 della checklist). Se Stripe
+   unreachable → error early, nessun cambiamento DB.
+3. **DB transaction atomic**:
    a. `OverrideRequest.status = APPROVED, decidedAt, decidedByUserId, decisionNotes`
-   b. Per ogni conflicting booking: `booking.status = CANCELLED` (updateMany)
+   b. Per ogni conflicting booking DIRECT: `booking.status = CANCELLED` (updateMany).
+      I booking OTA sono già CANCELLED nel DB (sync via webhook Bokun ricevuto
+      prima dell'approve, vedi §7.4 step 1).
    c. `newBooking.status = CONFIRMED`
    d. Se presente competitor a pari revenue (equal-revenue case §13.1): il
       competitor viene auto-rifiutato dentro stessa tx (`status=REJECTED`).
-3. **Post-commit side effects** (try/catch, errori collezionati non-blocking):
-   a. Per ogni conflicting booking: `refundPayment()` via Stripe (retry 3×,
-      pattern R10 BL-M4). Se fallisce: scrivere `Payment.status=FAILED` +
-      log fatal + alert admin; la reconciliation cron §8.3 recupera.
-   b. `releaseDates(CHANNELS.DIRECT)` per ogni conflict → fan-out esterni +
-      `ManualAlert` per source non-DIRECT (R10 BL-C2 pattern).
+   e. Se `conflictSourceChannels` contiene almeno un source OTA: setta
+      `reconcileCheckDue = now + 1h` (usato dal cron §8.4).
+4. **Post-commit side effects** (try/catch, errori collezionati non-blocking):
+   a. Per ogni conflicting booking **DIRECT**: `refundPayment()` via Stripe
+      (retry 3×, pattern R10 BL-M4). Se fallisce: scrivere `Payment.status=FAILED`
+      + log fatal + alert admin; la reconciliation cron §8.3 recupera.
+      **NON viene fatto refund per booking OTA** (rimborso e' gia' stato
+      gestito upstream dall'admin nel passo 3 della checklist §6.4).
+   b. `releaseDates(CHANNELS.DIRECT)` per ogni conflict DIRECT → fan-out
+      esterni (R10 BL-C2 pattern). Per conflict OTA: il webhook `bookings/cancel`
+      ha già rilasciato l'availability, niente da fare qui.
    c. `blockDates(CHANNELS.DIRECT)` per il newBooking → fan-out conferma.
-   d. Email apology al cliente perdente (`overbookingApologyTemplate`
-      esistente R29, esteso con voucher soft "2 drink gratis" nel body +
-      rebooking suggestions 3 date libere auto-calcolate).
+   d. Email apology **solo** per conflict DIRECT perdenti
+      (`overbookingApologyTemplate` esistente R29, esteso con voucher soft
+      "2 drink gratis" + rebooking suggestions 3 date libere auto-calcolate).
+      **NON inviamo apology per conflict OTA** — il cliente OTA ha rapporto
+      col portale upstream, che gestisce rimborso + eventuale apology da parte
+      loro (decisione brainstorm 2026-04-23).
    e. Email conferma al cliente vincitore (`bookingConfirmationTemplate` R29).
-   f. Auto-reject email al competitor equal-revenue (se scattato 2d).
-   g. Audit log admin action (`auditLog action="OVERRIDE_APPROVED"`).
+   f. Auto-reject email al competitor equal-revenue (se scattato §13.1).
+   g. Audit log admin action (`auditLog action="OVERRIDE_APPROVED"`) includendo
+      `conflictSourceChannels` in `after` payload.
    h. Dispatch notification admin `OVERRIDE_APPROVED` (email+telegram) per log.
+   i. **Se `reconcileCheckDue` e' stato settato in step 3.e**: il cron §8.4
+      (schedulato separatamente, non async job enqueued) lo processerà +1h
+      dopo per verificare lo stato upstream OTA e flaggare eventuale
+      `PENDING_RECONCILE_FAILED`.
 
 ### 7.5 Azione Rifiuta (click "✗ Rifiuta")
 
@@ -367,6 +632,45 @@ Scansiona `Payment.status = FAILED AND booking.status = CANCELLED`:
 Questo chiude il gap §13.5 "refund orphan state" — recupero automatico
 + fallback manuale admin senza perdita stato.
 
+### 8.4 Reconciliation post-approve OTA (nuovo cron)
+
+**Nuovo cron**: `/api/cron/override-reconcile` ogni 10min (sfasato 3min
+dai crons §8.1/§8.2).
+
+Scansiona `OverrideRequest.status = APPROVED AND reconcileCheckDue <= now
+AND reconcileCheckedAt IS NULL`:
+
+Per ogni request, per ogni `conflictingBookingId` che apparteneva a un
+canale OTA (verificato via `Booking.source`):
+- Chiama Bokun API `/booking.json/search?bookingId={bokunBookingId}` (o
+  analogo per Boataround/SamBoat se applicabile)
+- Se upstream `status === CANCELLED`: nessuna azione, conta come OK
+- Se upstream `status IN (CONFIRMED, ARRIVED)` (cioè **still active**):
+  il cancel manuale admin non e' stato completato correttamente (bug
+  Viator, admin ha solo spuntato checkbox senza aver cancellato, o
+  Viator non ha cascadato a Bokun):
+  - Flag `OverrideRequest.status = PENDING_RECONCILE_FAILED`
+  - Dispatch notification admin `OVERRIDE_RECONCILE_FAILED` (email +
+    telegram FATAL priority)
+  - Audit log `action="OVERRIDE_RECONCILE_FAILED"` con dettaglio booking
+    upstream ancora attivo
+
+Dopo processing (OK o failed), set `reconcileCheckedAt = now` per dedup.
+
+UI admin: override request con status `PENDING_RECONCILE_FAILED` mostra
+un banner rosso fisso in detail page con:
+- Lista dei booking OTA ancora CONFIRMED upstream
+- Bottone "Retry reconcile" che rilancia il check (re-invia query Bokun)
+- Link al pannello OTA per cancellazione manuale tardiva
+
+Se admin approva `Retry reconcile` e upstream nel frattempo e' stato
+effettivamente cancellato, il sistema ripristina `status = APPROVED` +
+alert auto-cleared. Altrimenti resta `PENDING_RECONCILE_FAILED` finché
+non risolto.
+
+**Single-flight guard**: Redis lease `cron:override-reconcile` TTL 5min
+(pattern R14).
+
 ## 9. Modello dati
 
 ### 9.1 Schema Prisma
@@ -380,18 +684,26 @@ model OverrideRequest {
   newBooking              Booking  @relation("NewBookingOverride", fields: [newBookingId], references: [id], onDelete: Cascade)
 
   // Booking ESISTENTI che verranno cancellati se approvato
-  // (array JSON perche' puo' essere 1..N booking, es. 3 cabine Cabin Charter)
+  // (array JSON perche' puo' essere 1..N booking in caso di conflitti multipli)
   conflictingBookingIds   String[] // Booking.id array
+
+  // Sorgente canali dei conflicting booking (per sapere quali cancel
+  // manuali upstream sono richiesti + workflow OTA). Union di Booking.source
+  // dei conflict. Es: ["DIRECT"], ["BOKUN"], ["DIRECT","BOKUN"].
+  // Usato dal cron §8.4 per sapere se fare reconciliation OTA.
+  conflictSourceChannels  String[] // Es: ["BOKUN","DIRECT"]
 
   // Revenue snapshot al momento della richiesta (audit + immutabile)
   newBookingRevenue       Decimal  @db.Decimal(10, 2)
   conflictingRevenueTotal Decimal  @db.Decimal(10, 2)
-  // Per Cabin Charter: revenue potenziale se tutte cabine vendute (info admin)
-  conflictingRevenuePotential Decimal? @db.Decimal(10, 2)
 
   // Lifecycle
   status                  OverrideStatus @default(PENDING)
   dropDeadAt              DateTime  // = experience_date - 15d, usato da cron
+
+  // Reconciliation cron §8.4 (post-approve OTA verification)
+  reconcileCheckDue       DateTime? // set = now+1h se conflictSourceChannels OTA
+  reconcileCheckedAt      DateTime? // dedup cron — NULL = non ancora processato
 
   // Escalation reminder dedup (§8.1)
   reminderLevel           Int       @default(0)  // 0=none, 1=24h sent, 2=48h sent, 3+=subsequent
@@ -408,14 +720,17 @@ model OverrideRequest {
 
   @@index([status, dropDeadAt])
   @@index([status, createdAt])
-  @@index([status, lastReminderSentAt])  // Per cron reminder
+  @@index([status, lastReminderSentAt])          // Per cron reminder §8.1
+  @@index([status, reconcileCheckDue])           // Per cron reconcile §8.4
 }
 
 enum OverrideStatus {
-  PENDING   // in attesa decisione admin
-  APPROVED  // admin ha cancellato conflitti e confermato newBooking
-  REJECTED  // admin ha rifiutato, newBooking annullato + refund
-  EXPIRED   // dropDeadAt passato, auto-reject
+  PENDING                     // in attesa decisione admin
+  APPROVED                    // admin ha cancellato conflitti e confermato newBooking
+  REJECTED                    // admin ha rifiutato, newBooking annullato + refund
+  EXPIRED                     // dropDeadAt passato, auto-reject
+  PENDING_RECONCILE_FAILED    // approved ma upstream OTA non ha confermato
+                              // il cancel entro 1h → admin intervention richiesta
 }
 ```
 
@@ -430,9 +745,18 @@ enum OverrideStatus {
            │            │                        └────────────┘
            │            │                        (terminal)
            │            │    approveOverride()    ┌────────────┐
-           │            │───────────────────────▶│  APPROVED  │
-           │            │                        └────────────┘
-           │            │                        (terminal)
+           │            │───────────────────────▶│  APPROVED  │◀──┐
+           │            │                        └────────────┘   │ retry
+           │            │                        (terminal, oppure │ reconcile
+           │            │                        → reconcile §8.4) │
+           │            │                                 │        │
+           │            │                                 ▼        │
+           │            │                        ┌─────────────────┴─┐
+           │            │                        │ PENDING_RECONCILE │
+           │            │                        │ _FAILED           │
+           │            │                        └───────────────────┘
+           │            │                        (cron §8.4 verify
+           │            │                         upstream still active)
            │            │    cron dropDead()      ┌────────────┐
            │            │───────────────────────▶│  EXPIRED   │
            └────────────┘                        └────────────┘
@@ -447,6 +771,14 @@ External triggers su PENDING:
 - Admin aggiunge boat-block su quella data → auto-rejected (§13.2)
 - Admin cancella manualmente il newBooking via /admin/prenotazioni →
   auto-rejected (§13.3)
+
+External triggers su APPROVED (solo se conflictSourceChannels ha OTA):
+- Cron §8.4 `checkOtaReconciliation` +1h post-approve rileva upstream
+  ancora CONFIRMED → flag `PENDING_RECONCILE_FAILED`
+
+External triggers su PENDING_RECONCILE_FAILED:
+- Admin clicca "Retry reconcile" → rilancia check, se upstream cancelled
+  → torna APPROVED, altrimenti resta FAILED
 
 ### 9.2 Estensioni esistenti
 
@@ -472,8 +804,9 @@ db.booking.findMany({
 
 ### 9.3 Migration
 
-- Aggiungi nuova tabella `OverrideRequest` + enum `OverrideStatus`
-- Aggiungi colonna `Booking.overrideRequestId` (nullable, FK)
+- Aggiungi nuova tabella `OverrideRequest` + enum `OverrideStatus` (con
+  valore aggiuntivo `PENDING_RECONCILE_FAILED`)
+- Nessuna colonna FK su Booking (back-relation via `newBookingId @unique`)
 - Seed: nessun backfill, nessun dato retroattivo
 
 ## 10. Business logic pura (testabile)
@@ -530,9 +863,7 @@ export function checkOverrideEligibility(
 - ✅ Esperienza a 15 gg esatti → blocked (cutoff strict `> 15`)
 - ✅ Esperienza a 16 gg + revenue pari → blocked/insufficient_revenue
 - ✅ Esperienza a 16 gg + revenue nuovo superiore → override_request
-- ✅ Multi-conflicting revenue sum (Cabin Charter 3 cabine) → somma corretta
-- ✅ Cabin Charter 2/3 cabine vendute → revenue = 2×€2.500 (pagato reale,
-   NON 3×€2.500 potenziale) — verifica regola §5.1
+- ✅ Multi-conflicting revenue sum (3 conflitti) → somma corretta
 - ✅ Decimal precision (€2000.01 vs €2000.00) → override_request
 
 ### 10.3 `src/lib/booking/override-request.ts`
@@ -603,6 +934,30 @@ export async function sendEscalationReminders(): Promise<{
   sent: number;
   errors: number;
 }>;
+
+// Cron §8.4 — reconciliation post-approve OTA
+// Interroga Bokun/Boataround API per verificare che upstream booking sia
+// effettivamente CANCELLED dopo admin approve.
+// Se still active: flag PENDING_RECONCILE_FAILED + alert admin.
+// Side-effects: possibile update status, dispatch notification, audit log.
+export async function checkOtaReconciliation(
+  requestId: string,
+): Promise<{
+  upstreamStatus: "CANCELLED" | "STILL_ACTIVE";
+  channels: string[]; // quali canali verificati
+}>;
+
+// Helper puro (no side-effect DB) — calcola cancellation rate per canale
+// rolling windowDays. Usato da dashboard admin KPI + guard in
+// approveOverride (hard block se > soglia).
+export async function computeCancellationRate(
+  channel: string,
+  windowDays: number,
+): Promise<{
+  rate: number;           // 0..1 (es. 0.042 = 4.2%)
+  totalBookings: number;  // denominatore
+  cancelledByOverride: number; // numeratore
+}>;
 ```
 
 ## 11. UI cliente
@@ -613,24 +968,36 @@ export async function sendEscalationReminders(): Promise<{
 
 **Eccezione**: data con boat-block → grey (gia' implementato).
 
-### 11.2 Submit confirmation (nuovo comportamento)
+### 11.2 Check-at-continua behavior (timing post-brainstorm 2026-04-23)
 
-Quando `status: "override_request"` (scenario B):
-- Stripe paga come normale
-- Redirect standard a pagina success
-- Email **"In attesa conferma"** al customer (nuovo template `booking-pending-override-confirmation.ts`)
+Il check viene eseguito al click **"Continua"** dallo step pax (prima del
+customer info step, prima di Stripe). I 3 scenari:
 
-Quando `status: "blocked"` (scenario C):
-- Modal pre-payment:
+**Scenario A — `status: "normal"`**
+- Wizard prosegue automaticamente allo step customer info → poi pagamento Stripe
+- Nessun messaggio visibile al cliente, flusso fluido
+
+**Scenario B — `status: "override_request"`**
+- Wizard prosegue allo step customer info come in A (cliente non sa di essere
+  in override). Paga Stripe normalmente.
+- Booking creato PENDING con `overrideRequestId` (flag server-side)
+- Post-payment: email **"In attesa conferma"** al customer (template
+  `booking-pending-override-confirmation.ts`)
+- Admin riceve dashboard alert + email
+
+**Scenario C — `status: "blocked"`**
+- Il wizard **torna allo step pax** (non prosegue a customer info)
+- Error banner inline in rosso sopra lo step pax:
   ```
-  Siamo spiacenti, la data selezionata non e' piu' disponibile per questo pacchetto.
-  Riceverai un'email con date alternative. [OK]
+  ⚠ Siamo spiacenti, data non disponibile per questo pacchetto.
+    Scegli altra data o pacchetto.
   ```
-- sessionStorage key: `blocked-dates:{boatId}:{serviceId}` array di dateIso.
-  Chiave composita per evitare leak se customer cambia pacchetto o barca nel
-  wizard (e.g. da Gourmet a Charter → grey diverso).
-- Calendar re-render grey su quelle date (solo per questa sessione browser)
-- Email con 3 date alternative auto-calcolate + link diretto a prenotazione
+- sessionStorage key: `blocked-dates:{boatId}:{serviceId}` array di dateIso
+  (stessa data ri-cliccata → stesso errore senza round-trip server)
+- Calendar re-render grey sulla data bloccata (solo questa sessione browser)
+- **Nessun addebito Stripe** (siamo prima del payment step)
+- **Nessuna email** al cliente (non ha ancora fornito email — customer info
+  step non ancora raggiunto)
 
 ### 11.3 Template email nuovi
 
@@ -640,6 +1007,13 @@ Quando `status: "blocked"` (scenario C):
 4. `override-expired.ts` — "La richiesta e' scaduta senza conferma. Rimborso in corso."
 5. `overbooking-apology-enhanced.ts` — estensione del template R29 con voucher "2 drink" + rebooking suggestions
 
+**Apology email — quando viene inviata**:
+- ✅ Inviata per override **DIRECT-vs-DIRECT** (Mario ha pagato sul nostro
+  Stripe, lo cancelliamo noi, gli scriviamo noi).
+- ❌ **NON inviata per override OTA** — il cliente OTA ha rapporto col
+  portale upstream (Viator/Booking/SamBoat), che gestisce rimborso + eventuale
+  apology da parte loro. Decisione brainstorm 2026-04-23.
+
 ## 12. UI admin
 
 ### 12.1 Nuova pagina `/admin/override-requests`
@@ -647,28 +1021,57 @@ Quando `status: "blocked"` (scenario C):
 Server component con tabella + drill-down per-richiesta.
 
 **Filtri**:
-- Status: PENDING (default), APPROVED, REJECTED, EXPIRED
+- Status: PENDING (default), APPROVED, REJECTED, EXPIRED, PENDING_RECONCILE_FAILED
 - Periodo: ultime 30gg default
 - Barca (Trimarano per Fase 1)
+- **Sorgente conflitti** (aggiunta post-brainstorm 2026-04-23): DIRECT,
+  VIATOR (Bokun), BOATAROUND, SAMBOAT, CLICKANDBOAT, NAUTAL, MULTIPLE
 
-**Lista**: card layout verticale, mostra sintesi come §7.1.
+**Lista**: card layout verticale, mostra sintesi come §7.1 incluso badge
+"🏷 Sorgente: VIATOR (via Bokun)" per conflitti OTA.
+
+**Colonna "Sorgente conflitti"**: badge colorato per canale (es. blu per
+DIRECT, viola per BOKUN, verde per BOATAROUND), "+N" se conflitti multipli.
 
 ### 12.2 Detail page `/admin/override-requests/[id]`
 
 Full screen con:
 - Info newBooking (link al booking)
 - Info conflittuali (ogni booking linkato)
+- **Sezione "Conflitti sorgente"**: raggruppa conflicting per canale, per
+  ciascuno mostra `source + externalRef` (es. "VIATOR BK-12345")
+- Se almeno un conflict e' OTA: **blocco workflow checklist 4-step** (§7.2bis)
+  per ciascun OTA conflict separatamente
 - Revenue analysis panel
 - Finestra + timer drop-dead countdown
 - ALTO IMPATTO badge se multi-day cancellato per single-day
-- Action buttons: Approva (con dialog conferma) + Rifiuta + Nota text area
+- Banner rosso fisso se status = PENDING_RECONCILE_FAILED con bottone "Retry
+  reconcile"
+- Action buttons: Approva (con dialog conferma + disabling logic per checklist
+  OTA) + Rifiuta + Nota text area
 
 ### 12.3 Integrazione dashboard `/admin`
 
 Card KPI "Richieste override":
 - Contatore PENDING (badge rosso se > 0)
+- Contatore PENDING_RECONCILE_FAILED (badge arancione + highlight)
 - Contatore approvati questo mese
 - Soft warning visibile: "3 override questo mese — soglia raggiunta"
+
+**NUOVA card KPI "Cancellation Rate portali (30gg rolling)"**:
+- Per ogni canale OTA attivo (Viator/Bokun, Boataround, SamBoat, Click&Boat,
+  Nautal): pill colorato con % cancellation rate ultimi 30gg
+- Formula: `(override admin-confirmed su quel canale) / (booking totali su
+  quel canale ultimi 30gg)`
+- Soglie visive:
+  - `< 3%`: verde OK
+  - `>= 3% AND < 5%`: rosso "soft warning — avvicinandosi limite Viator/GYG"
+  - `>= 5%`: rosso "HARD BLOCK — non puoi approvare nuovi override su
+    questo canale finche' non scende"
+- Soglie configurabili via `env.ts`:
+  `OVERRIDE_CANCELLATION_RATE_SOFT_WARN` (default 0.03),
+  `OVERRIDE_CANCELLATION_RATE_HARD_BLOCK` (default 0.05)
+- Cache Redis TTL 60s per-channel per evitare query aggregazione ogni render
 
 ### 12.4 Integrazione sidebar
 
@@ -730,15 +1133,6 @@ API potrebbe essere lenta).
 - Email cliente include "rimborso in elaborazione" (non importo specifico).
 - Cron reconciliation recupera refund successivamente.
 
-### 13.6 2 cabine vendute di un Cabin Charter, override totale
-
-Scenario: Cabin Charter 5-12 agosto venduto in 2 cabine (€5.000) a Mario +
-Giulia. Arriva Charter €7.500 per 5-12 agosto.
-
-- Revenue Charter €7.500 > conflicting €5.000 → eligibile.
-- Admin alert: 2 clienti distinti coinvolti + email separate ciascuno.
-- Approva → 2 booking cancellati + 2 refund + 2 email apology.
-
 ### 13.7 Boat-block admin aggiunto tra approve e refund success
 
 Scenario: admin approve alle 22:00. Stripe refund parte async. Stripe lento
@@ -753,6 +1147,61 @@ sulla stessa data per "manutenzione urgente".
 - Se admin vuole bloccare → deve esplicitamente cancellare Laura (refund
   automatico), poi ri-mettere boat-block.
 - Nessun corner case — R10 BL-C1 gia' copre via symmetric overlap guard.
+
+### 13.9 OTA upstream cancellation race
+
+Scenario: admin approva override contro Viator/Bokun alle 14:00. Admin
+spunta le 4 checkbox, il webhook Bokun `bookings/cancel` arriva alle 14:02,
+admin clicca Approva alle 14:03 → newBooking CONFIRMED, `reconcileCheckDue
+= 15:03`. Il cron reconciliation §8.4 parte alle 15:10 e interroga Bokun
+API per il bookingId cancellato.
+
+**Caso OK**: Bokun ritorna `status: CANCELLED` → nessuna azione, set
+`reconcileCheckedAt = now`.
+
+**Caso failure**: Bokun ritorna `status: CONFIRMED` (Viator non ha cascadato
+la cancellazione, bug sistema esterno, admin ha spuntato checkbox senza aver
+cancellato davvero, o booking re-confermato nel frattempo):
+- `OverrideRequest.status = PENDING_RECONCILE_FAILED`
+- Dispatch notification admin email + telegram FATAL
+- UI admin detail page mostra banner rosso fisso + bottone "Retry reconcile"
+- Admin deve:
+  1. Tornare su Viator extranet, verificare stato booking
+  2. Ri-cancellare se necessario
+  3. Attendere cascade webhook
+  4. Cliccare "Retry reconcile" → sistema rilancia check
+- Se upstream ora CANCELLED: `status → APPROVED`, alert cleared
+- Se ancora attivo: resta FAILED
+
+Questo gap residuo (tra i nostri 2 sistemi + Viator) non puo' essere risolto
+con piu' automazione sicura: noi non dovremmo chiamare `Bokun.cancel()` via
+API perche' e' supplier-initiated (penalty metriche Viator). Meglio alertare
+admin e farglielo gestire.
+
+### 13.10 Cancellation-rate limit raggiunto
+
+Scenario: Viator nel rolling 30gg e' a 5.1% (6 override admin-confirmed su
+118 booking Viator totali). Admin cerca di approvare nuovo override che
+coinvolge Viator conflict.
+
+- Pre-check in `approveOverride`: `computeCancellationRate("BOKUN", 30)`
+  → 0.051 > `OVERRIDE_CANCELLATION_RATE_HARD_BLOCK` (0.05)
+- Throw `ValidationError` con messaggio:
+  ```
+  Impossibile approvare: Viator/Bokun cancellation rate ultimi 30gg e' al
+  5.1%, sopra la soglia hard-block 5%. Viator de-ranka i supplier sopra
+  questa soglia. Attendi che il rate scenda (tipicamente 30gg dalle ultime
+  cancellazioni) prima di approvare nuovi override su questo canale.
+
+  Dettaglio:
+    Booking Viator ultimi 30gg: 118
+    Override admin-confirmed ultimi 30gg: 6
+    Rate corrente: 5.1%
+    Soglia hard-block: 5.0%
+  ```
+- Admin puo': (a) rifiutare l'override, (b) aspettare, (c) approvare
+  manualmente forzando il check (feature deferred a Plan 7 — per ora hard
+  block e' hard).
 
 ### 13.8 Feature flag off mid-session
 
@@ -775,7 +1224,6 @@ Le priorita' lettera A/B/C saranno attribuite solo a livello di **seed data**:
 // In seed o admin /admin/servizi:
 Gourmet      → priority 10 (alta label A, per UI sorting)
 Charter      → priority 8  (label B)
-Cabin Charter → priority 6  (label C)
 ```
 
 UI admin mostra queste label in `/admin/servizi` pero' non le usa per
@@ -789,12 +1237,14 @@ Decisioni override basate su revenue."
 ```ts
 type NotificationType =
   | ... existing ...
-  | "OVERRIDE_REQUESTED"      // ad admin dopo creazione richiesta
-  | "OVERRIDE_REMINDER"       // ad admin dopo 24h/48h/72h (cron §8.1)
-  | "OVERRIDE_APPROVED"       // a customer winner (nuovo template)
-  | "OVERRIDE_REJECTED"       // a customer new-booking rifiutato (nuovo)
-  | "OVERRIDE_EXPIRED"        // a customer dopo drop-dead (nuovo)
-  | "OVERRIDE_SUPERSEDED"     // a customer auto-rifiutato da revenue superiore
+  | "OVERRIDE_REQUESTED"          // ad admin dopo creazione richiesta
+  | "OVERRIDE_REMINDER"           // ad admin dopo 24h/48h/72h (cron §8.1)
+  | "OVERRIDE_APPROVED"           // a customer winner (nuovo template)
+  | "OVERRIDE_REJECTED"           // a customer new-booking rifiutato (nuovo)
+  | "OVERRIDE_EXPIRED"            // a customer dopo drop-dead (nuovo)
+  | "OVERRIDE_SUPERSEDED"         // a customer auto-rifiutato da revenue superiore
+  | "OVERRIDE_RECONCILE_FAILED"   // ad admin FATAL quando cron §8.4 rileva upstream still active
+  | "CROSS_CHANNEL_CONFLICT"      // ad admin (ManualAlert) per reverse override §6.5/§6.6
 ```
 
 **NOTA importante**: il template **apology al loser** riusa
@@ -846,10 +1296,19 @@ Not required for go-live Fase 1. Manual QA checklist pre-merge.
 9. ✓ 2 submit concorrenti revenue diverso → higher supersede lower
 10. ✓ 2 submit concorrenti revenue pari → entrambe PENDING, admin decide
 11. ✓ Override contatore dashboard visibile + soft warning > 3/mese
-12. ✓ Multi-day (Cabin Charter) cancellato per single-day (Gourmet) → alert ⚠ ALTO IMPATTO
+12. ✓ Multi-day (Charter 7gg) cancellato per single-day (Gourmet) → alert ⚠ ALTO IMPATTO
+13. ✓ Override contro OTA → checklist 4-step + polling webhook + Approve disabled
+14. ✓ Reverse override (webhook OTA su data con booking DIRECT attivo) → ManualAlert
+15. ✓ Cancellation-rate > 5% Viator → approveOverride rifiuta con ValidationError
+16. ✓ Reconcile cron +1h: upstream ancora active → PENDING_RECONCILE_FAILED
 
 ## 17. Performance
 
+- **Cancellation-rate cache Redis TTL 60s per-channel** per evitare la query
+  aggregazione `groupBy` ad ogni render dashboard admin (query comunque veloce
+  ma in alta stagione con 10+ admin concurrent = N dashboard reload simultanei).
+  Key: `cancellation-rate:{channel}:{windowDays}`. Invalidata on-demand quando
+  un override e' approvato/rifiutato (write-through invalidation).
 - `OverrideRequest.status + dropDeadAt` index → cron drop-dead in O(log n)
 - Advisory lock `override-slot:boatId:startDay` previene race concurrent submit.
   **Namespace registry** (da aggiornare in `src/lib/db/advisory-lock.ts`
@@ -879,7 +1338,16 @@ Not required for go-live Fase 1. Manual QA checklist pre-merge.
    va live, i submit col flag off continuano a vedere behavior legacy.
 3. Deploy UI admin `/admin/override-requests` + sidebar + dashboard KPI
 4. Deploy UI cliente (submit validation + sessionStorage greying)
-5. Abilita feature flag staging → QA completo → abilita prod
+5. **Rollout graduale con 2 feature flag** (post-brainstorm 2026-04-23):
+   a. Abilita `FEATURE_OVERRIDE_ENABLED=true` in staging → QA completo
+      DIRECT-vs-DIRECT → abilita in prod
+   b. Dopo 1-2 settimane di stabilita' produzione (no PENDING_RECONCILE_FAILED,
+      no booking orfani, funnel metrics OK) → abilita
+      `FEATURE_OVERRIDE_OTA_ENABLED=true` per workflow OTA (checklist admin
+      + reconciliation cron + cancellation rate guard)
+   c. Rollback granulare: se il workflow OTA ha problemi ma DIRECT va,
+      spegnere solo `FEATURE_OVERRIDE_OTA_ENABLED` — i DIRECT override
+      continuano a funzionare
 
 ### 19.2 Rollback
 
@@ -889,26 +1357,45 @@ Not required for go-live Fase 1. Manual QA checklist pre-merge.
 
 ### 19.3 Feature flag
 
-Env var: `FEATURE_OVERRIDE_ENABLED=true|false`. Default false in prod fino a test.
+2 env var (post-brainstorm 2026-04-23):
+- `FEATURE_OVERRIDE_ENABLED=true|false` — master switch del sistema override
+  (DIRECT-vs-DIRECT). Default false in prod fino a test.
+- `FEATURE_OVERRIDE_OTA_ENABLED=true|false` — gating del workflow OTA
+  (checklist admin + cancel manuale + reconciliation cron + cancellation rate
+  hard-block). Default false. Richiede `FEATURE_OVERRIDE_ENABLED=true`.
+
+Se `FEATURE_OVERRIDE_ENABLED=true` e `FEATURE_OVERRIDE_OTA_ENABLED=false`:
+gli override con almeno un conflict OTA vengono rifiutati al submit con
+reason `"ota_override_disabled"` → cliente vede scenario C blocked.
 
 ## 20. Effort stimato
 
-Plan-level breakdown:
+Plan-level breakdown (post-brainstorm 2026-04-23: rimosso Cabin Charter
+risparmia ~2gg, aggiunto workflow OTA + cancellation-rate + reconcile cron
+aggiunge ~2gg → totale invariato):
 
 - Schema + migration: 0.5 gg
 - Pure helper `override-eligibility.ts` + test: 0.5 gg
-- Server action `createOverrideRequest` integrato in `create-direct.ts`: 1 gg
-- Server actions `approveOverride` / `rejectOverride`: 1 gg
-- Cron `override-dropdead` + `override-reminders`: 0.5 gg
-- UI admin `/admin/override-requests`: 2 gg
+- Server action `createOverrideRequest` integrato in `create-direct.ts` +
+  nuovo Server Action `checkOverrideEligibility` per wizard: 1 gg
+- Server actions `approveOverride` / `rejectOverride` (incluso OTA checklist
+  validation): 1 gg
+- Cron `override-dropdead` + `override-reminders` + `override-reconcile`: 1 gg
+- UI admin `/admin/override-requests` (lista + detail + checklist OTA
+  workflow + polling webhook sync): 2 gg
+- UI admin cancellation-rate KPI card + soglie env + Redis cache: 0.5 gg
 - Integrazione sidebar + dashboard KPI: 0.5 gg
-- UI cliente submit flow (modal + sessionStorage greying): 1 gg
-- Template email × 5 (pending / approved / rejected / expired / apology enhanced): 1 gg
-- Notification events + dispatcher integration: 0.5 gg
+- UI cliente wizard timing al Continua (spinner + error banner inline +
+  sessionStorage greying): 1 gg
+- Template email × 5 (pending / approved / rejected / expired / apology
+  enhanced): 1 gg
+- Notification events + dispatcher integration (inclusi OVERRIDE_RECONCILE_FAILED
+  + CROSS_CHANNEL_CONFLICT): 0.5 gg
 - Integration tests: 2 gg
-- Manual QA: 1 gg
+- Manual QA: 0.5 gg
 
-**Totale: 12 giorni effettivi** (coincide con stima doc cliente 12-17).
+**Totale: ~12 giorni effettivi** (invariato vs brainstorm #1: -2gg Cabin
+Charter, +2gg workflow OTA/cancellation-rate/reconcile).
 
 ## 21. Open questions deferred
 
