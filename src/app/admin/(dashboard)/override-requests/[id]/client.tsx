@@ -10,6 +10,7 @@ import {
 } from "@/components/admin/override-ota-checklist";
 import { AdminCard } from "@/components/admin/admin-card";
 import { AdminAlert } from "@/components/admin/admin-alert";
+import { DetailRow } from "@/components/admin/detail-row";
 import { approveOverrideAction, rejectOverrideAction } from "../actions";
 
 export interface OverrideDetailData {
@@ -87,29 +88,21 @@ export function OverrideDetailClient({
         Override request {request.id.slice(0, 8)}
       </h1>
       <AdminCard padding="sm" className="space-y-2">
-        <div>
-          <strong>Status:</strong> {request.status}
-        </div>
-        <div>
-          <strong>Nuovo booking:</strong> {request.newBookingCode} &middot;{" "}
-          {request.newBookingCustomer} &middot; {request.newBookingServiceName} &middot;{" "}
-          {request.newBookingStartDate} &middot; {request.newBookingNumPeople} persone
-        </div>
-        <div>
-          <strong>Revenue nuovo:</strong> &euro; {request.newBookingRevenue} &middot;{" "}
-          <strong>Conflict:</strong> &euro; {request.conflictingRevenueTotal} &middot;{" "}
-          <strong>Delta:</strong> &euro; {request.deltaRevenue}
-        </div>
-        <div>
-          <strong>Drop-dead:</strong> {request.dropDeadAt.slice(0, 10)}
-        </div>
-        <div>
-          <strong>Sorgenti conflict:</strong> {request.conflictSourceChannels.join(", ") || "—"}
-        </div>
+        <DetailRow label="Status" value={request.status} />
+        <DetailRow
+          label="Nuovo booking"
+          value={`${request.newBookingCode} · ${request.newBookingCustomer} · ${request.newBookingServiceName} · ${request.newBookingStartDate} · ${request.newBookingNumPeople} persone`}
+        />
+        <DetailRow label="Revenue nuovo" value={`€ ${request.newBookingRevenue}`} />
+        <DetailRow label="Revenue conflict" value={`€ ${request.conflictingRevenueTotal}`} />
+        <DetailRow label="Delta approvando" value={`€ ${request.deltaRevenue}`} />
+        <DetailRow label="Drop-dead" value={request.dropDeadAt.slice(0, 10)} />
+        <DetailRow
+          label="Sorgenti conflict"
+          value={request.conflictSourceChannels.join(", ") || "—"}
+        />
         {request.decisionNotes && (
-          <div>
-            <strong>Note decisione:</strong> {request.decisionNotes}
-          </div>
+          <DetailRow label="Note decisione" value={request.decisionNotes} />
         )}
       </AdminCard>
 
