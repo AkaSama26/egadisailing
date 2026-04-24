@@ -18,4 +18,18 @@ describe("checkOverrideEligibility", () => {
     expect(result.status).toBe("normal");
     expect(result.conflictingBookingIds).toEqual([]);
   });
+
+  it("boat-block presente → blocked/boat_block (anche se revenue OK)", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      conflictingBookings: [
+        { id: "b1", revenue: new Decimal("500"), isAdminBlock: true },
+      ],
+    });
+    expect(result.status).toBe("blocked");
+    if (result.status === "blocked") {
+      expect(result.reason).toBe("boat_block");
+      expect(result.conflictingBookingIds).toEqual(["b1"]);
+    }
+  });
 });

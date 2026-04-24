@@ -42,6 +42,15 @@ export function checkOverrideEligibility(
   if (input.conflictingBookings.length === 0) {
     return { status: "normal", conflictingBookingIds: [] };
   }
-  // TODO: implementa i 6 passi in task 1.4-1.8
+  // Regola 1: boat-block absolute priority
+  const hasBoatBlock = input.conflictingBookings.some((b) => b.isAdminBlock);
+  if (hasBoatBlock) {
+    return {
+      status: "blocked",
+      reason: "boat_block",
+      conflictingBookingIds: input.conflictingBookings.map((b) => b.id),
+    };
+  }
+  // TODO: altre regole in task 1.5-1.8
   throw new Error("not yet implemented");
 }
