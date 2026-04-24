@@ -497,7 +497,9 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
                 serviceId: true,
                 startDate: true,
                 confirmationCode: true,
-                customer: { select: { email: true } },
+                totalPrice: true,
+                customer: { select: { email: true, firstName: true, lastName: true } },
+                service: { select: { name: true } },
               },
             },
           },
@@ -517,7 +519,7 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
       });
       refundFailures += cancelRes.refundsFailed.length;
 
-      // Email customer expired (inline — USE_IN_CHUNK_4_TASK_4.4)
+      // Email customer expired via dispatcher (template override-expired)
       if (req.newBooking.customer?.email) {
         try {
           const alternatives = await findAlternativeDates(
@@ -526,17 +528,25 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
             req.newBooking.startDate,
             3,
           );
-          const altStr = alternatives.map((d) => d.toISOString().slice(0, 10)).join(", ");
-          const delivered = await sendEmail({
-            to: req.newBooking.customer.email,
-            subject: `Prenotazione ${req.newBooking.confirmationCode} scaduta`,
-            htmlContent: `<p>Ci dispiace, la tua richiesta di prenotazione non è stata confermata entro il termine di 15 giorni pre-data. Rimborso in corso (5-10 giorni lavorativi).</p><p>Date alternative: ${altStr || "contattaci"}.</p>`,
-            textContent: `Prenotazione scaduta. Rimborso in corso. Date alternative: ${altStr || "contattaci"}.`,
+          const result = await dispatchNotification({
+            type: "OVERRIDE_EXPIRED",
+            channels: ["EMAIL"],
+            payload: {
+              customerName:
+                `${req.newBooking.customer.firstName ?? ""} ${req.newBooking.customer.lastName ?? ""}`.trim() ||
+                "cliente",
+              confirmationCode: req.newBooking.confirmationCode,
+              serviceName: req.newBooking.service?.name ?? "",
+              startDate: req.newBooking.startDate.toISOString().slice(0, 10),
+              refundAmount: req.newBooking.totalPrice?.toFixed(2) ?? "0.00",
+              alternativeDates: alternatives.map((d) => d.toISOString().slice(0, 10)),
+              bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+            } as unknown as Record<string, unknown>,
           });
-          if (!delivered) emailFailures++;
+          if (!result.emailOk) emailFailures++;
         } catch (err) {
           emailFailures++;
-          logger.error({ err, requestId: id }, "expireDropDead: email failed");
+          logger.error({ err, requestId: id }, "expireDropDead: dispatch OVERRIDE_EXPIRED failed");
         }
       }
 
