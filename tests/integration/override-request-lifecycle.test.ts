@@ -1,10 +1,16 @@
-import { beforeAll, afterAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { setupTestDb, resetTestDb, closeTestDb } from "../helpers/test-db";
 import { seedBoatAndService, seedBooking } from "../helpers/seed-override";
 import { createOverrideRequest } from "@/lib/booking/override-request";
 import Decimal from "decimal.js";
 
+// approveOverride usa db module-level: mock per dirottarlo al test client.
 let db: Awaited<ReturnType<typeof setupTestDb>>;
+vi.mock("@/lib/db", () => ({
+  get db() {
+    return db;
+  },
+}));
 
 beforeAll(async () => {
   db = await setupTestDb();
@@ -220,5 +226,54 @@ describe("createOverrideRequest", () => {
       where: { id: lauraReq.requestId },
     });
     expect(or?.conflictSourceChannels.sort()).toEqual(["BOKUN", "DIRECT"]);
+  });
+});
+
+describe("approveOverride", () => {
+  it("approva: cancella conflicts, conferma newBooking, update status", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000.00", status: "CONFIRMED",
+    });
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000.00", status: "PENDING",
+    });
+    const adminUser = await db.user.create({
+      data: {
+        email: "admin@test.com",
+        passwordHash: "x",
+        name: "Admin",
+        role: "ADMIN",
+      },
+    });
+    const req = await db.$transaction((tx) =>
+      createOverrideRequest(tx, {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        newBookingRevenue: new Decimal("3000.00"),
+        conflictingRevenueTotal: new Decimal("2000.00"),
+        dropDeadAt: new Date("2026-07-31"),
+      }),
+    );
+
+    const { approveOverride } = await import("@/lib/booking/override-request");
+    const result = await approveOverride(req.requestId, adminUser.id, "test approve");
+
+    expect(result.approved).toBe(true);
+
+    const orUpdated = await db.overrideRequest.findUnique({
+      where: { id: req.requestId },
+    });
+    expect(orUpdated?.status).toBe("APPROVED");
+    expect(orUpdated?.decidedByUserId).toBe(adminUser.id);
+    expect(orUpdated?.decisionNotes).toBe("test approve");
+
+    const conflictUpdated = await db.booking.findUnique({ where: { id: conflict.id } });
+    expect(conflictUpdated?.status).toBe("CANCELLED");
+
+    const lauraUpdated = await db.booking.findUnique({ where: { id: laura.id } });
+    expect(lauraUpdated?.status).toBe("CONFIRMED");
   });
 });

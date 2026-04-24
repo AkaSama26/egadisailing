@@ -101,6 +101,11 @@ const envSchema = z.object({
     .default("1.15")
     .refine((s) => !isNaN(parseFloat(s)) && parseFloat(s) >= 1, "must be a number >= 1.0"),
 
+  // Priority Override (Fase 1) — hard-block soglia cancellation rate per-channel
+  // (§13.10). Se il rate rolling 30gg di un canale supera questa soglia,
+  // approveOverride blocca nuovi approve su quel canale finche' non scende.
+  OVERRIDE_CANCELLATION_RATE_HARD_BLOCK: z.coerce.number().min(0).max(1).default(0.05),
+
   // Admin notifications (Plan 6)
   ADMIN_EMAIL: z.string().email().default("admin@egadisailing.com"),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
