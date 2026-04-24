@@ -9,7 +9,7 @@ import { isOtaChannel, isOtaConfirmationComplete } from "./override-types";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { env } from "@/lib/env";
 import { isUpstreamCancelled } from "./override-reconcile";
-import { computeCancellationRate } from "./cancellation-rate";
+import { computeCancellationRate, invalidateCancellationRateCache } from "./cancellation-rate";
 import { logger } from "@/lib/logger";
 import { blockDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
@@ -326,6 +326,19 @@ export async function approveOverride(
       emailsFailed,
     },
   });
+
+  // 6. Invalida cache cancellation-rate per i canali OTA coinvolti
+  // (riflette subito nuovo rate nella dashboard admin KPI).
+  const uniqueOtaChannelsForCache = Array.from(
+    new Set(
+      request.conflictSourceChannels.filter((c) =>
+        isOtaChannel(c as ConflictSourceChannel),
+      ),
+    ),
+  );
+  for (const channel of uniqueOtaChannelsForCache) {
+    await invalidateCancellationRateCache(channel);
+  }
 
   return { approved: true, refundErrors, emailsSent, emailsFailed };
 }
