@@ -17,6 +17,7 @@ import { postCommitCancelBooking } from "./post-commit-cancel";
 import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
 import { sendEmail } from "@/lib/email/brevo";
 import { auditLog } from "@/lib/audit/log";
+import { findAlternativeDates } from "./alternative-dates";
 
 export interface CreateOverrideRequestInput {
   newBookingId: string;
@@ -284,9 +285,6 @@ export async function approveOverride(
       conflict.startDate,
       3,
     );
-    // TODO(task-4.6): passa `alternatives` come rebookingSuggestions + voucherSoftText
-    // al template. Richiede estensione props overbooking-apology.ts.
-    void alternatives;
 
     const tpl = overbookingApologyTemplate({
       customerName: `${conflict.customer.firstName} ${conflict.customer.lastName}`.trim() || "cliente",
@@ -298,6 +296,8 @@ export async function approveOverride(
       contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
       contactPhone: env.CONTACT_PHONE,
       bookingUrl: `${env.APP_URL}/b/sessione`,
+      voucherSoftText: "Per scusarci ti offriamo 2 drink gratis a bordo per persona alla prossima visita",
+      rebookingSuggestions: alternatives.map((d) => d.toISOString().slice(0, 10)),
     });
     try {
       const delivered = await sendEmail({
@@ -605,29 +605,3 @@ export async function sendEscalationReminders(): Promise<SendEscalationReminders
   return { sent, errors };
 }
 
-/**
- * Trova N date libere successive per suggerimento rebooking.
- * Scan dei 30 giorni successivi a `aroundDate`, ritorna le prime N senza booking attivi.
- */
-async function findAlternativeDates(
-  boatId: string,
-  _serviceId: string,
-  aroundDate: Date,
-  limit: number,
-): Promise<Date[]> {
-  const results: Date[] = [];
-  for (let i = 1; i <= 30 && results.length < limit; i++) {
-    const candidate = new Date(aroundDate);
-    candidate.setUTCDate(candidate.getUTCDate() + i);
-    const conflicts = await db.booking.count({
-      where: {
-        boatId,
-        status: { in: ["PENDING", "CONFIRMED"] },
-        startDate: { lte: candidate },
-        endDate: { gte: candidate },
-      },
-    });
-    if (conflicts === 0) results.push(candidate);
-  }
-  return results;
-}

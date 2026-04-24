@@ -5,6 +5,7 @@ import { overrideRejectedWinnerTemplate } from "../override-rejected-winner";
 import { overrideExpiredTemplate } from "../override-expired";
 import { overrideSupersededTemplate } from "../override-superseded";
 import { overrideReconcileFailedAdminTemplate } from "../override-reconcile-failed-admin";
+import { overbookingApologyTemplate } from "../overbooking-apology";
 
 const INJECTION = "<script>alert(1)</script>Mario";
 
@@ -100,5 +101,45 @@ describe("override email templates — HTML escape", () => {
     expect(tpl.html).not.toContain("<b>BOKUN</b>");
     expect(tpl.html).toContain("&lt;b&gt;BOKUN");
     expect(tpl.subject).toContain("FATAL");
+  });
+});
+
+describe("overbookingApology extensions (Task 4.6)", () => {
+  const baseProps = {
+    customerName: "Mario",
+    confirmationCode: "BK1",
+    serviceName: "Social",
+    startDate: "2026-08-01",
+    refundAmount: "500€",
+    refundChannel: "stripe" as const,
+    contactEmail: "info@x.com",
+    contactPhone: "+39 123",
+    bookingUrl: "https://x.com",
+  };
+
+  it("retrocompat: senza voucher/rebooking non aggiunge nulla", () => {
+    const tpl = overbookingApologyTemplate(baseProps);
+    expect(tpl.html).not.toContain("drink");
+    expect(tpl.html).not.toContain("Date alternative:");
+  });
+
+  it("con voucher + rebooking renderizza entrambi", () => {
+    const tpl = overbookingApologyTemplate({
+      ...baseProps,
+      voucherSoftText: "2 drink gratis a bordo alla prossima visita",
+      rebookingSuggestions: ["2026-08-10", "2026-08-15"],
+    });
+    expect(tpl.html).toContain("2 drink gratis");
+    expect(tpl.html).toContain("2026-08-10");
+    expect(tpl.html).toContain("2026-08-15");
+  });
+
+  it("escapa HTML injection nel voucher text", () => {
+    const tpl = overbookingApologyTemplate({
+      ...baseProps,
+      voucherSoftText: "<script>alert(1)</script>Free drinks",
+    });
+    expect(tpl.html).not.toContain("<script>");
+    expect(tpl.html).toContain("&lt;script&gt;");
   });
 });

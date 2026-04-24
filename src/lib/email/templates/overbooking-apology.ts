@@ -27,6 +27,10 @@ export interface OverbookingApologyData {
   contactEmail: string;
   contactPhone?: string;
   bookingUrl: string;
+  /** Optional soft-voucher text (Task 4.6). E.g. "2 drink gratis a bordo". */
+  voucherSoftText?: string;
+  /** Optional alternative dates suggestions (Task 4.6). ISO yyyy-mm-dd. */
+  rebookingSuggestions?: string[];
 }
 
 export function overbookingApologyTemplate(data: OverbookingApologyData) {
@@ -49,6 +53,14 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
           utilizzabile su una data alternativa.
         </p>`;
 
+  const voucherHtml = data.voucherSoftText
+    ? `<p><em>${escapeHtml(data.voucherSoftText)}</em></p>`
+    : "";
+  const rebookingHtml =
+    data.rebookingSuggestions && data.rebookingSuggestions.length > 0
+      ? `<p>Date alternative:<br>${data.rebookingSuggestions.map((d) => escapeHtml(d)).join("<br>")}</p>`
+      : "";
+
   const html = emailLayout({
     heading: `Ci dispiace sinceramente, ${escapeHtml(data.customerName)}`,
     bodyHtml: `
@@ -63,6 +75,7 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
         Questo e' un nostro errore e ce ne assumiamo la piena responsabilita'.
       </p>
       ${refundHtml}
+      ${voucherHtml}${rebookingHtml}
       <h3 style="margin-top:24px">Come possiamo rimediare</h3>
       <p>
         Siamo a tua disposizione per trovare una data alternativa. Contattaci
@@ -85,11 +98,17 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
       ? `Rimborso processato: ${data.refundAmount} (5-10 giorni lavorativi sulla tua carta).`
       : `Rimborso: pagamento avvenuto offline (contanti/bonifico). Ti contatteremo entro 24 ore per concordare il bonifico di rimborso o il credito per una data alternativa.`;
 
+  const voucherText = data.voucherSoftText ? `\n\n${data.voucherSoftText}` : "";
+  const rebookingText =
+    data.rebookingSuggestions && data.rebookingSuggestions.length > 0
+      ? `\n\nAlternative: ${data.rebookingSuggestions.join(", ")}`
+      : "";
+
   const text = `${data.customerName}, ci dispiace.
 
 A causa di un problema di sincronizzazione tra i nostri canali, la prenotazione ${data.confirmationCode} per ${data.serviceName} del ${data.startDate} e' stata annullata.
 
-${refundText}
+${refundText}${voucherText}${rebookingText}
 
 Contattaci per trovare una data alternativa:
 Email: ${data.contactEmail}${data.contactPhone ? `\nTelefono/WhatsApp: ${data.contactPhone}` : ""}
