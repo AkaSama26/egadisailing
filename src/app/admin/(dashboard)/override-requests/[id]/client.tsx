@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   OverrideOtaChecklist,
@@ -31,6 +32,7 @@ export function OverrideDetailClient({
   request: OverrideDetailData;
   otaConflicts: OtaConflictData[];
 }) {
+  const router = useRouter();
   const [otaStates, setOtaStates] = useState<OtaConfirmationState[]>([]);
   const [notes, setNotes] = useState("");
   const [pending, startTransition] = useTransition();
@@ -54,7 +56,7 @@ export function OverrideDetailClient({
       });
       if (res.ok) {
         setFeedback({ type: "ok", msg: "Override approvato." });
-        window.location.reload();
+        router.refresh();
       } else {
         setFeedback({ type: "error", msg: res.message });
       }
@@ -69,7 +71,7 @@ export function OverrideDetailClient({
       });
       if (res.ok) {
         setFeedback({ type: "ok", msg: "Override rifiutato." });
-        window.location.reload();
+        router.refresh();
       } else {
         setFeedback({ type: "error", msg: res.message });
       }
