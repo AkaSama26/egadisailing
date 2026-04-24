@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { formatEur } from "@/lib/pricing/cents";
+import { CancellationRateKpi } from "@/components/admin/cancellation-rate-kpi";
 
 export default async function DashboardHome() {
   const now = new Date();
@@ -45,6 +46,18 @@ export default async function DashboardHome() {
   const revenueDec = new Decimal(revenueAgg._sum.amount?.toString() ?? "0");
   const balancesDec = new Decimal(balancesAgg._sum.balanceAmount?.toString() ?? "0");
 
+  const [overrideMonthly, overridePending] = await Promise.all([
+    db.overrideRequest.count({
+      where: {
+        status: "APPROVED",
+        decidedAt: { gte: monthStart },
+      },
+    }),
+    db.overrideRequest.count({
+      where: { status: { in: ["PENDING", "PENDING_RECONCILE_FAILED"] } },
+    }),
+  ]);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
@@ -70,7 +83,24 @@ export default async function DashboardHome() {
           tone={balancesDec.gt(0) ? "warn" : "default"}
           hint="Acconto versato, saldo ancora da incassare"
         />
+        <KpiCard
+          label="Override approvati questo mese"
+          value={String(overrideMonthly)}
+          icon={AlertTriangle}
+          hint={overrideMonthly > 3 ? "Soft warning: > 3/mese" : undefined}
+          tone={overrideMonthly > 3 ? "warn" : "default"}
+        />
+        <KpiCard
+          label="Richieste priorita' pending"
+          value={String(overridePending)}
+          icon={AlertTriangle}
+          tone={overridePending > 0 ? "warn" : "default"}
+        />
       </div>
+
+      <section>
+        <CancellationRateKpi />
+      </section>
 
       {pendingAlerts.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-5">

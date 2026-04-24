@@ -16,6 +16,7 @@ import {
   Activity,
   Settings,
   Ship,
+  AlertCircle,
 } from "lucide-react";
 
 /**
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/admin/crew", label: "Crew", icon: UserCog },
   { href: "/admin/finanza", label: "Finanza", icon: LineChart },
   { href: "/admin/canali", label: "Canali", icon: Plug },
+  { href: "/admin/override-requests", label: "Priorita'", icon: AlertCircle },
   { href: "/admin/meteo", label: "Meteo", icon: CloudSun },
   { href: "/admin/sync-log", label: "Sync & Log", icon: Activity },
   { href: "/admin/impostazioni", label: "Informazioni", icon: Settings },

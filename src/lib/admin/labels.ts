@@ -85,6 +85,14 @@ export const CHANNEL_SYNC_MODE_LABEL: Record<string, string> = {
   EMAIL: "Email (parser)",
 };
 
+export const OVERRIDE_STATUS_LABEL: Record<string, string> = {
+  PENDING: "In attesa",
+  APPROVED: "Approvata",
+  REJECTED: "Rifiutata",
+  EXPIRED: "Scaduta",
+  PENDING_RECONCILE_FAILED: "Reconcile failed",
+};
+
 /** Helper: ritorna la label tradotta se esiste, altrimenti il valore raw. */
 export function labelOrRaw<T extends string>(
   map: Record<string, string>,
