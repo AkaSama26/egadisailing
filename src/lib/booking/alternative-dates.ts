@@ -9,10 +9,11 @@ import { db } from "@/lib/db";
  *
  * Usato dagli email rejection/expired/superseded per suggerire alternative
  * al customer perdente.
+ *
+ * Nota: service-level filter non implementato (Fase 1) — filtro solo per boatId.
  */
 export async function findAlternativeDates(
   boatId: string,
-  _serviceId: string,
   aroundDate: Date,
   limit: number,
 ): Promise<Date[]> {
@@ -45,10 +46,9 @@ export async function findAlternativeDates(
  */
 export async function getAlternativeDatesIso(
   boatId: string,
-  serviceId: string,
   aroundDate: Date,
   limit: number,
 ): Promise<string[]> {
-  const dates = await findAlternativeDates(boatId, serviceId, aroundDate, limit);
+  const dates = await findAlternativeDates(boatId, aroundDate, limit);
   return dates.map((d) => d.toISOString().slice(0, 10));
 }

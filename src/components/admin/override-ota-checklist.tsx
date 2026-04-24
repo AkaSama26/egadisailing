@@ -96,24 +96,30 @@ export function OverrideOtaChecklist({
               Cliente upstream: {c.customerName} &middot; &euro; {c.amount}
             </p>
             <div className="space-y-2">
-              <label className="flex items-start gap-2">
+              <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
+                  id={`panel-${c.conflictId}`}
                   checked={state.panelOpened}
                   onChange={(e) => updateState(c.conflictId, { panelOpened: e.target.checked })}
                   className="mt-1"
                 />
-                <span>
-                  1. Apri pannello:{" "}
+                <div>
+                  <label htmlFor={`panel-${c.conflictId}`}>1. Apri pannello:</label>
                   {c.panelUrl ? (
-                    <a href={c.panelUrl} target="_blank" rel="noopener noreferrer" className="text-sky-600 underline">
+                    <a
+                      href={c.panelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sky-600 underline ml-2"
+                    >
                       {c.panelUrl}
                     </a>
                   ) : (
-                    <span className="italic">pannello esterno (accedi manualmente)</span>
+                    <span className="italic ml-2">pannello esterno (accedi manualmente)</span>
                   )}
-                </span>
-              </label>
+                </div>
+              </div>
               <label className="flex items-start gap-2">
                 <input
                   type="checkbox"

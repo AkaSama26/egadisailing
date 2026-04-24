@@ -282,7 +282,6 @@ export async function approveOverride(
 
     const alternativeDates = await getAlternativeDatesIso(
       conflict.boatId,
-      conflict.serviceId,
       conflict.startDate,
       3,
     );
@@ -409,7 +408,6 @@ export async function rejectOverride(
   if (request.newBooking.customer?.email) {
     const alternativeDates = await getAlternativeDatesIso(
       request.newBooking.boatId,
-      request.newBooking.serviceId,
       request.newBooking.startDate,
       3,
     );
@@ -494,7 +492,6 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
             newBooking: {
               select: {
                 boatId: true,
-                serviceId: true,
                 startDate: true,
                 confirmationCode: true,
                 totalPrice: true,
@@ -524,7 +521,6 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
         try {
           const alternativeDates = await getAlternativeDatesIso(
             req.newBooking.boatId,
-            req.newBooking.serviceId,
             req.newBooking.startDate,
             3,
           );

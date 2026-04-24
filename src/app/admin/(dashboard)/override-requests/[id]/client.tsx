@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   OverrideOtaChecklist,
@@ -85,7 +86,7 @@ export function OverrideDetailClient({
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-slate-900">
-        Override request {request.id.slice(0, 8)}
+        Override per prenotazione {request.newBookingCode}
       </h1>
       <AdminCard padding="sm" className="space-y-2">
         <DetailRow label="Status" value={request.status} />
@@ -140,10 +141,10 @@ export function OverrideDetailClient({
               onClick={handleApprove}
               variant="default"
             >
-              ✓ Approva
+              <Check className="size-4 mr-2" /> Approva
             </Button>
             <Button disabled={pending} onClick={handleReject} variant="destructive">
-              ✗ Rifiuta
+              <X className="size-4 mr-2" /> Rifiuta
             </Button>
           </div>
         </AdminCard>

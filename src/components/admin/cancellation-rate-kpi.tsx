@@ -1,3 +1,4 @@
+import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
 import { computeCancellationRate } from "@/lib/booking/cancellation-rate";
 import { env } from "@/lib/env";
 import { OTA_CHANNELS } from "@/lib/booking/override-types";
@@ -21,24 +22,41 @@ export async function CancellationRateKpi() {
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-slate-500">
-            <th className="pb-1">Canale</th>
-            <th className="pb-1">Rate</th>
-            <th className="pb-1">Override / Total</th>
+            <th className="pb-1" scope="col">Canale</th>
+            <th className="pb-1" scope="col">Rate</th>
+            <th className="pb-1" scope="col">Override / Total</th>
           </tr>
         </thead>
         <tbody>
           {rates.map((r) => {
-            const color =
-              r.rate > hard
-                ? "text-red-700 font-semibold"
-                : r.rate > soft
-                ? "text-amber-700 font-semibold"
-                : "text-emerald-700";
+            const isHard = r.rate > hard;
+            const isSoft = !isHard && r.rate > soft;
+            const color = isHard
+              ? "text-red-700 font-semibold"
+              : isSoft
+              ? "text-amber-700 font-semibold"
+              : "text-emerald-700";
+            const stateName = isHard
+              ? "oltre hard block"
+              : isSoft
+              ? "vicino soft warn"
+              : "ok";
+            const Icon = isHard ? AlertCircle : isSoft ? AlertTriangle : CheckCircle;
+            const iconColor = isHard
+              ? "text-red-700"
+              : isSoft
+              ? "text-amber-700"
+              : "text-emerald-700";
+            const ratePercent = (r.rate * 100).toFixed(1);
             return (
               <tr key={r.channel} className="border-t border-slate-100">
                 <td className="py-1">{r.channel}</td>
-                <td className={`py-1 ${color}`}>
-                  {(r.rate * 100).toFixed(1)}%
+                <td
+                  className={`py-1 ${color}`}
+                  aria-label={`${ratePercent}% — ${stateName}`}
+                >
+                  <Icon className={`inline size-4 mr-1 ${iconColor}`} aria-hidden="true" />
+                  {ratePercent}%
                 </td>
                 <td className="py-1 text-slate-600">
                   {r.cancelledByOverride} / {r.totalBookings}

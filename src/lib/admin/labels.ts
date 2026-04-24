@@ -14,6 +14,7 @@ import type {
   PaymentType,
   PaymentSchedule,
   AvailabilityStatus,
+  OverrideStatus,
 } from "@/generated/prisma/enums";
 
 export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
@@ -85,7 +86,7 @@ export const CHANNEL_SYNC_MODE_LABEL: Record<string, string> = {
   EMAIL: "Email (parser)",
 };
 
-export const OVERRIDE_STATUS_LABEL: Record<string, string> = {
+export const OVERRIDE_STATUS_LABEL: Record<OverrideStatus, string> = {
   PENDING: "In attesa",
   APPROVED: "Approvata",
   REJECTED: "Rifiutata",
