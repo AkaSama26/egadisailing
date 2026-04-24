@@ -426,6 +426,106 @@ export async function rejectOverride(
   return { rejected: true, refundOk, emailOk };
 }
 
+export interface ExpireDropDeadResult {
+  expired: number;
+  refundFailures: number;
+  emailFailures: number;
+}
+
+/**
+ * Cron helper §8.2: auto-expire PENDING OverrideRequest con dropDeadAt passato.
+ * Cancella newBooking + refund + release + email al customer.
+ * Batch 50/run per safety — chiamato ogni ora dal cron scheduler.
+ */
+export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
+  const now = new Date();
+  const toExpire = await db.overrideRequest.findMany({
+    where: {
+      status: "PENDING",
+      dropDeadAt: { lte: now },
+    },
+    select: { id: true },
+    take: 50,
+  });
+
+  let expiredCount = 0;
+  let refundFailures = 0;
+  let emailFailures = 0;
+
+  for (const { id } of toExpire) {
+    try {
+      // DB tx: mark EXPIRED + cancel newBooking (atomic)
+      const req = await db.$transaction(async (tx) => {
+        await tx.overrideRequest.update({
+          where: { id },
+          data: {
+            status: "EXPIRED",
+            decidedAt: now,
+            decisionNotes: "auto-expired at 15-day cutoff",
+          },
+        });
+        const r = await tx.overrideRequest.findUniqueOrThrow({
+          where: { id },
+          select: {
+            newBookingId: true,
+            newBooking: {
+              select: {
+                boatId: true,
+                serviceId: true,
+                startDate: true,
+                confirmationCode: true,
+                customer: { select: { email: true } },
+              },
+            },
+          },
+        });
+        await tx.booking.update({
+          where: { id: r.newBookingId },
+          data: { status: "CANCELLED" },
+        });
+        return r;
+      });
+
+      // Post-commit: refund + release + audit via helper
+      const cancelRes = await postCommitCancelBooking({
+        bookingId: req.newBookingId,
+        actorUserId: null,
+        reason: "override_expired",
+      });
+      refundFailures += cancelRes.refundsFailed.length;
+
+      // Email customer expired (inline — USE_IN_CHUNK_4_TASK_4.4)
+      if (req.newBooking.customer?.email) {
+        try {
+          const alternatives = await findAlternativeDates(
+            req.newBooking.boatId,
+            req.newBooking.serviceId,
+            req.newBooking.startDate,
+            3,
+          );
+          const altStr = alternatives.map((d) => d.toISOString().slice(0, 10)).join(", ");
+          const delivered = await sendEmail({
+            to: req.newBooking.customer.email,
+            subject: `Prenotazione ${req.newBooking.confirmationCode} scaduta`,
+            htmlContent: `<p>Ci dispiace, la tua richiesta di prenotazione non è stata confermata entro il termine di 15 giorni pre-data. Rimborso in corso (5-10 giorni lavorativi).</p><p>Date alternative: ${altStr || "contattaci"}.</p>`,
+            textContent: `Prenotazione scaduta. Rimborso in corso. Date alternative: ${altStr || "contattaci"}.`,
+          });
+          if (!delivered) emailFailures++;
+        } catch (err) {
+          emailFailures++;
+          logger.error({ err, requestId: id }, "expireDropDead: email failed");
+        }
+      }
+
+      expiredCount++;
+    } catch (err) {
+      logger.error({ err, requestId: id }, "expireDropDeadRequests iteration failed");
+    }
+  }
+
+  return { expired: expiredCount, refundFailures, emailFailures };
+}
+
 /**
  * Trova N date libere successive per suggerimento rebooking.
  * Scan dei 30 giorni successivi a `aroundDate`, ritorna le prime N senza booking attivi.

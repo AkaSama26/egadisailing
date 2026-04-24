@@ -508,3 +508,81 @@ describe("rejectOverride", () => {
     expect(auditLogs).toHaveLength(1);
   });
 });
+
+describe("expireDropDeadRequests", () => {
+  it("espira solo richieste PENDING con dropDeadAt <= now", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000", status: "PENDING",
+    });
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000", status: "CONFIRMED",
+    });
+
+    // Request già scaduta (dropDeadAt nel passato)
+    const expired = await db.overrideRequest.create({
+      data: {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        conflictSourceChannels: ["DIRECT"],
+        newBookingRevenue: "3000",
+        conflictingRevenueTotal: "2000",
+        dropDeadAt: new Date("2020-01-01"),
+        status: "PENDING",
+      },
+    });
+
+    // CANCEL laura manually first so the postCommitCancelBooking guard passes
+    // (the helper requires booking.status === "CANCELLED" at call time,
+    // but our code does the cancel inside tx BEFORE the helper, so it should work)
+
+    const { expireDropDeadRequests } = await import("@/lib/booking/override-request");
+    const result = await expireDropDeadRequests();
+
+    expect(result.expired).toBeGreaterThanOrEqual(1);
+
+    const expiredReq = await db.overrideRequest.findUnique({ where: { id: expired.id } });
+    expect(expiredReq?.status).toBe("EXPIRED");
+
+    const lauraUpdated = await db.booking.findUnique({ where: { id: laura.id } });
+    expect(lauraUpdated?.status).toBe("CANCELLED");
+
+    // Conflict INVARIATO
+    const conflictUpdated = await db.booking.findUnique({ where: { id: conflict.id } });
+    expect(conflictUpdated?.status).toBe("CONFIRMED");
+  });
+
+  it("NON espira PENDING con dropDeadAt in futuro", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000", status: "PENDING",
+    });
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000", status: "CONFIRMED",
+    });
+    const futureReq = await db.overrideRequest.create({
+      data: {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        conflictSourceChannels: ["DIRECT"],
+        newBookingRevenue: "3000",
+        conflictingRevenueTotal: "2000",
+        dropDeadAt: new Date("2099-01-01"), // futuro
+        status: "PENDING",
+      },
+    });
+
+    const { expireDropDeadRequests } = await import("@/lib/booking/override-request");
+    await expireDropDeadRequests();
+
+    const stillPending = await db.overrideRequest.findUnique({ where: { id: futureReq.id } });
+    expect(stillPending?.status).toBe("PENDING");
+
+    const lauraStillPending = await db.booking.findUnique({ where: { id: laura.id } });
+    expect(lauraStillPending?.status).toBe("PENDING");
+  });
+});
