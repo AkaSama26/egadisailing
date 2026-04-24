@@ -586,3 +586,117 @@ describe("expireDropDeadRequests", () => {
     expect(lauraStillPending?.status).toBe("PENDING");
   });
 });
+
+describe("sendEscalationReminders", () => {
+  it("24h reminderLevel 0 → 1, email sent", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000.00", status: "PENDING",
+    });
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000.00", status: "CONFIRMED",
+    });
+    const yesterday = new Date(Date.now() - 25 * 60 * 60 * 1000);
+    sendEmailMock.mockClear();
+
+    const req = await db.overrideRequest.create({
+      data: {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        conflictSourceChannels: ["DIRECT"],
+        newBookingRevenue: "3000",
+        conflictingRevenueTotal: "2000",
+        dropDeadAt: new Date("2026-12-31"),
+        status: "PENDING",
+        createdAt: yesterday,
+        reminderLevel: 0,
+      },
+    });
+
+    const { sendEscalationReminders } = await import("@/lib/booking/override-request");
+    const result = await sendEscalationReminders();
+
+    expect(result.sent).toBe(1);
+    expect(result.errors).toBe(0);
+    const updated = await db.overrideRequest.findUnique({ where: { id: req.id } });
+    expect(updated?.reminderLevel).toBe(1);
+    expect(updated?.lastReminderSentAt).not.toBeNull();
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: expect.stringContaining("pending") }),
+    );
+  });
+
+  it("già reminder 24h inviato 12h fa → NON re-invia", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000.00", status: "PENDING",
+    });
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000.00", status: "CONFIRMED",
+    });
+    const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    sendEmailMock.mockClear();
+
+    const req = await db.overrideRequest.create({
+      data: {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        conflictSourceChannels: ["DIRECT"],
+        newBookingRevenue: "3000",
+        conflictingRevenueTotal: "2000",
+        dropDeadAt: new Date("2026-12-31"),
+        status: "PENDING",
+        createdAt: twoDaysAgo,
+        reminderLevel: 1,
+        lastReminderSentAt: twelveHoursAgo,
+      },
+    });
+
+    const { sendEscalationReminders } = await import("@/lib/booking/override-request");
+    const result = await sendEscalationReminders();
+
+    expect(result.sent).toBe(0);
+    const updated = await db.overrideRequest.findUnique({ where: { id: req.id } });
+    expect(updated?.reminderLevel).toBe(1);
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("status REJECTED non riceve reminder", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const laura = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "3000.00", status: "CANCELLED",
+    });
+    const conflict = await seedBooking(db, {
+      boatId: boat.id, serviceId: service.id,
+      totalPrice: "2000.00", status: "CONFIRMED",
+    });
+    const yesterday = new Date(Date.now() - 25 * 60 * 60 * 1000);
+    sendEmailMock.mockClear();
+
+    await db.overrideRequest.create({
+      data: {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        conflictSourceChannels: ["DIRECT"],
+        newBookingRevenue: "3000",
+        conflictingRevenueTotal: "2000",
+        dropDeadAt: new Date("2026-12-31"),
+        status: "REJECTED",
+        createdAt: yesterday,
+        reminderLevel: 0,
+      },
+    });
+
+    const { sendEscalationReminders } = await import("@/lib/booking/override-request");
+    const result = await sendEscalationReminders();
+
+    expect(result.sent).toBe(0);
+    expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+});
