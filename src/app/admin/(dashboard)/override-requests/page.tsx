@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { OverrideImpactBadge } from "@/components/admin/override-impact-badge";
+import { AdminStatusTabs } from "@/components/admin/admin-status-tabs";
 import { OVERRIDE_STATUS_LABEL } from "@/lib/admin/labels";
 
 type Status = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "PENDING_RECONCILE_FAILED";
@@ -34,30 +35,21 @@ export default async function OverrideRequestsPage({
     take: 100,
   });
 
-  const tabs: { status: Status; label: string }[] = [
-    { status: "PENDING", label: "In attesa" },
-    { status: "PENDING_RECONCILE_FAILED", label: "Reconcile failed" },
-    { status: "APPROVED", label: "Approvate" },
-    { status: "REJECTED", label: "Rifiutate" },
-    { status: "EXPIRED", label: "Scadute" },
-  ];
-
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-slate-900">
         Richieste priorita&apos; ({requests.length})
       </h1>
-      <nav className="flex gap-4 border-b">
-        {tabs.map((t) => (
-          <Link
-            key={t.status}
-            href={`?status=${t.status}`}
-            className={`pb-2 px-2 text-sm ${status === t.status ? "border-b-2 border-sky-600 text-sky-700 font-semibold" : "text-slate-600 hover:text-slate-900"}`}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+      <AdminStatusTabs
+        active={status}
+        tabs={[
+          { value: "PENDING", label: OVERRIDE_STATUS_LABEL.PENDING },
+          { value: "PENDING_RECONCILE_FAILED", label: OVERRIDE_STATUS_LABEL.PENDING_RECONCILE_FAILED },
+          { value: "APPROVED", label: OVERRIDE_STATUS_LABEL.APPROVED },
+          { value: "REJECTED", label: OVERRIDE_STATUS_LABEL.REJECTED },
+          { value: "EXPIRED", label: OVERRIDE_STATUS_LABEL.EXPIRED },
+        ]}
+      />
       <div className="grid gap-4">
         {requests.length === 0 && (
           <p className="text-slate-500">Nessuna richiesta in questo stato.</p>
