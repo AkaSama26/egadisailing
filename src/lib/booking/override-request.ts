@@ -18,7 +18,7 @@ import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-ap
 import { sendEmail } from "@/lib/email/brevo";
 import { dispatchNotification } from "@/lib/notifications/dispatcher";
 import { auditLog } from "@/lib/audit/log";
-import { findAlternativeDates } from "./alternative-dates";
+import { getAlternativeDatesIso } from "./alternative-dates";
 
 export interface CreateOverrideRequestInput {
   newBookingId: string;
@@ -280,7 +280,7 @@ export async function approveOverride(
     });
     if (!conflict?.customer?.email) continue;
 
-    const alternatives = await findAlternativeDates(
+    const alternativeDates = await getAlternativeDatesIso(
       conflict.boatId,
       conflict.serviceId,
       conflict.startDate,
@@ -298,7 +298,7 @@ export async function approveOverride(
       contactPhone: env.CONTACT_PHONE,
       bookingUrl: `${env.APP_URL}/b/sessione`,
       voucherSoftText: "Per scusarci ti offriamo 2 drink gratis a bordo per persona alla prossima visita",
-      rebookingSuggestions: alternatives.map((d) => d.toISOString().slice(0, 10)),
+      rebookingSuggestions: alternativeDates,
     });
     try {
       const delivered = await sendEmail({
@@ -407,7 +407,7 @@ export async function rejectOverride(
   // Email rejection via dispatcher (template override-rejected-winner)
   let emailOk = true;
   if (request.newBooking.customer?.email) {
-    const alternatives = await findAlternativeDates(
+    const alternativeDates = await getAlternativeDatesIso(
       request.newBooking.boatId,
       request.newBooking.serviceId,
       request.newBooking.startDate,
@@ -425,7 +425,7 @@ export async function rejectOverride(
           serviceName: request.newBooking.service.name,
           startDate: request.newBooking.startDate.toISOString().slice(0, 10),
           refundAmount: request.newBooking.totalPrice.toFixed(2),
-          alternativeDates: alternatives.map((d) => d.toISOString().slice(0, 10)),
+          alternativeDates,
           bookingPortalUrl: `${env.APP_URL}/b/sessione`,
           contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
         } as unknown as Record<string, unknown>,
@@ -522,7 +522,7 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
       // Email customer expired via dispatcher (template override-expired)
       if (req.newBooking.customer?.email) {
         try {
-          const alternatives = await findAlternativeDates(
+          const alternativeDates = await getAlternativeDatesIso(
             req.newBooking.boatId,
             req.newBooking.serviceId,
             req.newBooking.startDate,
@@ -539,7 +539,7 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
               serviceName: req.newBooking.service?.name ?? "",
               startDate: req.newBooking.startDate.toISOString().slice(0, 10),
               refundAmount: req.newBooking.totalPrice?.toFixed(2) ?? "0.00",
-              alternativeDates: alternatives.map((d) => d.toISOString().slice(0, 10)),
+              alternativeDates,
               bookingPortalUrl: `${env.APP_URL}/b/sessione`,
             } as unknown as Record<string, unknown>,
           });

@@ -37,3 +37,18 @@ export async function findAlternativeDates(
   }
   return results;
 }
+
+/**
+ * Come findAlternativeDates, ma ritorna date gia' formattate come ISO
+ * (yyyy-mm-dd). Helper per email loser che hanno alternativeDates:
+ * string[].
+ */
+export async function getAlternativeDatesIso(
+  boatId: string,
+  serviceId: string,
+  aroundDate: Date,
+  limit: number,
+): Promise<string[]> {
+  const dates = await findAlternativeDates(boatId, serviceId, aroundDate, limit);
+  return dates.map((d) => d.toISOString().slice(0, 10));
+}
