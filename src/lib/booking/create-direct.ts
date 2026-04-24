@@ -20,6 +20,7 @@ import {
 } from "./override-eligibility";
 import { createOverrideRequest } from "./override-request";
 import { postCommitCancelBooking } from "./post-commit-cancel";
+import { dispatchNotification } from "@/lib/notifications/dispatcher";
 
 export interface ConsentInput {
   privacyAccepted: boolean;
@@ -469,6 +470,41 @@ export async function createPendingDirectBooking(
           "createPendingDirectBooking: supersede post-commit side-effects failed",
         );
       }
+    }
+  }
+
+  // Post-commit email dispatch per override_request (cliente + admin).
+  // Non-blocking: errori notification non devono rompere il booking flow.
+  if (result.overrideRequestResult) {
+    try {
+      const customerPayload = {
+        customerName:
+          `${input.customer.firstName ?? ""} ${input.customer.lastName ?? ""}`.trim() ||
+          "cliente",
+        confirmationCode,
+        serviceName: service.name,
+        startDate: startDay.toISOString().slice(0, 10),
+        numPeople: input.numPeople,
+        amountPaid: quote.totalPrice.toFixed(2),
+        bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+      };
+      // Cliente: pending confirmation email
+      await dispatchNotification({
+        type: "OVERRIDE_REQUESTED",
+        channels: ["EMAIL"],
+        payload: customerPayload as unknown as Record<string, unknown>,
+      });
+      // Admin alert (EMAIL; Telegram se configurato — default dal dispatcher).
+      await dispatchNotification({
+        type: "OVERRIDE_REQUESTED",
+        channels: ["EMAIL"],
+        payload: customerPayload as unknown as Record<string, unknown>,
+      });
+    } catch (err) {
+      logger.error(
+        { err, bookingId: result.created.id },
+        "createPendingDirectBooking: OVERRIDE_REQUESTED dispatch failed (non-blocking)",
+      );
     }
   }
 

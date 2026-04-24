@@ -18,10 +18,17 @@ export default async function BookingSuccessPage({
   const { code } = await params;
   const booking = await db.booking.findUnique({
     where: { confirmationCode: normalizeConfirmationCode(code) },
-    include: { service: true, customer: true, directBooking: true, payments: true },
+    include: {
+      service: true,
+      customer: true,
+      directBooking: true,
+      payments: true,
+      overrideRequest: true,
+    },
   });
   if (!booking) notFound();
 
+  const isOverrideRequest = booking.overrideRequest?.status === "PENDING";
   const isConfirmed = booking.status === "CONFIRMED";
   const paidCents = booking.payments
     .filter((p) => p.status === "SUCCEEDED" && p.type !== "REFUND")
@@ -34,7 +41,39 @@ export default async function BookingSuccessPage({
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#071934] to-[#0c3d5e] py-24 px-4">
       <div className="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-10 text-center space-y-5">
-        {isConfirmed ? (
+        {isOverrideRequest ? (
+          <>
+            <h1 className="text-3xl font-bold text-sky-700">Prenotazione ricevuta</h1>
+            <div className="inline-block px-3 py-1 rounded-full text-sm bg-amber-100 text-amber-900">
+              In attesa di conferma
+            </div>
+            <p className="text-gray-600">
+              Codice: <strong className="text-black">{booking.confirmationCode}</strong>
+            </p>
+            <p>
+              {booking.service.name} · {formatItDay(booking.startDate)}
+            </p>
+            <p>
+              Totale pagato:{" "}
+              <strong className="text-black">{formatEur(booking.totalPrice)}</strong>
+            </p>
+            <div className="text-left text-sm bg-sky-50 border border-sky-200 rounded p-4 space-y-2">
+              <p>
+                Abbiamo ricevuto il tuo pagamento. Lo staff conferma la
+                disponibilita&apos; <strong>entro 72 ore</strong>.
+              </p>
+              <p>
+                Se la data non viene confermata, riceverai{" "}
+                <strong>rimborso automatico completo</strong> sulla carta di pagamento
+                entro 5-10 giorni lavorativi (0 costi per te).
+              </p>
+              <p>
+                Ti abbiamo inviato una email di conferma ricezione con un link per
+                controllare lo stato in ogni momento.
+              </p>
+            </div>
+          </>
+        ) : isConfirmed ? (
           <>
             <h1 className="text-3xl font-bold text-emerald-600">Prenotazione confermata</h1>
             <p className="text-gray-600">
