@@ -13,6 +13,7 @@ import {
   rejectOverrideSchema,
   type ConflictSourceChannel,
 } from "@/lib/booking/override-types";
+import { captureError } from "@/lib/sentry/init";
 
 async function revalidateOverridePaths(requestId: string): Promise<void> {
   revalidatePath(`/admin/override-requests/${requestId}`);
@@ -51,6 +52,10 @@ export async function approveOverrideAction(
       refundErrors: result.refundErrors.length,
     };
   } catch (err) {
+    captureError(err, {
+      action: "approveOverrideAction",
+      requestId: (rawInput as Record<string, unknown>)?.requestId,
+    });
     return { ok: false, message: err instanceof Error ? err.message : "Errore sconosciuto" };
   }
 }
@@ -72,6 +77,10 @@ export async function rejectOverrideAction(
     await revalidateOverridePaths(input.requestId);
     return { ok: true, refundOk: result.refundOk, emailOk: result.emailOk };
   } catch (err) {
+    captureError(err, {
+      action: "rejectOverrideAction",
+      requestId: (rawInput as Record<string, unknown>)?.requestId,
+    });
     return { ok: false, message: err instanceof Error ? err.message : "Errore sconosciuto" };
   }
 }

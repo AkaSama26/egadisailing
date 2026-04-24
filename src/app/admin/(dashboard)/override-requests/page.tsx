@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { OverrideImpactBadge } from "@/components/admin/override-impact-badge";
 import { AdminStatusTabs } from "@/components/admin/admin-status-tabs";
 import { OVERRIDE_STATUS_LABEL } from "@/lib/admin/labels";
+import { ADMIN_LIST_LIMIT } from "@/lib/admin/constants";
 
 type Status = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "PENDING_RECONCILE_FAILED";
 
@@ -32,7 +33,7 @@ export default async function OverrideRequestsPage({
       },
     },
     orderBy: { createdAt: "desc" },
-    take: 100,
+    take: ADMIN_LIST_LIMIT,
   });
 
   return (
