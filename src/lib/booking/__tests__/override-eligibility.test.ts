@@ -60,4 +60,33 @@ describe("checkOverrideEligibility", () => {
       expect(result.reason).toBe("within_15_day_cutoff");
     }
   });
+
+  it("revenue pari → blocked/insufficient_revenue", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      conflictingBookings: [
+        { id: "b1", revenue: new Decimal("2000"), isAdminBlock: false },
+      ],
+    });
+    expect(result.status).toBe("blocked");
+    if (result.status === "blocked") {
+      expect(result.reason).toBe("insufficient_revenue");
+    }
+  });
+
+  it("revenue nuovo superiore → override_request", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      newBookingRevenue: new Decimal("3000"),
+      conflictingBookings: [
+        { id: "b1", revenue: new Decimal("2000"), isAdminBlock: false },
+      ],
+    });
+    expect(result.status).toBe("override_request");
+    if (result.status === "override_request") {
+      expect(result.conflictingBookingIds).toEqual(["b1"]);
+      expect(result.conflictingRevenueTotal.toString()).toBe("2000");
+      expect(result.dropDeadAt).toEqual(new Date("2026-07-31")); // 2026-08-15 - 15d
+    }
+  });
 });

@@ -1,4 +1,4 @@
-import type Decimal from "decimal.js";
+import Decimal from "decimal.js";
 
 /**
  * Input per checkOverrideEligibility — pure helper, nessun DB access.
@@ -63,6 +63,28 @@ export function checkOverrideEligibility(
       conflictingBookingIds: input.conflictingBookings.map((b) => b.id),
     };
   }
-  // TODO: revenue in task 1.6
-  throw new Error("not yet implemented");
+  // Regola 3: somma revenue conflittuali
+  const conflictingRevenueTotal = input.conflictingBookings.reduce(
+    (acc, b) => acc.add(b.revenue),
+    new Decimal(0),
+  );
+
+  if (input.newBookingRevenue.lte(conflictingRevenueTotal)) {
+    return {
+      status: "blocked",
+      reason: "insufficient_revenue",
+      conflictingBookingIds: input.conflictingBookings.map((b) => b.id),
+    };
+  }
+
+  // Eligibile
+  const dropDeadAt = new Date(input.experienceDate);
+  dropDeadAt.setDate(dropDeadAt.getDate() - 15);
+
+  return {
+    status: "override_request",
+    conflictingBookingIds: input.conflictingBookings.map((b) => b.id),
+    conflictingRevenueTotal,
+    dropDeadAt,
+  };
 }
