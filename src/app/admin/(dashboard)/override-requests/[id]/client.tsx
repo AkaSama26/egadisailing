@@ -15,6 +15,7 @@ export interface OverrideDetailData {
   status: string;
   newBookingRevenue: string;
   conflictingRevenueTotal: string;
+  deltaRevenue: string;
   conflictSourceChannels: string[];
   newBookingCode: string;
   newBookingCustomer: string;
@@ -95,10 +96,7 @@ export function OverrideDetailClient({
         <div>
           <strong>Revenue nuovo:</strong> &euro; {request.newBookingRevenue} &middot;{" "}
           <strong>Conflict:</strong> &euro; {request.conflictingRevenueTotal} &middot;{" "}
-          <strong>Delta:</strong> &euro;{" "}
-          {(
-            parseFloat(request.newBookingRevenue) - parseFloat(request.conflictingRevenueTotal)
-          ).toFixed(2)}
+          <strong>Delta:</strong> &euro; {request.deltaRevenue}
         </div>
         <div>
           <strong>Drop-dead:</strong> {request.dropDeadAt.slice(0, 10)}

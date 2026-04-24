@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { OTA_CHANNELS } from "@/lib/booking/override-types";
@@ -66,6 +67,9 @@ export default async function OverrideDetail({
         status: request.status,
         newBookingRevenue: request.newBookingRevenue.toFixed(2),
         conflictingRevenueTotal: request.conflictingRevenueTotal.toFixed(2),
+        deltaRevenue: new Decimal(request.newBookingRevenue.toString())
+          .minus(request.conflictingRevenueTotal.toString())
+          .toFixed(2),
         conflictSourceChannels: request.conflictSourceChannels,
         newBookingCode: request.newBooking.confirmationCode,
         newBookingCustomer: `${request.newBooking.customer.firstName} ${request.newBooking.customer.lastName}`.trim(),
