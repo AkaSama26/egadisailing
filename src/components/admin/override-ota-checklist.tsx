@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AdminCard } from "@/components/admin/admin-card";
 
 export interface OtaConflictData {
   conflictId: string;
@@ -86,10 +87,7 @@ export function OverrideOtaChecklist({
         const webhook = webhookStatus.find((w) => w.conflictId === c.conflictId);
         const upstreamOk = webhook?.upstreamCancelled ?? false;
         return (
-          <div
-            key={c.conflictId}
-            className="bg-white rounded-xl border border-amber-200 p-4"
-          >
+          <AdminCard key={c.conflictId} tone="warn" padding="sm">
             <h3 className="font-semibold">
               {c.channel} &mdash; {c.externalRef}
             </h3>
@@ -151,7 +149,7 @@ export function OverrideOtaChecklist({
                 ? `OK: cancel confermato upstream${webhook?.lastCheckedAt ? ` (${webhook.lastCheckedAt})` : ""}`
                 : "Attesa webhook cancel dall'OTA (polling 15s)..."}
             </div>
-          </div>
+          </AdminCard>
         );
       })}
     </div>

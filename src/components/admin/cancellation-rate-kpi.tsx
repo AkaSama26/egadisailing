@@ -1,6 +1,7 @@
 import { computeCancellationRate } from "@/lib/booking/cancellation-rate";
 import { env } from "@/lib/env";
 import { OTA_CHANNELS } from "@/lib/booking/override-types";
+import { AdminCard } from "@/components/admin/admin-card";
 
 export async function CancellationRateKpi() {
   const soft = env.OVERRIDE_CANCELLATION_RATE_SOFT_WARN;
@@ -13,10 +14,7 @@ export async function CancellationRateKpi() {
   );
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5">
-      <h3 className="font-semibold text-slate-900 mb-3">
-        Cancellation rate OTA (30gg)
-      </h3>
+    <AdminCard title="Cancellation rate OTA (30gg)">
       <p className="text-xs text-slate-500 mb-2">
         Soglie: soft {(soft * 100).toFixed(1)}% / hard {(hard * 100).toFixed(1)}%
       </p>
@@ -50,6 +48,6 @@ export async function CancellationRateKpi() {
           })}
         </tbody>
       </table>
-    </div>
+    </AdminCard>
   );
 }

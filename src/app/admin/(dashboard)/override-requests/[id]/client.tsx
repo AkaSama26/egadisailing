@@ -8,6 +8,7 @@ import {
   type OtaConfirmationState,
   type OtaConflictData,
 } from "@/components/admin/override-ota-checklist";
+import { AdminCard } from "@/components/admin/admin-card";
 import { approveOverrideAction, rejectOverrideAction } from "../actions";
 
 export interface OverrideDetailData {
@@ -84,7 +85,7 @@ export function OverrideDetailClient({
       <h1 className="text-3xl font-bold text-slate-900">
         Override request {request.id.slice(0, 8)}
       </h1>
-      <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+      <AdminCard padding="sm" className="space-y-2">
         <div>
           <strong>Status:</strong> {request.status}
         </div>
@@ -109,7 +110,7 @@ export function OverrideDetailClient({
             <strong>Note decisione:</strong> {request.decisionNotes}
           </div>
         )}
-      </div>
+      </AdminCard>
 
       {otaConflicts.length > 0 && canAct && (
         <section>
@@ -123,7 +124,7 @@ export function OverrideDetailClient({
       )}
 
       {canAct && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
+        <AdminCard padding="sm" className="space-y-3">
           <label className="block">
             <span className="text-sm font-medium">Note decisione (opzionale)</span>
             <textarea
@@ -154,7 +155,7 @@ export function OverrideDetailClient({
               ✗ Rifiuta
             </Button>
           </div>
-        </div>
+        </AdminCard>
       )}
     </div>
   );
