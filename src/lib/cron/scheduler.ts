@@ -131,5 +131,77 @@ export function startCronScheduler(): void {
     }
   });
 
+  // Priority Override Fase 1 — 4 cron sfasati per non saturare worker Next.js.
+  // overrideReminders min 0, overrideReconcile ogni 10min (granularita' sotto),
+  // overrideDropdead min 15, refundRetry min 10+40.
+
+  cron.schedule(
+    "0 * * * *",
+    async () => {
+      try {
+        const res = await fetch(`${env.APP_URL}/api/cron/override-reminders`, {
+          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+        });
+        if (!res.ok) {
+          logger.warn({ status: res.status }, "override-reminders cron non-2xx");
+        }
+      } catch (err) {
+        logger.error({ err }, "override-reminders cron fetch failed");
+      }
+    },
+    { timezone: "Europe/Rome" },
+  );
+
+  cron.schedule(
+    "*/10 * * * *",
+    async () => {
+      try {
+        const res = await fetch(`${env.APP_URL}/api/cron/override-reconcile`, {
+          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+        });
+        if (!res.ok) {
+          logger.warn({ status: res.status }, "override-reconcile cron non-2xx");
+        }
+      } catch (err) {
+        logger.error({ err }, "override-reconcile cron fetch failed");
+      }
+    },
+    { timezone: "Europe/Rome" },
+  );
+
+  cron.schedule(
+    "15 * * * *",
+    async () => {
+      try {
+        const res = await fetch(`${env.APP_URL}/api/cron/override-dropdead`, {
+          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+        });
+        if (!res.ok) {
+          logger.warn({ status: res.status }, "override-dropdead cron non-2xx");
+        }
+      } catch (err) {
+        logger.error({ err }, "override-dropdead cron fetch failed");
+      }
+    },
+    { timezone: "Europe/Rome" },
+  );
+
+  cron.schedule(
+    "10,40 * * * *",
+    async () => {
+      try {
+        const res = await fetch(`${env.APP_URL}/api/cron/refund-retry`, {
+          headers: { authorization: `Bearer ${env.CRON_SECRET}` },
+        });
+        if (!res.ok) {
+          logger.warn({ status: res.status }, "refund-retry cron non-2xx");
+        }
+      } catch (err) {
+        logger.error({ err }, "refund-retry cron fetch failed");
+      }
+    },
+    { timezone: "Europe/Rome" },
+  );
+
   logger.info("Cron scheduler started");
 }

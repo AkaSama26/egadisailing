@@ -14,6 +14,10 @@ export const LEASE_KEYS = {
   BALANCE_REMINDERS: "cron:balance-reminders",
   RETENTION: "cron:retention",
   WEATHER_FETCH_TRAPANI: "weather:fetch:trapani",
+  OVERRIDE_REMINDERS: "cron:override-reminders",
+  OVERRIDE_DROPDEAD: "cron:override-dropdead",
+  OVERRIDE_RECONCILE: "cron:override-reconcile",
+  REFUND_RETRY: "cron:refund-retry",
 } as const;
 
 export type LeaseKey = (typeof LEASE_KEYS)[keyof typeof LEASE_KEYS];
