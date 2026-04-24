@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { headers } from "next/headers";
-import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
@@ -13,8 +12,7 @@ import {
   checkOverrideEligibility as checkPure,
   type OverrideEligibilityResult,
 } from "./override-eligibility";
-import { toUtcDay, eachUtcDayInclusive } from "@/lib/dates";
-import { quotePrice } from "@/lib/pricing/service";
+import { loadEligibilityContext } from "./eligibility-context";
 
 const inputSchema = z.object({
   boatId: z.string().min(1).optional(),
@@ -66,73 +64,36 @@ export async function checkOverrideEligibilityAction(
     failOpen: true,
   });
 
-  const input = inputSchema.parse(rawInput);
-  let boatId = input.boatId;
+  const parsedInput = inputSchema.parse(rawInput);
+  let boatId = parsedInput.boatId;
   if (!boatId) {
     const svc = await db.service.findUnique({
-      where: { id: input.serviceId },
+      where: { id: parsedInput.serviceId },
       select: { boatId: true },
     });
     if (!svc) {
-      throw new Error(`Service ${input.serviceId} not found`);
+      throw new Error(`Service ${parsedInput.serviceId} not found`);
     }
     boatId = svc.boatId;
   }
-  const startDay = toUtcDay(new Date(input.startDate));
-  const endDay = toUtcDay(new Date(input.endDate));
 
-  // Conflicting bookings (PENDING | CONFIRMED) on same boat overlapping range
-  const conflictingBookings = await db.booking.findMany({
-    where: {
-      boatId,
-      status: { in: ["PENDING", "CONFIRMED"] },
-      startDate: { lte: endDay },
-      endDate: { gte: startDay },
-    },
-    select: { id: true, totalPrice: true, source: true },
+  const { input: eligibilityInput, rawConflicts } = await loadEligibilityContext({
+    boatId,
+    serviceId: parsedInput.serviceId,
+    startDate: parsedInput.startDate,
+    endDate: parsedInput.endDate,
+    numPax: parsedInput.numPax,
   });
 
-  // Admin boat-block (BoatAvailability BLOCKED + lockedByBookingId null)
-  const dayRange = Array.from(eachUtcDayInclusive(startDay, endDay));
-  const availability = await db.boatAvailability.findMany({
-    where: {
-      boatId,
-      date: { in: dayRange },
-      status: "BLOCKED",
-      lockedByBookingId: null,
-    },
-    select: { date: true },
-  });
-
-  // Revenue nuovo via quotePrice
-  const quote = await quotePrice(input.serviceId, startDay, input.numPax);
-  const newBookingRevenue = new Decimal(quote.totalPrice.toString());
-
-  const result = checkPure({
-    newBookingRevenue,
-    conflictingBookings: [
-      ...conflictingBookings.map((b) => ({
-        id: b.id,
-        revenue: new Decimal(b.totalPrice.toString()),
-        isAdminBlock: false,
-      })),
-      ...availability.map((a) => ({
-        id: `block:${a.date.toISOString().slice(0, 10)}`,
-        revenue: new Decimal(0),
-        isAdminBlock: true,
-      })),
-    ],
-    experienceDate: startDay,
-    today: new Date(),
-  });
+  const result = checkPure(eligibilityInput);
 
   logger.info(
     {
       boatId,
-      startDay: startDay.toISOString(),
+      startDay: eligibilityInput.experienceDate.toISOString(),
       status: result.status,
-      numConflicts: conflictingBookings.length,
-      numBlocks: availability.length,
+      numConflicts: rawConflicts.length,
+      numBlocks: eligibilityInput.conflictingBookings.length - rawConflicts.length,
     },
     "override.eligibility.check",
   );
