@@ -9,6 +9,7 @@ export type NotificationType =
   | "DOUBLE_BOOKING_DETECTED"
   // Fase 1 Trimarano — priority override system
   | "OVERRIDE_REQUESTED"
+  | "OVERRIDE_ADMIN_REQUESTED"
   | "OVERRIDE_REMINDER"
   | "OVERRIDE_APPROVED"
   | "OVERRIDE_REJECTED"
@@ -51,6 +52,7 @@ export const CHANNEL_DEFAULTS: Record<NotificationType, NotificationChannel[]> =
   OVERRIDE_EXPIRED: ["EMAIL"],
   OVERRIDE_SUPERSEDED: ["EMAIL"],
   // Admin-facing (EMAIL + TELEGRAM escalation):
+  OVERRIDE_ADMIN_REQUESTED: ["EMAIL", "TELEGRAM"],
   OVERRIDE_REMINDER: ["EMAIL"],
   OVERRIDE_RECONCILE_FAILED: ["EMAIL", "TELEGRAM"],
   CROSS_CHANNEL_CONFLICT: ["EMAIL", "TELEGRAM"],

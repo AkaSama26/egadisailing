@@ -24,6 +24,7 @@ import {
   type SyncFailurePayload,
 } from "./templates/sync-failure";
 import { bookingPendingOverrideConfirmationTemplate } from "@/lib/email/templates/booking-pending-override-confirmation";
+import { overrideAdminRequestedTemplate } from "@/lib/email/templates/override-admin-requested";
 import { overrideApprovedWinnerTemplate } from "@/lib/email/templates/override-approved-winner";
 import { overrideRejectedWinnerTemplate } from "@/lib/email/templates/override-rejected-winner";
 import { overrideExpiredTemplate } from "@/lib/email/templates/override-expired";
@@ -143,6 +144,12 @@ function renderTemplate(event: NotificationEvent): RenderedTemplate | null {
     case "OVERRIDE_REQUESTED": {
       const tpl = bookingPendingOverrideConfirmationTemplate(
         event.payload as unknown as Parameters<typeof bookingPendingOverrideConfirmationTemplate>[0],
+      );
+      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
+    }
+    case "OVERRIDE_ADMIN_REQUESTED": {
+      const tpl = overrideAdminRequestedTemplate(
+        event.payload as unknown as Parameters<typeof overrideAdminRequestedTemplate>[0],
       );
       return { subject: tpl.subject, html: tpl.html, text: tpl.text };
     }

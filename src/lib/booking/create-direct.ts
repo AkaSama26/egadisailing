@@ -477,6 +477,7 @@ export async function createPendingDirectBooking(
   // Non-blocking: errori notification non devono rompere il booking flow.
   if (result.overrideRequestResult) {
     try {
+      // Cliente: pending confirmation email (customer-phrased)
       const customerPayload = {
         customerName:
           `${input.customer.firstName ?? ""} ${input.customer.lastName ?? ""}`.trim() ||
@@ -488,17 +489,40 @@ export async function createPendingDirectBooking(
         amountPaid: quote.totalPrice.toFixed(2),
         bookingPortalUrl: `${env.APP_URL}/b/sessione`,
       };
-      // Cliente: pending confirmation email
       await dispatchNotification({
         type: "OVERRIDE_REQUESTED",
         channels: ["EMAIL"],
         payload: customerPayload as unknown as Record<string, unknown>,
       });
-      // Admin alert (EMAIL; Telegram se configurato — default dal dispatcher).
+
+      // Admin alert: distinct payload + type (not customer-phrased).
+      // Single findUniqueOrThrow: fetch tutti i campi in una query.
+      const overrideForAdmin = await db.overrideRequest.findUniqueOrThrow({
+        where: { id: result.overrideRequestResult.requestId },
+        select: {
+          conflictingRevenueTotal: true,
+          conflictSourceChannels: true,
+          dropDeadAt: true,
+        },
+      });
+      const adminDetailUrl = `${env.APP_URL}/admin/override-requests/${result.overrideRequestResult.requestId}`;
       await dispatchNotification({
-        type: "OVERRIDE_REQUESTED",
-        channels: ["EMAIL"],
-        payload: customerPayload as unknown as Record<string, unknown>,
+        type: "OVERRIDE_ADMIN_REQUESTED",
+        channels: ["EMAIL", "TELEGRAM"],
+        payload: {
+          confirmationCode,
+          customerName:
+            `${input.customer.firstName ?? ""} ${input.customer.lastName ?? ""}`.trim() || "?",
+          customerEmail: input.customer.email,
+          serviceName: service.name,
+          startDate: startDay.toISOString().slice(0, 10),
+          numPeople: input.numPeople,
+          newRevenue: quote.totalPrice.toFixed(2),
+          conflictRevenue: overrideForAdmin.conflictingRevenueTotal.toFixed(2),
+          conflictSources: overrideForAdmin.conflictSourceChannels,
+          dropDeadAt: overrideForAdmin.dropDeadAt.toISOString().slice(0, 10),
+          adminDetailUrl,
+        } as unknown as Record<string, unknown>,
       });
     } catch (err) {
       logger.error(
