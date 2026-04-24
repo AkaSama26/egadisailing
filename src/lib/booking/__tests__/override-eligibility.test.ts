@@ -32,4 +32,32 @@ describe("checkOverrideEligibility", () => {
       expect(result.conflictingBookingIds).toEqual(["b1"]);
     }
   });
+
+  it("esperienza a 14 gg → blocked/within_15_day_cutoff", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      experienceDate: new Date("2026-08-08"), // 14 giorni dopo 2026-07-25
+      conflictingBookings: [
+        { id: "b1", revenue: new Decimal("500"), isAdminBlock: false },
+      ],
+    });
+    expect(result.status).toBe("blocked");
+    if (result.status === "blocked") {
+      expect(result.reason).toBe("within_15_day_cutoff");
+    }
+  });
+
+  it("esperienza a 15 gg esatti → blocked (cutoff strict `> 15`)", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      experienceDate: new Date("2026-08-09"), // 15 giorni dopo 2026-07-25
+      conflictingBookings: [
+        { id: "b1", revenue: new Decimal("500"), isAdminBlock: false },
+      ],
+    });
+    expect(result.status).toBe("blocked");
+    if (result.status === "blocked") {
+      expect(result.reason).toBe("within_15_day_cutoff");
+    }
+  });
 });

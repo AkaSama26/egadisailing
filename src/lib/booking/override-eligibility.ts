@@ -51,6 +51,18 @@ export function checkOverrideEligibility(
       conflictingBookingIds: input.conflictingBookings.map((b) => b.id),
     };
   }
-  // TODO: altre regole in task 1.5-1.8
+  // Regola 2: 15-day cutoff strict (> 15 = eligible, <= 15 = blocked)
+  const daysToExperience = Math.floor(
+    (input.experienceDate.getTime() - input.today.getTime()) /
+      (24 * 60 * 60 * 1000),
+  );
+  if (daysToExperience <= 15) {
+    return {
+      status: "blocked",
+      reason: "within_15_day_cutoff",
+      conflictingBookingIds: input.conflictingBookings.map((b) => b.id),
+    };
+  }
+  // TODO: revenue in task 1.6
   throw new Error("not yet implemented");
 }
