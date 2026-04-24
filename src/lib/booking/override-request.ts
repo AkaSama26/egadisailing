@@ -4,10 +4,9 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { OverrideStatus } from "@/generated/prisma/enums";
 import Decimal from "decimal.js";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
-import type { OtaConfirmation } from "./override-types";
+import type { ConflictSourceChannel, OtaConfirmation } from "./override-types";
 import { isOtaChannel, isOtaConfirmationComplete } from "./override-types";
-import { ValidationError } from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import { env } from "@/lib/env";
 import { isUpstreamCancelled } from "./override-reconcile";
 import { computeCancellationRate } from "./cancellation-rate";
@@ -53,11 +52,12 @@ export async function createOverrideRequest(
     },
   });
   if (!newBooking) {
-    throw new Error(`newBookingId ${input.newBookingId} not found`);
+    throw new NotFoundError("Booking", input.newBookingId);
   }
   if (newBooking.status !== "PENDING") {
-    throw new Error(
-      `newBookingId ${input.newBookingId} not PENDING (is ${newBooking.status})`,
+    throw new ValidationError(
+      `Booking ${input.newBookingId} non è PENDING (stato: ${newBooking.status}). L'override può scavalcare solo booking PENDING.`,
+      { code: "NEW_BOOKING_NOT_PENDING", bookingId: input.newBookingId, actualStatus: newBooking.status },
     );
   }
 
@@ -147,27 +147,34 @@ export async function approveOverride(
     where: { id: requestId },
     include: { newBooking: { select: { boatId: true } } },
   });
-  if (!request) throw new Error(`OverrideRequest ${requestId} not found`);
+  if (!request) throw new NotFoundError("OverrideRequest", requestId);
   if (request.status !== "PENDING") {
-    throw new Error(`OverrideRequest ${requestId} is not PENDING (is ${request.status})`);
+    throw new ValidationError(
+      `OverrideRequest ${requestId} non è PENDING (stato: ${request.status}). Una decisione esiste già.`,
+      { code: "OVERRIDE_REQUEST_NOT_PENDING", requestId, actualStatus: request.status },
+    );
   }
 
   // OTA checklist enforcement (§7.4 step 1)
   const otaConflictChannels = request.conflictSourceChannels.filter((c) =>
-    isOtaChannel(c as never),
+    isOtaChannel(c as ConflictSourceChannel),
   );
   if (otaConflictChannels.length > 0) {
+    // Batch-load all conflict rows (avoid N+1 in guard loop).
+    const conflicts = await db.booking.findMany({
+      where: { id: { in: request.conflictingBookingIds } },
+      select: { id: true, source: true },
+    });
+    const conflictsById = new Map(conflicts.map((c) => [c.id, c]));
+
     for (const conflictId of request.conflictingBookingIds) {
-      const conflict = await db.booking.findUnique({
-        where: { id: conflictId },
-        select: { source: true },
-      });
-      if (!conflict || !isOtaChannel(conflict.source as never)) continue;
+      const conflict = conflictsById.get(conflictId);
+      if (!conflict || !isOtaChannel(conflict.source as ConflictSourceChannel)) continue;
 
       const conf = otaConfirmations.find((c) => c.conflictBookingId === conflictId);
       if (!conf || !isOtaConfirmationComplete(conf)) {
         throw new ValidationError(
-          `Conflict booking ${conflictId} (${conflict.source}) richiede le 4 checkbox complete prima dell'approve`,
+          `Conferma OTA mancante o incompleta per il conflict ${conflictId} (${conflict.source}). Tutte e 4 le checkbox devono essere spuntate prima dell'approve.`,
           { code: "OTA_CHECKLIST_INCOMPLETE", conflictId, channel: conflict.source },
         );
       }
@@ -216,6 +223,12 @@ export async function approveOverride(
   });
 
   // Post-commit side-effects: Stripe refund + fan-out + emails
-  // TODO: implement in task 2.5/2.6
-  return { approved: true, refundErrors: [], emailsSent: 0, emailsFailed: 0 };
+  // TODO(task-2.5): Stripe refund + releaseDates + blockDates
+  // TODO(task-2.6): email apology loser + conferma winner + audit log
+  return {
+    approved: true,
+    refundErrors: [], // TODO(task-2.5): popolare con eventuali fail
+    emailsSent: 0, // TODO(task-2.6)
+    emailsFailed: 0, // TODO(task-2.6)
+  };
 }
