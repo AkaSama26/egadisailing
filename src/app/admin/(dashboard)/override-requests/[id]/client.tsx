@@ -9,6 +9,7 @@ import {
   type OtaConflictData,
 } from "@/components/admin/override-ota-checklist";
 import { AdminCard } from "@/components/admin/admin-card";
+import { AdminAlert } from "@/components/admin/admin-alert";
 import { approveOverrideAction, rejectOverrideAction } from "../actions";
 
 export interface OverrideDetailData {
@@ -136,12 +137,9 @@ export function OverrideDetailClient({
             />
           </label>
           {feedback && (
-            <div
-              role={feedback.type === "error" ? "alert" : "status"}
-              className={`p-2 rounded text-sm ${feedback.type === "ok" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}
-            >
+            <AdminAlert variant={feedback.type === "ok" ? "success" : "error"}>
               {feedback.msg}
-            </div>
+            </AdminAlert>
           )}
           <div className="flex gap-3">
             <Button

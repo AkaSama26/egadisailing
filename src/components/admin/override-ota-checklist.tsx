@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AdminCard } from "@/components/admin/admin-card";
+import { AdminAlert } from "@/components/admin/admin-alert";
 
 export interface OtaConflictData {
   conflictId: string;
@@ -141,14 +142,14 @@ export function OverrideOtaChecklist({
                 <span>4. Dichiaro di aver completato i 3 passaggi sotto mia responsabilita&apos;</span>
               </label>
             </div>
-            <div
-              className={`mt-3 p-2 rounded text-sm ${upstreamOk ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}
-              role="status"
+            <AdminAlert
+              variant={upstreamOk ? "success" : "warn"}
+              className="mt-3"
             >
               {upstreamOk
                 ? `OK: cancel confermato upstream${webhook?.lastCheckedAt ? ` (${webhook.lastCheckedAt})` : ""}`
                 : "Attesa webhook cancel dall'OTA (polling 15s)..."}
-            </div>
+            </AdminAlert>
           </AdminCard>
         );
       })}

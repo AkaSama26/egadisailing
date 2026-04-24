@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { formatEur } from "@/lib/pricing/cents";
 import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 import { formatItDay } from "@/lib/dates";
+import { AdminAlert } from "@/components/admin/admin-alert";
 
 // R26-A1-A5: pagina post-payment con PII (confirmation code + email link).
 // noindex defense-in-depth.
@@ -57,7 +58,7 @@ export default async function BookingSuccessPage({
               Totale pagato:{" "}
               <strong className="text-black">{formatEur(booking.totalPrice)}</strong>
             </p>
-            <div className="text-left text-sm bg-sky-50 border border-sky-200 rounded p-4 space-y-2">
+            <AdminAlert variant="info" className="text-left space-y-2">
               <p>
                 Abbiamo ricevuto il tuo pagamento. Lo staff conferma la
                 disponibilita&apos; <strong>entro 72 ore</strong>.
@@ -71,7 +72,7 @@ export default async function BookingSuccessPage({
                 Ti abbiamo inviato una email di conferma ricezione con un link per
                 controllare lo stato in ogni momento.
               </p>
-            </div>
+            </AdminAlert>
           </>
         ) : isConfirmed ? (
           <>
