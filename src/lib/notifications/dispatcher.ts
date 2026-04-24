@@ -30,7 +30,7 @@ import { overrideRejectedWinnerTemplate } from "@/lib/email/templates/override-r
 import { overrideExpiredTemplate } from "@/lib/email/templates/override-expired";
 import { overrideSupersededTemplate } from "@/lib/email/templates/override-superseded";
 import { overrideReconcileFailedAdminTemplate } from "@/lib/email/templates/override-reconcile-failed-admin";
-import type { NotificationEvent } from "./events";
+import type { NotificationEvent, NotificationType } from "./events";
 
 interface RenderedTemplate {
   subject: string;
@@ -125,7 +125,57 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
   };
 }
 
+/**
+ * Lookup map per i 7 eventi OVERRIDE_* template-backed. Ogni entry chiama
+ * il template function corrispondente e normalizza a RenderedTemplate
+ * (subject+html+text). Consolida 7 case switch identici in uno
+ * `renderTemplate`.
+ */
+type OverrideTemplateFn = (payload: Record<string, unknown>) => {
+  subject: string;
+  html: string;
+  text: string;
+};
+
+const OVERRIDE_TEMPLATE_MAP: Partial<Record<NotificationType, OverrideTemplateFn>> = {
+  OVERRIDE_REQUESTED: (p) =>
+    bookingPendingOverrideConfirmationTemplate(
+      p as unknown as Parameters<typeof bookingPendingOverrideConfirmationTemplate>[0],
+    ),
+  OVERRIDE_ADMIN_REQUESTED: (p) =>
+    overrideAdminRequestedTemplate(
+      p as unknown as Parameters<typeof overrideAdminRequestedTemplate>[0],
+    ),
+  OVERRIDE_APPROVED: (p) =>
+    overrideApprovedWinnerTemplate(
+      p as unknown as Parameters<typeof overrideApprovedWinnerTemplate>[0],
+    ),
+  OVERRIDE_REJECTED: (p) =>
+    overrideRejectedWinnerTemplate(
+      p as unknown as Parameters<typeof overrideRejectedWinnerTemplate>[0],
+    ),
+  OVERRIDE_EXPIRED: (p) =>
+    overrideExpiredTemplate(
+      p as unknown as Parameters<typeof overrideExpiredTemplate>[0],
+    ),
+  OVERRIDE_SUPERSEDED: (p) =>
+    overrideSupersededTemplate(
+      p as unknown as Parameters<typeof overrideSupersededTemplate>[0],
+    ),
+  OVERRIDE_RECONCILE_FAILED: (p) =>
+    overrideReconcileFailedAdminTemplate(
+      p as unknown as Parameters<typeof overrideReconcileFailedAdminTemplate>[0],
+    ),
+};
+
 function renderTemplate(event: NotificationEvent): RenderedTemplate | null {
+  // Check OVERRIDE_* template-backed lookup first (consolidation).
+  const overrideFn = OVERRIDE_TEMPLATE_MAP[event.type];
+  if (overrideFn) {
+    const tpl = overrideFn(event.payload as Record<string, unknown>);
+    return { subject: tpl.subject, html: tpl.html, text: tpl.text };
+  }
+
   switch (event.type) {
     case "NEW_BOOKING_DIRECT":
     case "NEW_BOOKING_BOKUN":
@@ -141,48 +191,6 @@ function renderTemplate(event: NotificationEvent): RenderedTemplate | null {
       return paymentFailedTemplate(event.payload as unknown as PaymentFailedPayload);
     case "SYNC_FAILURE":
       return syncFailureTemplate(event.payload as unknown as SyncFailurePayload);
-    case "OVERRIDE_REQUESTED": {
-      const tpl = bookingPendingOverrideConfirmationTemplate(
-        event.payload as unknown as Parameters<typeof bookingPendingOverrideConfirmationTemplate>[0],
-      );
-      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
-    }
-    case "OVERRIDE_ADMIN_REQUESTED": {
-      const tpl = overrideAdminRequestedTemplate(
-        event.payload as unknown as Parameters<typeof overrideAdminRequestedTemplate>[0],
-      );
-      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
-    }
-    case "OVERRIDE_APPROVED": {
-      const tpl = overrideApprovedWinnerTemplate(
-        event.payload as unknown as Parameters<typeof overrideApprovedWinnerTemplate>[0],
-      );
-      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
-    }
-    case "OVERRIDE_REJECTED": {
-      const tpl = overrideRejectedWinnerTemplate(
-        event.payload as unknown as Parameters<typeof overrideRejectedWinnerTemplate>[0],
-      );
-      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
-    }
-    case "OVERRIDE_EXPIRED": {
-      const tpl = overrideExpiredTemplate(
-        event.payload as unknown as Parameters<typeof overrideExpiredTemplate>[0],
-      );
-      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
-    }
-    case "OVERRIDE_SUPERSEDED": {
-      const tpl = overrideSupersededTemplate(
-        event.payload as unknown as Parameters<typeof overrideSupersededTemplate>[0],
-      );
-      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
-    }
-    case "OVERRIDE_RECONCILE_FAILED": {
-      const tpl = overrideReconcileFailedAdminTemplate(
-        event.payload as unknown as Parameters<typeof overrideReconcileFailedAdminTemplate>[0],
-      );
-      return { subject: tpl.subject, html: tpl.html, text: tpl.text };
-    }
     case "OVERRIDE_REMINDER": {
       // No dedicated template — inline subject + summary for admin escalation.
       const payload = event.payload as { confirmationCode?: string; level?: number };
