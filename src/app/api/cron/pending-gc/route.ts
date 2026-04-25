@@ -1,11 +1,7 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
-import { enforceRateLimit } from "@/lib/rate-limit/service";
+import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
-import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { cancelPaymentIntent } from "@/lib/stripe/payment-intents";
 import { releaseDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
@@ -15,8 +11,6 @@ export const runtime = "nodejs";
 
 import { PENDING_GC_TTL_MS } from "@/lib/booking/constants";
 
-const LEASE_NAME = LEASE_KEYS.PENDING_GC;
-const LEASE_TTL_SECONDS = 5 * 60;
 // R20-A1-1: cutoff a 45min (da 30min) per creare buffer 30min rispetto alla
 // DIRECT_RETRY_WINDOW_MS (15min). Evita race retry-window vs GC concorrente
 // al bordo 30min quando cliente clicca "Usa altro metodo" al 29:59.
@@ -38,23 +32,14 @@ const RUN_BUDGET_MS = 4 * 60 * 1000;
  * Idempotency: ogni passo guardato (status check, PI gia' cancelled ignore,
  * releaseDates skippa se gia' AVAILABLE).
  */
-export const GET = withErrorHandler(async (req: Request) => {
-  requireBearerSecret(req, env.CRON_SECRET);
-  await enforceRateLimit({
-    identifier: "global",
+export const GET = withCronGuard(
+  {
     scope: RATE_LIMIT_SCOPES.PENDING_GC_CRON_IP,
-    limit: 10,
-    windowSeconds: 60,
-  });
-
-  const lease = await tryAcquireLease(LEASE_NAME, LEASE_TTL_SECONDS);
-  if (!lease) {
-    logger.warn("Pending GC skipped: another run in progress");
-    return NextResponse.json({ skipped: "concurrent_run" });
-  }
-
-  const startedAt = Date.now();
-  try {
+    leaseKey: LEASE_KEYS.PENDING_GC,
+    leaseTtlSeconds: 5 * 60,
+    runBudgetMs: RUN_BUDGET_MS,
+  },
+  async (_req, ctx) => {
     const cutoff = new Date(Date.now() - PENDING_MAX_AGE_MS);
     const BATCH_SIZE = 200;
     const MAX_BATCHES = 20; // cap hard: 4000 booking/run, oltre serve admin intervention
@@ -71,9 +56,9 @@ export const GET = withErrorHandler(async (req: Request) => {
     // il lease TTL (5min) → un altro pod parte e double-cancella. Break al
     // budget anche se batch pieni restano.
     for (let batchIdx = 0; batchIdx < MAX_BATCHES; batchIdx++) {
-      if (Date.now() - startedAt > RUN_BUDGET_MS) {
+      if (ctx.shouldStop()) {
         logger.warn(
-          { totalScanned, elapsedMs: Date.now() - startedAt },
+          { totalScanned, elapsedMs: ctx.elapsedMs() },
           "Pending GC stopped at RUN_BUDGET_MS to avoid lease expiry",
         );
         break;
@@ -179,14 +164,12 @@ export const GET = withErrorHandler(async (req: Request) => {
       },
       "Pending GC cron completed",
     );
-    return NextResponse.json({
+    return {
       scanned: totalScanned,
       cancelled,
       piCancelled,
       driftReleased,
       errors,
-    });
-  } finally {
-    await releaseLease(lease);
-  }
-});
+    };
+  },
+);

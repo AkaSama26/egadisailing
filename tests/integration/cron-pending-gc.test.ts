@@ -7,7 +7,7 @@
  *  3. Booking gia' CONFIRMED/CANCELLED → non toccato.
  *  4. Booking non-DIRECT source → non toccato (cron opera solo su DIRECT).
  *  5. cancelPaymentIntent errore Stripe → logged ma non blocca il batch.
- *  6. Lease concurrency: 2 run paralleli → secondo skip `concurrent_run`.
+ *  6. Lease concurrency: 2 run paralleli → secondo skip `already-running`.
  *  7. Senza Bearer → 401 UnauthorizedError (via withErrorHandler).
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -295,7 +295,7 @@ describe("pending-gc cron", () => {
     expect(after.status).toBe("CANCELLED");
   });
 
-  it("lease: 2 run concorrenti → secondo skip concurrent_run", async () => {
+  it("lease: 2 run concorrenti → secondo skip already-running", async () => {
     // Pre-acquire lease manualmente.
     const { tryAcquireLease } = await import("@/lib/lease/redis-lease");
     const held = await tryAcquireLease("cron:pending-gc", 60);
@@ -304,7 +304,7 @@ describe("pending-gc cron", () => {
     const { GET } = await import("@/app/api/cron/pending-gc/route");
     const res = await GET(makeReq());
     const body = await res.json();
-    expect(body.skipped).toBe("concurrent_run");
+    expect(body.skipped).toBe("already-running");
   });
 
   it("no Bearer → 401 UnauthorizedError", async () => {
