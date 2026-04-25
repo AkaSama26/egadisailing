@@ -3,6 +3,7 @@ import { ImapFlow } from "imapflow";
 import { simpleParser, type ParsedMail } from "mailparser";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { swallow } from "@/lib/result";
 
 export interface ImapConfig {
   host: string;
@@ -113,7 +114,7 @@ export async function fetchUnseenEmails(config: ImapConfig): Promise<FetchedEmai
       lock.release();
     }
   } finally {
-    await client.logout().catch(() => {});
+    await client.logout().catch(swallow("imap-client fetch logout"));
   }
 
   return emails;
@@ -150,6 +151,6 @@ export async function markEmailsSeen(config: ImapConfig, uids: number[]): Promis
       lock.release();
     }
   } finally {
-    await client.logout().catch(() => {});
+    await client.logout().catch(swallow("imap-client markSeen logout"));
   }
 }

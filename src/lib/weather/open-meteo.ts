@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger";
 import { ExternalServiceError } from "@/lib/errors";
+import { swallow } from "@/lib/result";
 
 export interface OpenMeteoForecast {
   date: string; // yyyy-MM-dd
@@ -55,7 +56,12 @@ export async function fetchOpenMeteoForecast(days = 16): Promise<OpenMeteoForeca
   try {
     const [weatherRes, marineRes] = await Promise.all([
       fetch(url, { signal: AbortSignal.timeout(FORECAST_TIMEOUT_MS) }),
-      fetch(marineUrl, { signal: AbortSignal.timeout(FORECAST_TIMEOUT_MS) }).catch(() => null),
+      fetch(marineUrl, { signal: AbortSignal.timeout(FORECAST_TIMEOUT_MS) }).catch(
+        (err) => {
+          swallow("open-meteo marine fetch", { url: marineUrl.toString() })(err);
+          return null;
+        },
+      ),
     ]);
     if (!weatherRes.ok) {
       throw new ExternalServiceError("OpenMeteo", `forecast status ${weatherRes.status}`);

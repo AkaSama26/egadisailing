@@ -10,6 +10,7 @@ import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { formatItDay } from "@/lib/dates";
 import { bookingWithDetailsInclude } from "@/lib/booking/queries";
 import { LEASE_KEYS } from "@/lib/lease/keys";
+import { swallow } from "@/lib/result";
 
 export const runtime = "nodejs";
 
@@ -91,7 +92,7 @@ export const GET = withCronGuard(
             where: { bookingId: b.id },
             data: { balanceReminderSentAt: null },
           })
-          .catch(() => {});
+          .catch(swallow("balance-reminder reset balanceReminderSentAt", { bookingId: b.id }));
         results.push({ bookingId: b.id, sent: false, error: "send_failed" });
       }
     }

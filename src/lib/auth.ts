@@ -6,6 +6,7 @@ import { enforceRateLimit } from "./rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "./channels";
 import { headers } from "next/headers";
 import { logger } from "./logger";
+import { swallow } from "./result";
 
 // R15-SEC-A3: dummy hash precomputato per timing-equalize il path
 // "user non esiste". Senza, `findUnique` + early return ~5ms vs
@@ -111,7 +112,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { id: token.sub },
           select: { id: true, email: true, name: true, role: true },
         })
-        .catch(() => null);
+        .catch((err) => {
+          swallow("session-callback user lookup", { userId: token.sub })(err);
+          return null;
+        });
       if (!dbUser) {
         // Session stale/compromessa → forza re-login (invalida nel middleware).
         // Cast via unknown: NextAuth type `user` e' non-nullable ma

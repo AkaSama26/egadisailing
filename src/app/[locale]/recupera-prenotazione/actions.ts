@@ -15,6 +15,7 @@ import { normalizeEmail } from "@/lib/email-normalize";
 import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 import { db } from "@/lib/db";
 import { emailSchema } from "@/lib/validation/common-zod";
+import { swallow } from "@/lib/result";
 
 const requestSchema = z.object({
   email: emailSchema,
@@ -82,7 +83,7 @@ export async function requestOtp(
             where: { id: otpId },
             data: { expiresAt: new Date() },
           })
-          .catch(() => {});
+          .catch(swallow("recovery-flow invalidate orphan OTP", { otpId }));
         throw err;
       }
     } else {
