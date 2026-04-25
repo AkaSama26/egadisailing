@@ -25,24 +25,34 @@ export function isOtaChannel(ch: ConflictSourceChannel): boolean {
   return OTA_CHANNELS.includes(ch);
 }
 
-// DTO per workflow checklist OTA admin (§7.2bis)
-export interface OtaConfirmation {
-  conflictBookingId: string;    // Booking.id
-  channel: ConflictSourceChannel;
-  externalRef: string;           // bokunBookingId / etc
-  panelOpened: boolean;          // checkbox 1
-  upstreamCancelled: boolean;    // checkbox 2
-  refundVerified: boolean;       // checkbox 3
-  adminDeclared: boolean;        // checkbox 4
-}
+// =====================================================================
+// Internal DTO Zod schema — strict shape per workflow checklist OTA admin (§7.2bis).
+// `OtaConfirmation` (interface) e' derivata via `z.infer` per eliminare drift.
+// =====================================================================
+
+export const otaConfirmationInternalSchema = z.object({
+  conflictBookingId: z.string(),                       // Booking.id
+  channel: z.enum(["DIRECT", "BOKUN", "BOATAROUND", "SAMBOAT", "CLICKANDBOAT", "NAUTAL"]),
+  externalRef: z.string(),                              // bokunBookingId / etc
+  panelOpened: z.boolean(),                             // checkbox 1
+  upstreamCancelled: z.boolean(),                       // checkbox 2
+  refundVerified: z.boolean(),                          // checkbox 3
+  adminDeclared: z.boolean(),                           // checkbox 4
+});
+
+// DTO interno usato da approveOverride() — single source of truth derivata da Zod.
+export type OtaConfirmation = z.infer<typeof otaConfirmationInternalSchema>;
 
 export function isOtaConfirmationComplete(c: OtaConfirmation): boolean {
   return c.panelOpened && c.upstreamCancelled && c.refundVerified && c.adminDeclared;
 }
 
 // =====================================================================
-// Zod schemas — single source of truth per Server Actions admin
-// override approve/reject. Mantenere allineato con OtaConfirmation DTO.
+// Wire schemas — Server Action input contract (client checkbox UI).
+// Differiscono dall'internal DTO per due motivi:
+//  - client invia `conflictId` (legacy nome del campo nel form), interno usa `conflictBookingId`
+//  - `channel: z.string()` permissivo perche' il server fa narrowing al map
+// L'action layer (actions.ts) traduce wire → internal via mapping esplicito.
 // =====================================================================
 
 export const otaConfirmationSchema = z.object({
