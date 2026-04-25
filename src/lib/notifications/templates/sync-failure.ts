@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/html-escape";
+import { safePlain } from "./_shared";
 
 export interface SyncFailurePayload {
   queueName: string;
@@ -13,9 +14,6 @@ export interface SyncFailurePayload {
 // `worker.on("failed")` dopo JOB_MAX_ATTEMPTS (final failure, non retry
 // intermedi). Alerting admin per DLQ draining: 100+ failed job su Bokun
 // con product-not-found = cross-channel drift garantito se non risolto.
-function safePlain(s: string): string {
-  return s.replace(/[\r\n]+/g, " ").trim();
-}
 
 export function syncFailureTemplate(payload: SyncFailurePayload) {
   const subject = `Sync failure · ${payload.queueName} · ${payload.jobName}`;

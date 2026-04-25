@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/html-escape";
+import { safePlain } from "./_shared";
 
 export interface DoubleBookingConflictItem {
   source: string;
@@ -14,10 +15,6 @@ export interface DoubleBookingPayload {
   startDate: string;
   endDate: string;
   conflicts: DoubleBookingConflictItem[];
-}
-
-function safePlain(s: string): string {
-  return s.replace(/[\r\n]+/g, " ").trim();
 }
 
 export function doubleBookingTemplate(payload: DoubleBookingPayload) {

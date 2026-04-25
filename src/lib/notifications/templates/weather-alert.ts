@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/html-escape";
+import { safePlain } from "./_shared";
 
 export interface WeatherAlertPayload {
   confirmationCode: string;
@@ -9,10 +10,7 @@ export interface WeatherAlertPayload {
   reasons: string[];
 }
 
-// R22-A2-MEDIA-1: strip \r\n da user-input per plain text fallback.
-function safePlain(s: string): string {
-  return s.replace(/[\r\n]+/g, " ").trim();
-}
+// R22-A2-MEDIA-1: strip \r\n da user-input per plain text fallback (in _shared).
 
 export function weatherAlertTemplate(payload: WeatherAlertPayload) {
   const subject = `Alert meteo ${payload.risk} · ${payload.confirmationCode}`;

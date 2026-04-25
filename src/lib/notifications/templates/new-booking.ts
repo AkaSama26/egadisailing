@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/html-escape";
+import { safePlain } from "./_shared";
 
 export interface NewBookingPayload {
   source: string;
@@ -10,10 +11,7 @@ export interface NewBookingPayload {
   totalPrice: string;
 }
 
-// R22-A2-MEDIA-1: strip \r\n da user-input per plain text fallback.
-function safePlain(s: string): string {
-  return s.replace(/[\r\n]+/g, " ").trim();
-}
+// R22-A2-MEDIA-1: strip \r\n da user-input per plain text fallback (in _shared).
 
 export function newBookingTemplate(payload: NewBookingPayload) {
   const subject = `Nuova prenotazione ${payload.source} · ${payload.confirmationCode}`;

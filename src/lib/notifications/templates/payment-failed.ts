@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/html-escape";
+import { safePlain } from "./_shared";
 
 export interface PaymentFailedPayload {
   confirmationCode: string;
@@ -12,9 +13,6 @@ export interface PaymentFailedPayload {
 // R27-CRIT-4: template generico per PAYMENT_FAILED. Primo consumer:
 // chargeback/dispute Stripe. Sara' riusato per payment_intent.payment_failed
 // terminal + SEPA async_payment_failed quando/se aggiunti.
-function safePlain(s: string): string {
-  return s.replace(/[\r\n]+/g, " ").trim();
-}
 
 export function paymentFailedTemplate(payload: PaymentFailedPayload) {
   const subject = `Pagamento problema · ${payload.confirmationCode}`;
