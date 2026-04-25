@@ -7,6 +7,7 @@ import { releaseDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { TTL, RUN_BUDGET, MAX_BATCHES as MAX_BATCHES_LIMITS } from "@/lib/timing";
+import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
 
 export const runtime = "nodejs";
 
@@ -43,41 +44,35 @@ export const GET = withCronGuard(
   async (_req, ctx) => {
     const cutoff = new Date(Date.now() - PENDING_MAX_AGE_MS);
     const BATCH_SIZE = 200;
-    const MAX_BATCHES = MAX_BATCHES_LIMITS.STANDARD; // cap hard: 4000 booking/run, oltre serve admin intervention
 
-    let totalScanned = 0;
     let cancelled = 0;
     let piCancelled = 0;
     const errors: Array<{ bookingId: string; error: string }> = [];
 
-    // R14-REG-A4: cursor pagination. Redis outage prolungata puo' accumulare
-    // 1000+ PENDING oltre cutoff; senza loop il GC clearava solo 200/run
-    // lasciando zombie slot LOCKED.
-    // R15-REG-6: soft-timeout. Con 200 iter × 2-5s ciascuna potremmo superare
-    // il lease TTL (5min) → un altro pod parte e double-cancella. Break al
-    // budget anche se batch pieni restano.
-    for (let batchIdx = 0; batchIdx < MAX_BATCHES; batchIdx++) {
-      if (ctx.shouldStop()) {
-        logger.warn(
-          { totalScanned, elapsedMs: ctx.elapsedMs() },
-          "Pending GC stopped at RUN_BUDGET_MS to avoid lease expiry",
-        );
-        break;
-      }
-      const batch = await db.booking.findMany({
-        where: {
-          status: "PENDING",
-          source: "DIRECT",
-          createdAt: { lt: cutoff },
-        },
-        include: { directBooking: true },
-        orderBy: { createdAt: "asc" },
-        take: BATCH_SIZE,
-      });
-      if (batch.length === 0) break;
-      totalScanned += batch.length;
-
-      for (const b of batch) {
+    // R14-REG-A4: cursor pagination via processBatchPaginated helper.
+    // R15-REG-6: soft-timeout via ctx.shouldStop() break per non superare il
+    // lease TTL.
+    const batchResult = await processBatchPaginated({
+      label: "pending-gc",
+      batchSize: BATCH_SIZE,
+      maxBatches: MAX_BATCHES_LIMITS.STANDARD, // cap 4000 booking/run
+      shouldStop: () => ctx.shouldStop(),
+      fetchBatch: async (_cursor, size) => {
+        const batch = await db.booking.findMany({
+          where: {
+            status: "PENDING",
+            source: "DIRECT",
+            createdAt: { lt: cutoff },
+          },
+          include: { directBooking: true },
+          orderBy: { createdAt: "asc" },
+          take: size,
+        });
+        // No cursor needed: the workload is consumed inline (status flip
+        // PENDING→CANCELLED) so the same query naturally advances each run.
+        return { items: batch, nextCursor: undefined };
+      },
+      processItem: async (b) => {
         try {
           const pi = b.directBooking?.stripePaymentIntentId;
           if (pi) {
@@ -95,23 +90,31 @@ export const GET = withCronGuard(
             where: { id: b.id, status: "PENDING" },
             data: { status: "CANCELLED" },
           });
-          if (claim.count === 0) continue;
+          if (claim.count === 0) return;
 
           await releaseDates(b.boatId, b.startDate, b.endDate, CHANNELS.DIRECT);
           cancelled++;
         } catch (err) {
           errors.push({ bookingId: b.id, error: (err as Error).message });
-          logger.error({ err: (err as Error).message, bookingId: b.id }, "Pending GC iteration failed");
+          logger.error(
+            { err: (err as Error).message, bookingId: b.id },
+            "Pending GC iteration failed",
+          );
         }
-      }
-
-      if (batch.length < BATCH_SIZE) break;
-      if (batchIdx === MAX_BATCHES - 1) {
-        logger.warn(
-          { totalScanned, cutoffMinutes: PENDING_MAX_AGE_MS / 60000 },
-          "Pending GC hit MAX_BATCHES cap — backlog not drained, will continue next run",
-        );
-      }
+      },
+    });
+    const totalScanned = batchResult.processedCount;
+    if (batchResult.hitTimeout) {
+      logger.warn(
+        { totalScanned, elapsedMs: ctx.elapsedMs() },
+        "Pending GC stopped at RUN_BUDGET_MS to avoid lease expiry",
+      );
+    }
+    if (batchResult.hitMaxBatches) {
+      logger.warn(
+        { totalScanned, cutoffMinutes: PENDING_MAX_AGE_MS / 60000 },
+        "Pending GC hit MAX_BATCHES cap — backlog not drained, will continue next run",
+      );
     }
 
     // R26-P4 (audit double-book Agent 1 #5-tail): recovery drift

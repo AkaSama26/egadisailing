@@ -1,4 +1,5 @@
 import { searchBokunBookings } from "@/lib/bokun/bookings";
+import type { BokunBookingSummary } from "@/lib/bokun/types";
 import { importBokunBooking } from "@/lib/bokun/adapters/booking";
 import { syncBookingAvailability } from "@/lib/bokun/sync-availability";
 import { isBokunConfigured } from "@/lib/bokun";
@@ -10,6 +11,7 @@ import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { RUN_BUDGET } from "@/lib/timing";
 import { recordChannelSync } from "@/lib/sync/record-channel-sync";
+import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
 
 export const runtime = "nodejs";
 
@@ -72,33 +74,26 @@ export const GET = withCronGuard(
       let imported = 0;
       let failed = 0;
       let totalHits = 0;
-      let page = 1;
-      let hasMore = true;
-      let budgetExceeded = false;
 
-      while (hasMore && page <= MAX_PAGES) {
-        // R28-ALTA-3: break su budget per evitare overrun lease TTL.
-        if (ctx.shouldStop()) {
-          budgetExceeded = true;
-          logger.warn(
-            {
-              page,
-              imported,
-              failed,
-              elapsedMs: ctx.elapsedMs(),
-            },
-            "Bokun reconciliation stopped at RUN_BUDGET_MS — backlog continues next run",
-          );
-          break;
-        }
-        const result = await searchBokunBookings({
-          updatedSince: since.toISOString(),
-          pageSize: PAGE_SIZE,
-          page,
-        });
-        totalHits = result.totalHits;
-
-        for (const b of result.bookings) {
+      // R14-REG-A4 / R28-ALTA-3: cursor pagination via processBatchPaginated.
+      // Cursor = page number (1-indexed), nextCursor incremented per page.
+      const batchRes = await processBatchPaginated<BokunBookingSummary, number>({
+        label: "bokun-reconciliation",
+        batchSize: PAGE_SIZE,
+        maxBatches: MAX_PAGES,
+        initialCursor: 1,
+        shouldStop: () => ctx.shouldStop(),
+        fetchBatch: async (cursor, size) => {
+          const page = cursor ?? 1;
+          const result = await searchBokunBookings({
+            updatedSince: since.toISOString(),
+            pageSize: size,
+            page,
+          });
+          totalHits = result.totalHits;
+          return { items: result.bookings, nextCursor: page + 1 };
+        },
+        processItem: async (b) => {
           try {
             const ours = await importBokunBooking(b);
             // R27-CRIT-6: skip fan-out quando l'import e' stato "skipped"
@@ -121,15 +116,27 @@ export const GET = withCronGuard(
               "importBokunBooking failed",
             );
           }
-        }
-
-        hasMore = result.bookings.length >= PAGE_SIZE;
-        page++;
+        },
+      });
+      const budgetExceeded = batchRes.hitTimeout;
+      if (budgetExceeded) {
+        logger.warn(
+          {
+            page: batchRes.batchCount,
+            imported,
+            failed,
+            elapsedMs: ctx.elapsedMs(),
+          },
+          "Bokun reconciliation stopped at RUN_BUDGET_MS — backlog continues next run",
+        );
       }
-
-      if (page > MAX_PAGES) {
-        logger.warn({ page, totalHits }, "Bokun reconciliation hit MAX_PAGES cap");
+      if (batchRes.hitMaxBatches) {
+        logger.warn(
+          { page: batchRes.batchCount, totalHits },
+          "Bokun reconciliation hit MAX_PAGES cap",
+        );
       }
+      const page = batchRes.batchCount + 1; // preserva diagnostica `pages: page - 1`
 
       // R28-ALTA-3: se abbiamo interrotto per budget o failure, NON avanzare
       // il cursor `since` — il prossimo run ri-legge la stessa finestra

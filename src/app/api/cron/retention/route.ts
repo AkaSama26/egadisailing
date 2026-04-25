@@ -6,6 +6,7 @@ import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { pruneProcessedEvents } from "@/lib/dedup/processed-event";
+import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
 
 export const runtime = "nodejs";
 
@@ -141,61 +142,63 @@ export const GET = withCronGuard(
     // ma la PII serve solo finche' la prenotazione e' operativa. Dopo 90g
     // sostituiamo il payload con i soli campi business-essenziali, cancellando
     // la PII residua. Idempotent: ri-esecuzione su record gia' redatti non ha
-    // effetti (non matchano il filtro grazie al marker `_redacted: true`).
-    // Loop fino a esaurire il backlog (cap 10k/run per evitare overrun cron).
-    // Idempotent grazie al marker `_redacted: true` — record gia' redatti vengono
-    // skippati senza update sprecato.
-    const BATCH = 500;
-    const MAX_BATCHES = 20;
+    // effetti (skippati via marker `_redacted: true`).
     try {
-      let batchIdx = 0;
-      let lastId: string | null = null;
-      while (batchIdx < MAX_BATCHES) {
-        const ninetyDayOldBookings: Array<{ bookingId: string; rawPayload: unknown }> =
-          await db.bokunBooking.findMany({
+      const bokunRes = await processBatchPaginated<
+        { bookingId: string; rawPayload: unknown },
+        string
+      >({
+        label: "retention-bokun-payload",
+        batchSize: 500,
+        maxBatches: 20,
+        fetchBatch: async (cursor, size) => {
+          const rows = await db.bokunBooking.findMany({
             where: {
               booking: { createdAt: { lt: ninetyDaysAgo } },
-              ...(lastId ? { bookingId: { gt: lastId } } : {}),
+              ...(cursor ? { bookingId: { gt: cursor } } : {}),
             },
             select: { bookingId: true, rawPayload: true },
             orderBy: { bookingId: "asc" },
-            take: BATCH,
+            take: size,
           });
-        if (ninetyDayOldBookings.length === 0) break;
-        batchIdx++;
-        lastId = ninetyDayOldBookings[ninetyDayOldBookings.length - 1].bookingId;
-        for (const row of ninetyDayOldBookings) {
-        const payload = row.rawPayload as Record<string, unknown>;
-        if (payload && typeof payload === "object" && payload._redacted === true) continue;
-        const pickNumber = (v: unknown): number | null =>
-          typeof v === "number" ? v : null;
-        const pickString = (v: unknown): string | null => (typeof v === "string" ? v : null);
-        const redacted: Prisma.InputJsonValue = {
-          id: pickNumber(payload?.id),
-          productId: pickString(payload?.productId),
-          status: pickString(payload?.status),
-          channelName: pickString(payload?.channelName),
-          startDate: pickString(payload?.startDate),
-          endDate: pickString(payload?.endDate),
-          numPeople: pickNumber(payload?.numPeople),
-          totalPrice: pickNumber(payload?.totalPrice),
-          currency: pickString(payload?.currency),
-          // Campi non-PII tenuti per audit fiscale (art. 2220 c.c., 10 anni).
-          paymentStatus: pickString(payload?.paymentStatus),
-          passengerCount: pickNumber(payload?.passengerCount),
-          _redacted: true,
-          _redactedAt: now.toISOString(),
-        };
-        await db.bokunBooking.update({
-          where: { bookingId: row.bookingId },
-          data: { rawPayload: redacted },
-        });
-        results.bokunPayloadRedacted++;
-        }
-      }
-      if (batchIdx >= MAX_BATCHES) {
+          return {
+            items: rows,
+            nextCursor: rows.length > 0 ? rows[rows.length - 1].bookingId : undefined,
+          };
+        },
+        processItem: async (row) => {
+          const payload = row.rawPayload as Record<string, unknown>;
+          if (payload && typeof payload === "object" && payload._redacted === true) return;
+          const pickNumber = (v: unknown): number | null =>
+            typeof v === "number" ? v : null;
+          const pickString = (v: unknown): string | null =>
+            typeof v === "string" ? v : null;
+          const redacted: Prisma.InputJsonValue = {
+            id: pickNumber(payload?.id),
+            productId: pickString(payload?.productId),
+            status: pickString(payload?.status),
+            channelName: pickString(payload?.channelName),
+            startDate: pickString(payload?.startDate),
+            endDate: pickString(payload?.endDate),
+            numPeople: pickNumber(payload?.numPeople),
+            totalPrice: pickNumber(payload?.totalPrice),
+            currency: pickString(payload?.currency),
+            // Campi non-PII tenuti per audit fiscale (art. 2220 c.c., 10 anni).
+            paymentStatus: pickString(payload?.paymentStatus),
+            passengerCount: pickNumber(payload?.passengerCount),
+            _redacted: true,
+            _redactedAt: now.toISOString(),
+          };
+          await db.bokunBooking.update({
+            where: { bookingId: row.bookingId },
+            data: { rawPayload: redacted },
+          });
+          results.bokunPayloadRedacted++;
+        },
+      });
+      if (bokunRes.hitMaxBatches) {
         logger.warn(
-          { batches: batchIdx, redacted: results.bokunPayloadRedacted },
+          { batches: bokunRes.batchCount, redacted: results.bokunPayloadRedacted },
           "Bokun rawPayload redaction hit MAX_BATCHES — backlog remains",
         );
       }
@@ -210,27 +213,31 @@ export const GET = withCronGuard(
     // legali fino al hard-delete Booking → violazione art. 5.1.c minimization
     // + art. 5.1.e storage limitation.
     try {
-      const BATCH = 500;
-      const MAX_BATCHES = 20;
-      let batchIdx = 0;
-      let lastId: string | null = null;
-      while (batchIdx < MAX_BATCHES) {
-        const rows: Array<{ bookingId: string; rawPayload: unknown }> =
-          await db.charterBooking.findMany({
+      const charterRes = await processBatchPaginated<
+        { bookingId: string; rawPayload: unknown },
+        string
+      >({
+        label: "retention-charter-payload",
+        batchSize: 500,
+        maxBatches: 20,
+        fetchBatch: async (cursor, size) => {
+          const rows = await db.charterBooking.findMany({
             where: {
               booking: { createdAt: { lt: ninetyDaysAgo } },
-              ...(lastId ? { bookingId: { gt: lastId } } : {}),
+              ...(cursor ? { bookingId: { gt: cursor } } : {}),
             },
             select: { bookingId: true, rawPayload: true },
             orderBy: { bookingId: "asc" },
-            take: BATCH,
+            take: size,
           });
-        if (rows.length === 0) break;
-        batchIdx++;
-        lastId = rows[rows.length - 1].bookingId;
-        for (const row of rows) {
+          return {
+            items: rows,
+            nextCursor: rows.length > 0 ? rows[rows.length - 1].bookingId : undefined,
+          };
+        },
+        processItem: async (row) => {
           const payload = row.rawPayload as Record<string, unknown>;
-          if (payload && typeof payload === "object" && payload._redacted === true) continue;
+          if (payload && typeof payload === "object" && payload._redacted === true) return;
           // Whitelist: preserva solo campi business non-PII per audit.
           const redacted = {
             _redacted: true,
@@ -240,7 +247,8 @@ export const GET = withCronGuard(
             startDate: payload?.startDate ?? null,
             endDate: payload?.endDate ?? null,
             numPeople: typeof payload?.numPeople === "number" ? payload.numPeople : null,
-            totalPriceCents: typeof payload?.totalPriceCents === "number" ? payload.totalPriceCents : null,
+            totalPriceCents:
+              typeof payload?.totalPriceCents === "number" ? payload.totalPriceCents : null,
             currency: payload?.currency ?? null,
           };
           await db.charterBooking.update({
@@ -248,11 +256,11 @@ export const GET = withCronGuard(
             data: { rawPayload: redacted },
           });
           results.charterPayloadRedacted++;
-        }
-      }
-      if (batchIdx >= MAX_BATCHES) {
+        },
+      });
+      if (charterRes.hitMaxBatches) {
         logger.warn(
-          { batches: batchIdx, redacted: results.charterPayloadRedacted },
+          { batches: charterRes.batchCount, redacted: results.charterPayloadRedacted },
           "Charter rawPayload redaction hit MAX_BATCHES — backlog remains",
         );
       }
