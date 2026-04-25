@@ -14,6 +14,7 @@ import { logger } from "@/lib/logger";
 import { blockDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
 import { postCommitCancelBooking } from "./post-commit-cancel";
+import { transitionBookingStatus } from "./transition-status";
 import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
 import { sendEmail } from "@/lib/email/brevo";
 import { dispatchNotification, toDispatchResult } from "@/lib/notifications/dispatcher";
@@ -396,9 +397,16 @@ export async function rejectOverride(
         decisionNotes: notes,
       },
     });
-    await tx.booking.update({
-      where: { id: request.newBookingId },
-      data: { status: "CANCELLED" },
+    // Phase 7: state-machine helper. newBooking e' garantito PENDING dal
+    // guard sopra (request.status === "PENDING" → newBooking PENDING per
+    // invariant del flow override). Race illegale (es. cancelled
+    // upstream) propaga ConflictError → l'azione admin fallisce
+    // chiaramente.
+    await transitionBookingStatus(tx, {
+      bookingId: request.newBookingId,
+      from: "PENDING",
+      to: "CANCELLED",
+      reason: "override_rejected",
     });
   });
 

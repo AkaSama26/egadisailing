@@ -2,10 +2,11 @@ import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { blockDates } from "@/lib/availability/service";
 import { logger } from "@/lib/logger";
-import { NotFoundError } from "@/lib/errors";
+import { ConflictError, NotFoundError } from "@/lib/errors";
 import { CHANNELS } from "@/lib/channels";
 import { fromCents } from "@/lib/pricing/cents";
 import type { PaymentType } from "@/lib/stripe/metadata";
+import { transitionBookingStatus } from "./transition-status";
 
 /**
  * Chiamato dal webhook Stripe quando un Payment Intent va a buon fine.
@@ -45,11 +46,34 @@ export async function confirmDirectBookingAfterPayment(params: {
 
     let transitioned = false;
     if (params.paymentType !== "BALANCE") {
-      const upd = await tx.booking.updateMany({
-        where: { id: booking.id, status: "PENDING" },
-        data: { status: "CONFIRMED" },
-      });
-      transitioned = upd.count === 1;
+      // Phase 7: usa state-machine helper. Catch ConflictError per
+      // distinguere idempotent (CONFIRMED) da race illegale
+      // (CANCELLED/REFUNDED). Quest'ultimo path delega al webhook handler
+      // (R10 BL-C3 auto-refund) via re-throw.
+      try {
+        await transitionBookingStatus(tx, {
+          bookingId: booking.id,
+          from: "PENDING",
+          to: "CONFIRMED",
+          reason: "stripe_succeeded",
+        });
+        transitioned = true;
+      } catch (err) {
+        if (err instanceof ConflictError) {
+          const actual = err.context.actualStatus as string | undefined;
+          if (actual === "CONFIRMED") {
+            // Idempotent (webhook retry on already-confirmed booking).
+            transitioned = false;
+          } else {
+            // Race illegale (CANCELLED/REFUNDED): admin ha cancellato dopo
+            // che PI era processing. Re-throw → webhook handler triggera
+            // auto-refund via R10 BL-C3 path.
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
     }
 
     if (booking.directBooking) {
