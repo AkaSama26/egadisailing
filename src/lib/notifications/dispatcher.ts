@@ -1,6 +1,7 @@
 import { sendEmail } from "@/lib/email/brevo";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { failed, ok, partial, type Outcome, type PartialError } from "@/lib/result";
 import { sendTelegramMessage } from "./telegram";
 import { newBookingTemplate, type NewBookingPayload } from "./templates/new-booking";
 import {
@@ -41,6 +42,19 @@ interface RenderedTemplate {
   telegram?: string;
 }
 
+/** Channel delivery outcome data. */
+export interface DispatchData {
+  emailDelivered: boolean;
+  telegramDelivered: boolean;
+}
+
+/** Outcome typed result of dispatchNotification. Phase 7 migration. */
+export type DispatchOutcome = Outcome<DispatchData>;
+
+/**
+ * Backward-compat shape used by callers prior to Phase 7. Kept for incremental
+ * migration: callers gradually migrate to `DispatchOutcome` direct usage.
+ */
 export interface DispatchResult {
   emailOk: boolean;
   telegramOk: boolean;
@@ -48,6 +62,31 @@ export interface DispatchResult {
   anyOk: boolean;
   /** true se il template non esiste (no-op) — il caller puo' ignorare. */
   skipped: boolean;
+}
+
+/**
+ * Convert `DispatchOutcome` to legacy `DispatchResult` shape. Lets existing
+ * callers continue working while Outcome migration completes incrementally.
+ */
+export function toDispatchResult(outcome: DispatchOutcome): DispatchResult {
+  if (outcome.status === "failed") {
+    // Distinguish "no template (skipped)" from "all channels failed":
+    // skipped iff dispatcher returned failed with kind:"other" id:"skipped".
+    const isSkipped = outcome.errors.some((e) => e.id === "skipped");
+    return {
+      emailOk: false,
+      telegramOk: false,
+      anyOk: false,
+      skipped: isSkipped,
+    };
+  }
+  // ok or partial
+  return {
+    emailOk: outcome.data.emailDelivered,
+    telegramOk: outcome.data.telegramDelivered,
+    anyOk: outcome.data.emailDelivered || outcome.data.telegramDelivered,
+    skipped: false,
+  };
 }
 
 /**
@@ -69,15 +108,24 @@ export function defaultNotificationChannels(): Array<"EMAIL" | "TELEGRAM"> {
  * template giusto + invia sui canali richiesti (EMAIL/TELEGRAM).
  *
  * Failure policy: ogni canale e' try/catch indipendente → un canale failed
- * non blocca l'altro. Ritorna `DispatchResult` per permettere ai caller
- * (es. weather cron alert dedup) di distinguere "dispatched" da "failed"
- * invece di affidarsi al void (R13-C1).
+ * non blocca l'altro. Ritorna `DispatchOutcome` (Phase 7 Outcome<T>) per
+ * permettere ai caller (es. weather cron alert dedup) di distinguere
+ * "dispatched" da "failed" invece di affidarsi al void (R13-C1). Caller
+ * legacy possono usare `toDispatchResult(outcome)` per shape pre-Phase-7.
  */
-export async function dispatchNotification(event: NotificationEvent): Promise<DispatchResult> {
+export async function dispatchNotification(event: NotificationEvent): Promise<DispatchOutcome> {
   const rendered = renderTemplate(event);
   if (!rendered) {
     logger.warn({ type: event.type }, "No template for notification type, skipping");
-    return { emailOk: false, telegramOk: false, anyOk: false, skipped: true };
+    // Phase 7: skip e' un "failed" con marker `skipped` per
+    // discriminazione caller (toDispatchResult espone `skipped:true`).
+    return failed([
+      {
+        id: "skipped",
+        message: `No template for notification type ${event.type}`,
+        kind: "other",
+      },
+    ]);
   }
 
   const wantEmail = event.channels.includes("EMAIL");
@@ -88,6 +136,8 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
   // usavamo `.then(()=>true)` che settava true anche sul dev-skip branch,
   // rendendo `anyOk=true` sempre true con TELEGRAM_BOT_TOKEN unset (attuale
   // stato) → weather cron scriveva marker dedup senza alert consegnato.
+  const errors: PartialError[] = [];
+
   const emailP: Promise<boolean> = wantEmail
     ? sendEmail({
         to: env.ADMIN_EMAIL,
@@ -95,34 +145,54 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
         htmlContent: rendered.html,
         textContent: rendered.text,
       }).catch((err: unknown) => {
+        const message = (err as Error).message;
         logger.error(
-          { err: (err as Error).message, type: event.type },
+          { err: message, type: event.type },
           "Email notification failed",
         );
+        errors.push({ id: "email", message, kind: "email" });
         return false;
       })
     : Promise.resolve(false);
 
   const telegramP: Promise<boolean> = wantTelegram
     ? sendTelegramMessage(rendered.telegram!).catch((err: unknown) => {
+        const message = (err as Error).message;
         logger.error(
-          { err: (err as Error).message, type: event.type },
+          { err: message, type: event.type },
           "Telegram notification failed",
         );
+        errors.push({ id: "telegram", message, kind: "telegram" });
         return false;
       })
     : Promise.resolve(false);
 
-  const [emailOk, telegramOk] = await Promise.all([emailP, telegramP]);
-  // R14-REG-C1: se nessun canale richiesto `anyOk=false` — il caller (es.
-  // weather-check) NON deve marcare "dispatched" quando l'evento aveva
-  // `channels: []`.
-  return {
-    emailOk,
-    telegramOk,
-    anyOk: emailOk || telegramOk,
-    skipped: false,
-  };
+  const [emailDelivered, telegramDelivered] = await Promise.all([emailP, telegramP]);
+
+  // Track non-throwing-but-undelivered (e.g. sendEmail returned false from
+  // a 4xx upstream caught upstream).
+  if (wantEmail && !emailDelivered && !errors.some((e) => e.id === "email")) {
+    errors.push({ id: "email", message: "email not delivered", kind: "email" });
+  }
+  if (wantTelegram && !telegramDelivered && !errors.some((e) => e.id === "telegram")) {
+    errors.push({ id: "telegram", message: "telegram not delivered", kind: "telegram" });
+  }
+
+  const data: DispatchData = { emailDelivered, telegramDelivered };
+
+  // No channels requested OR all failed → failed.
+  if (!wantEmail && !wantTelegram) {
+    return failed([
+      { id: "dispatch", message: "no channels requested", kind: "other" },
+    ]);
+  }
+  if (errors.length === 0) {
+    return ok(data);
+  }
+  if (emailDelivered || telegramDelivered) {
+    return partial(data, errors);
+  }
+  return failed(errors);
 }
 
 /**

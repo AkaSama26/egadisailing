@@ -87,14 +87,14 @@ describe("postCommitCancelBooking", () => {
       },
     });
 
-    const { postCommitCancelBooking } = await import(
+    const { postCommitCancelBooking, toLegacyResult } = await import(
       "@/lib/booking/post-commit-cancel"
     );
-    const res = await postCommitCancelBooking({
+    const res = toLegacyResult(await postCommitCancelBooking({
       bookingId: booking.id,
       actorUserId: null,
       reason: "override_rejected",
-    });
+    }));
 
     expect(res.refundsAttempted).toBe(1);
     expect(res.refundsSucceeded).toBe(1);
@@ -142,14 +142,14 @@ describe("postCommitCancelBooking", () => {
       },
     });
 
-    const { postCommitCancelBooking } = await import(
+    const { postCommitCancelBooking, toLegacyResult } = await import(
       "@/lib/booking/post-commit-cancel"
     );
-    const res = await postCommitCancelBooking({
+    const res = toLegacyResult(await postCommitCancelBooking({
       bookingId: booking.id,
       actorUserId: user.id,
       reason: "override_approved",
-    });
+    }));
 
     expect(res.refundsAttempted).toBe(0);
     expect(res.refundsSucceeded).toBe(0);
@@ -185,14 +185,14 @@ describe("postCommitCancelBooking", () => {
 
     refundPaymentMock.mockRejectedValueOnce(new Error("Stripe: network error"));
 
-    const { postCommitCancelBooking } = await import(
+    const { postCommitCancelBooking, toLegacyResult } = await import(
       "@/lib/booking/post-commit-cancel"
     );
-    const res = await postCommitCancelBooking({
+    const res = toLegacyResult(await postCommitCancelBooking({
       bookingId: booking.id,
       actorUserId: null,
       reason: "override_expired",
-    });
+    }));
 
     expect(res.refundsAttempted).toBe(1);
     expect(res.refundsSucceeded).toBe(0);
@@ -227,14 +227,14 @@ describe("postCommitCancelBooking", () => {
 
     releaseDatesMock.mockRejectedValueOnce(new Error("Advisory lock timeout"));
 
-    const { postCommitCancelBooking } = await import(
+    const { postCommitCancelBooking, toLegacyResult } = await import(
       "@/lib/booking/post-commit-cancel"
     );
-    const res = await postCommitCancelBooking({
+    const res = toLegacyResult(await postCommitCancelBooking({
       bookingId: booking.id,
       actorUserId: null,
       reason: "override_superseded",
-    });
+    }));
 
     expect(res.releaseOk).toBe(false);
 
@@ -290,14 +290,14 @@ describe("postCommitCancelBooking", () => {
       },
     });
 
-    const { postCommitCancelBooking } = await import(
+    const { postCommitCancelBooking, toLegacyResult } = await import(
       "@/lib/booking/post-commit-cancel"
     );
-    const res = await postCommitCancelBooking({
+    const res = toLegacyResult(await postCommitCancelBooking({
       bookingId: booking.id,
       actorUserId: null,
       reason: "override_approved",
-    });
+    }));
 
     expect(res.refundsAttempted).toBe(0);
     expect(refundPaymentMock).not.toHaveBeenCalled();
@@ -328,14 +328,14 @@ describe("postCommitCancelBooking", () => {
       residualCents: 0,
     });
 
-    const { postCommitCancelBooking } = await import(
+    const { postCommitCancelBooking, toLegacyResult } = await import(
       "@/lib/booking/post-commit-cancel"
     );
-    const res = await postCommitCancelBooking({
+    const res = toLegacyResult(await postCommitCancelBooking({
       bookingId: booking.id,
       actorUserId: null,
       reason: "override_rejected",
-    });
+    }));
 
     expect(res.refundsAttempted).toBe(1);
     expect(res.refundsSucceeded).toBe(1);

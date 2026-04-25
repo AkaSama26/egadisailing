@@ -6,6 +6,7 @@ import { CHANNELS } from "@/lib/channels";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { fromCents } from "@/lib/pricing/cents";
+import { ok, partial, type Outcome, type PartialError } from "@/lib/result";
 
 /**
  * Helper condiviso per side-effect post-commit dopo cancel di un Booking
@@ -60,6 +61,21 @@ export interface PostCommitCancelInput {
     | "override_superseded";
 }
 
+/** Phase 7: Outcome data shape (success metrics). */
+export interface PostCommitCancelData {
+  bookingId: string;
+  refundsAttempted: number;
+  refundsSucceeded: number;
+  releaseOk: boolean;
+}
+
+/** Phase 7: Outcome typed result. errors[] populated with kind="refund"/"release". */
+export type PostCommitCancelOutcome = Outcome<PostCommitCancelData>;
+
+/**
+ * Backward-compat shape (pre-Phase 7). Use `toLegacyResult(outcome)` per
+ * accedere alla shape che i caller storici si aspettano.
+ */
 export interface PostCommitCancelResult {
   bookingId: string;
   refundsAttempted: number;
@@ -68,9 +84,31 @@ export interface PostCommitCancelResult {
   releaseOk: boolean;
 }
 
+/** Convert outcome → legacy shape for non-migrated callers. */
+export function toLegacyResult(outcome: PostCommitCancelOutcome): PostCommitCancelResult {
+  // failed branch: outcome carries no `data`. Fallback to defaults preserving
+  // bookingId via errors[]? — failed e' impossibile per questa funzione
+  // (ritorniamo sempre ok|partial). Throw per evitare branch morti.
+  if (outcome.status === "failed") {
+    throw new Error("postCommitCancelBooking returned failed — invariant violation");
+  }
+  const refundsFailed = (
+    outcome.status === "partial" ? outcome.errors : []
+  )
+    .filter((e) => e.kind === "refund")
+    .map((e) => ({ paymentId: e.id, message: e.message }));
+  return {
+    bookingId: outcome.data.bookingId,
+    refundsAttempted: outcome.data.refundsAttempted,
+    refundsSucceeded: outcome.data.refundsSucceeded,
+    refundsFailed,
+    releaseOk: outcome.data.releaseOk,
+  };
+}
+
 export async function postCommitCancelBooking(
   input: PostCommitCancelInput,
-): Promise<PostCommitCancelResult> {
+): Promise<PostCommitCancelOutcome> {
   const booking = await db.booking.findUnique({
     where: { id: input.bookingId },
     include: { payments: true },
@@ -89,13 +127,10 @@ export async function postCommitCancelBooking(
     );
   }
 
-  const result: PostCommitCancelResult = {
-    bookingId: input.bookingId,
-    refundsAttempted: 0,
-    refundsSucceeded: 0,
-    refundsFailed: [],
-    releaseOk: true,
-  };
+  let refundsAttempted = 0;
+  let refundsSucceeded = 0;
+  let releaseOk = true;
+  const errors: PartialError[] = [];
 
   // 1. Refund Stripe — solo pagamenti SUCCEEDED con charge id, skip sibling
   // REFUND (type=REFUND non ha charge vero, ha note di correlation).
@@ -105,7 +140,7 @@ export async function postCommitCancelBooking(
     if (p.status !== "SUCCEEDED" || !p.stripeChargeId || p.type === "REFUND") {
       continue;
     }
-    result.refundsAttempted++;
+    refundsAttempted++;
     try {
       const state = await getChargeRefundState(p.stripeChargeId);
       if (state.residualCents <= 0) {
@@ -123,7 +158,7 @@ export async function postCommitCancelBooking(
           },
           "postCommitCancelBooking: charge already fully refunded upstream",
         );
-        result.refundsSucceeded++;
+        refundsSucceeded++;
         continue;
       }
       await refundPayment(p.stripeChargeId, state.residualCents);
@@ -142,10 +177,10 @@ export async function postCommitCancelBooking(
         },
         "postCommitCancelBooking: refund succeeded",
       );
-      result.refundsSucceeded++;
+      refundsSucceeded++;
     } catch (err) {
       const message = (err as Error).message;
-      result.refundsFailed.push({ paymentId: p.id, message });
+      errors.push({ id: p.id, message, kind: "refund" });
       logger.error(
         { err, paymentId: p.id, bookingId: booking.id, reason: input.reason },
         "postCommitCancelBooking: refund failed",
@@ -163,12 +198,16 @@ export async function postCommitCancelBooking(
       CHANNELS.DIRECT,
     );
   } catch (err) {
-    result.releaseOk = false;
+    releaseOk = false;
+    const message = (err as Error).message;
+    errors.push({ id: booking.id, message, kind: "release" });
     logger.error(
       { err, bookingId: booking.id, reason: input.reason },
       "postCommitCancelBooking: releaseDates failed",
     );
   }
+
+  const refundsFailedCount = errors.filter((e) => e.kind === "refund").length;
 
   // 3. Audit log — azione dedicata per distinguere cancel-by-override da
   // cancel admin manuale. Failure-safe dentro auditLog.
@@ -179,12 +218,19 @@ export async function postCommitCancelBooking(
     entityId: booking.id,
     after: {
       reason: input.reason,
-      refundsAttempted: result.refundsAttempted,
-      refundsSucceeded: result.refundsSucceeded,
-      refundsFailed: result.refundsFailed.length,
-      releaseOk: result.releaseOk,
+      refundsAttempted,
+      refundsSucceeded,
+      refundsFailed: refundsFailedCount,
+      releaseOk,
     },
   });
 
-  return result;
+  const data: PostCommitCancelData = {
+    bookingId: input.bookingId,
+    refundsAttempted,
+    refundsSucceeded,
+    releaseOk,
+  };
+
+  return errors.length === 0 ? ok(data) : partial(data, errors);
 }

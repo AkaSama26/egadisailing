@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { addDays, parseDateLikelyLocalDay } from "@/lib/dates";
 import { getWeatherForDate } from "@/lib/weather/service";
-import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
+import { dispatchNotification, defaultNotificationChannels, toDispatchResult } from "@/lib/notifications/dispatcher";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
@@ -75,7 +75,7 @@ export const GET = withCronGuard(
           continue;
         }
 
-        const dispatchResult = await dispatchNotification({
+        const dispatchOutcome = await dispatchNotification({
           type: "WEATHER_ALERT",
           channels: defaultNotificationChannels(),
           payload: {
@@ -87,6 +87,7 @@ export const GET = withCronGuard(
             reasons: w.reasons,
           },
         });
+        const dispatchResult = toDispatchResult(dispatchOutcome);
 
         // R13-C1: marker dedup SOLO se almeno un canale ha consegnato.
         // Se tutti i canali falliscono (Brevo 5xx + Telegram down), domani

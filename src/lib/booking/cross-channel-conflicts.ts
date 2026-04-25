@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import {
   dispatchNotification,
   defaultNotificationChannels,
+  toDispatchResult,
 } from "@/lib/notifications/dispatcher";
 
 // R29-AUDIT-FIX2: helper per decidere se un service type richiede
@@ -210,7 +211,7 @@ export async function recordDoubleBookingIncident(input: RecordIncidentInput): P
   // Admin log aggregator (Sentry/CloudWatch alarm su level=fatal) avvisa
   // un canale alternativo (SMS PagerDuty, Opsgenie) per escalation manuale.
   try {
-    const result = await dispatchNotification({
+    const outcome = await dispatchNotification({
       type: "DOUBLE_BOOKING_DETECTED",
       channels: defaultNotificationChannels(),
       payload: {
@@ -227,6 +228,7 @@ export async function recordDoubleBookingIncident(input: RecordIncidentInput): P
         })),
       },
     });
+    const result = toDispatchResult(outcome);
     if (!result.anyOk) {
       logger.fatal(
         {

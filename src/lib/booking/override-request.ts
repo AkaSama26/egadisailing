@@ -16,7 +16,7 @@ import { CHANNELS } from "@/lib/channels";
 import { postCommitCancelBooking } from "./post-commit-cancel";
 import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
 import { sendEmail } from "@/lib/email/brevo";
-import { dispatchNotification } from "@/lib/notifications/dispatcher";
+import { dispatchNotification, toDispatchResult } from "@/lib/notifications/dispatcher";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { getAlternativeDatesIso } from "./alternative-dates";
@@ -237,12 +237,18 @@ export async function approveOverride(
 
   // 1. Per ogni conflict: refund + releaseDates + audit via helper condiviso
   for (const conflictId of request.conflictingBookingIds) {
-    const cancelResult = await postCommitCancelBooking({
+    const cancelOutcome = await postCommitCancelBooking({
       bookingId: conflictId,
       actorUserId: adminUserId,
       reason: "override_approved",
     });
-    refundErrors.push(...cancelResult.refundsFailed);
+    if (cancelOutcome.status === "partial") {
+      for (const e of cancelOutcome.errors) {
+        if (e.kind === "refund") {
+          refundErrors.push({ paymentId: e.id, message: e.message });
+        }
+      }
+    }
   }
 
   // 2. blockDates per newBooking (side-effect unico dell'approve)
@@ -397,12 +403,13 @@ export async function rejectOverride(
   });
 
   // Post-commit: refund + release + audit via helper condiviso
-  const cancelResult = await postCommitCancelBooking({
+  const cancelOutcome = await postCommitCancelBooking({
     bookingId: request.newBookingId,
     actorUserId: adminUserId,
     reason: "override_rejected",
   });
-  const refundOk = cancelResult.refundsFailed.length === 0 && cancelResult.releaseOk;
+  // refundOk: nessun fallimento (status==="ok") significa refund + release entrambi ok.
+  const refundOk = cancelOutcome.status === "ok";
 
   // Email rejection via dispatcher (template override-rejected-winner)
   let emailOk = true;
@@ -413,7 +420,7 @@ export async function rejectOverride(
       3,
     );
     try {
-      const result = await dispatchNotification({
+      const outcome = await dispatchNotification({
         type: "OVERRIDE_REJECTED",
         channels: ["EMAIL"],
         payload: {
@@ -429,6 +436,7 @@ export async function rejectOverride(
           contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
         } as unknown as Record<string, unknown>,
       });
+      const result = toDispatchResult(outcome);
       if (!result.emailOk) emailOk = false;
     } catch (err) {
       emailOk = false;
@@ -510,12 +518,14 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
       });
 
       // Post-commit: refund + release + audit via helper
-      const cancelRes = await postCommitCancelBooking({
+      const cancelOutcome = await postCommitCancelBooking({
         bookingId: req.newBookingId,
         actorUserId: null,
         reason: "override_expired",
       });
-      refundFailures += cancelRes.refundsFailed.length;
+      if (cancelOutcome.status === "partial") {
+        refundFailures += cancelOutcome.errors.filter((e) => e.kind === "refund").length;
+      }
 
       // Email customer expired via dispatcher (template override-expired)
       if (req.newBooking.customer?.email) {
@@ -525,7 +535,7 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
             req.newBooking.startDate,
             3,
           );
-          const result = await dispatchNotification({
+          const outcome = await dispatchNotification({
             type: "OVERRIDE_EXPIRED",
             channels: ["EMAIL"],
             payload: {
@@ -540,6 +550,7 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
               bookingPortalUrl: `${env.APP_URL}/b/sessione`,
             } as unknown as Record<string, unknown>,
           });
+          const result = toDispatchResult(outcome);
           if (!result.emailOk) emailFailures++;
         } catch (err) {
           emailFailures++;

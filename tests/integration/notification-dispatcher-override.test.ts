@@ -53,7 +53,9 @@ describe("notification dispatcher — override types", () => {
           level: 1,
         },
       } as unknown as Parameters<typeof import("@/lib/notifications/dispatcher").dispatchNotification>[0]);
-      expect(res.anyOk).toBe(true);
+      // Phase 7: dispatchNotification ora ritorna DispatchOutcome.
+      // status === "ok" se entrambi i canali consegnati (qui solo EMAIL).
+      expect(res.status === "ok" || res.status === "partial").toBe(true);
     });
   }
 });
