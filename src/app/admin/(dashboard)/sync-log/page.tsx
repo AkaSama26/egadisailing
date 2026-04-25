@@ -185,7 +185,8 @@ export default async function SyncLogPage() {
                   <form
                     action={async () => {
                       "use server";
-                      await resolveAlertAction(a.id);
+                      const res = await resolveAlertAction({ id: a.id });
+                      if (!res.ok) throw new Error(res.message);
                     }}
                   >
                     <button
