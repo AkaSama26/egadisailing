@@ -1,20 +1,14 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { addDays, parseDateLikelyLocalDay } from "@/lib/dates";
 import { getWeatherForDate } from "@/lib/weather/service";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
-import { withErrorHandler, requireBearerSecret } from "@/lib/http/with-error-handler";
-import { enforceRateLimit } from "@/lib/rate-limit/service";
+import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
-import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 
 export const runtime = "nodejs";
 
-const LEASE_NAME = LEASE_KEYS.WEATHER_CHECK;
-const LEASE_TTL_SECONDS = 5 * 60;
 const ALERT_RESEND_THROTTLE_MS = 24 * 60 * 60 * 1000; // 24h tra re-alert per stesso risk
 
 /**
@@ -29,28 +23,15 @@ const ALERT_RESEND_THROTTLE_MS = 24 * 60 * 60 * 1000; // 24h tra re-alert per st
  * - R12-A1 alert fatigue: `weatherLastAlertedRisk` + `weatherLastAlertedAt`
  *   evitano email ripetute per lo stesso risk nelle stesse 24h.
  *
- * Multi-replica safety: Redis lease single-flight (R12-C1 audit abuse).
+ * Multi-replica safety: Redis lease single-flight (via withCronGuard).
  */
-export const GET = withErrorHandler(async (req: Request) => {
-  // R13-C2: Bearer PRIMA del rate-limit (difesa-in-profondita' contro
-  // X-Forwarded-For spoofing). Il rate-limit globale qui sotto protegge
-  // Open-Meteo anche se il CRON_SECRET leakasse: e' un cap hard al numero
-  // totale di fetch/min, non per-IP (che era aggirabile spooffando header).
-  requireBearerSecret(req, env.CRON_SECRET);
-  await enforceRateLimit({
-    identifier: "global",
+export const GET = withCronGuard(
+  {
     scope: RATE_LIMIT_SCOPES.WEATHER_CRON_IP,
-    limit: 10,
-    windowSeconds: 60,
-  });
-
-  const lease = await tryAcquireLease(LEASE_NAME, LEASE_TTL_SECONDS);
-  if (!lease) {
-    logger.warn("Weather check skipped: another run in progress");
-    return NextResponse.json({ skipped: "concurrent_run" });
-  }
-
-  try {
+    leaseKey: LEASE_KEYS.WEATHER_CHECK,
+    leaseTtlSeconds: 5 * 60,
+  },
+  async (_req, _ctx) => {
     // R22-A4-CRITICA-1: `toUtcDay(new Date())` usava day UTC → ai margini
     // (cron manuale ore 00:30 Rome CEST = 22:30 UTC ieri) il cron saltava
     // booking di oggi Italia. `Booking.startDate` e' salvato via
@@ -137,13 +118,11 @@ export const GET = withErrorHandler(async (req: Request) => {
       { checked: bookings.length, alertCount, skippedRecent, errors: errors.length },
       "Weather check cron completed",
     );
-    return NextResponse.json({
+    return {
       checked: bookings.length,
       alertCount,
       skippedRecent,
       errors,
-    });
-  } finally {
-    await releaseLease(lease);
-  }
-});
+    };
+  },
+);
