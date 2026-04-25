@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { AdminCard } from "@/components/admin/admin-card";
-import { EmptyState } from "@/components/admin/empty-state";
+import { AdminTable, type AdminTableColumn } from "@/components/admin/admin-table";
 import { PageHeader } from "@/components/admin/page-header";
 
 // Classi di servizio con label IT + badge color-coded per distinguere
@@ -46,6 +46,94 @@ export default async function ServiziPage() {
     orderBy: [{ priority: "desc" }, { name: "asc" }],
   });
 
+  type ServiceRow = (typeof services)[number];
+  const columns: AdminTableColumn<ServiceRow>[] = [
+    { label: "Nome", className: "font-medium", render: (s) => s.name },
+    {
+      label: "Classe",
+      render: (s) => {
+        const typeInfo = SERVICE_TYPE_LABEL[s.type] ?? {
+          label: s.type,
+          className: "bg-slate-100 text-slate-700 border-slate-200",
+        };
+        return (
+          <span
+            className={`inline-block px-2 py-0.5 rounded-full border text-xs font-semibold whitespace-nowrap ${typeInfo.className}`}
+          >
+            {typeInfo.label}
+          </span>
+        );
+      },
+    },
+    { label: "Barca", render: (s) => s.boat.name },
+    {
+      label: "Durata",
+      render: (s) => {
+        const durationLabel = DURATION_LABEL[s.durationType] ?? s.durationType;
+        return (
+          <>
+            {durationLabel}
+            {s.durationType !== "WEEK" ? ` · ${s.durationHours}h` : ""}
+          </>
+        );
+      },
+    },
+    {
+      label: "Capacity",
+      align: "center",
+      className: "tabular-nums",
+      render: (s) => (
+        <>
+          {s.capacityMax}
+          {s.minPaying ? (
+            <span
+              className="block text-xs text-slate-500"
+              title="Soglia minima per ordine singolo"
+            >
+              min {s.minPaying}
+            </span>
+          ) : null}
+        </>
+      ),
+    },
+    {
+      label: "Pagamento",
+      render: (s) =>
+        PAYMENT_LABEL[s.defaultPaymentSchedule] ?? s.defaultPaymentSchedule,
+    },
+    {
+      label: "Deposit %",
+      align: "center",
+      className: "tabular-nums",
+      render: (s) =>
+        s.defaultDepositPercentage != null ? `${s.defaultDepositPercentage}%` : "-",
+    },
+    {
+      label: "Bokun ID",
+      className: "text-xs font-mono",
+      render: (s) =>
+        s.bokunProductId ? (
+          s.bokunProductId
+        ) : (
+          <span className="text-slate-400 italic">non mappato</span>
+        ),
+    },
+    {
+      label: "Attivo",
+      align: "center",
+      render: (s) =>
+        s.active ? (
+          <span aria-label="Attivo" className="text-emerald-600">
+            ✓
+          </span>
+        ) : (
+          <span aria-label="Disattivato" className="text-slate-400">
+            ✗
+          </span>
+        ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -54,85 +142,13 @@ export default async function ServiziPage() {
       />
 
       <div className="bg-white rounded-xl border overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <th scope="col" className="text-left p-3">Nome</th>
-              <th scope="col" className="text-left p-3">Classe</th>
-              <th scope="col" className="text-left p-3">Barca</th>
-              <th scope="col" className="text-left p-3">Durata</th>
-              <th scope="col" className="text-center p-3">Capacity</th>
-              <th scope="col" className="text-left p-3">Pagamento</th>
-              <th scope="col" className="text-center p-3">Deposit %</th>
-              <th scope="col" className="text-left p-3">Bokun ID</th>
-              <th scope="col" className="text-center p-3">Attivo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {services.map((s) => {
-              const typeInfo = SERVICE_TYPE_LABEL[s.type] ?? {
-                label: s.type,
-                className: "bg-slate-100 text-slate-700 border-slate-200",
-              };
-              const durationLabel = DURATION_LABEL[s.durationType] ?? s.durationType;
-              return (
-                <tr key={s.id} className="border-t">
-                  <td className="p-3 font-medium">{s.name}</td>
-                  <td className="p-3">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded-full border text-xs font-semibold whitespace-nowrap ${typeInfo.className}`}
-                    >
-                      {typeInfo.label}
-                    </span>
-                  </td>
-                  <td className="p-3">{s.boat.name}</td>
-                  <td className="p-3">
-                    {durationLabel}
-                    {s.durationType !== "WEEK" ? ` · ${s.durationHours}h` : ""}
-                  </td>
-                  <td className="p-3 text-center tabular-nums">
-                    {s.capacityMax}
-                    {s.minPaying ? (
-                      <span
-                        className="block text-xs text-slate-500"
-                        title="Soglia minima per ordine singolo"
-                      >
-                        min {s.minPaying}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="p-3">
-                    {PAYMENT_LABEL[s.defaultPaymentSchedule] ?? s.defaultPaymentSchedule}
-                  </td>
-                  <td className="p-3 text-center tabular-nums">
-                    {s.defaultDepositPercentage != null ? `${s.defaultDepositPercentage}%` : "-"}
-                  </td>
-                  <td className="p-3 text-xs font-mono">
-                    {s.bokunProductId ? (
-                      s.bokunProductId
-                    ) : (
-                      <span className="text-slate-400 italic">non mappato</span>
-                    )}
-                  </td>
-                  <td className="p-3 text-center">
-                    {s.active ? (
-                      <span aria-label="Attivo" className="text-emerald-600">
-                        ✓
-                      </span>
-                    ) : (
-                      <span aria-label="Disattivato" className="text-slate-400">
-                        ✗
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            {services.length === 0 && (
-              <EmptyState message="Nessun servizio configurato." colSpan={9} />
-            )}
-          </tbody>
-        </table>
+        <AdminTable<ServiceRow>
+          caption="Catalogo servizi"
+          rows={services}
+          rowKey={(s) => s.id}
+          emptyMessage="Nessun servizio configurato."
+          columns={columns}
+        />
       </div>
 
       {/* Legenda classi per chiarire la distinzione in vista admin. */}

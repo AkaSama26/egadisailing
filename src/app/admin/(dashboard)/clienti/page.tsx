@@ -1,8 +1,41 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { EmptyState } from "@/components/admin/empty-state";
+import { AdminTable, type AdminTableColumn } from "@/components/admin/admin-table";
 import { PageHeader } from "@/components/admin/page-header";
 import { SubmitButton } from "@/components/admin/submit-button";
+
+interface CustomerRow {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  nationality: string | null;
+  _count: { bookings: number };
+}
+
+const customerColumns: AdminTableColumn<CustomerRow>[] = [
+  {
+    label: "Nome",
+    render: (c) => (
+      <Link
+        href={`/admin/clienti/${c.id}`}
+        className="text-blue-600 hover:underline"
+      >
+        {c.firstName} {c.lastName}
+      </Link>
+    ),
+  },
+  { label: "Email", render: (c) => c.email },
+  { label: "Telefono", render: (c) => c.phone ?? "-" },
+  { label: "Nazionalità", render: (c) => c.nationality ?? "-" },
+  {
+    label: "Prenotazioni",
+    align: "center",
+    className: "tabular-nums",
+    render: (c) => c._count.bookings,
+  },
+];
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -64,38 +97,13 @@ export default async function ClientiPage({ searchParams }: Props) {
       </p>
 
       <div className="bg-white rounded-xl border overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <th className="text-left p-3">Nome</th>
-              <th className="text-left p-3">Email</th>
-              <th className="text-left p-3">Telefono</th>
-              <th className="text-left p-3">Nazionalità</th>
-              <th className="text-center p-3">Prenotazioni</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((c) => (
-              <tr key={c.id} className="border-t hover:bg-slate-50">
-                <td className="p-3">
-                  <Link
-                    href={`/admin/clienti/${c.id}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    {c.firstName} {c.lastName}
-                  </Link>
-                </td>
-                <td className="p-3">{c.email}</td>
-                <td className="p-3">{c.phone ?? "-"}</td>
-                <td className="p-3">{c.nationality ?? "-"}</td>
-                <td className="p-3 text-center tabular-nums">{c._count.bookings}</td>
-              </tr>
-            ))}
-            {customers.length === 0 && (
-              <EmptyState message="Nessun cliente trovato." colSpan={5} />
-            )}
-          </tbody>
-        </table>
+        <AdminTable<CustomerRow>
+          caption="Elenco clienti"
+          columns={customerColumns}
+          rows={customers}
+          emptyMessage="Nessun cliente trovato."
+          rowKey={(c) => c.id}
+        />
       </div>
     </div>
   );

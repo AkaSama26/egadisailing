@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
-import { EmptyState } from "@/components/admin/empty-state";
+import { AdminTable, type AdminTableColumn } from "@/components/admin/admin-table";
 import { PageHeader } from "@/components/admin/page-header";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { upsertCrewMember, toggleCrewActive } from "./actions";
+
+type CrewRow = Awaited<ReturnType<typeof db.crewMember.findMany>>[number];
 
 export default async function CrewPage() {
   const members = await db.crewMember.findMany({
@@ -15,48 +17,41 @@ export default async function CrewPage() {
       <PageHeader title="Crew" />
 
       <div className="bg-white rounded-xl border overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <th className="text-left p-3">Nome</th>
-              <th className="text-left p-3">Ruolo</th>
-              <th className="text-left p-3">Telefono</th>
-              <th className="text-left p-3">Email</th>
-              <th className="text-right p-3">Tariffa/giorno</th>
-              <th className="text-center p-3">Attivo</th>
-              <th className="text-right p-3">Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((m) => (
-              <tr key={m.id} className="border-t">
-                <td className="p-3 font-medium">{m.name}</td>
-                <td className="p-3">{m.role}</td>
-                <td className="p-3">{m.phone ?? "-"}</td>
-                <td className="p-3">{m.email ?? "-"}</td>
-                <td className="p-3 text-right tabular-nums">
-                  {m.dailyRate ? formatEur(m.dailyRate.toString()) : "-"}
-                </td>
-                <td className="p-3 text-center">{m.active ? "✓" : "✗"}</td>
-                <td className="p-3 text-right">
-                  <form
-                    action={async () => {
-                      "use server";
-                      await toggleCrewActive(m.id, !m.active);
-                    }}
-                  >
-                    <SubmitButton className="text-xs text-slate-600 hover:underline">
-                      {m.active ? "Disattiva" : "Attiva"}
-                    </SubmitButton>
-                  </form>
-                </td>
-              </tr>
-            ))}
-            {members.length === 0 && (
-              <EmptyState message="Nessun membro crew configurato." colSpan={7} />
-            )}
-          </tbody>
-        </table>
+        <AdminTable<CrewRow>
+          caption="Elenco membri crew"
+          rows={members}
+          rowKey={(m) => m.id}
+          emptyMessage="Nessun membro crew configurato."
+          columns={[
+            { label: "Nome", className: "font-medium", render: (m) => m.name },
+            { label: "Ruolo", render: (m) => m.role },
+            { label: "Telefono", render: (m) => m.phone ?? "-" },
+            { label: "Email", render: (m) => m.email ?? "-" },
+            {
+              label: "Tariffa/giorno",
+              align: "right",
+              className: "tabular-nums",
+              render: (m) => (m.dailyRate ? formatEur(m.dailyRate.toString()) : "-"),
+            },
+            { label: "Attivo", align: "center", render: (m) => (m.active ? "✓" : "✗") },
+            {
+              label: "Azioni",
+              align: "right",
+              render: (m) => (
+                <form
+                  action={async () => {
+                    "use server";
+                    await toggleCrewActive(m.id, !m.active);
+                  }}
+                >
+                  <SubmitButton className="text-xs text-slate-600 hover:underline">
+                    {m.active ? "Disattiva" : "Attiva"}
+                  </SubmitButton>
+                </form>
+              ),
+            },
+          ]}
+        />
       </div>
 
       <form
