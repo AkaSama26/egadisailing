@@ -9,27 +9,12 @@ import { formatEur } from "@/lib/pricing/cents";
 import { LogoutButton } from "./logout-button";
 import { formatItDay } from "@/lib/dates";
 import { OceanLayout } from "@/components/customer/ocean-layout";
+import { StatusBadge } from "@/components/admin/status-badge";
 
 // R26-A1-A5: PII area — noindex defense-in-depth oltre robots.txt. Bot che
 // ignora robots.txt (o config error serve la pagina con slug indexable)
 // non deve produrre cache snapshot con email + confirmation codes.
 export const metadata: Metadata = { robots: { index: false, follow: false } };
-
-const STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: "Confermata",
-  PENDING: "In attesa",
-  CANCELLED: "Annullata",
-  REFUNDED: "Rimborsata",
-};
-
-// R19 WCAG 1.4.1: info non puo' essere trasmessa solo da colore. Icona
-// testuale + aria-label per screen reader distingue oltre al bg color.
-const STATUS_ICON: Record<string, string> = {
-  CONFIRMED: "✓",
-  PENDING: "⏱",
-  CANCELLED: "✕",
-  REFUNDED: "↩",
-};
 
 export default async function SessionePage({
   params,
@@ -80,23 +65,7 @@ export default async function SessionePage({
                   <h2 className="text-xl font-bold">{b.service.name}</h2>
                   <p className="text-gray-600 text-sm">Codice {b.confirmationCode}</p>
                 </div>
-                <span
-                  role="status"
-                  aria-label={`Stato prenotazione: ${STATUS_LABEL[b.status] ?? b.status}`}
-                  className={[
-                    "px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1",
-                    b.status === "CONFIRMED"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : b.status === "PENDING"
-                        ? "bg-amber-100 text-amber-800"
-                        : b.status === "CANCELLED"
-                          ? "bg-gray-100 text-gray-700"
-                          : "bg-red-100 text-red-800",
-                  ].join(" ")}
-                >
-                  <span aria-hidden="true">{STATUS_ICON[b.status] ?? ""}</span>
-                  {STATUS_LABEL[b.status] ?? b.status}
-                </span>
+                <StatusBadge status={b.status} kind="booking" />
               </div>
               <p>
                 {formatItDay(b.startDate)} · {b.numPeople} persone
