@@ -9,6 +9,7 @@ import { CHANNELS, RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { RUN_BUDGET } from "@/lib/timing";
+import { recordChannelSync } from "@/lib/sync/record-channel-sync";
 
 export const runtime = "nodejs";
 
@@ -145,19 +146,11 @@ export const GET = withCronGuard(
         : failed > 0
           ? `${failed} imports failed`
           : null;
-      await db.channelSyncStatus.upsert({
-        where: { channel: CHANNELS.BOKUN },
-        update: {
-          lastSyncAt: nextSince,
-          healthStatus,
-          lastError,
-        },
-        create: {
-          channel: CHANNELS.BOKUN,
-          lastSyncAt: nextSince,
-          healthStatus,
-          lastError,
-        },
+      await recordChannelSync({
+        channel: CHANNELS.BOKUN,
+        lastSyncAt: nextSince,
+        healthStatus,
+        lastError,
       });
 
       logger.info(
@@ -168,14 +161,10 @@ export const GET = withCronGuard(
       return { imported, failed, totalHits, pages: page - 1, durationMs };
     } catch (err) {
       logger.error({ err }, "Bokun reconciliation failed");
-      await db.channelSyncStatus.upsert({
-        where: { channel: CHANNELS.BOKUN },
-        update: { healthStatus: "RED", lastError: (err as Error).message },
-        create: {
-          channel: CHANNELS.BOKUN,
-          healthStatus: "RED",
-          lastError: (err as Error).message,
-        },
+      await recordChannelSync({
+        channel: CHANNELS.BOKUN,
+        healthStatus: "RED",
+        lastError: (err as Error).message,
       });
       throw err;
     }

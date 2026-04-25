@@ -9,6 +9,7 @@ import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { getRedisConnection } from "@/lib/queue";
 import { TTL } from "@/lib/timing";
+import { recordChannelSync } from "@/lib/sync/record-channel-sync";
 
 export const runtime = "nodejs";
 
@@ -242,15 +243,11 @@ export const GET = withCronGuard(
             ? `RUN_BUDGET_MS cap — backlog drain continues next run`
             : `MAX_PAGES cap — backlog drain continues next run`
           : null;
-      await db.channelSyncStatus.upsert({
-        where: { channel: CHANNEL_KEY },
-        update: { lastSyncAt: nextSince, healthStatus: status, lastError: errMsg },
-        create: {
-          channel: CHANNEL_KEY,
-          lastSyncAt: nextSince,
-          healthStatus: status,
-          lastError: errMsg,
-        },
+      await recordChannelSync({
+        channel: CHANNEL_KEY,
+        lastSyncAt: nextSince,
+        healthStatus: status,
+        lastError: errMsg,
       });
 
       logger.info(
@@ -295,14 +292,10 @@ export const GET = withCronGuard(
         await redis.del(CURSOR_REDIS_KEY).catch(() => null);
       }
       logger.error({ err }, "Stripe reconciliation failed");
-      await db.channelSyncStatus.upsert({
-        where: { channel: CHANNEL_KEY },
-        update: { healthStatus: "RED", lastError: (err as Error).message },
-        create: {
-          channel: CHANNEL_KEY,
-          healthStatus: "RED",
-          lastError: (err as Error).message,
-        },
+      await recordChannelSync({
+        channel: CHANNEL_KEY,
+        healthStatus: "RED",
+        lastError: (err as Error).message,
       });
       throw err;
     }
