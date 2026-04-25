@@ -1,7 +1,6 @@
 import Decimal from "decimal.js";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
 
 export const runtime = "nodejs";
@@ -11,9 +10,7 @@ export const runtime = "nodejs";
  * Authenticated via NextAuth session with role=ADMIN.
  */
 export const GET = withErrorHandler(async () => {
-  const session = await auth();
-  if (!session?.user) throw new UnauthorizedError();
-  if (session.user.role !== "ADMIN") throw new ForbiddenError();
+  await requireAdmin();
 
   const customers = await db.customer.findMany({
     include: {
