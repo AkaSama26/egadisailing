@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { AdminTable, type AdminTableColumn } from "@/components/admin/admin-table";
+import { AdminCard } from "@/components/admin/admin-card";
 import { PageHeader } from "@/components/admin/page-header";
 import { SubmitButton } from "@/components/admin/submit-button";
 
@@ -96,7 +97,7 @@ export default async function ClientiPage({ searchParams }: Props) {
         {customers.length} risultati {q ? `per "${q}"` : "(ultimi 200)"}.
       </p>
 
-      <div className="bg-white rounded-xl border overflow-x-auto">
+      <AdminCard padding="none" className="overflow-x-auto">
         <AdminTable<CustomerRow>
           caption="Elenco clienti"
           columns={customerColumns}
@@ -104,7 +105,7 @@ export default async function ClientiPage({ searchParams }: Props) {
           emptyMessage="Nessun cliente trovato."
           rowKey={(c) => c.id}
         />
-      </div>
+      </AdminCard>
     </div>
   );
 }

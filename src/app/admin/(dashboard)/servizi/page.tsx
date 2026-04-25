@@ -141,7 +141,7 @@ export default async function ServiziPage() {
         subtitle="Catalogo in sola lettura: i servizi sono popolati dal seed DB. Per modifiche strutturali contattare il team tech."
       />
 
-      <div className="bg-white rounded-xl border overflow-x-auto">
+      <AdminCard padding="none" className="overflow-x-auto">
         <AdminTable<ServiceRow>
           caption="Catalogo servizi"
           rows={services}
@@ -149,7 +149,7 @@ export default async function ServiziPage() {
           emptyMessage="Nessun servizio configurato."
           columns={columns}
         />
-      </div>
+      </AdminCard>
 
       {/* Legenda classi per chiarire la distinzione in vista admin. */}
       <AdminCard padding="sm" className="text-xs text-slate-600 space-y-2">

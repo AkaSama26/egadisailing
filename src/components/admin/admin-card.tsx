@@ -4,15 +4,15 @@ export interface AdminCardProps {
   children: ReactNode;
   /** Titolo header opzionale (render come h3) */
   title?: string;
-  /** Padding interno: default "md" (p-5), "sm" (p-4), "lg" (p-6) */
-  padding?: "sm" | "md" | "lg";
+  /** Padding interno: default "md" (p-5), "sm" (p-4), "lg" (p-6), "none" (table-flush) */
+  padding?: "none" | "sm" | "md" | "lg";
   /** Tono colorato per enfasi: warn (amber), alert (red), success (emerald) */
   tone?: "default" | "warn" | "alert" | "success";
   /** Classe extra opzionale */
   className?: string;
 }
 
-const PADDING = { sm: "p-4", md: "p-5", lg: "p-6" };
+const PADDING = { none: "", sm: "p-4", md: "p-5", lg: "p-6" };
 const TONE = {
   default: "border-slate-200",
   warn: "border-amber-200 bg-amber-50",

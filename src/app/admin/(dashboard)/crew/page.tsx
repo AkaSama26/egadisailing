@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { AdminTable, type AdminTableColumn } from "@/components/admin/admin-table";
+import { AdminCard } from "@/components/admin/admin-card";
 import { PageHeader } from "@/components/admin/page-header";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { upsertCrewMember, toggleCrewActive } from "./actions";
@@ -16,7 +17,7 @@ export default async function CrewPage() {
     <div className="space-y-6">
       <PageHeader title="Crew" />
 
-      <div className="bg-white rounded-xl border overflow-x-auto">
+      <AdminCard padding="none" className="overflow-x-auto">
         <AdminTable<CrewRow>
           caption="Elenco membri crew"
           rows={members}
@@ -52,7 +53,7 @@ export default async function CrewPage() {
             },
           ]}
         />
-      </div>
+      </AdminCard>
 
       <form
         action={async (fd) => {
