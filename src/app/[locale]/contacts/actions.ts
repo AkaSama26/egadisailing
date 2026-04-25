@@ -7,7 +7,7 @@ import { sendEmail } from "@/lib/email/brevo";
 import { escapeHtml } from "@/lib/html-escape";
 import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
-import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
+import { getClientIp, getUserAgent, normalizeIpForRateLimit } from "@/lib/http/client-ip";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { logger } from "@/lib/logger";
 import { ValidationError } from "@/lib/errors";
@@ -62,7 +62,10 @@ export async function sendContactMessage(
     }
 
     await enforceRateLimit({
-      identifier: ip,
+      // R25-A3-A1 consistency: normalizeIpForRateLimit IPv6 /64 (era ip raw,
+      // attaccante con /64 ruotava IP). Pattern uniformato con webhook
+      // Bokun/Boataround + payment-intent.
+      identifier: normalizeIpForRateLimit(ip),
       scope: RATE_LIMIT_SCOPES.CONTACT_FORM_IP,
       limit: 3,
       windowSeconds: 3600,

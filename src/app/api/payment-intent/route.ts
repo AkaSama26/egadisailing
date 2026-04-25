@@ -4,7 +4,7 @@ import { createPendingDirectBooking } from "@/lib/booking/create-direct";
 import { createPaymentIntent } from "@/lib/stripe/payment-intents";
 import { buildBookingMetadata } from "@/lib/stripe/metadata";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
-import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
+import { getClientIp, getUserAgent, normalizeIpForRateLimit } from "@/lib/http/client-ip";
 import { withErrorHandler } from "@/lib/http/with-error-handler";
 import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { ValidationError } from "@/lib/errors";
@@ -70,8 +70,11 @@ export const POST = withErrorHandler(async (req: Request) => {
   const ip = getClientIp(req.headers);
 
   // Rate limit aggressivo: 10/hour per IP, 5/hour per email
+  // R25-A3-A1 consistency: normalizeIpForRateLimit per IPv6 /64 subnet
+  // rotation bypass — attaccante con /64 IPv6 ruotava IP per moltiplicare
+  // bucket. Pattern uniformato con webhook Bokun/Boataround.
   await enforceRateLimit({
-    identifier: ip,
+    identifier: normalizeIpForRateLimit(ip),
     scope: "PAYMENT_INTENT_IP_HOUR",
     limit: 10,
     windowSeconds: 3600,
