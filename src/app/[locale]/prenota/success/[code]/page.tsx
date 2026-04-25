@@ -6,6 +6,8 @@ import { formatEur } from "@/lib/pricing/cents";
 import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 import { formatItDay } from "@/lib/dates";
 import { AdminAlert } from "@/components/admin/admin-alert";
+import { OceanLayout } from "@/components/customer/ocean-layout";
+import { CustomerCardLight } from "@/components/customer/customer-card-light";
 
 // R26-A1-A5: pagina post-payment con PII (confirmation code + email link).
 // noindex defense-in-depth.
@@ -40,8 +42,8 @@ export default async function BookingSuccessPage({
   const balanceCents = Math.max(0, totalCents - paidCents);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#071934] to-[#0c3d5e] py-24 px-4">
-      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-2xl p-10 text-center space-y-5">
+    <OceanLayout>
+      <CustomerCardLight>
         {isOverrideRequest ? (
           <>
             <h1 className="text-3xl font-bold text-sky-700">Prenotazione ricevuta</h1>
@@ -116,7 +118,7 @@ export default async function BookingSuccessPage({
             </p>
           </>
         )}
-      </div>
-    </div>
+      </CustomerCardLight>
+    </OceanLayout>
   );
 }

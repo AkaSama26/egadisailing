@@ -8,6 +8,7 @@ import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
 import { LogoutButton } from "./logout-button";
 import { formatItDay } from "@/lib/dates";
+import { OceanLayout } from "@/components/customer/ocean-layout";
 
 // R26-A1-A5: PII area — noindex defense-in-depth oltre robots.txt. Bot che
 // ignora robots.txt (o config error serve la pagina con slug indexable)
@@ -46,7 +47,7 @@ export default async function SessionePage({
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#071934] to-[#0c3d5e] py-24 px-4">
+    <OceanLayout>
       <div className="max-w-3xl mx-auto space-y-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-white text-3xl font-bold">Le tue prenotazioni</h1>
@@ -112,6 +113,6 @@ export default async function SessionePage({
           );
         })}
       </div>
-    </div>
+    </OceanLayout>
   );
 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { env } from "@/lib/env";
 import { BookingWizard } from "@/components/booking/booking-wizard";
+import { OceanLayout } from "@/components/customer/ocean-layout";
 
 // Round 11 SEO-M3: wizard di prenotazione non indexabile (no SEO value,
 // contiene codici/intent-dati sensibili).
@@ -20,7 +21,7 @@ export default async function BookingPage({
   if (!service || !service.active) notFound();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#071934] to-[#0c3d5e] py-24 px-4">
+    <OceanLayout>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-white text-4xl md:text-5xl font-heading font-bold mb-8 text-center">
           Prenota {service.name}
@@ -38,6 +39,6 @@ export default async function BookingPage({
           appUrl={env.APP_URL}
         />
       </div>
-    </div>
+    </OceanLayout>
   );
 }
