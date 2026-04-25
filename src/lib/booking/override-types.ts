@@ -34,10 +34,28 @@ export const otaConfirmationInternalSchema = z.object({
   conflictBookingId: z.string(),                       // Booking.id
   channel: z.enum(["DIRECT", "BOKUN", "BOATAROUND", "SAMBOAT", "CLICKANDBOAT", "NAUTAL"]),
   externalRef: z.string(),                              // bokunBookingId / etc
-  panelOpened: z.boolean(),                             // checkbox 1
-  upstreamCancelled: z.boolean(),                       // checkbox 2
-  refundVerified: z.boolean(),                          // checkbox 3
-  adminDeclared: z.boolean(),                           // checkbox 4
+  /** Checkbox 1: admin ha aperto il pannello OTA upstream. Solo attestation. */
+  panelOpened: z.boolean(),
+  /**
+   * Checkbox 2: admin dichiara di aver cancellato il booking nel pannello OTA.
+   *
+   * Questo flag e' una **attestation manuale** dell'admin — viene loggato per
+   * audit ma NON e' la fonte di verita'. La verifica reale avviene server-side
+   * in `approveOverride` via `isUpstreamCancelled(conflictId, channel)` che
+   * legge lo stato DB del BokunBooking/BoataroundBooking (popolato da webhook
+   * cancel upstream). Entrambi devono essere true:
+   *   - checkbox = admin ha agito manualmente upstream
+   *   - server query = il webhook upstream e' arrivato e ha aggiornato il DB
+   *
+   * NON e' un duplicato: e' un "double-bracket" pattern (admin attestation +
+   * server-side verification). UI mostra polling indicator separato per
+   * `isUpstreamCancelled`, distinto dal checkbox state.
+   */
+  upstreamCancelled: z.boolean(),
+  /** Checkbox 3: admin ha verificato il refund processato upstream. */
+  refundVerified: z.boolean(),
+  /** Checkbox 4: dichiarazione finale di responsabilita'. */
+  adminDeclared: z.boolean(),
 });
 
 // DTO interno usato da approveOverride() — single source of truth derivata da Zod.

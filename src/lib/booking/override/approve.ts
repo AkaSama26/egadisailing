@@ -65,6 +65,8 @@ export async function approveOverride(
       const conflict = conflictsById.get(conflictId);
       if (!conflict || !isOtaChannel(conflict.source as ConflictSourceChannel)) continue;
 
+      // Double-bracket pattern: admin attestation (checkbox) + server verification.
+      // Vedi JSDoc su `OtaConfirmation.upstreamCancelled` in override-types.ts.
       const conf = otaConfirmations.find((c) => c.conflictBookingId === conflictId);
       if (!conf || !isOtaConfirmationComplete(conf)) {
         throw new ValidationError(
