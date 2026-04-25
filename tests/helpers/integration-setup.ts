@@ -108,7 +108,10 @@ export function mockStripeModule() {
     refundedCents: 0,
     residualCents: 200000,
   });
-  const cancelPaymentIntent = vi.fn();
+  const cancelPaymentIntent = vi.fn().mockResolvedValue({
+    id: "pi_mock",
+    status: "canceled",
+  });
   const createPaymentIntent = vi.fn().mockResolvedValue({
     paymentIntentId: "pi_test",
     clientSecret: "pi_test_secret",
@@ -120,6 +123,8 @@ export function mockStripeModule() {
     createPaymentIntent,
     __refundPaymentMock: refundPayment,
     __getChargeRefundStateMock: getChargeRefundState,
+    __cancelPaymentIntentMock: cancelPaymentIntent,
+    __createPaymentIntentMock: createPaymentIntent,
   };
 }
 

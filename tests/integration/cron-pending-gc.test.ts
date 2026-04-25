@@ -21,37 +21,26 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-vi.mock("@/lib/queue", () => ({
-  getRedisConnection: () => installRedisMock(),
-  syncQueue: () => ({ add: vi.fn() }),
-  availBokunQueue: () => ({ add: vi.fn() }),
-  availBoataroundQueue: () => ({ add: vi.fn() }),
-  availManualQueue: () => ({ add: vi.fn() }),
-  pricingBokunQueue: () => ({ add: vi.fn() }),
-  getQueue: () => ({ add: vi.fn() }),
-  QUEUE_NAMES: {
-    AVAIL_BOKUN: "sync.avail.bokun",
-    AVAIL_BOATAROUND: "sync.avail.boataround",
-    AVAIL_MANUAL: "sync.avail.manual",
-    PRICING_BOKUN: "sync.pricing.bokun",
-  },
-  ALL_QUEUE_NAMES: [
-    "sync.avail.bokun",
-    "sync.avail.boataround",
-    "sync.avail.manual",
-    "sync.pricing.bokun",
-  ],
-}));
-
-const cancelPaymentIntentMock = vi.fn().mockResolvedValue({
-  id: "pi_mock",
-  status: "canceled",
+// Phase 7-6 POC: factory-based mocks via integration-setup helpers.
+// Uso vi.hoisted async per condividere instance tra factory hoisted e
+// top-level (vitest hoist le vi.mock chiamate al top file → dobbiamo
+// usare hoisted per accedere agli stessi vi.fn dalle assertion).
+const stripeMocks = await vi.hoisted(async () => {
+  const { mockStripeModule } = await import("../helpers/integration-setup");
+  return mockStripeModule();
 });
-vi.mock("@/lib/stripe/payment-intents", () => ({
-  cancelPaymentIntent: cancelPaymentIntentMock,
-  refundPayment: vi.fn(),
-  createPaymentIntent: vi.fn(),
-}));
+const cancelPaymentIntentMock = stripeMocks.__cancelPaymentIntentMock;
+
+vi.mock("@/lib/queue", async () => {
+  const { mockQueueModule } = await import("../helpers/integration-setup");
+  return {
+    ...mockQueueModule(),
+    // Override getRedisConnection per usare il redis-mock condiviso del test.
+    getRedisConnection: () => installRedisMock(),
+  };
+});
+
+vi.mock("@/lib/stripe/payment-intents", () => stripeMocks);
 
 let db: Awaited<ReturnType<typeof setupTestDb>>;
 
