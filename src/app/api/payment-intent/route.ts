@@ -11,6 +11,7 @@ import { ValidationError } from "@/lib/errors";
 import { env } from "@/lib/env";
 import { ACCEPTED_POLICY_VERSIONS } from "@/lib/legal/policy-version";
 import { normalizeEmail } from "@/lib/email-normalize";
+import { emailSchema, personNameSchema } from "@/lib/validation/common-zod";
 
 export const runtime = "nodejs";
 
@@ -37,10 +38,10 @@ const schema = z.object({
     }, "startDate oltre 2 anni nel futuro o invalida"),
   numPeople: z.number().int().min(1).max(50),
   customer: z.object({
-    email: z.string().email().max(320),
+    email: emailSchema,
     // Escape HTML-dangerous chars: riducono rischio XSS nei template email
-    firstName: z.string().min(1).max(100).regex(/^[^<>]*$/, "Invalid chars"),
-    lastName: z.string().min(1).max(100).regex(/^[^<>]*$/, "Invalid chars"),
+    firstName: personNameSchema(100),
+    lastName: personNameSchema(100),
     // R21-A3-ALTA-1: regex phone — permette solo digits + `+`, spazi, parentesi,
     // trattino, punto. Previene injection futura se phone finisce in template
     // HTML/WhatsApp URL. Max 30 per uniformita' con altri limiti.

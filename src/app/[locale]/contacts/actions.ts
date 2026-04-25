@@ -12,13 +12,14 @@ import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { logger } from "@/lib/logger";
 import { ValidationError } from "@/lib/errors";
 import { normalizeEmail } from "@/lib/email-normalize";
+import { emailSchema, freeTextSchema } from "@/lib/validation/common-zod";
 
 const schema = z.object({
   name: z.string().min(2).max(120).regex(/^[^<>]*$/, "Caratteri non ammessi"),
-  email: z.string().email().max(320),
+  email: emailSchema,
   phone: z.string().max(32).optional(),
-  subject: z.string().min(3).max(200).regex(/^[^<>]*$/, "Caratteri non ammessi"),
-  message: z.string().min(10).max(5000).regex(/^[^<>]*$/, "Caratteri non ammessi"),
+  subject: freeTextSchema({ min: 3, max: 200 }),
+  message: freeTextSchema({ min: 10, max: 5000 }),
   turnstileToken: z.string().optional(),
 });
 

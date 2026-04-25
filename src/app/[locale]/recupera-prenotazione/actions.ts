@@ -14,9 +14,10 @@ import { ValidationError } from "@/lib/errors";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 import { db } from "@/lib/db";
+import { emailSchema } from "@/lib/validation/common-zod";
 
 const requestSchema = z.object({
-  email: z.string().email().max(320),
+  email: emailSchema,
   turnstileToken: z.string().optional(),
 });
 
@@ -101,7 +102,7 @@ export async function requestOtp(
 }
 
 const verifySchema = z.object({
-  email: z.string().email().max(320),
+  email: emailSchema,
   code: z.string().length(6).regex(/^\d{6}$/),
 });
 
