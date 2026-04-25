@@ -1,64 +1,30 @@
-import { normalizeEmail } from "@/lib/email-normalize";
-import {
-  MAX_PARSER_TEXT_LENGTH,
-  detectCancellationKeywords,
-  parseAmountToCents,
-  parseFlexibleDate,
-  stripHtml,
-  type CharterParser,
-  type ExtractedCharterBooking,
-} from "./booking-extractor";
+import type { CharterParser } from "./booking-extractor";
+import { parseCharterEmail } from "./parse-charter-email";
 
 /**
  * Parser per email SamBoat.
  *
- * I template SamBoat cambiano: se il parse fallisce torna `null` e il
- * dispatcher logga per review manuale (no auto-block con dati incompleti).
+ * Template SamBoat usa campi separati "Check-in: X" / "Check-out: Y".
+ * Se il parse fallisce torna `null` e il dispatcher logga per review
+ * manuale (no auto-block con dati incompleti).
  *
- * Text cap anti-ReDoS: 200KB.
+ * Text cap anti-ReDoS: 200KB (gestito in `parse-charter-email`).
  */
 export const samboatParser: CharterParser = {
   platform: "SAMBOAT",
   senderDomains: ["samboat.com", "samboat.fr", "samboat.it", "samboat.es"],
 
   parse(email) {
-    const rawText = email.text ?? stripHtml(email.html ?? "");
-    if (rawText.length > MAX_PARSER_TEXT_LENGTH) return null;
-    const text = rawText;
-
-    const refMatch = text.match(/Booking\s+(?:ref|n°|id|number)[:\s]+([A-Z0-9\-]{1,64})/i);
-    const nameMatch = text.match(
-      /(?:Guest|Client)[:\s]+([A-Za-zÀ-ÿ\-']+)\s+([A-Za-zÀ-ÿ\-']+)/i,
-    );
-    const emailMatch = text.match(/[\w.\-+]+@[\w.\-]+\.\w{2,}/);
-    const startMatch = text.match(
-      /(?:From|Check[- ]in)[:\s]+(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4})/i,
-    );
-    const endMatch = text.match(
-      /(?:To|Check[- ]out)[:\s]+(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4})/i,
-    );
-    const amountMatch = text.match(/(?:Total|Amount|Price)[:\s]+(?:€|EUR)?\s*([\d.,]+)/i);
-
-    if (!refMatch || !nameMatch || !emailMatch || !startMatch || !endMatch || !amountMatch) {
-      return null;
-    }
-    const startDate = parseFlexibleDate(startMatch[1]);
-    const endDate = parseFlexibleDate(endMatch[1]);
-    const totalAmountCents = parseAmountToCents(amountMatch[1]);
-    if (!startDate || !endDate || totalAmountCents === null) return null;
-
-    const result: ExtractedCharterBooking = {
-      platformBookingRef: refMatch[1],
-      customerFirstName: nameMatch[1],
-      customerLastName: nameMatch[2],
-      customerEmail: normalizeEmail(emailMatch[0]),
-      startDate,
-      endDate,
-      totalAmountCents,
-      currency: "EUR",
-      rawEmailSubject: email.subject,
-      status: detectCancellationKeywords(text, email.subject) ? "CANCELLED" : "CONFIRMED",
-    };
-    return result;
+    return parseCharterEmail(email, {
+      platform: "SAMBOAT",
+      senderDomains: this.senderDomains,
+      regexes: {
+        ref: /Booking\s+(?:ref|n°|id|number)[:\s]+([A-Z0-9\-]{1,64})/i,
+        customerName: /(?:Guest|Client)[:\s]+([A-Za-zÀ-ÿ\-']+)\s+([A-Za-zÀ-ÿ\-']+)/i,
+        startDate: /(?:From|Check[- ]in)[:\s]+(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4})/i,
+        endDate: /(?:To|Check[- ]out)[:\s]+(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4})/i,
+        amount: /(?:Total|Amount|Price)[:\s]+(?:€|EUR)?\s*([\d.,]+)/i,
+      },
+    });
   },
 };
