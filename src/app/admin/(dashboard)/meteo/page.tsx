@@ -4,6 +4,7 @@ import { addDays } from "@/lib/dates";
 import { formatItDay } from "@/lib/dates";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
 
 export default async function MeteoPage() {
   const now = new Date();
@@ -22,12 +23,10 @@ export default async function MeteoPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Meteo · prossimi 7 giorni</h1>
-
-      <p className="text-sm text-slate-500">
-        La previsione e' popolata dal cron meteo (Plan 6). Finche' il worker non e' attivo, questa
-        pagina mostra solo l'elenco delle uscite programmate senza forecast associato.
-      </p>
+      <PageHeader
+        title="Meteo · prossimi 7 giorni"
+        subtitle="La previsione e' popolata dal cron meteo (Plan 6). Finche' il worker non e' attivo, questa pagina mostra solo l'elenco delle uscite programmate senza forecast associato."
+      />
 
       <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Uscite confermate</h2>

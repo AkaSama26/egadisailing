@@ -7,9 +7,10 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { AdminCard } from "@/components/admin/admin-card";
 import { DetailRow } from "@/components/admin/detail-row";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { anonymizeCustomerAction } from "./actions";
 import { formatItDay } from "@/lib/dates";
-import { BOOKING_STATUS_LABEL, labelOrRaw } from "@/lib/admin/labels";
 
 export default async function ClienteDetailPage({
   params,
@@ -44,14 +45,11 @@ export default async function ClienteDetailPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/admin/clienti" className="text-sm text-slate-500 hover:underline">
-          ← Clienti
-        </Link>
-        <h1 className="text-3xl font-bold text-slate-900 mt-2">
-          {customer.firstName} {customer.lastName}
-        </h1>
-      </div>
+      <PageHeader
+        title={`${customer.firstName} ${customer.lastName}`}
+        backHref="/admin/clienti"
+        backLabel="Clienti"
+      />
 
       <AdminCard className="space-y-2">
         <DetailRow label="Email" value={customer.email} />
@@ -129,19 +127,7 @@ export default async function ClienteDetailPage({
                 </div>
                 <div className="shrink-0 flex items-center gap-3 tabular-nums">
                   <span className="font-mono">{formatEur(b.totalPrice.toString())}</span>
-                  <span
-                    className={`text-xs font-semibold ${
-                      b.status === "CONFIRMED"
-                        ? "text-emerald-700"
-                        : b.status === "CANCELLED"
-                          ? "text-red-700"
-                          : b.status === "REFUNDED"
-                            ? "text-amber-700"
-                            : "text-slate-700"
-                    }`}
-                  >
-                    {labelOrRaw(BOOKING_STATUS_LABEL, b.status)}
-                  </span>
+                  <StatusBadge status={b.status} kind="booking" />
                 </div>
               </li>
             ))}

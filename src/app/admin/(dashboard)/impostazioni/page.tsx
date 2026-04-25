@@ -5,6 +5,7 @@ import { formatItDay } from "@/lib/dates";
 import { AdminCard } from "@/components/admin/admin-card";
 import { DetailRow } from "@/components/admin/detail-row";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
 
 // Label IT per channel key. Include anche i "meta channel" usati da cron
 // reconciliation (STRIPE_EVENTS_RECONCILIATION) + detection (CROSS_OTA_DOUBLE_BOOKING).
@@ -55,7 +56,7 @@ export default async function ImpostazioniPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Informazioni</h1>
+      <PageHeader title="Informazioni" />
 
       <AdminCard className="space-y-2">
         <h2 className="font-bold text-slate-900">Account</h2>

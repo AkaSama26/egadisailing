@@ -12,6 +12,7 @@ import {
 import { AdminCard } from "@/components/admin/admin-card";
 import { AdminAlert } from "@/components/admin/admin-alert";
 import { DetailRow } from "@/components/admin/detail-row";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { approveOverrideAction, rejectOverrideAction } from "../actions";
 
 export interface OverrideDetailData {
@@ -85,11 +86,11 @@ export function OverrideDetailClient({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">
+      <h1 id="main" className="text-3xl font-bold text-slate-900">
         Override per prenotazione {request.newBookingCode}
       </h1>
       <AdminCard padding="sm" className="space-y-2">
-        <DetailRow label="Status" value={request.status} />
+        <DetailRow label="Status" value={<StatusBadge status={request.status} kind="override" />} />
         <DetailRow
           label="Nuovo booking"
           value={`${request.newBookingCode} · ${request.newBookingCustomer} · ${request.newBookingServiceName} · ${request.newBookingStartDate} · ${request.newBookingNumPeople} persone`}

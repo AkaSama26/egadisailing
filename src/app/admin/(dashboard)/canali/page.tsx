@@ -2,9 +2,10 @@ import { db } from "@/lib/db";
 import { CHANNEL_SYNC_MODE, type Channel } from "@/lib/channels";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
+import { StatusBadge } from "@/components/admin/status-badge";
 import {
   BOOKING_SOURCE_LABEL,
-  HEALTH_STATUS_LABEL,
   CHANNEL_SYNC_MODE_LABEL,
   labelOrRaw,
 } from "@/lib/admin/labels";
@@ -14,17 +15,11 @@ export default async function CanaliPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Canali</h1>
+      <PageHeader title="Canali" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {channels.map((c) => {
           const mode = CHANNEL_SYNC_MODE[c.channel as Channel];
-          const statusClass =
-            c.healthStatus === "GREEN"
-              ? "bg-emerald-100 text-emerald-800"
-              : c.healthStatus === "YELLOW"
-                ? "bg-amber-100 text-amber-800"
-                : "bg-red-100 text-red-800";
           return (
             <AdminCard key={c.channel}>
               <div className="flex justify-between items-start mb-2">
@@ -36,9 +31,7 @@ export default async function CanaliPage() {
                     Modalità: {mode ? labelOrRaw(CHANNEL_SYNC_MODE_LABEL, mode) : "-"}
                   </p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusClass}`}>
-                  {labelOrRaw(HEALTH_STATUS_LABEL, c.healthStatus)}
-                </span>
+                <StatusBadge status={c.healthStatus} kind="sync" />
               </div>
               <p className="text-sm text-slate-600">
                 Ultimo sync:{" "}

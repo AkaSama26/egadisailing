@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { OverrideImpactBadge } from "@/components/admin/override-impact-badge";
 import { AdminStatusTabs } from "@/components/admin/admin-status-tabs";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { OVERRIDE_STATUS_LABEL } from "@/lib/admin/labels";
 import { ADMIN_LIST_LIMIT } from "@/lib/admin/constants";
 
@@ -39,9 +41,7 @@ export default async function OverrideRequestsPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">
-        Richieste priorita&apos; ({requests.length})
-      </h1>
+      <PageHeader title={`Richieste priorita’ (${requests.length})`} />
       <AdminStatusTabs
         active={status}
         tabs={[
@@ -68,10 +68,12 @@ export default async function OverrideRequestsPage({
               {r.newBooking.service.name} &middot;{" "}
               {r.newBooking.startDate.toISOString().slice(0, 10)}
             </div>
-            <div className="text-sm text-slate-600">
-              Revenue nuovo: &euro; {r.newBookingRevenue.toFixed(2)} &middot;
-              Conflict: &euro; {r.conflictingRevenueTotal.toFixed(2)} &middot;
-              Status: {OVERRIDE_STATUS_LABEL[r.status]}
+            <div className="text-sm text-slate-600 flex items-center gap-2 flex-wrap">
+              <span>Revenue nuovo: &euro; {r.newBookingRevenue.toFixed(2)}</span>
+              <span>&middot;</span>
+              <span>Conflict: &euro; {r.conflictingRevenueTotal.toFixed(2)}</span>
+              <span>&middot;</span>
+              <StatusBadge status={r.status} kind="override" />
             </div>
           </Link>
         ))}

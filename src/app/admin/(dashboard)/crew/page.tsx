@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
-import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
+import { SubmitButton } from "@/components/admin/submit-button";
 import { upsertCrewMember, toggleCrewActive } from "./actions";
 
 export default async function CrewPage() {
@@ -11,7 +12,7 @@ export default async function CrewPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Crew</h1>
+      <PageHeader title="Crew" />
 
       <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="w-full text-sm">
@@ -44,9 +45,9 @@ export default async function CrewPage() {
                       await toggleCrewActive(m.id, !m.active);
                     }}
                   >
-                    <button className="text-xs text-slate-600 hover:underline">
+                    <SubmitButton className="text-xs text-slate-600 hover:underline">
                       {m.active ? "Disattiva" : "Attiva"}
-                    </button>
+                    </SubmitButton>
                   </form>
                 </td>
               </tr>
@@ -106,12 +107,9 @@ export default async function CrewPage() {
           placeholder="€/giorno"
           className="border rounded px-3 py-2 text-sm"
         />
-        <button
-          type="submit"
-          className="md:col-span-5 bg-slate-900 text-white rounded py-2 text-sm font-medium hover:bg-slate-800"
-        >
+        <SubmitButton className="md:col-span-5 bg-slate-900 text-white rounded py-2 text-sm font-medium hover:bg-slate-800">
           Aggiungi membro
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );

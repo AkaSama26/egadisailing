@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
 
 // Classi di servizio con label IT + badge color-coded per distinguere
 // shared/exclusive/charter a colpo d'occhio.
@@ -47,11 +48,10 @@ export default async function ServiziPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Servizi</h1>
-      <p className="text-sm text-slate-500">
-        Catalogo in sola lettura: i servizi sono popolati dal seed DB. Per modifiche strutturali
-        contattare il team tech.
-      </p>
+      <PageHeader
+        title="Servizi"
+        subtitle="Catalogo in sola lettura: i servizi sono popolati dal seed DB. Per modifiche strutturali contattare il team tech."
+      />
 
       <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="w-full text-sm">

@@ -6,6 +6,7 @@ import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
 import { KpiCard } from "@/components/admin/kpi-card";
 import { formatEur } from "@/lib/pricing/cents";
 import { CancellationRateKpi } from "@/components/admin/cancellation-rate-kpi";
+import { PageHeader } from "@/components/admin/page-header";
 
 export default async function DashboardHome() {
   const now = new Date();
@@ -60,7 +61,7 @@ export default async function DashboardHome() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+      <PageHeader title="Dashboard" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard label="Entrate del mese" value={formatEur(revenueDec)} icon={Euro} />

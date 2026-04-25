@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { AdminCard } from "@/components/admin/admin-card";
+import { PageHeader } from "@/components/admin/page-header";
 import { BOOKING_SOURCE_LABEL, labelOrRaw } from "@/lib/admin/labels";
 
 export default async function FinanzaPage() {
@@ -54,7 +55,7 @@ export default async function FinanzaPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Finanza</h1>
+      <PageHeader title="Finanza" />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Kpi label="Revenue mese" value={formatEur(monthRevenue)} />

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { formatEur } from "@/lib/pricing/cents";
 import { formatItDay } from "@/lib/dates";
+import { StatusBadge } from "@/components/admin/status-badge";
 import {
-  BOOKING_STATUS_LABEL,
   BOOKING_SOURCE_LABEL,
   labelOrRaw,
 } from "@/lib/admin/labels";
@@ -67,19 +67,7 @@ export function BookingTable({ rows }: { rows: BookingRow[] }) {
               <td className="p-3 text-right tabular-nums">{formatEur(r.totalPrice)}</td>
               <td className="p-3 text-right tabular-nums">{formatEur(r.paidAmount)}</td>
               <td className="p-3">
-                <span
-                  className={`text-xs font-semibold ${
-                    r.status === "CONFIRMED"
-                      ? "text-emerald-700"
-                      : r.status === "CANCELLED"
-                        ? "text-red-700"
-                        : r.status === "REFUNDED"
-                          ? "text-amber-700"
-                          : "text-slate-700"
-                  }`}
-                >
-                  {labelOrRaw(BOOKING_STATUS_LABEL, r.status)}
-                </span>
+                <StatusBadge status={r.status} kind="booking" />
               </td>
             </tr>
           ))}

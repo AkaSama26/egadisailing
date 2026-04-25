@@ -6,6 +6,7 @@ import {
   BookingStatus,
 } from "@/generated/prisma/enums";
 import { BookingTable, type BookingRow } from "@/components/admin/booking-table";
+import { PageHeader } from "@/components/admin/page-header";
 import {
   BOOKING_SOURCE_LABEL,
   BOOKING_STATUS_LABEL,
@@ -72,7 +73,7 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Prenotazioni</h1>
+      <PageHeader title="Prenotazioni" />
 
       <div className="space-y-2">
         <div className="flex gap-2 flex-wrap">

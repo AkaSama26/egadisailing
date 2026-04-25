@@ -3,6 +3,7 @@ import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
 import { formatItDay } from "@/lib/dates";
 import {
   upsertPricingPeriod,
@@ -26,7 +27,7 @@ export default async function PrezziPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-slate-900">Prezzi</h1>
+      <PageHeader title="Prezzi" />
 
       <AdminCard className="space-y-4">
         <h2 className="font-bold text-slate-900">Pricing periods (€/pax base)</h2>
@@ -115,9 +116,9 @@ export default async function PrezziPage() {
             className="border rounded px-2 py-1 text-sm"
             required
           />
-          <button className="md:col-span-6 bg-slate-900 text-white rounded py-2 text-sm font-medium hover:bg-slate-800">
+          <SubmitButton className="md:col-span-6 bg-slate-900 text-white rounded py-2 text-sm font-medium hover:bg-slate-800">
             Aggiungi period
-          </button>
+          </SubmitButton>
         </form>
       </AdminCard>
 
@@ -242,9 +243,9 @@ export default async function PrezziPage() {
           <label className="flex items-center gap-2 text-sm md:col-span-2">
             <input type="checkbox" name="active" defaultChecked /> Attiva
           </label>
-          <button className="md:col-span-6 bg-slate-900 text-white rounded py-2 text-sm font-medium hover:bg-slate-800">
+          <SubmitButton className="md:col-span-6 bg-slate-900 text-white rounded py-2 text-sm font-medium hover:bg-slate-800">
             Aggiungi regola
-          </button>
+          </SubmitButton>
         </form>
       </AdminCard>
     </div>

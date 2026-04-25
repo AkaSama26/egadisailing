@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { AdminCard } from "@/components/admin/admin-card";
 import { DetailRow } from "@/components/admin/detail-row";
 import { EmptyState } from "@/components/admin/empty-state";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { formatItDay } from "@/lib/dates";
 import { BOAT_EXCLUSIVE_SERVICE_TYPES } from "@/lib/booking/cross-channel-conflicts";
 import {
@@ -79,15 +80,16 @@ export default async function BookingDetailPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 id="main" className="text-3xl font-bold text-slate-900">
             Prenotazione <span className="font-mono">{booking.confirmationCode}</span>
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Canale: <strong>{labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}</strong> · Stato:{" "}
-            <strong className={statusClass(booking.status)}>
-              {labelOrRaw(BOOKING_STATUS_LABEL, booking.status)}
-            </strong>
-          </p>
+          <div className="text-sm text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+            <span>
+              Canale: <strong>{labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}</strong>
+            </span>
+            <span>·</span>
+            <StatusBadge status={booking.status} kind="booking" />
+          </div>
         </div>
         {canCancel && (
           <form action={cancelAction}>
@@ -331,14 +333,4 @@ export default async function BookingDetailPage({
       </AdminCard>
     </div>
   );
-}
-
-function statusClass(status: string): string {
-  return status === "CONFIRMED"
-    ? "text-emerald-700"
-    : status === "CANCELLED"
-      ? "text-red-700"
-      : status === "REFUNDED"
-        ? "text-amber-700"
-        : "text-slate-700";
 }

@@ -6,6 +6,7 @@ import { formatItDay } from "@/lib/dates";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { PageHeader } from "@/components/admin/page-header";
 
 /**
  * Admin view: stato sync real-time.
@@ -99,7 +100,7 @@ export default async function SyncLogPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Sync & Log</h1>
+      <PageHeader title="Sync & Log" />
 
       <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">BullMQ queue · totali</h2>

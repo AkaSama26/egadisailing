@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { EmptyState } from "@/components/admin/empty-state";
+import { PageHeader } from "@/components/admin/page-header";
+import { SubmitButton } from "@/components/admin/submit-button";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -27,15 +29,17 @@ export default async function ClientiPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h1 className="text-3xl font-bold text-slate-900">Clienti</h1>
-        <Link
-          href="/api/admin/customers/export"
-          className="text-sm bg-white border border-slate-300 rounded-lg px-3 py-2 hover:bg-slate-50"
-        >
-          Esporta CSV
-        </Link>
-      </div>
+      <PageHeader
+        title="Clienti"
+        actions={
+          <Link
+            href="/api/admin/customers/export"
+            className="text-sm bg-white border border-slate-300 rounded-lg px-3 py-2 hover:bg-slate-50"
+          >
+            Esporta CSV
+          </Link>
+        }
+      />
 
       <form className="flex gap-2">
         <input
@@ -45,7 +49,9 @@ export default async function ClientiPage({ searchParams }: Props) {
           placeholder="Cerca per nome, cognome o email…"
           className="flex-1 max-w-md border rounded px-3 py-2 text-sm"
         />
-        <button className="bg-slate-900 text-white rounded px-4 py-2 text-sm">Cerca</button>
+        <SubmitButton className="bg-slate-900 text-white rounded px-4 py-2 text-sm">
+          Cerca
+        </SubmitButton>
         {q && (
           <Link href="/admin/clienti" className="text-sm text-slate-500 self-center">
             reset

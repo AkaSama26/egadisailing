@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { type DayCell } from "@/components/admin/calendar-grid";
 import { AdminCard } from "@/components/admin/admin-card";
+import { PageHeader } from "@/components/admin/page-header";
 import { enrichDayCells } from "./enrich";
 import { CalendarClient } from "./calendar-client";
 
@@ -83,31 +84,31 @@ export default async function CalendarioPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center flex-wrap gap-2">
-        <h1 className="text-3xl font-bold text-slate-900">
-          Calendario · {year}-{String(month).padStart(2, "0")}
-        </h1>
-        <div className="flex gap-2">
-          <Link
-            href={`/admin/calendario?year=${prev.y}&month=${prev.m}`}
-            className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
-          >
-            ← Prec
-          </Link>
-          <Link
-            href="/admin/calendario"
-            className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
-          >
-            Oggi
-          </Link>
-          <Link
-            href={`/admin/calendario?year=${next.y}&month=${next.m}`}
-            className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
-          >
-            Succ →
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title={`Calendario · ${year}-${String(month).padStart(2, "0")}`}
+        actions={
+          <>
+            <Link
+              href={`/admin/calendario?year=${prev.y}&month=${prev.m}`}
+              className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
+            >
+              ← Prec
+            </Link>
+            <Link
+              href="/admin/calendario"
+              className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
+            >
+              Oggi
+            </Link>
+            <Link
+              href={`/admin/calendario?year=${next.y}&month=${next.m}`}
+              className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
+            >
+              Succ →
+            </Link>
+          </>
+        }
+      />
 
       {boats.length === 0 && (
         <p className="text-sm text-slate-500">Nessuna barca configurata.</p>
