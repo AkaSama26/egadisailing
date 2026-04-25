@@ -16,6 +16,7 @@ export type NotificationType =
   | "OVERRIDE_EXPIRED"
   | "OVERRIDE_SUPERSEDED"
   | "OVERRIDE_RECONCILE_FAILED"
+  | "OVERRIDE_APOLOGY_LOSER"
   | "CROSS_CHANNEL_CONFLICT";
 
 export type NotificationChannel = "EMAIL" | "TELEGRAM";
@@ -24,6 +25,11 @@ export interface NotificationEvent<TPayload = Record<string, unknown>> {
   type: NotificationType;
   channels: NotificationChannel[];
   payload: TPayload;
+  /**
+   * Override del recipient email (per eventi customer-facing).
+   * Se omesso, dispatcher usa env.ADMIN_EMAIL (default admin-centric).
+   */
+  recipientEmail?: string;
 }
 
 /**
@@ -51,6 +57,9 @@ export const CHANNEL_DEFAULTS: Record<NotificationType, NotificationChannel[]> =
   OVERRIDE_REJECTED: ["EMAIL"],
   OVERRIDE_EXPIRED: ["EMAIL"],
   OVERRIDE_SUPERSEDED: ["EMAIL"],
+  // Customer "loser" che perde lo slot in approveOverride → riceve
+  // overbookingApology con voucher + rebooking suggestions (R29-#2).
+  OVERRIDE_APOLOGY_LOSER: ["EMAIL"],
   // Admin-facing (EMAIL + TELEGRAM escalation):
   OVERRIDE_ADMIN_REQUESTED: ["EMAIL", "TELEGRAM"],
   OVERRIDE_REMINDER: ["EMAIL"],

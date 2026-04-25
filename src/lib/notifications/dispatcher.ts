@@ -31,6 +31,7 @@ import { overrideRejectedWinnerTemplate } from "@/lib/email/templates/override-r
 import { overrideExpiredTemplate } from "@/lib/email/templates/override-expired";
 import { overrideSupersededTemplate } from "@/lib/email/templates/override-superseded";
 import { overrideReconcileFailedAdminTemplate } from "@/lib/email/templates/override-reconcile-failed-admin";
+import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
 import type { NotificationEvent, NotificationType } from "./events";
 
 interface RenderedTemplate {
@@ -140,7 +141,9 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
 
   const emailP: Promise<boolean> = wantEmail
     ? sendEmail({
-        to: env.ADMIN_EMAIL,
+        // Customer-facing events possono override via `recipientEmail`.
+        // Default admin-centric (env.ADMIN_EMAIL) per retrocompat.
+        to: event.recipientEmail ?? env.ADMIN_EMAIL,
         subject: rendered.subject,
         htmlContent: rendered.html,
         textContent: rendered.text,
@@ -235,6 +238,12 @@ const OVERRIDE_TEMPLATE_MAP: Partial<Record<NotificationType, OverrideTemplateFn
   OVERRIDE_RECONCILE_FAILED: (p) =>
     overrideReconcileFailedAdminTemplate(
       p as unknown as Parameters<typeof overrideReconcileFailedAdminTemplate>[0],
+    ),
+  // Customer "loser" overbooking apology — single-funnel route
+  // (eliminates direct sendEmail call in approve.ts, R2 fresh-eyes finding).
+  OVERRIDE_APOLOGY_LOSER: (p) =>
+    overbookingApologyTemplate(
+      p as unknown as Parameters<typeof overbookingApologyTemplate>[0],
     ),
 };
 

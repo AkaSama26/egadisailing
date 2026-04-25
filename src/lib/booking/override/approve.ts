@@ -11,8 +11,7 @@ import { logger } from "@/lib/logger";
 import { blockDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
 import { postCommitCancelBooking } from "../post-commit-cancel";
-import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
-import { sendEmail } from "@/lib/email/brevo";
+import { dispatchNotification, toDispatchResult } from "@/lib/notifications/dispatcher";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { getAlternativeDatesIso } from "../alternative-dates";
@@ -178,30 +177,35 @@ export async function approveOverride(
       3,
     );
 
-    const tpl = overbookingApologyTemplate({
-      customerName: `${conflict.customer.firstName} ${conflict.customer.lastName}`.trim() || "cliente",
-      confirmationCode: conflict.confirmationCode,
-      serviceName: conflict.service.name,
-      startDate: conflict.startDate.toISOString().slice(0, 10),
-      refundAmount: `${conflict.totalPrice.toFixed(2)}€`,
-      refundChannel: "stripe",
-      contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
-      contactPhone: env.CONTACT_PHONE,
-      bookingUrl: `${env.APP_URL}/b/sessione`,
-      voucherSoftText: "Per scusarci ti offriamo 2 drink gratis a bordo per persona alla prossima visita",
-      rebookingSuggestions: alternativeDates,
-    });
+    // Phase 8 #5: route via dispatcher (single notification funnel).
+    // The dispatcher renders the overbookingApology template + sends via
+    // sendEmail internally — eliminates direct sendEmail bypass that this
+    // module previously had.
     try {
-      const delivered = await sendEmail({
-        to: conflict.customer.email,
-        subject: tpl.subject,
-        htmlContent: tpl.html,
-        textContent: tpl.text,
+      const outcome = await dispatchNotification({
+        type: "OVERRIDE_APOLOGY_LOSER",
+        channels: ["EMAIL"],
+        // Recipient is the per-conflict customer, not the default ADMIN_EMAIL.
+        recipientEmail: conflict.customer.email,
+        payload: {
+          customerName: `${conflict.customer.firstName} ${conflict.customer.lastName}`.trim() || "cliente",
+          confirmationCode: conflict.confirmationCode,
+          serviceName: conflict.service.name,
+          startDate: conflict.startDate.toISOString().slice(0, 10),
+          refundAmount: `${conflict.totalPrice.toFixed(2)}€`,
+          refundChannel: "stripe",
+          contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+          contactPhone: env.CONTACT_PHONE,
+          bookingUrl: `${env.APP_URL}/b/sessione`,
+          voucherSoftText: "Per scusarci ti offriamo 2 drink gratis a bordo per persona alla prossima visita",
+          rebookingSuggestions: alternativeDates,
+        } as unknown as Record<string, unknown>,
       });
-      delivered ? emailsSent++ : emailsFailed++;
+      const result = toDispatchResult(outcome);
+      result.emailOk ? emailsSent++ : emailsFailed++;
     } catch (err) {
       emailsFailed++;
-      logger.error({ err, bookingId: conflictId }, "approveOverride: sendEmail loser failed");
+      logger.error({ err, bookingId: conflictId }, "approveOverride: dispatch OVERRIDE_APOLOGY_LOSER failed");
     }
   }
 
