@@ -20,15 +20,45 @@ import type { PrismaClient } from "@/generated/prisma/client";
 import type { BookingStatus, BookingSource } from "@/generated/prisma/enums";
 import { randomUUID } from "node:crypto";
 
+/**
+ * Service.type values supported by tests. Service.type schema column is
+ * `String` (not enum), but downstream code matches against fixed values.
+ */
+export type SeedableServiceType =
+  | "BOAT_EXCLUSIVE"
+  | "SOCIAL_BOATING"
+  | "CABIN_CHARTER"
+  | "BOAT_SHARED"
+  | "EXPERIENCE";
+
 export interface SeedBoatServiceOptions {
   boatId?: string;
   serviceId?: string;
   capacityMax?: number;
+  /**
+   * Service.type — default `BOAT_EXCLUSIVE` (semantica "barca intera",
+   * obbligatoria per test override perche' SOCIAL_BOATING non ha conflitti).
+   * Override per test che non sono override-related (es. booking-creation
+   * SOCIAL/CABIN_CHARTER, cron-balance-reminders, stripe-webhook).
+   */
+  serviceType?: SeedableServiceType;
+  /** Service.priority — default 5. Plan 7 priority override scoring. */
+  priority?: number;
+  /** PricingPeriod.pricePerPerson (Decimal stringa) — default "250.00". */
+  pricePerPerson?: string;
+  /** Service.minPaying — default 1 per ovviare al SOCIAL default 11. */
+  minPaying?: number;
 }
 
 /**
- * Crea Boat + Service (BOAT_EXCLUSIVE) + PricingPeriod minimal per test
- * override. ID di default stabili (`b-override` / `s-override`).
+ * Crea Boat + Service + PricingPeriod minimal per test override.
+ * ID di default stabili (`b-override` / `s-override`).
+ *
+ * Generalizzato (R-Phase1-E4): accetta `serviceType` per riusarlo da
+ * booking-creation.test.ts (SOCIAL_BOATING / CABIN_CHARTER), cron-balance-
+ * reminders.test.ts, stripe-webhook-handler.test.ts. Migrazione opt-in:
+ * i test esistenti possono restare con i loro inline seedServiceX finche'
+ * non sono toccati per altri motivi.
  */
 export async function seedBoatAndService(
   db: PrismaClient,
@@ -37,6 +67,10 @@ export async function seedBoatAndService(
   const boatId = opts.boatId ?? "b-override";
   const serviceId = opts.serviceId ?? "s-override";
   const capacityMax = opts.capacityMax ?? 8;
+  const serviceType: SeedableServiceType = opts.serviceType ?? "BOAT_EXCLUSIVE";
+  const priority = opts.priority ?? 5;
+  const pricePerPerson = opts.pricePerPerson ?? "250.00";
+  const minPaying = opts.minPaying ?? 1;
 
   const boat = await db.boat.create({
     data: {
@@ -54,12 +88,13 @@ export async function seedBoatAndService(
       id: serviceId,
       boatId: boat.id,
       name: "Gourmet Exclusive",
-      type: "BOAT_EXCLUSIVE",
+      type: serviceType,
       durationType: "FULL_DAY",
       durationHours: 8,
       capacityMax,
-      minPaying: 1,
+      minPaying,
       defaultPaymentSchedule: "FULL",
+      priority,
       active: true,
     },
   });
@@ -72,7 +107,7 @@ export async function seedBoatAndService(
       label: "Test 2026",
       startDate: new Date("2026-01-01"),
       endDate: new Date("2026-12-31"),
-      pricePerPerson: "250.00",
+      pricePerPerson,
       year: 2026,
     },
   });
