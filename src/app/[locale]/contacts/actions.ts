@@ -13,6 +13,7 @@ import { logger } from "@/lib/logger";
 import { ValidationError } from "@/lib/errors";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { emailSchema, freeTextSchema } from "@/lib/validation/common-zod";
+import { RL_WINDOW } from "@/lib/timing";
 
 const schema = z.object({
   name: z.string().min(2).max(120).regex(/^[^<>]*$/, "Caratteri non ammessi"),
@@ -68,7 +69,7 @@ export async function sendContactMessage(
       identifier: normalizeIpForRateLimit(ip),
       scope: RATE_LIMIT_SCOPES.CONTACT_FORM_IP,
       limit: 3,
-      windowSeconds: 3600,
+      windowSeconds: RL_WINDOW.HOUR,
       // R28-CRIT-3: fail-closed per prevenire spam Brevo durante Redis down
       // → SMTP reputation damage + quota abuse.
       failOpen: false,
@@ -78,7 +79,7 @@ export async function sendContactMessage(
       identifier: normalizeEmail(parsed.email),
       scope: RATE_LIMIT_SCOPES.CONTACT_FORM_EMAIL,
       limit: 3,
-      windowSeconds: 3600,
+      windowSeconds: RL_WINDOW.HOUR,
       failOpen: false,
     });
 

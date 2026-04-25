@@ -7,12 +7,13 @@ import { assessRisk, type WeatherRisk } from "./risk-assessment";
 import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { ExternalServiceError } from "@/lib/errors";
+import { TTL } from "@/lib/timing";
 
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+const CACHE_TTL_MS = TTL.WEATHER_FORECAST * 1000; // 6h
 const LOCATION_KEY = "trapani-38.0176,12.5365";
 const SOURCE = "OPEN_METEO";
 const FETCH_LEASE_NAME = LEASE_KEYS.WEATHER_FETCH_TRAPANI;
-const FETCH_LEASE_TTL_SECONDS = 30;
+const FETCH_LEASE_TTL_SECONDS = TTL.WEATHER_FETCH_LEASE;
 const STAMPEDE_WAIT_MS = 500;
 const STAMPEDE_MAX_WAITS = 6; // ~3s totali di attesa
 

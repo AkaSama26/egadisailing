@@ -12,6 +12,7 @@ import { env } from "@/lib/env";
 import { ACCEPTED_POLICY_VERSIONS } from "@/lib/legal/policy-version";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { emailSchema, personNameSchema } from "@/lib/validation/common-zod";
+import { RL_WINDOW } from "@/lib/timing";
 
 export const runtime = "nodejs";
 
@@ -77,7 +78,7 @@ export const POST = withErrorHandler(async (req: Request) => {
     identifier: normalizeIpForRateLimit(ip),
     scope: "PAYMENT_INTENT_IP_HOUR",
     limit: 10,
-    windowSeconds: 3600,
+    windowSeconds: RL_WINDOW.HOUR,
     failOpen: false, // R17-SEC-#5: endpoint pubblico sensibile, no bypass su Redis down
   });
 
@@ -102,7 +103,7 @@ export const POST = withErrorHandler(async (req: Request) => {
     identifier: normalizeEmail(input.customer.email),
     scope: "PAYMENT_INTENT_EMAIL_HOUR",
     limit: 5,
-    windowSeconds: 3600,
+    windowSeconds: RL_WINDOW.HOUR,
     failOpen: false, // R17-SEC-#5
   });
 

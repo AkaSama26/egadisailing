@@ -8,6 +8,7 @@ import { addHours } from "@/lib/dates";
 import { CHANNELS, RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { LEASE_KEYS } from "@/lib/lease/keys";
+import { RUN_BUDGET } from "@/lib/timing";
 
 export const runtime = "nodejs";
 
@@ -21,7 +22,7 @@ const CLOCK_SKEW_BUFFER_MS = 30_000;
 // × 1.5s = 3000s potenzialmente → lease 480s scade mid-run → altro replica
 // prende lease → doppio run concorrente. 6min cap lascia 2min margine per
 // upsert finale + finally. Pattern identico pending-gc RUN_BUDGET_MS.
-const RUN_BUDGET_MS = 6 * 60 * 1000;
+const RUN_BUDGET_MS = RUN_BUDGET.EXTENDED;
 
 /**
  * Cron ogni 5 minuti che importa bookings Bokun aggiornati dopo l'ultimo

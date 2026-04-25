@@ -8,6 +8,7 @@ import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { getRedisConnection } from "@/lib/queue";
+import { TTL } from "@/lib/timing";
 
 export const runtime = "nodejs";
 
@@ -49,7 +50,7 @@ const CHANNEL_KEY = "STRIPE_EVENTS_RECONCILIATION";
 // sempre restart da newest). Redis key TTL = 7gg per auto-clear in caso
 // di bug + idempotency naturalmente copre via ProcessedStripeEvent.
 const CURSOR_REDIS_KEY = "stripe-reconciliation:starting-after";
-const CURSOR_REDIS_TTL_SEC = 7 * 24 * 60 * 60;
+const CURSOR_REDIS_TTL_SEC = TTL.STRIPE_RECONCILIATION_CURSOR;
 
 /**
  * Cron Stripe events reconciliation — fallback per webhook persi.

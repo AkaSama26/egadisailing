@@ -4,8 +4,8 @@ import type { BookingSource } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { getRedisConnection } from "@/lib/queue";
+import { TTL } from "@/lib/timing";
 
-const CACHE_TTL_SECONDS = 60;
 const REDIS_TIMEOUT_MS = 2000;
 
 export interface CancellationRateResult {
@@ -81,7 +81,7 @@ export async function computeCancellationRate(
   try {
     const redis = getRedisConnection();
     await withRedisTimeout(
-      redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_TTL_SECONDS),
+      redis.set(cacheKey, JSON.stringify(result), "EX", TTL.CANCELLATION_RATE),
       undefined,
     );
   } catch (err) {

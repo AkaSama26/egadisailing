@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
+import { TTL } from "@/lib/timing";
 import { refundPayment, getChargeRefundState } from "@/lib/stripe/payment-intents";
 import { logger } from "@/lib/logger";
 
@@ -16,7 +17,7 @@ export const POST = withCronGuard(
   {
     scope: RATE_LIMIT_SCOPES.REFUND_RETRY_CRON_IP,
     leaseKey: LEASE_KEYS.REFUND_RETRY,
-    leaseTtlSeconds: 10 * 60,
+    leaseTtlSeconds: TTL.CRON_LEASE_REFUND_RETRY,
   },
   async (_req, _ctx) => {
     const cutoff = new Date(Date.now() - 30 * 60 * 1000);

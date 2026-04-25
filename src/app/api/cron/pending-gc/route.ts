@@ -6,6 +6,7 @@ import { cancelPaymentIntent } from "@/lib/stripe/payment-intents";
 import { releaseDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
+import { TTL, RUN_BUDGET, MAX_BATCHES as MAX_BATCHES_LIMITS } from "@/lib/timing";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,7 @@ const PENDING_MAX_AGE_MS = PENDING_GC_TTL_MS;
 // R15-REG-6: soft-timeout per non superare il lease TTL. Ogni iteration:
 // cancelPaymentIntent (1-3s Stripe API) + releaseDates (7 days × fan-out).
 // 4min cap lascia 1min di margine per rilasciare il lease pulito.
-const RUN_BUDGET_MS = 4 * 60 * 1000;
+const RUN_BUDGET_MS = RUN_BUDGET.STANDARD;
 
 /**
  * Cron ogni 15 min: trova booking PENDING > 30min → cancel PaymentIntent
@@ -36,13 +37,13 @@ export const GET = withCronGuard(
   {
     scope: RATE_LIMIT_SCOPES.PENDING_GC_CRON_IP,
     leaseKey: LEASE_KEYS.PENDING_GC,
-    leaseTtlSeconds: 5 * 60,
+    leaseTtlSeconds: TTL.CRON_LEASE_PENDING_GC,
     runBudgetMs: RUN_BUDGET_MS,
   },
   async (_req, ctx) => {
     const cutoff = new Date(Date.now() - PENDING_MAX_AGE_MS);
     const BATCH_SIZE = 200;
-    const MAX_BATCHES = 20; // cap hard: 4000 booking/run, oltre serve admin intervention
+    const MAX_BATCHES = MAX_BATCHES_LIMITS.STANDARD; // cap hard: 4000 booking/run, oltre serve admin intervention
 
     let totalScanned = 0;
     let cancelled = 0;
