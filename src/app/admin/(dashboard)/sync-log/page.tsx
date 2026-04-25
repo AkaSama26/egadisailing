@@ -3,6 +3,9 @@ import { getQueue, ALL_QUEUE_NAMES } from "@/lib/queue";
 import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
 import { resolveAlertAction } from "./actions";
 import { formatItDay } from "@/lib/dates";
+import { AdminCard } from "@/components/admin/admin-card";
+import { EmptyState } from "@/components/admin/empty-state";
+import { SubmitButton } from "@/components/admin/submit-button";
 
 /**
  * Admin view: stato sync real-time.
@@ -98,7 +101,7 @@ export default async function SyncLogPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-slate-900">Sync & Log</h1>
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">BullMQ queue · totali</h2>
         {queueStatus.reachable ? (
           <>
@@ -158,14 +161,14 @@ export default async function SyncLogPage() {
             </p>
           </div>
         )}
-      </section>
+      </AdminCard>
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">
           Manual alerts pendenti ({manualAlerts.length})
         </h2>
         {manualAlerts.length === 0 ? (
-          <p className="text-sm text-slate-500">Nessuna azione manuale richiesta.</p>
+          <EmptyState message="Nessuna azione manuale richiesta." />
         ) : (
           <ul className="text-sm divide-y divide-slate-100">
             {manualAlerts.slice(0, 30).map((a) => (
@@ -189,19 +192,18 @@ export default async function SyncLogPage() {
                       if (!res.ok) throw new Error(res.message);
                     }}
                   >
-                    <button
-                      type="submit"
+                    <SubmitButton
                       className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700"
                     >
                       Risolvi
-                    </button>
+                    </SubmitButton>
                   </form>
                 </div>
               </li>
             ))}
           </ul>
         )}
-      </section>
+      </AdminCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <EventList title="Bokun events (ultimi 20)" items={bokunEvents.map((e) => ({
@@ -221,25 +223,26 @@ export default async function SyncLogPage() {
         }))} />
       </div>
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Audit log (ultimi 50)</h2>
-        <ul className="text-xs font-mono divide-y divide-slate-100">
-          {auditEntries.map((a) => (
-            <li key={a.id} className="py-1.5 flex gap-3">
-              <span className="text-slate-500 shrink-0">
-                {a.timestamp.toLocaleString("it-IT")}
-              </span>
-              <span className="font-semibold">{a.action}</span>
-              <span className="text-slate-600">
-                {a.entity}/{a.entityId}
-              </span>
-            </li>
-          ))}
-          {auditEntries.length === 0 && (
-            <li className="text-slate-500">Nessuna entry audit.</li>
-          )}
-        </ul>
-      </section>
+        {auditEntries.length === 0 ? (
+          <EmptyState message="Nessuna entry audit." />
+        ) : (
+          <ul className="text-xs font-mono divide-y divide-slate-100">
+            {auditEntries.map((a) => (
+              <li key={a.id} className="py-1.5 flex gap-3">
+                <span className="text-slate-500 shrink-0">
+                  {a.timestamp.toLocaleString("it-IT")}
+                </span>
+                <span className="font-semibold">{a.action}</span>
+                <span className="text-slate-600">
+                  {a.entity}/{a.entityId}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </AdminCard>
     </div>
   );
 }
@@ -270,22 +273,22 @@ function EventList({
   items: Array<{ id: string; label: string; at: Date }>;
 }) {
   return (
-    <section className="bg-white rounded-xl border p-5">
+    <AdminCard>
       <h2 className="font-bold text-slate-900 mb-3 text-sm">{title}</h2>
-      <ul className="text-xs space-y-1 font-mono">
-        {items.length === 0 ? (
-          <li className="text-slate-500">Nessun evento.</li>
-        ) : (
-          items.map((e) => (
+      {items.length === 0 ? (
+        <EmptyState message="Nessun evento." />
+      ) : (
+        <ul className="text-xs space-y-1 font-mono">
+          {items.map((e) => (
             <li key={e.id} className="flex justify-between gap-2">
               <span className="truncate">{e.label}</span>
               <span className="text-slate-400 shrink-0">
                 {e.at.toLocaleTimeString("it-IT")}
               </span>
             </li>
-          ))
-        )}
-      </ul>
-    </section>
+          ))}
+        </ul>
+      )}
+    </AdminCard>
   );
 }

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { addDays } from "@/lib/dates";
 import { formatItDay } from "@/lib/dates";
+import { AdminCard } from "@/components/admin/admin-card";
+import { EmptyState } from "@/components/admin/empty-state";
 
 export default async function MeteoPage() {
   const now = new Date();
@@ -27,10 +29,10 @@ export default async function MeteoPage() {
         pagina mostra solo l'elenco delle uscite programmate senza forecast associato.
       </p>
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Uscite confermate</h2>
         {bookings.length === 0 ? (
-          <p className="text-sm text-slate-500">Nessuna uscita nei prossimi 7 giorni.</p>
+          <EmptyState message="Nessuna uscita nei prossimi 7 giorni." />
         ) : (
           <ul className="space-y-2 text-sm divide-y divide-slate-100">
             {bookings.map((b) => {
@@ -75,7 +77,7 @@ export default async function MeteoPage() {
             })}
           </ul>
         )}
-      </section>
+      </AdminCard>
     </div>
   );
 }

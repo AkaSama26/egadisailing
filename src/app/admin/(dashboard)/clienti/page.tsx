@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { EmptyState } from "@/components/admin/empty-state";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -85,11 +86,7 @@ export default async function ClientiPage({ searchParams }: Props) {
               </tr>
             ))}
             {customers.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-slate-500">
-                  Nessun cliente trovato.
-                </td>
-              </tr>
+              <EmptyState message="Nessun cliente trovato." colSpan={5} />
             )}
           </tbody>
         </table>

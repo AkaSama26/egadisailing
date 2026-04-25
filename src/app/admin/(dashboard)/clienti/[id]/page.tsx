@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { AdminCard } from "@/components/admin/admin-card";
+import { DetailRow } from "@/components/admin/detail-row";
+import { EmptyState } from "@/components/admin/empty-state";
 import { anonymizeCustomerAction } from "./actions";
 import { formatItDay } from "@/lib/dates";
 import { BOOKING_STATUS_LABEL, labelOrRaw } from "@/lib/admin/labels";
@@ -50,22 +53,22 @@ export default async function ClienteDetailPage({
         </h1>
       </div>
 
-      <section className="bg-white rounded-xl border p-5 space-y-2">
-        <Row label="Email" value={customer.email} />
-        <Row label="Telefono" value={customer.phone ?? "-"} />
-        <Row label="Nazionalità" value={customer.nationality ?? "-"} />
-        <Row label="Lingua preferita" value={customer.language ?? "-"} />
-        <Row label="Prenotazioni totali" value={String(customer.bookings.length)} />
-        <Row label="Speso totale (netto refund)" value={formatEur(totalSpent)} />
-        <Row
+      <AdminCard className="space-y-2">
+        <DetailRow label="Email" value={customer.email} />
+        <DetailRow label="Telefono" value={customer.phone ?? "-"} />
+        <DetailRow label="Nazionalità" value={customer.nationality ?? "-"} />
+        <DetailRow label="Lingua preferita" value={customer.language ?? "-"} />
+        <DetailRow label="Prenotazioni totali" value={String(customer.bookings.length)} />
+        <DetailRow label="Speso totale (netto refund)" value={formatEur(totalSpent)} />
+        <DetailRow
           label="Cliente dal"
           value={formatItDay(customer.createdAt)}
         />
-      </section>
+      </AdminCard>
 
       {/* GDPR art. 17 section — solo se customer non gia' anonymized */}
       {!isAnonymized && (
-        <section className="bg-white rounded-xl border border-red-200 p-5">
+        <AdminCard tone="alert">
           <h2 className="font-bold text-red-900 mb-2">Dati personali — GDPR</h2>
           <p className="text-sm text-slate-600 mb-3">
             Richiesta di cancellazione (art. 17 GDPR). Mantiene il record per
@@ -89,7 +92,7 @@ export default async function ClienteDetailPage({
               </SubmitButton>
             </form>
           )}
-        </section>
+        </AdminCard>
       )}
 
       {isAnonymized && (
@@ -99,10 +102,10 @@ export default async function ClienteDetailPage({
         </div>
       )}
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Storico prenotazioni</h2>
         {customer.bookings.length === 0 ? (
-          <p className="text-sm text-slate-500">Nessuna prenotazione.</p>
+          <EmptyState message="Nessuna prenotazione." />
         ) : (
           <ul className="space-y-2 text-sm">
             {customer.bookings.map((b) => (
@@ -144,15 +147,7 @@ export default async function ClienteDetailPage({
             ))}
           </ul>
         )}
-      </section>
+      </AdminCard>
     </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <p className="text-sm text-slate-700">
-      <span className="text-slate-500">{label}:</span> <strong>{value}</strong>
-    </p>
   );
 }

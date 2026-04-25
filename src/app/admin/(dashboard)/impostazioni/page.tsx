@@ -2,6 +2,9 @@ import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatItDay } from "@/lib/dates";
+import { AdminCard } from "@/components/admin/admin-card";
+import { DetailRow } from "@/components/admin/detail-row";
+import { EmptyState } from "@/components/admin/empty-state";
 
 // Label IT per channel key. Include anche i "meta channel" usati da cron
 // reconciliation (STRIPE_EVENTS_RECONCILIATION) + detection (CROSS_OTA_DOUBLE_BOOKING).
@@ -54,14 +57,14 @@ export default async function ImpostazioniPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-slate-900">Informazioni</h1>
 
-      <section className="bg-white rounded-xl border p-5 space-y-2">
+      <AdminCard className="space-y-2">
         <h2 className="font-bold text-slate-900">Account</h2>
-        <Row label="Nome" value={session?.user?.name ?? "-"} />
-        <Row label="Email" value={session?.user?.email ?? "-"} />
-        <Row label="Ruolo" value={(session?.user?.role as string | undefined) ?? "-"} />
-      </section>
+        <DetailRow label="Nome" value={session?.user?.name ?? "-"} />
+        <DetailRow label="Email" value={session?.user?.email ?? "-"} />
+        <DetailRow label="Ruolo" value={(session?.user?.role as string | undefined) ?? "-"} />
+      </AdminCard>
 
-      <section className="bg-white rounded-xl border p-5 space-y-4">
+      <AdminCard className="space-y-4">
         <div>
           <h2 className="font-bold text-slate-900">Stato canali</h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -71,7 +74,7 @@ export default async function ImpostazioniPage() {
         </div>
 
         {channelStatuses.length === 0 ? (
-          <p className="text-sm text-slate-500">Nessun canale ancora sincronizzato.</p>
+          <EmptyState message="Nessun canale ancora sincronizzato." />
         ) : (
           <ul className="space-y-2">
             {channelStatuses.map((c) => {
@@ -129,9 +132,9 @@ export default async function ImpostazioniPage() {
             })}
           </ul>
         )}
-      </section>
+      </AdminCard>
 
-      <section className="bg-white rounded-xl border p-5 space-y-3">
+      <AdminCard className="space-y-3">
         <h2 className="font-bold text-slate-900">Configurazione</h2>
         <p className="text-sm text-slate-600">
           Le configurazioni sensibili sono gestite tramite <code>.env</code> sul VPS:
@@ -146,9 +149,9 @@ export default async function ImpostazioniPage() {
           Per rotazione secret contattare il team tech. La UI admin per editing ENV e' fuori scope
           (Plan 6).
         </p>
-      </section>
+      </AdminCard>
 
-      <section className="bg-white rounded-xl border p-5 space-y-3">
+      <AdminCard className="space-y-3">
         <h2 className="font-bold text-slate-900">Link utili</h2>
         <ul className="text-sm space-y-1 list-disc ml-6">
           <li>
@@ -163,15 +166,7 @@ export default async function ImpostazioniPage() {
             </a>
           </li>
         </ul>
-      </section>
+      </AdminCard>
     </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <p className="text-sm text-slate-700">
-      <span className="text-slate-500">{label}:</span> <strong>{value}</strong>
-    </p>
   );
 }

@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { AdminCard } from "@/components/admin/admin-card";
+import { EmptyState } from "@/components/admin/empty-state";
 import { formatItDay } from "@/lib/dates";
 import {
   upsertPricingPeriod,
@@ -26,7 +28,7 @@ export default async function PrezziPage() {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-slate-900">Prezzi</h1>
 
-      <section className="bg-white rounded-xl border p-5 space-y-4">
+      <AdminCard className="space-y-4">
         <h2 className="font-bold text-slate-900">Pricing periods (€/pax base)</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -54,11 +56,7 @@ export default async function PrezziPage() {
                 </tr>
               ))}
               {periods.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">
-                    Nessun period configurato.
-                  </td>
-                </tr>
+                <EmptyState message="Nessun period configurato." colSpan={6} />
               )}
             </tbody>
           </table>
@@ -121,9 +119,9 @@ export default async function PrezziPage() {
             Aggiungi period
           </button>
         </form>
-      </section>
+      </AdminCard>
 
-      <section className="bg-white rounded-xl border p-5 space-y-4">
+      <AdminCard className="space-y-4">
         <h2 className="font-bold text-slate-900">Hot day rules (moltiplicatori)</h2>
         <ul className="space-y-2 text-sm">
           {hotDayRules.map((r) => (
@@ -248,7 +246,7 @@ export default async function PrezziPage() {
             Aggiungi regola
           </button>
         </form>
-      </section>
+      </AdminCard>
     </div>
   );
 }

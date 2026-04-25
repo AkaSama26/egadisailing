@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { AdminCard } from "@/components/admin/admin-card";
+import { DetailRow } from "@/components/admin/detail-row";
+import { EmptyState } from "@/components/admin/empty-state";
 import { formatItDay } from "@/lib/dates";
 import { BOAT_EXCLUSIVE_SERVICE_TYPES } from "@/lib/booking/cross-channel-conflicts";
 import {
@@ -151,25 +154,25 @@ export default async function BookingDetailPage({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="bg-white rounded-xl border p-5 space-y-2">
+        <AdminCard className="space-y-2">
           <h2 className="font-bold text-slate-900">Dettagli</h2>
-          <Row label="Servizio" value={booking.service.name} />
-          <Row label="Tipo" value={labelOrRaw(SERVICE_TYPE_LABEL, booking.service.type)} />
-          <Row label="Barca" value={booking.boat.name} />
-          <Row
+          <DetailRow label="Servizio" value={booking.service.name} />
+          <DetailRow label="Tipo" value={labelOrRaw(SERVICE_TYPE_LABEL, booking.service.type)} />
+          <DetailRow label="Barca" value={booking.boat.name} />
+          <DetailRow
             label="Date"
             value={`${formatItDay(booking.startDate)} → ${formatItDay(booking.endDate)}`}
           />
-          <Row label="Persone" value={String(booking.numPeople)} />
-          <Row label="Totale" value={formatEur(booking.totalPrice.toString())} />
+          <DetailRow label="Persone" value={String(booking.numPeople)} />
+          <DetailRow label="Totale" value={formatEur(booking.totalPrice.toString())} />
           {booking.directBooking && (
             <>
-              <Row
+              <DetailRow
                 label="Tipo pagamento"
                 value={labelOrRaw(PAYMENT_SCHEDULE_LABEL, booking.directBooking.paymentSchedule)}
               />
               {booking.directBooking.balanceAmount && (
-                <Row
+                <DetailRow
                   label="Saldo"
                   value={`${formatEur(booking.directBooking.balanceAmount.toString())} · ${
                     booking.directBooking.balancePaidAt ? "pagato" : "in attesa"
@@ -179,36 +182,36 @@ export default async function BookingDetailPage({
             </>
           )}
           {booking.bokunBooking && (
-            <Row
+            <DetailRow
               label="Bokun"
               value={`${booking.bokunBooking.channelName} · ${booking.bokunBooking.bokunBookingId}`}
             />
           )}
           {booking.charterBooking && (
-            <Row
+            <DetailRow
               label="Charter platform"
               value={`${booking.charterBooking.platformName} · ${booking.charterBooking.platformBookingRef}`}
             />
           )}
-        </section>
+        </AdminCard>
 
-        <section className="bg-white rounded-xl border p-5 space-y-2">
+        <AdminCard className="space-y-2">
           <h2 className="font-bold text-slate-900">Cliente</h2>
-          <Row
+          <DetailRow
             label="Nome"
             value={`${booking.customer.firstName} ${booking.customer.lastName}`.trim()}
           />
-          <Row label="Email" value={booking.customer.email} />
-          <Row label="Telefono" value={booking.customer.phone ?? "-"} />
-          <Row label="Nazionalità" value={booking.customer.nationality ?? "-"} />
-          <Row label="Lingua" value={booking.customer.language ?? "-"} />
-        </section>
+          <DetailRow label="Email" value={booking.customer.email} />
+          <DetailRow label="Telefono" value={booking.customer.phone ?? "-"} />
+          <DetailRow label="Nazionalità" value={booking.customer.nationality ?? "-"} />
+          <DetailRow label="Lingua" value={booking.customer.language ?? "-"} />
+        </AdminCard>
       </div>
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Pagamenti</h2>
         {booking.payments.length === 0 ? (
-          <p className="text-sm text-slate-500">Nessun pagamento registrato.</p>
+          <EmptyState message="Nessun pagamento registrato." />
         ) : (
           <ul className="space-y-2 text-sm">
             {booking.payments.map((p) => (
@@ -286,9 +289,9 @@ export default async function BookingDetailPage({
             Registra pagamento
           </SubmitButton>
         </form>
-      </section>
+      </AdminCard>
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Note interne</h2>
         <form
           action={async (fd) => {
@@ -312,7 +315,7 @@ export default async function BookingDetailPage({
           </SubmitButton>
         </form>
         {booking.bookingNotes.length === 0 ? (
-          <p className="text-sm text-slate-500">Nessuna nota ancora.</p>
+          <EmptyState message="Nessuna nota ancora." />
         ) : (
           <ul className="space-y-2 text-sm">
             {booking.bookingNotes.map((n) => (
@@ -325,16 +328,8 @@ export default async function BookingDetailPage({
             ))}
           </ul>
         )}
-      </section>
+      </AdminCard>
     </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <p className="text-sm text-slate-700">
-      <span className="text-slate-500">{label}:</span> <strong>{value}</strong>
-    </p>
   );
 }
 

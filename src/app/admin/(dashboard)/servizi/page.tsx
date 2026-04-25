@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { AdminCard } from "@/components/admin/admin-card";
+import { EmptyState } from "@/components/admin/empty-state";
 
 // Classi di servizio con label IT + badge color-coded per distinguere
 // shared/exclusive/charter a colpo d'occhio.
@@ -127,18 +129,14 @@ export default async function ServiziPage() {
               );
             })}
             {services.length === 0 && (
-              <tr>
-                <td colSpan={9} className="p-8 text-center text-slate-500">
-                  Nessun servizio configurato.
-                </td>
-              </tr>
+              <EmptyState message="Nessun servizio configurato." colSpan={9} />
             )}
           </tbody>
         </table>
       </div>
 
       {/* Legenda classi per chiarire la distinzione in vista admin. */}
-      <div className="bg-white rounded-xl border p-4 text-xs text-slate-600 space-y-2">
+      <AdminCard padding="sm" className="text-xs text-slate-600 space-y-2">
         <p className="font-semibold text-slate-900">Classi di servizio</p>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
           <li>
@@ -160,7 +158,7 @@ export default async function ServiziPage() {
             saldo.
           </li>
         </ul>
-      </div>
+      </AdminCard>
     </div>
   );
 }

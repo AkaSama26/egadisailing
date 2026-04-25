@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
+import { AdminCard } from "@/components/admin/admin-card";
 import { BOOKING_SOURCE_LABEL, labelOrRaw } from "@/lib/admin/labels";
 
 export default async function FinanzaPage() {
@@ -65,7 +66,7 @@ export default async function FinanzaPage() {
         />
       </div>
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Per canale (YTD)</h2>
         <ul className="text-sm divide-y divide-slate-100">
           {bySource.map((s) => (
@@ -82,9 +83,9 @@ export default async function FinanzaPage() {
             <li className="text-slate-500 py-2">Nessun dato.</li>
           )}
         </ul>
-      </section>
+      </AdminCard>
 
-      <section className="bg-white rounded-xl border p-5">
+      <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Per servizio (YTD)</h2>
         <ul className="text-sm divide-y divide-slate-100">
           {byService.map((s) => (
@@ -101,17 +102,17 @@ export default async function FinanzaPage() {
             <li className="text-slate-500 py-2">Nessun dato.</li>
           )}
         </ul>
-      </section>
+      </AdminCard>
     </div>
   );
 }
 
 function Kpi({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="bg-white rounded-xl border p-5">
+    <AdminCard>
       <div className="text-sm text-slate-500">{label}</div>
       <div className="text-2xl font-bold text-slate-900">{value}</div>
       {hint && <div className="text-xs text-slate-500 mt-1">{hint}</div>}
-    </div>
+    </AdminCard>
   );
 }

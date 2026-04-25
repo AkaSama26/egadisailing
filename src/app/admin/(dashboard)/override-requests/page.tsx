@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { OverrideImpactBadge } from "@/components/admin/override-impact-badge";
 import { AdminStatusTabs } from "@/components/admin/admin-status-tabs";
+import { EmptyState } from "@/components/admin/empty-state";
 import { OVERRIDE_STATUS_LABEL } from "@/lib/admin/labels";
 import { ADMIN_LIST_LIMIT } from "@/lib/admin/constants";
 
@@ -53,7 +54,7 @@ export default async function OverrideRequestsPage({
       />
       <div className="grid gap-4">
         {requests.length === 0 && (
-          <p className="text-slate-500">Nessuna richiesta in questo stato.</p>
+          <EmptyState message="Nessuna richiesta in questo stato." />
         )}
         {requests.map((r) => (
           <Link

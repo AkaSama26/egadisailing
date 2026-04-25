@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
+import { AdminCard } from "@/components/admin/admin-card";
+import { EmptyState } from "@/components/admin/empty-state";
 import { upsertCrewMember, toggleCrewActive } from "./actions";
 
 export default async function CrewPage() {
@@ -50,11 +52,7 @@ export default async function CrewPage() {
               </tr>
             ))}
             {members.length === 0 && (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-slate-500">
-                  Nessun membro crew configurato.
-                </td>
-              </tr>
+              <EmptyState message="Nessun membro crew configurato." colSpan={7} />
             )}
           </tbody>
         </table>

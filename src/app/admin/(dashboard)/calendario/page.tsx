@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { type DayCell } from "@/components/admin/calendar-grid";
+import { AdminCard } from "@/components/admin/admin-card";
 import { enrichDayCells } from "./enrich";
 import { CalendarClient } from "./calendar-client";
 
@@ -140,19 +141,19 @@ export default async function CalendarioPage({ searchParams }: Props) {
             });
           }
           return (
-            <div key={boat.id} className="bg-white rounded-xl border p-5 space-y-4">
+            <AdminCard key={boat.id} className="space-y-4">
               <CalendarClient
                 boatId={boat.id}
                 boatName={boat.name}
                 days={days}
                 enriched={boatEnriched}
               />
-            </div>
+            </AdminCard>
           );
         })}
       </div>
 
-      <div className="bg-white rounded-xl border p-4 text-xs text-slate-600 space-y-1">
+      <AdminCard padding="sm" className="text-xs text-slate-600 space-y-1">
         <p className="font-semibold text-slate-900">Legenda:</p>
         <div className="flex gap-3 flex-wrap">
           <LegendBadge className="bg-red-50 border-red-200">Prenotato</LegendBadge>
@@ -160,7 +161,7 @@ export default async function CalendarioPage({ searchParams }: Props) {
           <LegendBadge className="bg-white border-slate-200">Disponibile</LegendBadge>
         </div>
         <p className="mt-2">Fino a 3 booking per cella; oltre mostra "+N".</p>
-      </div>
+      </AdminCard>
     </div>
   );
 }
