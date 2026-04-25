@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { blockDates, releaseDates } from "@/lib/availability/service";
 import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
 import { CHANNELS } from "@/lib/channels";
@@ -78,7 +79,7 @@ export async function manualBlockRange(
 
   await auditLog({
     userId,
-    action: "MANUAL_BLOCK",
+    action: AUDIT_ACTIONS.MANUAL_BLOCK,
     entity: "Boat",
     entityId: boatId,
     after: {
@@ -146,7 +147,7 @@ export async function manualReleaseRange(
 
   await auditLog({
     userId,
-    action: "MANUAL_RELEASE",
+    action: AUDIT_ACTIONS.MANUAL_RELEASE,
     entity: "Boat",
     entityId: boatId,
     after: { boatName, startDate: startDateIso, endDate: endDateIso },

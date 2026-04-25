@@ -18,6 +18,7 @@ import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-ap
 import { sendEmail } from "@/lib/email/brevo";
 import { dispatchNotification } from "@/lib/notifications/dispatcher";
 import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { getAlternativeDatesIso } from "./alternative-dates";
 
 export interface CreateOverrideRequestInput {
@@ -316,7 +317,7 @@ export async function approveOverride(
   // 5. Audit log
   await auditLog({
     userId: adminUserId,
-    action: "OVERRIDE_APPROVED",
+    action: AUDIT_ACTIONS.OVERRIDE_APPROVED,
     entity: "OverrideRequest",
     entityId: requestId,
     after: {
@@ -438,7 +439,7 @@ export async function rejectOverride(
   // Audit log a livello di request (il helper emette audit BOOKING_CANCELLED_BY_OVERRIDE)
   await auditLog({
     userId: adminUserId,
-    action: "OVERRIDE_REJECTED",
+    action: AUDIT_ACTIONS.OVERRIDE_REJECTED,
     entity: "OverrideRequest",
     entityId: requestId,
     after: { newBookingId: request.newBookingId, notes, refundOk, emailOk },

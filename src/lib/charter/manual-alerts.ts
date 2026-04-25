@@ -109,9 +109,10 @@ export async function resolveManualAlert(id: string, userId?: string): Promise<v
   // L'import circolare e' evitato con dynamic import (manualAlerts e' chiamato
   // da audit-adjacent paths).
   const { auditLog } = await import("@/lib/audit/log");
+  const { AUDIT_ACTIONS } = await import("@/lib/audit/actions");
   await auditLog({
     userId,
-    action: "RESOLVE_MANUAL_ALERT",
+    action: AUDIT_ACTIONS.RESOLVE_MANUAL_ALERT,
     entity: "ManualAlert",
     entityId: id,
   });

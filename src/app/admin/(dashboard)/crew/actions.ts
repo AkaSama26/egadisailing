@@ -6,6 +6,7 @@ import type { CrewRole } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { ValidationError } from "@/lib/errors";
 
 export interface UpsertCrewMemberInput {
@@ -54,7 +55,7 @@ export async function upsertCrewMember(input: UpsertCrewMemberInput): Promise<vo
 
   await auditLog({
     userId,
-    action: input.id ? "UPDATE" : "CREATE",
+    action: input.id ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     entity: "CrewMember",
     entityId: result.id,
     after: { name: data.name, role: data.role, active: data.active },
@@ -98,7 +99,7 @@ export async function assignCrewToBooking(
 
   await auditLog({
     userId,
-    action: "ASSIGN_CREW",
+    action: AUDIT_ACTIONS.ASSIGN_CREW,
     entity: "Booking",
     entityId: bookingId,
     after: { crewMemberId, role },
@@ -113,7 +114,7 @@ export async function toggleCrewActive(id: string, active: boolean): Promise<voi
   await db.crewMember.update({ where: { id }, data: { active } });
   await auditLog({
     userId,
-    action: active ? "ACTIVATE" : "DEACTIVATE",
+    action: active ? AUDIT_ACTIONS.ACTIVATE : AUDIT_ACTIONS.DEACTIVATE,
     entity: "CrewMember",
     entityId: id,
   });

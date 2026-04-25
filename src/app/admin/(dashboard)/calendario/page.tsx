@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { type DayCell } from "@/components/admin/calendar-grid";
 import { enrichDayCells } from "./enrich";
 import { CalendarClient } from "./calendar-client";
@@ -55,7 +56,7 @@ export default async function CalendarioPage({ searchParams }: Props) {
     // blocchi recenti e' entro questa finestra; oltre scade retention.
     db.auditLog.findMany({
       where: {
-        action: "MANUAL_BLOCK",
+        action: AUDIT_ACTIONS.MANUAL_BLOCK,
         entity: "Boat",
         timestamp: {
           gte: new Date(monthStart.getTime() - 90 * 24 * 60 * 60 * 1000),

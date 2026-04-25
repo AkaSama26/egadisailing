@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { refundPayment, cancelPaymentIntent, getChargeRefundState } from "@/lib/stripe/payment-intents";
 import { fromCents, formatEurCents } from "@/lib/pricing/cents";
 import { sendEmail } from "@/lib/email/brevo";
@@ -192,7 +193,7 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
 
   await auditLog({
     userId,
-    action: "CANCEL",
+    action: AUDIT_ACTIONS.CANCEL,
     entity: "Booking",
     entityId: bookingId,
     before: { status: booking.status },
@@ -304,7 +305,7 @@ export async function addBookingNote(bookingId: string, note: string): Promise<v
 
   await auditLog({
     userId,
-    action: "ADD_NOTE",
+    action: AUDIT_ACTIONS.ADD_NOTE,
     entity: "Booking",
     entityId: bookingId,
     after: { noteLength: clean.length },
@@ -427,7 +428,7 @@ export async function registerManualPayment(input: RegisterPaymentInput): Promis
 
   await auditLog({
     userId,
-    action: "REGISTER_PAYMENT",
+    action: AUDIT_ACTIONS.REGISTER_PAYMENT,
     entity: "Booking",
     entityId: input.bookingId,
     after: { amountEur: input.amountEur, method: input.method, type: input.type },

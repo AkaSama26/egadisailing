@@ -6,6 +6,7 @@ import { LEASE_KEYS } from "@/lib/lease/keys";
 import { checkOtaReconciliation } from "@/lib/booking/override-reconcile";
 import { dispatchNotification } from "@/lib/notifications/dispatcher";
 import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -69,7 +70,7 @@ export const POST = withCronGuard(
             },
           });
           await auditLog({
-            action: "OVERRIDE_RECONCILE_FAILED",
+            action: AUDIT_ACTIONS.OVERRIDE_RECONCILE_FAILED,
             entity: "OverrideRequest",
             entityId: r.id,
             after: { channels: result.channels },

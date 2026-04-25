@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { logger } from "@/lib/logger";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 
@@ -117,7 +118,7 @@ export async function anonymizeCustomer(
     userId: opts.actorUserId,
     entity: "Customer",
     entityId: customerId,
-    action: "ANONYMIZE",
+    action: AUDIT_ACTIONS.ANONYMIZE,
     after: { reason: opts.reason ?? "gdpr_art_17" },
   });
 

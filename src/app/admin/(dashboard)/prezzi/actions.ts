@@ -5,6 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { scheduleBokunPricingSync } from "@/lib/pricing/bokun-sync";
 import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
@@ -79,7 +80,7 @@ export async function upsertPricingPeriod(input: UpsertPricingPeriodInput): Prom
 
   await auditLog({
     userId,
-    action: input.id ? "UPDATE" : "CREATE",
+    action: input.id ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     entity: "PricingPeriod",
     entityId: result.id,
     after: {
@@ -160,7 +161,7 @@ export async function upsertHotDayRule(input: UpsertHotDayRuleInput): Promise<vo
 
   await auditLog({
     userId,
-    action: input.id ? "UPDATE" : "CREATE",
+    action: input.id ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     entity: "HotDayRule",
     entityId: result.id,
     after: {
@@ -197,7 +198,7 @@ export async function deleteHotDayRule(id: string): Promise<void> {
   await db.hotDayRule.delete({ where: { id } });
   await auditLog({
     userId,
-    action: "DELETE",
+    action: AUDIT_ACTIONS.DELETE,
     entity: "HotDayRule",
     entityId: id,
     before: { name: before.name, multiplier: before.multiplier.toString() },

@@ -4,6 +4,7 @@ import { refundPayment, getChargeRefundState } from "@/lib/stripe/payment-intent
 import { releaseDates } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
 import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { fromCents } from "@/lib/pricing/cents";
 
 /**
@@ -173,7 +174,7 @@ export async function postCommitCancelBooking(
   // cancel admin manuale. Failure-safe dentro auditLog.
   await auditLog({
     userId: input.actorUserId ?? undefined,
-    action: "BOOKING_CANCELLED_BY_OVERRIDE",
+    action: AUDIT_ACTIONS.BOOKING_CANCELLED_BY_OVERRIDE,
     entity: "Booking",
     entityId: booking.id,
     after: {
