@@ -3,6 +3,7 @@ import { getQueue, ALL_QUEUE_NAMES } from "@/lib/queue";
 import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
 import { resolveAlertAction } from "./actions";
 import { formatItDay } from "@/lib/dates";
+import { TimeIso } from "@/components/ui/time-iso";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
 import { SubmitButton } from "@/components/admin/submit-button";
@@ -184,7 +185,7 @@ export default async function SyncLogPage() {
                 </span>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="text-xs text-slate-500">
-                    {a.createdAt.toLocaleString("it-IT")}
+                    <TimeIso datetime={a.createdAt} />
                   </span>
                   <form
                     action={async () => {
@@ -233,7 +234,7 @@ export default async function SyncLogPage() {
             {auditEntries.map((a) => (
               <li key={a.id} className="py-1.5 flex gap-3">
                 <span className="text-slate-500 shrink-0">
-                  {a.timestamp.toLocaleString("it-IT")}
+                  <TimeIso datetime={a.timestamp} />
                 </span>
                 <span className="font-semibold">{a.action}</span>
                 <span className="text-slate-600">

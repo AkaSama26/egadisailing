@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { OVERRIDE_STATUS_LABEL } from "@/lib/admin/labels";
 import { ADMIN_LIST_LIMIT } from "@/lib/admin/constants";
+import { formatItDay } from "@/lib/dates";
 
 type Status = "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "PENDING_RECONCILE_FAILED";
 
@@ -66,7 +67,7 @@ export default async function OverrideRequestsPage({
             <div className="font-semibold">
               {r.newBooking.customer.firstName} {r.newBooking.customer.lastName} &middot;{" "}
               {r.newBooking.service.name} &middot;{" "}
-              {r.newBooking.startDate.toISOString().slice(0, 10)}
+              {formatItDay(r.newBooking.startDate)}
             </div>
             <div className="text-sm text-slate-600 flex items-center gap-2 flex-wrap">
               <span>Revenue nuovo: &euro; {r.newBookingRevenue.toFixed(2)}</span>

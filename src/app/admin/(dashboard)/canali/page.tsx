@@ -4,6 +4,7 @@ import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { TimeIso } from "@/components/ui/time-iso";
 import {
   BOOKING_SOURCE_LABEL,
   CHANNEL_SYNC_MODE_LABEL,
@@ -35,7 +36,7 @@ export default async function CanaliPage() {
               </div>
               <p className="text-sm text-slate-600">
                 Ultimo sync:{" "}
-                <strong>{c.lastSyncAt ? c.lastSyncAt.toLocaleString("it-IT") : "mai"}</strong>
+                <strong>{c.lastSyncAt ? <TimeIso datetime={c.lastSyncAt} /> : "mai"}</strong>
               </p>
               {c.lastError && (
                 <p className="text-xs text-red-600 mt-2 break-words">

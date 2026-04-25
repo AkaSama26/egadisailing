@@ -7,6 +7,7 @@ import { DetailRow } from "@/components/admin/detail-row";
 import { EmptyState } from "@/components/admin/empty-state";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { formatItDay } from "@/lib/dates";
+import { TimeIso } from "@/components/ui/time-iso";
 import { BOAT_EXCLUSIVE_SERVICE_TYPES } from "@/lib/booking/cross-channel-conflicts";
 import {
   BOOKING_STATUS_LABEL,
@@ -323,7 +324,7 @@ export default async function BookingDetailPage({
             {booking.bookingNotes.map((n) => (
               <li key={n.id} className="border-l-2 border-slate-200 pl-3 py-1">
                 <div className="text-slate-500 text-xs">
-                  {n.createdAt.toLocaleString("it-IT")}
+                  <TimeIso datetime={n.createdAt} />
                 </div>
                 <div className="whitespace-pre-wrap">{n.note}</div>
               </li>

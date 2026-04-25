@@ -118,3 +118,37 @@ export function formatItDay(d: Date): string {
     day: "2-digit",
   }).format(d);
 }
+
+/**
+ * Format date+time as "DD/MM/YYYY HH:MM" (Italian locale, Europe/Rome esplicito).
+ * Uso admin/log displays sintetici. Per audit con secondi vedi `formatAdminDateTime`.
+ */
+export function formatItDateTime(d: Date): string {
+  return new Intl.DateTimeFormat("it-IT", {
+    timeZone: "Europe/Rome",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+}
+
+/**
+ * Format date+time as "DD/MM/YYYY HH:MM:SS" — full precision per audit log /
+ * sync-log displays.
+ */
+export function formatAdminDateTime(d: Date): string {
+  return new Intl.DateTimeFormat("it-IT", {
+    timeZone: "Europe/Rome",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(d);
+}
+
+/** Alias semantico: admin date-only display (uguale a formatItDay ma firma esplicita). */
+export const formatAdminDate = formatItDay;
