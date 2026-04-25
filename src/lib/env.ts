@@ -26,6 +26,8 @@ const envSchema = z.object({
   //   3. DATABASE_URL resta direct connection per migrations
   // R16 capacity planning: obbligatorio pre-Ferragosto 2026.
   DATABASE_URL_POOLED: z.string().url().optional(),
+  // R16 capacity planning: pool size del runtime (PgBouncer o direct).
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(200).default(20),
 
   // Redis
   REDIS_URL: z.string().url(),

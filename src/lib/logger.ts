@@ -1,5 +1,9 @@
 import pino from "pino";
+import { env } from "./env";
 
+// NODE_ENV reads via process.env directly: Next.js convention (statically
+// replaced by bundler at build time). env.NODE_ENV would also work but
+// process.env.NODE_ENV is the canonical Next.js pattern.
 const isDev = process.env.NODE_ENV !== "production";
 const isTest = process.env.NODE_ENV === "test";
 
@@ -65,7 +69,7 @@ const globalForLogger = globalThis as unknown as { __logger__?: pino.Logger };
 export const logger: pino.Logger =
   globalForLogger.__logger__ ??
   pino({
-    level: process.env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
+    level: env.LOG_LEVEL ?? (isDev ? "debug" : "info"),
     transport:
       isDev && !isTest
         ? {
