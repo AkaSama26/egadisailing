@@ -17,7 +17,7 @@ export const POST = withCronGuard(
     leaseKey: LEASE_KEYS.OVERRIDE_DROPDEAD,
     leaseTtlSeconds: 10 * 60,
   },
-  async () => {
+  async (_req, _ctx) => {
     const result = await expireDropDeadRequests();
     logger.info({ ...result }, "override-dropdead cron completed");
     return result;

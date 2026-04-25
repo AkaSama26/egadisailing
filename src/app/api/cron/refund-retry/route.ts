@@ -18,7 +18,7 @@ export const POST = withCronGuard(
     leaseKey: LEASE_KEYS.REFUND_RETRY,
     leaseTtlSeconds: 10 * 60,
   },
-  async () => {
+  async (_req, _ctx) => {
     const cutoff = new Date(Date.now() - 30 * 60 * 1000);
     // Payment non ha updatedAt — usiamo createdAt come cutoff anti-loop
     // (un FAILED appena marcato deve avere tempo di essere verificato).

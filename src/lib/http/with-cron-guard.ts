@@ -15,6 +15,20 @@ export interface CronGuardConfig {
   leaseTtlSeconds: number;
   /** Rate-limit cap per-minute (default 10) */
   rateLimitPerMin?: number;
+  /**
+   * Soft timeout (ms). Quando set, l'handler riceve `shouldStop()` da chiamare
+   * tra iterations di un batch loop. Il guard NON interrompe forzatamente — e'
+   * responsabilita' dell'handler controllare e break/early-return.
+   * Pattern R28-ALTA-3 (pending-gc / bokun-reconciliation / stripe-reconciliation).
+   */
+  runBudgetMs?: number;
+}
+
+export interface CronHandlerCtx {
+  /** True quando runBudgetMs e' superato. Handler dovrebbe fare break su batch loop. */
+  shouldStop: () => boolean;
+  /** Tempo elapsed dall'inizio handler (ms). */
+  elapsedMs: () => number;
 }
 
 /**
@@ -28,13 +42,12 @@ export interface CronGuardConfig {
  * Restituisce 200 con risultato handler, o `{skipped: "already-running"}` se
  * il lease e' gia' acquisito da un altro pod.
  *
- * TODO: migrate pending-gc, weather-check, stripe-reconciliation,
- * bokun-reconciliation, retention, balance-reminders, email-parser a
- * withCronGuard (Fase 2 deferred).
+ * Quando `runBudgetMs` e' set, l'handler riceve `ctx.shouldStop()` per
+ * controllare il soft-timeout dentro batch loops (pattern R28-ALTA-3).
  */
 export function withCronGuard<T>(
   config: CronGuardConfig,
-  handler: (req: Request) => Promise<T>,
+  handler: (req: Request, ctx: CronHandlerCtx) => Promise<T>,
 ) {
   return withErrorHandler(async (req: Request) => {
     requireBearerSecret(req, env.CRON_SECRET);
@@ -50,8 +63,17 @@ export function withCronGuard<T>(
     if (!lease) {
       return NextResponse.json({ skipped: "already-running" });
     }
+
+    const startedAt = Date.now();
+    const ctx: CronHandlerCtx = {
+      elapsedMs: () => Date.now() - startedAt,
+      shouldStop: () =>
+        config.runBudgetMs !== undefined &&
+        Date.now() - startedAt > config.runBudgetMs,
+    };
+
     try {
-      const result = await handler(req);
+      const result = await handler(req, ctx);
       return NextResponse.json(result);
     } finally {
       await releaseLease(lease);

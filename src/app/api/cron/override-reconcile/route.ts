@@ -25,7 +25,7 @@ export const POST = withCronGuard(
     leaseKey: LEASE_KEYS.OVERRIDE_RECONCILE,
     leaseTtlSeconds: 5 * 60,
   },
-  async () => {
+  async (_req, _ctx) => {
     const now = new Date();
     const due = await db.overrideRequest.findMany({
       where: {

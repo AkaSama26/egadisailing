@@ -17,7 +17,7 @@ export const POST = withCronGuard(
     leaseKey: LEASE_KEYS.OVERRIDE_REMINDERS,
     leaseTtlSeconds: 10 * 60,
   },
-  async () => {
+  async (_req, _ctx) => {
     const result = await sendEscalationReminders();
     logger.info({ ...result }, "override-reminders cron completed");
     return result;
