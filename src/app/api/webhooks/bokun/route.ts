@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { Prisma } from "@/generated/prisma/client";
 import { verifyBokunWebhookResult } from "@/lib/bokun/webhook-verifier";
 import { getBokunBooking } from "@/lib/bokun/bookings";
 import { bokunWebhookBodySchema } from "@/lib/bokun/schemas";
 import { importBokunBooking } from "@/lib/bokun/adapters/booking";
 import { syncBookingAvailability } from "@/lib/bokun/sync-availability";
-import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { withWebhookGuard } from "@/lib/http/with-webhook-guard";
 import { AppError, UnauthorizedError, ValidationError } from "@/lib/errors";
 import { getUserAgent } from "@/lib/http/client-ip";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
+import { withDedupedEvent } from "@/lib/dedup/processed-event";
 
 export const runtime = "nodejs";
 
@@ -120,54 +119,33 @@ export const POST = withWebhookGuard(
     // 200 duplicate → booking MAI importato, perdita permanente. Ora: check
     // idempotency; se gia' processato, skip. Altrimenti processa + marker al
     // fondo con P2002 catch (race concurrent retry).
-    const existing = await db.processedBokunEvent.findUnique({
-      where: { eventId },
-      select: { eventId: true },
-    });
-    if (existing) {
-      logger.info({ eventId, topic }, "Bokun webhook duplicate (pre-check)");
+    const dedup = await withDedupedEvent(
+      "ProcessedBokunEvent",
+      eventId,
+      { topic },
+      async () => {
+        if (!topic.startsWith("bookings/")) {
+          logger.debug({ topic }, "Bokun webhook topic outside bookings namespace");
+          // Topic non-bookings: nessun side effect ma marker scritto al fondo
+          // per evitare retry storm upstream.
+          return;
+        }
+
+        if (!HANDLED_TOPICS.has(topic)) {
+          // Topic noto ma non mappato (es. bookings/reschedule): import+sync
+          // comunque, cosi' il DB riflette lo stato upstream.
+          logger.warn({ topic }, "Bokun webhook topic unhandled, forcing import+sync");
+        }
+
+        const bokunBooking = await getBokunBooking(body.bookingId);
+        const imported = await importBokunBooking(bokunBooking);
+        await syncBookingAvailability(imported);
+      },
+    );
+
+    if (dedup.skipped) {
       return NextResponse.json({ received: true, duplicate: true });
     }
-
-    if (!topic.startsWith("bookings/")) {
-      logger.debug({ topic }, "Bokun webhook topic outside bookings namespace");
-      // Marker write: topic non-bookings non ha side effect pero' mark to
-      // avoid retry storm upstream.
-      await markProcessed(eventId, topic);
-      return NextResponse.json({ received: true });
-    }
-
-    if (!HANDLED_TOPICS.has(topic)) {
-      // Topic noto ma non mappato (es. bookings/reschedule): import+sync comunque,
-      // cosi' il DB riflette lo stato upstream.
-      logger.warn({ topic }, "Bokun webhook topic unhandled, forcing import+sync");
-    }
-
-    const bokunBooking = await getBokunBooking(body.bookingId);
-    const imported = await importBokunBooking(bokunBooking);
-    await syncBookingAvailability(imported);
-
-    // Marker ALLA FINE (solo se import+sync success). Se P2002, un retry
-    // concorrente ha vinto → skip silent. Se altro error, propaga → 500 →
-    // Bokun retry di nuovo (raro: side-effect gia' committati, retry nuovo
-    // import e' no-op via advisory lock + P2002 catch in importBokunBooking).
-    await markProcessed(eventId, topic);
-
     return NextResponse.json({ received: true });
   },
 );
-
-async function markProcessed(eventId: string, topic: string): Promise<void> {
-  try {
-    await db.processedBokunEvent.create({ data: { eventId, topic } });
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      logger.info(
-        { eventId, topic },
-        "Bokun marker race (concurrent retry completed first)",
-      );
-      return;
-    }
-    throw err;
-  }
-}

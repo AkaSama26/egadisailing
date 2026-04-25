@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { Prisma } from "@/generated/prisma/client";
 import { verifyBoataroundWebhook } from "@/lib/boataround/webhook-verifier";
 import { getBoataroundBooking } from "@/lib/boataround/bookings";
 import { boataroundWebhookBodySchema } from "@/lib/boataround/schemas";
 import { importBoataroundBooking } from "@/lib/boataround/adapters/booking";
 import { syncBookingAvailability } from "@/lib/boataround/sync-availability";
-import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { withWebhookGuard } from "@/lib/http/with-webhook-guard";
 import { AppError, UnauthorizedError, ValidationError } from "@/lib/errors";
 import { getUserAgent } from "@/lib/http/client-ip";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
+import { withDedupedEvent } from "@/lib/dedup/processed-event";
 
 export const runtime = "nodejs";
 
@@ -82,37 +81,20 @@ export const POST = withWebhookGuard(
     // aligned con Stripe + Bokun post-R28. Prima: marker INSERT-first → se
     // getBoataroundBooking o import/sync falliva, retry trovava dedup → 200
     // duplicate → booking mai importato permanentemente.
-    const existing = await db.processedBoataroundEvent.findUnique({
-      where: { eventId },
-      select: { eventId: true },
-    });
-    if (existing) {
-      logger.info(
-        { eventId, type: body.type },
-        "Boataround webhook duplicate (pre-check)",
-      );
+    const dedup = await withDedupedEvent(
+      "ProcessedBoataroundEvent",
+      eventId,
+      { eventType: body.type },
+      async () => {
+        const bokunBooking = await getBoataroundBooking(body.bookingId);
+        const imported = await importBoataroundBooking(bokunBooking);
+        await syncBookingAvailability(imported);
+      },
+    );
+
+    if (dedup.skipped) {
       return NextResponse.json({ received: true, duplicate: true });
     }
-
-    const bokunBooking = await getBoataroundBooking(body.bookingId);
-    const imported = await importBoataroundBooking(bokunBooking);
-    await syncBookingAvailability(imported);
-
-    try {
-      await db.processedBoataroundEvent.create({
-        data: { eventId, eventType: body.type },
-      });
-    } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-        logger.info(
-          { eventId, type: body.type },
-          "Boataround marker race (concurrent retry completed first)",
-        );
-      } else {
-        throw err;
-      }
-    }
-
     return NextResponse.json({ received: true });
   },
 );

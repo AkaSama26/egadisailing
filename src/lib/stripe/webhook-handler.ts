@@ -1,5 +1,4 @@
 import type Stripe from "stripe";
-import { Prisma } from "@/generated/prisma/client";
 import { confirmDirectBookingAfterPayment } from "@/lib/booking/confirm";
 import { sendEmail } from "@/lib/email/brevo";
 import { bookingConfirmationTemplate } from "@/lib/email/templates/booking-confirmation";
@@ -12,6 +11,7 @@ import { ValidationError } from "@/lib/errors";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import { formatItDay } from "@/lib/dates";
 import { bookingWithDetailsInclude } from "@/lib/booking/queries";
+import { withDedupedEvent } from "@/lib/dedup/processed-event";
 
 /**
  * Handler dei webhook Stripe.
@@ -30,62 +30,45 @@ import { bookingWithDetailsInclude } from "@/lib/booking/queries";
 export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
   logger.info({ type: event.type, id: event.id }, "Stripe event received");
 
-  // Early return se event gia' processato completamente
-  const existing = await db.processedStripeEvent.findUnique({
-    where: { eventId: event.id },
-  });
-  if (existing) {
-    logger.info({ eventId: event.id }, "Duplicate Stripe event, skipping");
-    return;
-  }
-
-  switch (event.type) {
-    case "payment_intent.succeeded":
-      await onPaymentIntentSucceeded(event.data.object);
-      break;
-    case "payment_intent.payment_failed":
-      await onPaymentIntentFailed(event.data.object);
-      break;
-    case "payment_intent.canceled":
-      // R23-S-ALTA-1: Stripe auto-cancel PI dopo 24h requires_payment_method
-      // + admin manual cancel via cancelPaymentIntent helper. Senza questo
-      // handler il booking restava PENDING fino al cron pending-gc (30min+).
-      await onPaymentIntentCanceled(event.data.object);
-      break;
-    case "charge.refunded":
-      await onChargeRefunded(event.data.object);
-      break;
-    case "charge.dispute.created":
-    case "charge.dispute.updated":
-    case "charge.dispute.closed":
-      // R27-CRIT-4: chargeback/dispute. Senza handler, l'evento finiva in
-      // `default` log + marker → admin NON notificato → slot BLOCKED per
-      // 30gg di dispute window senza possibilita' di rivendere. GDPR art.
-      // 33 + perdita revenue €500-2000/caso. Ora notify sincrono admin +
-      // log persistente (no release automatico: dispute potrebbe essere
-      // winnable).
-      await onChargeDispute(event.data.object as Stripe.Dispute, event.type);
-      break;
-    default:
-      logger.debug({ type: event.type }, "Unhandled stripe event");
-  }
-
-  // Mark event as processed AFTER all side-effects succeeded.
-  // Unique constraint previene doppio insert se Stripe retry atterra in
-  // un'altra istanza dopo il commit.
-  try {
-    await db.processedStripeEvent.create({
-      data: { eventId: event.id, eventType: event.type },
-    });
-  } catch (err) {
-    // R20-A1-2: check robusto su Prisma error code invece di string match
-    // sul message (che poteva cambiare tra versioni Prisma).
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      logger.info({ eventId: event.id }, "Event already marked processed by another worker");
-      return;
-    }
-    throw err;
-  }
+  // R28-CRIT-2: dedup pre-check (read-only) PRIMA degli side-effect, marker
+  // ALLA FINE post-side-effect. Helper centralizzato in `lib/dedup/processed-event`.
+  await withDedupedEvent(
+    "ProcessedStripeEvent",
+    event.id,
+    { eventType: event.type },
+    async () => {
+      switch (event.type) {
+        case "payment_intent.succeeded":
+          await onPaymentIntentSucceeded(event.data.object);
+          break;
+        case "payment_intent.payment_failed":
+          await onPaymentIntentFailed(event.data.object);
+          break;
+        case "payment_intent.canceled":
+          // R23-S-ALTA-1: Stripe auto-cancel PI dopo 24h requires_payment_method
+          // + admin manual cancel via cancelPaymentIntent helper. Senza questo
+          // handler il booking restava PENDING fino al cron pending-gc (30min+).
+          await onPaymentIntentCanceled(event.data.object);
+          break;
+        case "charge.refunded":
+          await onChargeRefunded(event.data.object);
+          break;
+        case "charge.dispute.created":
+        case "charge.dispute.updated":
+        case "charge.dispute.closed":
+          // R27-CRIT-4: chargeback/dispute. Senza handler, l'evento finiva in
+          // `default` log + marker → admin NON notificato → slot BLOCKED per
+          // 30gg di dispute window senza possibilita' di rivendere. GDPR art.
+          // 33 + perdita revenue €500-2000/caso. Ora notify sincrono admin +
+          // log persistente (no release automatico: dispute potrebbe essere
+          // winnable).
+          await onChargeDispute(event.data.object as Stripe.Dispute, event.type);
+          break;
+        default:
+          logger.debug({ type: event.type }, "Unhandled stripe event");
+      }
+    },
+  );
 }
 
 async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void> {

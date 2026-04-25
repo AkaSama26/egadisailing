@@ -5,6 +5,7 @@ import { addDays } from "@/lib/dates";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
+import { pruneProcessedEvents } from "@/lib/dedup/processed-event";
 
 export const runtime = "nodejs";
 
@@ -46,9 +47,7 @@ export const GET = withCronGuard(
     const now = new Date();
     const thirtyDaysAgo = addDays(now, -30);
     const ninetyDaysAgo = addDays(now, -90);
-    const threeSixtyFiveDaysAgo = addDays(now, -365);
     const sevenDaysAgo = addDays(now, -7);
-    const sixtyDaysAgo = addDays(now, -60);
     const fourteenDaysAgo = addDays(now, -14);
     const twoYearsAgo = addDays(now, -365 * 2);
 
@@ -104,11 +103,8 @@ export const GET = withCronGuard(
     }
 
     try {
-      results.stripeEventDeleted = (
-        await db.processedStripeEvent.deleteMany({
-          where: { processedAt: { lt: sixtyDaysAgo } },
-        })
-      ).count;
+      // 60d retention window: Stripe webhook retry max 30g + buffer audit.
+      results.stripeEventDeleted = await pruneProcessedEvents("ProcessedStripeEvent", 60);
     } catch (err) {
       errors.push("stripeEvent");
       logger.error({ err }, "StripeEvent retention cleanup failed");
@@ -119,11 +115,7 @@ export const GET = withCronGuard(
       // ±5min su x-bokun-date nel webhook route, un payload capturato non
       // puo' piu' essere replayato > 5min dopo l'emissione originale.
       // Storage: 64-byte hash × 1k events/day × 365d = ~23MB/y, trascurabile.
-      results.bokunEventDeleted = (
-        await db.processedBokunEvent.deleteMany({
-          where: { processedAt: { lt: threeSixtyFiveDaysAgo } },
-        })
-      ).count;
+      results.bokunEventDeleted = await pruneProcessedEvents("ProcessedBokunEvent", 365);
     } catch (err) {
       errors.push("bokunEvent");
       logger.error({ err }, "BokunEvent retention cleanup failed");
@@ -131,22 +123,14 @@ export const GET = withCronGuard(
 
     try {
       // R25-A3-C2: same 365d window di Bokun per consistenza replay defense.
-      results.boataroundEventDeleted = (
-        await db.processedBoataroundEvent.deleteMany({
-          where: { processedAt: { lt: threeSixtyFiveDaysAgo } },
-        })
-      ).count;
+      results.boataroundEventDeleted = await pruneProcessedEvents("ProcessedBoataroundEvent", 365);
     } catch (err) {
       errors.push("boataroundEvent");
       logger.error({ err }, "BoataroundEvent retention cleanup failed");
     }
 
     try {
-      results.charterEmailDeleted = (
-        await db.processedCharterEmail.deleteMany({
-          where: { processedAt: { lt: ninetyDaysAgo } },
-        })
-      ).count;
+      results.charterEmailDeleted = await pruneProcessedEvents("ProcessedCharterEmail", 90);
     } catch (err) {
       errors.push("charterEmail");
       logger.error({ err }, "CharterEmail retention cleanup failed");

@@ -12,6 +12,14 @@ import { db } from "@/lib/db";
  * `markMessageProcessed` usa insert-first con catch P2002 per idempotenza
  * anche in caso di race tra due run paralleli (non dovrebbe succedere
  * grazie al lease Redis, ma defense-in-depth).
+ *
+ * NOTE: questo modulo espone `wasMessageProcessed` + `markMessageProcessed`
+ * separati invece di una `withDedupedEvent` wrapper, perche' il cron
+ * caller (`api/cron/email-parser`) deve eseguire dispatch+parse+import
+ * tra il check e il mark con flussi early-return distinti (skippedUnmatched,
+ * skippedUnparsed) che non sarebbero gestibili nello scope del helper.
+ * Internamente l'implementazione usa lo stesso pattern findUnique +
+ * create+P2002-catch del helper centralizzato.
  */
 export function hashMessageKey(messageId: string, from: string): string {
   const normalized = `${messageId}|${from.toLowerCase().trim()}`;
