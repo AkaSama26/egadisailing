@@ -18,6 +18,7 @@ import {
   BOAT_EXCLUSIVE_SERVICE_TYPES,
   type CrossChannelConflict,
 } from "@/lib/booking/cross-channel-conflicts";
+import { upsertCustomerFromExternal } from "@/lib/booking/upsert-customer-from-external";
 import type {
   CharterPlatform,
   ExtractedCharterBooking,
@@ -131,19 +132,12 @@ export async function importCharterBooking(
         };
       }
 
-      const customer = await tx.customer.upsert({
-        where: { email: emailLower },
-        update: {
-          phone: input.customerPhone || undefined,
-          nationality: input.customerNationality || undefined,
-        },
-        create: {
-          email: emailLower,
-          firstName: input.customerFirstName,
-          lastName: input.customerLastName,
-          phone: input.customerPhone,
-          nationality: input.customerNationality,
-        },
+      const customer = await upsertCustomerFromExternal(tx, {
+        email: emailLower,
+        firstName: input.customerFirstName,
+        lastName: input.customerLastName,
+        phone: input.customerPhone,
+        nationality: input.customerNationality,
       });
 
       // R14 cross-OTA detection cross-source (incluso BOKUN/BOATAROUND/

@@ -17,6 +17,7 @@ import {
   isBoatExclusiveServiceType,
   type CrossChannelConflict,
 } from "@/lib/booking/cross-channel-conflicts";
+import { upsertCustomerFromExternal } from "@/lib/booking/upsert-customer-from-external";
 import type { BokunBookingSummary } from "../types";
 
 export interface ImportedBokunBooking {
@@ -186,21 +187,13 @@ export async function importBokunBooking(
         selfSource: "BOKUN",
       });
 
-      const customer = await tx.customer.upsert({
-        where: { email: emailLower },
-        update: {
-          phone: booking.mainContactDetails.phoneNumber || undefined,
-          nationality: booking.mainContactDetails.country || undefined,
-          language: booking.mainContactDetails.language || undefined,
-        },
-        create: {
-          email: emailLower,
-          firstName: booking.mainContactDetails.firstName,
-          lastName: booking.mainContactDetails.lastName,
-          phone: booking.mainContactDetails.phoneNumber,
-          nationality: booking.mainContactDetails.country,
-          language: booking.mainContactDetails.language,
-        },
+      const customer = await upsertCustomerFromExternal(tx, {
+        email: emailLower,
+        firstName: booking.mainContactDetails.firstName,
+        lastName: booking.mainContactDetails.lastName,
+        phone: booking.mainContactDetails.phoneNumber,
+        nationality: booking.mainContactDetails.country,
+        language: booking.mainContactDetails.language,
       });
 
       const created = await tx.booking.create({

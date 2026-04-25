@@ -16,6 +16,7 @@ import {
   BOAT_EXCLUSIVE_SERVICE_TYPES,
   type CrossChannelConflict,
 } from "@/lib/booking/cross-channel-conflicts";
+import { upsertCustomerFromExternal } from "@/lib/booking/upsert-customer-from-external";
 import type { BoataroundBookingResponse } from "../schemas";
 
 export interface ImportedBoataroundBooking {
@@ -139,19 +140,12 @@ export async function importBoataroundBooking(
         return { booking: updated, mode: "updated" as const };
       }
 
-      const customer = await tx.customer.upsert({
-        where: { email: emailLower },
-        update: {
-          phone: booking.customer.phone || undefined,
-          nationality: booking.customer.country || undefined,
-        },
-        create: {
-          email: emailLower,
-          firstName: booking.customer.firstName,
-          lastName: booking.customer.lastName,
-          phone: booking.customer.phone,
-          nationality: booking.customer.country,
-        },
+      const customer = await upsertCustomerFromExternal(tx, {
+        email: emailLower,
+        firstName: booking.customer.firstName,
+        lastName: booking.customer.lastName,
+        phone: booking.customer.phone,
+        nationality: booking.customer.country,
       });
 
       // R14 cross-OTA detection (cross-source inclusi BOKUN + charter, non
