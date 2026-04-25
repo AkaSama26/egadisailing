@@ -323,7 +323,9 @@ describe("R25-A2-A4: upsertPricingPeriod overlap check in tx", () => {
       "@/app/admin/(dashboard)/prezzi/actions"
     );
 
-    const results = await Promise.allSettled([
+    // Phase 6: action migrated to withAdminAction → returns {ok:true|false}
+    // tuple instead of throw. Test asserts on the tuple shape.
+    const results = await Promise.all([
       upsertPricingPeriod({
         serviceId: service.id,
         label: "Estate A",
@@ -342,14 +344,15 @@ describe("R25-A2-A4: upsertPricingPeriod overlap check in tx", () => {
       }),
     ]);
 
-    const fulfilled = results.filter((r) => r.status === "fulfilled");
-    const rejected = results.filter((r) => r.status === "rejected");
+    const succeeded = results.filter((r) => r.ok);
+    const failed = results.filter((r) => !r.ok);
 
-    // Advisory lock serializza dentro tx → esattamente 1 succ + 1 overlap
-    // ValidationError.
-    expect(fulfilled).toHaveLength(1);
-    expect(rejected).toHaveLength(1);
-    expect((rejected[0] as PromiseRejectedResult).reason.message).toMatch(/Overlap/i);
+    // Advisory lock serializza dentro tx → esattamente 1 succ + 1 overlap.
+    expect(succeeded).toHaveLength(1);
+    expect(failed).toHaveLength(1);
+    const failedResult = failed[0];
+    if (failedResult.ok) throw new Error("unreachable");
+    expect(failedResult.message).toMatch(/Overlap/i);
 
     // DB deve avere 1 sola PricingPeriod per il service.
     const periods = await db.pricingPeriod.findMany({

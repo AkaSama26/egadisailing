@@ -42,7 +42,8 @@ export default async function CrewPage() {
                 <form
                   action={async () => {
                     "use server";
-                    await toggleCrewActive(m.id, !m.active);
+                    const res = await toggleCrewActive({ id: m.id, active: !m.active });
+                    if (!res.ok) throw new Error(res.message);
                   }}
                 >
                   <SubmitButton className="text-xs text-slate-600 hover:underline">
@@ -59,7 +60,7 @@ export default async function CrewPage() {
         action={async (fd) => {
           "use server";
           const dailyRateStr = String(fd.get("dailyRate") ?? "").trim();
-          await upsertCrewMember({
+          const res = await upsertCrewMember({
             name: String(fd.get("name")),
             role: fd.get("role") as "SKIPPER" | "CHEF" | "HOSTESS",
             phone: String(fd.get("phone") ?? "").trim() || undefined,
@@ -67,6 +68,7 @@ export default async function CrewPage() {
             dailyRateEur: dailyRateStr ? parseFloat(dailyRateStr) : undefined,
             active: true,
           });
+          if (!res.ok) throw new Error(res.message);
         }}
         className="bg-white rounded-xl border p-5 grid grid-cols-1 md:grid-cols-5 gap-2"
       >

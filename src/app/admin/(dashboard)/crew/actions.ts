@@ -1,68 +1,70 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
-import type { CrewRole } from "@/generated/prisma/enums";
+import { CrewRole } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { ValidationError } from "@/lib/errors";
+import { withAdminAction } from "@/lib/admin/with-admin-action";
 
-export interface UpsertCrewMemberInput {
-  id?: string;
-  name: string;
-  role: CrewRole;
-  phone?: string;
-  email?: string;
-  dailyRateEur?: number;
-  active: boolean;
-}
-
-export async function upsertCrewMember(input: UpsertCrewMemberInput): Promise<void> {
-  const { userId } = await requireAdmin();
-  const name = input.name.trim();
-  if (!name) throw new ValidationError("Nome obbligatorio");
-  if (input.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.email)) {
-    throw new ValidationError("Email non valida");
-  }
-
+const upsertCrewMemberSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Nome obbligatorio").transform((s) => s.trim()),
+  role: z.nativeEnum(CrewRole),
+  phone: z.string().optional(),
+  email: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+      "Email non valida",
+    ),
   // Round 10 Sec-M6 + M5: NaN guard + range cap.
-  if (typeof input.dailyRateEur === "number") {
-    if (!Number.isFinite(input.dailyRateEur) || input.dailyRateEur < 0) {
-      throw new ValidationError("dailyRateEur must be a non-negative number");
-    }
-    if (input.dailyRateEur > 10_000) {
-      throw new ValidationError("dailyRateEur fuori range (max 10.000€/giorno)");
-    }
-  }
+  dailyRateEur: z
+    .number()
+    .nonnegative("dailyRateEur must be a non-negative number")
+    .max(10_000, "dailyRateEur fuori range (max 10.000€/giorno)")
+    .optional(),
+  active: z.boolean(),
+});
 
-  const data = {
-    name,
-    role: input.role,
-    phone: input.phone?.trim() || null,
-    email: input.email?.trim() || null,
-    dailyRate:
-      typeof input.dailyRateEur === "number"
-        ? new Prisma.Decimal(input.dailyRateEur.toFixed(2))
-        : null,
-    active: input.active,
-  };
+export type UpsertCrewMemberInput = z.input<typeof upsertCrewMemberSchema>;
 
-  const result = input.id
-    ? await db.crewMember.update({ where: { id: input.id }, data })
-    : await db.crewMember.create({ data });
+export const upsertCrewMember = withAdminAction(
+  {
+    schema: upsertCrewMemberSchema,
+    revalidatePaths: ["/admin/crew"],
+  },
+  async (input, { userId }) => {
+    const data = {
+      name: input.name,
+      role: input.role,
+      phone: input.phone?.trim() || null,
+      email: input.email?.trim() || null,
+      dailyRate:
+        typeof input.dailyRateEur === "number"
+          ? new Prisma.Decimal(input.dailyRateEur.toFixed(2))
+          : null,
+      active: input.active,
+    };
 
-  await auditLog({
-    userId,
-    action: input.id ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
-    entity: "CrewMember",
-    entityId: result.id,
-    after: { name: data.name, role: data.role, active: data.active },
-  });
+    const result = input.id
+      ? await db.crewMember.update({ where: { id: input.id }, data })
+      : await db.crewMember.create({ data });
 
-  revalidatePath("/admin/crew");
-}
+    await auditLog({
+      userId,
+      action: input.id ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
+      entity: "CrewMember",
+      entityId: result.id,
+      after: { name: data.name, role: data.role, active: data.active },
+    });
+  },
+);
 
 export async function assignCrewToBooking(
   bookingId: string,
@@ -109,14 +111,23 @@ export async function assignCrewToBooking(
   revalidatePath("/admin/crew");
 }
 
-export async function toggleCrewActive(id: string, active: boolean): Promise<void> {
-  const { userId } = await requireAdmin();
-  await db.crewMember.update({ where: { id }, data: { active } });
-  await auditLog({
-    userId,
-    action: active ? AUDIT_ACTIONS.ACTIVATE : AUDIT_ACTIONS.DEACTIVATE,
-    entity: "CrewMember",
-    entityId: id,
-  });
-  revalidatePath("/admin/crew");
-}
+const toggleCrewActiveSchema = z.object({
+  id: z.string().min(1),
+  active: z.boolean(),
+});
+
+export const toggleCrewActive = withAdminAction(
+  {
+    schema: toggleCrewActiveSchema,
+    revalidatePaths: ["/admin/crew"],
+  },
+  async (input, { userId }) => {
+    await db.crewMember.update({ where: { id: input.id }, data: { active: input.active } });
+    await auditLog({
+      userId,
+      action: input.active ? AUDIT_ACTIONS.ACTIVATE : AUDIT_ACTIONS.DEACTIVATE,
+      entity: "CrewMember",
+      entityId: input.id,
+    });
+  },
+);

@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
+import { withAdminAction } from "@/lib/admin/with-admin-action";
 import { refundPayment, cancelPaymentIntent, getChargeRefundState } from "@/lib/stripe/payment-intents";
 import { fromCents, formatEurCents } from "@/lib/pricing/cents";
 import { sendEmail } from "@/lib/email/brevo";
@@ -291,28 +293,36 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
   revalidatePath("/admin/calendario");
 }
 
-export async function addBookingNote(bookingId: string, note: string): Promise<void> {
-  const { userId } = await requireAdmin();
-  const clean = note.trim();
-  if (!clean) return;
-  if (clean.length > 2000) {
-    throw new ValidationError("Nota troppo lunga (max 2000 char)");
-  }
+const addBookingNoteSchema = z.object({
+  bookingId: z.string().min(1),
+  note: z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().max(2000, "Nota troppo lunga (max 2000 char)")),
+});
 
-  await db.bookingNote.create({
-    data: { bookingId, note: clean, authorId: userId },
-  });
+export const addBookingNote = withAdminAction(
+  {
+    schema: addBookingNoteSchema,
+    revalidatePaths: (input) => [`/admin/prenotazioni/${input.bookingId}`],
+  },
+  async (input, { userId }) => {
+    const clean = input.note;
+    if (!clean) return;
 
-  await auditLog({
-    userId,
-    action: AUDIT_ACTIONS.ADD_NOTE,
-    entity: "Booking",
-    entityId: bookingId,
-    after: { noteLength: clean.length },
-  });
+    await db.bookingNote.create({
+      data: { bookingId: input.bookingId, note: clean, authorId: userId },
+    });
 
-  revalidatePath(`/admin/prenotazioni/${bookingId}`);
-}
+    await auditLog({
+      userId,
+      action: AUDIT_ACTIONS.ADD_NOTE,
+      entity: "Booking",
+      entityId: input.bookingId,
+      after: { noteLength: clean.length },
+    });
+  },
+);
 
 export interface RegisterPaymentInput {
   bookingId: string;

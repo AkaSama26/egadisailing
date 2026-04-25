@@ -299,7 +299,11 @@ export default async function BookingDetailPage({
         <form
           action={async (fd) => {
             "use server";
-            await addBookingNote(booking.id, String(fd.get("note") ?? ""));
+            const res = await addBookingNote({
+              bookingId: booking.id,
+              note: String(fd.get("note") ?? ""),
+            });
+            if (!res.ok) throw new Error(res.message);
           }}
           className="space-y-2 mb-4"
         >

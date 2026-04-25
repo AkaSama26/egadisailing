@@ -66,7 +66,7 @@ export default async function PrezziPage() {
         <form
           action={async (fd) => {
             "use server";
-            await upsertPricingPeriod({
+            const res = await upsertPricingPeriod({
               serviceId: String(fd.get("serviceId")),
               label: String(fd.get("label")),
               startDate: String(fd.get("startDate")),
@@ -74,6 +74,7 @@ export default async function PrezziPage() {
               pricePerPerson: parseFloat(String(fd.get("pricePerPerson")).replace(",", ".")),
               year: parseInt(String(fd.get("year")), 10),
             });
+            if (!res.ok) throw new Error(res.message);
           }}
           className="grid grid-cols-1 md:grid-cols-6 gap-2 border-t pt-4"
         >
@@ -150,7 +151,8 @@ export default async function PrezziPage() {
                 <form
                   action={async () => {
                     "use server";
-                    await deleteHotDayRule(r.id);
+                    const res = await deleteHotDayRule({ id: r.id });
+                    if (!res.ok) throw new Error(res.message);
                   }}
                 >
                   <SubmitButton
@@ -179,7 +181,7 @@ export default async function PrezziPage() {
                   .map((n) => parseInt(n.trim(), 10))
                   .filter((n) => !isNaN(n))
               : [];
-            await upsertHotDayRule({
+            const res = await upsertHotDayRule({
               name: String(fd.get("name")),
               dateRangeStart: String(fd.get("dateRangeStart")),
               dateRangeEnd: String(fd.get("dateRangeEnd")),
@@ -189,6 +191,7 @@ export default async function PrezziPage() {
               priority: parseInt(String(fd.get("priority")), 10),
               active: fd.get("active") === "on",
             });
+            if (!res.ok) throw new Error(res.message);
           }}
           className="grid grid-cols-1 md:grid-cols-6 gap-2 border-t pt-4"
         >
