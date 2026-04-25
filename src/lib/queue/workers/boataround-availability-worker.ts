@@ -1,8 +1,8 @@
-import { createWorker, registerWorker, QUEUE_NAMES } from "@/lib/queue";
+import { QUEUE_NAMES } from "@/lib/queue";
+import { defineWorker } from "@/lib/queue/define-worker";
 import { updateBoataroundAvailability } from "@/lib/boataround/availability";
 import { isBoataroundConfigured } from "@/lib/boataround/client";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
 import { parseIsoDay } from "@/lib/dates";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
 
@@ -16,28 +16,14 @@ interface AvailabilityJob {
  * Pusha lo stato AVAILABLE/BLOCKED su Boataround con limiter upstream 10/s.
  */
 export function startBoataroundAvailabilityWorker() {
-  const worker = createWorker<AvailabilityJob>(
-    QUEUE_NAMES.AVAIL_BOATAROUND,
-    async (job) => {
-      // R23-Q-CRITICA-1: queue dedicata — no early-return drop.
-      if (job.name !== "availability.update") {
-        logger.warn(
-          { jobName: job.name, queue: QUEUE_NAMES.AVAIL_BOATAROUND },
-          "Unexpected job name on Boataround availability queue",
-        );
-        return;
-      }
-      const { data } = job.data;
-      if (!data) return;
-
-      if (!isBoataroundConfigured()) {
-        logger.warn(
-          { boatId: data.boatId, date: data.date },
-          "Boataround not configured, skipping availability sync",
-        );
-        return;
-      }
-
+  return defineWorker<AvailabilityJob, AvailabilityUpdateJobPayload>({
+    queue: QUEUE_NAMES.AVAIL_BOATAROUND,
+    jobName: "availability.update",
+    label: "boataround-availability",
+    configCheck: isBoataroundConfigured,
+    configCheckLogContext: (data) => ({ boatId: data.boatId, date: data.date }),
+    workerOptions: { concurrency: 3, limiter: { max: 10, duration: 1000 } },
+    handler: async (data) => {
       // Re-read DB prima di pushare upstream: coalescenza jobId BullMQ
       // garantisce l'ultimo job vinca per ID, ma job con date/boat diverse
       // o order stale possono portare status obsoleto nel payload. Leggiamo
@@ -56,8 +42,5 @@ export function startBoataroundAvailabilityWorker() {
         available: effectiveStatus === "AVAILABLE",
       });
     },
-    { concurrency: 3, limiter: { max: 10, duration: 1000 } },
-  );
-  registerWorker(worker);
-  return worker;
+  });
 }

@@ -1,4 +1,5 @@
-import { createWorker, registerWorker, QUEUE_NAMES } from "@/lib/queue";
+import { QUEUE_NAMES } from "@/lib/queue";
+import { defineWorker } from "@/lib/queue/define-worker";
 import { createManualAlert } from "@/lib/charter/manual-alerts";
 import { logger } from "@/lib/logger";
 import { CHANNELS } from "@/lib/channels";
@@ -17,19 +18,15 @@ interface AvailabilityJob {
  * e lasciamo all'operatore la sincronizzazione esterna.
  */
 export function startManualAlertWorker() {
-  const worker = createWorker<AvailabilityJob>(
-    QUEUE_NAMES.AVAIL_MANUAL,
-    async (job) => {
-      // R23-Q-CRITICA-1: queue dedicata — no early-return drop.
-      if (job.name !== "availability.update") {
-        logger.warn(
-          { jobName: job.name, queue: QUEUE_NAMES.AVAIL_MANUAL },
-          "Unexpected job name on manual alert queue",
-        );
-        return;
-      }
-      const { data } = job.data;
-      if (!data) return;
+  return defineWorker<AvailabilityJob, AvailabilityUpdateJobPayload>({
+    queue: QUEUE_NAMES.AVAIL_MANUAL,
+    jobName: "availability.update",
+    label: "manual-alert",
+    // R23-Q-ALTA-2: concurrency=1 — createManualAlert fa advisory lock,
+    // concurrency=3 serialize inutile + scaricava pool Prisma + SIGTERM
+    // timeout risk con 3 active jobs.
+    workerOptions: { concurrency: 1 },
+    handler: async (data) => {
       // Sanity guard: fan-out routing only enqueues CLICKANDBOAT/NAUTAL here,
       // un payload diverso significa producer bug — log+skip invece di drop.
       if (data.targetChannel !== CHANNELS.CLICKANDBOAT && data.targetChannel !== CHANNELS.NAUTAL) {
@@ -48,11 +45,5 @@ export function startManualAlertWorker() {
         bookingId: data.originBookingId,
       });
     },
-    // R23-Q-ALTA-2: concurrency=1 — createManualAlert fa advisory lock,
-    // concurrency=3 serialize inutile + scaricava pool Prisma + SIGTERM
-    // timeout risk con 3 active jobs.
-    { concurrency: 1 },
-  );
-  registerWorker(worker);
-  return worker;
+  });
 }

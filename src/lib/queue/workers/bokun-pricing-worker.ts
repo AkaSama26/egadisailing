@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
-import { createWorker, registerWorker, QUEUE_NAMES } from "@/lib/queue";
+import { QUEUE_NAMES } from "@/lib/queue";
+import { defineWorker } from "@/lib/queue/define-worker";
 import { upsertBokunPriceOverride } from "@/lib/bokun/pricing";
 import { isBokunConfigured } from "@/lib/bokun";
 import { db } from "@/lib/db";
@@ -22,25 +23,14 @@ interface PricingJob {
  * manuale se il markup cambia).
  */
 export function startBokunPricingWorker() {
-  const worker = createWorker<PricingJob>(
-    QUEUE_NAMES.PRICING_BOKUN,
-    async (job) => {
-      // R23-Q-CRITICA-1: queue dedicata — no early-return drop.
-      if (job.name !== "pricing.bokun.sync") {
-        logger.warn(
-          { jobName: job.name, queue: QUEUE_NAMES.PRICING_BOKUN },
-          "Unexpected job name on Bokun pricing queue",
-        );
-        return;
-      }
-      const { data } = job.data;
-      if (!data) return;
-
-      if (!isBokunConfigured()) {
-        logger.warn({ serviceId: data.serviceId }, "Bokun not configured, skipping pricing sync");
-        return;
-      }
-
+  return defineWorker<PricingJob, BokunPricingSyncPayload>({
+    queue: QUEUE_NAMES.PRICING_BOKUN,
+    jobName: "pricing.bokun.sync",
+    label: "bokun-pricing",
+    configCheck: isBokunConfigured,
+    configCheckLogContext: (data) => ({ serviceId: data.serviceId }),
+    workerOptions: { concurrency: 2, limiter: { max: 5, duration: 1000 } },
+    handler: async (data) => {
       const service = await db.service.findUnique({ where: { id: data.serviceId } });
       if (!service || !service.bokunProductId) {
         logger.warn(
@@ -137,8 +127,5 @@ export function startBokunPricingWorker() {
         },
       });
     },
-    { concurrency: 2, limiter: { max: 5, duration: 1000 } },
-  );
-  registerWorker(worker);
-  return worker;
+  });
 }

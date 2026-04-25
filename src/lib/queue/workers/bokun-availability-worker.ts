@@ -1,8 +1,8 @@
-import { createWorker, registerWorker, QUEUE_NAMES } from "@/lib/queue";
+import { QUEUE_NAMES } from "@/lib/queue";
+import { defineWorker } from "@/lib/queue/define-worker";
 import { updateBokunAvailability } from "@/lib/bokun/availability";
 import { isBokunConfigured } from "@/lib/bokun";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
 import { parseIsoDay } from "@/lib/dates";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
 
@@ -48,30 +48,16 @@ async function getServicesForBoat(boatId: string) {
  * Push su Bokun con `capacityMax` del servizio se AVAILABLE, 0 se BLOCKED.
  */
 export function startBokunAvailabilityWorker() {
-  const worker = createWorker<AvailabilityJob>(
-    QUEUE_NAMES.AVAIL_BOKUN,
-    async (job) => {
-      // R23-Q-CRITICA-1: queue dedicata — no early-return drop. Manteniamo
-      // il check name come guard-rail (producer potrebbe evolvere, ma non
-      // deve droppare silente: log+throw per visibilita').
-      if (job.name !== "availability.update") {
-        logger.warn(
-          { jobName: job.name, queue: QUEUE_NAMES.AVAIL_BOKUN },
-          "Unexpected job name on Bokun availability queue",
-        );
-        return;
-      }
-      const { data } = job.data;
-      if (!data) return;
-
-      if (!isBokunConfigured()) {
-        logger.warn(
-          { boatId: data.boatId, date: data.date },
-          "Bokun not configured, skipping availability sync",
-        );
-        return;
-      }
-
+  return defineWorker<AvailabilityJob, AvailabilityUpdateJobPayload>({
+    queue: QUEUE_NAMES.AVAIL_BOKUN,
+    jobName: "availability.update",
+    label: "bokun-availability",
+    configCheck: isBokunConfigured,
+    configCheckLogContext: (data) => ({ boatId: data.boatId, date: data.date }),
+    // Limiter: max 10 POST/sec verso Bokun per evitare 429. Concurrency=3
+    // mantiene il throughput su job di canali diversi quando verranno aggiunti.
+    workerOptions: { concurrency: 3, limiter: { max: 10, duration: 1000 } },
+    handler: async (data) => {
       // R23-Q-CRITICA-2: re-read DB prima di push upstream. jobId coalescence
       // agisce solo su job waiting/delayed — una volta active, un nuovo
       // enqueue con stesso jobId non sostituisce. Burst su stessa cella con
@@ -97,10 +83,5 @@ export function startBokunAvailabilityWorker() {
         });
       }
     },
-    // Limiter: max 10 POST/sec verso Bokun per evitare 429. Concurrency=3
-    // mantiene il throughput su job di canali diversi quando verranno aggiunti.
-    { concurrency: 3, limiter: { max: 10, duration: 1000 } },
-  );
-  registerWorker(worker);
-  return worker;
+  });
 }
