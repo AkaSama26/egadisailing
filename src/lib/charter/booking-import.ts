@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { fromCents } from "@/lib/pricing/cents";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { blockDates, releaseDates } from "@/lib/availability/service";
+import { blockDates, releaseBookingDates } from "@/lib/availability/service";
 import { CHANNELS, type Channel } from "@/lib/channels";
 import { toUtcDay, parseDateLikelyLocalDay } from "@/lib/dates";
 import {
@@ -19,6 +19,7 @@ import {
   type CrossChannelConflict,
 } from "@/lib/booking/cross-channel-conflicts";
 import { upsertCustomerFromExternal } from "@/lib/booking/upsert-customer-from-external";
+import { createManualAlert } from "@/lib/charter/manual-alerts";
 import type {
   CharterPlatform,
   ExtractedCharterBooking,
@@ -42,6 +43,13 @@ export interface ImportedCharterBooking {
   startDate: Date;
   endDate: Date;
   status: BookingStatus;
+  shouldSyncAvailability?: boolean;
+  previous?: {
+    boatId: string;
+    startDate: Date;
+    endDate: Date;
+    status: BookingStatus;
+  };
 }
 
 const PLATFORM_TO_CHANNEL: Record<CharterPlatform, Channel> = {
@@ -107,31 +115,6 @@ export async function importCharterBooking(
         include: { booking: true },
       });
 
-      if (existing) {
-        // Email di cancellazione su booking gia' importato come CONFIRMED:
-        // aggiorna lo status + triggera releaseDates post-commit.
-        const targetStatus: BookingStatus =
-          input.status === "CANCELLED" ? "CANCELLED" : existing.booking.status;
-        if (targetStatus !== existing.booking.status) {
-          const updated = await tx.booking.update({
-            where: { id: existing.bookingId },
-            data: { status: targetStatus },
-            select: { id: true, boatId: true, startDate: true, endDate: true, status: true },
-          });
-          return { booking: updated, mode: "cancelled" as const };
-        }
-        return {
-          booking: {
-            id: existing.bookingId,
-            boatId: existing.booking.boatId,
-            startDate: existing.booking.startDate,
-            endDate: existing.booking.endDate,
-            status: existing.booking.status,
-          },
-          mode: "skipped" as const,
-        };
-      }
-
       const customer = await upsertCustomerFromExternal(tx, {
         email: emailLower,
         firstName: input.customerFirstName,
@@ -139,6 +122,74 @@ export async function importCharterBooking(
         phone: input.customerPhone,
         nationality: input.customerNationality,
       });
+
+      if (existing) {
+        const previous = {
+          boatId: existing.booking.boatId,
+          startDate: existing.booking.startDate,
+          endDate: existing.booking.endDate,
+          status: existing.booking.status,
+        };
+        const targetStatus: BookingStatus =
+          input.status === "CANCELLED" ? "CANCELLED" : "CONFIRMED";
+        detectedConflicts = await detectCrossChannelConflicts(tx, {
+          boatId: input.boatId,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          selfSource: input.platform,
+          includeSameSource: true,
+          selfBookingId: existing.bookingId,
+        });
+        if (detectedConflicts.length > 0 && targetStatus !== "CANCELLED") {
+          return {
+            booking: {
+              id: existing.bookingId,
+              boatId: existing.booking.boatId,
+              startDate: existing.booking.startDate,
+              endDate: existing.booking.endDate,
+              status: existing.booking.status,
+            },
+            previous,
+            mode: "conflict" as const,
+          };
+        }
+
+        const updated = await tx.booking.update({
+          where: { id: existing.bookingId },
+          data: {
+            customerId: customer.id,
+            serviceId: service.id,
+            boatId: input.boatId,
+            startDate: input.startDate,
+            endDate: input.endDate,
+            totalPrice: new Prisma.Decimal(totalPriceStr),
+            currency: input.currency,
+            status: targetStatus,
+            externalRef: input.platformBookingRef,
+            exclusiveSlot: true,
+            claimsAvailability: true,
+          },
+          select: { id: true, boatId: true, startDate: true, endDate: true, status: true },
+        });
+        await tx.charterBooking.update({
+          where: { bookingId: existing.bookingId },
+          data: {
+            rawPayload: {
+              platform: input.platform,
+              ref: input.platformBookingRef,
+              startDate: input.startDate.toISOString().slice(0, 10),
+              endDate: input.endDate.toISOString().slice(0, 10),
+              totalAmountCents: input.totalAmountCents,
+              currency: input.currency,
+            } satisfies Prisma.InputJsonValue,
+          },
+        });
+        return {
+          booking: updated,
+          previous,
+          mode: targetStatus === "CANCELLED" ? ("cancelled" as const) : ("updated" as const),
+        };
+      }
 
       // R14 cross-OTA detection cross-source (incluso BOKUN/BOATAROUND/
       // charter platforms). Charter ha gia' committato upstream → warn +
@@ -148,7 +199,21 @@ export async function importCharterBooking(
         startDate: input.startDate,
         endDate: input.endDate,
         selfSource: input.platform,
+        includeSameSource: true,
       });
+      if (detectedConflicts.length > 0 && input.status !== "CANCELLED") {
+        return {
+          booking: {
+            id: `${input.platform}-CONFLICT-${input.platformBookingRef}`,
+            boatId: input.boatId,
+            startDate: input.startDate,
+            endDate: input.endDate,
+            status: "CONFIRMED" as BookingStatus,
+          },
+          previous: null,
+          mode: "conflict" as const,
+        };
+      }
 
       const created = await tx.booking.create({
         data: {
@@ -164,6 +229,8 @@ export async function importCharterBooking(
           totalPrice: new Prisma.Decimal(totalPriceStr),
           currency: input.currency,
           status: input.status === "CANCELLED" ? "CANCELLED" : "CONFIRMED",
+          exclusiveSlot: true,
+          claimsAvailability: true,
           charterBooking: {
             create: {
               platformName: input.platform,
@@ -185,12 +252,34 @@ export async function importCharterBooking(
         select: { id: true, boatId: true, startDate: true, endDate: true, status: true },
       });
 
-      return { booking: created, mode: "created" as const };
+      return { booking: created, previous: null, mode: "created" as const };
     });
 
     // Fan-out availability POST-commit per evitare ghost jobs su rollback.
     const channel = PLATFORM_TO_CHANNEL[input.platform];
-    if (result.mode === "created" && result.booking.status !== "CANCELLED") {
+    if (result.previous && result.previous.status !== "CANCELLED" && result.previous.status !== "REFUNDED") {
+      const rangeChanged =
+        result.previous.boatId !== result.booking.boatId ||
+        result.previous.startDate.getTime() !== result.booking.startDate.getTime() ||
+        result.previous.endDate.getTime() !== result.booking.endDate.getTime() ||
+        result.booking.status === "CANCELLED" ||
+        result.booking.status === "REFUNDED";
+      if (rangeChanged) {
+        await releaseBookingDates({
+          bookingId: result.booking.id,
+          boatId: result.previous.boatId,
+          startDate: result.previous.startDate,
+          endDate: result.previous.endDate,
+          sourceChannel: channel,
+        });
+      }
+    }
+
+    if (
+      (result.mode === "created" || result.mode === "updated") &&
+      result.booking.status !== "CANCELLED" &&
+      result.booking.status !== "REFUNDED"
+    ) {
       await blockDates(
         result.booking.boatId,
         result.booking.startDate,
@@ -203,12 +292,13 @@ export async function importCharterBooking(
       // `mode==="skipped" && status==="CANCELLED"` (email cancellazione
       // replay su booking gia' cancellato) scatenava fan-out inutile —
       // idempotent via self-echo ma sprecava job BullMQ + log noise.
-      await releaseDates(
-        result.booking.boatId,
-        result.booking.startDate,
-        result.booking.endDate,
-        channel,
-      );
+      await releaseBookingDates({
+        bookingId: result.booking.id,
+        boatId: result.booking.boatId,
+        startDate: result.booking.startDate,
+        endDate: result.booking.endDate,
+        sourceChannel: channel,
+      });
     }
 
     logger.info(
@@ -224,7 +314,16 @@ export async function importCharterBooking(
     // R14 cross-OTA post-commit incident recording.
     // R24-A1-A4: un import charter CANCELLED (email di disdetta al primo
     // ingest) non deve emettere alert — non e' un booking attivo.
-    if (
+    if (result.mode === "conflict" && detectedConflicts.length > 0) {
+      await recordCharterConflictAlerts({
+        platform: input.platform,
+        platformBookingRef: input.platformBookingRef,
+        boatId: result.booking.boatId,
+        startDate: result.booking.startDate,
+        endDate: result.booking.endDate,
+        conflicts: detectedConflicts,
+      });
+    } else if (
       result.mode === "created" &&
       result.booking.status !== "CANCELLED" &&
       detectedConflicts.length > 0
@@ -246,6 +345,8 @@ export async function importCharterBooking(
       startDate: result.booking.startDate,
       endDate: result.booking.endDate,
       status: result.booking.status,
+      shouldSyncAvailability: result.mode !== "conflict",
+      previous: result.previous ?? undefined,
     };
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -276,6 +377,28 @@ export async function importCharterBooking(
       };
     }
     throw err;
+  }
+}
+
+async function recordCharterConflictAlerts(input: {
+  platform: CharterPlatform;
+  platformBookingRef: string;
+  boatId: string;
+  startDate: Date;
+  endDate: Date;
+  conflicts: CrossChannelConflict[];
+}): Promise<void> {
+  for (const conflict of input.conflicts) {
+    await createManualAlert({
+      channel: input.platform,
+      boatId: input.boatId,
+      date: input.startDate,
+      action: "BLOCK",
+      notes:
+        `${input.platform} booking ${input.platformBookingRef} overlaps existing booking ` +
+        `${conflict.confirmationCode} (${conflict.source}) from ${input.startDate.toISOString().slice(0, 10)} ` +
+        `to ${input.endDate.toISOString().slice(0, 10)}. Import skipped; resolve manually upstream.`,
+    });
   }
 }
 

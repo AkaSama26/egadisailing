@@ -64,6 +64,17 @@ export async function createOverrideRequest(
     conflictSourceChannels = Array.from(new Set(conflicts.map((c) => c.source)));
   }
 
+  const nonDirectChannels = conflictSourceChannels.filter((ch) => ch !== "DIRECT");
+  if (nonDirectChannels.length > 0) {
+    throw new ValidationError(
+      "Override consentito solo per conflitti DIRECT. Prenotazioni da portali aggregatori bloccano il calendario master.",
+      {
+        code: "OVERRIDE_EXTERNAL_CONFLICT_FORBIDDEN",
+        channels: nonDirectChannels,
+      },
+    );
+  }
+
   const request = await tx.overrideRequest.create({
     data: {
       newBookingId: input.newBookingId,
@@ -75,6 +86,11 @@ export async function createOverrideRequest(
       status: "PENDING",
     },
     select: { id: true },
+  });
+
+  await tx.booking.update({
+    where: { id: input.newBookingId },
+    data: { claimsAvailability: false },
   });
 
   // Supersede inferior PENDING requests on overlapping slot + lower revenue.
@@ -107,7 +123,7 @@ export async function createOverrideRequest(
     });
     await tx.booking.update({
       where: { id: inferior.newBooking.id },
-      data: { status: "CANCELLED" },
+      data: { status: "CANCELLED", claimsAvailability: false },
     });
     supersededIds.push(inferior.id);
   }

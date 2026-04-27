@@ -38,7 +38,11 @@ export default async function ExperiencesPage({
   });
 
   const serialized = services
-    .filter((s) => s.durationType !== "HALF_DAY_MORNING")
+    .filter(
+      (s) =>
+        s.durationType !== "HALF_DAY_MORNING" &&
+        (s.type !== "CABIN_CHARTER" || s.id === "cabin-charter"),
+    )
     .map((s) => ({
       id: s.id,
       name: s.name,
@@ -49,6 +53,7 @@ export default async function ExperiencesPage({
       boatName: s.boat?.name || null,
       description: s.description as Record<string, string>,
       minPrice: s.pricingPeriods[0]?.pricePerPerson?.toString() ?? null,
+      pricingUnit: s.pricingUnit,
     }));
 
   return (

@@ -14,13 +14,16 @@ import { withAdminAction } from "@/lib/admin/with-admin-action";
 const upsertPricingPeriodSchema = z.object({
   id: z.string().optional(),
   serviceId: z.string().min(1),
-  label: z.string().transform((s) => s.trim()),
+  label: z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().min(1).max(64)),
   startDate: z.string().min(1), // YYYY-MM-DD
   endDate: z.string().min(1),
   pricePerPerson: z
     .number()
     .positive("pricePerPerson must be a positive number")
-    .max(100_000, "pricePerPerson fuori range (max 100.000€/pax)"),
+    .max(100_000, "Prezzo fuori range (max 100.000€)"),
   year: z
     .number()
     .int("year must be integer")
@@ -37,7 +40,10 @@ export type UpsertPricingPeriodInput = z.input<typeof upsertPricingPeriodSchema>
 export const upsertPricingPeriod = withAdminAction(
   {
     schema: upsertPricingPeriodSchema,
-    revalidatePaths: ["/admin/prezzi"],
+    revalidatePaths: (input) => [
+      "/admin/prezzi",
+      ...(input.id ? [`/admin/prezzi/${input.id}`] : []),
+    ],
   },
   async (input, { userId }) => {
     const start = parseIsoDay(input.startDate);
@@ -98,127 +104,53 @@ export const upsertPricingPeriod = withAdminAction(
 
     const dates = Array.from(eachUtcDayInclusive(start, end));
     await scheduleBokunPricingSync({ dates, serviceIds: [input.serviceId] });
+
+    return { id: result.id };
   },
 );
 
-const upsertHotDayRuleSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().transform((s) => s.trim()),
-  dateRangeStart: z.string().min(1),
-  dateRangeEnd: z.string().min(1),
-  weekdays: z
-    .array(z.number().int().min(0).max(6, "weekdays must be integers in 0..6"))
-    .default([]),
-  multiplier: z
-    .number()
-    .positive("multiplier must be a positive number")
-    .max(10, "multiplier fuori range (max 10×)"),
-  roundTo: z
-    .number()
-    .int("roundTo must be integer")
-    .min(0, "roundTo invalid (0-1000)")
-    .max(1000, "roundTo invalid (0-1000)"),
-  priority: z.number().int("priority must be integer"),
-  active: z.boolean(),
-});
+const deletePricingPeriodSchema = z.object({ id: z.string().min(1) });
 
-export type UpsertHotDayRuleInput = z.input<typeof upsertHotDayRuleSchema>;
-
-export const upsertHotDayRule = withAdminAction(
+export const deletePricingPeriod = withAdminAction(
   {
-    schema: upsertHotDayRuleSchema,
+    schema: deletePricingPeriodSchema,
     revalidatePaths: ["/admin/prezzi"],
   },
   async (input, { userId }) => {
-    const start = parseIsoDay(input.dateRangeStart);
-    const end = parseIsoDay(input.dateRangeEnd);
-    if (end < start) throw new ValidationError("dateRangeEnd before dateRangeStart");
-    // Round 10 BL-A4: no past-only HotDayRule. Un admin distratto potrebbe
-    // creare "Ferragosto 2024" per errore; la sync accoda job inutili.
-    const todayUtc = parseIsoDay(new Date().toISOString().slice(0, 10));
-    if (end < todayUtc) {
-      throw new ValidationError(
-        "HotDayRule con dateRangeEnd nel passato — nessuna data futura da applicare",
-      );
-    }
-
-    const data = {
-      name: input.name,
-      dateRangeStart: start,
-      dateRangeEnd: end,
-      weekdays: input.weekdays,
-      multiplier: new Prisma.Decimal(input.multiplier.toFixed(3)),
-      roundTo: input.roundTo,
-      priority: input.priority,
-      active: input.active,
-    };
-
-    const result = input.id
-      ? await db.hotDayRule.update({ where: { id: input.id }, data })
-      : await db.hotDayRule.create({ data });
-
-    await auditLog({
-      userId,
-      action: input.id ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
-      entity: "HotDayRule",
-      entityId: result.id,
-      after: {
-        name: data.name,
-        dateRangeStart: input.dateRangeStart,
-        dateRangeEnd: input.dateRangeEnd,
-        weekdays: data.weekdays,
-        multiplier: input.multiplier,
-        roundTo: data.roundTo,
-        priority: data.priority,
-        active: data.active,
+    const before = await db.pricingPeriod.findUnique({
+      where: { id: input.id },
+      select: {
+        id: true,
+        serviceId: true,
+        label: true,
+        startDate: true,
+        endDate: true,
+        pricePerPerson: true,
+        year: true,
       },
     });
-
-    // Enqueue sync Bokun solo sulle date future effettive (skip past + weekday filter).
-    const dates: Date[] = [];
-    for (const d of eachUtcDayInclusive(start, end)) {
-      if (d < todayUtc) continue;
-      if (data.weekdays.length === 0 || data.weekdays.includes(d.getUTCDay())) {
-        dates.push(d);
-      }
-    }
-    if (dates.length > 0) await scheduleBokunPricingSync({ dates });
-  },
-);
-
-const deleteHotDayRuleSchema = z.object({ id: z.string().min(1) });
-
-export const deleteHotDayRule = withAdminAction(
-  {
-    schema: deleteHotDayRuleSchema,
-    revalidatePaths: ["/admin/prezzi"],
-  },
-  async (input, { userId }) => {
-    const before = await db.hotDayRule.findUnique({ where: { id: input.id } });
     if (!before) {
-      throw new ValidationError(`HotDayRule ${input.id} non trovata`);
+      throw new ValidationError(`PricingPeriod ${input.id} non trovato`);
     }
-    await db.hotDayRule.delete({ where: { id: input.id } });
+
+    await db.pricingPeriod.delete({ where: { id: input.id } });
+
     await auditLog({
       userId,
       action: AUDIT_ACTIONS.DELETE,
-      entity: "HotDayRule",
+      entity: "PricingPeriod",
       entityId: input.id,
-      before: { name: before.name, multiplier: before.multiplier.toString() },
+      before: {
+        serviceId: before.serviceId,
+        label: before.label,
+        startDate: before.startDate.toISOString().slice(0, 10),
+        endDate: before.endDate.toISOString().slice(0, 10),
+        pricePerPerson: before.pricePerPerson.toString(),
+        year: before.year,
+      },
     });
 
-    // Re-sync Bokun pricing sulle date precedentemente affected (Round 10 BL-A2).
-    // Senza questo, Bokun conserva il prezzo-con-markup vecchio finche' un
-    // altro evento non tocca le stesse date. Il worker ricalcolera' la
-    // base-price corrente (senza il multiplier appena eliminato).
-    const todayUtc = parseIsoDay(new Date().toISOString().slice(0, 10));
-    const dates: Date[] = [];
-    for (const d of eachUtcDayInclusive(before.dateRangeStart, before.dateRangeEnd)) {
-      if (d < todayUtc) continue;
-      if (before.weekdays.length === 0 || before.weekdays.includes(d.getUTCDay())) {
-        dates.push(d);
-      }
-    }
-    if (dates.length > 0) await scheduleBokunPricingSync({ dates });
+    const dates = Array.from(eachUtcDayInclusive(before.startDate, before.endDate));
+    await scheduleBokunPricingSync({ dates, serviceIds: [before.serviceId] });
   },
 );

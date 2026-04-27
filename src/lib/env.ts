@@ -48,6 +48,7 @@ const envSchema = z.object({
   // App URL
   APP_URL: z.string().url().default("http://localhost:3000"),
   APP_LOCALES_DEFAULT: z.string().default("it"),
+  NEXT_PUBLIC_ASSET_CDN_URL: z.string().url().optional(),
 
   // Server Actions allowed origins (comma-separated). Obbligatorio in prod
   // dietro reverse proxy (Round 10 Sec-C1). Es.:

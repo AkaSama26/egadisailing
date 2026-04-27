@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createPendingDirectBooking } from "@/lib/booking/create-direct";
-import { createPaymentIntent } from "@/lib/stripe/payment-intents";
+import { assertOtaFreshBeforePayment } from "@/lib/booking/ota-preflight";
+import {
+  applyDirectBookingAvailabilityHold,
+  attachPaymentIntentToPendingDirectBooking,
+  cancelPendingDirectBookingAndReleaseHold,
+} from "@/lib/booking/direct-availability-hold";
+import { logger } from "@/lib/logger";
+import { cancelPaymentIntent, createPaymentIntent } from "@/lib/stripe/payment-intents";
 import { buildBookingMetadata } from "@/lib/stripe/metadata";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { getClientIp, getUserAgent, normalizeIpForRateLimit } from "@/lib/http/client-ip";
@@ -37,6 +44,7 @@ const schema = z.object({
       maxFuture.setUTCFullYear(maxFuture.getUTCFullYear() + 2);
       return d <= maxFuture;
     }, "startDate oltre 2 anni nel futuro o invalida"),
+  durationDays: z.number().int().min(3).max(7).optional(),
   numPeople: z.number().int().min(1).max(50),
   customer: z.object({
     email: emailSchema,
@@ -107,9 +115,16 @@ export const POST = withErrorHandler(async (req: Request) => {
     failOpen: false, // R17-SEC-#5
   });
 
+  await assertOtaFreshBeforePayment({
+    serviceId: input.serviceId,
+    startDate: new Date(input.startDate),
+    durationDays: input.durationDays,
+  });
+
   const booking = await createPendingDirectBooking({
     serviceId: input.serviceId,
     startDate: new Date(input.startDate),
+    durationDays: input.durationDays,
     numPeople: input.numPeople,
     customer: input.customer,
     paymentSchedule: input.paymentSchedule,
@@ -124,17 +139,48 @@ export const POST = withErrorHandler(async (req: Request) => {
     },
   });
 
-  const pi = await createPaymentIntent({
-    amountCents: booking.upfrontAmountCents,
-    customerEmail: input.customer.email,
-    customerName: `${input.customer.firstName} ${input.customer.lastName}`,
-    description: `Egadisailing ${booking.confirmationCode}`,
-    metadata: buildBookingMetadata({
+  await applyDirectBookingAvailabilityHold(booking.bookingId);
+
+  let pi: Awaited<ReturnType<typeof createPaymentIntent>>;
+  try {
+    pi = await createPaymentIntent({
+      amountCents: booking.upfrontAmountCents,
+      customerEmail: input.customer.email,
+      customerName: `${input.customer.firstName} ${input.customer.lastName}`,
+      description: `Egadisailing ${booking.confirmationCode}`,
+      metadata: buildBookingMetadata({
+        bookingId: booking.bookingId,
+        confirmationCode: booking.confirmationCode,
+        paymentType: input.paymentSchedule === "DEPOSIT_BALANCE" ? "DEPOSIT" : "FULL",
+      }),
+    });
+
+    try {
+      await attachPaymentIntentToPendingDirectBooking({
+        bookingId: booking.bookingId,
+        paymentIntentId: pi.paymentIntentId,
+      });
+    } catch (err) {
+      await cancelPaymentIntent(pi.paymentIntentId).catch((cancelErr) => {
+        logger.warn(
+          { err: cancelErr, bookingId: booking.bookingId, piId: pi.paymentIntentId },
+          "PaymentIntent cancel after attach failure failed",
+        );
+      });
+      throw err;
+    }
+  } catch (err) {
+    await cancelPendingDirectBookingAndReleaseHold({
       bookingId: booking.bookingId,
-      confirmationCode: booking.confirmationCode,
-      paymentType: input.paymentSchedule === "DEPOSIT_BALANCE" ? "DEPOSIT" : "FULL",
-    }),
-  });
+      reason: "payment_intent_create_failed",
+    }).catch((cleanupErr) => {
+      logger.error(
+        { err: cleanupErr, bookingId: booking.bookingId },
+        "Failed to release checkout availability hold after PaymentIntent failure",
+      );
+    });
+    throw err;
+  }
 
   // 201 Created + Location per consumer REST-aware. Envelope { data: ... }
   // coerente con convenzione documentata in AGENTS.md.

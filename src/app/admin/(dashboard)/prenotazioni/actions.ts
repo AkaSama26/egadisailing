@@ -12,7 +12,10 @@ import { fromCents, formatEurCents } from "@/lib/pricing/cents";
 import { sendEmail } from "@/lib/email/brevo";
 import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
 import { env } from "@/lib/env";
-import { releaseDates } from "@/lib/availability/service";
+import {
+  reconcileBoatDatesFromActiveBookings,
+  releaseBookingDates,
+} from "@/lib/availability/service";
 import { toCents } from "@/lib/pricing/cents";
 import { CHANNELS } from "@/lib/channels";
 import { createManualAlert, type ManualAlertChannel } from "@/lib/charter/manual-alerts";
@@ -21,6 +24,7 @@ import { tryAcquireLease, releaseLease } from "@/lib/lease/redis-lease";
 import { logger } from "@/lib/logger";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
+import { isBoatSharedServiceType } from "@/lib/booking/boat-slot-availability";
 
 /**
  * Admin action: cancella una prenotazione + refund Stripe dei payments
@@ -59,7 +63,7 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
       payments: true,
       directBooking: true,
       customer: { select: { firstName: true, lastName: true, email: true } },
-      service: { select: { name: true } },
+      service: { select: { name: true, type: true } },
     },
   });
   if (!booking) throw new NotFoundError("Booking", bookingId);
@@ -170,7 +174,22 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
   // panel OTA (Bokun UI, Boataround panel) perche' l'API release non
   // cancella il booking upstream.
   try {
-    await releaseDates(booking.boatId, booking.startDate, booking.endDate, CHANNELS.DIRECT);
+    if (booking.service && isBoatSharedServiceType(booking.service.type)) {
+      await reconcileBoatDatesFromActiveBookings({
+        boatId: booking.boatId,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        sourceChannel: CHANNELS.DIRECT,
+      });
+    } else {
+      await releaseBookingDates({
+        bookingId: booking.id,
+        boatId: booking.boatId,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        sourceChannel: CHANNELS.DIRECT,
+      });
+    }
   } catch (err) {
     logger.error({ err, bookingId }, "releaseDates failed during admin cancel");
   }

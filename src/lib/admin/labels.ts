@@ -66,10 +66,11 @@ export const AVAILABILITY_STATUS_LABEL: Record<AvailabilityStatus, string> = {
 };
 
 export const SERVICE_TYPE_LABEL: Record<string, string> = {
-  SOCIAL_BOATING: "Social Boating",
+  EXCLUSIVE_EXPERIENCE: "Esperienza Gourmet",
+  CABIN_CHARTER: "Esperienza Charter",
   BOAT_SHARED: "Barca condivisa",
-  CABIN_CHARTER: "Cabin Charter",
-  BOAT_EXCLUSIVE: "Barca esclusiva",
+  BOAT_EXCLUSIVE: "Barca in esclusiva",
+  SOCIAL_BOATING: "Social Boating",
 };
 
 /** Health status cross-channel (ChannelSyncStatus.healthStatus). */
@@ -83,7 +84,19 @@ export const HEALTH_STATUS_LABEL: Record<string, string> = {
 export const CHANNEL_SYNC_MODE_LABEL: Record<string, string> = {
   API: "API bidirezionale",
   ICAL: "iCal (polling)",
-  EMAIL: "Email (parser)",
+  EMAIL: "Email con controllo admin",
+};
+
+export const MANUAL_ALERT_ACTION_LABEL: Record<string, string> = {
+  BLOCK: "Bloccare la data sul portale esterno",
+  UNBLOCK: "Riaprire la data sul portale esterno",
+  REVIEW: "Controllare e decidere cosa fare",
+};
+
+export const MANUAL_ALERT_CHANNEL_LABEL: Record<string, string> = {
+  ...BOOKING_SOURCE_LABEL,
+  CROSS_OTA_DOUBLE_BOOKING: "Conflitto tra canali",
+  STRIPE_EVENTS_RECONCILIATION: "Controllo pagamenti Stripe",
 };
 
 export const OVERRIDE_STATUS_LABEL: Record<OverrideStatus, string> = {

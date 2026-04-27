@@ -8,11 +8,14 @@ import {
   toDispatchResult,
 } from "@/lib/notifications/dispatcher";
 
-// R29-AUDIT-FIX2: helper per decidere se un service type richiede
-// serializzazione cross-adapter. Tours condivisi (SOCIAL_BOATING 20 posti,
+// R29-AUDIT-FIX2/R30-BIZ: helper per decidere se un service type richiede
+// serializzazione cross-adapter. I pacchetti venduti come barca intera
+// (gourmet/exclusive experience, cabin charter, boat exclusive) devono
+// occupare lo slot del trimarano. Tours condivisi (SOCIAL_BOATING 20 posti,
 // BOAT_SHARED 12 posti) NON hanno bisogno del lock "availability" perche'
 // cohabitation e' feature, non bug.
 export const BOAT_EXCLUSIVE_SERVICE_TYPES = [
+  "EXCLUSIVE_EXPERIENCE",
   "CABIN_CHARTER",
   "BOAT_EXCLUSIVE",
 ] as const;
@@ -38,9 +41,10 @@ export function isBoatExclusiveServiceType(type: string): boolean {
  *  3. Il caller chiama poi `recordDoubleBookingIncident` post-tx per
  *     emettere ManualAlert per-conflict + dispatch notification admin.
  *
- * Scope: SOLO boat-exclusive services (CABIN_CHARTER, BOAT_EXCLUSIVE).
- * SOCIAL_BOATING/BOAT_SHARED sono tour condivisi dove overlap multi-source
- * e' feature, non bug (passenger slots allocati via `capacityMax`).
+ * Scope: SOLO servizi/pacchetti boat-exclusive (EXCLUSIVE_EXPERIENCE,
+ * CABIN_CHARTER, BOAT_EXCLUSIVE). SOCIAL_BOATING/BOAT_SHARED sono tour
+ * condivisi dove overlap multi-source e' feature, non bug (passenger slots
+ * allocati via `capacityMax`).
  */
 
 export interface CrossChannelConflictInput {
@@ -48,6 +52,7 @@ export interface CrossChannelConflictInput {
   startDate: Date;
   endDate: Date;
   selfSource: string;
+  includeSameSource?: boolean;
   /** ID del nostro booking lato questo import (per evitare self-match). */
   selfBookingId?: string;
 }
@@ -80,8 +85,9 @@ export async function detectCrossChannelConflicts(
     where: {
       boatId: input.boatId,
       ...(input.selfBookingId ? { id: { not: input.selfBookingId } } : {}),
-      source: { not: selfSource },
+      ...(input.includeSameSource ? {} : { source: { not: selfSource } }),
       status: { in: ["PENDING", "CONFIRMED"] },
+      claimsAvailability: true,
       // Overlap: existingStart <= newEnd AND existingEnd >= newStart
       startDate: { lte: input.endDate },
       endDate: { gte: input.startDate },

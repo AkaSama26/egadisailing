@@ -1,4 +1,3 @@
-// @ts-nocheck - legacy schema references, refactored in Plan 2-5
 import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -16,12 +15,7 @@ import {
   ArrowLeft,
   CalendarDays,
 } from "lucide-react";
-
-const durationLabels: Record<string, string> = {
-  FULL_DAY: "fullDay",
-  HALF_DAY_MORNING: "halfDay",
-  WEEK: "week",
-};
+import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
 
 export async function generateMetadata({
   params,
@@ -31,11 +25,9 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const service = await db.service.findUnique({ where: { id: slug } });
   if (!service) return { title: "Not Found" };
-  const description =
-    (service.description as any)[locale] || (service.description as any).it;
   return {
     title: `${service.name} — Egadisailing`,
-    description,
+    description: service.name,
   };
 }
 
@@ -55,13 +47,14 @@ export default async function ExperienceDetailPage({
     },
   });
 
-  if (!service) notFound();
+  if (!service || !service.active) notFound();
 
-  const description =
-    (service.description as any)[locale] ||
-    (service.description as any).it ||
-    "";
-  const durationKey = durationLabels[service.durationType] || "fullDay";
+  const description = service.name;
+  const durationText = getServiceDurationLabel(service);
+  const priceUnit =
+    service.type === "CABIN_CHARTER" || service.pricingUnit === "PER_PACKAGE"
+      ? getPriceUnitLabel(service.pricingUnit, service.type)
+      : t("experience.perPerson");
 
   const itinerary = [
     { timeKey: "itin1Time", textKey: "itin1Text" },
@@ -106,7 +99,7 @@ export default async function ExperienceDetailPage({
               )}
               <Badge className="gap-1.5 bg-white/20 text-white border-white/30 text-sm py-1.5 px-3">
                 <Clock className="h-4 w-4" />
-                {t("experience.duration")}: {t(`common.${durationKey}`)} ({service.durationHours}h)
+                {t("experience.duration")}: {durationText}
               </Badge>
               <Badge className="gap-1.5 bg-white/20 text-white border-white/30 text-sm py-1.5 px-3">
                 <Users className="h-4 w-4" />
@@ -244,7 +237,7 @@ export default async function ExperienceDetailPage({
                       <td className="p-4 text-right font-semibold text-[var(--color-gold)]">
                         &euro;{period.pricePerPerson.toString()}{" "}
                         <span className="text-muted-foreground font-normal text-sm">
-                          {t("experience.perPerson")}
+                          {priceUnit}
                         </span>
                       </td>
                     </tr>
@@ -273,7 +266,7 @@ export default async function ExperienceDetailPage({
                     Number(service.pricingPeriods[0].pricePerPerson)
                   )
                   .toString()}{" "}
-                {t("experience.perPerson")}
+                {priceUnit}
               </p>
             )}
             <Link href={`/${locale}/contacts`}>

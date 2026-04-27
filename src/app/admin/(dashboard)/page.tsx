@@ -5,6 +5,11 @@ import { formatEur } from "@/lib/pricing/cents";
 import { CancellationRateKpi } from "@/components/admin/cancellation-rate-kpi";
 import { PageHeader } from "@/components/admin/page-header";
 import { getDashboardKpi } from "@/lib/queries/dashboard-kpi";
+import {
+  MANUAL_ALERT_ACTION_LABEL,
+  MANUAL_ALERT_CHANNEL_LABEL,
+  labelOrRaw,
+} from "@/lib/admin/labels";
 
 export default async function DashboardHome() {
   const kpi = await getDashboardKpi();
@@ -59,17 +64,22 @@ export default async function DashboardHome() {
             <h2 className="font-bold text-red-800 flex items-center gap-2">
               <AlertTriangle className="size-5" aria-hidden="true" />
               <span className="sr-only">Attenzione:</span>
-              Alert manuali ({kpi.pendingAlerts.length})
+              Azioni da completare ({kpi.pendingAlerts.length})
             </h2>
             <Link href="/admin/sync-log" className="text-red-700 hover:underline text-sm font-medium">
-              Vai al registro
+              Vedi cosa fare
             </Link>
           </div>
+          <p className="mb-3 text-sm text-red-800">
+            Il sito ha trovato una situazione che richiede un controllo umano, di solito su
+            un portale esterno come Bokun, Boataround, Click&Boat o Nautal.
+          </p>
           <ul className="space-y-1 text-sm text-red-900">
             {kpi.pendingAlerts.slice(0, 5).map((a) => (
               <li key={a.id} className="flex justify-between">
                 <span>
-                  <strong>{a.channel}</strong> — {a.action} {a.boatId} il{" "}
+                  <strong>{labelOrRaw(MANUAL_ALERT_CHANNEL_LABEL, a.channel)}</strong> —{" "}
+                  {labelOrRaw(MANUAL_ALERT_ACTION_LABEL, a.action)} il{" "}
                   {a.date.toISOString().slice(0, 10)}
                 </span>
               </li>

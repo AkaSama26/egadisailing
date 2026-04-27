@@ -1,255 +1,166 @@
+import Link from "next/link";
+import { CalendarDays, Euro, Pencil, Plus, Ship, Tags } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
-import { SubmitButton } from "@/components/admin/submit-button";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
 import { PageHeader } from "@/components/admin/page-header";
+import { buttonVariants } from "@/components/ui/button";
 import { formatItDay } from "@/lib/dates";
-import {
-  upsertPricingPeriod,
-  upsertHotDayRule,
-  deleteHotDayRule,
-} from "./actions";
+import { getPriceUnitLabel } from "@/lib/services/display";
+import { cn } from "@/lib/utils";
+
+function durationLabel(durationType: string) {
+  switch (durationType) {
+    case "FULL_DAY":
+      return "Giornata intera";
+    case "HALF_DAY_MORNING":
+      return "Mattina";
+    case "HALF_DAY_AFTERNOON":
+      return "Pomeriggio";
+    case "MULTI_DAY":
+      return "Piu' giorni";
+    case "WEEK":
+      return "Settimana";
+    default:
+      return durationType;
+  }
+}
 
 export default async function PrezziPage() {
-  const [services, periods, hotDayRules] = await Promise.all([
+  const [periods, services] = await Promise.all([
+    db.pricingPeriod.findMany({
+      where: { service: { active: true } },
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            durationType: true,
+            pricingUnit: true,
+            boat: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: [{ year: "desc" }, { serviceId: "asc" }, { startDate: "asc" }],
+    }),
     db.service.findMany({
       where: { active: true },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
+      select: { id: true, pricingPeriods: { select: { id: true } } },
     }),
-    db.pricingPeriod.findMany({
-      include: { service: { select: { name: true } } },
-      orderBy: [{ year: "desc" }, { startDate: "asc" }],
-    }),
-    db.hotDayRule.findMany({ orderBy: [{ priority: "desc" }, { dateRangeStart: "asc" }] }),
   ]);
 
-  return (
-    <div className="space-y-8">
-      <PageHeader title="Prezzi" />
+  const configuredServices = new Set(periods.map((period) => period.service.id)).size;
+  const servicesWithoutPrices = services.filter((service) => service.pricingPeriods.length === 0).length;
+  const packagePeriods = periods.filter((period) => period.service.pricingUnit === "PER_PACKAGE").length;
 
-      <AdminCard className="space-y-4">
-        <h2 className="font-bold text-slate-900">Pricing periods (€/pax base)</h2>
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Prezzi"
+        subtitle="Listini stagionali usati dal checkout e dalle sincronizzazioni canali."
+        actions={
+          <Link href="/admin/prezzi/nuovo" className={cn(buttonVariants(), "gap-1.5")}>
+            <Plus className="size-4" />
+            Nuovo prezzo
+          </Link>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <AdminCard className="flex items-center gap-3">
+          <Euro className="size-5 text-slate-500" />
+          <div>
+            <div className="text-2xl font-semibold tabular-nums">{periods.length}</div>
+            <div className="text-xs text-slate-500">periodi inseriti</div>
+          </div>
+        </AdminCard>
+        <AdminCard className="flex items-center gap-3">
+          <Ship className="size-5 text-slate-500" />
+          <div>
+            <div className="text-2xl font-semibold tabular-nums">{configuredServices}</div>
+            <div className="text-xs text-slate-500">servizi con listino</div>
+          </div>
+        </AdminCard>
+        <AdminCard className="flex items-center gap-3">
+          <Tags className="size-5 text-slate-500" />
+          <div>
+            <div className="text-2xl font-semibold tabular-nums">{packagePeriods}</div>
+            <div className="text-xs text-slate-500">prezzi a pacchetto</div>
+          </div>
+        </AdminCard>
+        <AdminCard className="flex items-center gap-3" tone={servicesWithoutPrices > 0 ? "warn" : "success"}>
+          <CalendarDays className="size-5 text-slate-500" />
+          <div>
+            <div className="text-2xl font-semibold tabular-nums">{servicesWithoutPrices}</div>
+            <div className="text-xs text-slate-500">servizi senza listino</div>
+          </div>
+        </AdminCard>
+      </div>
+
+      <AdminCard padding="none">
+        <div className="flex items-center justify-between border-b border-slate-200 p-4">
+          <div>
+            <h2 className="font-semibold text-slate-900">Listini inseriti</h2>
+            <p className="text-sm text-slate-500">Apri un periodo per modificarlo o cancellarlo.</p>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-slate-500 bg-slate-50">
+            <caption className="sr-only">Listini prezzo configurati</caption>
+            <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
               <tr>
-                <th className="text-left p-2">Servizio</th>
-                <th className="text-left p-2">Label</th>
-                <th className="text-left p-2">Anno</th>
-                <th className="text-left p-2">Da</th>
-                <th className="text-left p-2">A</th>
-                <th className="text-right p-2">€/pax</th>
+                <th scope="col" className="px-4 py-2 text-left font-medium">Servizio</th>
+                <th scope="col" className="px-4 py-2 text-left font-medium">Periodo</th>
+                <th scope="col" className="px-4 py-2 text-left font-medium">Validita'</th>
+                <th scope="col" className="px-4 py-2 text-right font-medium">Prezzo</th>
+                <th scope="col" className="px-4 py-2 text-right font-medium">Azioni</th>
               </tr>
             </thead>
             <tbody>
-              {periods.map((p) => (
-                <tr key={p.id} className="border-t">
-                  <td className="p-2">{p.service.name}</td>
-                  <td className="p-2">{p.label}</td>
-                  <td className="p-2 tabular-nums">{p.year}</td>
-                  <td className="p-2">{formatItDay(p.startDate)}</td>
-                  <td className="p-2">{formatItDay(p.endDate)}</td>
-                  <td className="p-2 text-right tabular-nums font-mono">
-                    {formatEur(p.pricePerPerson.toString())}
-                  </td>
-                </tr>
-              ))}
+              {periods.map((period) => {
+                const unitLabel = getPriceUnitLabel(period.service.pricingUnit, period.service.type);
+                return (
+                  <tr key={period.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-slate-900">{period.service.name}</div>
+                      <div className="text-xs text-slate-500">
+                        {period.service.boat.name} · {durationLabel(period.service.durationType)} · {unitLabel}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>{period.label}</div>
+                      <div className="text-xs text-slate-500">{period.year}</div>
+                    </td>
+                    <td className="px-4 py-3 tabular-nums">
+                      {formatItDay(period.startDate)} - {formatItDay(period.endDate)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="font-mono font-semibold tabular-nums">
+                        {formatEur(period.pricePerPerson.toString())}
+                      </div>
+                      <div className="text-xs text-slate-500">{unitLabel}</div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/admin/prezzi/${period.id}`}
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1")}
+                      >
+                        <Pencil className="size-3.5" />
+                        Modifica
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
               {periods.length === 0 && (
-                <EmptyState message="Nessun period configurato." colSpan={6} />
+                <EmptyState message="Nessun prezzo configurato." colSpan={5} />
               )}
             </tbody>
           </table>
         </div>
-
-        <form
-          action={async (fd) => {
-            "use server";
-            const res = await upsertPricingPeriod({
-              serviceId: String(fd.get("serviceId")),
-              label: String(fd.get("label")),
-              startDate: String(fd.get("startDate")),
-              endDate: String(fd.get("endDate")),
-              pricePerPerson: parseFloat(String(fd.get("pricePerPerson")).replace(",", ".")),
-              year: parseInt(String(fd.get("year")), 10),
-            });
-            if (!res.ok) throw new Error(res.message);
-          }}
-          className="grid grid-cols-1 md:grid-cols-6 gap-2 border-t pt-4"
-        >
-          <select name="serviceId" className="border rounded px-2 py-1 text-sm" required>
-            {services.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          <input
-            name="label"
-            placeholder="alta/media/bassa"
-            className="border rounded px-2 py-1 text-sm"
-            required
-            maxLength={32}
-          />
-          <input
-            name="startDate"
-            type="date"
-            className="border rounded px-2 py-1 text-sm"
-            required
-          />
-          <input name="endDate" type="date" className="border rounded px-2 py-1 text-sm" required />
-          <input
-            name="pricePerPerson"
-            type="text"
-            inputMode="decimal"
-            pattern="[0-9]+([.,][0-9]{1,2})?"
-            placeholder="€/pax"
-            className="border rounded px-2 py-1 text-sm"
-            required
-          />
-          <input
-            name="year"
-            type="number"
-            min="2020"
-            max="2100"
-            defaultValue={new Date().getFullYear()}
-            className="border rounded px-2 py-1 text-sm"
-            required
-          />
-          <SubmitButton className="md:col-span-6 bg-slate-900 text-white rounded py-2 text-sm font-medium hover:bg-slate-800">
-            Aggiungi period
-          </SubmitButton>
-        </form>
-      </AdminCard>
-
-      <AdminCard className="space-y-4">
-        <h2 className="font-bold text-slate-900">Hot day rules (moltiplicatori)</h2>
-        <ul className="space-y-2 text-sm">
-          {hotDayRules.map((r) => (
-            <li
-              key={r.id}
-              className="flex justify-between items-center gap-3 border-b border-slate-100 pb-2 last:border-0"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">{r.name}</div>
-                <div className="text-xs text-slate-500">
-                  {formatItDay(r.dateRangeStart)} →{" "}
-                  {formatItDay(r.dateRangeEnd)} · ×{r.multiplier.toString()} · round
-                  €{r.roundTo} · priority {r.priority}
-                  {r.weekdays.length > 0 && ` · weekdays ${r.weekdays.join(",")}`}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span
-                  className={`text-xs font-semibold ${
-                    r.active ? "text-emerald-700" : "text-slate-400"
-                  }`}
-                >
-                  {r.active ? "ATTIVA" : "OFF"}
-                </span>
-                <form
-                  action={async () => {
-                    "use server";
-                    const res = await deleteHotDayRule({ id: r.id });
-                    if (!res.ok) throw new Error(res.message);
-                  }}
-                >
-                  <SubmitButton
-                    className="text-xs text-red-600 hover:underline"
-                    confirmMessage={`Elimina HotDayRule "${r.name}"? I prezzi Bokun saranno ricalcolati (base-price).`}
-                    pendingLabel="..."
-                  >
-                    Elimina
-                  </SubmitButton>
-                </form>
-              </div>
-            </li>
-          ))}
-          {hotDayRules.length === 0 && (
-            <li className="text-slate-500 text-sm">Nessuna hot day rule configurata.</li>
-          )}
-        </ul>
-
-        <form
-          action={async (fd) => {
-            "use server";
-            const weekdaysStr = String(fd.get("weekdays") ?? "").trim();
-            const weekdays = weekdaysStr
-              ? weekdaysStr
-                  .split(",")
-                  .map((n) => parseInt(n.trim(), 10))
-                  .filter((n) => !isNaN(n))
-              : [];
-            const res = await upsertHotDayRule({
-              name: String(fd.get("name")),
-              dateRangeStart: String(fd.get("dateRangeStart")),
-              dateRangeEnd: String(fd.get("dateRangeEnd")),
-              weekdays,
-              multiplier: parseFloat(String(fd.get("multiplier")).replace(",", ".")),
-              roundTo: parseInt(String(fd.get("roundTo")), 10),
-              priority: parseInt(String(fd.get("priority")), 10),
-              active: fd.get("active") === "on",
-            });
-            if (!res.ok) throw new Error(res.message);
-          }}
-          className="grid grid-cols-1 md:grid-cols-6 gap-2 border-t pt-4"
-        >
-          <input
-            name="name"
-            placeholder="Nome (es. Ferragosto)"
-            className="border rounded px-2 py-1 text-sm md:col-span-2"
-            required
-            maxLength={64}
-          />
-          <input
-            name="dateRangeStart"
-            type="date"
-            className="border rounded px-2 py-1 text-sm"
-            required
-          />
-          <input
-            name="dateRangeEnd"
-            type="date"
-            className="border rounded px-2 py-1 text-sm"
-            required
-          />
-          <input
-            name="multiplier"
-            type="text"
-            inputMode="decimal"
-            pattern="[0-9]+([.,][0-9]{1,2})?"
-            placeholder="es. 1.5 (+50%)"
-            className="border rounded px-2 py-1 text-sm"
-            required
-          />
-          <input
-            name="roundTo"
-            type="number"
-            min="0"
-            max="1000"
-            defaultValue="10"
-            className="border rounded px-2 py-1 text-sm"
-            required
-          />
-          <input
-            name="weekdays"
-            placeholder="Weekdays es. 6,0 (sab,dom) o vuoto per tutti"
-            className="border rounded px-2 py-1 text-sm md:col-span-3"
-          />
-          <input
-            name="priority"
-            type="number"
-            defaultValue="10"
-            className="border rounded px-2 py-1 text-sm"
-          />
-          <label className="flex items-center gap-2 text-sm md:col-span-2">
-            <input type="checkbox" name="active" defaultChecked /> Attiva
-          </label>
-          <SubmitButton className="md:col-span-6 bg-slate-900 text-white rounded py-2 text-sm font-medium hover:bg-slate-800">
-            Aggiungi regola
-          </SubmitButton>
-        </form>
       </AdminCard>
     </div>
   );

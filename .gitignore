@@ -51,8 +51,8 @@ next-env.d.ts
 # brainstorm/scratch artifacts (never commit)
 .superpowers/
 .claude/
+.codex
 
 # asset bloat at repo root (put optimized versions in public/)
 /*.mp4
 /*.webp
-

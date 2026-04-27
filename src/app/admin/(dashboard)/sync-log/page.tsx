@@ -8,6 +8,11 @@ import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { PageHeader } from "@/components/admin/page-header";
+import {
+  MANUAL_ALERT_ACTION_LABEL,
+  MANUAL_ALERT_CHANNEL_LABEL,
+  labelOrRaw,
+} from "@/lib/admin/labels";
 
 /**
  * Admin view: stato sync real-time.
@@ -167,17 +172,21 @@ export default async function SyncLogPage() {
 
       <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">
-          Manual alerts pendenti ({manualAlerts.length})
+          Azioni da completare sui canali esterni ({manualAlerts.length})
         </h2>
+        <p className="mb-3 text-sm text-slate-600">
+          Queste sono attivita' che il sistema non puo' chiudere automaticamente:
+          l'admin controlla il portale indicato, completa l'azione e poi la segna come fatta.
+        </p>
         {manualAlerts.length === 0 ? (
-          <EmptyState message="Nessuna azione manuale richiesta." />
+          <EmptyState message="Nessuna azione richiesta." />
         ) : (
           <ul className="text-sm divide-y divide-slate-100">
             {manualAlerts.slice(0, 30).map((a) => (
               <li key={a.id} className="py-2 flex items-center justify-between gap-3 flex-wrap">
                 <span className="flex-1 min-w-0">
-                  <strong>{a.channel}</strong> · {a.action} · boat{" "}
-                  <code className="text-xs">{a.boatId}</code> ·{" "}
+                  <strong>{labelOrRaw(MANUAL_ALERT_CHANNEL_LABEL, a.channel)}</strong> ·{" "}
+                  {labelOrRaw(MANUAL_ALERT_ACTION_LABEL, a.action)} ·{" "}
                   {formatItDay(a.date)}
                   {a.notes && (
                     <span className="block text-xs text-slate-500 mt-1">{a.notes}</span>
@@ -197,7 +206,7 @@ export default async function SyncLogPage() {
                     <SubmitButton
                       className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700"
                     >
-                      Risolvi
+                      Segna come fatto
                     </SubmitButton>
                   </form>
                 </div>

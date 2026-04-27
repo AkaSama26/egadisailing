@@ -17,7 +17,7 @@ import { DestinationText } from "./destination-text";
 export function IslandsItinerary() {
   const t = useTranslations();
   const sectionRef = useRef<HTMLElement>(null);
-  const [activeTab, setActiveTab] = useState("SOCIAL_BOATING");
+  const [activeTab, setActiveTab] = useState("EXCLUSIVE_EXPERIENCE");
   const [progress, setProgress] = useState(0);
   const [activeStopIndex, setActiveStopIndex] = useState(0);
   const reducedMotion = useReducedMotion();

@@ -63,7 +63,7 @@ async function main() {
     },
   });
 
-  const motorboat = await prisma.boat.upsert({
+  await prisma.boat.upsert({
     where: { id: "motoscafo" },
     update: {},
     create: {
@@ -81,25 +81,54 @@ async function main() {
       images: [],
     },
   });
+  const boat = await prisma.boat.upsert({
+    where: { id: "boat" },
+    update: {
+      name: "Barca",
+      type: "MOTORBOAT",
+      description: "Barca Egadisailing per esperienze condivise ed esclusive alle Egadi.",
+    },
+    create: {
+      id: "boat",
+      name: "Barca",
+      type: "MOTORBOAT",
+      description: "Barca Egadisailing per esperienze condivise ed esclusive alle Egadi.",
+      amenities: {
+        seats: 12,
+        shade: true,
+        swimLadder: true,
+        snorkeling: true,
+      },
+      images: [],
+    },
+  });
   console.log("✓ Boats");
 
   // Services
+  const orphanServiceIds = ["social-boating", "boat-tour", "boat-exclusive"];
+  await prisma.hotDayOverride.deleteMany({
+    where: { serviceId: { in: orphanServiceIds } },
+  });
+  await prisma.pricingPeriod.deleteMany({
+    where: { serviceId: { in: orphanServiceIds } },
+  });
+  await prisma.service.deleteMany({
+    where: {
+      id: { in: orphanServiceIds },
+      bookings: { none: {} },
+    },
+  });
+  await prisma.service.updateMany({
+    where: {
+      id: { in: orphanServiceIds },
+    },
+    data: { active: false },
+  });
+
   const services = [
     {
-      id: "social-boating",
-      name: "Social Boating",
-      type: "SOCIAL_BOATING",
-      boatId: trimarano.id,
-      durationType: "FULL_DAY" as const,
-      durationHours: 8,
-      capacityMax: 20,
-      minPaying: 11,
-      defaultPaymentSchedule: "FULL" as const,
-      priority: 6,
-    },
-    {
       id: "exclusive-experience",
-      name: "Exclusive Experience",
+      name: "Esperienza Gourmet",
       type: "EXCLUSIVE_EXPERIENCE",
       boatId: trimarano.id,
       durationType: "FULL_DAY" as const,
@@ -108,41 +137,101 @@ async function main() {
       defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
       defaultDepositPercentage: 30,
       priority: 8,
+      pricingUnit: "PER_PACKAGE",
     },
     {
       id: "cabin-charter",
-      name: "Cabin Charter",
+      name: "Esperienza Charter",
       type: "CABIN_CHARTER",
       boatId: trimarano.id,
-      durationType: "WEEK" as const,
-      durationHours: 168,
+      durationType: "MULTI_DAY" as const,
+      durationHours: 72,
       capacityMax: 8,
       defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
       defaultDepositPercentage: 30,
       priority: 10,
+      pricingUnit: "PER_PACKAGE",
     },
     {
-      id: "boat-tour",
-      name: "Boat Tour",
+      id: "boat-shared-full-day",
+      name: "Barca condivisa giornata intera",
       type: "BOAT_SHARED",
-      boatId: motorboat.id,
+      boatId: boat.id,
       durationType: "FULL_DAY" as const,
       durationHours: 8,
       capacityMax: 12,
-      defaultPaymentSchedule: "FULL" as const,
-      priority: 4,
+      minPaying: 1,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
+      priority: 6,
+      pricingUnit: "PER_PERSON",
     },
     {
-      id: "boat-exclusive",
-      name: "Barca Esclusiva",
+      id: "boat-shared-morning",
+      name: "Barca condivisa mattina",
+      type: "BOAT_SHARED",
+      boatId: boat.id,
+      durationType: "HALF_DAY_MORNING" as const,
+      durationHours: 4,
+      capacityMax: 12,
+      minPaying: 1,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
+      priority: 4,
+      pricingUnit: "PER_PERSON",
+    },
+    {
+      id: "boat-shared-afternoon",
+      name: "Barca condivisa pomeriggio",
+      type: "BOAT_SHARED",
+      boatId: boat.id,
+      durationType: "HALF_DAY_AFTERNOON" as const,
+      durationHours: 4,
+      capacityMax: 12,
+      minPaying: 1,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
+      priority: 4,
+      pricingUnit: "PER_PERSON",
+    },
+    {
+      id: "boat-exclusive-full-day",
+      name: "Barca esclusiva giornata intera",
       type: "BOAT_EXCLUSIVE",
-      boatId: motorboat.id,
+      boatId: boat.id,
       durationType: "FULL_DAY" as const,
       durationHours: 8,
       capacityMax: 12,
       defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
       defaultDepositPercentage: 30,
+      priority: 9,
+      pricingUnit: "PER_PACKAGE",
+    },
+    {
+      id: "boat-exclusive-morning",
+      name: "Barca esclusiva mattina",
+      type: "BOAT_EXCLUSIVE",
+      boatId: boat.id,
+      durationType: "HALF_DAY_MORNING" as const,
+      durationHours: 4,
+      capacityMax: 12,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
       priority: 5,
+      pricingUnit: "PER_PACKAGE",
+    },
+    {
+      id: "boat-exclusive-afternoon",
+      name: "Barca esclusiva pomeriggio",
+      type: "BOAT_EXCLUSIVE",
+      boatId: boat.id,
+      durationType: "HALF_DAY_AFTERNOON" as const,
+      durationHours: 4,
+      capacityMax: 12,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
+      priority: 5,
+      pricingUnit: "PER_PACKAGE",
     },
   ];
 
@@ -153,6 +242,12 @@ async function main() {
       create: svc,
     });
   }
+  await prisma.service.updateMany({
+    where: {
+      id: { in: ["charter-3-days", "charter-4-days", "charter-5-days", "charter-6-days"] },
+    },
+    data: { active: false },
+  });
   console.log(`✓ ${services.length} services`);
 
   // Crew members (placeholder per testing)

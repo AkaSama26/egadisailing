@@ -70,7 +70,9 @@ describe("checkOverrideEligibilityAction", () => {
   });
 
   it("scenario 2 — override_request (revenue nuovo > conflict, > 15gg)", async () => {
-    const { boat, service } = await seedBoatAndService(db);
+    const { boat, service } = await seedBoatAndService(db, {
+      pricePerPerson: "750.00",
+    });
     await seedBooking(db, {
       boatId: boat.id,
       serviceId: service.id,
@@ -87,12 +89,39 @@ describe("checkOverrideEligibilityAction", () => {
       serviceId: service.id,
       startDate: "2026-09-01",
       endDate: "2026-09-01",
-      numPax: 10, // pricing 10 × 250 = 2500 > 500 → eligible
+      numPax: 10, // BOAT_EXCLUSIVE e' PER_PACKAGE: 750 > 500 → eligible
     });
     expect(res.status).toBe("override_request");
     if (res.status === "override_request") {
       expect(res.conflictingBookingIds).toHaveLength(1);
       expect(res.conflictingRevenueTotal.toString()).toBe("500");
+    }
+  });
+
+  it("booking BOKUN sovrapposto → blocked external_booking anche se revenue nuovo > conflict", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "500.00",
+      status: "CONFIRMED",
+      source: "BOKUN",
+      startDate: new Date("2026-09-01"),
+      endDate: new Date("2026-09-01"),
+    });
+    const { checkOverrideEligibilityAction } = await import(
+      "@/lib/booking/override-check-action"
+    );
+    const res = await checkOverrideEligibilityAction({
+      boatId: boat.id,
+      serviceId: service.id,
+      startDate: "2026-09-01",
+      endDate: "2026-09-01",
+      numPax: 10,
+    });
+    expect(res.status).toBe("blocked");
+    if (res.status === "blocked") {
+      expect(res.reason).toBe("external_booking");
     }
   });
 

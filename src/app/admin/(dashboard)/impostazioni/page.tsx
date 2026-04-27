@@ -14,8 +14,8 @@ const CHANNEL_LABEL: Record<string, { label: string; mode: string }> = {
   BOKUN: { label: "Bokun (+ OTA hub: Viator, GetYourGuide)", mode: "API bidirezionale" },
   BOATAROUND: { label: "Boataround", mode: "API bidirezionale" },
   SAMBOAT: { label: "SamBoat", mode: "Export iCal" },
-  CLICKANDBOAT: { label: "Click&Boat", mode: "Email + alert manuale" },
-  NAUTAL: { label: "Nautal", mode: "Email + alert manuale" },
+  CLICKANDBOAT: { label: "Click&Boat", mode: "Email + controllo admin" },
+  NAUTAL: { label: "Nautal", mode: "Email + controllo admin" },
   STRIPE_EVENTS_RECONCILIATION: {
     label: "Stripe reconciliation",
     mode: "Cron fallback webhook persi",

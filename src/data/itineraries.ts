@@ -15,46 +15,6 @@ export interface Itinerary {
 
 export const itineraries: Itinerary[] = [
   {
-    experienceType: "SOCIAL_BOATING",
-    tabLabelKey: "itinerary.tabs.socialBoating",
-    stops: [
-      {
-        time: "09:00",
-        nameKey: "itinerary.socialBoating.stop1.name",
-        descriptionKey: "itinerary.socialBoating.stop1.description",
-        mapPosition: { x: 130, y: 70 },
-        noMapMarker: true,
-      },
-      {
-        time: "10:30",
-        nameKey: "itinerary.socialBoating.stop2.name",
-        islandKey: "itinerary.socialBoating.stop2.island",
-        descriptionKey: "itinerary.socialBoating.stop2.description",
-        mapPosition: { x: 68, y: 62 },
-      },
-      {
-        time: "13:00",
-        nameKey: "itinerary.socialBoating.stop3.name",
-        descriptionKey: "itinerary.socialBoating.stop3.description",
-        mapPosition: { x: 52, y: 78 },
-      },
-      {
-        time: "15:00",
-        nameKey: "itinerary.socialBoating.stop4.name",
-        islandKey: "itinerary.socialBoating.stop4.island",
-        descriptionKey: "itinerary.socialBoating.stop4.description",
-        mapPosition: { x: 45, y: 22 },
-      },
-      {
-        time: "17:00",
-        nameKey: "itinerary.socialBoating.stop5.name",
-        descriptionKey: "itinerary.socialBoating.stop5.description",
-        mapPosition: { x: 130, y: 70 },
-        noMapMarker: true,
-      },
-    ],
-  },
-  {
     experienceType: "EXCLUSIVE_EXPERIENCE",
     tabLabelKey: "itinerary.tabs.exclusive",
     stops: [
@@ -127,76 +87,6 @@ export const itineraries: Itinerary[] = [
         time: "Day 7",
         nameKey: "itinerary.cabinCharter.stop5.name",
         descriptionKey: "itinerary.cabinCharter.stop5.description",
-        mapPosition: { x: 15, y: 82 },
-      },
-    ],
-  },
-  {
-    experienceType: "BOAT_SHARED",
-    tabLabelKey: "itinerary.tabs.boatShared",
-    stops: [
-      {
-        time: "09:00",
-        nameKey: "itinerary.boatShared.stop1.name",
-        descriptionKey: "itinerary.boatShared.stop1.description",
-        mapPosition: { x: 15, y: 82 },
-      },
-      {
-        time: "10:00",
-        nameKey: "itinerary.boatShared.stop2.name",
-        islandKey: "itinerary.boatShared.stop2.island",
-        descriptionKey: "itinerary.boatShared.stop2.description",
-        mapPosition: { x: 38, y: 52 },
-      },
-      {
-        time: "12:00",
-        nameKey: "itinerary.boatShared.stop3.name",
-        islandKey: "itinerary.boatShared.stop3.island",
-        descriptionKey: "itinerary.boatShared.stop3.description",
-        mapPosition: { x: 55, y: 30 },
-      },
-      {
-        time: "14:00",
-        nameKey: "itinerary.boatShared.stop4.name",
-        descriptionKey: "itinerary.boatShared.stop4.description",
-        mapPosition: { x: 15, y: 82 },
-      },
-    ],
-  },
-  {
-    experienceType: "BOAT_EXCLUSIVE",
-    tabLabelKey: "itinerary.tabs.boatExclusive",
-    stops: [
-      {
-        time: "10:00",
-        nameKey: "itinerary.boatExclusive.stop1.name",
-        descriptionKey: "itinerary.boatExclusive.stop1.description",
-        mapPosition: { x: 15, y: 82 },
-      },
-      {
-        time: "11:30",
-        nameKey: "itinerary.boatExclusive.stop2.name",
-        islandKey: "itinerary.boatExclusive.stop2.island",
-        descriptionKey: "itinerary.boatExclusive.stop2.description",
-        mapPosition: { x: 38, y: 52 },
-      },
-      {
-        time: "13:30",
-        nameKey: "itinerary.boatExclusive.stop3.name",
-        descriptionKey: "itinerary.boatExclusive.stop3.description",
-        mapPosition: { x: 52, y: 38 },
-      },
-      {
-        time: "16:00",
-        nameKey: "itinerary.boatExclusive.stop4.name",
-        islandKey: "itinerary.boatExclusive.stop4.island",
-        descriptionKey: "itinerary.boatExclusive.stop4.description",
-        mapPosition: { x: 65, y: 20 },
-      },
-      {
-        time: "18:00",
-        nameKey: "itinerary.boatExclusive.stop5.name",
-        descriptionKey: "itinerary.boatExclusive.stop5.description",
         mapPosition: { x: 15, y: 82 },
       },
     ],

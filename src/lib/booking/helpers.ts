@@ -37,6 +37,10 @@ export function deriveEndDate(
   durationHours: number,
 ): Date {
   switch (durationType) {
+    case "MULTI_DAY": {
+      const durationDays = Math.max(1, Math.ceil(durationHours / 24));
+      return addDays(startDate, durationDays - 1);
+    }
     case "WEEK":
       // Cabin charter: 7 giorni, cambio sabato
       return addDays(startDate, 6);

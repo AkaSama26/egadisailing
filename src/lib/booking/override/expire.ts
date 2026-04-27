@@ -63,7 +63,7 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
         });
         await tx.booking.update({
           where: { id: r.newBookingId },
-          data: { status: "CANCELLED" },
+          data: { status: "CANCELLED", claimsAvailability: false },
         });
         return r;
       });

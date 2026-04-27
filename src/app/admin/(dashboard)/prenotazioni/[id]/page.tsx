@@ -150,9 +150,9 @@ export default async function BookingDetailPage({
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
           <strong>Attenzione</strong> — questo booking proviene da{" "}
           <strong>{labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}</strong>. La cancellazione qui rilascia l'availability
-          interna e crea un ManualAlert per ricordarti di cancellare anche sul pannello
-          OTA esterno (Bokun UI, Boataround, ecc). L'API release NON cancella il booking
-          upstream.
+          interna e crea un promemoria operativo per ricordarti di cancellare anche sul
+          pannello esterno (Bokun, Boataround, ecc). Il sito non cancella automaticamente
+          la prenotazione sul portale esterno.
         </div>
       )}
 

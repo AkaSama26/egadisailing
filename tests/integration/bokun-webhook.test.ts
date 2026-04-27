@@ -14,6 +14,8 @@ import crypto from "node:crypto";
 import { setupTestDb, resetTestDb, closeTestDb } from "../helpers/test-db";
 import { installRedisMock, resetRedisMock } from "../helpers/redis-mock";
 
+const bookingBokunAdd = vi.hoisted(() => vi.fn().mockResolvedValue({ id: "job-bokun-booking" }));
+
 let testPrisma: Awaited<ReturnType<typeof setupTestDb>>;
 vi.mock("@/lib/db", () => ({
   get db() {
@@ -27,6 +29,7 @@ vi.mock("@/lib/queue", () => ({
   availBokunQueue: () => ({ add: vi.fn() }),
   availBoataroundQueue: () => ({ add: vi.fn() }),
   availManualQueue: () => ({ add: vi.fn() }),
+  bookingBokunQueue: () => ({ add: bookingBokunAdd }),
   pricingBokunQueue: () => ({ add: vi.fn() }),
   getQueue: () => ({ add: vi.fn() }),
   QUEUE_NAMES: {
@@ -34,12 +37,14 @@ vi.mock("@/lib/queue", () => ({
     AVAIL_BOATAROUND: "sync.avail.boataround",
     AVAIL_MANUAL: "sync.avail.manual",
     PRICING_BOKUN: "sync.pricing.bokun",
+    BOOKING_BOKUN: "sync.booking.bokun",
   },
   ALL_QUEUE_NAMES: [
     "sync.avail.bokun",
     "sync.avail.boataround",
     "sync.avail.manual",
     "sync.pricing.bokun",
+    "sync.booking.bokun",
   ],
 }));
 
@@ -131,6 +136,7 @@ function buildBokunHeaders(opts: {
     "x-bokun-topic": opts.topic,
     "x-bokun-date": date,
     "x-bokun-delivery-id": "delivery-" + Math.random().toString(36).slice(2),
+    "x-bokun-booking-id": opts.bookingId,
   };
 
   // String-to-sign: header x-bokun-* (tranne x-bokun-hmac) sort alpha + join.
@@ -174,6 +180,21 @@ describe("Bokun webhook security (R24-R25)", () => {
     const { POST } = await import("@/app/api/webhooks/bokun/route");
     const res = await POST(makeReq(body, headers));
     expect(res.status).toBe(200);
+    expect(bookingBokunAdd).toHaveBeenCalledTimes(1);
+    expect(bookingBokunAdd.mock.calls[0]?.[0]).toBe("booking.webhook.process");
+  });
+
+  it("body/header bookingId mismatch → 400", async () => {
+    const body = { bookingId: "other-booking", timestamp: new Date().toISOString() };
+    const headers = buildBokunHeaders({
+      bookingId: "bkn-test-1",
+      topic: "bookings/create",
+    });
+
+    const { POST } = await import("@/app/api/webhooks/bokun/route");
+    const res = await POST(makeReq(body, headers));
+    expect(res.status).toBe(400);
+    expect(bookingBokunAdd).not.toHaveBeenCalled();
   });
 
   it("R25-A3-C1: x-bokun-date > 5min old → reject ValidationError", async () => {
@@ -276,5 +297,6 @@ describe("Bokun webhook security (R24-R25)", () => {
     // Solo 1 row in ProcessedBokunEvent.
     const rows = await db.processedBokunEvent.findMany();
     expect(rows).toHaveLength(1);
+    expect(bookingBokunAdd).toHaveBeenCalledTimes(1);
   });
 });

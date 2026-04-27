@@ -24,6 +24,11 @@ import {
   UserCheck,
   ArrowRight,
 } from "lucide-react";
+import {
+  getExperienceDisplay,
+  getExperienceTitle,
+  getServiceDurationLabel,
+} from "@/lib/services/display";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -33,7 +38,12 @@ interface SerializedService {
   id: string;
   name: string;
   type: string;
+  boatId: string;
+  boatName: string;
   durationType: string;
+  durationHours: number;
+  capacityMax: number;
+  pricingUnit: string;
   description: Record<string, string>;
   minPrice: string | null;
 }
@@ -111,74 +121,12 @@ function RevealTitle({ text }: { text: string }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Experience content & polaroid data                                */
-/* ------------------------------------------------------------------ */
-
-const experienceContent: Record<string, { title: string; subtitle: string }> = {
-  SOCIAL_BOATING: {
-    title: "Social Boating",
-    subtitle: "Sali a bordo con nuovi amici. Navigazione, tuffi in acque cristalline e pranzo di pesce fresco preparato dal nostro chef. Il modo più conviviale di scoprire le Egadi.",
-  },
-  EXCLUSIVE_EXPERIENCE: {
-    title: "Exclusive Experience",
-    subtitle: "Il trimarano tutto per te. Chef rinomato, menù raffinato, rotta personalizzata. Un'esperienza senza compromessi per chi cerca il meglio.",
-  },
-  CABIN_CHARTER: {
-    title: "Cabin Charter",
-    subtitle: "La tua casa è il mare. Una settimana a bordo navigando tra Favignana, Levanzo e Marettimo. Svegliati ogni mattina in un'isola diversa.",
-  },
-  BOAT_SHARED: {
-    title: "Tour in Barca",
-    subtitle: "Le Egadi in giornata. Tour per piccoli gruppi tra grotte marine, calette nascoste e acque cristalline. Disponibile anche in mezza giornata.",
-  },
-  BOAT_EXCLUSIVE: {
-    title: "Barca Esclusiva",
-    subtitle: "La barca tutta per voi. Scegliete la rotta, i tempi, le soste. Libertà totale con il vostro skipper privato.",
-  },
-};
-
-/* Polaroid data */
-const experiencePolaroids: Record<string, { caption: string; color: string }[]> = {
-  SOCIAL_BOATING: [
-    { caption: "Cala Rossa dall'alto", color: "#87CEEB" },
-    { caption: "Pranzo dello chef", color: "#F5DEB3" },
-    { caption: "Tutti a bordo!", color: "#90EE90" },
-  ],
-  EXCLUSIVE_EXPERIENCE: [
-    { caption: "Tavola luxury", color: "#FFB6C1" },
-    { caption: "Tuffo privato", color: "#FFDAB9" },
-    { caption: "Tramonto a bordo", color: "#DDA0DD" },
-  ],
-  CABIN_CHARTER: [
-    { caption: "La tua cabina", color: "#ADD8E6" },
-    { caption: "Alba su Marettimo", color: "#B2DFDB" },
-    { caption: "Colazione in coperta", color: "#C5CAE9" },
-  ],
-  BOAT_SHARED: [
-    { caption: "Grotta marina", color: "#B2EBF2" },
-    { caption: "Snorkeling!", color: "#87CEEB" },
-    { caption: "Barca in cala", color: "#C8E6C9" },
-  ],
-  BOAT_EXCLUSIVE: [
-    { caption: "Caletta deserta", color: "#E1BEE7" },
-    { caption: "Solo per voi", color: "#BBDEFB" },
-    { caption: "Aperitivo a bordo", color: "#F8BBD0" },
-  ],
-};
-
 /* Polaroid scattered positions */
 const polaroidLayouts = [
   { x: 2, y: 0, rotate: -8 },
   { x: 40, y: 5, rotate: 6 },
   { x: 15, y: 52, rotate: -4 },
 ];
-
-const durationLabels: Record<string, string> = {
-  FULL_DAY: "8 ore",
-  HALF_DAY_MORNING: "4 ore",
-  WEEK: "7 giorni",
-};
 
 /* ------------------------------------------------------------------ */
 /*  Experience Row — alternating layout, polaroid appear on scroll    */
@@ -320,8 +268,9 @@ function ExperienceRow({
   priceLabel: string | undefined;
 }) {
   const isEven = index % 2 === 0;
-  const polaroids = experiencePolaroids[service.type] || experiencePolaroids.SOCIAL_BOATING;
-  const content = experienceContent[service.type] || { title: service.name, subtitle: "" };
+  const content = getExperienceDisplay(service);
+  const polaroids = content.media.slice(0, 3);
+  const title = getExperienceTitle(service);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center min-h-[450px]">
@@ -331,7 +280,7 @@ function ExperienceRow({
         className={`space-y-6 ${isEven ? "lg:order-1" : "lg:order-2"}`}
       >
         <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-          {content.title}
+          {title}
         </h2>
 
         <p className="text-white/70 text-lg leading-relaxed max-w-lg">
@@ -341,11 +290,11 @@ function ExperienceRow({
         <div className="flex items-center gap-6 text-white/60 text-sm">
           <span className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            {durationLabels[service.durationType] || service.durationType}
+            {getServiceDurationLabel(service)}
           </span>
           <span className="flex items-center gap-2">
             <UserCheck className="h-4 w-4" />
-            Max {service.type === "BOAT_SHARED" || service.type === "BOAT_EXCLUSIVE" ? "12" : "20"} pax
+            Max {service.capacityMax} pax
           </span>
         </div>
 
@@ -357,7 +306,7 @@ function ExperienceRow({
 
         <Link
           href={`/${locale}/experiences/${service.id}`}
-          aria-label={`Scopri di più su ${content.title}`}
+          aria-label={`Scopri di più su ${title}`}
           className="inline-flex items-center gap-2 text-white font-medium hover:gap-3 transition-all"
         >
           Scopri di più <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -450,7 +399,11 @@ export function LandingSections({ services }: LandingSectionsProps) {
 
           <div className="space-y-32">
             {services
-              .filter((s) => s.durationType !== "HALF_DAY_MORNING")
+              .filter(
+                (s) =>
+                  s.durationType !== "HALF_DAY_MORNING" &&
+                  (s.type !== "CABIN_CHARTER" || s.id === "cabin-charter"),
+              )
               .map((service, i) => (
               <ExperienceRow
                 key={service.id}
@@ -459,7 +412,13 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 locale={locale}
                 priceLabel={
                   service.minPrice
-                    ? `${t("common.priceFrom")} €${service.minPrice} ${t("common.perPerson")}`
+                    ? `${t("common.priceFrom")} €${service.minPrice} ${
+                        service.type === "CABIN_CHARTER"
+                          ? "per giornata"
+                          : service.pricingUnit === "PER_PACKAGE"
+                            ? "per pacchetto"
+                            : t("common.perPerson")
+                      }`
                     : undefined
                 }
               />
@@ -730,7 +689,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
               Prenota la tua esperienza nelle Isole Egadi. Scegli la data, sali a bordo.
             </p>
             <div className="flex justify-center">
-              <BookingSearch />
+              <BookingSearch services={services} />
             </div>
           </ScrollSection>
         </div>

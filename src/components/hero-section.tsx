@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingSearch } from "@/components/booking-search";
+import { HERO_VIDEO_POSTER_SRC, HERO_VIDEO_SRC } from "@/lib/public-assets";
+import type { BookingSearchService } from "@/components/booking-search";
 
 /* ------------------------------------------------------------------ */
 /*  Rotating words animation                                          */
@@ -162,11 +164,37 @@ export function GoldWavesDivider() {
 /*  Hero Section                                                      */
 /* ------------------------------------------------------------------ */
 
-export function HeroSection() {
+export function HeroSection({ services }: { services: BookingSearchService[] }) {
   const t = useTranslations("hero");
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const connection = navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    };
+    const effectiveType = connection.connection?.effectiveType ?? "";
+    const slowConnection = effectiveType === "slow-2g" || effectiveType === "2g";
+
+    if (prefersReducedMotion || connection.connection?.saveData || slowConnection) return;
+
+    const load = () => setShouldLoadVideo(true);
+    const win = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (win.requestIdleCallback && win.cancelIdleCallback) {
+      const idleId = win.requestIdleCallback(load, { timeout: 1800 });
+      return () => win.cancelIdleCallback?.(idleId);
+    }
+    const timeout = globalThis.setTimeout(load, 1200);
+    return () => globalThis.clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadVideo) return;
     const video = videoRef.current;
     if (!video) return;
 
@@ -183,15 +211,22 @@ export function HeroSection() {
       });
     };
 
+    video.load();
     if (video.readyState >= 2) {
       playVideo();
     } else {
       video.addEventListener("loadeddata", playVideo, { once: true });
     }
-  }, []);
+  }, [shouldLoadVideo]);
 
   return (
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-[#071934] select-none">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-0 bg-cover bg-center scale-105"
+        style={{ backgroundImage: `url(${HERO_VIDEO_POSTER_SRC})`, filter: "blur(1px)" }}
+      />
+
       {/* ---- Background video (decorative) ---- */}
       {/* R19-A11y 1.1.1: aria-hidden + tabIndex=-1 perche' decorativo (muted
           loop). No captions richieste. */}
@@ -203,12 +238,16 @@ export function HeroSection() {
         muted
         loop
         playsInline
-        preload="auto"
-        poster="/videos/hero-poster.webp"
-        className="absolute inset-0 w-full h-full object-cover z-0 scale-105"
+        preload="none"
+        poster={HERO_VIDEO_POSTER_SRC}
+        onLoadedData={() => setVideoReady(true)}
+        className={`absolute inset-0 w-full h-full object-cover z-0 scale-105 transition-opacity duration-700 ${
+          videoReady ? "opacity-100" : "opacity-0"
+        }`}
         style={{ filter: "blur(1px)" }}
-        src="/videos/hero.mp4"
-      />
+      >
+        {shouldLoadVideo && <source src={HERO_VIDEO_SRC} type="video/mp4" />}
+      </video>
 
       {/* ---- Subtle overlay — bottom darkens to blend with next section ---- */}
       <div className="absolute inset-0 z-[1]" style={{
@@ -229,7 +268,7 @@ export function HeroSection() {
 
           {/* ---- Booking form ---- */}
           <div className="relative z-[60]">
-            <BookingSearch />
+            <BookingSearch services={services} />
           </div>
         </div>
       </div>

@@ -26,11 +26,24 @@ export interface ImportedBokunBooking {
   startDate: Date;
   endDate: Date;
   status: BookingStatus;
+  previous?: {
+    boatId: string;
+    startDate: Date;
+    endDate: Date;
+    status: BookingStatus;
+  };
+  shouldSyncAvailability?: boolean;
   // R27-CRIT-6: caller (webhook route / reconciliation cron) puo' usare
   // `mode` per saltare fan-out quando il booking e' gia' terminale
   // (CANCELLED/REFUNDED) e non c'e' stato cambio — evita re-blockDates
   // che sovrascrive admin-cancel o burn quota API Bokun su duplicati.
-  mode?: "created" | "updated" | "skipped";
+  mode?: "created" | "updated" | "skipped" | "conflict";
+}
+
+const TERMINAL_STATUSES = new Set<BookingStatus>(["CANCELLED", "REFUNDED"]);
+
+function isActiveStatus(status: BookingStatus): boolean {
+  return status === "PENDING" || status === "CONFIRMED";
 }
 
 /**
@@ -61,13 +74,25 @@ export async function importBokunBooking(
     throw new NotFoundError("Service", `bokunProductId=${booking.productId}`);
   }
 
+  const startDate = parseIsoDay(booking.startDate.slice(0, 10));
+  const endDate = parseIsoDay((booking.endDate ?? booking.startDate).slice(0, 10));
+  if (hasMultipleProductBookings(booking)) {
+    await createMultiProductAlert(booking, service.boatId, startDate, endDate);
+    return {
+      bookingId: String(booking.id),
+      boatId: service.boatId,
+      startDate,
+      endDate,
+      status,
+      mode: "skipped",
+    };
+  }
+
   const totalPriceStr = new Decimal(booking.totalPrice).toFixed(2);
   const commissionStr = booking.commissionAmount
     ? new Decimal(booking.commissionAmount).toFixed(2)
     : null;
   const netStr = booking.netAmount ? new Decimal(booking.netAmount).toFixed(2) : null;
-  const startDate = parseIsoDay(booking.startDate.slice(0, 10));
-  const endDate = parseIsoDay((booking.endDate ?? booking.startDate).slice(0, 10));
 
   // GDPR minimization: salviamo SOLO i campi business-essenziali; PII
   // (firstName/lastName/email/phone/passengers) vive gia' su `Customer` che
@@ -123,8 +148,7 @@ export async function importBokunBooking(
         // Optimistic guard R27-CRIT-2: se lo status corrente e' "piu' terminale"
         // del nuovo (CANCELLED/REFUNDED arrivati prima di CONFIRMED out-of-order),
         // skip l'update. Preserve il cancel admin + ordering upstream Bokun.
-        const TERMINAL = new Set<BookingStatus>(["CANCELLED", "REFUNDED"]);
-        if (TERMINAL.has(existing.booking.status) && !TERMINAL.has(status)) {
+        if (TERMINAL_STATUSES.has(existing.booking.status) && !TERMINAL_STATUSES.has(status)) {
           logger.warn(
             {
               bokunBookingId: String(booking.id),
@@ -158,20 +182,88 @@ export async function importBokunBooking(
           };
         }
 
+        const previous = {
+          boatId: existing.booking.boatId,
+          startDate: existing.booking.startDate,
+          endDate: existing.booking.endDate,
+          status: existing.booking.status,
+        };
+
+        const existingService = await tx.service.findUnique({
+          where: { id: existing.booking.serviceId },
+          select: { type: true },
+        });
+        const rangeChanged =
+          existing.booking.boatId !== service.boatId ||
+          existing.booking.startDate.getTime() !== startDate.getTime() ||
+          existing.booking.endDate.getTime() !== endDate.getTime();
+        if (rangeChanged && existingService && isBoatExclusiveServiceType(existingService.type)) {
+          await acquireAvailabilityRangeLock(
+            tx,
+            existing.booking.boatId,
+            existing.booking.startDate,
+            existing.booking.endDate,
+          );
+        }
+
+        detectedConflicts = await detectCrossChannelConflicts(tx, {
+          boatId: service.boatId,
+          startDate,
+          endDate,
+          selfSource: "BOKUN",
+          selfBookingId: existing.bookingId,
+          includeSameSource: true,
+        });
+        if (detectedConflicts.length > 0 && isActiveStatus(status)) {
+          return {
+            booking: {
+              id: existing.bookingId,
+              boatId: existing.booking.boatId,
+              startDate: existing.booking.startDate,
+              endDate: existing.booking.endDate,
+              status: existing.booking.status,
+            },
+            previous,
+            mode: "conflict" as const,
+          };
+        }
+
+        const customer = await upsertCustomerFromExternal(tx, {
+          email: emailLower,
+          firstName: booking.mainContactDetails.firstName,
+          lastName: booking.mainContactDetails.lastName,
+          phone: booking.mainContactDetails.phoneNumber,
+          nationality: booking.mainContactDetails.country,
+          language: booking.mainContactDetails.language,
+        });
+
         const updated = await tx.booking.update({
           where: { id: existing.bookingId },
           data: {
+            externalRef: booking.productConfirmationCode,
+            customerId: customer.id,
+            serviceId: service.id,
+            boatId: service.boatId,
+            startDate,
+            endDate,
             status,
             numPeople: booking.numPeople ?? existing.booking.numPeople,
             totalPrice: totalPriceStr,
+            exclusiveSlot: true,
+            claimsAvailability: true,
           },
           select: { id: true, boatId: true, startDate: true, endDate: true, status: true },
         });
         await tx.bokunBooking.update({
           where: { bookingId: existing.bookingId },
-          data: { rawPayload, commissionAmount: commissionStr, netAmount: netStr },
+          data: {
+            channelName: booking.channelName,
+            rawPayload,
+            commissionAmount: commissionStr,
+            netAmount: netStr,
+          },
         });
-        return { booking: updated, mode: "updated" as const };
+        return { booking: updated, previous, mode: "updated" as const };
       }
 
       // R14 cross-OTA detection: cerca conflicts cross-source (non solo
@@ -185,7 +277,20 @@ export async function importBokunBooking(
         startDate,
         endDate,
         selfSource: "BOKUN",
+        includeSameSource: true,
       });
+      if (detectedConflicts.length > 0 && isActiveStatus(status)) {
+        return {
+          booking: {
+            id: `BOKUN-CONFLICT-${booking.id}`,
+            boatId: service.boatId,
+            startDate,
+            endDate,
+            status,
+          },
+          mode: "conflict" as const,
+        };
+      }
 
       const customer = await upsertCustomerFromExternal(tx, {
         email: emailLower,
@@ -220,6 +325,8 @@ export async function importBokunBooking(
           // constraint violation in produzione al primo ordine non-EUR.
           currency: "EUR",
           status,
+          exclusiveSlot: true,
+          claimsAvailability: true,
           bokunBooking: {
             create: {
               bokunBookingId: String(booking.id),
@@ -272,7 +379,18 @@ export async function importBokunBooking(
     // R14: post-commit double-booking incident recording. Non nella tx
     // perche' fa side-effect rete (dispatch notification) + ManualAlert
     // ha la sua advisory lock.
-    if (result.mode === "created" && detectedConflicts.length > 0) {
+    if (result.mode === "conflict" && detectedConflicts.length > 0) {
+      await recordBokunConflictAlerts({
+        boatId: result.booking.boatId,
+        startDate: result.booking.startDate,
+        endDate: result.booking.endDate,
+        bokunBookingId: String(booking.id),
+        conflicts: detectedConflicts,
+      });
+    } else if (
+      (result.mode === "created" || result.mode === "updated") &&
+      detectedConflicts.length > 0
+    ) {
       await recordDoubleBookingIncident({
         newBookingId: result.booking.id,
         newSource: "BOKUN",
@@ -290,6 +408,8 @@ export async function importBokunBooking(
       startDate: result.booking.startDate,
       endDate: result.booking.endDate,
       status: result.booking.status,
+      previous: "previous" in result ? result.previous : undefined,
+      shouldSyncAvailability: result.mode !== "conflict",
       mode: result.mode,
     };
   } catch (err) {
@@ -357,6 +477,53 @@ function buildSafeRawPayload(booking: BokunBookingSummary): Prisma.InputJsonValu
     paymentStatus: booking.paymentStatus,
     passengerCount: booking.passengers?.length,
   };
+}
+
+function hasMultipleProductBookings(booking: BokunBookingSummary): boolean {
+  return (
+    (booking.experienceBookings?.length ?? 0) > 1 ||
+    (booking.productBookings?.length ?? 0) > 1
+  );
+}
+
+async function createMultiProductAlert(
+  booking: BokunBookingSummary,
+  boatId: string,
+  startDate: Date,
+  endDate: Date,
+): Promise<void> {
+  for (const day of eachUtcDayInclusive(startDate, endDate)) {
+    await createManualAlert({
+      channel: "BOKUN",
+      boatId,
+      date: day,
+      action: "BLOCK",
+      notes:
+        `Bokun booking ${booking.confirmationCode} contiene piu' product booking. ` +
+        "Import automatico saltato: configurare Bokun mono-prodotto o gestire manualmente.",
+    });
+  }
+}
+
+async function recordBokunConflictAlerts(input: {
+  boatId: string;
+  startDate: Date;
+  endDate: Date;
+  bokunBookingId: string;
+  conflicts: CrossChannelConflict[];
+}): Promise<void> {
+  for (const conflict of input.conflicts) {
+    await createManualAlert({
+      channel: "BOKUN",
+      boatId: input.boatId,
+      date: input.startDate,
+      action: "BLOCK",
+      notes:
+        `Bokun booking ${input.bokunBookingId} overlaps existing booking ` +
+        `${conflict.confirmationCode} (${conflict.source}) from ${input.startDate.toISOString().slice(0, 10)} ` +
+        `to ${input.endDate.toISOString().slice(0, 10)}. Import skipped; resolve manually upstream.`,
+    });
+  }
 }
 
 export function mapStatus(bokunStatus: string): BookingStatus {

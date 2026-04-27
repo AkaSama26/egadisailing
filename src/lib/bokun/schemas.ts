@@ -13,7 +13,8 @@ export const bokunBookingIdSchema = z.union([
 
 export const bokunWebhookBodySchema = z.object({
   timestamp: z.string().optional(),
-  bookingId: bokunBookingIdSchema,
+  bookingId: bokunBookingIdSchema.optional(),
+  experienceBookingId: bokunBookingIdSchema.optional(),
 });
 
 /**
@@ -58,6 +59,8 @@ export const bokunBookingResponseSchema = z.object({
   paymentStatus: z.string().max(64).optional(),
   commissionAmount: z.number().nonnegative().max(1_000_000).optional().nullable(),
   netAmount: z.number().nonnegative().max(1_000_000).optional().nullable(),
+  experienceBookings: z.array(z.unknown()).optional(),
+  productBookings: z.array(z.unknown()).optional(),
 });
 
 export type BokunBookingResponse = z.infer<typeof bokunBookingResponseSchema>;

@@ -194,6 +194,7 @@ export const QUEUE_NAMES = {
   /** CLICKANDBOAT + NAUTAL (email-only) → manual alert */
   AVAIL_MANUAL: "sync.avail.manual",
   PRICING_BOKUN: "sync.pricing.bokun",
+  BOOKING_BOKUN: "sync.booking.bokun",
 } as const;
 
 /** Lista queue attive per aggregate metrics (health + admin sync-log). */
@@ -214,6 +215,11 @@ export function availManualQueue(): Queue<SyncJob> {
 /** Queue per pricing sync verso BOKUN. */
 export function pricingBokunQueue(): Queue<SyncJob> {
   return getQueue<SyncJob>(QUEUE_NAMES.PRICING_BOKUN);
+}
+
+/** Queue per processare webhook booking Bokun fuori dalla request HTTP. */
+export function bookingBokunQueue(): Queue<SyncJob> {
+  return getQueue<SyncJob>(QUEUE_NAMES.BOOKING_BOKUN);
 }
 
 /** @deprecated usa le per-channel. Mantenuto per non rompere caller legacy

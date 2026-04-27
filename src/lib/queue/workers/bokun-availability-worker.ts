@@ -4,6 +4,11 @@ import { updateBokunAvailability } from "@/lib/bokun/availability";
 import { isBokunConfigured } from "@/lib/bokun";
 import { db } from "@/lib/db";
 import { parseIsoDay } from "@/lib/dates";
+import { PRICING_UNITS, effectivePricingUnit, type PricingUnit } from "@/lib/pricing/units";
+import {
+  computeBoatServiceAvailableSpots,
+  isBoatServiceType,
+} from "@/lib/booking/boat-slot-availability";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
 
 interface AvailabilityJob {
@@ -23,7 +28,15 @@ interface AvailabilityJob {
 // garantito in finestra post-mutate. 60s riduce finestra a <1min +
 // impatto DB trascurabile (limiter 10/s × 60s = max 600 roundtrip/min).
 interface ServiceCacheEntry {
-  services: Array<{ id: string; bokunProductId: string | null; capacityMax: number }>;
+  services: Array<{
+    id: string;
+    type: string;
+    pricingUnit: string | null;
+    bokunProductId: string | null;
+    capacityMax: number;
+    boatId: string;
+    durationType: "FULL_DAY" | "HALF_DAY_MORNING" | "HALF_DAY_AFTERNOON" | "MULTI_DAY" | "WEEK";
+  }>;
   expiresAt: number;
 }
 const SERVICE_CACHE_TTL_MS = 60 * 1000;
@@ -34,7 +47,15 @@ async function getServicesForBoat(boatId: string) {
   if (cached && cached.expiresAt > Date.now()) return cached.services;
   const services = await db.service.findMany({
     where: { boatId, bokunProductId: { not: null } },
-    select: { id: true, bokunProductId: true, capacityMax: true },
+    select: {
+      id: true,
+      type: true,
+      boatId: true,
+      durationType: true,
+      pricingUnit: true,
+      bokunProductId: true,
+      capacityMax: true,
+    },
   });
   serviceCacheByBoat.set(boatId, {
     services,
@@ -75,7 +96,18 @@ export function startBokunAvailabilityWorker() {
       const services = await getServicesForBoat(data.boatId);
 
       for (const service of services) {
-        const spots = effectiveStatus === "AVAILABLE" ? service.capacityMax : 0;
+        let spots: number;
+        if (isBoatServiceType(service.type)) {
+          spots = await computeBoatServiceAvailableSpots({
+            service,
+            date: parseIsoDay(data.date),
+          });
+        } else {
+          const pricingUnit: PricingUnit = effectivePricingUnit(service);
+          const openCapacity =
+            pricingUnit === PRICING_UNITS.PER_PACKAGE ? 1 : service.capacityMax;
+          spots = effectiveStatus === "AVAILABLE" ? openCapacity : 0;
+        }
         await updateBokunAvailability({
           productId: service.bokunProductId!,
           date: data.date,

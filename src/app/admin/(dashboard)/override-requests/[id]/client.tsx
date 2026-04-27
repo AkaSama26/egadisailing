@@ -31,11 +31,22 @@ export interface OverrideDetailData {
   decisionNotes: string | null;
 }
 
+export interface OverrideConflictGroupData {
+  durationType: string;
+  sources: string[];
+  bookingCount: number;
+  tickets: number;
+  revenue: string;
+  refundEstimate: string;
+}
+
 export function OverrideDetailClient({
   request,
+  conflictGroups,
   otaConflicts,
 }: {
   request: OverrideDetailData;
+  conflictGroups: OverrideConflictGroupData[];
   otaConflicts: OtaConflictData[];
 }) {
   const router = useRouter();
@@ -108,6 +119,42 @@ export function OverrideDetailClient({
         )}
       </AdminCard>
 
+      {conflictGroups.length > 0 && (
+        <AdminCard padding="sm" className="space-y-3">
+          <h2 className="text-lg font-semibold text-slate-900">Gruppi concorrenti</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-slate-500">
+                <tr>
+                  <th className="py-2 pr-4 font-medium">Slot</th>
+                  <th className="py-2 pr-4 font-medium">Sorgenti</th>
+                  <th className="py-2 pr-4 font-medium">Booking</th>
+                  <th className="py-2 pr-4 font-medium">Posti</th>
+                  <th className="py-2 pr-4 font-medium">Revenue</th>
+                  <th className="py-2 font-medium">Refund stimato</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {conflictGroups.map((group) => (
+                  <tr key={group.durationType}>
+                    <td className="py-2 pr-4 font-medium text-slate-900">
+                      {formatDurationType(group.durationType)}
+                    </td>
+                    <td className="py-2 pr-4 text-slate-700">
+                      {group.sources.join(", ") || "-"}
+                    </td>
+                    <td className="py-2 pr-4 text-slate-700">{group.bookingCount}</td>
+                    <td className="py-2 pr-4 text-slate-700">{group.tickets}</td>
+                    <td className="py-2 pr-4 text-slate-700">€ {group.revenue}</td>
+                    <td className="py-2 text-slate-700">€ {group.refundEstimate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </AdminCard>
+      )}
+
       {otaConflicts.length > 0 && canAct && (
         <section>
           <h2 className="text-xl font-semibold mb-2">Conflitti OTA — checklist manuale</h2>
@@ -152,4 +199,11 @@ export function OverrideDetailClient({
       )}
     </div>
   );
+}
+
+function formatDurationType(durationType: string): string {
+  if (durationType === "FULL_DAY") return "Full day";
+  if (durationType === "HALF_DAY_MORNING") return "Mattina";
+  if (durationType === "HALF_DAY_AFTERNOON") return "Pomeriggio";
+  return durationType;
 }

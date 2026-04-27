@@ -12,6 +12,7 @@ import { dispatchNotification, defaultNotificationChannels } from "@/lib/notific
 import { formatItDay } from "@/lib/dates";
 import { bookingWithDetailsInclude } from "@/lib/booking/queries";
 import { handleAutoRefundOnConfirmedToCancelled } from "./auto-refund";
+import { buildTicketUrl } from "@/lib/booking/ticket";
 
 export async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void> {
   // Tolerant parsing: PI creato fuori dal flusso (Stripe dashboard, testing)
@@ -175,6 +176,7 @@ async function sendConfirmationEmail(bookingId: string, paidCents: number): Prom
       ? formatEur(booking.directBooking.balanceAmount)
       : undefined,
     recoveryUrl: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/recupera-prenotazione`,
+    ticketUrl: buildTicketUrl(booking.confirmationCode),
   });
 
   await sendEmail({

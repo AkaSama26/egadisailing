@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
+import { db } from "@/lib/db";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://egadisailing.com";
   const pages = [
     "",
@@ -11,17 +12,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/about",
     "/contacts",
     "/faq",
-    "/experiences/social-boating",
-    "/experiences/exclusive-experience",
-    "/experiences/cabin-charter",
-    "/experiences/boat-shared-full",
-    "/experiences/boat-shared-morning",
-    "/experiences/boat-exclusive-full",
-    "/experiences/boat-exclusive-morning",
     "/islands/favignana",
     "/islands/levanzo",
     "/islands/marettimo",
   ];
+
+  const services = await db.service.findMany({
+    where: { active: true },
+    select: { id: true, updatedAt: true },
+    orderBy: { priority: "desc" },
+  });
 
   const entries: MetadataRoute.Sitemap = [];
 
@@ -32,6 +32,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
         lastModified: new Date(),
         changeFrequency: "weekly",
         priority: page === "" ? 1 : 0.8,
+      });
+    }
+  }
+
+  for (const service of services) {
+    for (const locale of routing.locales) {
+      entries.push({
+        url: `${baseUrl}/${locale}/experiences/${service.id}`,
+        lastModified: service.updatedAt,
+        changeFrequency: "weekly",
+        priority: 0.8,
       });
     }
   }

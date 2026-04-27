@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Decimal from "decimal.js";
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { formatEur } from "@/lib/pricing/cents";
@@ -18,7 +19,7 @@ export default async function BookingSuccessPage({
 }: {
   params: Promise<{ locale: string; code: string }>;
 }) {
-  const { code } = await params;
+  const { code, locale } = await params;
   const booking = await db.booking.findUnique({
     where: { confirmationCode: normalizeConfirmationCode(code) },
     include: {
@@ -98,6 +99,12 @@ export default async function BookingSuccessPage({
               Email conferma inviata a{" "}
               <strong className="text-black">{booking.customer.email}</strong>.
             </p>
+            <Link
+              href={`/${locale}/ticket/${booking.confirmationCode}`}
+              className="inline-block rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white hover:bg-slate-700"
+            >
+              Apri biglietto QR
+            </Link>
           </>
         ) : (
           <>

@@ -93,7 +93,8 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
             aria-live="polite"
             className="p-3 rounded-lg bg-emerald-50 text-emerald-700 text-sm"
           >
-            Codice inviato a <strong>{reqState.email}</strong>. Controlla la tua email.
+            Se esiste una prenotazione associata a <strong>{email || reqState.email}</strong>,
+            riceverai un codice via email. Controlla anche spam o promozioni.
           </div>
         )}
         {reqState.status === "error" && (
@@ -110,6 +111,9 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
       <hr className="my-6" />
 
       <h2 className="text-lg font-semibold mb-3">Inserisci il codice</h2>
+      <p className="mb-4 text-sm text-gray-600">
+        Una volta verificato il codice accederai alla tua area prenotazioni.
+      </p>
       <form action={verifyAction} className="space-y-3">
         <label className="block text-sm font-medium" htmlFor="ver-email">
           Email

@@ -1,4 +1,5 @@
 import { startBokunAvailabilityWorker } from "./workers/bokun-availability-worker";
+import { startBokunBookingWorker } from "./workers/bokun-booking-worker";
 import { startBokunPricingWorker } from "./workers/bokun-pricing-worker";
 import { startBoataroundAvailabilityWorker } from "./workers/boataround-availability-worker";
 import { startManualAlertWorker } from "./workers/manual-alert-worker";
@@ -35,11 +36,12 @@ export function registerQueueWorkers(): void {
   globalForWorkers.__workersRegistered__ = true;
 
   startBokunAvailabilityWorker();
+  startBokunBookingWorker();
   startBokunPricingWorker();
   startBoataroundAvailabilityWorker();
   startManualAlertWorker();
   logger.info(
-    "BullMQ workers registered (bokun availability, bokun pricing, boataround availability, manual alert)",
+    "BullMQ workers registered (bokun availability, bokun booking, bokun pricing, boataround availability, manual alert)",
   );
 
   registerShutdownHandler();

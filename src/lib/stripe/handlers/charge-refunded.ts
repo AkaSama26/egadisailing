@@ -6,7 +6,9 @@ import { ValidationError } from "@/lib/errors";
 export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   const payment = await db.payment.findFirst({
     where: { stripeChargeId: charge.id },
-    include: { booking: true },
+    include: {
+      booking: { include: { service: { select: { type: true } } } },
+    },
   });
   // R13-ALTA: se charge.refunded arriva PRIMA di payment_intent.succeeded
   // (rare network race Stripe workers), il Payment non esiste ancora. Se
@@ -117,14 +119,25 @@ export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   // booking e' ancora attivo, il cliente riceve solo parziale rimborso.
   if (isFullRefund) {
     try {
-      const { releaseDates } = await import("@/lib/availability/service");
+      const { reconcileBoatDatesFromActiveBookings, releaseBookingDates } = await import("@/lib/availability/service");
       const { CHANNELS } = await import("@/lib/channels");
-      await releaseDates(
-        payment.booking.boatId,
-        payment.booking.startDate,
-        payment.booking.endDate,
-        CHANNELS.DIRECT,
-      );
+      const { isBoatSharedServiceType } = await import("@/lib/booking/boat-slot-availability");
+      if (isBoatSharedServiceType(payment.booking.service.type)) {
+        await reconcileBoatDatesFromActiveBookings({
+          boatId: payment.booking.boatId,
+          startDate: payment.booking.startDate,
+          endDate: payment.booking.endDate,
+          sourceChannel: CHANNELS.DIRECT,
+        });
+      } else {
+        await releaseBookingDates({
+          bookingId: payment.bookingId,
+          boatId: payment.booking.boatId,
+          startDate: payment.booking.startDate,
+          endDate: payment.booking.endDate,
+          sourceChannel: CHANNELS.DIRECT,
+        });
+      }
     } catch (err) {
       // Log ma non throw: il refund Stripe e' gia' committato. Admin
       // dovra' rilasciare manualmente il calendario se questo fallisce.

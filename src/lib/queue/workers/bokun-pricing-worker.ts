@@ -73,7 +73,7 @@ export function startBokunPricingWorker() {
       }
 
       const markup = new Decimal(env.BOKUN_PRICE_MARKUP);
-      const freshAmount = quote.finalPricePerPerson;
+      const freshAmount = quote.finalUnitPrice;
       // Arrotonda per eccesso all'euro — Bokun non accetta frazioni di cent
       // diverse da quelle del proprio arrotondamento; integer e' safest.
       const bokunAmount = freshAmount

@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { toUtcDay, isoDay, eachUtcDayInclusive } from "@/lib/dates";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { fanOutAvailability } from "./fan-out";
+import { BOAT_SERVICE_TYPES } from "@/lib/booking/boat-slot-availability";
 
 export interface UpdateAvailabilityInput {
   boatId: string;
@@ -301,6 +302,15 @@ export async function blockDates(
   await changeDatesBatch(boatId, startDate, endDate, sourceChannel, "BLOCKED", lockedByBookingId);
 }
 
+export async function markDatesPartiallyBooked(
+  boatId: string,
+  startDate: Date,
+  endDate: Date,
+  sourceChannel: string,
+): Promise<void> {
+  await changeDatesBatch(boatId, startDate, endDate, sourceChannel, "PARTIALLY_BOOKED");
+}
+
 export async function releaseDates(
   boatId: string,
   startDate: Date,
@@ -308,4 +318,170 @@ export async function releaseDates(
   sourceChannel: string,
 ): Promise<void> {
   await changeDatesBatch(boatId, startDate, endDate, sourceChannel, "AVAILABLE");
+}
+
+export async function reconcileBoatDatesFromActiveBookings(input: {
+  boatId: string;
+  startDate: Date;
+  endDate: Date;
+  sourceChannel: string;
+}): Promise<void> {
+  for (const date of eachUtcDayInclusive(input.startDate, input.endDate)) {
+    const day = toUtcDay(date);
+    const current = await db.boatAvailability.findUnique({
+      where: { boatId_date: { boatId: input.boatId, date: day } },
+      select: { status: true, lockedByBookingId: true },
+    });
+
+    if (current?.status === "BLOCKED" && !current.lockedByBookingId) {
+      logger.info(
+        { boatId: input.boatId, date: isoDay(day), source: input.sourceChannel },
+        "Skipping boat availability reconciliation because an admin block owns the day",
+      );
+      continue;
+    }
+
+    const activeBookings = await db.booking.findMany({
+      where: {
+        boatId: input.boatId,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        claimsAvailability: true,
+        startDate: { lte: day },
+        endDate: { gte: day },
+        service: { is: { type: { in: [...BOAT_SERVICE_TYPES] } } },
+      },
+      select: {
+        id: true,
+        service: { select: { type: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const exclusive = activeBookings.find((b) => b.service.type === "BOAT_EXCLUSIVE");
+    if (exclusive) {
+      await updateAvailability({
+        boatId: input.boatId,
+        date: day,
+        status: "BLOCKED",
+        sourceChannel: input.sourceChannel,
+        lockedByBookingId: exclusive.id,
+      });
+      continue;
+    }
+
+    if (activeBookings.some((b) => b.service.type === "BOAT_SHARED")) {
+      await updateAvailability({
+        boatId: input.boatId,
+        date: day,
+        status: "PARTIALLY_BOOKED",
+        sourceChannel: input.sourceChannel,
+      });
+      continue;
+    }
+
+    await updateAvailability({
+      boatId: input.boatId,
+      date: day,
+      status: "AVAILABLE",
+      sourceChannel: input.sourceChannel,
+    });
+  }
+}
+
+export async function releaseDatesIfOwned(
+  boatId: string,
+  startDate: Date,
+  endDate: Date,
+  sourceChannel: string,
+  bookingId: string,
+): Promise<void> {
+  const days = eachUtcDayInclusive(startDate, endDate);
+  const fanOutTargets: string[] = [];
+
+  await db.$transaction(async (tx) => {
+    for (const date of days) {
+      const dateOnly = toUtcDay(date);
+      const dayIso = isoDay(dateOnly);
+
+      await acquireTxAdvisoryLock(tx, AVAILABILITY_LOCK_NAMESPACE, boatId, dayIso);
+
+      const current = await tx.boatAvailability.findUnique({
+        where: { boatId_date: { boatId, date: dateOnly } },
+      });
+
+      if (!current || current.lockedByBookingId !== bookingId) {
+        logger.warn(
+          {
+            boatId,
+            date: dayIso,
+            source: sourceChannel,
+            bookingId,
+            currentLockedBy: current?.lockedByBookingId ?? null,
+          },
+          "Owner-aware availability release skipped",
+        );
+        continue;
+      }
+
+      if (current.status === "AVAILABLE") {
+        await tx.boatAvailability.update({
+          where: { boatId_date: { boatId, date: dateOnly } },
+          data: { lastSyncedSource: sourceChannel, lastSyncedAt: new Date() },
+        });
+        continue;
+      }
+
+      await tx.boatAvailability.update({
+        where: { boatId_date: { boatId, date: dateOnly } },
+        data: {
+          status: "AVAILABLE",
+          lockedByBookingId: null,
+          lastSyncedSource: sourceChannel,
+          lastSyncedAt: new Date(),
+        },
+      });
+      fanOutTargets.push(dayIso);
+    }
+  });
+
+  for (const dayIso of fanOutTargets) {
+    try {
+      await fanOutAvailability({
+        boatId,
+        date: dayIso,
+        status: "AVAILABLE",
+        sourceChannel,
+      });
+    } catch (err) {
+      logger.error(
+        { err, boatId, date: dayIso, source: sourceChannel, bookingId },
+        "Owner-aware fan-out enqueue failed — reconciliation cron will recover",
+      );
+    }
+  }
+}
+
+export interface ReleaseBookingDatesInput {
+  bookingId: string;
+  boatId: string;
+  startDate: Date;
+  endDate: Date;
+  sourceChannel: string;
+}
+
+/**
+ * Owner-aware release for booking-bound cleanup paths.
+ *
+ * Use this when a concrete booking is being cancelled/refunded/expired. It
+ * prevents cleanup for booking B from freeing a cell currently owned by
+ * booking A after a race or override decision.
+ */
+export async function releaseBookingDates(input: ReleaseBookingDatesInput): Promise<void> {
+  await releaseDatesIfOwned(
+    input.boatId,
+    input.startDate,
+    input.endDate,
+    input.sourceChannel,
+    input.bookingId,
+  );
 }

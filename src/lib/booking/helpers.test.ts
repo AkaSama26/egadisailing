@@ -31,6 +31,12 @@ describe("deriveEndDate", () => {
     expect(isoDay(end)).toBe("2026-07-10");
   });
 
+  test("MULTI_DAY = calendar days inclusive", () => {
+    const start = parseIsoDay("2026-07-04");
+    const end = deriveEndDate(start, "MULTI_DAY", 72);
+    expect(isoDay(end)).toBe("2026-07-06");
+  });
+
   test("FULL_DAY = +durationHours", () => {
     const start = new Date("2026-07-15T09:00:00Z");
     const end = deriveEndDate(start, "FULL_DAY", 8);

@@ -28,9 +28,12 @@ export interface BokunPricingSyncPayload {
 }
 
 export interface BookingWebhookPayload {
-  channel: Extract<Channel, "BOKUN" | "BOATAROUND">;
-  externalBookingId: string;
-  rawPayload: Record<string, unknown>;
+  provider: Extract<Channel, "BOKUN" | "BOATAROUND">;
+  eventId: string;
+  topic: string;
+  bookingId: string;
+  experienceBookingId?: string;
+  receivedAt: string;
 }
 
 export interface OtpCleanupPayload {

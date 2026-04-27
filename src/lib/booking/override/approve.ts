@@ -49,6 +49,20 @@ export async function approveOverride(
     );
   }
 
+  const nonDirectConflictChannels = request.conflictSourceChannels.filter(
+    (c) => c !== "DIRECT",
+  );
+  if (nonDirectConflictChannels.length > 0) {
+    throw new ValidationError(
+      "Override non approvabile: i conflitti da portali aggregatori bloccano il calendario master e non possono essere scavalcati.",
+      {
+        code: "OVERRIDE_EXTERNAL_CONFLICT_FORBIDDEN",
+        requestId,
+        channels: nonDirectConflictChannels,
+      },
+    );
+  }
+
   // OTA checklist enforcement (§7.4 step 1)
   const otaConflictChannels = request.conflictSourceChannels.filter((c) =>
     isOtaChannel(c as ConflictSourceChannel),
@@ -110,11 +124,11 @@ export async function approveOverride(
     });
     await tx.booking.updateMany({
       where: { id: { in: request.conflictingBookingIds } },
-      data: { status: "CANCELLED" },
+      data: { status: "CANCELLED", claimsAvailability: false },
     });
     await tx.booking.update({
       where: { id: request.newBookingId },
-      data: { status: "CONFIRMED" },
+      data: { status: "CONFIRMED", claimsAvailability: true },
     });
   });
 

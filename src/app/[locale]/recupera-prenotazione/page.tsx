@@ -16,6 +16,14 @@ export default function RecuperaPrenotazionePage() {
           Inserisci l&apos;email usata al momento della prenotazione. Ti invieremo un codice di
           verifica valido per 15 minuti.
         </p>
+        <div className="mb-6 rounded-lg border border-sky-100 bg-sky-50 p-4 text-sm text-sky-950">
+          <p className="font-semibold">Dopo l&apos;accesso potrai:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>aprire il biglietto QR della prenotazione;</li>
+            <li>cambiare data gratuitamente, se disponibile;</li>
+            <li>richiedere cancellazione e rimborso secondo la policy.</li>
+          </ul>
+        </div>
         <RecuperaPrenotazioneClient turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""} />
       </CustomerCardLight>
     </OceanLayout>

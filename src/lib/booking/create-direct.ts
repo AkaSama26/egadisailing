@@ -10,6 +10,11 @@ import {
   isBoatExclusiveServiceType,
   BOAT_EXCLUSIVE_SERVICE_TYPES,
 } from "@/lib/booking/cross-channel-conflicts";
+import {
+  decideBoatSlotAvailability,
+  isBoatServiceType,
+  loadBoatSlotAvailability,
+} from "@/lib/booking/boat-slot-availability";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { NotFoundError, ValidationError, ConflictError } from "@/lib/errors";
 import { deriveEndDate, generateConfirmationCode } from "./helpers";
@@ -33,6 +38,7 @@ export interface ConsentInput {
 export interface CreateDirectBookingInput {
   serviceId: string;
   startDate: Date;
+  durationDays?: number;
   numPeople: number;
   customer: {
     email: string;
@@ -115,6 +121,19 @@ export async function createPendingDirectBooking(
     );
   }
 
+  let charterDurationDays: number | undefined;
+  if (service.type === "CABIN_CHARTER") {
+    charterDurationDays =
+      input.durationDays ?? Math.max(3, Math.min(7, Math.ceil(service.durationHours / 24)));
+    if (
+      !Number.isInteger(charterDurationDays) ||
+      charterDurationDays < 3 ||
+      charterDurationDays > 7
+    ) {
+      throw new ValidationError("Il charter deve durare da 3 a 7 giornate");
+    }
+  }
+
   // Enforce paymentSchedule dal service — il client non puo' overridere.
   // Es. Cabin Charter e' sempre DEPOSIT_BALANCE: bloccare FULL mantiene
   // coerenza con il flusso commerciale (admin puo' sempre fare booking
@@ -145,10 +164,18 @@ export async function createPendingDirectBooking(
     );
   }
 
-  const endDate = deriveEndDate(startDay, service.durationType, service.durationHours);
+  const effectiveDurationHours =
+    service.type === "CABIN_CHARTER" && charterDurationDays
+      ? charterDurationDays * 24
+      : service.durationHours;
+  const effectiveDurationType =
+    service.type === "CABIN_CHARTER" ? "MULTI_DAY" : service.durationType;
+  const endDate = deriveEndDate(startDay, effectiveDurationType, effectiveDurationHours);
   const endDay = toUtcDay(endDate);
 
-  const quote = await quotePrice(input.serviceId, startDay, input.numPeople);
+  const quote = await quotePrice(input.serviceId, startDay, input.numPeople, {
+    durationDays: charterDurationDays,
+  });
   const totalCents = toCents(quote.totalPrice);
 
   let depositCents = 0;
@@ -167,9 +194,10 @@ export async function createPendingDirectBooking(
     // R29-AUDIT-FIX1/2: lock "availability" range-based (tutti i giorni del
     // booking, ordinati ASC). Skip per SHARED services (SOCIAL_BOATING /
     // BOAT_SHARED): cohabitation legittima, lock-per-giorno serializzerebbe
-    // 20 clienti stesso tour artificialmente. Exclusive (CABIN_CHARTER /
-    // BOAT_EXCLUSIVE): lock richiesto per serializzare cross-adapter concorrenti.
-    if (isBoatExclusiveServiceType(service.type)) {
+    // 20 clienti stesso tour artificialmente. Exclusive (EXCLUSIVE_EXPERIENCE /
+    // CABIN_CHARTER / BOAT_EXCLUSIVE): lock richiesto per serializzare
+    // cross-adapter concorrenti.
+    if (isBoatExclusiveServiceType(service.type) || isBoatServiceType(service.type)) {
       await acquireAvailabilityRangeLock(tx, service.boatId, startDay, endDay);
     }
 
@@ -235,10 +263,10 @@ export async function createPendingDirectBooking(
     //
     // R28-CRIT-1: filtro asimmetrico per tipo servizio. Il pattern precedente
     // (pre-R28) bloccava OGNI overlap stessa (boatId, date-range) —
-    // appropriato per boat-exclusive (CABIN_CHARTER/BOAT_EXCLUSIVE) ma ROMPE
-    // il modello tour condivisi (SOCIAL_BOATING 20 posti / BOAT_SHARED 12
-    // posti): secondo cliente riceveva ConflictError invece di passare a
-    // capacity-check normale.
+    // appropriato per boat-exclusive (EXCLUSIVE_EXPERIENCE/CABIN_CHARTER/
+    // BOAT_EXCLUSIVE) ma ROMPE il modello tour condivisi (SOCIAL_BOATING 20
+    // posti / BOAT_SHARED 12 posti): secondo cliente riceveva ConflictError
+    // invece di passare a capacity-check normale.
     //
     // Logica asimmetrica:
     //  - Nuovo booking EXCLUSIVE → blocca su QUALSIASI booking attivo stesso
@@ -249,21 +277,70 @@ export async function createPendingDirectBooking(
     //
     // Aligned con pattern Bokun/Boataround/Charter adapter + cross-channel-
     // conflicts helper (gia' usavano filter service.type IN boat-exclusive).
+    //
+    // R30-BIZ: l'override resta solo DIRECT-vs-DIRECT. Se il conflict arriva
+    // da Bokun/Boataround/SamBoat/Click&Boat/Nautal, quello slot e' gia'
+    // impegnato sul DB master e deve risultare non prenotabile ovunque, senza
+    // offrire scavalco al cliente del sito.
     const isNewBoatExclusive = isBoatExclusiveServiceType(service.type);
-    const allConflicts = await tx.booking.findMany({
-      where: {
-        boatId: service.boatId,
-        status: { in: ["PENDING", "CONFIRMED"] },
-        startDate: { lte: endDay },
-        endDate: { gte: startDay },
-        // Se nuovo e' shared, escludiamo altri shared dai conflitti
-        // (permettiamo cohabitation). Se exclusive, NO filter (tutti).
-        ...(isNewBoatExclusive
-          ? {}
-          : { service: { is: { type: { in: [...BOAT_EXCLUSIVE_SERVICE_TYPES] } } } }),
-      },
-      include: { directBooking: true },
-    });
+    let allConflicts;
+    if (isBoatServiceType(service.type)) {
+      const boatSlot = await loadBoatSlotAvailability(tx, service.boatId, startDay);
+      const decision = decideBoatSlotAvailability(
+        {
+          id: service.id,
+          type: service.type,
+          boatId: service.boatId,
+          durationType: service.durationType,
+          capacityMax: service.capacityMax,
+        },
+        input.numPeople,
+        boatSlot,
+      );
+      if (decision.capacityExceeded) {
+        throw new ConflictError("Boat shared capacity exceeded", {
+          requestedPeople: input.numPeople,
+          sold: decision.sharedSold,
+          remaining: decision.sharedRemaining,
+          capacityMax: service.capacityMax,
+        });
+      }
+      if (
+        service.durationType !== "FULL_DAY" &&
+        decision.conflicts.some((c) => c.booking.durationType === "FULL_DAY")
+      ) {
+        throw new ConflictError("Half-day cannot override an existing full-day booking", {
+          reason: "full_day_priority",
+          conflictingBookings: decision.conflicts.map((c) => ({
+            id: c.booking.id,
+            source: c.booking.source,
+          })),
+        });
+      }
+      const conflictIds = decision.conflicts.map((c) => c.booking.id);
+      allConflicts =
+        conflictIds.length > 0
+          ? await tx.booking.findMany({
+              where: { id: { in: conflictIds } },
+              include: { directBooking: true },
+            })
+          : [];
+    } else {
+      allConflicts = await tx.booking.findMany({
+        where: {
+          boatId: service.boatId,
+          status: { in: ["PENDING", "CONFIRMED"] },
+          startDate: { lte: endDay },
+          endDate: { gte: startDay },
+          // Se nuovo e' shared, escludiamo altri shared dai conflitti
+          // (permettiamo cohabitation). Se exclusive, NO filter (tutti).
+          ...(isNewBoatExclusive
+            ? {}
+            : { service: { is: { type: { in: [...BOAT_EXCLUSIVE_SERVICE_TYPES] } } } }),
+        },
+        include: { directBooking: true },
+      });
+    }
 
     // Step 2: partitio — "ownRetriable" sono i propri PENDING recenti con
     // PI in stato terminal-failure (card_declined, canceled). Altri sono
@@ -326,6 +403,7 @@ export async function createPendingDirectBooking(
           id: b.id,
           revenue: new Decimal(b.totalPrice.toString()),
           isAdminBlock: false,
+          source: b.source,
         })),
         experienceDate: startDay,
         today: new Date(),
@@ -337,8 +415,15 @@ export async function createPendingDirectBooking(
             conflictingBookings: blockers.map((b) => ({
               code: b.confirmationCode,
               source: b.source,
+              numPeople: b.numPeople,
             })),
             overrideReason: overrideEligibility.reason,
+            externalTicketsToRefundManually:
+              overrideEligibility.reason === "external_booking"
+                ? blockers
+                    .filter((b) => b.source !== "DIRECT")
+                    .reduce((sum, b) => sum + b.numPeople, 0)
+                : 0,
           },
         );
       }
@@ -369,6 +454,8 @@ export async function createPendingDirectBooking(
         totalPrice: quote.totalPrice.toFixed(2),
         notes: input.notes,
         status: "PENDING",
+        exclusiveSlot: isNewBoatExclusive || service.type === "BOAT_EXCLUSIVE",
+        claimsAvailability: overrideEligibility?.status === "override_request" ? false : true,
         directBooking: {
           create: {
             paymentSchedule: input.paymentSchedule,

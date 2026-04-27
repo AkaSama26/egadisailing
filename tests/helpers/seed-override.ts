@@ -26,6 +26,7 @@ import { randomUUID } from "node:crypto";
  */
 export type SeedableServiceType =
   | "BOAT_EXCLUSIVE"
+  | "EXCLUSIVE_EXPERIENCE"
   | "SOCIAL_BOATING"
   | "CABIN_CHARTER"
   | "BOAT_SHARED"
@@ -129,6 +130,7 @@ export interface SeedBookingOverrides {
   status?: BookingStatus;
   source?: BookingSource;
   confirmationCode?: string;
+  claimsAvailability?: boolean;
   /** Se true, crea DirectBooking associato (paymentSchedule FULL). */
   withDirectBooking?: boolean;
 }
@@ -169,6 +171,7 @@ export async function seedBooking(db: PrismaClient, opts: SeedBookingOverrides) 
       numPeople: opts.numPeople ?? 2,
       totalPrice: opts.totalPrice ?? "500.00",
       status: opts.status ?? "PENDING",
+      claimsAvailability: opts.claimsAvailability ?? (opts.status ? opts.status !== "PENDING" : false),
       ...(opts.withDirectBooking
         ? {
             directBooking: {

@@ -60,6 +60,24 @@ export default async function OverrideDetail({
       };
     });
 
+  const conflictGroups = ["FULL_DAY", "HALF_DAY_MORNING", "HALF_DAY_AFTERNOON"]
+    .map((durationType) => {
+      const group = conflicts.filter((c) => c.service.durationType === durationType);
+      const revenue = group.reduce(
+        (sum, c) => sum.plus(c.totalPrice.toString()),
+        new Decimal(0),
+      );
+      return {
+        durationType,
+        sources: Array.from(new Set(group.map((c) => c.source))),
+        bookingCount: group.length,
+        tickets: group.reduce((sum, c) => sum + c.numPeople, 0),
+        revenue: revenue.toFixed(2),
+        refundEstimate: revenue.toFixed(2),
+      };
+    })
+    .filter((g) => g.bookingCount > 0);
+
   return (
     <OverrideDetailClient
       request={{
@@ -79,6 +97,7 @@ export default async function OverrideDetail({
         dropDeadAt: request.dropDeadAt.toISOString(),
         decisionNotes: request.decisionNotes,
       }}
+      conflictGroups={conflictGroups}
       otaConflicts={otaConflicts}
     />
   );

@@ -17,6 +17,8 @@ type Step = "date" | "people" | "customer" | "payment" | "success";
 interface PersistedState {
   step: Step;
   startDate: string;
+  endDate: string;
+  durationDays: number;
   numPeople: number;
   customer: Customer;
 }
@@ -56,10 +58,39 @@ function clearDraft(serviceId: string): void {
   }
 }
 
+function addIsoDays(isoDate: string, days: number): string {
+  const date = new Date(`${isoDate}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function inclusiveDaysBetween(startDate: string, endDate: string): number | null {
+  if (!startDate || !endDate) return null;
+  const start = new Date(`${startDate}T00:00:00.000Z`).getTime();
+  const end = new Date(`${endDate}T00:00:00.000Z`).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
+  return Math.round((end - start) / 86_400_000) + 1;
+}
+
+function deriveClientEndDate(
+  startDate: string,
+  durationType: string,
+  durationHours: number,
+  durationDays?: number,
+): string {
+  if (!startDate) return startDate;
+  if (durationType === "MULTI_DAY") {
+    return addIsoDays(startDate, Math.max(1, durationDays ?? Math.ceil(durationHours / 24)) - 1);
+  }
+  if (durationType === "WEEK") return addIsoDays(startDate, 6);
+  return startDate;
+}
+
 interface Props {
   locale: string;
   serviceId: string;
   serviceName: string;
+  serviceType: string;
   durationType: string;
   durationHours: number;
   capacityMax: number;
@@ -72,6 +103,9 @@ interface Props {
    *  ritornerebbe a quell'host che poi potrebbe non matchare
    *  SERVER_ACTIONS_ALLOWED_ORIGINS. */
   appUrl: string;
+  initialStartDate?: string;
+  initialEndDate?: string;
+  initialDurationDays?: number;
 }
 
 interface Customer {
@@ -92,6 +126,8 @@ export function BookingWizard(props: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [durationDays, setDurationDays] = useState<number>(props.initialDurationDays ?? 3);
   const [numPeople, setNumPeople] = useState<number>(1);
   const [customer, setCustomer] = useState<Customer>({
     email: "",
@@ -125,30 +161,70 @@ export function BookingWizard(props: Props) {
   // Senza, la prima saveDraft post-mount viene invocata con default vuoti
   // prima che il restore giunga → sovrascrive il draft salvato precedente.
   const [hydrated, setHydrated] = useState(false);
+  const isCharter = props.serviceType === "CABIN_CHARTER";
+  const charterDurationDays = isCharter ? inclusiveDaysBetween(startDate, endDate) : null;
+  const effectiveDurationDays = isCharter ? charterDurationDays ?? durationDays : durationDays;
+  const canContinueFromDate =
+    !isCharter ||
+    (charterDurationDays !== null && charterDurationDays >= 3 && charterDurationDays <= 7);
 
   // R26-A1-C1 + R26-P2-CRITICA: restore in useEffect client-side per evitare
   // hydration mismatch. Dopo restore marca `hydrated=true` → save effect puo'
   // procedere senza sovrascrivere draft precedente con stati default.
   useEffect(() => {
     const d = loadDraft(props.serviceId);
-    if (d) {
-      if (d.step === "people" || d.step === "customer") setStep(d.step);
+    if (props.initialStartDate) {
+      setStartDate(props.initialStartDate);
+      const nextDurationDays = props.initialDurationDays ?? 3;
+      const nextEndDate = props.initialEndDate ?? addIsoDays(props.initialStartDate, nextDurationDays - 1);
+      if (props.initialDurationDays) setDurationDays(props.initialDurationDays);
+      if (isCharter) setEndDate(nextEndDate);
+      setStep(isCharter && !props.initialDurationDays && !props.initialEndDate ? "date" : "people");
+    } else if (d) {
+      if (d.step === "people" || d.step === "customer") {
+        setStep(d.step);
+      }
       if (typeof d.startDate === "string") setStartDate(d.startDate);
+      if (typeof d.endDate === "string") setEndDate(d.endDate);
+      if (typeof d.durationDays === "number") setDurationDays(d.durationDays);
       if (typeof d.numPeople === "number") setNumPeople(d.numPeople);
       if (d.customer && typeof d.customer === "object") {
         setCustomer((prev) => ({ ...prev, ...d.customer }));
       }
     }
     setHydrated(true);
-  }, [props.serviceId]);
+  }, [
+    props.serviceId,
+    props.initialStartDate,
+    props.initialEndDate,
+    props.initialDurationDays,
+    isCharter,
+  ]);
 
   // R26-A1-C1: persist draft ad ogni change. Skip finche' hydrated=false
   // (R26-P2-CRITICA: altrimenti overrite draft esistente con defaults).
   useEffect(() => {
     if (!hydrated) return;
     if (step === "payment" || step === "success") return;
-    saveDraft(props.serviceId, { step, startDate, numPeople, customer });
-  }, [hydrated, props.serviceId, step, startDate, numPeople, customer]);
+    saveDraft(props.serviceId, {
+      step,
+      startDate,
+      endDate,
+      durationDays: effectiveDurationDays,
+      numPeople,
+      customer,
+    });
+  }, [
+    hydrated,
+    props.serviceId,
+    step,
+    startDate,
+    endDate,
+    durationDays,
+    effectiveDurationDays,
+    numPeople,
+    customer,
+  ]);
 
   async function createIntent() {
     setError(null);
@@ -173,6 +249,7 @@ export function BookingWizard(props: Props) {
           // era fragile: funzionava per date pure ma un futuro switch a
           // `datetime-local` input introdurrebbe TZ silent shift.
           startDate,
+          durationDays: isCharter ? effectiveDurationDays : undefined,
           numPeople,
           customer,
           paymentSchedule: props.defaultPaymentSchedule,
@@ -238,7 +315,13 @@ export function BookingWizard(props: Props) {
       const result = await checkOverrideEligibilityAction({
         serviceId: props.serviceId,
         startDate: startDate,
-        endDate: startDate, // single-day booking — wizard doesn't yet support range
+        endDate: deriveClientEndDate(
+          startDate,
+          isCharter ? "MULTI_DAY" : props.durationType,
+          props.durationHours,
+          isCharter ? effectiveDurationDays : undefined,
+        ),
+        durationDays: isCharter ? effectiveDurationDays : undefined,
         numPax: numPeople,
       });
       if (result.status === "blocked") {
@@ -249,6 +332,8 @@ export function BookingWizard(props: Props) {
             ? "Questa data e' gia' prenotata. Prova un'altra data."
             : result.reason === "boat_block"
             ? "Questa data e' stata bloccata dall'amministrazione (manutenzione)."
+            : result.reason === "external_booking"
+            ? "Questa data e' gia' occupata da una prenotazione confermata su un portale esterno. Prova un'altra data."
             : result.reason === "feature_disabled"
             ? // Feature flag OFF: comportamento legacy — procediamo allo step
               // successivo, il controllo vero avverra' al createPendingDirectBooking.
@@ -299,8 +384,15 @@ export function BookingWizard(props: Props) {
       {step === "date" && (
         <DateStep
           value={startDate}
-          onChange={setStartDate}
-          onNext={() => startDate && setStep("people")}
+          endValue={endDate}
+          isCharter={isCharter}
+          onChange={(value) => {
+            setStartDate(value);
+            if (endDate && value && endDate < addIsoDays(value, 2)) setEndDate("");
+          }}
+          onEndChange={setEndDate}
+          onNext={() => setStep("people")}
+          canContinue={Boolean(startDate) && canContinueFromDate}
         />
       )}
 
@@ -391,20 +483,39 @@ export function BookingWizard(props: Props) {
 
 function DateStep({
   value,
+  endValue,
+  isCharter,
   onChange,
+  onEndChange,
   onNext,
+  canContinue,
 }: {
   value: string;
+  endValue: string;
+  isCharter: boolean;
   onChange: (v: string) => void;
+  onEndChange: (v: string) => void;
   onNext: () => void;
+  canContinue: boolean;
 }) {
+  const charterDurationDays = isCharter ? inclusiveDaysBetween(value, endValue) : null;
+  const charterIsTooShort =
+    isCharter &&
+    Boolean(value && endValue) &&
+    (charterDurationDays === null || charterDurationDays < 3);
+  const charterIsTooLong = isCharter && charterDurationDays !== null && charterDurationDays > 7;
+  const endMin = value ? addIsoDays(value, 2) : new Date().toISOString().slice(0, 10);
+
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Scegli la data</h2>
+      <h2 className="text-2xl font-bold">Scegli le date</h2>
       {/* R24-A1-#13 WCAG 3.3.2: label esplicita per `date` input. */}
-      <div>
-        <label htmlFor="wizard-date" className="block text-sm font-medium mb-1">
-          Data di partenza
+      <div className="flex items-center gap-3">
+        <label
+          htmlFor="wizard-date"
+          className="w-8 shrink-0 text-right text-sm font-medium text-gray-600"
+        >
+          Da
         </label>
         <input
           id="wizard-date"
@@ -413,13 +524,46 @@ function DateStep({
           aria-required="true"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+          className="min-w-0 flex-1 px-4 py-3 rounded-lg border border-gray-300"
           min={new Date().toISOString().slice(0, 10)}
         />
       </div>
+      {isCharter && (
+        <>
+          <div className="flex items-center gap-3">
+            <label
+              htmlFor="wizard-end-date"
+              className="w-8 shrink-0 text-right text-sm font-medium text-gray-600"
+            >
+              A
+            </label>
+            <input
+              id="wizard-end-date"
+              type="date"
+              required
+              aria-required="true"
+              value={endValue}
+              onChange={(e) => onEndChange(e.target.value)}
+              className="min-w-0 flex-1 px-4 py-3 rounded-lg border border-gray-300"
+              min={endMin}
+            />
+          </div>
+          {charterIsTooShort && (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+              Il charter richiede almeno 3 giornate.
+            </p>
+          )}
+          {charterIsTooLong && (
+            <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-sky-800">
+              Per charter più lunghi di 7 giornate contatta la crew per un preventivo dedicato.
+            </p>
+          )}
+        </>
+      )}
       <button
+        type="button"
         onClick={onNext}
-        disabled={!value}
+        disabled={!canContinue}
         className="w-full py-3 rounded-full bg-[#d97706] text-white font-bold disabled:opacity-50"
       >
         Avanti

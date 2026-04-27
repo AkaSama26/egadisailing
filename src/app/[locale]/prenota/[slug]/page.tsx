@@ -13,12 +13,32 @@ export const metadata: Metadata = {
 
 export default async function BookingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ date?: string; endDate?: string; durationDays?: string }>;
 }) {
   const { locale, slug } = await params;
+  const sp = await searchParams;
   const service = await db.service.findUnique({ where: { id: slug } });
   if (!service || !service.active) notFound();
+  const initialStartDate =
+    typeof sp.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.date)
+      ? sp.date
+      : undefined;
+  const parsedDurationDays =
+    typeof sp.durationDays === "string" ? Number.parseInt(sp.durationDays, 10) : undefined;
+  const initialEndDate =
+    typeof sp.endDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.endDate)
+      ? sp.endDate
+      : undefined;
+  const initialDurationDays =
+    service.type === "CABIN_CHARTER" &&
+    parsedDurationDays &&
+    parsedDurationDays >= 3 &&
+    parsedDurationDays <= 7
+      ? parsedDurationDays
+      : undefined;
 
   return (
     <OceanLayout>
@@ -30,6 +50,7 @@ export default async function BookingPage({
           locale={locale}
           serviceId={service.id}
           serviceName={service.name}
+          serviceType={service.type}
           durationType={service.durationType}
           durationHours={service.durationHours}
           capacityMax={service.capacityMax}
@@ -37,6 +58,9 @@ export default async function BookingPage({
           defaultDepositPercentage={service.defaultDepositPercentage}
           turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
           appUrl={env.APP_URL}
+          initialStartDate={initialStartDate}
+          initialEndDate={initialEndDate}
+          initialDurationDays={initialDurationDays}
         />
       </div>
     </OceanLayout>

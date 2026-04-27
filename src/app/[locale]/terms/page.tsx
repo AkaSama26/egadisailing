@@ -52,13 +52,11 @@ export default function TermsPage() {
         </ul>
 
         <h2>3. Cancellazione da parte del cliente</h2>
-        <p>
-          <strong>DA DEFINIRE CON CLIENTE.</strong> Policy suggerita:
-        </p>
         <ul>
-          <li>Cancellazione almeno 7 giorni prima: rimborso 100%.</li>
-          <li>Cancellazione tra 7 e 2 giorni prima: rimborso 50%.</li>
-          <li>Cancellazione meno di 48h prima o no-show: nessun rimborso.</li>
+          <li>Fino a 15 giorni prima della partenza: rimborso completo.</li>
+          <li>Da 14 a 7 giorni prima della partenza: rimborso del 50% dell'importo pagato.</li>
+          <li>Da 6 giorni alla partenza e in caso di no-show: nessun rimborso.</li>
+          <li>Il cambio data e' sempre gratuito, subordinatamente alla disponibilita' della nuova data.</li>
         </ul>
 
         <h2>4. Cancellazione per meteo avverso</h2>

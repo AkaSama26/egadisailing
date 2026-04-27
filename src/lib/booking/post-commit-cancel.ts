@@ -1,12 +1,16 @@
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { refundPayment, getChargeRefundState } from "@/lib/stripe/payment-intents";
-import { releaseDates } from "@/lib/availability/service";
+import {
+  reconcileBoatDatesFromActiveBookings,
+  releaseBookingDates,
+} from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { fromCents } from "@/lib/pricing/cents";
 import { ok, partial, type Outcome, type PartialError } from "@/lib/result";
+import { isBoatSharedServiceType } from "./boat-slot-availability";
 
 /**
  * Helper condiviso per side-effect post-commit dopo cancel di un Booking
@@ -111,7 +115,10 @@ export async function postCommitCancelBooking(
 ): Promise<PostCommitCancelOutcome> {
   const booking = await db.booking.findUnique({
     where: { id: input.bookingId },
-    include: { payments: true },
+    include: {
+      payments: true,
+      service: { select: { type: true } },
+    },
   });
   if (!booking) {
     throw new Error(`postCommitCancelBooking: booking ${input.bookingId} not found`);
@@ -191,12 +198,22 @@ export async function postCommitCancelBooking(
   // 2. Release availability — fan-out via CHANNELS.DIRECT a tutti gli esterni.
   // Error tolerant: log warn, flag releaseOk=false, continue (non blocca audit).
   try {
-    await releaseDates(
-      booking.boatId,
-      booking.startDate,
-      booking.endDate,
-      CHANNELS.DIRECT,
-    );
+    if (isBoatSharedServiceType(booking.service.type)) {
+      await reconcileBoatDatesFromActiveBookings({
+        boatId: booking.boatId,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        sourceChannel: CHANNELS.DIRECT,
+      });
+    } else {
+      await releaseBookingDates({
+        bookingId: booking.id,
+        boatId: booking.boatId,
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        sourceChannel: CHANNELS.DIRECT,
+      });
+    }
   } catch (err) {
     releaseOk = false;
     const message = (err as Error).message;

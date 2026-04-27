@@ -1,12 +1,13 @@
 import Decimal from "decimal.js";
 import { db } from "@/lib/db";
-import { blockDates } from "@/lib/availability/service";
+import { blockDates, markDatesPartiallyBooked } from "@/lib/availability/service";
 import { logger } from "@/lib/logger";
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import { CHANNELS } from "@/lib/channels";
 import { fromCents } from "@/lib/pricing/cents";
 import type { PaymentType } from "@/lib/stripe/metadata";
 import { transitionBookingStatus } from "./transition-status";
+import { isBoatSharedServiceType } from "./boat-slot-availability";
 
 /**
  * Chiamato dal webhook Stripe quando un Payment Intent va a buon fine.
@@ -28,7 +29,7 @@ export async function confirmDirectBookingAfterPayment(params: {
 }): Promise<void> {
   const booking = await db.booking.findUnique({
     where: { id: params.bookingId },
-    include: { directBooking: true },
+    include: { directBooking: true, service: { select: { type: true } } },
   });
   if (!booking) throw new NotFoundError("Booking", params.bookingId);
 
@@ -148,13 +149,22 @@ export async function confirmDirectBookingAfterPayment(params: {
   // CONFIRMED, ma blockDates su slot gia' BLOCKED → noChange → no-op,
   // ok.
   if (booking.status === "CONFIRMED" || statusChanged) {
-    await blockDates(
-      booking.boatId,
-      booking.startDate,
-      booking.endDate,
-      CHANNELS.DIRECT,
-      booking.id,
-    );
+    if (isBoatSharedServiceType(booking.service.type)) {
+      await markDatesPartiallyBooked(
+        booking.boatId,
+        booking.startDate,
+        booking.endDate,
+        CHANNELS.DIRECT,
+      );
+    } else {
+      await blockDates(
+        booking.boatId,
+        booking.startDate,
+        booking.endDate,
+        CHANNELS.DIRECT,
+        booking.id,
+      );
+    }
   }
 
   logger.info(

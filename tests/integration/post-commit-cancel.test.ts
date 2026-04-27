@@ -32,6 +32,7 @@ const releaseDatesMock = vi.fn();
 const blockDatesMock = vi.fn();
 vi.mock("@/lib/availability/service", () => ({
   releaseDates: releaseDatesMock,
+  releaseBookingDates: releaseDatesMock,
   blockDates: blockDatesMock,
 }));
 
@@ -102,12 +103,13 @@ describe("postCommitCancelBooking", () => {
     expect(res.releaseOk).toBe(true);
 
     expect(refundPaymentMock).toHaveBeenCalledWith("ch_test_123", 200000);
-    expect(releaseDatesMock).toHaveBeenCalledWith(
-      boat.id,
-      booking.startDate,
-      booking.endDate,
-      "DIRECT",
-    );
+    expect(releaseDatesMock).toHaveBeenCalledWith({
+      bookingId: booking.id,
+      boatId: boat.id,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      sourceChannel: "DIRECT",
+    });
 
     // Payment marked REFUNDED
     const payments = await db.payment.findMany({ where: { bookingId: booking.id } });

@@ -31,4 +31,6 @@ export interface BokunBookingSummary {
   paymentStatus?: string;
   commissionAmount?: number | null;
   netAmount?: number | null;
+  experienceBookings?: unknown[];
+  productBookings?: unknown[];
 }

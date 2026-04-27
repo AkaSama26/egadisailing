@@ -42,12 +42,15 @@ describe("computeCancellationRate", () => {
     // 10 BOKUN bookings
     const bokunBookings = [];
     for (let i = 0; i < 10; i++) {
+      const date = new Date(Date.UTC(2026, 7, 15 + i));
       const b = await seedBooking(db, {
         boatId: boat.id,
         serviceId: service.id,
         source: "BOKUN",
         totalPrice: "1000.00",
         status: "CONFIRMED",
+        startDate: date,
+        endDate: date,
       });
       bokunBookings.push(b);
     }

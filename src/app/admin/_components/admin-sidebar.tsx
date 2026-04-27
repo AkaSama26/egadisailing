@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Calendar,
+  CalendarClock,
   Coins,
   Boxes,
   Users,
@@ -27,6 +28,7 @@ import {
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/prenotazioni", label: "Prenotazioni", icon: ListChecks },
+  { href: "/admin/change-requests", label: "Cambi data", icon: CalendarClock },
   { href: "/admin/calendario", label: "Calendario", icon: Calendar },
   { href: "/admin/prezzi", label: "Prezzi", icon: Coins },
   { href: "/admin/servizi", label: "Servizi", icon: Boxes },

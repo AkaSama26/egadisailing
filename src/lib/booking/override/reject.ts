@@ -68,6 +68,10 @@ export async function rejectOverride(
       to: "CANCELLED",
       reason: "override_rejected",
     });
+    await tx.booking.update({
+      where: { id: request.newBookingId },
+      data: { claimsAvailability: false },
+    });
   });
 
   // Post-commit: refund + release + audit via helper condiviso

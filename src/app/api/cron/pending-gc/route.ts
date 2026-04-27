@@ -3,11 +3,15 @@ import { logger } from "@/lib/logger";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { cancelPaymentIntent } from "@/lib/stripe/payment-intents";
-import { releaseDates } from "@/lib/availability/service";
+import {
+  reconcileBoatDatesFromActiveBookings,
+  releaseBookingDates,
+} from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { TTL, RUN_BUDGET, MAX_BATCHES as MAX_BATCHES_LIMITS } from "@/lib/timing";
 import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
+import { isBoatSharedServiceType } from "@/lib/booking/boat-slot-availability";
 
 export const runtime = "nodejs";
 
@@ -64,7 +68,10 @@ export const GET = withCronGuard(
             source: "DIRECT",
             createdAt: { lt: cutoff },
           },
-          include: { directBooking: true },
+          include: {
+            directBooking: true,
+            service: { select: { type: true } },
+          },
           orderBy: { createdAt: "asc" },
           take: size,
         });
@@ -92,7 +99,22 @@ export const GET = withCronGuard(
           });
           if (claim.count === 0) return;
 
-          await releaseDates(b.boatId, b.startDate, b.endDate, CHANNELS.DIRECT);
+          if (isBoatSharedServiceType(b.service.type)) {
+            await reconcileBoatDatesFromActiveBookings({
+              boatId: b.boatId,
+              startDate: b.startDate,
+              endDate: b.endDate,
+              sourceChannel: CHANNELS.DIRECT,
+            });
+          } else {
+            await releaseBookingDates({
+              bookingId: b.id,
+              boatId: b.boatId,
+              startDate: b.startDate,
+              endDate: b.endDate,
+              sourceChannel: CHANNELS.DIRECT,
+            });
+          }
           cancelled++;
         } catch (err) {
           errors.push({ bookingId: b.id, error: (err as Error).message });
@@ -134,12 +156,19 @@ export const GET = withCronGuard(
             status: { in: ["CANCELLED", "REFUNDED"] },
           },
         },
-        select: { boatId: true, date: true },
+        select: { boatId: true, date: true, lockedByBookingId: true },
         take: 200,
       });
       for (const o of orphans) {
         try {
-          await releaseDates(o.boatId, o.date, o.date, CHANNELS.DIRECT);
+          if (!o.lockedByBookingId) continue;
+          await releaseBookingDates({
+            bookingId: o.lockedByBookingId,
+            boatId: o.boatId,
+            startDate: o.date,
+            endDate: o.date,
+            sourceChannel: CHANNELS.DIRECT,
+          });
           driftReleased++;
         } catch (err) {
           logger.warn(

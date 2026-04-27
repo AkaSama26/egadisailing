@@ -7,9 +7,8 @@ import { logger } from "@/lib/logger";
 /**
  * Accoda job `pricing.bokun.sync` per ogni (service, date) dato.
  *
- * Chiamato dall'admin dopo create/update di HotDayRule o HotDayOverride
- * per propagare il nuovo prezzo al catalogo Bokun con markup applicato
- * dal worker.
+ * Chiamato dall'admin dopo create/update/delete di PricingPeriod per
+ * propagare il nuovo prezzo al catalogo Bokun con markup applicato dal worker.
  *
  * jobId deterministico `bokun-pricing-{serviceId}-{date}` per coalescenza
  * BullMQ: update ripetuti sulla stessa cella collassano sull'ultimo.
@@ -46,7 +45,7 @@ export async function scheduleBokunPricingSync(options: {
             data: {
               serviceId: service.id,
               date: day,
-              amount: quote.finalPricePerPerson.toString(),
+              amount: quote.finalUnitPrice.toString(),
             },
           },
           { jobId: `bokun-pricing-${service.id}-${day}` },

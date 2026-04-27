@@ -43,6 +43,7 @@ vi.mock("@/lib/stripe/payment-intents", () => ({
 
 vi.mock("@/lib/availability/service", () => ({
   releaseDates: releaseDatesMock,
+  releaseBookingDates: releaseDatesMock,
   blockDates: blockDatesMock,
   updateAvailability: vi.fn(),
 }));
@@ -127,6 +128,7 @@ describe("createOverrideRequest", () => {
       serviceId: service.id,
       totalPrice: "1000.00",
       status: "CONFIRMED",
+      claimsAvailability: false,
     });
 
     // Prima request: Laura Gourmet €2000
@@ -187,6 +189,7 @@ describe("createOverrideRequest", () => {
       serviceId: service.id,
       totalPrice: "1000.00",
       status: "CONFIRMED",
+      claimsAvailability: false,
     });
 
     const laura = await seedBooking(db, {
@@ -230,14 +233,16 @@ describe("createOverrideRequest", () => {
     expect(lauraUpdated?.status).toBe("PENDING"); // NOT rejected
   });
 
-  it("supersede preserva conflictSourceChannels del request originale (multi-source)", async () => {
+  it("rifiuta OverrideRequest con conflitti non-DIRECT", async () => {
     const { boat, service } = await seedBoatAndService(db);
-    // Conflict misto: 1 DIRECT + 1 BOKUN
+    // Conflict misto: 1 DIRECT + 1 BOKUN. R30-BIZ: i portali aggregatori
+    // bloccano il calendario master e non possono essere scavalcati.
     const conflictDirect = await seedBooking(db, {
       boatId: boat.id,
       serviceId: service.id,
       totalPrice: "1000.00",
       status: "CONFIRMED",
+      claimsAvailability: false,
     });
     const customerBokun = await db.customer.create({
       data: { email: "bk@x.com", firstName: "B", lastName: "K" },
@@ -263,12 +268,43 @@ describe("createOverrideRequest", () => {
       totalPrice: "2000.00",
       status: "PENDING",
     });
+    await expect(
+      db.$transaction((tx) =>
+        createOverrideRequest(tx, {
+          newBookingId: laura.id,
+          conflictingBookingIds: [conflictDirect.id, conflictBokun.id],
+          newBookingRevenue: new Decimal("2000.00"),
+          conflictingRevenueTotal: new Decimal("1800.00"),
+          dropDeadAt: new Date("2026-07-31"),
+        }),
+      ),
+    ).rejects.toThrow(/solo per conflitti DIRECT|portali aggregatori/i);
+
+    const count = await db.overrideRequest.count();
+    expect(count).toBe(0);
+  });
+
+  it("deriva conflictSourceChannels DIRECT quando tutti i conflitti sono interni", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const conflictDirect = await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "1000.00",
+      status: "CONFIRMED",
+    });
+
+    const laura = await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "2000.00",
+      status: "PENDING",
+    });
     const lauraReq = await db.$transaction((tx) =>
       createOverrideRequest(tx, {
         newBookingId: laura.id,
-        conflictingBookingIds: [conflictDirect.id, conflictBokun.id],
+        conflictingBookingIds: [conflictDirect.id],
         newBookingRevenue: new Decimal("2000.00"),
-        conflictingRevenueTotal: new Decimal("1800.00"),
+        conflictingRevenueTotal: new Decimal("1000.00"),
         dropDeadAt: new Date("2026-07-31"),
       }),
     );
@@ -276,11 +312,58 @@ describe("createOverrideRequest", () => {
     const or = await db.overrideRequest.findUnique({
       where: { id: lauraReq.requestId },
     });
-    expect(or?.conflictSourceChannels.sort()).toEqual(["BOKUN", "DIRECT"]);
+    expect(or?.conflictSourceChannels).toEqual(["DIRECT"]);
   });
 });
 
 describe("approveOverride", () => {
+  it("rifiuta approve di request legacy con conflictSourceChannels non-DIRECT", async () => {
+    const { boat, service } = await seedBoatAndService(db);
+    const conflict = await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "1000.00",
+      status: "CONFIRMED",
+      source: "BOKUN",
+    });
+    const laura = await seedBooking(db, {
+      boatId: boat.id,
+      serviceId: service.id,
+      totalPrice: "3000.00",
+      status: "PENDING",
+    });
+    const adminUser = await db.user.create({
+      data: {
+        email: "admin-legacy@test.com",
+        passwordHash: "x",
+        name: "Admin",
+        role: "ADMIN",
+      },
+    });
+    const legacyRequest = await db.overrideRequest.create({
+      data: {
+        newBookingId: laura.id,
+        conflictingBookingIds: [conflict.id],
+        conflictSourceChannels: ["BOKUN"],
+        newBookingRevenue: "3000.00",
+        conflictingRevenueTotal: "1000.00",
+        dropDeadAt: new Date("2026-07-31"),
+        status: "PENDING",
+      },
+    });
+
+    const { approveOverride } = await import("@/lib/booking/override-request");
+    await expect(
+      approveOverride(legacyRequest.id, adminUser.id, "should fail"),
+    ).rejects.toThrow(/portali aggregatori|non possono essere scavalcati/i);
+
+    const updated = await db.overrideRequest.findUnique({
+      where: { id: legacyRequest.id },
+      select: { status: true },
+    });
+    expect(updated?.status).toBe("PENDING");
+  });
+
   it("approva: cancella conflicts, conferma newBooking, update status", async () => {
     const { boat, service } = await seedBoatAndService(db);
     const conflict = await seedBooking(db, {

@@ -32,7 +32,6 @@ export default async function BoatsPage({
   const t = await getTranslations();
 
   const boats = await db.boat.findMany({
-    where: { active: true },
     include: {
       services: {
         where: { active: true },

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { verifyBokunWebhookResult } from "@/lib/bokun/webhook-verifier";
-import { getBokunBooking } from "@/lib/bokun/bookings";
-import { bokunWebhookBodySchema } from "@/lib/bokun/schemas";
-import { importBokunBooking } from "@/lib/bokun/adapters/booking";
-import { syncBookingAvailability } from "@/lib/bokun/sync-availability";
+import { bokunBookingIdSchema, bokunWebhookBodySchema } from "@/lib/bokun/schemas";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { withWebhookGuard } from "@/lib/http/with-webhook-guard";
@@ -12,6 +9,7 @@ import { AppError, UnauthorizedError, ValidationError } from "@/lib/errors";
 import { getUserAgent } from "@/lib/http/client-ip";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { withDedupedEvent } from "@/lib/dedup/processed-event";
+import { bookingBokunQueue } from "@/lib/queue";
 
 export const runtime = "nodejs";
 
@@ -102,6 +100,29 @@ export const POST = withWebhookGuard(
       parsedJson = null;
     }
     const body = bokunWebhookBodySchema.parse(parsedJson);
+    const headerBookingId = headers["x-bokun-booking-id"];
+    const headerExperienceBookingId = headers["x-bokun-experiencebooking-id"];
+
+    const isBookingTopic = topic.startsWith("bookings/");
+    if (isBookingTopic && !headerBookingId) {
+      throw new ValidationError("Missing x-bokun-booking-id header");
+    }
+    const bookingId =
+      headerBookingId !== undefined
+        ? String(bokunBookingIdSchema.parse(headerBookingId))
+        : body.bookingId !== undefined
+          ? String(body.bookingId)
+          : null;
+    if (isBookingTopic && !bookingId) throw new ValidationError("Missing Bokun bookingId");
+    if (body.bookingId !== undefined && String(body.bookingId) !== bookingId) {
+      throw new ValidationError("Bokun bookingId mismatch between header and body");
+    }
+    const experienceBookingId =
+      headerExperienceBookingId !== undefined
+        ? String(bokunBookingIdSchema.parse(headerExperienceBookingId))
+        : body.experienceBookingId !== undefined
+          ? String(body.experienceBookingId)
+          : undefined;
 
     // Idempotency: hash(topic|bookingId|timestamp|signature) come eventId.
     // Bokun non fornisce un event.id esplicito, ma la combinazione e' unica
@@ -109,7 +130,7 @@ export const POST = withWebhookGuard(
     const signature = headers["x-bokun-hmac"] ?? headers["x-bokun-signature"] ?? "";
     const eventId = crypto
       .createHash("sha256")
-      .update(`${topic}|${body.bookingId}|${body.timestamp ?? ""}|${signature}`)
+      .update(JSON.stringify([topic, bookingId ?? "", experienceBookingId ?? "", body.timestamp ?? "", signature]))
       .digest("hex");
 
     // R28-CRIT-2: dedup pre-check (read-only) invece di INSERT-first.
@@ -137,9 +158,22 @@ export const POST = withWebhookGuard(
           logger.warn({ topic }, "Bokun webhook topic unhandled, forcing import+sync");
         }
 
-        const bokunBooking = await getBokunBooking(body.bookingId);
-        const imported = await importBokunBooking(bokunBooking);
-        await syncBookingAvailability(imported);
+        if (!bookingId) return;
+        await bookingBokunQueue().add(
+          "booking.webhook.process",
+          {
+            type: "booking.webhook.process",
+            data: {
+              provider: "BOKUN",
+              eventId,
+              topic,
+              bookingId,
+              experienceBookingId,
+              receivedAt: new Date().toISOString(),
+            },
+          },
+          { jobId: `bokun-booking-${eventId}` },
+        );
       },
     );
 

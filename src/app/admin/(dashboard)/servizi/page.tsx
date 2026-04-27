@@ -2,36 +2,22 @@ import { db } from "@/lib/db";
 import { AdminCard } from "@/components/admin/admin-card";
 import { AdminTable, type AdminTableColumn } from "@/components/admin/admin-table";
 import { PageHeader } from "@/components/admin/page-header";
+import { SERVICE_TYPE_LABEL, labelOrRaw } from "@/lib/admin/labels";
 
-// Classi di servizio con label IT + badge color-coded per distinguere
-// shared/exclusive/charter a colpo d'occhio.
-const SERVICE_TYPE_LABEL: Record<string, { label: string; className: string }> = {
-  SOCIAL_BOATING: {
-    label: "Social Boating",
-    className: "bg-sky-100 text-sky-800 border-sky-200",
-  },
-  EXCLUSIVE_EXPERIENCE: {
-    label: "Exclusive Experience",
-    className: "bg-amber-100 text-amber-900 border-amber-300",
-  },
-  CABIN_CHARTER: {
-    label: "Cabin Charter",
-    className: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  },
-  BOAT_SHARED: {
-    label: "Boat Shared",
-    className: "bg-cyan-100 text-cyan-800 border-cyan-200",
-  },
-  BOAT_EXCLUSIVE: {
-    label: "Boat Exclusive",
-    className: "bg-orange-100 text-orange-900 border-orange-300",
-  },
+// Classi dei servizi attualmente vendibili.
+const SERVICE_TYPE_CLASS: Record<string, string> = {
+  EXCLUSIVE_EXPERIENCE: "bg-amber-100 text-amber-900 border-amber-300",
+  CABIN_CHARTER: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  BOAT_SHARED: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  BOAT_EXCLUSIVE: "bg-sky-100 text-sky-800 border-sky-200",
+  SOCIAL_BOATING: "bg-teal-100 text-teal-800 border-teal-200",
 };
 
 const DURATION_LABEL: Record<string, string> = {
   FULL_DAY: "Giornata intera",
   HALF_DAY_MORNING: "Mezza giornata · mattino",
   HALF_DAY_AFTERNOON: "Mezza giornata · pomeriggio",
+  MULTI_DAY: "Piu' giorni",
   WEEK: "Settimana",
 };
 
@@ -52,15 +38,13 @@ export default async function ServiziPage() {
     {
       label: "Classe",
       render: (s) => {
-        const typeInfo = SERVICE_TYPE_LABEL[s.type] ?? {
-          label: s.type,
-          className: "bg-slate-100 text-slate-700 border-slate-200",
-        };
+        const className =
+          SERVICE_TYPE_CLASS[s.type] ?? "bg-slate-100 text-slate-700 border-slate-200";
         return (
           <span
-            className={`inline-block px-2 py-0.5 rounded-full border text-xs font-semibold whitespace-nowrap ${typeInfo.className}`}
+            className={`inline-block px-2 py-0.5 rounded-full border text-xs font-semibold whitespace-nowrap ${className}`}
           >
-            {typeInfo.label}
+            {labelOrRaw(SERVICE_TYPE_LABEL, s.type)}
           </span>
         );
       },

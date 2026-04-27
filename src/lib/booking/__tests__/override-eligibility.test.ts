@@ -33,6 +33,26 @@ describe("checkOverrideEligibility", () => {
     }
   });
 
+  it("booking da portale esterno → blocked/external_booking anche se revenue nuovo superiore", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      newBookingRevenue: new Decimal("10000"),
+      conflictingBookings: [
+        {
+          id: "bk1",
+          revenue: new Decimal("500"),
+          isAdminBlock: false,
+          source: "BOKUN",
+        },
+      ],
+    });
+    expect(result.status).toBe("blocked");
+    if (result.status === "blocked") {
+      expect(result.reason).toBe("external_booking");
+      expect(result.conflictingBookingIds).toEqual(["bk1"]);
+    }
+  });
+
   it("esperienza a 14 gg → blocked/within_15_day_cutoff", () => {
     const result = checkOverrideEligibility({
       ...baseInput,

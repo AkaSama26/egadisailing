@@ -79,7 +79,14 @@ export async function cleanupPendingAfterPiFailure(
 ): Promise<void> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    select: { id: true, status: true, boatId: true, startDate: true, endDate: true },
+    select: {
+      id: true,
+      status: true,
+      boatId: true,
+      startDate: true,
+      endDate: true,
+      service: { select: { type: true } },
+    },
   });
   if (!booking) {
     logger.warn({ bookingId }, "Booking not found for PI cleanup — ignored");
@@ -102,9 +109,25 @@ export async function cleanupPendingAfterPiFailure(
     });
   }
   // releaseDates sempre — idempotent, recovery-safe su retry Stripe.
-  const { releaseDates } = await import("@/lib/availability/service");
+  const { reconcileBoatDatesFromActiveBookings, releaseBookingDates } = await import("@/lib/availability/service");
   const { CHANNELS } = await import("@/lib/channels");
-  await releaseDates(booking.boatId, booking.startDate, booking.endDate, CHANNELS.DIRECT);
+  const { isBoatSharedServiceType } = await import("@/lib/booking/boat-slot-availability");
+  if (isBoatSharedServiceType(booking.service.type)) {
+    await reconcileBoatDatesFromActiveBookings({
+      boatId: booking.boatId,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      sourceChannel: CHANNELS.DIRECT,
+    });
+  } else {
+    await releaseBookingDates({
+      bookingId: booking.id,
+      boatId: booking.boatId,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      sourceChannel: CHANNELS.DIRECT,
+    });
+  }
   logger.info(
     { bookingId, ...ctx },
     "Booking cleanup completed after PI failure/cancel",

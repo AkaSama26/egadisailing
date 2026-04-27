@@ -28,6 +28,7 @@ model User {
   // Priority Override System (Fase 1 Trimarano) — tutte le richieste
   // decise da questo admin. FK onDelete: SetNull preserva audit storico.
   overrideDecisions OverrideRequest[]
+  changeRequestDecisions BookingChangeRequest[] @relation("BookingChangeRequestDecision")
 }
 
 model AuditLog {
@@ -85,6 +86,7 @@ enum DurationType {
   FULL_DAY
   HALF_DAY_MORNING
   HALF_DAY_AFTERNOON
+  MULTI_DAY
   WEEK
 }
 
@@ -100,6 +102,7 @@ model Service {
   defaultPaymentSchedule   PaymentSchedule @default(FULL)
   defaultDepositPercentage Int?
   priority                 Int             @default(5)
+  pricingUnit              String          @default("PER_PERSON")
   bokunProductId           String?         @unique
   active                   Boolean         @default(true)
   createdAt                DateTime        @default(now())
@@ -276,10 +279,13 @@ model Booking {
   boatId           String
   startDate        DateTime      @db.Date
   endDate          DateTime      @db.Date
+  cancellationPolicyAnchorDate DateTime? @db.Date
   numPeople        Int
   totalPrice       Decimal       @db.Decimal(10, 2)
   currency         String        @default("EUR")
   status           BookingStatus @default(PENDING)
+  exclusiveSlot    Boolean       @default(true)
+  claimsAvailability Boolean     @default(true)
   notes            String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
@@ -304,6 +310,7 @@ model Booking {
   // Priority Override System (Fase 1 Trimarano) — se questo booking e'
   // il "nuovo" in PENDING che vuole scavalcare conflict esistenti.
   overrideRequest OverrideRequest? @relation("NewBookingOverride")
+  changeRequests BookingChangeRequest[]
 
   @@index([source, status])
   @@index([startDate])
@@ -315,6 +322,7 @@ model Booking {
   @@index([boatId, status, startDate])
   // Per pending-gc query (status=PENDING AND source=DIRECT AND createdAt<cutoff).
   @@index([status, source, createdAt])
+  @@index([exclusiveSlot, claimsAvailability, status])
   // R18-Prisma: reconciliation cron Bokun legge (source=BOKUN, externalRef=id)
   // — prima seq-scan su `source,status` compound con filter post.
   @@index([source, externalRef])
@@ -332,6 +340,37 @@ model DirectBooking {
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([paymentSchedule, balanceReminderSentAt, balancePaidAt])
+}
+
+enum BookingChangeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model BookingChangeRequest {
+  id                 String                     @id @default(cuid())
+  bookingId          String
+  booking            Booking                    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  originalStartDate  DateTime                   @db.Date
+  originalEndDate    DateTime                   @db.Date
+  requestedStartDate DateTime                   @db.Date
+  requestedEndDate   DateTime                   @db.Date
+  customerNote       String?                    @db.Text
+
+  status             BookingChangeRequestStatus @default(PENDING)
+  adminNote          String?                    @db.Text
+  decidedAt          DateTime?
+  decidedByUserId    String?
+  decidedBy          User?                      @relation("BookingChangeRequestDecision", fields: [decidedByUserId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+
+  @@index([bookingId, status])
+  @@index([status, createdAt])
 }
 
 /// GDPR art. 7 — prova del consenso. Salvata al momento della creazione

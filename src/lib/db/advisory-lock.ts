@@ -55,9 +55,9 @@ export async function acquireTxAdvisoryLock(
  * un giorno e' in comune → lock shared → serializzazione garantita.
  * Ordine ascendente previene deadlock (lock ordering consistente).
  *
- * Use SOLO per boat-exclusive services (CABIN_CHARTER/BOAT_EXCLUSIVE).
- * Per SHARED (SOCIAL_BOATING/BOAT_SHARED) il lock e' overhead inutile
- * (cohabitation legittima).
+ * Use SOLO per boat-exclusive services (EXCLUSIVE_EXPERIENCE/CABIN_CHARTER/
+ * BOAT_EXCLUSIVE). Per SHARED (SOCIAL_BOATING/BOAT_SHARED) il lock e'
+ * overhead inutile (cohabitation legittima).
  */
 export async function acquireAvailabilityRangeLock(
   tx: { $executeRawUnsafe: (sql: string) => Promise<unknown> },

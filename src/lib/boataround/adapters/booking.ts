@@ -16,6 +16,7 @@ import {
   BOAT_EXCLUSIVE_SERVICE_TYPES,
   type CrossChannelConflict,
 } from "@/lib/booking/cross-channel-conflicts";
+import { createManualAlert } from "@/lib/charter/manual-alerts";
 import { upsertCustomerFromExternal } from "@/lib/booking/upsert-customer-from-external";
 import type { BoataroundBookingResponse } from "../schemas";
 
@@ -25,6 +26,13 @@ export interface ImportedBoataroundBooking {
   startDate: Date;
   endDate: Date;
   status: BookingStatus;
+  shouldSyncAvailability?: boolean;
+  previous?: {
+    boatId: string;
+    startDate: Date;
+    endDate: Date;
+    status: BookingStatus;
+  };
 }
 
 const BOATAROUND_STATUS_MAP: Record<string, BookingStatus> = {
@@ -117,6 +125,14 @@ export async function importBoataroundBooking(
       // simmetrico Boataround) → race webhook duplicato concorrente.
       await acquireTxAdvisoryLock(tx, "boataround-booking", booking.id);
 
+      const customer = await upsertCustomerFromExternal(tx, {
+        email: emailLower,
+        firstName: booking.customer.firstName,
+        lastName: booking.customer.lastName,
+        phone: booking.customer.phone,
+        nationality: booking.customer.country,
+      });
+
       const existing = await tx.charterBooking.findUnique({
         where: {
           platformName_platformBookingRef: {
@@ -128,25 +144,55 @@ export async function importBoataroundBooking(
       });
 
       if (existing) {
+        const previous = {
+          boatId: existing.booking.boatId,
+          startDate: existing.booking.startDate,
+          endDate: existing.booking.endDate,
+          status: existing.booking.status,
+        };
+        detectedConflicts = await detectCrossChannelConflicts(tx, {
+          boatId: boat.id,
+          startDate,
+          endDate,
+          selfSource: "BOATAROUND",
+          includeSameSource: true,
+          selfBookingId: existing.bookingId,
+        });
+        if (detectedConflicts.length > 0 && (status === "PENDING" || status === "CONFIRMED")) {
+          return {
+            booking: {
+              id: existing.bookingId,
+              boatId: existing.booking.boatId,
+              startDate: existing.booking.startDate,
+              endDate: existing.booking.endDate,
+              status: existing.booking.status,
+            },
+            previous,
+            mode: "conflict" as const,
+          };
+        }
         const updated = await tx.booking.update({
           where: { id: existing.bookingId },
-          data: { status, totalPrice: totalPriceStr },
+          data: {
+            customerId: customer.id,
+            serviceId: service.id,
+            boatId: boat.id,
+            startDate,
+            endDate,
+            status,
+            totalPrice: totalPriceStr,
+            externalRef: booking.id,
+            exclusiveSlot: true,
+            claimsAvailability: true,
+          },
           select: { id: true, boatId: true, startDate: true, endDate: true, status: true },
         });
         await tx.charterBooking.update({
           where: { bookingId: existing.bookingId },
           data: { rawPayload },
         });
-        return { booking: updated, mode: "updated" as const };
+        return { booking: updated, previous, mode: "updated" as const };
       }
-
-      const customer = await upsertCustomerFromExternal(tx, {
-        email: emailLower,
-        firstName: booking.customer.firstName,
-        lastName: booking.customer.lastName,
-        phone: booking.customer.phone,
-        nationality: booking.customer.country,
-      });
 
       // R14 cross-OTA detection (cross-source inclusi BOKUN + charter, non
       // solo DIRECT). Boataround confermata upstream → warn + ManualAlert
@@ -156,7 +202,21 @@ export async function importBoataroundBooking(
         startDate,
         endDate,
         selfSource: "BOATAROUND",
+        includeSameSource: true,
       });
+      if (detectedConflicts.length > 0 && (status === "PENDING" || status === "CONFIRMED")) {
+        return {
+          booking: {
+            id: `BOATAROUND-CONFLICT-${booking.id}`,
+            boatId: boat.id,
+            startDate,
+            endDate,
+            status,
+          },
+          previous: null,
+          mode: "conflict" as const,
+        };
+      }
 
       const created = await tx.booking.create({
         data: {
@@ -175,6 +235,8 @@ export async function importBoataroundBooking(
           // bokun/adapters/booking.ts per motivazione.
           currency: "EUR",
           status,
+          exclusiveSlot: true,
+          claimsAvailability: true,
           charterBooking: {
             create: {
               platformName: "BOATAROUND",
@@ -185,7 +247,7 @@ export async function importBoataroundBooking(
         },
         select: { id: true, boatId: true, startDate: true, endDate: true, status: true },
       });
-      return { booking: created, mode: "created" as const };
+      return { booking: created, previous: null, mode: "created" as const };
     });
 
     logger.info(
@@ -197,6 +259,16 @@ export async function importBoataroundBooking(
       },
       `Boataround booking ${result.mode}`,
     );
+
+    if (result.mode === "conflict" && detectedConflicts.length > 0) {
+      await recordBoataroundConflictAlerts({
+        boatId: result.booking.boatId,
+        startDate: result.booking.startDate,
+        endDate: result.booking.endDate,
+        boataroundBookingId: booking.id,
+        conflicts: detectedConflicts,
+      });
+    }
 
     // R14 cross-OTA post-commit incident recording.
     if (result.mode === "created" && detectedConflicts.length > 0) {
@@ -217,6 +289,8 @@ export async function importBoataroundBooking(
       startDate: result.booking.startDate,
       endDate: result.booking.endDate,
       status: result.booking.status,
+      shouldSyncAvailability: result.mode !== "conflict",
+      previous: result.previous ?? undefined,
     };
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -247,5 +321,26 @@ export async function importBoataroundBooking(
       };
     }
     throw err;
+  }
+}
+
+async function recordBoataroundConflictAlerts(input: {
+  boatId: string;
+  startDate: Date;
+  endDate: Date;
+  boataroundBookingId: string;
+  conflicts: CrossChannelConflict[];
+}): Promise<void> {
+  for (const conflict of input.conflicts) {
+    await createManualAlert({
+      channel: "BOATAROUND",
+      boatId: input.boatId,
+      date: input.startDate,
+      action: "BLOCK",
+      notes:
+        `Boataround booking ${input.boataroundBookingId} overlaps existing booking ` +
+        `${conflict.confirmationCode} (${conflict.source}) from ${input.startDate.toISOString().slice(0, 10)} ` +
+        `to ${input.endDate.toISOString().slice(0, 10)}. Import skipped; resolve manually upstream.`,
+    });
   }
 }

@@ -23,6 +23,7 @@ const inputSchema = z.object({
   endDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), {
     message: "endDate must be parseable",
   }),
+  durationDays: z.number().int().min(3).max(7).optional(),
   numPax: z.number().int().min(1).max(100),
 });
 
@@ -82,6 +83,7 @@ export async function checkOverrideEligibilityAction(
     serviceId: parsedInput.serviceId,
     startDate: parsedInput.startDate,
     endDate: parsedInput.endDate,
+    durationDays: parsedInput.durationDays,
     numPax: parsedInput.numPax,
   });
 
