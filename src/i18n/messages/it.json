@@ -195,10 +195,10 @@
   "itinerary": {
     "tabs": {
       "socialBoating": "Social Boating",
-      "exclusive": "Exclusive",
-      "cabinCharter": "Cabin Charter",
-      "boatShared": "Tour Barca",
-      "boatExclusive": "Barca Esclusiva"
+      "exclusive": "Gourmet",
+      "cabinCharter": "Charter",
+      "boatShared": "4 ore",
+      "boatExclusive": "8 ore"
     },
     "socialBoating": {
       "stop1": { "name": "Partenza", "description": "Imbarco al porto di Trapani, welcome drink e briefing del capitano" },
@@ -208,18 +208,19 @@
       "stop5": { "name": "Rientro", "description": "Navigazione al tramonto verso Trapani" }
     },
     "exclusive": {
-      "stop1": { "name": "Partenza", "description": "Imbarco riservato, accoglienza con champagne e briefing privato" },
-      "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "La spiaggia più iconica delle Egadi, tutta per voi" },
-      "stop3": { "name": "Pranzo gourmet", "description": "Menu raffinato dello chef con pesce del mercato di Trapani" },
-      "stop4": { "name": "Cala Tramontana", "island": "Levanzo", "description": "Caletta nascosta con acque trasparenti e fondali incontaminati" },
-      "stop5": { "name": "Rientro", "description": "Aperitivo al tramonto durante la navigazione di ritorno" }
+      "stop1": { "name": "Accoglienza a bordo", "description": "Punto di incontro: Via dei Gladioli, 16, Trapani, Italy, 91100 Trapani." },
+      "stop2": { "name": "Cala Azzurra", "island": "Favignana", "description": "Bagno in acque cristalline. Cala Azzurra, Favignana, Free municipal consortium of Trapani, Italy." },
+      "stop3": { "name": "Cala Rossa", "island": "Favignana", "description": "Pranzo gourmet in rada. Cala Rossa, Favignana, Free municipal consortium of Trapani, Italy, 91023." },
+      "stop4": { "name": "Show cooking a bordo", "description": "Lo chef locale prepara il pranzo in rada a Cala Rossa, Favignana." },
+      "stop5": { "name": "Pranzo vista mare", "description": "Pranzo gourmet vista mare a Cala Rossa, Favignana." },
+      "stop6": { "name": "Relax a Cala Rossa", "island": "Favignana", "description": "Relax e sosta bagno nelle acque di Cala Rossa, Favignana." },
+      "stop7": { "name": "Cala Dogana", "island": "Levanzo", "description": "Sosta a Spiaggia di Cala Dogana, Levanzo, Free municipal consortium of Trapani, Italy, 91023 Levanzo." },
+      "stop8": { "name": "Cala Fredda", "island": "Levanzo", "description": "Natura, silenzio e mare turchese. Spiaggia di Cala Fredda, Italy." },
+      "stop9": { "name": "Aperitivo al tramonto", "description": "Durante la navigazione di rientro tra le Isole Egadi." },
+      "stop10": { "name": "Rientro al porto", "description": "Fine dell'esperienza e rientro a Trapani." }
     },
     "cabinCharter": {
-      "stop1": { "name": "Partenza", "description": "Check-in a bordo, sistemazione in cabina e briefing settimanale" },
-      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Due giorni esplorando cale, grotte e il borgo dell'isola farfalla" },
-      "stop3": { "name": "Levanzo", "island": "Levanzo", "description": "L'isola più selvaggia, Grotta del Genovese e fondali da sogno" },
-      "stop4": { "name": "Marettimo", "island": "Marettimo", "description": "La perla delle Egadi, sentieri montani e grotte marine" },
-      "stop5": { "name": "Rientro", "description": "Ultima colazione in mare e rientro a Trapani" }
+      "stop1": { "name": "Itinerario su misura", "description": "L'itinerario del charter viene concordato insieme alla clientela tra Favignana, Levanzo e Marettimo, seguendo preferenze, ritmo di viaggio, condizioni meteo-marine e desiderio di baie, borghi, mare o relax a bordo." }
     },
     "boatShared": {
       "stop1": { "name": "Partenza", "description": "Ritrovo al porto di Trapani e partenza verso le isole" },

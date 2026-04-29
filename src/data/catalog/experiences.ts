@@ -3,6 +3,7 @@ import { localize, type LocalizedString } from "./locales";
 export interface ExperienceCatalogMedia {
   caption: LocalizedString;
   color: string;
+  src?: string;
 }
 
 export interface ExperienceCatalogEntry {
@@ -29,7 +30,7 @@ export interface ResolvedExperienceContent {
   detailDescription: string;
   seoTitle: string;
   seoDescription: string;
-  media: Array<{ caption: string; color: string }>;
+  media: Array<{ caption: string; color: string; src?: string }>;
   itinerary: Array<{ time: string; text: string }>;
   includes: string[];
   bringItems: string[];
@@ -122,9 +123,21 @@ export const EXPERIENCE_CATALOG = {
       en: "Book the Egadisailing trimaran privately with onboard chef, skipper and an itinerary around Favignana, Levanzo and Marettimo.",
     },
     media: [
-      { caption: { it: "Tavola in rada", en: "Table at anchor" }, color: "#FFB6C1" },
-      { caption: { it: "Tuffo privato", en: "Private swim" }, color: "#FFDAB9" },
-      { caption: { it: "Tramonto a bordo", en: "Sunset on board" }, color: "#DDA0DD" },
+      {
+        caption: { it: "Chef a bordo", en: "Chef on board" },
+        color: "#FFB6C1",
+        src: "/images/experience-polaroids/chef-a-bordo-cucina.webp",
+      },
+      {
+        caption: { it: "Aperitivo al tramonto", en: "Sunset aperitivo" },
+        color: "#FFDAB9",
+        src: "/images/experience-polaroids/chef-a-bordo-rada.webp",
+      },
+      {
+        caption: { it: "Sapori locali", en: "Local flavours" },
+        color: "#DDA0DD",
+        src: "/images/experience-polaroids/chef-a-bordo-dettaglio-piatto.webp",
+      },
       { caption: { it: "Solo per voi", en: "Only for you" }, color: "#E1BEE7" },
     ],
     itinerary: defaultItinerary,
@@ -162,9 +175,21 @@ export const EXPERIENCE_CATALOG = {
       en: "Trimaran charter in the Egadi Islands for 3 to 7 days with skipper and overnight stay on board.",
     },
     media: [
-      { caption: { it: "Cabina a bordo", en: "Cabin on board" }, color: "#ADD8E6" },
-      { caption: { it: "Alba su Marettimo", en: "Marettimo sunrise" }, color: "#B2DFDB" },
-      { caption: { it: "Colazione in coperta", en: "Breakfast on deck" }, color: "#C5CAE9" },
+      {
+        caption: { it: "Trimarano Egadi", en: "Egadi trimaran" },
+        color: "#ADD8E6",
+        src: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+      },
+      {
+        caption: { it: "Vita a bordo", en: "Life on board" },
+        color: "#B2DFDB",
+        src: "/images/experience-polaroids/charter-cabina-bordo.webp",
+      },
+      {
+        caption: { it: "Rada tranquilla", en: "Quiet anchorage" },
+        color: "#C5CAE9",
+        src: "/images/experience-polaroids/charter-rada-tranquilla.webp",
+      },
       { caption: { it: "Rotta lenta", en: "Slow route" }, color: "#BBDEFB" },
     ],
     itinerary: [
@@ -409,6 +434,7 @@ export function getExperienceContent(
     media: entry.media.map((item) => ({
       caption: localize(item.caption, locale),
       color: item.color,
+      src: item.src,
     })),
     itinerary: entry.itinerary.map((item) => ({
       time: item.time,

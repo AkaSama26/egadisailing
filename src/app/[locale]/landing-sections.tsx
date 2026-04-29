@@ -7,14 +7,13 @@ import { ScrollSection } from "@/components/scroll-section";
 import { IslandsItinerary } from "@/components/islands-itinerary";
 import { BookingSearch } from "@/components/booking-search";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Star,
   Clock,
   UserCheck,
   ArrowRight,
 } from "lucide-react";
-import { getExperienceContent, isExperienceListed } from "@/data/catalog/experiences";
-import { getServiceDurationLabel } from "@/lib/services/display";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -35,6 +34,44 @@ interface SerializedService {
 
 interface LandingSectionsProps {
   services: SerializedService[];
+}
+
+interface FeaturedPolaroid {
+  caption: string;
+  color: string;
+  src?: string;
+}
+
+interface FeaturedPackage {
+  key: string;
+  title: string;
+  subtitle: string;
+  durationLabel: string;
+  detailLabel: string;
+  priceLabel?: string;
+  href: string;
+  ctaLabel: string;
+  polaroids: FeaturedPolaroid[];
+}
+
+function getLowestPrice(services: SerializedService[], serviceIds: string[]) {
+  return services
+    .filter((service) => serviceIds.includes(service.id) && service.minPrice)
+    .map((service) => ({
+      amount: Number(service.minPrice),
+      label: service.minPrice!,
+    }))
+    .filter((price) => Number.isFinite(price.amount))
+    .sort((a, b) => a.amount - b.amount)[0]?.label;
+}
+
+function getMaxCapacity(services: SerializedService[], serviceIds: string[]) {
+  return Math.max(
+    0,
+    ...services
+      .filter((service) => serviceIds.includes(service.id))
+      .map((service) => service.capacityMax),
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -118,21 +155,14 @@ const polaroidLayouts = [
 /* ------------------------------------------------------------------ */
 
 function ExperienceRow({
-  service,
+  experience,
   index,
-  locale,
-  priceLabel,
 }: {
-  service: SerializedService;
+  experience: FeaturedPackage;
   index: number;
-  locale: string;
-  priceLabel: string | undefined;
 }) {
   const isEven = index % 2 === 0;
-  const content = getExperienceContent(service.id, locale);
-  if (!content) return null;
-  const polaroids = content.media.slice(0, 3);
-  const title = content.title;
+  const polaroids = experience.polaroids.slice(0, 3);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center min-h-[450px]">
@@ -142,36 +172,36 @@ function ExperienceRow({
         className={`space-y-6 ${isEven ? "lg:order-1" : "lg:order-2"}`}
       >
         <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-          {title}
+          {experience.title}
         </h2>
 
         <p className="text-white/70 text-lg leading-relaxed max-w-lg">
-          {content.subtitle}
+          {experience.subtitle}
         </p>
 
         <div className="flex items-center gap-6 text-white/60 text-sm">
           <span className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            {getServiceDurationLabel(service)}
+            {experience.durationLabel}
           </span>
           <span className="flex items-center gap-2">
             <UserCheck className="h-4 w-4" />
-            Max {service.capacityMax} pax
+            {experience.detailLabel}
           </span>
         </div>
 
-        {priceLabel && (
+        {experience.priceLabel && (
           <p className="text-xl font-semibold text-[var(--color-gold)]">
-            {priceLabel}
+            {experience.priceLabel}
           </p>
         )}
 
         <Link
-          href={`/${locale}/experiences/${service.id}`}
-          aria-label={`Scopri di più su ${title}`}
+          href={experience.href}
+          aria-label={`${experience.ctaLabel}: ${experience.title}`}
           className="inline-flex items-center gap-2 text-white font-medium hover:gap-3 transition-all"
         >
-          Scopri di più <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          {experience.ctaLabel} <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </ScrollSection>
 
@@ -212,12 +242,19 @@ function ExperienceRow({
               }}
             >
               <div className="bg-white p-[5%] pb-[18%] shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-shadow duration-300">
-                <div
-                  className="w-full aspect-[4/3] rounded-sm"
-                  style={{ backgroundColor: p.color }}
-                />
+                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm" style={{ backgroundColor: p.color }}>
+                  {p.src && (
+                    <Image
+                      src={p.src}
+                      alt={p.caption}
+                      fill
+                      sizes="(min-width: 1024px) 24vw, 48vw"
+                      className="object-cover"
+                    />
+                  )}
+                </div>
                 <p
-                  className="text-sm md:text-base lg:text-lg text-gray-600 mt-2 text-center"
+                  className="mt-4 text-center text-lg text-gray-600 md:text-xl lg:text-2xl"
                   style={{ fontFamily: "var(--font-handwriting), cursive" }}
                 >
                   {p.caption}
@@ -238,6 +275,130 @@ function ExperienceRow({
 export function LandingSections({ services }: LandingSectionsProps) {
   const t = useTranslations();
   const locale = useLocale();
+  const priceFrom = (serviceIds: string[]) => {
+    const price = getLowestPrice(services, serviceIds);
+    return price ? `${t("common.priceFrom")} €${price}` : undefined;
+  };
+  const maxPax = (serviceIds: string[]) => getMaxCapacity(services, serviceIds);
+  const featuredPackages: FeaturedPackage[] = [
+    {
+      key: "chef-a-bordo",
+      title: "Chef a bordo",
+      subtitle:
+        "Il trimarano Egadisailing con chef, skipper e hostess per una giornata premium tra sapori locali, mare e soste in rada.",
+      durationLabel: "8 ore",
+      detailLabel: `Max ${maxPax(["exclusive-experience"])} pax`,
+      priceLabel: priceFrom(["exclusive-experience"]),
+      href: `/${locale}/experiences/exclusive-experience`,
+      ctaLabel: "Scopri di più",
+      polaroids: [
+        {
+          caption: "Chef a bordo",
+          color: "#FFB6C1",
+          src: "/images/experience-polaroids/chef-a-bordo-cucina.webp",
+        },
+        {
+          caption: "Aperitivo al tramonto",
+          color: "#FFDAB9",
+          src: "/images/experience-polaroids/chef-a-bordo-rada.webp",
+        },
+        {
+          caption: "Sapori locali",
+          color: "#DDA0DD",
+          src: "/images/experience-polaroids/chef-a-bordo-dettaglio-piatto.webp",
+        },
+      ],
+    },
+    {
+      key: "charter",
+      title: "Charter",
+      subtitle:
+        "Da 3 a 7 giornate sul trimarano, con itinerario concordato tra Favignana, Levanzo e Marettimo in base alle tue preferenze.",
+      durationLabel: "3-7 giornate",
+      detailLabel: "Itinerario su misura",
+      priceLabel: priceFrom(["cabin-charter"]),
+      href: `/${locale}/experiences/cabin-charter`,
+      ctaLabel: "Scopri di più",
+      polaroids: [
+        {
+          caption: "Trimarano Egadi",
+          color: "#ADD8E6",
+          src: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+        },
+        {
+          caption: "Vita a bordo",
+          color: "#B2DFDB",
+          src: "/images/experience-polaroids/charter-cabina-bordo.webp",
+        },
+        {
+          caption: "Rada tranquilla",
+          color: "#C5CAE9",
+          src: "/images/experience-polaroids/charter-rada-tranquilla.webp",
+        },
+      ],
+    },
+    {
+      key: "barca-4-ore",
+      title: "Barca 4 ore",
+      subtitle:
+        "La formula agile per vivere le Egadi in mezza giornata, con bagno, relax e rotta scelta in base al mare.",
+      durationLabel: "4 ore",
+      detailLabel: "Condiviso o esclusivo",
+      priceLabel: priceFrom([
+        "boat-shared-morning",
+        "boat-shared-afternoon",
+        "boat-exclusive-morning",
+        "boat-exclusive-afternoon",
+      ]),
+      href: `/${locale}/prenota?boat=boat&durationType=HALF_DAY_AFTERNOON`,
+      ctaLabel: "Prenota",
+      polaroids: [
+        {
+          caption: "Tour agile",
+          color: "#BFDBFE",
+          src: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
+        },
+        {
+          caption: "Tuffo veloce",
+          color: "#A7F3D0",
+          src: "/images/experience-polaroids/barca-4-ore-tuffo.webp",
+        },
+        {
+          caption: "Cala Rossa",
+          color: "#FDE68A",
+          src: "/images/experience-polaroids/barca-4-ore-cala-rossa.webp",
+        },
+      ],
+    },
+    {
+      key: "barca-8-ore",
+      title: "Barca 8 ore",
+      subtitle:
+        "Una giornata completa tra baie, snorkeling e tempo lento a bordo, disponibile in formula condivisa o esclusiva.",
+      durationLabel: "8 ore",
+      detailLabel: "Condiviso o esclusivo",
+      priceLabel: priceFrom(["boat-shared-full-day", "boat-exclusive-full-day"]),
+      href: `/${locale}/prenota?boat=boat&durationType=FULL_DAY`,
+      ctaLabel: "Prenota",
+      polaroids: [
+        {
+          caption: "Giornata intera",
+          color: "#A7F3D0",
+          src: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+        },
+        {
+          caption: "Snorkeling",
+          color: "#BFDBFE",
+          src: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
+        },
+        {
+          caption: "Tramonto",
+          color: "#FED7AA",
+          src: "/images/experience-polaroids/barca-8-ore-tramonto.webp",
+        },
+      ],
+    },
+  ].filter((item) => item.detailLabel !== "Max 0 pax");
 
   return (
     <div>
@@ -259,25 +420,11 @@ export function LandingSections({ services }: LandingSectionsProps) {
           </ScrollSection>
 
           <div className="space-y-32">
-            {services
-              .filter((s) => isExperienceListed(s.id))
-              .map((service, i) => (
+            {featuredPackages.map((experience, i) => (
               <ExperienceRow
-                key={service.id}
-                service={service}
+                key={experience.key}
+                experience={experience}
                 index={i}
-                locale={locale}
-                priceLabel={
-                  service.minPrice
-                    ? `${t("common.priceFrom")} €${service.minPrice} ${
-                        service.type === "CABIN_CHARTER"
-                          ? "per giornata"
-                          : service.pricingUnit === "PER_PACKAGE"
-                            ? "per pacchetto"
-                            : t("common.perPerson")
-                      }`
-                    : undefined
-                }
               />
             ))}
           </div>
@@ -290,137 +437,252 @@ export function LandingSections({ services }: LandingSectionsProps) {
       <IslandsItinerary />
 
       {/* ============================================================ */}
-      {/*  Section 3: Perché Siamo la Scelta Giusta                    */}
-      {/*  Three alternating rows with polaroid photos                 */}
+      {/*  Section 3: La scelta giusta per il tour in barca alle Egadi */}
       {/* ============================================================ */}
       <section
-        className="relative py-32 px-4 md:px-8 lg:px-12"
+        className="relative overflow-hidden px-4 py-28 md:px-8 lg:px-12 lg:py-32"
         style={{
-          background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 60%, #071934 100%)",
+          background: "linear-gradient(180deg, #071934 0%, #0a2a4a 38%, #0c3d5e 72%, #071934 100%)",
         }}
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto max-w-7xl">
           <ScrollSection animation="fade-up">
-            <div className="text-center mb-24">
-              <RevealTitle text="Perché Siamo la Scelta Giusta" />
+            <div className="mx-auto mb-20 max-w-7xl text-center">
+              <div className="relative inline-block max-w-6xl">
+                <motion.h2
+                  className="font-heading text-4xl font-bold leading-[1.04] text-white md:text-5xl lg:text-6xl xl:text-7xl"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                  La scelta giusta per il tuo tour in barca alle Isole Egadi
+                </motion.h2>
+                <motion.svg
+                  viewBox="0 0 400 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mx-auto mt-4 w-[52%]"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  whileInView={{ pathLength: 1, opacity: 1 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 1.2, delay: 0.4, ease: "easeInOut" }}
+                >
+                  <motion.path
+                    d="M0 10 Q50 2 100 10 T200 10 T300 10 T400 10"
+                    stroke="url(#tourTitleGold)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    fill="none"
+                    initial={{ pathLength: 0 }}
+                    whileInView={{ pathLength: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.2, delay: 0.4, ease: "easeInOut" }}
+                  />
+                  <defs>
+                    <linearGradient id="tourTitleGold" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#d97706" stopOpacity="0" />
+                      <stop offset="20%" stopColor="#f59e0b" stopOpacity="0.8" />
+                      <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+                      <stop offset="80%" stopColor="#f59e0b" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                </motion.svg>
+              </div>
+              <p className="mx-auto mt-8 max-w-3xl text-base leading-relaxed text-white/70 md:text-lg">
+                A bordo trovi rotte curate, sapori locali e una crew che conosce il mare delle Egadi:
+                dall&apos;esperienza con chef sul trimarano ai tour in barca tra Favignana e Levanzo.
+              </p>
             </div>
           </ScrollSection>
 
-          {/* Row 1 — Chef a bordo (testo sinistra, foto destra) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center mb-32">
-            <ScrollSection animation="fade-left" className="space-y-6">
-              <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                Il Nostro Chef
-              </h2>
-              <p className="text-white/70 text-lg leading-relaxed max-w-lg">
-                Pesce freschissimo del mercato di Trapani, preparato a bordo dal nostro chef con ricette della tradizione siciliana. Un pranzo vista mare che non dimenticherai.
+          <div className="grid items-stretch gap-10 lg:min-h-[620px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
+            <ScrollSection animation="fade-left" className="space-y-7">
+              <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
+                Cooking experience
               </p>
+              <div className="space-y-5">
+                <h2 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                  Chef a bordo durante il tuo tour alle Egadi
+                </h2>
+                <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
+                  Lo chef prepara a bordo piatti ispirati alla cucina siciliana e al mare di Trapani,
+                  trasformando la sosta in rada in un momento conviviale, curato e profondamente locale.
+                  Non e&apos; solo pranzo: e&apos; una parte viva dell&apos;esperienza Egadisailing.
+                </p>
+              </div>
               <Link
-                href={`/${locale}/experiences`}
-                className="inline-flex items-center gap-2 text-[var(--color-gold)] font-semibold hover:gap-3 transition-all text-lg"
+                href={`/${locale}/experiences/exclusive-experience`}
+                className="inline-flex items-center gap-2 text-base font-semibold text-[var(--color-gold)] transition-all hover:gap-3 md:text-lg"
               >
-                Scopri il menù compreso nel prezzo <ArrowRight className="h-5 w-5" />
+                Scopri i menù <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             </ScrollSection>
 
-            <div className="relative h-[450px] hidden lg:block">
-              {[
-                { caption: "Pranzo a bordo", color: "#F5DEB3", x: 5, y: 5, rotate: -6 },
-                { caption: "Vista dal tavolo", color: "#87CEEB", x: 45, y: 15, rotate: 5 },
-              ].map((p, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute"
-                  style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
-                  initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
-                  whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
-                  whileHover={{ scale: 1.1, rotate: 0, zIndex: 50, transition: { duration: 0.3 } }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.7, delay: i * 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+            <ScrollSection animation="fade-right" className="h-full">
+              <div className="relative h-full">
+                <div className="relative z-10 h-full min-h-[520px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.28)]">
+                  <Image
+                    src="/images/egadisailing-experience/01-cooking-experience-chef-a-bordo.webp"
+                    alt="Chef a bordo durante un tour in barca alle Isole Egadi"
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#071934]/45 via-transparent to-transparent" />
+                </div>
+                <div
+                  className="pointer-events-none absolute -right-8 -top-5 z-0 flex w-44 flex-col items-end gap-2 md:-right-14 md:w-56"
+                  aria-hidden="true"
                 >
-                  <div className="bg-white p-[5%] pb-[16%] shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-shadow duration-300">
-                    <div className="w-full aspect-square rounded-sm" style={{ backgroundColor: p.color }} />
-                    <p className="text-sm md:text-base lg:text-lg text-gray-600 mt-2 text-center" style={{ fontFamily: "var(--font-handwriting), cursive" }}>
-                      {p.caption}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Row 2 — Snorkeling (testo destra, foto sinistra) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center mb-32">
-            <div className="relative h-[450px] hidden lg:block lg:order-1">
-              {[
-                { caption: "Fondali cristallini", color: "#B2EBF2", x: 5, y: 5, rotate: -4 },
-                { caption: "Snorkeling!", color: "#90EE90", x: 45, y: 20, rotate: 7 },
-              ].map((p, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute"
-                  style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
-                  initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
-                  whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
-                  whileHover={{ scale: 1.1, rotate: 0, zIndex: 50, transition: { duration: 0.3 } }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.7, delay: i * 0.15, ease: [0.34, 1.56, 0.64, 1] }}
-                >
-                  <div className="bg-white p-[5%] pb-[16%] shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-shadow duration-300">
-                    <div className="w-full aspect-square rounded-sm" style={{ backgroundColor: p.color }} />
-                    <p className="text-sm md:text-base lg:text-lg text-gray-600 mt-2 text-center" style={{ fontFamily: "var(--font-handwriting), cursive" }}>
-                      {p.caption}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            <ScrollSection animation="fade-right" className="space-y-6 lg:order-2">
-              <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                Tuffati nel Blu
-              </h2>
-              <p className="text-white/70 text-lg leading-relaxed max-w-lg">
-                Le Egadi custodiscono i fondali più belli del Mediterraneo. Posidonia, pesci colorati, grotte marine — attrezzatura snorkeling inclusa, gli hotspot li conosciamo noi.
-              </p>
+                  <span className="h-px w-full bg-[var(--color-gold)]/85" />
+                  <span className="h-px w-[92%] bg-[var(--color-gold)]/75" />
+                  <span className="h-px w-[84%] bg-[var(--color-gold)]/65" />
+                  <span className="h-px w-[76%] bg-[var(--color-gold)]/55" />
+                  <span className="h-px w-[68%] bg-[var(--color-gold)]/45" />
+                  <span className="h-px w-[60%] bg-[var(--color-gold)]/35" />
+                </div>
+              </div>
             </ScrollSection>
           </div>
 
-          {/* Row 3 — Esperienza unica (testo sinistra, foto destra) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <ScrollSection animation="fade-left" className="space-y-6">
-              <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                Un&apos;Esperienza Unica
-              </h2>
-              <p className="text-white/70 text-lg leading-relaxed max-w-lg">
-                Un trimarano con chef, hostess e skipper dedicati. Non è una semplice gita in barca — è un&apos;esperienza rara, esclusiva, che ti resterà nel cuore. Una volta nella vita.
-              </p>
+          <div className="mt-28 grid items-stretch gap-10 lg:min-h-[560px] lg:grid-cols-[1.06fr_0.94fr] lg:gap-16">
+            <ScrollSection animation="fade-left" className="h-full">
+              <div className="relative h-full">
+                <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
+                  <Image
+                    src="/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp"
+                    alt="Isole Egadi viste dal mare durante un tour in barca"
+                    fill
+                    sizes="(min-width: 1024px) 52vw, 100vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#071934]/35 via-transparent to-transparent" />
+                </div>
+                <div
+                  className="pointer-events-none absolute -bottom-5 -left-8 z-0 flex w-44 flex-col gap-2 md:-left-14 md:w-56"
+                  aria-hidden="true"
+                >
+                  <span className="h-px w-full bg-[var(--color-gold)]/85" />
+                  <span className="h-px w-[92%] bg-[var(--color-gold)]/75" />
+                  <span className="h-px w-[84%] bg-[var(--color-gold)]/65" />
+                  <span className="h-px w-[76%] bg-[var(--color-gold)]/55" />
+                  <span className="h-px w-[68%] bg-[var(--color-gold)]/45" />
+                  <span className="h-px w-[60%] bg-[var(--color-gold)]/35" />
+                </div>
+              </div>
             </ScrollSection>
 
-            <div className="relative h-[450px] hidden lg:block">
-              {[
-                { caption: "A bordo del trimarano", color: "#DDA0DD", x: 5, y: 5, rotate: -5 },
-                { caption: "Tramonto alle Egadi", color: "#FFDAB9", x: 45, y: 18, rotate: 6 },
-              ].map((p, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute"
-                  style={{ left: `${p.x}%`, top: `${p.y}%`, width: "48%" }}
-                  initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
-                  whileInView={{ opacity: 1, scale: 1, rotate: p.rotate, y: 0 }}
-                  whileHover={{ scale: 1.1, rotate: 0, zIndex: 50, transition: { duration: 0.3 } }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.7, delay: i * 0.15, ease: [0.34, 1.56, 0.64, 1] }}
+            <ScrollSection animation="fade-right" className="flex items-center">
+              <div className="space-y-7">
+                <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
+                  Prospettiva dal mare
+                </p>
+                <div className="space-y-5">
+                  <h2 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                    Le Isole Egadi come non le hai mai viste
+                  </h2>
+                  <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
+                    Scopri Favignana, Levanzo e Marettimo da una prospettiva diversa,
+                    tra baie raggiungibili solo via mare, soste in rada e scorci che
+                    cambiano con la luce del giorno.
+                  </p>
+                </div>
+              </div>
+            </ScrollSection>
+          </div>
+
+          <div className="mt-28 grid items-stretch gap-10 lg:min-h-[560px] lg:grid-cols-[0.94fr_1.06fr] lg:gap-16">
+            <ScrollSection animation="fade-left" className="flex items-center">
+              <div className="space-y-7">
+                <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
+                  Cala Rossa
+                </p>
+                <div className="space-y-5">
+                  <h2 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                    Nuota nelle acque cristalline di Cala Rossa
+                  </h2>
+                  <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
+                    Tuffati nelle sfumature turchesi di Cala Rossa, una delle baie
+                    piu&apos; iconiche di Favignana, con tempo per nuotare, rilassarti
+                    e vivere il mare delle Egadi da vicino.
+                  </p>
+                </div>
+              </div>
+            </ScrollSection>
+
+            <ScrollSection animation="fade-right" className="h-full">
+              <div className="relative h-full">
+                <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
+                  <Image
+                    src="/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp"
+                    alt="Donna che nuota nelle acque cristalline di Cala Rossa a Favignana"
+                    fill
+                    sizes="(min-width: 1024px) 52vw, 100vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#071934]/35 via-transparent to-transparent" />
+                </div>
+                <div
+                  className="pointer-events-none absolute -right-8 -top-5 z-0 flex w-44 flex-col items-end gap-2 md:-right-14 md:w-56"
+                  aria-hidden="true"
                 >
-                  <div className="bg-white p-[5%] pb-[16%] shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-shadow duration-300">
-                    <div className="w-full aspect-square rounded-sm" style={{ backgroundColor: p.color }} />
-                    <p className="text-sm md:text-base lg:text-lg text-gray-600 mt-2 text-center" style={{ fontFamily: "var(--font-handwriting), cursive" }}>
-                      {p.caption}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  <span className="h-px w-full bg-[var(--color-gold)]/85" />
+                  <span className="h-px w-[92%] bg-[var(--color-gold)]/75" />
+                  <span className="h-px w-[84%] bg-[var(--color-gold)]/65" />
+                  <span className="h-px w-[76%] bg-[var(--color-gold)]/55" />
+                  <span className="h-px w-[68%] bg-[var(--color-gold)]/45" />
+                  <span className="h-px w-[60%] bg-[var(--color-gold)]/35" />
+                </div>
+              </div>
+            </ScrollSection>
+          </div>
+
+          <div className="mt-28 grid items-stretch gap-10 lg:min-h-[560px] lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
+            <ScrollSection animation="fade-left" className="h-full">
+              <div className="relative h-full">
+                <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
+                  <Image
+                    src="/images/egadisailing-experience/04-aperitivo-tramonto-isole-egadi.webp"
+                    alt="Gruppo che fa aperitivo in barca al tramonto con le Isole Egadi sullo sfondo"
+                    fill
+                    sizes="(min-width: 1024px) 54vw, 100vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#071934]/40 via-transparent to-transparent" />
+                </div>
+                <div
+                  className="pointer-events-none absolute -bottom-5 -left-8 z-0 flex w-44 flex-col gap-2 md:-left-14 md:w-56"
+                  aria-hidden="true"
+                >
+                  <span className="h-px w-full bg-[var(--color-gold)]/85" />
+                  <span className="h-px w-[92%] bg-[var(--color-gold)]/75" />
+                  <span className="h-px w-[84%] bg-[var(--color-gold)]/65" />
+                  <span className="h-px w-[76%] bg-[var(--color-gold)]/55" />
+                  <span className="h-px w-[68%] bg-[var(--color-gold)]/45" />
+                  <span className="h-px w-[60%] bg-[var(--color-gold)]/35" />
+                </div>
+              </div>
+            </ScrollSection>
+
+            <ScrollSection animation="fade-right" className="flex items-center">
+              <div className="space-y-7">
+                <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
+                  Tramonto in rada
+                </p>
+                <div className="space-y-5">
+                  <h2 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                    Aperitivo al tramonto alle Isole Egadi
+                  </h2>
+                  <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
+                    Brinda in rada mentre il sole scende dietro le Isole Egadi,
+                    con il gruppo a bordo, il mare intorno e quella luce dorata
+                    che trasforma il rientro in uno dei momenti più belli della giornata.
+                  </p>
+                </div>
+              </div>
+            </ScrollSection>
           </div>
         </div>
       </section>

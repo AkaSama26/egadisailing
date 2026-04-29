@@ -28,13 +28,14 @@ export function DestinationText({
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Time badge */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
-            <span className="text-amber-500 text-xs font-semibold tracking-[2px] uppercase">
-              {stop.time}
-            </span>
-          </div>
+          {!stop.hideTime && (
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
+              <span className="text-amber-500 text-xs font-semibold tracking-[2px] uppercase">
+                {stop.time}
+              </span>
+            </div>
+          )}
 
           {/* Destination name */}
           <h3 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold italic text-white leading-[1.05] tracking-tight mb-2">
@@ -49,28 +50,29 @@ export function DestinationText({
           )}
 
           {/* Description */}
-          <p className="text-white/45 text-base font-light leading-relaxed max-w-md">
+          <p className="text-white/65 text-base font-light leading-relaxed max-w-md">
             {t(stop.descriptionKey)}
           </p>
         </motion.div>
       </AnimatePresence>
 
-      {/* Progress dots */}
-      <div className="flex gap-2.5 mt-8" aria-hidden="true">
-        {Array.from({ length: totalStops }).map((_, i) => (
-          <div
-            key={i}
-            className={[
-              "w-5 h-[3px] rounded-full transition-all duration-300",
-              i === activeStopIndex
-                ? "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]"
-                : i < activeStopIndex
-                  ? "bg-amber-500/25"
-                  : "bg-white/5",
-            ].join(" ")}
-          />
-        ))}
-      </div>
+      {totalStops > 1 && (
+        <div className="flex gap-2.5 mt-8" aria-hidden="true">
+          {Array.from({ length: totalStops }).map((_, i) => (
+            <div
+              key={i}
+              className={[
+                "w-5 h-[3px] rounded-full transition-all duration-300",
+                i === activeStopIndex
+                  ? "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]"
+                  : i < activeStopIndex
+                    ? "bg-amber-500/25"
+                    : "bg-white/5",
+              ].join(" ")}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
