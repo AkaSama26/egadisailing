@@ -154,3 +154,172 @@ export const deletePricingPeriod = withAdminAction(
     await scheduleBokunPricingSync({ dates, serviceIds: [before.serviceId] });
   },
 );
+
+const PRICE_BUCKETS = ["LOW", "MID", "HIGH"] as const;
+const SEASON_KEYS = ["LOW", "MID", "HIGH", "LATE_LOW"] as const;
+
+const servicePriceInputSchema = z.object({
+  serviceId: z.string().min(1),
+  priceBucket: z.enum(PRICE_BUCKETS).nullable().optional(),
+  durationDays: z.number().int().min(1).max(30).nullable().optional(),
+  amount: z.number().positive("Il prezzo deve essere positivo").max(100_000),
+  pricingUnit: z.enum(["PER_PERSON", "PER_PACKAGE"]),
+});
+
+const saveServicePriceMatrixSchema = z.object({
+  year: z.number().int().min(2020).max(2100),
+  rows: z.array(servicePriceInputSchema).min(1),
+});
+
+type ServicePriceInput = z.infer<typeof servicePriceInputSchema>;
+
+async function upsertServicePrice(
+  tx: Prisma.TransactionClient,
+  year: number,
+  row: ServicePriceInput,
+) {
+  const priceBucket = row.priceBucket ?? null;
+  const durationDays = row.durationDays ?? null;
+  const existing = await tx.servicePrice.findFirst({
+    where: {
+      serviceId: row.serviceId,
+      year,
+      priceBucket,
+      durationDays,
+    },
+    select: { id: true },
+  });
+  const data = {
+    serviceId: row.serviceId,
+    year,
+    priceBucket,
+    durationDays,
+    amount: new Prisma.Decimal(row.amount.toFixed(2)),
+    pricingUnit: row.pricingUnit,
+  };
+  return existing
+    ? tx.servicePrice.update({ where: { id: existing.id }, data })
+    : tx.servicePrice.create({ data });
+}
+
+export const saveServicePriceMatrix = withAdminAction(
+  {
+    schema: saveServicePriceMatrixSchema,
+    revalidatePaths: ["/admin/prezzi", "/"],
+  },
+  async (input, { userId }) => {
+    const touchedServiceIds = Array.from(new Set(input.rows.map((row) => row.serviceId)));
+    await db.$transaction(async (tx) => {
+      await acquireTxAdvisoryLock(tx, "service-price-matrix", String(input.year));
+      for (const row of input.rows) {
+        if (!row.priceBucket && !row.durationDays) {
+          throw new ValidationError("Ogni prezzo deve avere stagione o durata");
+        }
+        if (row.priceBucket && row.durationDays) {
+          throw new ValidationError("Un prezzo non puo' avere insieme stagione e durata");
+        }
+        await upsertServicePrice(tx, input.year, row);
+      }
+    });
+
+    await auditLog({
+      userId,
+      action: AUDIT_ACTIONS.UPDATE,
+      entity: "ServicePriceMatrix",
+      entityId: String(input.year),
+      after: {
+        year: input.year,
+        services: touchedServiceIds,
+        rows: input.rows.length,
+      },
+    });
+
+    const seasons = await db.season.findMany({ where: { year: input.year } });
+    const dates = seasons.flatMap((season) =>
+      Array.from(eachUtcDayInclusive(season.startDate, season.endDate)),
+    );
+    if (dates.length > 0) {
+      await scheduleBokunPricingSync({ dates, serviceIds: touchedServiceIds });
+    }
+  },
+);
+
+const saveSeasonsSchema = z.object({
+  year: z.number().int().min(2020).max(2100),
+  seasons: z
+    .array(
+      z.object({
+        key: z.enum(SEASON_KEYS),
+        label: z.string().min(1).max(80),
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        priceBucket: z.enum(PRICE_BUCKETS),
+      }),
+    )
+    .length(4),
+});
+
+export const saveSeasons = withAdminAction(
+  {
+    schema: saveSeasonsSchema,
+    revalidatePaths: ["/admin/prezzi", "/"],
+  },
+  async (input, { userId }) => {
+    const normalized = input.seasons
+      .map((season) => ({
+        ...season,
+        start: parseIsoDay(season.startDate),
+        end: parseIsoDay(season.endDate),
+        priceBucket: season.key === "LATE_LOW" ? "LOW" : season.priceBucket,
+      }))
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+
+    for (const season of normalized) {
+      if (season.end < season.start) throw new ValidationError("Stagione con fine prima dell'inizio");
+    }
+    for (let i = 1; i < normalized.length; i += 1) {
+      if (normalized[i].start <= normalized[i - 1].end) {
+        throw new ValidationError("Le stagioni non possono sovrapporsi nello stesso anno");
+      }
+    }
+
+    await db.$transaction(async (tx) => {
+      await acquireTxAdvisoryLock(tx, "season-year", String(input.year));
+      for (const season of normalized) {
+        await tx.season.upsert({
+          where: { year_key: { year: input.year, key: season.key } },
+          update: {
+            label: season.label,
+            startDate: season.start,
+            endDate: season.end,
+            priceBucket: season.priceBucket,
+          },
+          create: {
+            year: input.year,
+            key: season.key,
+            label: season.label,
+            startDate: season.start,
+            endDate: season.end,
+            priceBucket: season.priceBucket,
+          },
+        });
+      }
+    });
+
+    await auditLog({
+      userId,
+      action: AUDIT_ACTIONS.UPDATE,
+      entity: "Season",
+      entityId: String(input.year),
+      after: {
+        year: input.year,
+        seasons: normalized.map((season) => ({
+          key: season.key,
+          startDate: season.startDate,
+          endDate: season.endDate,
+          priceBucket: season.priceBucket,
+        })),
+      },
+    });
+  },
+);

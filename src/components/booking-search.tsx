@@ -59,6 +59,13 @@ function isCharterService(service: BookingSearchService) {
   return service.type === "CABIN_CHARTER";
 }
 
+function bookingExperienceKey(service: BookingSearchService) {
+  if (service.type === "BOAT_SHARED" || service.type === "BOAT_EXCLUSIVE") {
+    return `${service.boatId}:${service.type}`;
+  }
+  return `${service.boatId}:${service.id}`;
+}
+
 function durationLabel(service: BookingSearchService, t: ReturnType<typeof useTranslations>) {
   if (service.durationType === "FULL_DAY") return t("durationFullDay");
   if (service.durationType === "HALF_DAY_MORNING") return t("durationMorning");
@@ -165,8 +172,13 @@ export function BookingSearch({ services }: BookingSearchProps) {
     } else if (date) {
       params.set("date", date);
     }
-    const suffix = params.toString() ? `?${params.toString()}` : "";
-    router.push(`/${locale}/prenota/${serviceId}${suffix}`);
+    if (selectedService) {
+      params.set("boat", selectedService.boatId);
+      params.set("experience", bookingExperienceKey(selectedService));
+      params.set("durationType", selectedService.durationType);
+    }
+    params.set("service", serviceId);
+    router.push(`/${locale}/prenota?${params.toString()}`);
   }
 
   const canSubmit = Boolean(serviceId) && (selectedIsCharter ? charterIsBookable : Boolean(date));
@@ -259,7 +271,7 @@ export function BookingSearch({ services }: BookingSearchProps) {
               <option value="">{t("experiencePlaceholder")}</option>
               {nonBoatServices.map((service) => (
                 <option key={service.id} value={service.id}>
-                  {getExperienceTitle(service)}
+                  {getExperienceTitle(service, locale)}
                 </option>
               ))}
             </select>

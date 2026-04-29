@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 import { buildTicketUrl, ticketSlotLabel } from "@/lib/booking/ticket";
 import { createQrSvg } from "@/lib/qr-code";
-import { formatEur } from "@/lib/pricing/cents";
+import { formatEur, formatEurCents } from "@/lib/pricing/cents";
 import { formatItDateTime, formatItDay } from "@/lib/dates";
 import { PrintTicketButton } from "./print-button";
 
@@ -47,6 +47,30 @@ export default async function TicketPage({
   const customerName = `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
   const statusLabel = STATUS_LABELS[booking.status] ?? booking.status;
   const isValid = booking.status === "CONFIRMED";
+  const paidCents = paid.mul(100).toNumber();
+  const totalCents = new Decimal(booking.totalPrice.toString()).mul(100).toNumber();
+  const balanceCents = Math.max(0, totalCents - paidCents);
+  const guestBreakdown = [
+    booking.adultCount ? `${booking.adultCount} adulti` : null,
+    booking.childCount ? `${booking.childCount} bambini 5-9` : null,
+    booking.freeChildSeatCount ? `${booking.freeChildSeatCount} bimbi 3-4` : null,
+    booking.infantCount ? `${booking.infantCount} neonati 0-2` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const bookingRows: Array<[string, string]> = [
+    ["Codice", booking.confirmationCode],
+    ["Canale", booking.source],
+    ["Data prenotazione", formatItDateTime(booking.createdAt)],
+    ["Totale", formatEur(booking.totalPrice)],
+    ["Pagato", formatEur(paid)],
+  ];
+  if (balanceCents > 0) {
+    bookingRows.push([
+      "Saldo in loco",
+      `${formatEurCents(balanceCents)} · da pagare prima della partenza, contanti preferiti`,
+    ]);
+  }
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950 print:bg-white print:p-0">
@@ -107,19 +131,11 @@ export default async function TicketPage({
                   ["Mezzo", booking.boat.name],
                   ["Data esperienza", formatItDay(booking.startDate)],
                   ["Orario", ticketSlotLabel(booking.service.durationType)],
-                  ["Persone", String(booking.numPeople)],
+                  ["Ospiti", guestBreakdown || String(booking.numPeople)],
+                  ["Posti occupati", String(booking.numPeople)],
                 ]}
               />
-              <TicketBlock
-                title="Prenotazione"
-                rows={[
-                  ["Codice", booking.confirmationCode],
-                  ["Canale", booking.source],
-                  ["Data prenotazione", formatItDateTime(booking.createdAt)],
-                  ["Totale", formatEur(booking.totalPrice)],
-                  ["Pagato", formatEur(paid)],
-                ]}
-              />
+              <TicketBlock title="Prenotazione" rows={bookingRows} />
               <TicketBlock
                 title="Intestatario"
                 rows={[

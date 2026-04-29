@@ -7,6 +7,7 @@ export type NotificationType =
   | "SYNC_FAILURE"
   | "WEATHER_ALERT"
   | "DOUBLE_BOOKING_DETECTED"
+  | "CHANGE_REQUESTED"
   // Fase 1 Trimarano — priority override system
   | "OVERRIDE_REQUESTED"
   | "OVERRIDE_ADMIN_REQUESTED"
@@ -21,15 +22,50 @@ export type NotificationType =
 
 export type NotificationChannel = "EMAIL" | "TELEGRAM";
 
-export interface NotificationEvent<TPayload = Record<string, unknown>> {
+export const CUSTOMER_NOTIFICATION_TYPES = [
+  "OVERRIDE_REQUESTED",
+  "OVERRIDE_APPROVED",
+  "OVERRIDE_REJECTED",
+  "OVERRIDE_EXPIRED",
+  "OVERRIDE_SUPERSEDED",
+  "OVERRIDE_APOLOGY_LOSER",
+] as const satisfies readonly NotificationType[];
+
+export type CustomerNotificationType = (typeof CUSTOMER_NOTIFICATION_TYPES)[number];
+export type AdminNotificationType = Exclude<NotificationType, CustomerNotificationType>;
+
+interface NotificationEventBase<TPayload = Record<string, unknown>> {
   type: NotificationType;
   channels: NotificationChannel[];
   payload: TPayload;
+  emailIdempotencyKey?: string;
+  bookingId?: string;
+  customerId?: string;
+  recipientName?: string;
+}
+
+export interface CustomerNotificationEvent<TPayload = Record<string, unknown>>
+  extends NotificationEventBase<TPayload> {
+  type: CustomerNotificationType;
   /**
-   * Override del recipient email (per eventi customer-facing).
-   * Se omesso, dispatcher usa env.ADMIN_EMAIL (default admin-centric).
+   * Obbligatorio per eventi cliente. Evita regressioni dove email customer
+   * finivano a `ADMIN_EMAIL` per fallback implicito.
    */
-  recipientEmail?: string;
+  recipientEmail: string;
+}
+
+export interface AdminNotificationEvent<TPayload = Record<string, unknown>>
+  extends NotificationEventBase<TPayload> {
+  type: AdminNotificationType;
+  recipientEmail?: never;
+}
+
+export type NotificationEvent<TPayload = Record<string, unknown>> =
+  | CustomerNotificationEvent<TPayload>
+  | AdminNotificationEvent<TPayload>;
+
+export function isCustomerNotificationType(type: NotificationType): type is CustomerNotificationType {
+  return (CUSTOMER_NOTIFICATION_TYPES as readonly NotificationType[]).includes(type);
 }
 
 /**
@@ -47,6 +83,7 @@ export const CHANNEL_DEFAULTS: Record<NotificationType, NotificationChannel[]> =
   PAYMENT_FAILED: ["EMAIL", "TELEGRAM"],
   SYNC_FAILURE: ["EMAIL", "TELEGRAM"],
   WEATHER_ALERT: ["EMAIL", "TELEGRAM"],
+  CHANGE_REQUESTED: ["EMAIL", "TELEGRAM"],
   // Double-booking e' evento urgente (cliente stopped/embarassment rischio) —
   // TELEGRAM attivo se configurato per escalation rapida.
   DOUBLE_BOOKING_DETECTED: ["EMAIL", "TELEGRAM"],

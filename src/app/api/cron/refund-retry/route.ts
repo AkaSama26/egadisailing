@@ -5,6 +5,7 @@ import { LEASE_KEYS } from "@/lib/lease/keys";
 import { TTL } from "@/lib/timing";
 import { refundPayment, getChargeRefundState } from "@/lib/stripe/payment-intents";
 import { logger } from "@/lib/logger";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 
 export const runtime = "nodejs";
 
@@ -64,6 +65,21 @@ export const POST = withCronGuard(
       }
     }
     logger.info({ retried, recovered, exhausted }, "refund-retry cron completed");
+    if (exhausted > 0) {
+      await dispatchNotification({
+        type: "PAYMENT_FAILED",
+        channels: defaultNotificationChannels(),
+        payload: {
+          confirmationCode: "refund-retry",
+          customerName: "n/a",
+          serviceName: "Stripe refund retry",
+          startDate: new Date().toISOString().slice(0, 10),
+          amount: "n/a",
+          reason: `${exhausted} refund retry falliti: controllare /admin/finanza`,
+        },
+        emailIdempotencyKey: `refund-retry-exhausted:${new Date().toISOString().slice(0, 13)}`,
+      });
+    }
     return { retried, recovered, exhausted };
   },
 );

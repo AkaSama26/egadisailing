@@ -95,6 +95,12 @@ export async function rejectOverride(
       const outcome = await dispatchNotification({
         type: "OVERRIDE_REJECTED",
         channels: ["EMAIL"],
+        recipientEmail: request.newBooking.customer.email,
+        recipientName:
+          `${request.newBooking.customer.firstName ?? ""} ${request.newBooking.customer.lastName ?? ""}`.trim() ||
+          undefined,
+        bookingId: request.newBooking.id,
+        emailIdempotencyKey: `override-rejected:${requestId}`,
         payload: {
           customerName:
             `${request.newBooking.customer.firstName ?? ""} ${request.newBooking.customer.lastName ?? ""}`.trim() ||

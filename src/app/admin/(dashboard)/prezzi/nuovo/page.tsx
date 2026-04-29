@@ -1,35 +1,26 @@
-import { db } from "@/lib/db";
+import Link from "next/link";
 import { AdminCard } from "@/components/admin/admin-card";
 import { PageHeader } from "@/components/admin/page-header";
-import { PricingPeriodForm, type PricingServiceOption } from "../_components/pricing-period-form";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function NuovoPrezzoPage() {
-  const services = await db.service.findMany({
-    where: { active: true },
-    include: { boat: { select: { name: true } } },
-    orderBy: [{ boatId: "asc" }, { priority: "desc" }, { name: "asc" }],
-  });
-
-  const serviceOptions: PricingServiceOption[] = services.map((service) => ({
-    id: service.id,
-    name: service.name,
-    type: service.type,
-    durationType: service.durationType,
-    pricingUnit: service.pricingUnit,
-    boatName: service.boat.name,
-  }));
-
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Nuovo prezzo"
-        subtitle="Creazione guidata di un periodo listino."
+        title="Nuovo prezzo legacy disattivato"
+        subtitle="I nuovi prezzi vanno gestiti dalla matrice stagionale ServicePrice."
         backHref="/admin/prezzi"
         backLabel="Prezzi"
       />
 
-      <AdminCard>
-        <PricingPeriodForm services={serviceOptions} mode="create" />
+      <AdminCard tone="warn">
+        <p className="text-sm text-amber-900">
+          La creazione di nuovi `PricingPeriod` e&apos; bloccata. I periodi legacy restano
+          disponibili solo come fallback temporaneo del checkout.
+        </p>
+        <Link href="/admin/prezzi" className={buttonVariants({ className: "mt-4" })}>
+          Torna alla matrice prezzi
+        </Link>
       </AdminCard>
     </div>
   );

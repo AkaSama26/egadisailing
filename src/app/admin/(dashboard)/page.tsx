@@ -33,11 +33,11 @@ export default async function DashboardHome() {
           hint="Confermate con data successiva a oggi"
         />
         <KpiCard
-          label="Saldi pendenti"
+          label="Saldi da incassare"
           value={formatEur(kpi.pendingBalances)}
           icon={AlertTriangle}
           tone={kpi.pendingBalances.gt(0) ? "warn" : "default"}
-          hint="Acconto versato, saldo ancora da incassare"
+          hint="Acconto versato, saldo da incassare in loco"
         />
         <KpiCard
           label="Override approvati questo mese"
@@ -51,6 +51,13 @@ export default async function DashboardHome() {
           value={String(kpi.overridePending)}
           icon={AlertTriangle}
           tone={kpi.overridePending > 0 ? "warn" : "default"}
+        />
+        <KpiCard
+          label="Email fallite"
+          value={String(kpi.failedEmailCount)}
+          icon={AlertTriangle}
+          tone={kpi.failedEmailCount > 0 ? "warn" : "default"}
+          hint="Dead-letter Brevo da controllare"
         />
       </div>
 
@@ -87,6 +94,28 @@ export default async function DashboardHome() {
             {kpi.pendingAlerts.length > 5 && (
               <li className="text-xs text-red-700">+ altri {kpi.pendingAlerts.length - 5}</li>
             )}
+          </ul>
+        </div>
+      )}
+
+      {kpi.failedEmails.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-amber-900 flex items-center gap-2">
+              <AlertTriangle className="size-5" aria-hidden="true" />
+              Email transazionali fallite
+            </h2>
+          </div>
+          <ul className="space-y-2 text-sm text-amber-950">
+            {kpi.failedEmails.map((email) => (
+              <li key={email.id} className="flex flex-col gap-1 border-t border-amber-200 pt-2 first:border-t-0 first:pt-0">
+                <span className="font-medium">{email.subject}</span>
+                <span>
+                  {email.templateKey} · {email.recipientEmail} · tentativi {email.attempts}
+                </span>
+                {email.lastError && <span className="text-amber-800">{email.lastError}</span>}
+              </li>
+            ))}
           </ul>
         </div>
       )}

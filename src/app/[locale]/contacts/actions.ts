@@ -3,7 +3,11 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { env } from "@/lib/env";
-import { sendEmail } from "@/lib/email/brevo";
+import { contactAutoReplyTemplate } from "@/lib/email/templates/customer-lifecycle";
+import {
+  buildEmailIdempotencyKey,
+  enqueueTransactionalEmail,
+} from "@/lib/email/outbox";
 import { escapeHtml } from "@/lib/html-escape";
 import { verifyTurnstileToken } from "@/lib/turnstile/verify";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
@@ -107,14 +111,49 @@ export async function sendContactMessage(
       <p style="white-space: pre-wrap">${escapeHtml(parsed.message)}</p>
     `;
 
-    await sendEmail({
-      to: env.BREVO_SENDER_EMAIL, // info@egadisailing.com (stesso sender)
+    await enqueueTransactionalEmail({
+      templateKey: "admin.contact-message",
+      recipientEmail: env.ADMIN_EMAIL,
       subject: `[Contatti] ${parsed.subject}`,
       htmlContent: html,
       textContent: `Da: ${safePlain(parsed.name)} <${safePlain(parsed.email)}>\n${parsed.message.replace(/\r\n/g, "\n")}`,
       // R22-A4-ALTA-1: Reply → cliente. Senza questo override, Reply va al
       // sender stesso (info@) → loop o bisogna copia/incollare from-line.
       replyTo: { email: parsed.email, name: parsed.name },
+      payload: {
+        name: parsed.name,
+        email: normalizeEmail(parsed.email),
+        phone: parsed.phone ?? null,
+        subject: parsed.subject,
+      },
+      idempotencyKey: buildEmailIdempotencyKey([
+        "admin-contact",
+        normalizeEmail(parsed.email),
+        parsed.subject,
+        parsed.message,
+      ]),
+    });
+
+    const reply = contactAutoReplyTemplate({
+      customerName: parsed.name,
+      subject: parsed.subject,
+    });
+    await enqueueTransactionalEmail({
+      templateKey: "customer.contact.auto-reply",
+      recipientEmail: parsed.email,
+      recipientName: parsed.name,
+      subject: reply.subject,
+      htmlContent: reply.html,
+      textContent: reply.text,
+      payload: {
+        subject: parsed.subject,
+      },
+      idempotencyKey: buildEmailIdempotencyKey([
+        "contact-auto-reply",
+        normalizeEmail(parsed.email),
+        parsed.subject,
+        parsed.message,
+      ]),
     });
 
     logger.info({ subject: parsed.subject }, "Contact message sent");

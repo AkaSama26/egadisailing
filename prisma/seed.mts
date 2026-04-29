@@ -133,7 +133,7 @@ async function main() {
       boatId: trimarano.id,
       durationType: "FULL_DAY" as const,
       durationHours: 8,
-      capacityMax: 20,
+      capacityMax: 10,
       defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
       defaultDepositPercentage: 30,
       priority: 8,
@@ -146,7 +146,7 @@ async function main() {
       boatId: trimarano.id,
       durationType: "MULTI_DAY" as const,
       durationHours: 72,
-      capacityMax: 8,
+      capacityMax: 6,
       defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
       defaultDepositPercentage: 30,
       priority: 10,
@@ -244,11 +244,128 @@ async function main() {
   }
   await prisma.service.updateMany({
     where: {
-      id: { in: ["charter-3-days", "charter-4-days", "charter-5-days", "charter-6-days"] },
+      id: {
+        in: [
+          "charter-3-days",
+          "charter-4-days",
+          "charter-5-days",
+          "charter-6-days",
+          "charter-7-days",
+        ],
+      },
     },
     data: { active: false },
   });
   console.log(`✓ ${services.length} services`);
+
+  const seasons = [
+    {
+      id: "season-2026-low",
+      year: 2026,
+      key: "LOW",
+      label: "Bassa stagione",
+      startDate: new Date("2026-04-01T00:00:00.000Z"),
+      endDate: new Date("2026-06-15T00:00:00.000Z"),
+      priceBucket: "LOW",
+    },
+    {
+      id: "season-2026-mid",
+      year: 2026,
+      key: "MID",
+      label: "Media stagione",
+      startDate: new Date("2026-06-16T00:00:00.000Z"),
+      endDate: new Date("2026-07-15T00:00:00.000Z"),
+      priceBucket: "MID",
+    },
+    {
+      id: "season-2026-high",
+      year: 2026,
+      key: "HIGH",
+      label: "Alta stagione",
+      startDate: new Date("2026-07-16T00:00:00.000Z"),
+      endDate: new Date("2026-09-15T00:00:00.000Z"),
+      priceBucket: "HIGH",
+    },
+    {
+      id: "season-2026-late-low",
+      year: 2026,
+      key: "LATE_LOW",
+      label: "Bassa tardiva",
+      startDate: new Date("2026-09-16T00:00:00.000Z"),
+      endDate: new Date("2026-10-31T00:00:00.000Z"),
+      priceBucket: "LOW",
+    },
+  ];
+
+  for (const season of seasons) {
+    await prisma.season.upsert({
+      where: { year_key: { year: season.year, key: season.key } },
+      update: {
+        label: season.label,
+        startDate: season.startDate,
+        endDate: season.endDate,
+        priceBucket: season.priceBucket,
+      },
+      create: season,
+    });
+  }
+  console.log(`✓ ${seasons.length} seasons`);
+
+  const servicePrices = [
+    ["sp-2026-gourmet-low", "exclusive-experience", "LOW", null, 2000, "PER_PACKAGE"],
+    ["sp-2026-gourmet-mid", "exclusive-experience", "MID", null, 2200, "PER_PACKAGE"],
+    ["sp-2026-gourmet-high", "exclusive-experience", "HIGH", null, 2500, "PER_PACKAGE"],
+
+    ["sp-2026-boat-excl-full-low", "boat-exclusive-full-day", "LOW", null, 900, "PER_PACKAGE"],
+    ["sp-2026-boat-excl-full-mid", "boat-exclusive-full-day", "MID", null, 1050, "PER_PACKAGE"],
+    ["sp-2026-boat-excl-full-high", "boat-exclusive-full-day", "HIGH", null, 1200, "PER_PACKAGE"],
+    ["sp-2026-boat-excl-morning-low", "boat-exclusive-morning", "LOW", null, 630, "PER_PACKAGE"],
+    ["sp-2026-boat-excl-morning-mid", "boat-exclusive-morning", "MID", null, 740, "PER_PACKAGE"],
+    ["sp-2026-boat-excl-morning-high", "boat-exclusive-morning", "HIGH", null, 840, "PER_PACKAGE"],
+    ["sp-2026-boat-excl-afternoon-low", "boat-exclusive-afternoon", "LOW", null, 630, "PER_PACKAGE"],
+    ["sp-2026-boat-excl-afternoon-mid", "boat-exclusive-afternoon", "MID", null, 740, "PER_PACKAGE"],
+    ["sp-2026-boat-excl-afternoon-high", "boat-exclusive-afternoon", "HIGH", null, 840, "PER_PACKAGE"],
+
+    ["sp-2026-boat-shared-full-low", "boat-shared-full-day", "LOW", null, 75, "PER_PERSON"],
+    ["sp-2026-boat-shared-full-mid", "boat-shared-full-day", "MID", null, 85, "PER_PERSON"],
+    ["sp-2026-boat-shared-full-high", "boat-shared-full-day", "HIGH", null, 100, "PER_PERSON"],
+    ["sp-2026-boat-shared-morning-low", "boat-shared-morning", "LOW", null, 55, "PER_PERSON"],
+    ["sp-2026-boat-shared-morning-mid", "boat-shared-morning", "MID", null, 65, "PER_PERSON"],
+    ["sp-2026-boat-shared-morning-high", "boat-shared-morning", "HIGH", null, 75, "PER_PERSON"],
+    ["sp-2026-boat-shared-afternoon-low", "boat-shared-afternoon", "LOW", null, 55, "PER_PERSON"],
+    ["sp-2026-boat-shared-afternoon-mid", "boat-shared-afternoon", "MID", null, 65, "PER_PERSON"],
+    ["sp-2026-boat-shared-afternoon-high", "boat-shared-afternoon", "HIGH", null, 75, "PER_PERSON"],
+
+    ["sp-2026-charter-3", "cabin-charter", null, 3, 3250, "PER_PACKAGE"],
+    ["sp-2026-charter-4", "cabin-charter", null, 4, 4300, "PER_PACKAGE"],
+    ["sp-2026-charter-5", "cabin-charter", null, 5, 5400, "PER_PACKAGE"],
+    ["sp-2026-charter-6", "cabin-charter", null, 6, 6450, "PER_PACKAGE"],
+    ["sp-2026-charter-7", "cabin-charter", null, 7, 7500, "PER_PACKAGE"],
+  ] as const;
+
+  for (const [id, serviceId, priceBucket, durationDays, amount, pricingUnit] of servicePrices) {
+    await prisma.servicePrice.upsert({
+      where: { id },
+      update: {
+        serviceId,
+        year: 2026,
+        priceBucket,
+        durationDays,
+        amount,
+        pricingUnit,
+      },
+      create: {
+        id,
+        serviceId,
+        year: 2026,
+        priceBucket,
+        durationDays,
+        amount,
+        pricingUnit,
+      },
+    });
+  }
+  console.log(`✓ ${servicePrices.length} service prices`);
 
   // Crew members (placeholder per testing)
   const crew = [

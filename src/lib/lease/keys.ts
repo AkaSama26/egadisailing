@@ -18,6 +18,7 @@ export const LEASE_KEYS = {
   OVERRIDE_DROPDEAD: "cron:override-dropdead",
   OVERRIDE_RECONCILE: "cron:override-reconcile",
   REFUND_RETRY: "cron:refund-retry",
+  EMAIL_OUTBOX: "cron:email-outbox",
 } as const;
 
 export type LeaseKey = (typeof LEASE_KEYS)[keyof typeof LEASE_KEYS];

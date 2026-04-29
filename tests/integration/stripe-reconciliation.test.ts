@@ -32,12 +32,14 @@ vi.mock("@/lib/queue", () => ({
   availBoataroundQueue: () => ({ add: vi.fn() }),
   availManualQueue: () => ({ add: vi.fn() }),
   pricingBokunQueue: () => ({ add: vi.fn() }),
+  emailTransactionalQueue: () => ({ add: vi.fn() }),
   getQueue: () => ({ add: vi.fn() }),
   QUEUE_NAMES: {
     AVAIL_BOKUN: "sync.avail.bokun",
     AVAIL_BOATAROUND: "sync.avail.boataround",
     AVAIL_MANUAL: "sync.avail.manual",
     PRICING_BOKUN: "sync.pricing.bokun",
+      EMAIL_TRANSACTIONAL: "email.transactional",
   },
   ALL_QUEUE_NAMES: [
     "sync.avail.bokun",

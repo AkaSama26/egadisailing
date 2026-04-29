@@ -7,9 +7,6 @@ export function startCronScheduler(): void {
   if (globalForCron.__cronStarted__) return;
   globalForCron.__cronStarted__ = true;
 
-  // Balance reminders: ogni giorno alle 07:00 Europe/Rome
-  scheduleCronFetch("0 7 * * *", "/api/cron/balance-reminders");
-
   // Data retention cleanup: ogni giorno alle 03:00 Europe/Rome (low-traffic).
   scheduleCronFetch("0 3 * * *", "/api/cron/retention");
 
@@ -20,9 +17,7 @@ export function startCronScheduler(): void {
   // spalmare carico). Skippa silenzioso se IMAP non configurato.
   scheduleCronFetch("2-59/5 * * * *", "/api/cron/email-parser");
 
-  // Weather check: ogni mattina 07:15 Europe/Rome (R12-M1: sfasato 15min
-  // da balance-reminders per non saturare il worker in-process single-thread
-  // e disperdere i picchi di carico Open-Meteo). Alert admin su booking
+  // Weather check: ogni mattina 07:15 Europe/Rome. Alert admin su booking
   // CONFIRMED nei prossimi 7gg con risk HIGH/EXTREME (Plan 6).
   scheduleCronFetch("15 7 * * *", "/api/cron/weather-check");
 
@@ -43,6 +38,10 @@ export function startCronScheduler(): void {
   scheduleCronFetch("*/10 * * * *", "/api/cron/override-reconcile");
   scheduleCronFetch("15 * * * *", "/api/cron/override-dropdead");
   scheduleCronFetch("10,40 * * * *", "/api/cron/refund-retry");
+
+  // Email outbox drain: recupera invii Brevo rimasti PENDING se Redis era giu'
+  // al momento dell'enqueue o se un deploy ha interrotto il worker.
+  scheduleCronFetch("*/5 * * * *", "/api/cron/email-outbox");
 
   logger.info("Cron scheduler started");
 }

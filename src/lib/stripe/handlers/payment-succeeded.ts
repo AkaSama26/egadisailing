@@ -1,7 +1,10 @@
 import type Stripe from "stripe";
 import { confirmDirectBookingAfterPayment } from "@/lib/booking/confirm";
-import { sendEmail } from "@/lib/email/brevo";
 import { bookingConfirmationTemplate } from "@/lib/email/templates/booking-confirmation";
+import {
+  buildEmailIdempotencyKey,
+  enqueueTransactionalEmail,
+} from "@/lib/email/outbox";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
@@ -179,11 +182,25 @@ async function sendConfirmationEmail(bookingId: string, paidCents: number): Prom
     ticketUrl: buildTicketUrl(booking.confirmationCode),
   });
 
-  await sendEmail({
-    to: booking.customer.email,
-    toName: `${booking.customer.firstName} ${booking.customer.lastName}`,
+  await enqueueTransactionalEmail({
+    templateKey: "customer.booking-confirmation",
+    recipientEmail: booking.customer.email,
+    recipientName: `${booking.customer.firstName} ${booking.customer.lastName}`,
     subject,
     htmlContent: html,
     textContent: text,
+    bookingId: booking.id,
+    customerId: booking.customerId,
+    payload: {
+      confirmationCode: booking.confirmationCode,
+      paidCents,
+      totalPrice: booking.totalPrice.toFixed(2),
+      paymentSchedule: booking.directBooking?.paymentSchedule ?? null,
+    },
+    idempotencyKey: buildEmailIdempotencyKey([
+      "booking-confirmation",
+      booking.id,
+      paidCents,
+    ]),
   });
 }

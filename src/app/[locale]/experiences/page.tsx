@@ -1,10 +1,11 @@
-// @ts-nocheck - legacy schema references, refactored in Plan 2-5
 import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { ScrollSection } from "@/components/scroll-section";
 import { ExperiencesList } from "./experiences-list";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { compareExperienceOrder, isExperienceListed } from "@/data/catalog/experiences";
+import { getDisplayPriceMap } from "@/lib/pricing/display";
 
 export async function generateMetadata({
   params,
@@ -32,17 +33,13 @@ export default async function ExperiencesPage({
     where: { active: true },
     include: {
       boat: { select: { name: true } },
-      pricingPeriods: { orderBy: { pricePerPerson: "asc" }, take: 1 },
     },
     orderBy: { name: "asc" },
   });
+  const displayPrices = await getDisplayPriceMap(services.map((s) => s.id));
 
   const serialized = services
-    .filter(
-      (s) =>
-        s.durationType !== "HALF_DAY_MORNING" &&
-        (s.type !== "CABIN_CHARTER" || s.id === "cabin-charter"),
-    )
+    .filter((s) => isExperienceListed(s.id))
     .map((s) => ({
       id: s.id,
       name: s.name,
@@ -51,10 +48,10 @@ export default async function ExperiencesPage({
       durationHours: s.durationHours,
       capacityMax: s.capacityMax,
       boatName: s.boat?.name || null,
-      description: s.description as Record<string, string>,
-      minPrice: s.pricingPeriods[0]?.pricePerPerson?.toString() ?? null,
+      priceLabel: displayPrices.get(s.id)?.label ?? null,
       pricingUnit: s.pricingUnit,
-    }));
+    }))
+    .sort((a, b) => compareExperienceOrder(a.id, b.id));
 
   return (
     <div

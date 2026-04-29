@@ -1,4 +1,3 @@
-// @ts-nocheck - legacy schema references, refactored in Plan 2-5
 import { db } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -6,6 +5,8 @@ import { HeroSection } from "@/components/hero-section";
 import { LandingSections } from "./landing-sections";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { HERO_VIDEO_POSTER_SRC } from "@/lib/public-assets";
+import { compareExperienceOrder } from "@/data/catalog/experiences";
+import { getDisplayPriceMap } from "@/lib/pricing/display";
 
 export async function generateMetadata({
   params,
@@ -27,24 +28,25 @@ export default async function HomePage() {
     where: { active: true },
     include: {
       boat: { select: { id: true, name: true } },
-      pricingPeriods: { orderBy: { pricePerPerson: "asc" }, take: 1 },
     },
     orderBy: [{ boatId: "asc" }, { priority: "desc" }, { name: "asc" }],
   });
+  const displayPrices = await getDisplayPriceMap(services.map((s) => s.id));
 
-  const serializedServices = services.map((s) => ({
-    id: s.id,
-    name: s.name,
-    type: s.type,
-    boatId: s.boat.id,
-    boatName: s.boat.name,
-    durationType: s.durationType,
-    durationHours: s.durationHours,
-    capacityMax: s.capacityMax,
-    pricingUnit: s.pricingUnit,
-    description: s.description as Record<string, string>,
-    minPrice: s.pricingPeriods[0]?.pricePerPerson?.toString() ?? null,
-  }));
+  const serializedServices = services
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      type: s.type,
+      boatId: s.boat.id,
+      boatName: s.boat.name,
+      durationType: s.durationType,
+      durationHours: s.durationHours,
+      capacityMax: s.capacityMax,
+      pricingUnit: s.pricingUnit,
+      minPrice: displayPrices.get(s.id)?.amount?.toString() ?? null,
+    }))
+    .sort((a, b) => compareExperienceOrder(a.id, b.id));
 
   return (
     <>

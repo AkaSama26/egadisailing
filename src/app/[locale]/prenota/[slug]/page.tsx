@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { env } from "@/lib/env";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { OceanLayout } from "@/components/customer/ocean-layout";
+import { getExperienceContent } from "@/data/catalog/experiences";
 
 // Round 11 SEO-M3: wizard di prenotazione non indexabile (no SEO value,
 // contiene codici/intent-dati sensibili).
@@ -22,6 +23,8 @@ export default async function BookingPage({
   const sp = await searchParams;
   const service = await db.service.findUnique({ where: { id: slug } });
   if (!service || !service.active) notFound();
+  const content = getExperienceContent(service.id, locale);
+  const serviceTitle = content?.title ?? service.name;
   const initialStartDate =
     typeof sp.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.date)
       ? sp.date
@@ -44,12 +47,12 @@ export default async function BookingPage({
     <OceanLayout>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-white text-4xl md:text-5xl font-heading font-bold mb-8 text-center">
-          Prenota {service.name}
+          Prenota {serviceTitle}
         </h1>
         <BookingWizard
           locale={locale}
           serviceId={service.id}
-          serviceName={service.name}
+          serviceName={serviceTitle}
           serviceType={service.type}
           durationType={service.durationType}
           durationHours={service.durationHours}

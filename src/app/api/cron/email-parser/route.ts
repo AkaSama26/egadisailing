@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { db } from "@/lib/db";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -82,6 +83,21 @@ export const GET = withCronGuard(
               messageIdHash: email.messageId.slice(-16),
             },
             "Charter email platform matched but parser returned null — admin review",
+          );
+          await dispatchNotification({
+            type: "SYNC_FAILURE",
+            channels: defaultNotificationChannels(),
+            payload: {
+              queueName: "cron:email-parser",
+              jobName: "charter-email-parser",
+              jobId: String(email.uid),
+              attemptsMade: 1,
+              errorCode: "CHARTER_PARSE_FAILED",
+              errorMessage: `${dispatched.platform} email riconosciuta ma non parsabile. Controllare inbox manualmente.`,
+            },
+            emailIdempotencyKey: `charter-parser-unparsed:${email.messageId}`,
+          }).catch((err) =>
+            logger.warn({ err, uid: email.uid }, "Charter parser admin notification failed"),
           );
           skippedUnparsed++;
           continue;

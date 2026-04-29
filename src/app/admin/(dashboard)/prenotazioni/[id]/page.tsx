@@ -176,7 +176,7 @@ export default async function BookingDetailPage({
               />
               {booking.directBooking.balanceAmount && (
                 <DetailRow
-                  label="Saldo"
+                  label="Saldo in loco"
                   value={`${formatEur(booking.directBooking.balanceAmount.toString())} · ${
                     booking.directBooking.balancePaidAt ? "pagato" : "in attesa"
                   }`}

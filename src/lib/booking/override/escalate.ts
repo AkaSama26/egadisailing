@@ -1,9 +1,12 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { sendEmail } from "@/lib/email/brevo";
+import {
+  defaultNotificationChannels,
+  dispatchNotification,
+  toDispatchResult,
+} from "@/lib/notifications/dispatcher";
 
 export interface SendEscalationRemindersResult {
   sent: number;
@@ -42,12 +45,18 @@ export async function sendEscalationReminders(): Promise<SendEscalationReminders
     try {
       const ageHours = Math.floor((now.getTime() - req.createdAt.getTime()) / (60 * 60 * 1000));
       const nextLevel = req.reminderLevel + 1;
-      const delivered = await sendEmail({
-        to: env.ADMIN_EMAIL,
-        subject: `Override request pending level ${nextLevel}: ${req.newBooking.confirmationCode}`,
-        htmlContent: `<p>Override request <strong>${req.newBooking.confirmationCode}</strong> pending da ${ageHours}h (reminder level ${nextLevel}). Decisione richiesta.</p>`,
-        textContent: `Override request ${req.newBooking.confirmationCode} pending (${ageHours}h, level ${nextLevel}). Decisione richiesta.`,
+      const outcome = await dispatchNotification({
+        type: "OVERRIDE_REMINDER",
+        channels: defaultNotificationChannels(),
+        payload: {
+          confirmationCode: req.newBooking.confirmationCode,
+          level: nextLevel,
+          ageHours,
+          overrideRequestId: req.id,
+        },
+        emailIdempotencyKey: `override-reminder:${req.id}:${nextLevel}`,
       });
+      const delivered = toDispatchResult(outcome).anyOk;
 
       if (!delivered) {
         errors++;

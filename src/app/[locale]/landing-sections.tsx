@@ -1,34 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { ScrollSection } from "@/components/scroll-section";
 import { IslandsItinerary } from "@/components/islands-itinerary";
 import { BookingSearch } from "@/components/booking-search";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
-  Ship,
-  Crown,
-  Home,
-  Users,
-  Sparkles,
-  ChefHat,
-  Gem,
-  Anchor,
-  Waves,
   Star,
   Clock,
   UserCheck,
   ArrowRight,
 } from "lucide-react";
-import {
-  getExperienceDisplay,
-  getExperienceTitle,
-  getServiceDurationLabel,
-} from "@/lib/services/display";
+import { getExperienceContent, isExperienceListed } from "@/data/catalog/experiences";
+import { getServiceDurationLabel } from "@/lib/services/display";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -44,7 +30,6 @@ interface SerializedService {
   durationHours: number;
   capacityMax: number;
   pricingUnit: string;
-  description: Record<string, string>;
   minPrice: string | null;
 }
 
@@ -132,130 +117,6 @@ const polaroidLayouts = [
 /*  Experience Row — alternating layout, polaroid appear on scroll    */
 /* ------------------------------------------------------------------ */
 
-/*
- * Gold flow connecting ONLY polaroid columns.
- * Measured positions (in a 1905×3291 section):
- *   Row 0 polaroids: RIGHT col, center ~(1277, 626)
- *   Row 1 polaroids: LEFT col,  center ~(629, 1204)
- *   Row 2 polaroids: RIGHT col, center ~(1277, 1782)
- *   Row 3 polaroids: LEFT col,  center ~(629, 2360)
- *   Row 4 polaroids: RIGHT col, center ~(1277, 2938)
- * Curves stay within polaroid columns, crossing the middle only to connect rows.
- */
-function GoldFlowBackground() {
-  // Normalized to percentage-based viewBox matching section proportions
-  // Right center X ≈ 67%, Left center X ≈ 33%
-  // Using viewBox 0 0 100 100 with preserveAspectRatio="none"
-  const R = 67;
-  const L = 33;
-
-  /* Two intertwining paths that weave around each other */
-  const pathA = `
-    M ${R} 12
-    C ${R+12} 15, ${R+6} 19, ${R-2} 22
-    C ${R-15} 26, ${52} 29, ${L+8} 33
-    C ${L-4} 37, ${L-10} 39, ${L+3} 41
-    C ${L+15} 44, ${48} 47, ${R-8} 50
-    C ${R+4} 53, ${R+10} 55, ${R-3} 57
-    C ${R-15} 61, ${52} 63, ${L+8} 66
-    C ${L-4} 69, ${L-10} 72, ${L+3} 74
-    C ${L+15} 77, ${48} 80, ${R-8} 83
-    C ${R+4} 86, ${R+10} 88, ${R} 91
-  `;
-
-  /* Second path — weaves in opposite phase, crossing path A */
-  const pathB = `
-    M ${R+5} 11
-    C ${R-5} 14, ${R+10} 18, ${R+5} 21
-    C ${R-8} 25, ${48} 27, ${L-3} 31
-    C ${L+8} 35, ${L+12} 38, ${L-5} 42
-    C ${L+5} 45, ${52} 48, ${R+5} 51
-    C ${R-8} 54, ${R-5} 56, ${R+5} 58
-    C ${R-8} 62, ${48} 64, ${L-3} 67
-    C ${L+8} 70, ${L+12} 73, ${L-5} 76
-    C ${L+5} 79, ${52} 81, ${R+5} 84
-    C ${R-5} 87, ${R+8} 89, ${R+3} 92
-  `;
-
-  /* Third — finer, dashed, more decorative */
-  const pathC = `
-    M ${R-4} 13
-    C ${R+8} 17, ${R-3} 20, ${R+2} 23
-    C ${R-12} 27, ${50} 30, ${L+2} 34
-    C ${L+10} 38, ${L-8} 40, ${L+5} 43
-    C ${L-5} 46, ${50} 49, ${R+2} 52
-    C ${R-6} 55, ${R+8} 57, ${R-4} 59
-    C ${R-12} 63, ${50} 65, ${L+2} 68
-    C ${L+10} 71, ${L-8} 74, ${L+5} 77
-    C ${L-5} 80, ${50} 82, ${R+2} 85
-    C ${R-4} 88, ${R+6} 90, ${R-2} 92
-  `;
-
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden hidden lg:block">
-      <svg
-        viewBox="0 0 100 100"
-        className="absolute top-0 left-0 w-full h-full"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="none"
-      >
-        {/* Path A — main flow */}
-        <path d={pathA} stroke="url(#gfMain)" strokeWidth="0.15" strokeLinecap="round">
-          <animate attributeName="stroke-dasharray" from="0 200" to="200 0" dur="4s" fill="freeze" />
-        </path>
-
-        {/* Path B — intertwining, slightly delayed */}
-        <path d={pathB} stroke="url(#gfSecond)" strokeWidth="0.12" strokeLinecap="round">
-          <animate attributeName="stroke-dasharray" from="0 200" to="200 0" dur="4s" begin="0.6s" fill="freeze" />
-        </path>
-
-        {/* Path C — fine dashed accent */}
-        <path d={pathC} stroke="url(#gfFine)" strokeWidth="0.08" strokeLinecap="round" strokeDasharray="0.4 0.8">
-          <animate attributeName="stroke-dashoffset" from="10" to="0" dur="3s" begin="1s" fill="freeze" />
-          <animate attributeName="opacity" from="0" to="1" dur="2s" begin="1s" fill="freeze" />
-        </path>
-
-        {/* Animated dot traveling along path A */}
-        <circle r="0.25" fill="#f59e0b" opacity="0.6">
-          <animateMotion dur="12s" repeatCount="indefinite" path={pathA} />
-        </circle>
-
-        {/* Second dot on path B — opposite direction feel */}
-        <circle r="0.18" fill="#d97706" opacity="0.45">
-          <animateMotion dur="15s" repeatCount="indefinite" path={pathB} />
-        </circle>
-
-        <defs>
-          <linearGradient id="gfMain" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#d97706" stopOpacity="0" />
-            <stop offset="8%" stopColor="#d97706" stopOpacity="0.45" />
-            <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.55" />
-            <stop offset="50%" stopColor="#d97706" stopOpacity="0.5" />
-            <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.55" />
-            <stop offset="92%" stopColor="#d97706" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="gfSecond" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0" />
-            <stop offset="12%" stopColor="#f59e0b" stopOpacity="0.35" />
-            <stop offset="50%" stopColor="#d97706" stopOpacity="0.4" />
-            <stop offset="88%" stopColor="#f59e0b" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id="gfFine" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#d97706" stopOpacity="0" />
-            <stop offset="15%" stopColor="#d97706" stopOpacity="0.2" />
-            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.3" />
-            <stop offset="85%" stopColor="#d97706" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-      </svg>
-    </div>
-  );
-}
-
 function ExperienceRow({
   service,
   index,
@@ -268,9 +129,10 @@ function ExperienceRow({
   priceLabel: string | undefined;
 }) {
   const isEven = index % 2 === 0;
-  const content = getExperienceDisplay(service);
+  const content = getExperienceContent(service.id, locale);
+  if (!content) return null;
   const polaroids = content.media.slice(0, 3);
-  const title = getExperienceTitle(service);
+  const title = content.title;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center min-h-[450px]">
@@ -313,7 +175,7 @@ function ExperienceRow({
         </Link>
       </ScrollSection>
 
-      {/* Polaroid column with gold SVG decorations */}
+      {/* Polaroid column */}
       <div
         className={`relative h-[450px] hidden lg:block ${isEven ? "lg:order-2" : "lg:order-1"}`}
       >
@@ -389,7 +251,6 @@ export function LandingSections({ services }: LandingSectionsProps) {
           background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 60%, #071934 100%)",
         }}
       >
-
         <div className="max-w-7xl mx-auto relative z-10">
           <ScrollSection animation="fade-up">
             <div className="text-center mb-24">
@@ -399,11 +260,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
 
           <div className="space-y-32">
             {services
-              .filter(
-                (s) =>
-                  s.durationType !== "HALF_DAY_MORNING" &&
-                  (s.type !== "CABIN_CHARTER" || s.id === "cabin-charter"),
-              )
+              .filter((s) => isExperienceListed(s.id))
               .map((service, i) => (
               <ExperienceRow
                 key={service.id}

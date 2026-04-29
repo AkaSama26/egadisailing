@@ -13,7 +13,6 @@
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type Stripe from "stripe";
-import { http, HttpResponse } from "msw";
 import { server } from "../helpers/msw-server";
 import { setupTestDb, resetTestDb, closeTestDb } from "../helpers/test-db";
 import { installRedisMock } from "../helpers/redis-mock";
@@ -39,12 +38,14 @@ vi.mock("@/lib/queue", () => {
     availBoataroundQueue: mockQueue,
     availManualQueue: mockQueue,
     pricingBokunQueue: mockQueue,
+    emailTransactionalQueue: mockQueue,
     getQueue: mockQueue,
     QUEUE_NAMES: {
       AVAIL_BOKUN: "sync.avail.bokun",
       AVAIL_BOATAROUND: "sync.avail.boataround",
       AVAIL_MANUAL: "sync.avail.manual",
       PRICING_BOKUN: "sync.pricing.bokun",
+      EMAIL_TRANSACTIONAL: "email.transactional",
     },
     ALL_QUEUE_NAMES: [
       "sync.avail.bokun",
@@ -269,7 +270,6 @@ describe("handleStripeEvent — integration", () => {
   it("happy path: PENDING → succeeded → CONFIRMED + Payment + blockDates + confirmation email", async () => {
     const { booking, boat } = await seedBooking("PENDING");
     const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
-    const { sendEmail } = await import("@/lib/email/brevo");
     const { dispatchNotification } = await import("@/lib/notifications/dispatcher");
 
     const event = makeEvent("payment_intent.succeeded", {
@@ -305,13 +305,14 @@ describe("handleStripeEvent — integration", () => {
     expect(cells[0].status).toBe("BLOCKED");
     expect(cells[0].lockedByBookingId).toBe(booking.id);
 
-    // Email confermazione inviata al cliente.
-    expect(sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "mario@example.com",
-        subject: expect.stringContaining(booking.confirmationCode),
-      }),
-    );
+    // Email confermazione accodata al cliente.
+    const confirmationEmail = await db.emailOutbox.findFirst({
+      where: {
+        recipientEmail: "mario@example.com",
+        templateKey: "customer.booking-confirmation",
+      },
+    });
+    expect(confirmationEmail?.subject).toContain(booking.confirmationCode);
 
     // Notification admin dispatched (NEW_BOOKING_DIRECT).
     expect(dispatchNotification).toHaveBeenCalledWith(

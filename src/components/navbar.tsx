@@ -89,7 +89,7 @@ export function Navbar() {
             className={cn(!isTransparent ? "text-gray-700" : "text-white")}
           />
           <Link
-            href={`/${locale}/experiences`}
+            href={`/${locale}/prenota`}
             className={cn(
               buttonVariants({ size: "default" }),
               "bg-[var(--color-gold)] text-white hover:bg-[var(--color-gold)]/90 border-none"
@@ -134,7 +134,7 @@ export function Navbar() {
                   <LanguageSwitcher className="text-gray-700" />
                 </div>
                 <Link
-                  href={`/${locale}/experiences`}
+                  href={`/${locale}/prenota`}
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "mt-4 w-full bg-[var(--color-gold)] text-white hover:bg-[var(--color-gold)]/90 border-none"

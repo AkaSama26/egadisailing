@@ -1,8 +1,14 @@
 import Decimal from "decimal.js";
+import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors";
 import { toUtcDay } from "@/lib/dates";
 import { PRICING_UNITS, effectivePricingUnit, type PricingUnit } from "./units";
+import {
+  normalizePassengerBreakdown,
+  paidUnitsForService,
+  type PassengerBreakdown,
+} from "@/lib/booking/passengers";
 
 export interface PriceQuote {
   basePricePerPerson: Decimal;
@@ -15,10 +21,124 @@ export interface PriceQuote {
   hotDaySource: string;
   hotDayRuleName?: string;
   totalPrice: Decimal;
+  seasonKey?: string;
+  priceBucket?: string;
+  durationDays?: number;
+  legacyFallback: boolean;
 }
 
 export interface QuotePriceOptions {
   durationDays?: number;
+  passengers?: Partial<PassengerBreakdown> | null;
+}
+
+interface PriceSource {
+  amount: Prisma.Decimal;
+  pricingUnit: PricingUnit;
+  seasonKey?: string;
+  priceBucket?: string;
+  durationDays?: number;
+  legacyFallback: boolean;
+}
+
+type QuoteService = {
+  id: string;
+  type: string;
+  boatId: string;
+  durationType: string;
+  durationHours: number;
+  pricingUnit: string | null;
+};
+
+function resolveCharterDurationDays(service: QuoteService, durationDays?: number): number {
+  const resolved = durationDays ?? Math.max(3, Math.min(7, Math.ceil(service.durationHours / 24)));
+  if (!Number.isInteger(resolved) || resolved < 3 || resolved > 7) {
+    throw new Error("durationDays must be between 3 and 7 for cabin charter");
+  }
+  return resolved;
+}
+
+async function findSeasonalPriceSource(params: {
+  service: QuoteService;
+  dateOnly: Date;
+  durationDays?: number;
+}): Promise<PriceSource | null> {
+  const { service, dateOnly, durationDays } = params;
+  const year = dateOnly.getUTCFullYear();
+
+  if (service.type === "CABIN_CHARTER") {
+    const resolvedDurationDays = resolveCharterDurationDays(service, durationDays);
+    const price = await db.servicePrice.findFirst({
+      where: {
+        serviceId: service.id,
+        year,
+        priceBucket: null,
+        durationDays: resolvedDurationDays,
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+    if (!price) return null;
+    return {
+      amount: price.amount,
+      pricingUnit: effectivePricingUnit({ type: service.type, pricingUnit: price.pricingUnit }),
+      durationDays: resolvedDurationDays,
+      legacyFallback: false,
+    };
+  }
+
+  const season = await db.season.findFirst({
+    where: {
+      year,
+      startDate: { lte: dateOnly },
+      endDate: { gte: dateOnly },
+    },
+    orderBy: { startDate: "desc" },
+  });
+  if (!season) return null;
+
+  const price = await db.servicePrice.findFirst({
+    where: {
+      serviceId: service.id,
+      year,
+      priceBucket: season.priceBucket,
+      durationDays: null,
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+  if (!price) return null;
+
+  return {
+    amount: price.amount,
+    pricingUnit: effectivePricingUnit({ type: service.type, pricingUnit: price.pricingUnit }),
+    seasonKey: season.key,
+    priceBucket: season.priceBucket,
+    legacyFallback: false,
+  };
+}
+
+async function findLegacyPriceSource(params: {
+  service: QuoteService;
+  dateOnly: Date;
+}): Promise<PriceSource | null> {
+  const { service, dateOnly } = params;
+  const period = await db.pricingPeriod.findFirst({
+    where: {
+      serviceId: service.id,
+      startDate: { lte: dateOnly },
+      endDate: { gte: dateOnly },
+    },
+    orderBy: { startDate: "desc" },
+    include: {
+      service: { select: { type: true, pricingUnit: true } },
+    },
+  });
+  if (!period) return null;
+
+  return {
+    amount: period.pricePerPerson,
+    pricingUnit: effectivePricingUnit(period.service),
+    legacyFallback: true,
+  };
 }
 
 /**
@@ -54,66 +174,24 @@ export async function quotePrice(
     throw new NotFoundError("Service", serviceId);
   }
 
-  let period = await db.pricingPeriod.findFirst({
-    where: {
-      serviceId,
-      startDate: { lte: dateOnly },
-      endDate: { gte: dateOnly },
-    },
-    orderBy: { startDate: "desc" },
-    include: {
-      service: { select: { type: true, pricingUnit: true } },
-    },
-  });
+  const source =
+    (await findSeasonalPriceSource({
+      service,
+      dateOnly,
+      durationDays: options.durationDays,
+    })) ?? (await findLegacyPriceSource({ service, dateOnly }));
 
-  let derivedHalfDayMultiplier = 1;
-  if (
-    service.type.startsWith("BOAT_") &&
-    (service.durationType === "HALF_DAY_MORNING" ||
-      service.durationType === "HALF_DAY_AFTERNOON")
-  ) {
-    const fullDayService = await db.service.findFirst({
-      where: {
-        boatId: service.boatId,
-        type: service.type,
-        pricingUnit: service.pricingUnit,
-        durationType: "FULL_DAY",
-        active: true,
-      },
-      select: { id: true },
-    });
-    if (fullDayService) {
-      const fullDayPeriod = await db.pricingPeriod.findFirst({
-        where: {
-          serviceId: fullDayService.id,
-          startDate: { lte: dateOnly },
-          endDate: { gte: dateOnly },
-        },
-        orderBy: { startDate: "desc" },
-        include: {
-          service: { select: { type: true, pricingUnit: true } },
-        },
-      });
-      if (fullDayPeriod) {
-        period = fullDayPeriod;
-        derivedHalfDayMultiplier = 0.75;
-      }
-    }
+  if (!source) {
+    throw new NotFoundError("ServicePrice", `${serviceId} @ ${dateOnly.toISOString()}`);
   }
 
-  if (!period) {
-    throw new NotFoundError("PricingPeriod", `${serviceId} @ ${dateOnly.toISOString()}`);
-  }
-
-  const basePrice = new Decimal(period.pricePerPerson.toString()).mul(derivedHalfDayMultiplier);
+  const basePrice = new Decimal(source.amount.toString());
   const finalPrice = basePrice;
-  const pricingUnit = effectivePricingUnit(period.service);
-  const billableDays =
-    service.type === "CABIN_CHARTER"
-      ? Math.max(3, Math.min(7, options.durationDays ?? Math.ceil(service.durationHours / 24)))
-      : 1;
-  const unitTotal = finalPrice.mul(billableDays);
-  const total = pricingUnit === PRICING_UNITS.PER_PACKAGE ? unitTotal : unitTotal.mul(numPeople);
+  const pricingUnit = source.pricingUnit;
+  const passengers = normalizePassengerBreakdown(options.passengers, numPeople);
+  const paidUnits = paidUnitsForService(service.type, passengers);
+  const total =
+    pricingUnit === PRICING_UNITS.PER_PACKAGE ? finalPrice : finalPrice.mul(paidUnits);
 
   return {
     basePricePerPerson: basePrice,
@@ -125,6 +203,10 @@ export async function quotePrice(
     hotDayMultiplier: 1,
     hotDaySource: "NONE",
     totalPrice: total,
+    seasonKey: source.seasonKey,
+    priceBucket: source.priceBucket,
+    durationDays: source.durationDays,
+    legacyFallback: source.legacyFallback,
   };
 }
 
@@ -144,5 +226,9 @@ export function quoteToJson(q: PriceQuote) {
     hotDaySource: q.hotDaySource,
     hotDayRuleName: q.hotDayRuleName,
     totalPrice: q.totalPrice.toNumber(),
+    seasonKey: q.seasonKey,
+    priceBucket: q.priceBucket,
+    durationDays: q.durationDays,
+    legacyFallback: q.legacyFallback,
   };
 }

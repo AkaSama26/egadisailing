@@ -26,6 +26,12 @@ import {
 import { createOverrideRequest } from "./override-request";
 import { postCommitCancelBooking } from "./post-commit-cancel";
 import { dispatchNotification } from "@/lib/notifications/dispatcher";
+import { getAlternativeDatesIso } from "./alternative-dates";
+import {
+  normalizePassengerBreakdown,
+  occupiedSeatCount,
+  type PassengerBreakdown,
+} from "@/lib/booking/passengers";
 
 export interface ConsentInput {
   privacyAccepted: boolean;
@@ -39,12 +45,13 @@ export interface CreateDirectBookingInput {
   serviceId: string;
   startDate: Date;
   durationDays?: number;
-  numPeople: number;
+  numPeople?: number;
+  passengers?: Partial<PassengerBreakdown> | null;
   customer: {
     email: string;
     firstName: string;
     lastName: string;
-    phone?: string;
+    phone: string;
     nationality?: string;
     language?: string;
   };
@@ -103,10 +110,17 @@ export async function createPendingDirectBooking(
   const service = await db.service.findUnique({ where: { id: input.serviceId } });
   if (!service) throw new NotFoundError("Service", input.serviceId);
   if (!service.active) throw new ValidationError("Service is not active");
+  const phone = input.customer.phone?.trim() ?? "";
+  if (!phone) {
+    throw new ValidationError("Telefono obbligatorio");
+  }
 
-  if (input.numPeople < 1 || input.numPeople > service.capacityMax) {
+  const passengers = normalizePassengerBreakdown(input.passengers, input.numPeople ?? 1);
+  const occupiedSeats = occupiedSeatCount(passengers);
+
+  if (occupiedSeats < 1 || occupiedSeats > service.capacityMax) {
     throw new ValidationError(
-      `numPeople out of range (1..${service.capacityMax}): ${input.numPeople}`,
+      `numPeople out of range (1..${service.capacityMax}): ${occupiedSeats}`,
     );
   }
 
@@ -115,7 +129,7 @@ export async function createPendingDirectBooking(
   // 1 posto su una giornata non ancora attiva. La logica "tour parte se
   // cumulativamente raggiunge minPaying" va gestita separatamente (Plan 5
   // admin: cancel + refund se soglia non raggiunta X giorni prima).
-  if (service.minPaying && input.numPeople < service.minPaying) {
+  if (service.minPaying && occupiedSeats < service.minPaying) {
     throw new ValidationError(
       `Minimum ${service.minPaying} persone richieste per ${service.name}`,
     );
@@ -134,15 +148,10 @@ export async function createPendingDirectBooking(
     }
   }
 
-  // Enforce paymentSchedule dal service — il client non puo' overridere.
-  // Es. Cabin Charter e' sempre DEPOSIT_BALANCE: bloccare FULL mantiene
-  // coerenza con il flusso commerciale (admin puo' sempre fare booking
-  // manuali con logica diversa).
-  if (input.paymentSchedule !== service.defaultPaymentSchedule) {
-    throw new ValidationError(
-      `${service.name} richiede ${service.defaultPaymentSchedule}, ricevuto ${input.paymentSchedule}`,
-    );
-  }
+  // Il cliente puo' scegliere se pagare tutto subito o versare un acconto.
+  // La percentuale dell'acconto resta pero' server-owned: il browser non puo'
+  // abbassarla manipolando `depositPercentage`.
+  const serverDepositPercentage = service.defaultDepositPercentage ?? 30;
 
   // Normalizza startDate al giorno di calendario Europe/Rome (risolve
   // off-by-one: 2026-04-07 digitato dal cliente e' 2026-04-06T22:00Z).
@@ -173,15 +182,16 @@ export async function createPendingDirectBooking(
   const endDate = deriveEndDate(startDay, effectiveDurationType, effectiveDurationHours);
   const endDay = toUtcDay(endDate);
 
-  const quote = await quotePrice(input.serviceId, startDay, input.numPeople, {
+  const quote = await quotePrice(input.serviceId, startDay, occupiedSeats, {
     durationDays: charterDurationDays,
+    passengers,
   });
   const totalCents = toCents(quote.totalPrice);
 
   let depositCents = 0;
   let balanceCents = 0;
   if (input.paymentSchedule === "DEPOSIT_BALANCE") {
-    const pct = input.depositPercentage ?? service.defaultDepositPercentage ?? 30;
+    const pct = serverDepositPercentage;
     if (pct < 1 || pct > 100) throw new ValidationError(`Invalid depositPercentage: ${pct}`);
     depositCents = Math.round((totalCents * pct) / 100);
     balanceCents = totalCents - depositCents;
@@ -224,7 +234,7 @@ export async function createPendingDirectBooking(
     const customer = await tx.customer.upsert({
       where: { email: emailLower },
       update: {
-        phone: input.customer.phone || undefined,
+        phone,
         nationality: input.customer.nationality || undefined,
         language: input.customer.language || undefined,
       },
@@ -232,7 +242,7 @@ export async function createPendingDirectBooking(
         email: emailLower,
         firstName: input.customer.firstName,
         lastName: input.customer.lastName,
-        phone: input.customer.phone,
+        phone,
         nationality: input.customer.nationality,
         language: input.customer.language,
       },
@@ -294,12 +304,12 @@ export async function createPendingDirectBooking(
           durationType: service.durationType,
           capacityMax: service.capacityMax,
         },
-        input.numPeople,
+        occupiedSeats,
         boatSlot,
       );
       if (decision.capacityExceeded) {
         throw new ConflictError("Boat shared capacity exceeded", {
-          requestedPeople: input.numPeople,
+          requestedPeople: occupiedSeats,
           sold: decision.sharedSold,
           remaining: decision.sharedRemaining,
           capacityMax: service.capacityMax,
@@ -450,7 +460,11 @@ export async function createPendingDirectBooking(
         boatId: service.boatId,
         startDate: startDay,
         endDate: endDay,
-        numPeople: input.numPeople,
+        numPeople: occupiedSeats,
+        adultCount: passengers.adults,
+        childCount: passengers.children,
+        freeChildSeatCount: passengers.freeChildren,
+        infantCount: passengers.infants,
         totalPrice: quote.totalPrice.toFixed(2),
         notes: input.notes,
         status: "PENDING",
@@ -540,7 +554,15 @@ export async function createPendingDirectBooking(
       try {
         const superseded = await db.overrideRequest.findUnique({
           where: { id: supersededId },
-          select: { newBookingId: true },
+          select: {
+            newBookingId: true,
+            newBooking: {
+              include: {
+                customer: { select: { id: true, email: true, firstName: true, lastName: true } },
+                service: { select: { name: true } },
+              },
+            },
+          },
         });
         if (superseded) {
           // postCommitCancelBooking precondition: newBooking.status = CANCELLED,
@@ -550,6 +572,36 @@ export async function createPendingDirectBooking(
             actorUserId: null,
             reason: "override_superseded",
           });
+
+          if (superseded.newBooking.customer?.email) {
+            const alternativeDates = await getAlternativeDatesIso(
+              superseded.newBooking.boatId,
+              superseded.newBooking.startDate,
+              3,
+            );
+            await dispatchNotification({
+              type: "OVERRIDE_SUPERSEDED",
+              channels: ["EMAIL"],
+              recipientEmail: superseded.newBooking.customer.email,
+              recipientName:
+                `${superseded.newBooking.customer.firstName ?? ""} ${superseded.newBooking.customer.lastName ?? ""}`.trim() ||
+                undefined,
+              bookingId: superseded.newBooking.id,
+              customerId: superseded.newBooking.customer.id,
+              emailIdempotencyKey: `override-superseded:${supersededId}`,
+              payload: {
+                customerName:
+                  `${superseded.newBooking.customer.firstName ?? ""} ${superseded.newBooking.customer.lastName ?? ""}`.trim() ||
+                  "cliente",
+                confirmationCode: superseded.newBooking.confirmationCode,
+                serviceName: superseded.newBooking.service.name,
+                startDate: superseded.newBooking.startDate.toISOString().slice(0, 10),
+                refundAmount: superseded.newBooking.totalPrice.toFixed(2),
+                alternativeDates,
+                bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+              } as unknown as Record<string, unknown>,
+            });
+          }
         }
       } catch (err) {
         logger.error(
@@ -572,13 +624,20 @@ export async function createPendingDirectBooking(
         confirmationCode,
         serviceName: service.name,
         startDate: startDay.toISOString().slice(0, 10),
-        numPeople: input.numPeople,
+        numPeople: occupiedSeats,
         amountPaid: quote.totalPrice.toFixed(2),
         bookingPortalUrl: `${env.APP_URL}/b/sessione`,
       };
       await dispatchNotification({
         type: "OVERRIDE_REQUESTED",
         channels: ["EMAIL"],
+        recipientEmail: input.customer.email,
+        recipientName:
+          `${input.customer.firstName ?? ""} ${input.customer.lastName ?? ""}`.trim() ||
+          undefined,
+        bookingId: result.created.id,
+        customerId: result.created.customerId,
+        emailIdempotencyKey: `override-requested:${result.overrideRequestResult.requestId}`,
         payload: customerPayload as unknown as Record<string, unknown>,
       });
 
@@ -603,7 +662,7 @@ export async function createPendingDirectBooking(
           customerEmail: input.customer.email,
           serviceName: service.name,
           startDate: startDay.toISOString().slice(0, 10),
-          numPeople: input.numPeople,
+          numPeople: occupiedSeats,
           newRevenue: quote.totalPrice.toFixed(2),
           conflictRevenue: overrideForAdmin.conflictingRevenueTotal.toFixed(2),
           conflictSources: overrideForAdmin.conflictSourceChannels,

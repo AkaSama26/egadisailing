@@ -3,6 +3,7 @@ import { startBokunBookingWorker } from "./workers/bokun-booking-worker";
 import { startBokunPricingWorker } from "./workers/bokun-pricing-worker";
 import { startBoataroundAvailabilityWorker } from "./workers/boataround-availability-worker";
 import { startManualAlertWorker } from "./workers/manual-alert-worker";
+import { startTransactionalEmailWorker } from "./workers/transactional-email-worker";
 import { getRegisteredWorkers, getRedisConnection } from "./index";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
@@ -40,8 +41,9 @@ export function registerQueueWorkers(): void {
   startBokunPricingWorker();
   startBoataroundAvailabilityWorker();
   startManualAlertWorker();
+  startTransactionalEmailWorker();
   logger.info(
-    "BullMQ workers registered (bokun availability, bokun booking, bokun pricing, boataround availability, manual alert)",
+    "BullMQ workers registered (bokun availability, bokun booking, bokun pricing, boataround availability, manual alert, transactional email)",
   );
 
   registerShutdownHandler();

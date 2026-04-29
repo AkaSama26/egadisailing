@@ -18,6 +18,7 @@ import {
 } from "@/lib/booking/cross-channel-conflicts";
 import { createManualAlert } from "@/lib/charter/manual-alerts";
 import { upsertCustomerFromExternal } from "@/lib/booking/upsert-customer-from-external";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import type { BoataroundBookingResponse } from "../schemas";
 
 export interface ImportedBoataroundBooking {
@@ -259,6 +260,28 @@ export async function importBoataroundBooking(
       },
       `Boataround booking ${result.mode}`,
     );
+
+    if (result.mode === "created") {
+      await dispatchNotification({
+        type: "NEW_BOOKING_CHARTER",
+        channels: defaultNotificationChannels(),
+        payload: {
+          source: "BOATAROUND",
+          confirmationCode: `BR-${booking.id}`,
+          customerName:
+            `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
+            "n/a",
+          serviceName: service.name,
+          startDate: startDate.toISOString().slice(0, 10),
+          numPeople: 1,
+          totalPrice: `€${totalPriceStr}`,
+        },
+        bookingId: result.booking.id,
+        emailIdempotencyKey: `new-booking-boataround:${booking.id}`,
+      }).catch((err) =>
+        logger.warn({ err, boataroundBookingId: booking.id }, "Boataround new booking notification failed"),
+      );
+    }
 
     if (result.mode === "conflict" && detectedConflicts.length > 0) {
       await recordBoataroundConflictAlerts({

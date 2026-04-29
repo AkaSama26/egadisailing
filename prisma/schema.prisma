@@ -111,12 +111,46 @@ model Service {
   boat            Boat             @relation(fields: [boatId], references: [id])
   bookings        Booking[]
   pricingPeriods  PricingPeriod[]
+  servicePrices   ServicePrice[]
   hotDayOverrides HotDayOverride[]
 }
 
 // ═══════════════════════════════════════════════════════════
 // PREZZI
 // ═══════════════════════════════════════════════════════════
+
+model Season {
+  id          String   @id @default(cuid())
+  year        Int
+  key         String
+  label       String
+  startDate   DateTime @db.Date
+  endDate     DateTime @db.Date
+  priceBucket String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([year, key])
+  @@index([year, startDate, endDate])
+  @@index([year, priceBucket])
+}
+
+model ServicePrice {
+  id           String   @id @default(cuid())
+  serviceId    String
+  year         Int
+  priceBucket  String?
+  durationDays Int?
+  amount       Decimal  @db.Decimal(10, 2)
+  pricingUnit  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@index([serviceId, year, priceBucket, durationDays])
+  @@index([year, priceBucket])
+}
 
 model PricingPeriod {
   id             String   @id @default(cuid())
@@ -245,6 +279,7 @@ model Customer {
   updatedAt   DateTime @updatedAt
 
   bookings        Booking[]
+  emailOutboxEntries EmailOutbox[]
   // R26-A2-4: FK inverse (onDelete: SetNull in migration).
   consentRecords  ConsentRecord[]
 }
@@ -281,6 +316,10 @@ model Booking {
   endDate          DateTime      @db.Date
   cancellationPolicyAnchorDate DateTime? @db.Date
   numPeople        Int
+  adultCount       Int           @default(0)
+  childCount       Int           @default(0)
+  freeChildSeatCount Int         @default(0)
+  infantCount      Int           @default(0)
   totalPrice       Decimal       @db.Decimal(10, 2)
   currency         String        @default("EUR")
   status           BookingStatus @default(PENDING)
@@ -300,6 +339,7 @@ model Booking {
   bokunBooking   BokunBooking?
   charterBooking CharterBooking?
   payments       Payment[]
+  emailOutboxEntries EmailOutbox[]
   bookingNotes   BookingNote[]
   tripCrew       TripCrew[]
   // R26-A2-4/A2-7: inverse relations per FK aggiunti (onDelete: SetNull).
@@ -326,6 +366,38 @@ model Booking {
   // R18-Prisma: reconciliation cron Bokun legge (source=BOKUN, externalRef=id)
   // — prima seq-scan su `source,status` compound con filter post.
   @@index([source, externalRef])
+}
+
+model EmailOutbox {
+  id              String    @id @default(cuid())
+  templateKey     String
+  recipientEmail  String
+  recipientName   String?
+  replyToEmail    String?
+  replyToName     String?
+  subject         String
+  htmlContent     String    @db.Text
+  textContent     String?   @db.Text
+  payload         Json
+  status          String    @default("PENDING")
+  attempts        Int       @default(0)
+  lastError       String?   @db.Text
+  brevoMessageId  String?
+  idempotencyKey  String    @unique
+  bookingId       String?
+  customerId      String?
+  nextAttemptAt   DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  sentAt          DateTime?
+
+  booking  Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([status, nextAttemptAt])
+  @@index([bookingId])
+  @@index([customerId])
+  @@index([templateKey, createdAt])
 }
 
 model DirectBooking {

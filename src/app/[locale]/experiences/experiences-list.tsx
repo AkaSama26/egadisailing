@@ -1,16 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useLocale } from "next-intl";
 import { ScrollSection } from "@/components/scroll-section";
 import { ImageStack } from "@/components/image-stack";
 import { Clock, Users, Ship, ArrowRight } from "lucide-react";
 import {
-  getExperienceDisplay,
-  getExperienceTitle,
   getPriceUnitLabel,
   getServiceDurationLabel,
 } from "@/lib/services/display";
+import { getExperienceContent } from "@/data/catalog/experiences";
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -24,8 +22,7 @@ interface Service {
   durationHours: number;
   capacityMax: number;
   boatName: string | null;
-  description: Record<string, string>;
-  minPrice: string | null;
+  priceLabel: string | null;
   pricingUnit?: string | null;
 }
 
@@ -45,9 +42,10 @@ export function ExperiencesList({
       <div className="max-w-7xl mx-auto space-y-32">
         {services.map((service, i) => {
           const isEven = i % 2 === 0;
-          const content = getExperienceDisplay(service);
+          const content = getExperienceContent(service.id, locale);
+          if (!content) return null;
           const images = content.media;
-          const title = getExperienceTitle(service);
+          const title = content.title;
 
           return (
             <div
@@ -84,9 +82,9 @@ export function ExperiencesList({
                   )}
                 </div>
 
-                {service.minPrice && (
+                {service.priceLabel && (
                   <p className="text-2xl font-semibold text-[var(--color-gold)]">
-                    A partire da €{service.minPrice}{" "}
+                    {service.priceLabel}{" "}
                     {getPriceUnitLabel(service.pricingUnit, service.type)}
                   </p>
                 )}

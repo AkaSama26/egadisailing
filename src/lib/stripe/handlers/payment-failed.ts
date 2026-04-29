@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { parseBookingMetadata } from "../metadata";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 
 /**
  * Set di error code Stripe **terminal** (no recovery): cliente deve
@@ -85,7 +86,9 @@ export async function cleanupPendingAfterPiFailure(
       boatId: true,
       startDate: true,
       endDate: true,
-      service: { select: { type: true } },
+      confirmationCode: true,
+      service: { select: { type: true, name: true } },
+      customer: { select: { firstName: true, lastName: true } },
     },
   });
   if (!booking) {
@@ -131,5 +134,23 @@ export async function cleanupPendingAfterPiFailure(
   logger.info(
     { bookingId, ...ctx },
     "Booking cleanup completed after PI failure/cancel",
+  );
+
+  await dispatchNotification({
+    type: "PAYMENT_FAILED",
+    channels: defaultNotificationChannels(),
+    payload: {
+      confirmationCode: booking.confirmationCode,
+      customerName:
+        `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
+        "n/a",
+      serviceName: booking.service.name,
+      startDate: booking.startDate.toISOString().slice(0, 10),
+      amount: "n/a",
+      reason: `${ctx.reason}${ctx.errorCode ? ` · ${ctx.errorCode}` : ""}`,
+    },
+    emailIdempotencyKey: `payment-failed-cleanup:${bookingId}:${ctx.reason}`,
+  }).catch((err) =>
+    logger.warn({ err, bookingId }, "Payment failed admin notification failed"),
   );
 }

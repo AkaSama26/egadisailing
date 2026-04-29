@@ -154,7 +154,10 @@ export async function approveOverride(
   // 2. blockDates per newBooking (side-effect unico dell'approve)
   const newBookingData = await db.booking.findUnique({
     where: { id: request.newBookingId },
-    select: { boatId: true, startDate: true, endDate: true },
+    include: {
+      customer: { select: { id: true, email: true, firstName: true, lastName: true } },
+      service: { select: { name: true } },
+    },
   });
   if (newBookingData) {
     try {
@@ -170,6 +173,35 @@ export async function approveOverride(
         { err, bookingId: request.newBookingId },
         "approveOverride: blockDates failed",
       );
+    }
+  }
+
+  if (newBookingData?.customer?.email) {
+    try {
+      await dispatchNotification({
+        type: "OVERRIDE_APPROVED",
+        channels: ["EMAIL"],
+        recipientEmail: newBookingData.customer.email,
+        recipientName:
+          `${newBookingData.customer.firstName ?? ""} ${newBookingData.customer.lastName ?? ""}`.trim() ||
+          undefined,
+        bookingId: request.newBookingId,
+        customerId: newBookingData.customer.id,
+        emailIdempotencyKey: `override-approved:${requestId}`,
+        payload: {
+          customerName:
+            `${newBookingData.customer.firstName ?? ""} ${newBookingData.customer.lastName ?? ""}`.trim() ||
+            "cliente",
+          confirmationCode: newBookingData.confirmationCode,
+          serviceName: newBookingData.service.name,
+          startDate: newBookingData.startDate.toISOString().slice(0, 10),
+          numPeople: newBookingData.numPeople,
+          bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+          contactPhone: env.CONTACT_PHONE ?? "",
+        } as unknown as Record<string, unknown>,
+      });
+    } catch (err) {
+      logger.error({ err, bookingId: request.newBookingId }, "approveOverride: dispatch OVERRIDE_APPROVED failed");
     }
   }
 
@@ -194,15 +226,19 @@ export async function approveOverride(
     );
 
     // Phase 8 #5: route via dispatcher (single notification funnel).
-    // The dispatcher renders the overbookingApology template + sends via
-    // sendEmail internally — eliminates direct sendEmail bypass that this
-    // module previously had.
+    // The dispatcher renders the overbookingApology template and enqueues it
+    // in the transactional email outbox.
     try {
       const outcome = await dispatchNotification({
         type: "OVERRIDE_APOLOGY_LOSER",
         channels: ["EMAIL"],
         // Recipient is the per-conflict customer, not the default ADMIN_EMAIL.
         recipientEmail: conflict.customer.email,
+        recipientName:
+          `${conflict.customer.firstName ?? ""} ${conflict.customer.lastName ?? ""}`.trim() ||
+          undefined,
+        bookingId: conflict.id,
+        emailIdempotencyKey: `override-apology-loser:${requestId}:${conflictId}`,
         payload: {
           customerName: `${conflict.customer.firstName} ${conflict.customer.lastName}`.trim() || "cliente",
           confirmationCode: conflict.confirmationCode,
@@ -218,7 +254,11 @@ export async function approveOverride(
         } as unknown as Record<string, unknown>,
       });
       const result = toDispatchResult(outcome);
-      result.emailOk ? emailsSent++ : emailsFailed++;
+      if (result.emailOk) {
+        emailsSent++;
+      } else {
+        emailsFailed++;
+      }
     } catch (err) {
       emailsFailed++;
       logger.error({ err, bookingId: conflictId }, "approveOverride: dispatch OVERRIDE_APOLOGY_LOSER failed");

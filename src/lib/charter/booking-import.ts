@@ -20,6 +20,7 @@ import {
 } from "@/lib/booking/cross-channel-conflicts";
 import { upsertCustomerFromExternal } from "@/lib/booking/upsert-customer-from-external";
 import { createManualAlert } from "@/lib/charter/manual-alerts";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import type {
   CharterPlatform,
   ExtractedCharterBooking,
@@ -310,6 +311,31 @@ export async function importCharterBooking(
       },
       `Charter booking ${result.mode}`,
     );
+
+    if (result.mode === "created" && result.booking.status !== "CANCELLED") {
+      await dispatchNotification({
+        type: "NEW_BOOKING_CHARTER",
+        channels: defaultNotificationChannels(),
+        payload: {
+          source: input.platform,
+          confirmationCode: `${input.platform.slice(0, 2)}-${input.platformBookingRef}`,
+          customerName:
+            `${input.customerFirstName ?? ""} ${input.customerLastName ?? ""}`.trim() ||
+            "n/a",
+          serviceName: service.name,
+          startDate: input.startDate.toISOString().slice(0, 10),
+          numPeople: 1,
+          totalPrice: `€${totalPriceStr}`,
+        },
+        bookingId: result.booking.id,
+        emailIdempotencyKey: `new-booking-charter:${input.platform}:${input.platformBookingRef}`,
+      }).catch((err) =>
+        logger.warn(
+          { err, platform: input.platform, ref: input.platformBookingRef },
+          "Charter new booking notification failed",
+        ),
+      );
+    }
 
     // R14 cross-OTA post-commit incident recording.
     // R24-A1-A4: un import charter CANCELLED (email di disdetta al primo

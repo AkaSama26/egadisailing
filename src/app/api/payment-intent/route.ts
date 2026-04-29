@@ -20,6 +20,7 @@ import { ACCEPTED_POLICY_VERSIONS } from "@/lib/legal/policy-version";
 import { normalizeEmail } from "@/lib/email-normalize";
 import { emailSchema, personNameSchema } from "@/lib/validation/common-zod";
 import { RL_WINDOW } from "@/lib/timing";
+import { passengerBreakdownSchema } from "@/lib/booking/passengers";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,10 @@ const schema = z.object({
       return d <= maxFuture;
     }, "startDate oltre 2 anni nel futuro o invalida"),
   durationDays: z.number().int().min(3).max(7).optional(),
-  numPeople: z.number().int().min(1).max(50),
+  passengers: passengerBreakdownSchema.optional(),
+  // Back-compat temporanea per test/client vecchi. Il nuovo wizard pubblico
+  // manda sempre `passengers`.
+  numPeople: z.number().int().min(1).max(50).optional(),
   customer: z.object({
     email: emailSchema,
     // Escape HTML-dangerous chars: riducono rischio XSS nei template email
@@ -56,9 +60,10 @@ const schema = z.object({
     // HTML/WhatsApp URL. Max 30 per uniformita' con altri limiti.
     phone: z
       .string()
+      .trim()
+      .min(1, "Telefono obbligatorio")
       .max(30)
-      .regex(/^[+\d\s()\-.]{0,30}$/, "Numero telefono non valido")
-      .optional(),
+      .regex(/^(?=.*\d)[+\d\s()\-.]{1,30}$/, "Numero telefono non valido"),
     nationality: z.string().length(2).optional(),
     language: z.string().max(8).optional(),
   }),
@@ -73,6 +78,9 @@ const schema = z.object({
     termsAccepted: z.literal(true),
     policyVersion: z.enum(ACCEPTED_POLICY_VERSIONS),
   }),
+}).refine((value) => value.passengers || value.numPeople, {
+  message: "passengers is required",
+  path: ["passengers"],
 });
 
 export const POST = withErrorHandler(async (req: Request) => {
@@ -126,6 +134,7 @@ export const POST = withErrorHandler(async (req: Request) => {
     startDate: new Date(input.startDate),
     durationDays: input.durationDays,
     numPeople: input.numPeople,
+    passengers: input.passengers,
     customer: input.customer,
     paymentSchedule: input.paymentSchedule,
     depositPercentage: input.depositPercentage,

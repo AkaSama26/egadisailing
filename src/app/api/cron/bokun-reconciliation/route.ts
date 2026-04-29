@@ -12,6 +12,7 @@ import { LEASE_KEYS } from "@/lib/lease/keys";
 import { RUN_BUDGET } from "@/lib/timing";
 import { recordChannelSync } from "@/lib/sync/record-channel-sync";
 import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 
 export const runtime = "nodejs";
 
@@ -160,6 +161,24 @@ export const GET = withCronGuard(
         lastError,
       });
 
+      if (failed > 0 || budgetExceeded) {
+        await dispatchNotification({
+          type: "SYNC_FAILURE",
+          channels: defaultNotificationChannels(),
+          payload: {
+            queueName: "cron:bokun-reconciliation",
+            jobName: "bokun-reconciliation",
+            jobId: runStartedAt.toISOString(),
+            attemptsMade: 1,
+            errorCode: budgetExceeded ? "RUN_BUDGET" : "IMPORT_FAILED",
+            errorMessage: lastError ?? "Bokun reconciliation degraded",
+          },
+          emailIdempotencyKey: `bokun-reconciliation:${runStartedAt.toISOString().slice(0, 13)}`,
+        }).catch((err) =>
+          logger.warn({ err }, "Bokun reconciliation degraded notification failed"),
+        );
+      }
+
       logger.info(
         { imported, failed, totalHits, pages: page - 1, durationMs, since: since.toISOString() },
         "Bokun reconciliation run completed",
@@ -173,6 +192,21 @@ export const GET = withCronGuard(
         healthStatus: "RED",
         lastError: (err as Error).message,
       });
+      await dispatchNotification({
+        type: "SYNC_FAILURE",
+        channels: defaultNotificationChannels(),
+        payload: {
+          queueName: "cron:bokun-reconciliation",
+          jobName: "bokun-reconciliation",
+          jobId: new Date().toISOString(),
+          attemptsMade: 1,
+          errorCode: "CRON_RED",
+          errorMessage: (err as Error).message,
+        },
+        emailIdempotencyKey: `bokun-reconciliation-red:${new Date().toISOString().slice(0, 13)}`,
+      }).catch((dispatchErr) =>
+        logger.warn({ err: dispatchErr }, "Bokun reconciliation RED notification failed"),
+      );
       throw err;
     }
   },

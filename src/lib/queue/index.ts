@@ -68,6 +68,11 @@ export interface WorkerOptions {
    * Utile per non martellare i canali upstream (Bokun 429).
    */
   limiter?: { max: number; duration: number };
+  /**
+   * Se false, non emette SYNC_FAILURE al fallimento finale del job.
+   * Necessario per worker email per evitare loop se Brevo e' giu'.
+   */
+  alertOnFinalFailure?: boolean;
 }
 
 export function createWorker<T = unknown>(
@@ -106,6 +111,7 @@ export function createWorker<T = unknown>(
     // R28-ALTA-4: alert admin su final failure (attempts esauriti). Senza,
     // DLQ cresceva silente — admin doveva visitare /admin/sync-log per
     // scoprirla. Con 100+ failed job cross-channel drift garantito.
+    if (options.alertOnFinalFailure === false) return;
     if (!job || job.attemptsMade < JOB_MAX_ATTEMPTS) return;
     const dedupKey = `${name}|${errCode ?? "unknown"}`;
     const lastAt = syncFailureDedup.get(dedupKey) ?? 0;
@@ -195,6 +201,7 @@ export const QUEUE_NAMES = {
   AVAIL_MANUAL: "sync.avail.manual",
   PRICING_BOKUN: "sync.pricing.bokun",
   BOOKING_BOKUN: "sync.booking.bokun",
+  EMAIL_TRANSACTIONAL: "email.transactional",
 } as const;
 
 /** Lista queue attive per aggregate metrics (health + admin sync-log). */
@@ -220,6 +227,11 @@ export function pricingBokunQueue(): Queue<SyncJob> {
 /** Queue per processare webhook booking Bokun fuori dalla request HTTP. */
 export function bookingBokunQueue(): Queue<SyncJob> {
   return getQueue<SyncJob>(QUEUE_NAMES.BOOKING_BOKUN);
+}
+
+/** Queue per inviare email transazionali Brevo via outbox persistente. */
+export function emailTransactionalQueue(): Queue<SyncJob> {
+  return getQueue<SyncJob>(QUEUE_NAMES.EMAIL_TRANSACTIONAL);
 }
 
 /** @deprecated usa le per-channel. Mantenuto per non rompere caller legacy

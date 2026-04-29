@@ -10,6 +10,7 @@ import { LEASE_KEYS } from "@/lib/lease/keys";
 import { getRedisConnection } from "@/lib/queue";
 import { TTL } from "@/lib/timing";
 import { recordChannelSync } from "@/lib/sync/record-channel-sync";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 
 export const runtime = "nodejs";
 
@@ -250,6 +251,24 @@ export const GET = withCronGuard(
         lastError: errMsg,
       });
 
+      if (failed > 0 || reachedLimit) {
+        await dispatchNotification({
+          type: "SYNC_FAILURE",
+          channels: defaultNotificationChannels(),
+          payload: {
+            queueName: "cron:stripe-reconciliation",
+            jobName: "stripe-reconciliation",
+            jobId: runStartedAt.toISOString(),
+            attemptsMade: 1,
+            errorCode: failed > 0 ? "REPLAY_FAILED" : "BACKLOG_LIMIT",
+            errorMessage: errMsg ?? "Stripe reconciliation degraded",
+          },
+          emailIdempotencyKey: `stripe-reconciliation:${runStartedAt.toISOString().slice(0, 13)}`,
+        }).catch((dispatchErr) =>
+          logger.warn({ err: dispatchErr }, "Stripe reconciliation degraded notification failed"),
+        );
+      }
+
       logger.info(
         {
           totalFetched,
@@ -297,6 +316,21 @@ export const GET = withCronGuard(
         healthStatus: "RED",
         lastError: (err as Error).message,
       });
+      await dispatchNotification({
+        type: "SYNC_FAILURE",
+        channels: defaultNotificationChannels(),
+        payload: {
+          queueName: "cron:stripe-reconciliation",
+          jobName: "stripe-reconciliation",
+          jobId: new Date().toISOString(),
+          attemptsMade: 1,
+          errorCode: "CRON_RED",
+          errorMessage: (err as Error).message,
+        },
+        emailIdempotencyKey: `stripe-reconciliation-red:${new Date().toISOString().slice(0, 13)}`,
+      }).catch((dispatchErr) =>
+        logger.warn({ err: dispatchErr }, "Stripe reconciliation RED notification failed"),
+      );
       throw err;
     }
   },

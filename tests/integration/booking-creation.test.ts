@@ -31,12 +31,14 @@ vi.mock("@/lib/queue", () => ({
   availBoataroundQueue: () => ({ add: vi.fn() }),
   availManualQueue: () => ({ add: vi.fn() }),
   pricingBokunQueue: () => ({ add: vi.fn() }),
+  emailTransactionalQueue: () => ({ add: vi.fn() }),
   getQueue: () => ({ add: vi.fn() }),
   QUEUE_NAMES: {
     AVAIL_BOKUN: "sync.avail.bokun",
     AVAIL_BOATAROUND: "sync.avail.boataround",
     AVAIL_MANUAL: "sync.avail.manual",
     PRICING_BOKUN: "sync.pricing.bokun",
+      EMAIL_TRANSACTIONAL: "email.transactional",
   },
   ALL_QUEUE_NAMES: [
     "sync.avail.bokun",
@@ -219,7 +221,30 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     expect(consents[0].privacyAccepted).toBe(true);
   });
 
-  it("charter: durationDays calcola totale e range a giornata", async () => {
+  it("checkout diretto: acconto 30% server-side anche se il client prova a cambiarlo", async () => {
+    await seedServiceSocial();
+    await db.service.update({
+      where: { id: "s-social" },
+      data: { defaultPaymentSchedule: "DEPOSIT_BALANCE", defaultDepositPercentage: 30 },
+    });
+    const { createPendingDirectBooking } = await import(
+      "@/lib/booking/create-direct"
+    );
+
+    const res = await createPendingDirectBooking(
+      baseInput({
+        paymentSchedule: "DEPOSIT_BALANCE",
+        depositPercentage: 1,
+      }),
+    );
+
+    expect(res.totalAmountCents).toBe(20_000);
+    expect(res.depositAmountCents).toBe(6_000);
+    expect(res.upfrontAmountCents).toBe(6_000);
+    expect(res.balanceAmountCents).toBe(14_000);
+  });
+
+  it("charter: durationDays definisce il range, prezzo legacy fallback fisso", async () => {
     await seedServiceExclusive();
     const { createPendingDirectBooking } = await import(
       "@/lib/booking/create-direct"
@@ -229,11 +254,11 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
       exclusiveInput({ durationDays: 5, numPeople: 8 }),
     );
 
-    expect(res.totalAmountCents).toBe(50_000);
+    expect(res.totalAmountCents).toBe(10_000);
     const booking = await db.booking.findUniqueOrThrow({
       where: { id: res.bookingId },
     });
-    expect(booking.totalPrice.toString()).toBe("500");
+    expect(booking.totalPrice.toString()).toBe("100");
     expect(booking.endDate.toISOString().slice(0, 10)).toBe("2026-07-19");
   });
 
@@ -532,7 +557,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     ).resolves.toMatchObject({ bookingId: expect.any(String) });
   });
 
-  it("barca half-day costa il 75% del full-day corrispondente", async () => {
+  it("barca half-day usa il proprio prezzo configurato, senza derivazione 75%", async () => {
     const { sharedMorning } = await seedBoatCatalog();
     const { createPendingDirectBooking } = await import(
       "@/lib/booking/create-direct"
@@ -544,7 +569,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
       customer: { ...baseInput().customer, email: "half-price@example.com" },
     }));
 
-    expect(res.totalAmountCents).toBe(15_000);
+    expect(res.totalAmountCents).toBe(20_000);
   });
 
   it("barca exclusive e' prezzo pacchetto e non moltiplica per persone", async () => {
@@ -768,7 +793,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
         email: "a@example.com",
         firstName: "A",
         lastName: "X",
-        phone: "",
+        phone: "+39 111",
         nationality: "IT",
         language: "it",
       },
@@ -778,7 +803,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
         email: "b@example.com",
         firstName: "B",
         lastName: "Y",
-        phone: "",
+        phone: "+39 222",
         nationality: "IT",
         language: "it",
       },

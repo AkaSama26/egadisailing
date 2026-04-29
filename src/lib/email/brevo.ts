@@ -23,6 +23,11 @@ export interface SendEmailOptions {
   replyTo?: { email: string; name?: string };
 }
 
+export interface SendEmailResult {
+  delivered: boolean;
+  messageId?: string;
+}
+
 /**
  * Invia email transazionale via Brevo REST API.
  *
@@ -36,6 +41,11 @@ export interface SendEmailOptions {
  * caller non marca falsi "anyOk=true".
  */
 export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
+  const result = await sendEmailWithResult(opts);
+  return result.delivered;
+}
+
+export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendEmailResult> {
   if (!env.BREVO_API_KEY) {
     // In production, env.ts ha gia' enforced la presenza della key quindi
     // arriveremo qui solo se mancante. Fail loud invece di silent-skip.
@@ -43,7 +53,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
       throw new ExternalServiceError("Brevo", "BREVO_API_KEY not configured");
     }
     logger.warn({ subject: opts.subject }, "BREVO_API_KEY not set in dev — skipping email send");
-    return false;
+    return { delivered: false };
   }
 
   try {
@@ -100,10 +110,18 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
       throw new ExternalServiceError("Brevo", `send failed (${res.status})`);
     }
 
+    let messageId: string | undefined;
+    try {
+      const body = (await res.json()) as { messageId?: string };
+      messageId = body.messageId;
+    } catch {
+      messageId = undefined;
+    }
+
     // R14-Area1-CRITICA: niente email in chiaro nei log. Subject OK (non-PII
     // per template admin/customer generici).
-    logger.info({ subject: opts.subject }, "Email sent");
-    return true;
+    logger.info({ subject: opts.subject, messageId }, "Email sent");
+    return { delivered: true, messageId };
   } catch (err) {
     if (err instanceof ExternalServiceError) throw err;
     logger.error({ err: (err as Error).message }, "Brevo sendEmail failed");

@@ -14,6 +14,17 @@ import {
 } from "@/lib/booking/reschedule";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
+import { env } from "@/lib/env";
+import {
+  changeRequestApprovedTemplate,
+  changeRequestRejectedTemplate,
+} from "@/lib/email/templates/customer-lifecycle";
+import {
+  buildEmailIdempotencyKey,
+  enqueueTransactionalEmail,
+} from "@/lib/email/outbox";
+import { formatItDay } from "@/lib/dates";
 
 const requestIdSchema = z.string().min(1);
 
@@ -129,6 +140,41 @@ export async function approveChangeRequest(formData: FormData): Promise<void> {
     },
   });
 
+  try {
+    const customerName =
+      `${approved.booking.customer.firstName ?? ""} ${approved.booking.customer.lastName ?? ""}`.trim() ||
+      "cliente";
+    const tpl = changeRequestApprovedTemplate({
+      customerName,
+      confirmationCode: approved.booking.confirmationCode,
+      serviceName: approved.booking.service.name,
+      originalDate: formatItDay(approved.request.originalStartDate),
+      requestedDate: formatItDay(approved.request.requestedStartDate),
+      bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+    });
+    await enqueueTransactionalEmail({
+      templateKey: "customer.change-request.approved",
+      recipientEmail: approved.booking.customer.email,
+      recipientName: customerName,
+      subject: tpl.subject,
+      htmlContent: tpl.html,
+      textContent: tpl.text,
+      bookingId: approved.booking.id,
+      customerId: approved.booking.customerId,
+      payload: {
+        requestId: approved.request.id,
+        confirmationCode: approved.booking.confirmationCode,
+      },
+      idempotencyKey: buildEmailIdempotencyKey([
+        "change-request-approved",
+        approved.request.id,
+      ]),
+    });
+  } catch (err) {
+    logger.error({ err, requestId: approved.request.id }, "Change request approved email enqueue failed");
+    // Non bloccare l'azione admin: la modifica data e' gia' stata applicata.
+  }
+
   revalidatePath("/admin/change-requests");
   revalidatePath(`/admin/prenotazioni/${approved.booking.id}`);
 }
@@ -144,7 +190,14 @@ export async function rejectChangeRequest(formData: FormData): Promise<void> {
     await acquireTxAdvisoryLock(tx, "booking-change-request", input.requestId);
     const request = await tx.bookingChangeRequest.findUnique({
       where: { id: input.requestId },
-      include: { booking: { select: { id: true } } },
+      include: {
+        booking: {
+          include: {
+            customer: { select: { id: true, email: true, firstName: true, lastName: true } },
+            service: { select: { name: true } },
+          },
+        },
+      },
     });
     if (!request) throw new NotFoundError("BookingChangeRequest", input.requestId);
     if (request.status !== "PENDING") {
@@ -172,6 +225,43 @@ export async function rejectChangeRequest(formData: FormData): Promise<void> {
     before: { status: request.status },
     after: { status: "REJECTED", adminNote: input.adminNote?.trim() || null },
   });
+
+  try {
+    const customerName =
+      `${request.booking.customer.firstName ?? ""} ${request.booking.customer.lastName ?? ""}`.trim() ||
+      "cliente";
+    const tpl = changeRequestRejectedTemplate({
+      customerName,
+      confirmationCode: request.booking.confirmationCode,
+      serviceName: request.booking.service.name,
+      originalDate: formatItDay(request.originalStartDate),
+      requestedDate: formatItDay(request.requestedStartDate),
+      bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+      adminNote: input.adminNote?.trim() || undefined,
+    });
+    await enqueueTransactionalEmail({
+      templateKey: "customer.change-request.rejected",
+      recipientEmail: request.booking.customer.email,
+      recipientName: customerName,
+      subject: tpl.subject,
+      htmlContent: tpl.html,
+      textContent: tpl.text,
+      bookingId: request.booking.id,
+      customerId: request.booking.customer.id,
+      payload: {
+        requestId: request.id,
+        confirmationCode: request.booking.confirmationCode,
+        adminNote: input.adminNote?.trim() || null,
+      },
+      idempotencyKey: buildEmailIdempotencyKey([
+        "change-request-rejected",
+        request.id,
+      ]),
+    });
+  } catch (err) {
+    logger.error({ err, requestId: request.id }, "Change request rejected email enqueue failed");
+    // Non bloccare l'azione admin: il rifiuto e' gia' stato salvato.
+  }
 
   revalidatePath("/admin/change-requests");
   revalidatePath(`/admin/prenotazioni/${request.booking.id}`);

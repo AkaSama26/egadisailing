@@ -1,4 +1,5 @@
 import { escapeHtml, safeUrl } from "@/lib/html-escape";
+import { env } from "@/lib/env";
 
 export { escapeHtml, safeUrl };
 
@@ -20,6 +21,8 @@ export function emailLayout(opts: {
           </a>
         </div>`
       : "";
+  const privacyUrl = `${env.APP_URL}/privacy`;
+  const termsUrl = `${env.APP_URL}/terms`;
 
   return `<!DOCTYPE html>
 <html>
@@ -29,6 +32,16 @@ export function emailLayout(opts: {
       <h2 style="color: #0c3d5e; margin-top: 0;">${escapeHtml(opts.heading)}</h2>
       ${opts.bodyHtml}
       ${ctaBlock}
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0 16px;" />
+      <p style="color: #6b7280; font-size: 12px; line-height: 1.5;">
+        Egadisailing Srl · Email transazionale relativa ai servizi richiesti.<br />
+        Per assistenza rispondi a questa email o scrivici dai contatti ufficiali.
+      </p>
+      <p style="color: #6b7280; font-size: 12px;">
+        <a href="${safeUrl(privacyUrl)}" style="color: #0c3d5e;">Privacy</a>
+        ·
+        <a href="${safeUrl(termsUrl)}" style="color: #0c3d5e;">Termini</a>
+      </p>
     </div>
   </body>
 </html>`;

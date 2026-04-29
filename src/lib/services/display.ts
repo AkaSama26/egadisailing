@@ -1,3 +1,5 @@
+import { getExperienceContent } from "@/data/catalog/experiences";
+
 export interface ServiceDisplayInput {
   id?: string;
   name: string;
@@ -13,65 +15,29 @@ export interface ExperienceVisual {
   media: Array<{ caption: string; color: string }>;
 }
 
-const EXPERIENCE_VISUALS: Record<string, ExperienceVisual> = {
-  EXCLUSIVE_EXPERIENCE: {
-    title: "Exclusive Experience",
-    subtitle:
-      "Il trimarano tutto per te. Chef rinomato, menù raffinato, rotta personalizzata. Un'esperienza senza compromessi per chi cerca il meglio.",
-    media: [
-      { caption: "Tavola luxury", color: "#FFB6C1" },
-      { caption: "Tuffo privato", color: "#FFDAB9" },
-      { caption: "Tramonto a bordo", color: "#DDA0DD" },
-      { caption: "Solo per voi", color: "#E1BEE7" },
-    ],
-  },
-  CABIN_CHARTER: {
-    title: "Esperienza Charter",
-    subtitle:
-      "La tua casa e' il mare. Scegli il pacchetto da 3 a 7 giorni e naviga tra Favignana, Levanzo e Marettimo con il trimarano tutto per te.",
-    media: [
-      { caption: "La tua cabina", color: "#ADD8E6" },
-      { caption: "Alba su Marettimo", color: "#B2DFDB" },
-      { caption: "Colazione in coperta", color: "#C5CAE9" },
-      { caption: "Una settimana", color: "#BBDEFB" },
-    ],
-  },
-  BOAT_SHARED: {
-    title: "Barca condivisa",
-    subtitle:
-      "Biglietti singoli sulla barca da 12 posti, con scelta tra giornata intera, mattina o pomeriggio.",
-    media: [
-      { caption: "Full day", color: "#A7F3D0" },
-      { caption: "Mattina", color: "#BFDBFE" },
-      { caption: "Pomeriggio", color: "#FDE68A" },
-      { caption: "12 posti", color: "#DDD6FE" },
-    ],
-  },
-  BOAT_EXCLUSIVE: {
-    title: "Barca in esclusiva",
-    subtitle:
-      "La barca riservata al tuo gruppo, venduta a pacchetto e disponibile per giornata intera, mattina o pomeriggio.",
-    media: [
-      { caption: "Uso esclusivo", color: "#FECACA" },
-      { caption: "Rotta privata", color: "#BAE6FD" },
-      { caption: "Mezza giornata", color: "#FED7AA" },
-      { caption: "Fino a 12", color: "#C7D2FE" },
-    ],
-  },
-};
+const FALLBACK_MEDIA = [
+  { caption: "Egadisailing", color: "#BAE6FD" },
+  { caption: "Isole Egadi", color: "#FDE68A" },
+  { caption: "Trapani", color: "#A7F3D0" },
+];
 
-export function getExperienceDisplay(service: ServiceDisplayInput): ExperienceVisual {
-  return (
-    EXPERIENCE_VISUALS[service.type] ?? {
-      title: service.name,
-      subtitle: "",
-      media: EXPERIENCE_VISUALS.EXCLUSIVE_EXPERIENCE.media,
-    }
-  );
+export function getExperienceDisplay(
+  service: ServiceDisplayInput,
+  locale?: string | null,
+): ExperienceVisual {
+  const content = service.id ? getExperienceContent(service.id, locale) : null;
+  return {
+    title: content?.title ?? service.name,
+    subtitle: content?.subtitle ?? "",
+    media: content?.media ?? FALLBACK_MEDIA,
+  };
 }
 
-export function getExperienceTitle(service: ServiceDisplayInput): string {
-  return getExperienceDisplay(service).title;
+export function getExperienceTitle(
+  service: ServiceDisplayInput,
+  locale?: string | null,
+): string {
+  return getExperienceDisplay(service, locale).title;
 }
 
 export function getServiceDurationLabel(service: ServiceDisplayInput): string {
@@ -88,6 +54,6 @@ export function getServiceDurationLabel(service: ServiceDisplayInput): string {
 }
 
 export function getPriceUnitLabel(pricingUnit?: string | null, serviceType?: string | null): string {
-  if (serviceType === "CABIN_CHARTER") return "per giornata";
+  if (serviceType === "CABIN_CHARTER") return "per pacchetto";
   return pricingUnit === "PER_PACKAGE" ? "per pacchetto" : "a persona";
 }

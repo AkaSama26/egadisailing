@@ -9,8 +9,12 @@ import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { withAdminAction } from "@/lib/admin/with-admin-action";
 import { refundPayment, cancelPaymentIntent, getChargeRefundState } from "@/lib/stripe/payment-intents";
 import { fromCents, formatEurCents } from "@/lib/pricing/cents";
-import { sendEmail } from "@/lib/email/brevo";
 import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
+import { customerCancellationTemplate } from "@/lib/email/templates/customer-lifecycle";
+import {
+  buildEmailIdempotencyKey,
+  enqueueTransactionalEmail,
+} from "@/lib/email/outbox";
 import { env } from "@/lib/env";
 import {
   reconcileBoatDatesFromActiveBookings,
@@ -25,6 +29,7 @@ import { logger } from "@/lib/logger";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
 import { isBoatSharedServiceType } from "@/lib/booking/boat-slot-availability";
+import { formatItDay } from "@/lib/dates";
 
 /**
  * Admin action: cancella una prenotazione + refund Stripe dei payments
@@ -246,6 +251,48 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
     logger.warn({ err, bookingId }, "Cancel notification failed (non-blocking)");
   }
 
+  if (booking.customer?.email) {
+    try {
+      const refundAmount =
+        refundedCentsTotal > 0 ? formatEurCents(refundedCentsTotal) : undefined;
+      const tpl = customerCancellationTemplate({
+        customerName:
+          `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
+          "cliente",
+        confirmationCode: booking.confirmationCode,
+        serviceName: booking.service?.name ?? "la tua esperienza",
+        startDate: formatItDay(booking.startDate),
+        refundAmount,
+        bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+        contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+      });
+      await enqueueTransactionalEmail({
+        templateKey: "customer.booking-cancelled.admin",
+        recipientEmail: booking.customer.email,
+        recipientName:
+          `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
+          undefined,
+        subject: tpl.subject,
+        htmlContent: tpl.html,
+        textContent: tpl.text,
+        bookingId: booking.id,
+        customerId: booking.customerId,
+        payload: {
+          confirmationCode: booking.confirmationCode,
+          source: booking.source,
+          refundAmount: refundAmount ?? null,
+        },
+        idempotencyKey: buildEmailIdempotencyKey([
+          "admin-cancel-customer",
+          booking.id,
+          refundedCentsTotal,
+        ]),
+      });
+    } catch (err) {
+      logger.error({ err, bookingId }, "Customer cancellation email enqueue failed");
+    }
+  }
+
   // R29-#2: apology email customer se cancel e' causato da double-booking
   // cross-OTA. Query ManualAlert PENDING/RESOLVED `CROSS_OTA_DOUBLE_BOOKING`
   // per questo booking. Se esiste → cliente e' perdente dell'incident →
@@ -288,13 +335,29 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
         contactPhone: env.CONTACT_PHONE,
         bookingUrl: `${env.APP_URL}/b/sessione`,
       });
-      const delivered = await sendEmail({
-        to: booking.customer.email,
+      const delivered = await enqueueTransactionalEmail({
+        templateKey: "customer.overbooking-apology",
+        recipientEmail: booking.customer.email,
+        recipientName:
+          `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
+          undefined,
         subject: tpl.subject,
         htmlContent: tpl.html,
         textContent: tpl.text,
+        bookingId: booking.id,
+        customerId: booking.customerId,
+        payload: {
+          confirmationCode: booking.confirmationCode,
+          refundAmount: refundedCentsTotal > 0 ? formatEurCents(refundedCentsTotal) : null,
+          refundChannel,
+        },
+        idempotencyKey: buildEmailIdempotencyKey([
+          "overbooking-apology",
+          booking.id,
+          refundedCentsTotal,
+        ]),
       });
-      if (!delivered) {
+      if (!delivered.accepted) {
         logger.error(
           { bookingId, customerEmail: booking.customer.email },
           "Overbooking apology email failed — admin must contact customer manually",
@@ -352,8 +415,8 @@ export interface RegisterPaymentInput {
 }
 
 /**
- * Registra un pagamento off-Stripe (contanti/bonifico). Se type=BALANCE
- * marca `DirectBooking.balancePaidAt` per suppressione balance-reminder cron.
+ * Registra un pagamento off-Stripe (contanti/bonifico). Se type=BALANCE marca
+ * `DirectBooking.balancePaidAt`: il saldo viene incassato solo in loco.
  */
 export async function registerManualPayment(input: RegisterPaymentInput): Promise<void> {
   const { userId } = await requireAdmin();

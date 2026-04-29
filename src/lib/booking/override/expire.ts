@@ -89,6 +89,12 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
           const outcome = await dispatchNotification({
             type: "OVERRIDE_EXPIRED",
             channels: ["EMAIL"],
+            recipientEmail: req.newBooking.customer.email,
+            recipientName:
+              `${req.newBooking.customer.firstName ?? ""} ${req.newBooking.customer.lastName ?? ""}`.trim() ||
+              undefined,
+            bookingId: req.newBookingId,
+            emailIdempotencyKey: `override-expired:${id}`,
             payload: {
               customerName:
                 `${req.newBooking.customer.firstName ?? ""} ${req.newBooking.customer.lastName ?? ""}`.trim() ||

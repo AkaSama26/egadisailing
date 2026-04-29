@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { db } from "@/lib/db";
+import { getListedExperienceIds } from "@/data/catalog/experiences";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://egadisailing.com";
@@ -18,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const services = await db.service.findMany({
-    where: { active: true },
+    where: { active: true, id: { in: getListedExperienceIds() } },
     select: { id: true, updatedAt: true },
     orderBy: { priority: "desc" },
   });

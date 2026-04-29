@@ -13,6 +13,16 @@ export interface DashboardKpi {
   upcomingCount: number;
   pendingBalances: Decimal;
   pendingAlerts: PendingManualAlert[];
+  failedEmailCount: number;
+  failedEmails: Array<{
+    id: string;
+    templateKey: string;
+    recipientEmail: string;
+    subject: string;
+    attempts: number;
+    lastError: string | null;
+    updatedAt: Date;
+  }>;
   overrideMonthlyApproved: number;
   overridePending: number;
 }
@@ -33,6 +43,8 @@ export async function getDashboardKpi(now: Date = new Date()): Promise<Dashboard
     upcomingCount,
     balancesAgg,
     pendingAlerts,
+    failedEmailCount,
+    failedEmails,
     overrideMonthlyApproved,
     overridePending,
   ] = await Promise.all([
@@ -62,6 +74,23 @@ export async function getDashboardKpi(now: Date = new Date()): Promise<Dashboard
       _sum: { balanceAmount: true },
     }),
     listPendingManualAlerts(),
+    db.emailOutbox.count({
+      where: { status: "FAILED" },
+    }),
+    db.emailOutbox.findMany({
+      where: { status: "FAILED" },
+      select: {
+        id: true,
+        templateKey: true,
+        recipientEmail: true,
+        subject: true,
+        attempts: true,
+        lastError: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 5,
+    }),
     db.overrideRequest.count({
       where: { status: "APPROVED", decidedAt: { gte: monthStart } },
     }),
@@ -76,6 +105,8 @@ export async function getDashboardKpi(now: Date = new Date()): Promise<Dashboard
     upcomingCount,
     pendingBalances: new Decimal(balancesAgg._sum.balanceAmount?.toString() ?? "0"),
     pendingAlerts,
+    failedEmailCount,
+    failedEmails,
     overrideMonthlyApproved,
     overridePending,
   };

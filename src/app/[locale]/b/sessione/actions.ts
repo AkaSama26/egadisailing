@@ -14,7 +14,7 @@ import {
   releaseBookingDates,
 } from "@/lib/availability/service";
 import { CHANNELS } from "@/lib/channels";
-import { parseDateLikelyLocalDay } from "@/lib/dates";
+import { formatItDay, parseDateLikelyLocalDay } from "@/lib/dates";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { deriveEndDate } from "@/lib/booking/helpers";
 import { isBoatSharedServiceType } from "@/lib/booking/boat-slot-availability";
@@ -24,8 +24,17 @@ import {
   getChargeRefundState,
   refundPayment,
 } from "@/lib/stripe/payment-intents";
-import { fromCents } from "@/lib/pricing/cents";
+import { formatEurCents, fromCents } from "@/lib/pricing/cents";
 import { logger } from "@/lib/logger";
+import {
+  changeRequestReceivedTemplate,
+  customerCancellationTemplate,
+} from "@/lib/email/templates/customer-lifecycle";
+import {
+  buildEmailIdempotencyKey,
+  enqueueTransactionalEmail,
+} from "@/lib/email/outbox";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 
 export async function logout(): Promise<void> {
   await revokeBookingSession();
@@ -178,6 +187,59 @@ export async function cancelCustomerBooking(bookingId: string): Promise<void> {
     },
   });
 
+  try {
+    const tpl = customerCancellationTemplate({
+      customerName: session.email,
+      confirmationCode: booking.confirmationCode,
+      serviceName: "la tua esperienza",
+      startDate: formatItDay(booking.startDate),
+      refundAmount: refundedCents > 0 ? formatEurCents(refundedCents) : undefined,
+      retainedAmount: retainedCents > 0 ? formatEurCents(retainedCents) : undefined,
+      policyLabel: policy.label,
+      bookingPortalUrl: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/b/sessione`,
+      contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+    });
+    await enqueueTransactionalEmail({
+      templateKey: "customer.booking-cancelled.self-service",
+      recipientEmail: booking.customer.email,
+      subject: tpl.subject,
+      htmlContent: tpl.html,
+      textContent: tpl.text,
+      bookingId: booking.id,
+      customerId: booking.customerId,
+      payload: {
+        confirmationCode: booking.confirmationCode,
+        refundedCents,
+        retainedCents,
+        policyBand: policy.band,
+      },
+      idempotencyKey: buildEmailIdempotencyKey([
+        "customer-cancel",
+        booking.id,
+        refundedCents,
+        retainedCents,
+      ]),
+    });
+  } catch (err) {
+    logger.error({ err, bookingId: booking.id }, "Customer cancellation email enqueue failed");
+  }
+
+  await dispatchNotification({
+    type: "BOOKING_CANCELLED",
+    channels: defaultNotificationChannels(),
+    payload: {
+      confirmationCode: booking.confirmationCode,
+      customerName: session.email,
+      serviceName: "DIRECT customer self-service",
+      startDate: booking.startDate.toISOString().slice(0, 10),
+      source: booking.source,
+      reason: "customer_self_service",
+      refundAmount: refundedCents > 0 ? formatEurCents(refundedCents) : undefined,
+    },
+  }).catch((err) =>
+    logger.warn({ err, bookingId: booking.id }, "Customer cancellation admin notification failed"),
+  );
+
   revalidatePath(`/${env.APP_LOCALES_DEFAULT}/b/sessione`);
 }
 
@@ -264,6 +326,53 @@ export async function requestCustomerReschedule(formData: FormData): Promise<voi
       status: "PENDING",
     },
   });
+
+  try {
+    const tpl = changeRequestReceivedTemplate({
+      customerName: session.email,
+      confirmationCode: booking.confirmationCode,
+      serviceName: booking.service.name,
+      originalDate: formatItDay(oldStartDate),
+      requestedDate: formatItDay(newStartDate),
+      bookingPortalUrl: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/b/sessione`,
+    });
+    await enqueueTransactionalEmail({
+      templateKey: "customer.change-request.received",
+      recipientEmail: booking.customer.email,
+      subject: tpl.subject,
+      htmlContent: tpl.html,
+      textContent: tpl.text,
+      bookingId: booking.id,
+      customerId: booking.customerId,
+      payload: {
+        requestId: request.id,
+        confirmationCode: booking.confirmationCode,
+        originalDate: oldStartDate.toISOString().slice(0, 10),
+        requestedDate: newStartDate.toISOString().slice(0, 10),
+      },
+      idempotencyKey: buildEmailIdempotencyKey([
+        "change-request-received",
+        request.id,
+        newStartDate.toISOString(),
+      ]),
+    });
+    await dispatchNotification({
+      type: "CHANGE_REQUESTED",
+      channels: defaultNotificationChannels(),
+      payload: {
+        confirmationCode: booking.confirmationCode,
+        customerName: session.email,
+        serviceName: booking.service.name,
+        originalDate: formatItDay(oldStartDate),
+        requestedDate: formatItDay(newStartDate),
+        note: input.note?.trim() || undefined,
+        detailUrl: `${env.APP_URL}/admin/change-requests`,
+      },
+      emailIdempotencyKey: `admin-change-request:${request.id}`,
+    });
+  } catch (err) {
+    logger.error({ err, bookingId: booking.id }, "Change request notification failed");
+  }
 
   revalidatePath(`/${env.APP_LOCALES_DEFAULT}/b/sessione`);
 }

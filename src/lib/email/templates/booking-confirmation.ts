@@ -18,8 +18,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
   const ticketHref = data.ticketUrl ? safeUrl(data.ticketUrl) : undefined;
   const hasSafeTicketUrl = Boolean(ticketHref && ticketHref !== "#");
   const balanceBlock = data.balanceAmount
-    ? `<p style="color: #c2410c;"><strong>Saldo da versare:</strong> ${escapeHtml(data.balanceAmount)}<br>
-         Ti invieremo un link per il pagamento 7 giorni prima dell'esperienza.</p>`
+    ? `<p style="color: #c2410c;"><strong>Saldo da pagare in loco:</strong> ${escapeHtml(data.balanceAmount)}<br>
+         Il saldo restante si paga solamente in loco prima della partenza. Contanti preferiti.</p>`
     : "";
   const ticketBlock = hasSafeTicketUrl
     ? `<p><strong>Biglietto QR:</strong> <a href="${ticketHref}">${ticketHref}</a></p>`
@@ -52,7 +52,7 @@ Data: ${data.startDate}
 Persone: ${data.numPeople}
 Totale: ${data.totalPrice}
 Pagato: ${data.paidAmount}
-${data.balanceAmount ? `Saldo: ${data.balanceAmount}\n` : ""}${hasSafeTicketUrl ? `Biglietto QR: ${data.ticketUrl}\n` : ""}Gestisci: ${data.recoveryUrl}`;
+${data.balanceAmount ? `Saldo da pagare in loco: ${data.balanceAmount}. Contanti preferiti.\n` : ""}${hasSafeTicketUrl ? `Biglietto QR: ${data.ticketUrl}\n` : ""}Gestisci: ${data.recoveryUrl}`;
 
   return { subject, html, text };
 }

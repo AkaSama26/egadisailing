@@ -1,8 +1,13 @@
-import { sendEmail } from "@/lib/email/brevo";
+import { Prisma } from "@/generated/prisma/client";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { failed, ok, partial, type Outcome, type PartialError } from "@/lib/result";
+import {
+  buildEmailIdempotencyKey,
+  enqueueTransactionalEmail,
+} from "@/lib/email/outbox";
 import { sendTelegramMessage } from "./telegram";
+import { escapeHtml, safeUrl } from "@/lib/html-escape";
 import { newBookingTemplate, type NewBookingPayload } from "./templates/new-booking";
 import {
   weatherAlertTemplate,
@@ -32,7 +37,11 @@ import { overrideExpiredTemplate } from "@/lib/email/templates/override-expired"
 import { overrideSupersededTemplate } from "@/lib/email/templates/override-superseded";
 import { overrideReconcileFailedAdminTemplate } from "@/lib/email/templates/override-reconcile-failed-admin";
 import { overbookingApologyTemplate } from "@/lib/email/templates/overbooking-apology";
-import type { NotificationEvent, NotificationType } from "./events";
+import {
+  isCustomerNotificationType,
+  type NotificationEvent,
+  type NotificationType,
+} from "./events";
 
 interface RenderedTemplate {
   subject: string;
@@ -139,19 +148,35 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
   // stato) → weather cron scriveva marker dedup senza alert consegnato.
   const errors: PartialError[] = [];
 
+  const emailRecipient: string = isCustomerNotificationType(event.type)
+    ? (event as { recipientEmail: string }).recipientEmail
+    : (env.ADMIN_EMAIL ?? env.BREVO_SENDER_EMAIL);
+
   const emailP: Promise<boolean> = wantEmail
-    ? sendEmail({
-        // Customer-facing events possono override via `recipientEmail`.
-        // Default admin-centric (env.ADMIN_EMAIL) per retrocompat.
-        to: event.recipientEmail ?? env.ADMIN_EMAIL,
+    ? enqueueTransactionalEmail({
+        templateKey: `notification.${event.type}`,
+        recipientEmail: emailRecipient,
+        recipientName: event.recipientName,
         subject: rendered.subject,
         htmlContent: rendered.html,
         textContent: rendered.text,
-      }).catch((err: unknown) => {
+        payload: event.payload as Prisma.InputJsonValue,
+        idempotencyKey:
+          event.emailIdempotencyKey ??
+          buildEmailIdempotencyKey([
+            "notification",
+            event.type,
+            emailRecipient,
+            rendered.subject,
+            JSON.stringify(event.payload),
+          ]),
+        bookingId: event.bookingId,
+        customerId: event.customerId,
+      }).then((result) => result.accepted).catch((err: unknown) => {
         const message = (err as Error).message;
         logger.error(
           { err: message, type: event.type },
-          "Email notification failed",
+          "Email notification enqueue failed",
         );
         errors.push({ id: "email", message, kind: "email" });
         return false;
@@ -266,6 +291,50 @@ function renderTemplate(event: NotificationEvent): RenderedTemplate | null {
       return bookingCancelledTemplate(event.payload as unknown as BookingCancelledPayload);
     case "DOUBLE_BOOKING_DETECTED":
       return doubleBookingTemplate(event.payload as unknown as DoubleBookingPayload);
+    case "CHANGE_REQUESTED": {
+      const payload = event.payload as {
+        confirmationCode?: string;
+        customerName?: string;
+        serviceName?: string;
+        originalDate?: string;
+        requestedDate?: string;
+        note?: string;
+        detailUrl?: string;
+      };
+      const subject = `Richiesta cambio data ${payload.confirmationCode ?? "?"}`;
+      const rows = [
+        ["Prenotazione", payload.confirmationCode],
+        ["Cliente", payload.customerName],
+        ["Esperienza", payload.serviceName],
+        ["Data attuale", payload.originalDate],
+        ["Data richiesta", payload.requestedDate],
+        ["Nota", payload.note],
+      ]
+        .filter(([, value]) => value)
+        .map(
+          ([label, value]) =>
+            `<p><strong>${escapeHtml(label ?? "")}:</strong> ${escapeHtml(value ?? "")}</p>`,
+        )
+        .join("");
+      const cta = payload.detailUrl
+        ? `<p><a href="${safeUrl(payload.detailUrl)}">Apri richiesta in admin</a></p>`
+        : "";
+      return {
+        subject,
+        html: `${rows}${cta}`,
+        text: [
+          `Richiesta cambio data ${payload.confirmationCode ?? "?"}`,
+          `Cliente: ${payload.customerName ?? "?"}`,
+          `Esperienza: ${payload.serviceName ?? "?"}`,
+          `Data attuale: ${payload.originalDate ?? "?"}`,
+          `Data richiesta: ${payload.requestedDate ?? "?"}`,
+          payload.note ? `Nota: ${payload.note}` : undefined,
+          payload.detailUrl,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      };
+    }
     case "PAYMENT_FAILED":
       return paymentFailedTemplate(event.payload as unknown as PaymentFailedPayload);
     case "SYNC_FAILURE":

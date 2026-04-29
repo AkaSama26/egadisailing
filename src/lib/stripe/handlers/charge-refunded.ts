@@ -2,12 +2,24 @@ import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { ValidationError } from "@/lib/errors";
+import { refundReceiptTemplate } from "@/lib/email/templates/customer-lifecycle";
+import {
+  buildEmailIdempotencyKey,
+  enqueueTransactionalEmail,
+} from "@/lib/email/outbox";
+import { formatEurCents } from "@/lib/pricing/cents";
+import { env } from "@/lib/env";
 
 export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   const payment = await db.payment.findFirst({
     where: { stripeChargeId: charge.id },
     include: {
-      booking: { include: { service: { select: { type: true } } } },
+      booking: {
+        include: {
+          service: { select: { type: true } },
+          customer: { select: { id: true, email: true, firstName: true, lastName: true } },
+        },
+      },
     },
   });
   // R13-ALTA: se charge.refunded arriva PRIMA di payment_intent.succeeded
@@ -157,4 +169,38 @@ export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
     },
     "Payment refunded",
   );
+
+  if (payment.booking.customer?.email) {
+    try {
+      const customerName =
+        `${payment.booking.customer.firstName ?? ""} ${payment.booking.customer.lastName ?? ""}`.trim() ||
+        "cliente";
+      const tpl = refundReceiptTemplate({
+        customerName,
+        confirmationCode: payment.booking.confirmationCode,
+        refundAmount: formatEurCents(refundAmountCents),
+        refundType: isFullRefund ? "full" : "partial",
+        bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+      });
+      await enqueueTransactionalEmail({
+        templateKey: "customer.refund-receipt",
+        recipientEmail: payment.booking.customer.email,
+        recipientName: customerName,
+        subject: tpl.subject,
+        htmlContent: tpl.html,
+        textContent: tpl.text,
+        bookingId: payment.bookingId,
+        customerId: payment.booking.customer.id,
+        payload: {
+          refundId,
+          chargeId: charge.id,
+          refundAmountCents,
+          isFullRefund,
+        },
+        idempotencyKey: buildEmailIdempotencyKey(["refund-receipt", refundId]),
+      });
+    } catch (err) {
+      logger.error({ err, bookingId: payment.bookingId, refundId }, "Refund receipt email enqueue failed");
+    }
+  }
 }

@@ -55,8 +55,9 @@ vi.mock("@/lib/queue", () => ({
   availBoataroundQueue: () => ({ add: vi.fn() }),
   availManualQueue: () => ({ add: vi.fn() }),
   pricingBokunQueue: () => ({ add: vi.fn() }),
+  emailTransactionalQueue: () => ({ add: vi.fn() }),
   getQueue: () => ({ add: vi.fn() }),
-  QUEUE_NAMES: { AVAIL_BOKUN: "x", AVAIL_BOATAROUND: "x", AVAIL_MANUAL: "x", PRICING_BOKUN: "x" },
+  QUEUE_NAMES: { AVAIL_BOKUN: "x", AVAIL_BOATAROUND: "x", AVAIL_MANUAL: "x", PRICING_BOKUN: "x", EMAIL_TRANSACTIONAL: "email.transactional" },
   ALL_QUEUE_NAMES: [],
 }));
 
@@ -512,11 +513,14 @@ describe("approveOverride", () => {
 
     expect(result.approved).toBe(true);
 
-    // sendEmail chiamato con email del conflict (loser)
-    expect(sendEmailMock).toHaveBeenCalledWith(expect.objectContaining({
-      to: conflictEmail,
-      subject: expect.stringContaining("scusiamo"),
-    }));
+    // Email loser accodata in outbox, non inviata fire-and-forget.
+    const loserEmail = await db.emailOutbox.findFirst({
+      where: {
+        recipientEmail: conflictEmail,
+        templateKey: "notification.OVERRIDE_APOLOGY_LOSER",
+      },
+    });
+    expect(loserEmail?.subject).toContain("scusiamo");
 
     expect(result.emailsSent).toBe(1);
     expect(result.emailsFailed).toBe(0);
@@ -706,9 +710,10 @@ describe("sendEscalationReminders", () => {
     const updated = await db.overrideRequest.findUnique({ where: { id: req.id } });
     expect(updated?.reminderLevel).toBe(1);
     expect(updated?.lastReminderSentAt).not.toBeNull();
-    expect(sendEmailMock).toHaveBeenCalledWith(
-      expect.objectContaining({ subject: expect.stringContaining("pending") }),
-    );
+    const reminderEmail = await db.emailOutbox.findFirst({
+      where: { templateKey: "notification.OVERRIDE_REMINDER" },
+    });
+    expect(reminderEmail?.subject.toLowerCase()).toContain("pending");
   });
 
   it("già reminder 24h inviato 12h fa → NON re-invia", async () => {

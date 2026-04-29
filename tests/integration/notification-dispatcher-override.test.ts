@@ -1,8 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const sendEmailMock = vi.fn().mockResolvedValue(true);
+const enqueueTransactionalEmailMock = vi.fn().mockResolvedValue({
+  outboxId: "email-1",
+  accepted: true,
+  alreadySent: false,
+  queued: true,
+});
 const sendTelegramMock = vi.fn().mockResolvedValue(true);
-vi.mock("@/lib/email/brevo", () => ({ sendEmail: sendEmailMock }));
+vi.mock("@/lib/email/outbox", () => ({
+  enqueueTransactionalEmail: enqueueTransactionalEmailMock,
+  buildEmailIdempotencyKey: vi.fn(() => "idem-test"),
+}));
 vi.mock("@/lib/notifications/telegram", () => ({
   sendTelegramMessage: sendTelegramMock,
   isTelegramConfigured: () => true,
@@ -14,24 +22,37 @@ const OVERRIDE_TYPES = [
   "OVERRIDE_REJECTED",
   "OVERRIDE_EXPIRED",
   "OVERRIDE_SUPERSEDED",
+  "OVERRIDE_APOLOGY_LOSER",
   "OVERRIDE_RECONCILE_FAILED",
   "OVERRIDE_REMINDER",
   "CROSS_CHANNEL_CONFLICT",
 ] as const;
 
+const CUSTOMER_OVERRIDE_TYPES = new Set([
+  "OVERRIDE_REQUESTED",
+  "OVERRIDE_APPROVED",
+  "OVERRIDE_REJECTED",
+  "OVERRIDE_EXPIRED",
+  "OVERRIDE_SUPERSEDED",
+  "OVERRIDE_APOLOGY_LOSER",
+]);
+
 describe("notification dispatcher — override types", () => {
   beforeEach(() => {
-    sendEmailMock.mockClear();
+    enqueueTransactionalEmailMock.mockClear();
     sendTelegramMock.mockClear();
   });
 
   for (const type of OVERRIDE_TYPES) {
     it(`dispatches ${type} without crashing`, async () => {
       const { dispatchNotification } = await import("@/lib/notifications/dispatcher");
-      const res = await dispatchNotification({
+      const event = {
         type,
         // Esplicitamente solo EMAIL per evitare dipendenza Telegram config
         channels: ["EMAIL"],
+        ...(CUSTOMER_OVERRIDE_TYPES.has(type)
+          ? { recipientEmail: "mario@example.com", recipientName: "Mario" }
+          : {}),
         payload: {
           customerName: "Mario",
           confirmationCode: "CODE1",
@@ -52,7 +73,8 @@ describe("notification dispatcher — override types", () => {
           date: "2026-08-15",
           level: 1,
         },
-      } as unknown as Parameters<typeof import("@/lib/notifications/dispatcher").dispatchNotification>[0]);
+      } as unknown as Parameters<typeof import("@/lib/notifications/dispatcher").dispatchNotification>[0];
+      const res = await dispatchNotification(event);
       // Phase 7: dispatchNotification ora ritorna DispatchOutcome.
       // status === "ok" se entrambi i canali consegnati (qui solo EMAIL).
       expect(res.status === "ok" || res.status === "partial").toBe(true);

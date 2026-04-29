@@ -26,18 +26,21 @@ export function mockQueueModule() {
     availBoataroundQueue: () => ({ add: sharedAdd }),
     availManualQueue: () => ({ add: sharedAdd }),
     pricingBokunQueue: () => ({ add: sharedAdd }),
+    emailTransactionalQueue: () => ({ add: sharedAdd }),
     getQueue: () => ({ add: sharedAdd }),
     QUEUE_NAMES: {
       AVAIL_BOKUN: "sync.avail.bokun",
       AVAIL_BOATAROUND: "sync.avail.boataround",
       AVAIL_MANUAL: "sync.avail.manual",
       PRICING_BOKUN: "sync.pricing.bokun",
+      EMAIL_TRANSACTIONAL: "email.transactional",
     },
     ALL_QUEUE_NAMES: [
       "sync.avail.bokun",
       "sync.avail.boataround",
       "sync.avail.manual",
       "sync.pricing.bokun",
+      "email.transactional",
     ],
     // Esposto per assertion: tests possono importare e fare expect(sharedAdd)
     __sharedAdd: sharedAdd,
@@ -50,9 +53,15 @@ export function mockQueueModule() {
  */
 export function mockEmailModule() {
   const sendEmail = vi.fn().mockResolvedValue(true);
+  const sendEmailWithResult = vi.fn().mockResolvedValue({
+    delivered: true,
+    messageId: "msg_test",
+  });
   return {
     sendEmail,
+    sendEmailWithResult,
     __sendEmailMock: sendEmail,
+    __sendEmailWithResultMock: sendEmailWithResult,
   };
 }
 

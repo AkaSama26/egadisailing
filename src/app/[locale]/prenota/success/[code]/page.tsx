@@ -3,7 +3,7 @@ import Decimal from "decimal.js";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
-import { formatEur } from "@/lib/pricing/cents";
+import { formatEur, formatEurCents } from "@/lib/pricing/cents";
 import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 import { formatItDay } from "@/lib/dates";
 import { AdminAlert } from "@/components/admin/admin-alert";
@@ -34,6 +34,8 @@ export default async function BookingSuccessPage({
 
   const isOverrideRequest = booking.overrideRequest?.status === "PENDING";
   const isConfirmed = booking.status === "CONFIRMED";
+  const isCancelled = booking.status === "CANCELLED";
+  const isRefunded = booking.status === "REFUNDED";
   const paidCents = booking.payments
     .filter((p) => p.status === "SUCCEEDED" && p.type !== "REFUND")
     .reduce((sum, p) => sum.plus(p.amount.toString()), new Decimal(0))
@@ -58,9 +60,14 @@ export default async function BookingSuccessPage({
               {booking.service.name} · {formatItDay(booking.startDate)}
             </p>
             <p>
-              Totale pagato:{" "}
-              <strong className="text-black">{formatEur(booking.totalPrice)}</strong>
+              Pagato online: <strong className="text-black">{formatEurCents(paidCents)}</strong>
             </p>
+            {balanceCents > 0 && (
+              <p className="text-amber-700">
+                Saldo da pagare solo in loco se la data viene confermata:{" "}
+                <strong>{formatEurCents(balanceCents)}</strong>.
+              </p>
+            )}
             <AdminAlert variant="info" className="text-left space-y-2">
               <p>
                 Abbiamo ricevuto il tuo pagamento. Lo staff conferma la
@@ -90,10 +97,15 @@ export default async function BookingSuccessPage({
               Totale: <strong className="text-black">{formatEur(booking.totalPrice)}</strong>
             </p>
             {balanceCents > 0 && (
-              <p className="text-amber-700">
-                Saldo da versare:{" "}
-                <strong>{formatEur(new Decimal(balanceCents).div(100))}</strong>
-              </p>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-left text-amber-900">
+                <p className="font-semibold">
+                  Saldo da pagare in loco: {formatEurCents(balanceCents)}
+                </p>
+                <p className="mt-1 text-sm">
+                  Il saldo restante si paga solamente in loco prima della partenza.
+                  Contanti preferiti.
+                </p>
+              </div>
             )}
             <p>
               Email conferma inviata a{" "}
@@ -105,6 +117,35 @@ export default async function BookingSuccessPage({
             >
               Apri biglietto QR
             </Link>
+          </>
+        ) : isCancelled ? (
+          <>
+            <h1 className="text-3xl font-bold text-red-600">Pagamento non completato</h1>
+            <p className="text-gray-600">
+              Codice: <strong className="text-black">{booking.confirmationCode}</strong>
+            </p>
+            <p className="text-gray-700">
+              Il pagamento non e&apos; andato a buon fine oppure la prenotazione e&apos;
+              stata annullata. La data non risulta bloccata.
+            </p>
+            <p className="text-sm text-gray-500">
+              Per riprovare, torna alla pagina prenotazioni e crea una nuova richiesta.
+              Per dubbi scrivici a{" "}
+              <a className="underline" href="mailto:info@egadisailing.com">
+                info@egadisailing.com
+              </a>
+              .
+            </p>
+          </>
+        ) : isRefunded ? (
+          <>
+            <h1 className="text-3xl font-bold text-slate-700">Prenotazione rimborsata</h1>
+            <p className="text-gray-600">
+              Codice: <strong className="text-black">{booking.confirmationCode}</strong>
+            </p>
+            <p className="text-gray-700">
+              Questa prenotazione e&apos; stata rimborsata e non e&apos; piu&apos; attiva.
+            </p>
           </>
         ) : (
           <>

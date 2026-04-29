@@ -18,6 +18,7 @@ import {
   type CrossChannelConflict,
 } from "@/lib/booking/cross-channel-conflicts";
 import { upsertCustomerFromExternal } from "@/lib/booking/upsert-customer-from-external";
+import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import type { BokunBookingSummary } from "../types";
 
 export interface ImportedBokunBooking {
@@ -351,6 +352,28 @@ export async function importBokunBooking(
       },
       `Bokun booking ${result.mode}`,
     );
+
+    if (result.mode === "created") {
+      await dispatchNotification({
+        type: "NEW_BOOKING_BOKUN",
+        channels: defaultNotificationChannels(),
+        payload: {
+          source: "BOKUN",
+          confirmationCode: booking.confirmationCode,
+          customerName:
+            `${booking.mainContactDetails.firstName ?? ""} ${booking.mainContactDetails.lastName ?? ""}`.trim() ||
+            "n/a",
+          serviceName: service.name,
+          startDate: startDate.toISOString().slice(0, 10),
+          numPeople: booking.numPeople ?? 1,
+          totalPrice: `€${totalPriceStr}`,
+        },
+        bookingId: result.booking.id.startsWith("BOKUN-CONFLICT-") ? undefined : result.booking.id,
+        emailIdempotencyKey: `new-booking-bokun:${booking.id}`,
+      }).catch((err) =>
+        logger.warn({ err, bokunBookingId: String(booking.id) }, "Bokun new booking notification failed"),
+      );
+    }
 
     // R28-ALTA-1: post-commit ManualAlert per terminal-skip hit. Idempotent
     // via partial unique (channel, boatId, date, action) WHERE status=PENDING.

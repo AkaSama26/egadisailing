@@ -9,6 +9,7 @@ export type JobType =
   | "availability.update"
   | "pricing.bokun.sync"
   | "booking.webhook.process"
+  | "email.transactional.send"
   | "otp.cleanup";
 
 export interface AvailabilityUpdateJobPayload {
@@ -36,14 +37,18 @@ export interface BookingWebhookPayload {
   receivedAt: string;
 }
 
-export interface OtpCleanupPayload {
-  // no-op: cleanup legge tutto il DB
+// no-op: cleanup legge tutto il DB
+export type OtpCleanupPayload = Record<string, never>;
+
+export interface TransactionalEmailPayload {
+  emailOutboxId: string;
 }
 
 export type Job =
   | { type: "availability.update"; data: AvailabilityUpdateJobPayload }
   | { type: "pricing.bokun.sync"; data: BokunPricingSyncPayload }
   | { type: "booking.webhook.process"; data: BookingWebhookPayload }
+  | { type: "email.transactional.send"; data: TransactionalEmailPayload }
   | { type: "otp.cleanup"; data: OtpCleanupPayload };
 
 export type JobPayloadFor<T extends JobType> = Extract<Job, { type: T }>["data"];

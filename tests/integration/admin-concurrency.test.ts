@@ -34,12 +34,14 @@ vi.mock("@/lib/queue", () => {
     availBoataroundQueue: mockQueue,
     availManualQueue: mockQueue,
     pricingBokunQueue: mockQueue,
+    emailTransactionalQueue: mockQueue,
     getQueue: mockQueue,
     QUEUE_NAMES: {
       AVAIL_BOKUN: "sync.avail.bokun",
       AVAIL_BOATAROUND: "sync.avail.boataround",
       AVAIL_MANUAL: "sync.avail.manual",
       PRICING_BOKUN: "sync.pricing.bokun",
+      EMAIL_TRANSACTIONAL: "email.transactional",
     },
     ALL_QUEUE_NAMES: [
       "sync.avail.bokun",

@@ -145,17 +145,18 @@ export default async function ServiziPage() {
           </li>
           <li>
             <strong>Exclusive Experience</strong>: barca intera per gruppo privato, giornata,
-            acconto 30% + saldo 7gg prima.
+            acconto 30% online + saldo solo in loco.
           </li>
           <li>
-            <strong>Cabin Charter</strong>: settimana sab→sab, 8 cabine, acconto + saldo.
+            <strong>Cabin Charter</strong>: settimana sab→sab, 8 cabine, acconto online +
+            saldo solo in loco.
           </li>
           <li>
             <strong>Boat Shared</strong>: motoscafo condiviso (tour giornaliero a slot).
           </li>
           <li>
             <strong>Boat Exclusive</strong>: motoscafo riservato al gruppo, giornata, acconto +
-            saldo.
+            saldo solo in loco.
           </li>
         </ul>
       </AdminCard>
