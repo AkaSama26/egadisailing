@@ -150,6 +150,12 @@ const polaroidLayouts = [
   { x: 15, y: 52, rotate: -4 },
 ];
 
+const mobilePolaroidLayouts = [
+  { x: 0, y: 24, rotate: -7, zIndex: 10 },
+  { x: 27, y: 0, rotate: 5, zIndex: 20 },
+  { x: 54, y: 30, rotate: -4, zIndex: 30 },
+];
+
 /* ------------------------------------------------------------------ */
 /*  Experience Row — alternating layout, polaroid appear on scroll    */
 /* ------------------------------------------------------------------ */
@@ -203,6 +209,57 @@ function ExperienceRow({
         >
           {experience.ctaLabel} <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
+
+        <div className="relative mx-auto h-[19rem] w-full max-w-[24rem] overflow-hidden pt-2 sm:h-[23rem] lg:hidden">
+          {polaroids.map((p, i) => {
+            const layout = mobilePolaroidLayouts[i];
+
+            return (
+              <motion.div
+                key={p.caption}
+                className="absolute w-[43%] max-w-[12rem] sm:max-w-[15rem]"
+                style={{
+                  left: `${layout.x}%`,
+                  top: `${layout.y}%`,
+                  zIndex: layout.zIndex,
+                }}
+                initial={{ opacity: 0, scale: 0.85, rotate: 0, y: 32 }}
+                whileInView={{
+                  opacity: 1,
+                  scale: 1,
+                  rotate: layout.rotate,
+                  y: 0,
+                }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{
+                  duration: 0.55,
+                  delay: i * 0.12,
+                  ease: [0.34, 1.2, 0.64, 1],
+                }}
+              >
+                <div className="bg-white p-[5%] pb-[18%] shadow-2xl">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm" style={{ backgroundColor: p.color }}>
+                    {p.src && (
+                      <Image
+                        src={p.src}
+                        alt={p.caption}
+                        fill
+                        sizes="45vw"
+                        className="object-cover"
+                      />
+                    )}
+                  </div>
+                  <p
+                    className="mt-3 text-center text-base text-gray-600 sm:text-lg"
+                    style={{ fontFamily: "var(--font-handwriting), cursive" }}
+                  >
+                    {p.caption}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </ScrollSection>
 
       {/* Polaroid column */}
@@ -317,7 +374,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
       durationLabel: "3-7 giornate",
       detailLabel: "Itinerario su misura",
       priceLabel: priceFrom(["cabin-charter"]),
-      href: `/${locale}/experiences/cabin-charter`,
+      href: `/${locale}/experiences/charter`,
       ctaLabel: "Scopri di più",
       polaroids: [
         {
@@ -401,7 +458,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
   ].filter((item) => item.detailLabel !== "Max 0 pax");
 
   return (
-    <div>
+    <div className="overflow-x-clip">
       {/* ============================================================ */}
       {/*  Section 1: Le Nostre Esperienze                             */}
       {/*  Background blends from hero video sea color to teal         */}
@@ -548,7 +605,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
           </div>
 
           <div className="mt-28 grid items-stretch gap-10 lg:min-h-[560px] lg:grid-cols-[1.06fr_0.94fr] lg:gap-16">
-            <ScrollSection animation="fade-left" className="h-full">
+            <ScrollSection animation="fade-left" className="order-2 h-full lg:order-1">
               <div className="relative h-full">
                 <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
                   <Image
@@ -574,7 +631,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
               </div>
             </ScrollSection>
 
-            <ScrollSection animation="fade-right" className="flex items-center">
+            <ScrollSection animation="fade-right" className="order-1 flex items-center lg:order-2">
               <div className="space-y-7">
                 <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
                   Prospettiva dal mare
@@ -640,7 +697,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
           </div>
 
           <div className="mt-28 grid items-stretch gap-10 lg:min-h-[560px] lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
-            <ScrollSection animation="fade-left" className="h-full">
+            <ScrollSection animation="fade-left" className="order-2 h-full lg:order-1">
               <div className="relative h-full">
                 <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
                   <Image
@@ -666,7 +723,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
               </div>
             </ScrollSection>
 
-            <ScrollSection animation="fade-right" className="flex items-center">
+            <ScrollSection animation="fade-right" className="order-1 flex items-center lg:order-2">
               <div className="space-y-7">
                 <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
                   Tramonto in rada
@@ -724,7 +781,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 name: "Alessandro P.",
                 location: "Monaco",
                 stars: 5,
-                text: "Il cabin charter è stato il viaggio più bello della nostra vita. Svegliarsi ogni mattina in un'isola diversa, con il mare cristallino. Torneremo sicuramente.",
+                text: "Il charter è stato il viaggio più bello della nostra vita. Svegliarsi ogni mattina in un'isola diversa, con il mare cristallino. Torneremo sicuramente.",
               },
             ].map((testimonial, i) => (
               <ScrollSection key={i} animation="fade-up" delay={i * 0.15}>

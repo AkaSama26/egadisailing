@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { db } from "@/lib/db";
-import { getListedExperienceIds } from "@/data/catalog/experiences";
+import { getExperiencePublicSlug, getListedExperienceIds } from "@/data/catalog/experiences";
+import { getPublicBoatSlugs } from "@/data/catalog/boats";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://egadisailing.com";
@@ -37,10 +38,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  for (const slug of getPublicBoatSlugs()) {
+    for (const locale of routing.locales) {
+      entries.push({
+        url: `${baseUrl}/${locale}/boats/${slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly",
+        priority: 0.75,
+      });
+    }
+  }
+
   for (const service of services) {
     for (const locale of routing.locales) {
       entries.push({
-        url: `${baseUrl}/${locale}/experiences/${service.id}`,
+        url: `${baseUrl}/${locale}/experiences/${getExperiencePublicSlug(service.id)}`,
         lastModified: service.updatedAt,
         changeFrequency: "weekly",
         priority: 0.8,

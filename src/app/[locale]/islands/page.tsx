@@ -9,9 +9,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return buildPageMetadata({
-    title: "Le Isole Egadi: Favignana, Levanzo e Marettimo",
+    title: "Isole Egadi in Barca: Favignana, Levanzo e Marettimo",
     description:
-      "Scopri le Isole Egadi: cosa vedere a Favignana, le calette di Levanzo e la natura incontaminata di Marettimo. Escursioni in barca da Trapani.",
+      "Guida alle Isole Egadi in barca: cosa vedere a Favignana, Levanzo e Marettimo, le cale più belle e le rotte migliori per un tour da Trapani.",
     path: "/islands",
     locale,
   });
@@ -25,12 +25,7 @@ export default async function IslandsPage({
   const { locale } = await params;
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 50%, #0a2a4a 80%, #071934 100%)",
-      }}
-    >
+    <div className="min-h-screen bg-[#071934]">
       <IslandsScrollSection locale={locale} />
     </div>
   );

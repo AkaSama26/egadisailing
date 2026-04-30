@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingSearch } from "@/components/booking-search";
-import { HERO_VIDEO_POSTER_SRC, HERO_VIDEO_SRC } from "@/lib/public-assets";
+import { HERO_VIDEO_SRC } from "@/lib/public-assets";
 import type { BookingSearchService } from "@/components/booking-search";
 
 /* ------------------------------------------------------------------ */
@@ -179,17 +179,7 @@ export function HeroSection({ services }: { services: BookingSearchService[] }) 
     const slowConnection = effectiveType === "slow-2g" || effectiveType === "2g";
 
     if (prefersReducedMotion || connection.connection?.saveData || slowConnection) return;
-
-    const load = () => setShouldLoadVideo(true);
-    const win = window as Window & {
-      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    if (win.requestIdleCallback && win.cancelIdleCallback) {
-      const idleId = win.requestIdleCallback(load, { timeout: 1800 });
-      return () => win.cancelIdleCallback?.(idleId);
-    }
-    const timeout = globalThis.setTimeout(load, 1200);
+    const timeout = globalThis.setTimeout(() => setShouldLoadVideo(true), 0);
     return () => globalThis.clearTimeout(timeout);
   }, []);
 
@@ -223,8 +213,7 @@ export function HeroSection({ services }: { services: BookingSearchService[] }) 
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden bg-[#071934] select-none">
       <div
         aria-hidden="true"
-        className="absolute inset-0 z-0 bg-cover bg-center scale-105"
-        style={{ backgroundImage: `url(${HERO_VIDEO_POSTER_SRC})`, filter: "blur(1px)" }}
+        className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_38%,rgba(14,165,233,0.24),transparent_42%),linear-gradient(180deg,#071934_0%,#0a2a4a_56%,#071934_100%)]"
       />
 
       {/* ---- Background video (decorative) ---- */}
@@ -238,10 +227,9 @@ export function HeroSection({ services }: { services: BookingSearchService[] }) 
         muted
         loop
         playsInline
-        preload="none"
-        poster={HERO_VIDEO_POSTER_SRC}
-        onLoadedData={() => setVideoReady(true)}
-        className={`absolute inset-0 w-full h-full object-cover z-0 scale-105 transition-opacity duration-700 ${
+        preload={shouldLoadVideo ? "auto" : "none"}
+        onCanPlay={() => setVideoReady(true)}
+        className={`absolute inset-0 z-0 h-full w-full scale-105 object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
           videoReady ? "opacity-100" : "opacity-0"
         }`}
         style={{ filter: "blur(1px)" }}

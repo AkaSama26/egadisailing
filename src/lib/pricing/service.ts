@@ -53,7 +53,7 @@ type QuoteService = {
 function resolveCharterDurationDays(service: QuoteService, durationDays?: number): number {
   const resolved = durationDays ?? Math.max(3, Math.min(7, Math.ceil(service.durationHours / 24)));
   if (!Number.isInteger(resolved) || resolved < 3 || resolved > 7) {
-    throw new Error("durationDays must be between 3 and 7 for cabin charter");
+    throw new Error("durationDays must be between 3 and 7 for charter");
   }
   return resolved;
 }

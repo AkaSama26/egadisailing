@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -13,7 +12,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetClose,
 } from "@/components/ui/sheet";
 import { MenuIcon } from "lucide-react";
 
@@ -27,13 +25,10 @@ const navLinks = [
 
 export function Navbar() {
   const locale = useLocale();
-  const pathname = usePathname();
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
   const [scrolled, setScrolled] = useState(false);
-
-  // Pages with dark background throughout — navbar stays transparent
-  const alwaysTransparent = pathname.includes("/islands");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     function handleScroll() {
@@ -44,12 +39,12 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isTransparent = !scrolled || alwaysTransparent;
+  const isTransparent = !scrolled;
 
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 w-full z-50 transition-all duration-300",
+        "fixed top-0 left-0 w-full z-[200] transition-all duration-300",
         !isTransparent
           ? "bg-white/90 backdrop-blur-md shadow-sm"
           : "bg-transparent"
@@ -101,16 +96,17 @@ export function Navbar() {
 
         {/* Mobile hamburger */}
         <div className="lg:hidden">
-          <Sheet>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
+              render={<button type="button" />}
               className={cn(
-                "inline-flex items-center justify-center rounded-md p-2 transition-colors",
+                "relative z-[210] inline-flex size-11 shrink-0 items-center justify-center rounded-md p-2 transition-colors",
                 scrolled
                   ? "text-gray-700 hover:bg-gray-100"
-                  : "text-white hover:bg-white/10"
+                  : "text-white hover:bg-transparent"
               )}
             >
-              <MenuIcon className="size-6" />
+              <MenuIcon className="block size-7 stroke-[2.75]" />
               <span className="sr-only">Menu</span>
             </SheetTrigger>
             <SheetContent side="right">
@@ -121,20 +117,21 @@ export function Navbar() {
               </SheetHeader>
               <div className="flex flex-col gap-1 px-4">
                 {navLinks.map((link) => (
-                  <SheetClose key={link.key} render={<div />}>
-                    <Link
-                      href={`/${locale}${link.href}`}
-                      className="block rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-                    >
-                      {t(link.key)}
-                    </Link>
-                  </SheetClose>
+                  <Link
+                    key={link.key}
+                    href={`/${locale}${link.href}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                  >
+                    {t(link.key)}
+                  </Link>
                 ))}
                 <div className="mt-4 border-t pt-4">
                   <LanguageSwitcher className="text-gray-700" />
                 </div>
                 <Link
                   href={`/${locale}/prenota`}
+                  onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "mt-4 w-full bg-[var(--color-gold)] text-white hover:bg-[var(--color-gold)]/90 border-none"

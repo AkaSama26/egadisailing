@@ -67,7 +67,7 @@ describe("enrichDayCells", () => {
           boatId: "boat-1",
           startDate: new Date(Date.UTC(2026, 6, 10)),
           endDate: new Date(Date.UTC(2026, 6, 12)),
-          service: { name: "Cabin Charter" },
+          service: { name: "Charter" },
           customer: { firstName: "Mario", lastName: "Rossi" },
         },
       ],
@@ -92,7 +92,7 @@ describe("enrichDayCells", () => {
       confirmationCode: "ABC123",
       source: "DIRECT",
       status: "CONFIRMED",
-      serviceName: "Cabin Charter",
+      serviceName: "Charter",
       customerName: "Mario Rossi",
     });
   });

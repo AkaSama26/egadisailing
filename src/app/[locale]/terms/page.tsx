@@ -45,7 +45,7 @@ export default function TermsPage() {
         <ul>
           <li>La prenotazione si considera confermata al ricevimento del pagamento.</li>
           <li>
-            Per i servizi con acconto (es. Cabin Charter), il saldo e' dovuto 7 giorni prima della
+            Per i servizi con acconto (es. Charter), il saldo e' dovuto 7 giorni prima della
             data dell'esperienza.
           </li>
           <li>Tutti i prezzi sono espressi in Euro (EUR), IVA inclusa dove applicabile.</li>

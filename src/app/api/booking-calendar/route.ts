@@ -18,6 +18,7 @@ import {
   type BoatSlotService,
 } from "@/lib/booking/boat-slot-availability";
 import { checkOverrideEligibility } from "@/lib/booking/override-eligibility";
+import { resolveExperienceServiceIdFromSlug } from "@/data/catalog/experiences";
 
 export const dynamic = "force-dynamic";
 
@@ -258,6 +259,7 @@ export const GET = withErrorHandler(async (req: Request) => {
 
   const searchParams = Object.fromEntries(new URL(req.url).searchParams);
   const input = querySchema.parse(searchParams);
+  const requestedServiceId = resolveExperienceServiceIdFromSlug(input.serviceId);
   const start = parseIsoDay(input.start);
   const end = parseIsoDay(input.end);
   const days = Array.from(eachUtcDayInclusive(start, end));
@@ -270,7 +272,7 @@ export const GET = withErrorHandler(async (req: Request) => {
   }
 
   const service = await db.service.findFirst({
-    where: { id: input.serviceId, active: true },
+    where: { id: requestedServiceId, active: true },
     select: {
       id: true,
       type: true,

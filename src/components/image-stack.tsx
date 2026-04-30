@@ -1,29 +1,36 @@
 "use client";
 
-import { useState, useRef } from "react";
+import Image from "next/image";
+import { useRef, useState } from "react";
 import { motion, type PanInfo } from "framer-motion";
 
 interface Card {
   id: number;
   color: string;
   caption: string;
+  alt?: string;
+  src?: string;
   zIndex: number;
 }
 
 interface ImageStackProps {
-  images: { color: string; caption: string }[];
+  images: { color: string; caption: string; alt?: string; src?: string }[];
   className?: string;
 }
 
+function buildCards(images: ImageStackProps["images"]): Card[] {
+  return images.map((img, index) => ({
+    id: index,
+    color: img.color,
+    caption: img.caption,
+    alt: img.alt,
+    src: img.src,
+    zIndex: 50 - index * 10,
+  }));
+}
+
 export function ImageStack({ images, className }: ImageStackProps) {
-  const [cards, setCards] = useState<Card[]>(
-    images.map((img, index) => ({
-      id: index,
-      color: img.color,
-      caption: img.caption,
-      zIndex: 50 - index * 10,
-    }))
-  );
+  const [cards, setCards] = useState<Card[]>(() => buildCards(images));
   const [isAnimating, setIsAnimating] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const minDragDistance = 50;
@@ -68,7 +75,7 @@ export function ImageStack({ images, className }: ImageStackProps) {
         return (
           <motion.div
             key={card.id}
-            className="absolute w-[75%] origin-bottom-center overflow-hidden rounded-xl shadow-xl bg-white cursor-grab active:cursor-grabbing border border-gray-100"
+            className="absolute w-[82%] origin-bottom-center overflow-hidden rounded-xl shadow-xl bg-white cursor-grab active:cursor-grabbing border border-gray-100"
             style={{ zIndex: card.zIndex, aspectRatio: "1/1" }}
             animate={styles}
             drag={isTop && !isAnimating}
@@ -87,14 +94,21 @@ export function ImageStack({ images, className }: ImageStackProps) {
               transition: { duration: 0.1 },
             }}
           >
-            {/* Placeholder color — replace with Image when photos are ready */}
-            <div
-              className="w-full h-full"
-              style={{ backgroundColor: card.color }}
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-white px-4 py-3">
+            <div className="relative h-full w-full" style={{ backgroundColor: card.color }}>
+              {card.src && (
+                <Image
+                  src={card.src}
+                  alt={card.alt ?? card.caption}
+                  fill
+                  sizes="(max-width: 768px) 288px, (max-width: 1024px) 368px, 420px"
+                  draggable={false}
+                  className="pointer-events-none select-none object-cover"
+                />
+              )}
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-white px-5 py-3.5">
               <p
-                className="text-sm md:text-base text-gray-600 text-center"
+                className="text-base md:text-lg text-gray-600 text-center"
                 style={{ fontFamily: "var(--font-handwriting), cursive" }}
               >
                 {card.caption}

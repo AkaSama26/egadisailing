@@ -148,8 +148,8 @@ export default async function ServiziPage() {
             acconto 30% online + saldo solo in loco.
           </li>
           <li>
-            <strong>Cabin Charter</strong>: settimana sab→sab, 8 cabine, acconto online +
-            saldo solo in loco.
+            <strong>Charter</strong>: settimana sab→sab, 8 cabine, acconto online + saldo
+            solo in loco.
           </li>
           <li>
             <strong>Boat Shared</strong>: motoscafo condiviso (tour giornaliero a slot).

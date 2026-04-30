@@ -65,6 +65,7 @@ export function AdminTopbar({ userName }: { userName?: string | null }) {
                 <Button
                   key={item.href}
                   variant={isActive ? "secondary" : "ghost"}
+                  nativeButton={false}
                   className="w-full justify-start gap-2"
                   render={<Link href={item.href} />}
                 >

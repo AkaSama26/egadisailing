@@ -12,7 +12,7 @@ export interface ServiceDisplayInput {
 export interface ExperienceVisual {
   title: string;
   subtitle: string;
-  media: Array<{ caption: string; color: string }>;
+  media: Array<{ caption: string; alt?: string; color: string; src?: string }>;
 }
 
 const FALLBACK_MEDIA = [

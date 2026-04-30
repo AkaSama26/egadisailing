@@ -10,7 +10,7 @@ import {
 
 // R29-AUDIT-FIX2/R30-BIZ: helper per decidere se un service type richiede
 // serializzazione cross-adapter. I pacchetti venduti come barca intera
-// (gourmet/exclusive experience, cabin charter, boat exclusive) devono
+// (gourmet/exclusive experience, charter, boat exclusive) devono
 // occupare lo slot del trimarano. Tours condivisi (SOCIAL_BOATING 20 posti,
 // BOAT_SHARED 12 posti) NON hanno bisogno del lock "availability" perche'
 // cohabitation e' feature, non bug.

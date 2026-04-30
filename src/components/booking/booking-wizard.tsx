@@ -533,7 +533,7 @@ export function BookingWizard(props: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-2xl">
+    <div className="max-w-full overflow-hidden rounded-lg bg-white shadow-2xl">
       <div className="border-b border-slate-200 bg-slate-50 px-5 py-5 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
           Checkout diretto
@@ -551,7 +551,7 @@ export function BookingWizard(props: Props) {
         </div>
       </div>
 
-      <div className="p-5 sm:p-8">
+      <div className="p-4 sm:p-8">
       {error && (
         <div
           role="alert"
@@ -717,7 +717,7 @@ function StepIndicator({ step }: { step: Step }) {
   const activeIndex = step === "success" ? CHECKOUT_STEPS.length : CHECKOUT_STEPS.findIndex((item) => item.key === step);
 
   return (
-    <ol className="grid grid-cols-5 gap-1 text-xs font-semibold text-slate-500" aria-label="Stato checkout">
+    <ol className="flex w-full items-center gap-1 text-xs font-semibold text-slate-500 sm:grid sm:w-auto sm:min-w-[360px] sm:grid-cols-5" aria-label="Stato checkout">
       {CHECKOUT_STEPS.map((item, index) => {
         const Icon = item.icon;
         const active = index === activeIndex;
@@ -726,14 +726,17 @@ function StepIndicator({ step }: { step: Step }) {
           <li
             key={item.key}
             className={cnStep(
-              "flex min-w-0 items-center justify-center gap-1.5 rounded-full px-2 py-2",
+              "flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 transition sm:h-auto sm:px-2 sm:py-2",
+              active ? "flex-[1.8] sm:flex-auto" : "size-9 shrink-0 px-0 sm:h-auto sm:w-auto sm:shrink sm:flex-auto sm:px-2",
               active && "bg-sky-100 text-sky-900",
               complete && "bg-emerald-50 text-emerald-700",
             )}
             aria-current={active ? "step" : undefined}
           >
             {complete ? <Check className="size-3.5 shrink-0" aria-hidden="true" /> : <Icon className="size-3.5 shrink-0" aria-hidden="true" />}
-            <span className="truncate">{item.label}</span>
+            <span className={cnStep("truncate sm:inline", active ? "inline" : "hidden")}>
+              {item.label}
+            </span>
           </li>
         );
       })}
@@ -782,7 +785,7 @@ function calendarDayClass({
   loading: boolean;
 }): string {
   return cnStep(
-    "min-h-[76px] rounded-md border p-1.5 text-left transition focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed",
+    "relative flex aspect-square min-h-11 items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed sm:min-h-[76px] sm:items-start sm:justify-start sm:p-1.5 sm:text-left",
     selected &&
       "border-sky-700 bg-sky-700 text-white shadow-sm ring-2 ring-sky-200 hover:bg-sky-800",
     !selected && !status && "border-slate-200 bg-white text-slate-400",
@@ -795,6 +798,36 @@ function calendarDayClass({
     !selected && status === "unavailable" && "border-slate-200 bg-slate-100 text-slate-400",
     outOfMonth && !selected && "opacity-55",
     loading && "animate-pulse",
+  );
+}
+
+function calendarDayDotClass({
+  selected,
+  status,
+  loading,
+}: {
+  selected: boolean;
+  status?: CalendarApiDay["status"];
+  loading: boolean;
+}): string {
+  return cnStep(
+    "mt-1 size-1.5 rounded-full sm:hidden",
+    selected && "bg-white",
+    !selected && status === "available" && "bg-emerald-500",
+    !selected && status === "request" && "bg-amber-500",
+    !selected && status === "unavailable" && "bg-slate-300",
+    !selected && !status && "bg-slate-200",
+    loading && "animate-pulse",
+  );
+}
+
+function calendarStatusBadgeClass(status?: CalendarApiDay["status"]): string {
+  return cnStep(
+    "rounded-full px-2.5 py-1 text-xs font-bold",
+    status === "available" && "bg-emerald-100 text-emerald-800",
+    status === "request" && "bg-amber-100 text-amber-800",
+    status === "unavailable" && "bg-slate-200 text-slate-600",
+    !status && "bg-slate-100 text-slate-600",
   );
 }
 
@@ -839,6 +872,7 @@ function DateStep({
   const range = useMemo(() => calendarRange(visibleMonth), [visibleMonth]);
   const currentMonth = new Date().toISOString().slice(0, 7);
   const canGoPrevious = visibleMonth > currentMonth;
+  const selectedDay = value ? calendarDays[value] : undefined;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -898,8 +932,8 @@ function DateStep({
         if (canContinue) onNext();
       }}
     >
-      <h2 className="text-2xl font-bold">Scegli una data disponibile</h2>
-      <fieldset className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4">
+      <h2 className="text-2xl font-bold leading-tight">Scegli una data disponibile</h2>
+      <fieldset className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:bg-slate-50 sm:p-4">
         <legend className="sr-only">Calendario disponibilita&apos; e prezzi</legend>
         <div className="mb-3 flex items-center justify-between gap-3">
           <button
@@ -911,7 +945,9 @@ function DateStep({
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
-          <p className="text-base font-bold capitalize text-slate-950">{monthLabel(visibleMonth)}</p>
+          <p className="min-w-0 text-center text-base font-bold capitalize text-slate-950">
+            {monthLabel(visibleMonth)}
+          </p>
           <button
             type="button"
             onClick={() => setVisibleMonth((month) => shiftMonth(month, 1))}
@@ -922,14 +958,14 @@ function DateStep({
           </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase text-slate-500">
+        <div className="grid grid-cols-7 gap-0.5 text-center text-[11px] font-bold uppercase text-slate-500 sm:gap-1">
           {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((day) => (
             <div key={day} className="py-1">
               {day}
             </div>
           ))}
         </div>
-        <div className="mt-1 grid grid-cols-7 gap-1">
+        <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-1">
           {range.days.map((date) => {
             const day = calendarDays[date];
             const outOfMonth = monthKeyFromIso(date) !== visibleMonth;
@@ -958,13 +994,21 @@ function DateStep({
                   loading: calendarLoading && !day,
                 })}
               >
-                <span className="text-sm font-bold">{Number(date.slice(8, 10))}</span>
-                <span className="mt-1 block min-h-4 text-[11px] font-semibold leading-tight">
+                <span className="text-sm font-bold leading-none">{Number(date.slice(8, 10))}</span>
+                <span className="mt-1 hidden min-h-4 text-[11px] font-semibold leading-tight sm:block">
                   {day?.priceLabel ?? (calendarLoading ? "..." : "")}
                 </span>
-                <span className="mt-0.5 block min-h-4 text-[10px] leading-tight">
+                <span className="mt-0.5 hidden min-h-4 text-[10px] leading-tight sm:block">
                   {day?.reasonLabel ?? ""}
                 </span>
+                <span
+                  className={calendarDayDotClass({
+                    selected,
+                    status: day?.status,
+                    loading: calendarLoading && !day,
+                  })}
+                  aria-hidden="true"
+                />
               </button>
             );
           })}
@@ -990,9 +1034,29 @@ function DateStep({
         )}
       </fieldset>
       {value && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
-          Data selezionata: {value}
-        </p>
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
+                Data selezionata
+              </p>
+              <p className="mt-1 font-bold">{formatIsoDateLabel(value)}</p>
+              {selectedDay?.priceHint && (
+                <p className="mt-1 text-xs leading-5 text-emerald-800">
+                  {selectedDay.priceHint}
+                </p>
+              )}
+            </div>
+            <span className={calendarStatusBadgeClass(selectedDay?.status)}>
+              {selectedDay?.reasonLabel ?? "Selezionata"}
+            </span>
+          </div>
+          {selectedDay?.priceLabel && (
+            <p className="mt-3 border-t border-emerald-200 pt-2 font-bold tabular-nums">
+              {selectedDay.priceLabel}
+            </p>
+          )}
+        </div>
       )}
       {isCharter && fixedDurationDays && (
         <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900">
@@ -1090,7 +1154,7 @@ function PeopleStep({
       }}
     >
       <h2 className="text-2xl font-bold">Chi sale a bordo?</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         <PassengerCounter
           id="wizard-adults"
           label="Adulti"
@@ -1130,7 +1194,7 @@ function PeopleStep({
       </div>
       <div
         className={cnStep(
-          "grid gap-3 rounded-lg border p-3 text-sm sm:grid-cols-3",
+          "grid grid-cols-2 gap-3 rounded-lg border p-3 text-sm sm:grid-cols-3",
           capacityExceeded ? "border-red-200 bg-red-50 text-red-800" : "border-slate-200 bg-slate-50 text-slate-700",
         )}
       >
@@ -1142,7 +1206,7 @@ function PeopleStep({
           <div className="text-xs font-semibold uppercase text-slate-500">Quote paganti</div>
           <div className="font-bold tabular-nums">{paidUnits.toLocaleString("it-IT")}</div>
         </div>
-        <div>
+        <div className="col-span-2 sm:col-span-1">
           <div className="text-xs font-semibold uppercase text-slate-500">Totale stimato</div>
           <div className="font-bold tabular-nums">
             {estimatedTotal != null ? formatClientEur(estimatedTotal) : "In caricamento"}
@@ -1159,13 +1223,13 @@ function PeopleStep({
           Hai selezionato piu&apos; posti della capacita&apos; disponibile.
         </p>
       )}
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         {onBack && (
           <button
             type="button"
             onClick={onBack}
             disabled={checking}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 py-3 font-semibold disabled:opacity-50"
+            className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 py-3 font-semibold disabled:opacity-50"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             Indietro
@@ -1174,7 +1238,7 @@ function PeopleStep({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
         >
           {checking ? "Verifica..." : "Avanti"}
           {!checking && <ChevronRight className="size-4" aria-hidden="true" />}
@@ -1202,24 +1266,24 @@ function PassengerCounter({
   onChange: (n: number) => void;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="inline-flex size-8 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-3">
+      <div className="mb-3 flex min-w-0 items-center gap-2">
+        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700">
           {icon}
         </span>
-        <div>
+        <div className="min-w-0">
           <label htmlFor={id} className="block text-sm font-bold text-slate-950">
             {label}
           </label>
-          <p className="text-xs text-slate-500">{hint}</p>
+          <p className="text-xs leading-4 text-slate-500">{hint}</p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full min-w-0 items-center gap-2">
         <button
           type="button"
           onClick={() => onChange(value - 1)}
           disabled={value <= min}
-          className="inline-flex size-10 items-center justify-center rounded-full border border-slate-300 font-bold disabled:opacity-40"
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-300 font-bold disabled:opacity-40 sm:size-11"
           aria-label={`Diminuisci ${label}`}
         >
           -
@@ -1234,12 +1298,12 @@ function PassengerCounter({
             const digits = event.target.value.replace(/\D/g, "");
             onChange(digits ? Number.parseInt(digits, 10) : 0);
           }}
-          className="h-10 min-w-0 flex-1 rounded-md border border-slate-300 text-center font-bold tabular-nums"
+          className="h-10 w-0 min-w-0 flex-1 rounded-md border border-slate-300 text-center font-bold tabular-nums sm:h-11"
         />
         <button
           type="button"
           onClick={() => onChange(value + 1)}
-          className="inline-flex size-10 items-center justify-center rounded-full border border-slate-300 font-bold"
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-300 font-bold sm:size-11"
           aria-label={`Aumenta ${label}`}
         >
           +
@@ -1299,6 +1363,19 @@ function ReviewStep({
     endDate && endDate !== startDate
       ? `${formatIsoDateLabel(startDate)} - ${formatIsoDateLabel(endDate)}`
       : formatIsoDateLabel(startDate);
+  const guestLabel = totalGuests === 1 ? "1 ospite" : `${totalGuests} ospiti`;
+  const customerName = `${customer.firstName} ${customer.lastName}`.trim();
+  const paymentModeLabel =
+    paymentSchedule === "DEPOSIT_BALANCE"
+      ? `Acconto ${depositPercentage}%`
+      : "Pagamento completo";
+  const paidUnitsLabel = paidUnits.toLocaleString("it-IT");
+  const showGuestBreakdown =
+    passengers.children > 0 || passengers.freeChildren > 0 || passengers.infants > 0;
+  const guestAccountingDetails = [
+    seats !== totalGuests ? `Posti occupati: ${seats}` : null,
+    Math.abs(paidUnits - seats) > 0.001 ? `Quote paganti: ${paidUnitsLabel}` : null,
+  ].filter(Boolean);
 
   return (
     <form
@@ -1351,52 +1428,91 @@ function ReviewStep({
         )}
       </fieldset>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <ReviewPanel title="Esperienza">
-          <ReviewRow label="Pacchetto" value={serviceName} />
-          <ReviewRow label="Data" value={dateLabel} />
-          <ReviewRow label="Durata" value={durationLabel} />
-        </ReviewPanel>
+      <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
+        <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-sky-700">
+              Riepilogo
+            </p>
+            <h3 className="mt-1 break-words text-xl font-heading font-bold text-slate-950">
+              {serviceName}
+            </h3>
+          </div>
+          <span className="inline-flex w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-800">
+            {paymentModeLabel}
+          </span>
+        </div>
 
-        <ReviewPanel title="Ospiti">
-          <ReviewRow label="Adulti" value={String(passengers.adults)} />
-          <ReviewRow label="Bambini 5-9" value={String(passengers.children)} />
-          <ReviewRow label="Bimbi 3-4" value={String(passengers.freeChildren)} />
-          <ReviewRow label="Neonati 0-2" value={String(passengers.infants)} />
-          <ReviewRow label="Posti occupati" value={String(seats)} />
-          <ReviewRow label="Quote paganti" value={paidUnits.toLocaleString("it-IT")} />
-          <ReviewRow label="Ospiti totali" value={String(totalGuests)} />
-        </ReviewPanel>
+        <div className="grid grid-cols-2 gap-x-5 gap-y-4 border-b border-slate-200 py-4 sm:grid-cols-3">
+          <SummaryMetric label="Data" value={dateLabel} />
+          <SummaryMetric label="Durata" value={durationLabel} />
+          <SummaryMetric label="Ospiti" value={guestLabel} />
+        </div>
 
-        <ReviewPanel title="Dati cliente">
-          <ReviewRow label="Nome" value={`${customer.firstName} ${customer.lastName}`.trim()} />
-          <ReviewRow label="Email" value={customer.email} />
-          <ReviewRow label="Telefono" value={customer.phone} />
-        </ReviewPanel>
+        {(showGuestBreakdown || guestAccountingDetails.length > 0) && (
+          <div className="border-b border-slate-200 py-3">
+            {showGuestBreakdown && (
+              <div className="flex flex-wrap gap-2">
+                {passengers.adults > 0 && <SummaryPill label="Adulti" value={passengers.adults} />}
+                {passengers.children > 0 && (
+                  <SummaryPill label="Bambini 5-9" value={passengers.children} />
+                )}
+                {passengers.freeChildren > 0 && (
+                  <SummaryPill label="Bimbi 3-4" value={passengers.freeChildren} />
+                )}
+                {passengers.infants > 0 && <SummaryPill label="Neonati" value={passengers.infants} />}
+              </div>
+            )}
+            {guestAccountingDetails.length > 0 && (
+              <p className="mt-2 text-xs font-medium text-slate-500">
+                {guestAccountingDetails.join(" · ")}
+              </p>
+            )}
+          </div>
+        )}
 
-        <ReviewPanel title="Pagamento">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-4 border-b border-slate-200 py-4">
+          <SummaryMetric label="Cliente" value={customerName} />
+          <SummaryMetric label="Telefono" value={customer.phone} />
+          <div className="col-span-2">
+            <SummaryMetric label="Email" value={customer.email} />
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+            Pagamento
+          </h4>
           {payment ? (
-            <>
-              <ReviewRow label="Totale prenotazione" value={formatClientCents(payment.totalCents)} />
-              <ReviewRow
+            <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3">
+              <SummaryMetric
+                label="Totale"
+                value={formatClientCents(payment.totalCents)}
+                strong
+              />
+              <SummaryMetric
                 label={
                   paymentSchedule === "DEPOSIT_BALANCE"
-                    ? `Da pagare ora (${payment.depositPercentage}%)`
-                    : "Da pagare ora"
+                    ? `Ora (${payment.depositPercentage}%)`
+                    : "Ora"
                 }
                 value={formatClientCents(payment.upfrontCents)}
                 strong
+                highlight
               />
-              {payment.balanceCents > 0 && (
-                <ReviewRow label="Saldo in loco" value={formatClientCents(payment.balanceCents)} />
-              )}
-            </>
+              <div className="col-span-2 sm:col-span-1">
+                <SummaryMetric
+                  label="Saldo in loco"
+                  value={payment.balanceCents > 0 ? formatClientCents(payment.balanceCents) : "-"}
+                />
+              </div>
+            </div>
           ) : (
-            <p className="text-sm text-amber-700">
+            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
               Prezzo non ancora disponibile. Torna alla data e seleziona una giornata con listino.
             </p>
           )}
-        </ReviewPanel>
+        </div>
       </div>
 
       <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
@@ -1405,12 +1521,12 @@ function ReviewStep({
         si paga solo in loco prima della partenza.
       </p>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 py-3 font-semibold disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-3 text-center font-semibold disabled:opacity-50"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Modifica dati
@@ -1418,7 +1534,7 @@ function ReviewStep({
         <button
           type="submit"
           disabled={!payment || loading}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 text-center font-bold text-white disabled:opacity-50"
         >
           {loading ? "Creo il pagamento..." : "Conferma e vai a Stripe"}
           {!loading && <CreditCard className="size-4" aria-hidden="true" />}
@@ -1446,7 +1562,7 @@ function PaymentChoiceCard({
   return (
     <label
       className={cnStep(
-        "flex cursor-pointer gap-3 rounded-lg border bg-white p-4 transition",
+        "flex min-w-0 cursor-pointer items-start gap-3 rounded-lg border bg-white p-4 transition",
         checked ? "border-sky-500 ring-2 ring-sky-100" : "border-slate-200 hover:border-sky-200",
       )}
     >
@@ -1455,7 +1571,7 @@ function PaymentChoiceCard({
         name="checkout-payment-schedule"
         checked={checked}
         onChange={onChange}
-        className="mt-1 size-4"
+        className="mt-1 size-4 shrink-0"
       />
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
@@ -1467,42 +1583,59 @@ function PaymentChoiceCard({
           )}
         </span>
         <span className="mt-1 block text-sm text-slate-600">{description}</span>
-        <span className="mt-3 block text-lg font-bold text-slate-950">{amount}</span>
+        <span className="mt-3 block break-words text-base font-bold text-slate-950 sm:text-lg">
+          {amount}
+        </span>
       </span>
     </label>
   );
 }
 
-function ReviewPanel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <h3 className="text-sm font-bold uppercase tracking-[0.12em] text-slate-500">{title}</h3>
-      <div className="mt-3 space-y-2">{children}</div>
-    </section>
-  );
-}
-
-function ReviewRow({
+function SummaryMetric({
   label,
   value,
   strong,
+  highlight,
 }: {
   label: string;
   value: string;
   strong?: boolean;
+  highlight?: boolean;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span
+    <div
+      className={cnStep(
+        "min-w-0 border-l-2 pl-3",
+        highlight ? "border-sky-500" : "border-slate-200",
+      )}
+    >
+      <p
         className={cnStep(
-          "max-w-[60%] text-right text-slate-900",
-          strong && "text-base font-bold",
+          "text-[11px] font-bold uppercase tracking-[0.1em]",
+          highlight ? "text-sky-700" : "text-slate-500",
         )}
       >
-        {value || "-"}
-      </span>
+        {label}
+      </p>
+      <p
+        className={cnStep(
+          "mt-1 break-words text-sm",
+          highlight ? "text-sky-950" : "text-slate-950",
+          strong ? "font-bold" : "font-semibold",
+        )}
+      >
+        {value}
+      </p>
     </div>
+  );
+}
+
+function SummaryPill({ label, value }: { label: string; value: number }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+      <span>{label}</span>
+      <span className="font-bold tabular-nums">{value}</span>
+    </span>
   );
 }
 
@@ -1567,12 +1700,12 @@ function CustomerStep({
           required
           aria-required="true"
           autoComplete="email"
-          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+          className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3"
           value={value.email}
           onChange={(e) => onChange({ ...value, email: e.target.value })}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label htmlFor="wizard-first-name" className="block text-sm font-medium mb-1">
             Nome
@@ -1583,7 +1716,7 @@ function CustomerStep({
             required
             aria-required="true"
             autoComplete="given-name"
-            className="w-full px-4 py-3 rounded-lg border border-gray-300"
+            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3"
             value={value.firstName}
             onChange={(e) => onChange({ ...value, firstName: e.target.value })}
           />
@@ -1598,7 +1731,7 @@ function CustomerStep({
             required
             aria-required="true"
             autoComplete="family-name"
-            className="w-full px-4 py-3 rounded-lg border border-gray-300"
+            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3"
             value={value.lastName}
             onChange={(e) => onChange({ ...value, lastName: e.target.value })}
           />
@@ -1615,20 +1748,22 @@ function CustomerStep({
           aria-required="true"
           autoComplete="tel"
           placeholder="+39 333 123 4567"
-          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+          className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3"
           value={value.phone}
           onChange={(e) => onChange({ ...value, phone: e.target.value })}
         />
       </div>
       {turnstileSiteKey && (
-        <TurnstileWidget
-          // R26-A1-C2: key cambia su onRetryNeeded → remount forzato →
-          // widget re-challenge Cloudflare (evita token stale post-cardDeclined).
-          key={turnstileResetKey}
-          siteKey={turnstileSiteKey}
-          onToken={onTurnstileToken}
-          onExpired={onTurnstileExpired}
-        />
+        <div className="max-w-full overflow-x-auto pb-1">
+          <TurnstileWidget
+            // R26-A1-C2: key cambia su onRetryNeeded → remount forzato →
+            // widget re-challenge Cloudflare (evita token stale post-cardDeclined).
+            key={turnstileResetKey}
+            siteKey={turnstileSiteKey}
+            onToken={onTurnstileToken}
+            onExpired={onTurnstileExpired}
+          />
+        </div>
       )}
 
       <div className="space-y-2 text-sm border-t pt-4">
@@ -1637,10 +1772,10 @@ function CustomerStep({
             type="checkbox"
             checked={consentPrivacy}
             onChange={(e) => onConsentPrivacyChange(e.target.checked)}
-            className="mt-1 size-4"
+            className="mt-1 size-4 shrink-0"
             required
           />
-          <span>
+          <span className="min-w-0 leading-6">
             Ho letto e accetto la{" "}
             <a
               href={`/${locale}/privacy`}
@@ -1658,10 +1793,10 @@ function CustomerStep({
             type="checkbox"
             checked={consentTerms}
             onChange={(e) => onConsentTermsChange(e.target.checked)}
-            className="mt-1 size-4"
+            className="mt-1 size-4 shrink-0"
             required
           />
-          <span>
+          <span className="min-w-0 leading-6">
             Accetto i{" "}
             <a
               href={`/${locale}/terms`}
@@ -1676,12 +1811,12 @@ function CustomerStep({
         </label>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 py-3 font-semibold disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-3 text-center font-semibold disabled:opacity-50"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           Indietro
@@ -1689,7 +1824,7 @@ function CustomerStep({
         <button
           type="submit"
           disabled={!valid || loading || !consentPrivacy || !consentTerms}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 text-center font-bold text-white disabled:opacity-50"
         >
           {loading ? "Attendere..." : "Procedi al pagamento"}
           {!loading && <CreditCard className="size-4" aria-hidden="true" />}

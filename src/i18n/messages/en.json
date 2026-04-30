@@ -15,7 +15,7 @@
   },
   "hero": {
     "title": "Leave the Shore Behind",
-    "subtitle": "Discover the Egadi Islands. Trimaran with chef, exclusive tours and cabin charter from Trapani",
+    "subtitle": "Discover the Egadi Islands. Trimaran with chef, exclusive tours and charter from Trapani",
     "cta": "Explore Experiences",
     "vehicleLabel": "Boat",
     "vehiclePlaceholder": "Choose a boat",
@@ -45,7 +45,7 @@
       "short": "Renowned chef, customized route, uncompromised luxury."
     },
     "cabinCharter": {
-      "title": "Cabin Charter",
+      "title": "Charter",
       "short": "A week among the Egadi Islands. Your home is the sea."
     },
     "boatShared": {
@@ -163,8 +163,8 @@
     "periodDates": "Dates"
   },
   "experiences": {
-    "title": "Our Experiences",
-    "subtitle": "Discover the perfect way to experience the Egadi Islands"
+    "title": "Boat tours in the Egadi Islands from Trapani",
+    "subtitle": "Choose your Egadi tour: gourmet trimaran with chef, charter, 4-hour or 8-hour boat tours from Trapani. Prices and availability online."
   },
   "boats": {
     "title": "Our Boats",

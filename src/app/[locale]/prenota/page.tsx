@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import { BookingPageClient, type BookingServiceOption } from "@/components/booking/booking-page-client";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { getBoatContent } from "@/data/catalog/boats";
-import { getExperienceContent, getExperienceIds, compareExperienceOrder } from "@/data/catalog/experiences";
+import {
+  compareExperienceOrder,
+  getExperienceContent,
+  getExperienceIds,
+  resolveExperienceServiceIdFromSlug,
+} from "@/data/catalog/experiences";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getDisplayPriceMap } from "@/lib/pricing/display";
@@ -95,9 +100,11 @@ export default async function BookingIndexPage({
     parsedDurationDays && parsedDurationDays >= 3 && parsedDurationDays <= 7
       ? parsedDurationDays
       : undefined;
+  const requestedServiceId =
+    typeof sp.service === "string" ? resolveExperienceServiceIdFromSlug(sp.service) : undefined;
   const initialServiceId =
-    typeof sp.service === "string" && options.some((service) => service.id === sp.service)
-      ? sp.service
+    requestedServiceId && options.some((service) => service.id === requestedServiceId)
+      ? requestedServiceId
       : undefined;
   const initialBoatId =
     typeof sp.boat === "string" && options.some((service) => service.boatId === sp.boat)

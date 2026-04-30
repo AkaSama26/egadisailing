@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import { HeroSection } from "@/components/hero-section";
 import { LandingSections } from "./landing-sections";
 import { buildPageMetadata } from "@/lib/seo/metadata";
-import { HERO_VIDEO_POSTER_SRC } from "@/lib/public-assets";
 import { compareExperienceOrder } from "@/data/catalog/experiences";
 import { getDisplayPriceMap } from "@/lib/pricing/display";
 
@@ -50,7 +49,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <link rel="preload" as="image" href={HERO_VIDEO_POSTER_SRC} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

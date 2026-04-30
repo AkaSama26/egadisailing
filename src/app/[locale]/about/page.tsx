@@ -1,8 +1,39 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, Anchor, Compass, Utensils } from "lucide-react";
 import { ScrollSection } from "@/components/scroll-section";
-import { Waves, Heart, Anchor, Users, ArrowRight } from "lucide-react";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+
+const crew = [
+  {
+    role: "Skipper",
+    image: "/images/about/skipper.webp",
+    alt: "Skipper Egadisailing durante una navigazione alle Isole Egadi",
+    icon: Anchor,
+    description:
+      "Guida la rotta, legge vento e mare, sceglie le cale più riparate e rende la navigazione sicura, fluida e piacevole.",
+    note: "Rotte sicure, ritmo giusto, conoscenza vera delle Egadi.",
+  },
+  {
+    role: "Hostess",
+    image: "/images/about/hostess.webp",
+    alt: "Hostess Egadisailing che accoglie gli ospiti a bordo",
+    icon: Compass,
+    description:
+      "Si prende cura dell'accoglienza, dei dettagli a bordo e del comfort degli ospiti, dal primo sorriso fino al rientro in porto.",
+    note: "Presenza discreta, attenzione concreta, ospitalità siciliana.",
+  },
+  {
+    role: "Chef",
+    image: "/images/about/chef.webp",
+    alt: "Chef Egadisailing che prepara un pranzo a bordo",
+    icon: Utensils,
+    description:
+      "Porta in tavola sapori del territorio, ingredienti freschi e piatti pensati per essere gustati con il mare intorno.",
+    note: "Cucina di bordo, prodotti locali, pranzo vista Egadi.",
+  },
+] as const;
 
 export async function generateMetadata({
   params,
@@ -11,9 +42,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return buildPageMetadata({
-    title: "Chi Siamo",
+    title: "Chi Siamo: Crew Locale per Escursioni alle Egadi",
     description:
-      "Ogni onda racconta la nostra storia. Scopri la famiglia dietro Egadisailing, la passione per il mare e le Isole Egadi.",
+      "Scopri Egadisailing e Nicolò Genna: armatore, skipper, hostess e chef per escursioni in barca alle Isole Egadi da Trapani.",
     path: "/about",
     locale,
   });
@@ -27,189 +58,185 @@ export default async function AboutPage({
   const { locale } = await params;
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 50%, #0a2a4a 80%, #071934 100%)",
-      }}
-    >
-      {/* ── Hero: H1 left + photo right ── */}
-      <section className="pt-36 pb-32 px-4 md:px-8 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[70vh]">
-            {/* Left: text */}
-            <ScrollSection animation="fade-left">
-              <div className="space-y-8">
-                <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
-                  Ogni Onda Racconta la Nostra Storia
-                </h1>
-                <p className="text-white/60 text-lg md:text-xl leading-relaxed max-w-lg">
-                  Tutto è iniziato con una barca e un sogno: far scoprire le Egadi come le conosciamo noi. La passione è la stessa — il mare, l&apos;ospitalità siciliana, e la promessa di un&apos;esperienza che non dimenticherai.
-                </p>
-              </div>
-            </ScrollSection>
+    <div className="min-h-screen bg-[#f7f1e6] text-[#0a2637]">
+      <section className="relative isolate overflow-hidden bg-[#071934] px-4 pb-20 pt-32 text-white sm:px-6 lg:px-8 lg:pb-28 lg:pt-36">
+        <div
+          className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_20%,rgba(14,165,233,0.18),transparent_34%),linear-gradient(180deg,#071934_0%,#0a2a4a_58%,#071934_100%)]"
+          aria-hidden="true"
+        />
 
-            {/* Right: armatore photo placeholder */}
-            <ScrollSection animation="fade-right">
-              <div className="flex justify-center">
-                <div className="relative w-80 h-96 md:w-96 md:h-[28rem]">
-                  {/* Glow */}
-                  <div
-                    className="absolute inset-0 -z-10 scale-110"
-                    style={{
-                      background: "radial-gradient(ellipse, rgba(14,165,233,0.12) 0%, transparent 60%)",
-                      filter: "blur(30px)",
-                    }}
-                  />
-                  {/* Placeholder */}
-                  <div className="w-full h-full rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col items-center justify-center gap-4">
-                    <div className="w-24 h-24 rounded-full bg-white/[0.06] border border-white/[0.1] flex items-center justify-center">
-                      <Users className="h-12 w-12 text-white/20" />
+        <div className="mx-auto grid max-w-7xl gap-12 lg:min-h-[72vh] lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+          <ScrollSection animation="fade-left">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-gold)]">
+                Chi siamo
+              </p>
+              <h1 className="mt-5 font-heading text-4xl font-bold leading-[0.98] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+                Il mare delle Egadi, raccontato da chi lo vive ogni giorno
+              </h1>
+              <p className="mt-6 text-base leading-7 text-white/72 sm:text-lg">
+                Egadisailing nasce a Trapani da una passione semplice: portare gli ospiti
+                tra Favignana, Levanzo e Marettimo con la cura di una crew locale, barche
+                preparate e un modo di accogliere che sa di Sicilia.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3 text-sm text-white/76">
+                <span className="rounded-full border border-white/16 bg-white/[0.06] px-4 py-2">
+                  Escursioni da Trapani
+                </span>
+                <span className="rounded-full border border-white/16 bg-white/[0.06] px-4 py-2">
+                  Crew locale
+                </span>
+                <span className="rounded-full border border-white/16 bg-white/[0.06] px-4 py-2">
+                  Cucina a bordo
+                </span>
+              </div>
+            </div>
+          </ScrollSection>
+
+          <ScrollSection animation="fade-right">
+            <div className="relative mx-auto max-w-xl">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-white/[0.05] shadow-[0_28px_90px_rgba(0,0,0,0.38)]">
+                <Image
+                  src="/images/about/armatore.webp"
+                  alt="Nicolò Genna, armatore Egadisailing a bordo alle Isole Egadi"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 48vw, 100vw"
+                  className="object-cover"
+                />
+                <div
+                  className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,25,52,0.05)_42%,rgba(7,25,52,0.76)_100%)]"
+                  aria-hidden="true"
+                />
+                <div className="absolute bottom-5 left-5 right-5 rounded-lg border border-white/14 bg-[#071934]/55 p-5 backdrop-blur-md">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-gold)]">
+                    Armatore
+                  </p>
+                  <p className="mt-2 font-heading text-3xl font-bold leading-tight text-white">
+                    Nicolò Genna
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-white/78 sm:text-base">
+                    È cresciuto con le Egadi davanti agli occhi e ha trasformato quella
+                    conoscenza in un modo di navigare fatto di accoglienza, rotte scelte
+                    bene e rispetto per il mare.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </ScrollSection>
+        </div>
+      </section>
+
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+          <ScrollSection animation="fade-up">
+            <div className="lg:sticky lg:top-28">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#b58a27]">
+                La nostra storia
+              </p>
+              <h2 className="mt-3 font-heading text-3xl font-bold leading-tight text-[#092337] sm:text-4xl md:text-5xl">
+                Una famiglia di mare, una base a Trapani, le Egadi davanti
+              </h2>
+            </div>
+          </ScrollSection>
+
+          <ScrollSection animation="fade-up" delay={0.1}>
+            <div className="space-y-6 text-base leading-8 text-[#425f6f] sm:text-lg">
+              <p>
+                Siamo cresciuti con le Isole Egadi all&apos;orizzonte. Le abbiamo viste cambiare
+                con la luce del mattino, con il Maestrale, con lo Scirocco, con quelle giornate
+                calme in cui il mare sembra una lastra e ogni cala diventa un piccolo approdo.
+              </p>
+              <p>
+                Per noi un&apos;escursione in barca non è solo una sequenza di soste. È scegliere
+                il momento giusto per entrare in una baia, capire dove il mare è più pulito,
+                lasciare spazio al silenzio quando serve e creare a bordo un&apos;ospitalità
+                semplice, curata, memorabile.
+              </p>
+              <p>
+                Egadisailing mette insieme esperienza locale, attenzione alla sicurezza,
+                comfort in navigazione e cucina di bordo. È il nostro modo di condividere
+                Favignana, Levanzo e Marettimo con chi vuole scoprirle senza fretta.
+              </p>
+            </div>
+          </ScrollSection>
+        </div>
+      </section>
+
+      <section className="bg-[#092337] px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <div className="mx-auto max-w-7xl">
+          <ScrollSection animation="fade-up">
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--color-gold)]">
+                La crew
+              </p>
+              <h2 className="mt-3 font-heading text-3xl font-bold leading-tight text-white sm:text-4xl md:text-5xl">
+                Le persone che ti accompagnano a bordo
+              </h2>
+              <p className="mt-5 text-base leading-7 text-white/66 sm:text-lg">
+                Skipper, hostess e chef lavorano insieme perché ogni uscita abbia una rotta
+                sicura, un&apos;accoglienza attenta e sapori capaci di raccontare il territorio.
+              </p>
+            </div>
+          </ScrollSection>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {crew.map((member, index) => {
+              const Icon = member.icon;
+
+              return (
+                <ScrollSection key={member.role} animation="fade-up" delay={index * 0.12}>
+                  <article className="h-full overflow-hidden rounded-lg border border-white/10 bg-white/[0.05] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
+                    <div className="relative aspect-[4/5] bg-white/[0.04]">
+                      <Image
+                        src={member.image}
+                        alt={member.alt}
+                        fill
+                        sizes="(min-width: 768px) 31vw, 100vw"
+                        className="object-cover"
+                      />
                     </div>
-                    <p className="text-white/20 text-sm tracking-wider uppercase">Foto Armatore</p>
-                  </div>
-                </div>
-              </div>
-            </ScrollSection>
+                    <div className="p-6">
+                      <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-gold)]/14 text-[var(--color-gold)]">
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-gold)]">
+                        {member.role}
+                      </p>
+                      <p className="mt-3 text-base leading-7 text-white/72">
+                        {member.description}
+                      </p>
+                      <p className="mt-5 border-t border-white/10 pt-5 text-sm font-medium leading-6 text-white">
+                        {member.note}
+                      </p>
+                    </div>
+                  </article>
+                </ScrollSection>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ── La Nostra Storia ── */}
-      <section className="pb-32 px-4 md:px-8 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <ScrollSection animation="fade-left">
-              <div className="space-y-6">
-                <h2 className="font-heading text-4xl md:text-5xl font-bold text-white">
-                  La Nostra Storia
-                </h2>
-                <p className="text-white/60 text-lg leading-relaxed">
-                  Siamo nati a Trapani, cresciuti guardando le Egadi all&apos;orizzonte. Conosciamo ogni cala, ogni grotta, ogni corrente. Non è solo il nostro lavoro — è la nostra vita.
-                </p>
-                <p className="text-white/60 text-lg leading-relaxed">
-                  Abbiamo scelto un trimarano perché volevamo offrire qualcosa di diverso: spazio, comfort, stabilità. Un&apos;esperienza che non esiste altrove in Sicilia. Con uno chef a bordo che cucina il pesce del giorno, e una crew che ti fa sentire a casa.
-                </p>
-              </div>
-            </ScrollSection>
-
-            <ScrollSection animation="fade-right">
-              <div className="space-y-6">
-                <p className="text-white/60 text-lg leading-relaxed">
-                  Ogni mattina salpiamo dal Porto di Trapani con lo stesso entusiasmo del primo giorno. Perché ogni uscita è diversa — la luce, il vento, i colori del mare. E la faccia dei nostri ospiti quando vedono Cala Rossa per la prima volta non ha prezzo.
-                </p>
-                <p className="text-white/60 text-lg leading-relaxed">
-                  Non siamo un&apos;agenzia. Siamo una famiglia che ha fatto del mare la propria vita, e che vuole condividerla con te.
-                </p>
-              </div>
-            </ScrollSection>
-          </div>
-        </div>
-      </section>
-
-      {/* ── I Nostri Valori ── */}
-      <section className="pb-32 px-4 md:px-8 lg:px-12">
-        <div className="max-w-7xl mx-auto">
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+        <div className="mx-auto max-w-3xl text-center">
           <ScrollSection animation="fade-up">
-            <h2 className="font-heading text-4xl md:text-5xl font-bold text-white text-center mb-16">
-              I Nostri Valori
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#b58a27]">
+              Sali a bordo
+            </p>
+            <h2 className="mt-3 font-heading text-3xl font-bold leading-tight text-[#092337] sm:text-4xl">
+              Il modo migliore per conoscerci è vivere una giornata in mare
             </h2>
-          </ScrollSection>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <Waves className="h-8 w-8" />,
-                title: "Passione per il Mare",
-                description: "Il Mediterraneo non è solo il nostro ufficio — è la nostra casa. Ogni giorno in mare è un privilegio che non diamo mai per scontato.",
-              },
-              {
-                icon: <Heart className="h-8 w-8" />,
-                title: "Ospitalità Siciliana",
-                description: "Ti accogliamo come famiglia. Dal welcome drink al pranzo dello chef, ogni dettaglio è curato per farti sentire speciale.",
-              },
-              {
-                icon: <Anchor className="h-8 w-8" />,
-                title: "Qualità Senza Compromessi",
-                description: "Barche mantenute alla perfezione, crew professionale, ingredienti freschi. Non facciamo sconti sulla qualità dell'esperienza.",
-              },
-            ].map((value, i) => (
-              <ScrollSection key={value.title} animation="fade-up" delay={i * 0.15}>
-                <div className="p-8 rounded-2xl bg-white/[0.04] border border-white/[0.08] h-full">
-                  <div className="w-14 h-14 rounded-xl bg-[var(--color-gold)]/10 flex items-center justify-center text-[var(--color-gold)] mb-6">
-                    {value.icon}
-                  </div>
-                  <h3 className="font-heading text-xl font-bold text-white mb-3">
-                    {value.title}
-                  </h3>
-                  <p className="text-white/50 leading-relaxed">
-                    {value.description}
-                  </p>
-                </div>
-              </ScrollSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── La Crew ── */}
-      <section className="pb-32 px-4 md:px-8 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          <ScrollSection animation="fade-up">
-            <h2 className="font-heading text-4xl md:text-5xl font-bold text-white text-center mb-16">
-              La Crew
-            </h2>
-          </ScrollSection>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                role: "Skipper",
-                description: "Il capitano che conosce ogni segreto delle Egadi. Rotte sicure, calette nascoste, e storie da raccontare.",
-              },
-              {
-                role: "Chef",
-                description: "Pesce freschissimo dal mercato di Trapani, cucinato a bordo con ricette della tradizione siciliana. Un pranzo vista mare indimenticabile.",
-              },
-              {
-                role: "Hostess",
-                description: "L'accoglienza a bordo. Si prende cura di ogni dettaglio perché tu possa solo goderti il mare.",
-              },
-            ].map((member, i) => (
-              <ScrollSection key={member.role} animation="fade-up" delay={i * 0.15}>
-                <div className="text-center">
-                  {/* Avatar placeholder */}
-                  <div className="w-28 h-28 rounded-full bg-white/[0.06] border border-white/[0.1] flex items-center justify-center mx-auto mb-6">
-                    <Users className="h-10 w-10 text-white/20" />
-                  </div>
-                  <h3 className="font-heading text-2xl font-bold text-white mb-2">
-                    {member.role}
-                  </h3>
-                  <p className="text-white/50 leading-relaxed max-w-xs mx-auto">
-                    {member.description}
-                  </p>
-                </div>
-              </ScrollSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="pb-32 px-4 md:px-8 lg:px-12">
-        <div className="max-w-3xl mx-auto text-center">
-          <ScrollSection animation="fade-up">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-white mb-6">
-              Vieni a Conoscerci a Bordo
-            </h2>
-            <p className="text-white/50 text-lg mb-10">
-              Le parole non bastano. Sali a bordo e scopri perché i nostri ospiti tornano ogni anno.
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#425f6f] sm:text-lg">
+              Scegli l&apos;esperienza più adatta e lasciati guidare tra le cale, le rotte
+              e i sapori delle Egadi.
             </p>
             <Link
               href={`/${locale}/experiences`}
-              className="inline-flex items-center gap-2 bg-[var(--color-gold)] text-[var(--color-ocean)] font-semibold text-lg px-10 py-4 rounded-full hover:bg-[var(--color-gold)]/90 transition-colors shadow-lg"
+              className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#092337] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#123d5a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58a27]"
             >
-              Scopri le Esperienze <ArrowRight className="h-5 w-5" />
+              Scopri le esperienze
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </ScrollSection>
         </div>

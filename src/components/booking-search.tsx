@@ -4,8 +4,9 @@ import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Check, ChevronDown, Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { getExperiencePublicSlug } from "@/data/catalog/experiences";
 import { getExperienceTitle, getServiceDurationLabel } from "@/lib/services/display";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,14 @@ export interface BookingSearchService {
 interface BookingSearchProps {
   services: BookingSearchService[];
 }
+
+interface BookingSelectOption {
+  value: string;
+  label: string;
+}
+
+type BookingSelectTone = "default" | "sky";
+type BookingSelectId = "boat" | "boat-experience" | "service" | "duration";
 
 const BOAT_SERVICE_TYPES = new Set(["BOAT_SHARED", "BOAT_EXCLUSIVE"]);
 const BOAT_TYPE_ORDER = ["BOAT_EXCLUSIVE", "BOAT_SHARED"];
@@ -73,6 +82,172 @@ function durationLabel(service: BookingSearchService, t: ReturnType<typeof useTr
   return getServiceDurationLabel(service);
 }
 
+function BookingDateField({
+  value,
+  min,
+  ariaLabel,
+  onChange,
+  onOpenSelectChange,
+}: {
+  value: string;
+  min: string;
+  ariaLabel: string;
+  onChange: (value: string) => void;
+  onOpenSelectChange: (id: BookingSelectId | null) => void;
+}) {
+  return (
+    <div className="relative rounded-xl border border-gray-200 bg-white px-3 py-3 text-left transition focus-within:ring-2 focus-within:ring-sky-200">
+      <input
+        type="date"
+        min={min}
+        value={value}
+        onFocus={() => onOpenSelectChange(null)}
+        onClick={(event) => {
+          onOpenSelectChange(null);
+          const input = event.currentTarget as HTMLInputElement & { showPicker?: () => void };
+          input.showPicker?.();
+        }}
+        onChange={(event) => onChange(event.target.value)}
+        className="block min-h-7 w-full cursor-pointer bg-transparent text-sm font-medium text-gray-700 outline-none [color-scheme:light] disabled:cursor-not-allowed"
+        aria-label={ariaLabel}
+        required
+      />
+    </div>
+  );
+}
+
+function BookingSelectField({
+  id,
+  value,
+  placeholder,
+  options,
+  ariaLabel,
+  disabled,
+  tone = "default",
+  openSelect,
+  onOpenChange,
+  onChange,
+}: {
+  id: BookingSelectId;
+  value: string;
+  placeholder: string;
+  options: BookingSelectOption[];
+  ariaLabel: string;
+  disabled?: boolean;
+  tone?: BookingSelectTone;
+  openSelect: BookingSelectId | null;
+  onOpenChange: (id: BookingSelectId | null) => void;
+  onChange: (value: string) => void;
+}) {
+  const isOpen = openSelect === id && !disabled;
+  const selected = options.find((option) => option.value === value);
+  const displayLabel = selected?.label ?? placeholder;
+  const fieldTone =
+    tone === "sky"
+      ? "border-sky-100 bg-sky-50 text-sky-950 ring-1 ring-sky-100"
+      : "border-gray-200 bg-white text-gray-700";
+
+  return (
+    <div
+      className={cn(
+        "relative rounded-xl border px-3 py-3 text-left transition",
+        fieldTone,
+        disabled && "opacity-60",
+      )}
+      onBlur={(event) => {
+        const nextTarget = event.relatedTarget as Node | null;
+        if (!event.currentTarget.contains(nextTarget)) {
+          onOpenChange(null);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onOpenChange(null);
+      }}
+    >
+      <button
+        type="button"
+        disabled={disabled}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        className="flex min-h-7 w-full items-center justify-between gap-3 text-left text-sm font-medium outline-none disabled:cursor-not-allowed"
+        onClick={() => onOpenChange(isOpen ? null : id)}
+      >
+        <span className={cn("min-w-0 truncate", !selected && "text-gray-400")}>
+          {displayLabel}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 shrink-0 transition-transform",
+            tone === "sky" ? "text-sky-800/60" : "text-gray-500",
+            isOpen && "rotate-180",
+          )}
+          aria-hidden="true"
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            role="listbox"
+            aria-label={ariaLabel}
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
+            className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-[80] max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 text-slate-700 shadow-[0_18px_55px_rgba(15,23,42,0.20)]"
+          >
+            <button
+              type="button"
+              role="option"
+              aria-selected={!value}
+              className={cn(
+                "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition",
+                !value
+                  ? "bg-sky-50 text-sky-950"
+                  : "text-slate-400 hover:bg-slate-50 hover:text-slate-700",
+              )}
+              onClick={() => {
+                onChange("");
+                onOpenChange(null);
+              }}
+            >
+              <span>{placeholder}</span>
+              {!value && <Check className="h-4 w-4 text-sky-600" aria-hidden="true" />}
+            </button>
+
+            {options.map((option) => {
+              const isSelected = option.value === value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  className={cn(
+                    "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition",
+                    isSelected
+                      ? "bg-sky-50 text-sky-950"
+                      : "text-slate-700 hover:bg-slate-50",
+                  )}
+                  onClick={() => {
+                    onChange(option.value);
+                    onOpenChange(null);
+                  }}
+                >
+                  <span className="min-w-0 truncate">{option.label}</span>
+                  {isSelected && <Check className="h-4 w-4 text-sky-600" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function BookingSearch({ services }: BookingSearchProps) {
   const t = useTranslations("hero");
   const locale = useLocale();
@@ -82,6 +257,7 @@ export function BookingSearch({ services }: BookingSearchProps) {
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState("");
   const [charterEndDate, setCharterEndDate] = useState("");
+  const [openSelect, setOpenSelect] = useState<BookingSelectId | null>(null);
   const minDate = useMemo(() => todayIso(), []);
 
   const boats = useMemo(() => {
@@ -157,6 +333,41 @@ export function BookingSearch({ services }: BookingSearchProps) {
     charterDurationDays >= 3 &&
     charterDurationDays <= 7;
 
+  const boatSelectOptions = useMemo(
+    () => boats.map((boat) => ({ value: boat.id, label: boat.name })),
+    [boats],
+  );
+
+  const boatExperienceSelectOptions = useMemo(
+    () =>
+      boatExperienceOptions.map((type) => ({
+        value: type,
+        label:
+          type === "BOAT_EXCLUSIVE"
+            ? t("boatExperienceExclusive")
+            : t("boatExperienceShared"),
+      })),
+    [boatExperienceOptions, t],
+  );
+
+  const serviceSelectOptions = useMemo(
+    () =>
+      nonBoatServices.map((service) => ({
+        value: service.id,
+        label: getExperienceTitle(service, locale),
+      })),
+    [locale, nonBoatServices],
+  );
+
+  const durationSelectOptions = useMemo(
+    () =>
+      boatDurationServices.map((service) => ({
+        value: service.id,
+        label: durationLabel(service, t),
+      })),
+    [boatDurationServices, t],
+  );
+
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!serviceId) {
@@ -177,7 +388,7 @@ export function BookingSearch({ services }: BookingSearchProps) {
       params.set("experience", bookingExperienceKey(selectedService));
       params.set("durationType", selectedService.durationType);
     }
-    params.set("service", serviceId);
+    params.set("service", getExperiencePublicSlug(serviceId));
     router.push(`/${locale}/prenota?${params.toString()}`);
   }
 
@@ -199,116 +410,91 @@ export function BookingSearch({ services }: BookingSearchProps) {
         )}
       >
         {/* Vehicle field */}
-        <motion.label layout className="rounded-xl border border-gray-200 px-3 py-4 text-left">
-          <span className="sr-only">{t("vehicleLabel")}</span>
-          <select
+        <motion.div layout>
+          <BookingSelectField
+            id="boat"
             value={boatId}
-            onChange={(event) => {
-              setBoatId(event.target.value);
+            placeholder={t("vehiclePlaceholder")}
+            options={boatSelectOptions}
+            ariaLabel={t("vehicleLabel")}
+            openSelect={openSelect}
+            onOpenChange={setOpenSelect}
+            onChange={(value) => {
+              setBoatId(value);
               setBoatExperienceType("");
               setServiceId("");
               setDate("");
               setCharterEndDate("");
             }}
-            className="w-full bg-transparent text-sm font-medium text-gray-700 outline-none"
-            aria-label={t("vehicleLabel")}
-            required
-          >
-            <option value="">{t("vehiclePlaceholder")}</option>
-            {boats.map((boat) => (
-              <option key={boat.id} value={boat.id}>
-                {boat.name}
-              </option>
-            ))}
-          </select>
-        </motion.label>
+          />
+        </motion.div>
 
         {/* Experience field */}
-        <motion.label
+        <motion.div
           layout
-          className={cn(
-            "rounded-xl border border-gray-200 px-3 py-4 text-left",
-            !boatId && "opacity-60",
-          )}
         >
-          <span className="sr-only">{t("experienceLabel")}</span>
           {isBoatFlow ? (
-            <select
+            <BookingSelectField
+              id="boat-experience"
               value={boatExperienceType}
-              onChange={(event) => {
-                setBoatExperienceType(event.target.value);
+              placeholder={t("experiencePlaceholder")}
+              options={boatExperienceSelectOptions}
+              ariaLabel={t("experienceLabel")}
+              disabled={!boatId}
+              openSelect={openSelect}
+              onOpenChange={setOpenSelect}
+              onChange={(value) => {
+                setBoatExperienceType(value);
                 setServiceId("");
                 setDate("");
                 setCharterEndDate("");
               }}
-              disabled={!boatId}
-              className="w-full bg-transparent text-sm font-medium text-gray-700 outline-none disabled:cursor-not-allowed"
-              aria-label={t("experienceLabel")}
-              required
-            >
-              <option value="">{t("experiencePlaceholder")}</option>
-              {boatExperienceOptions.map((type) => (
-                <option key={type} value={type}>
-                  {type === "BOAT_EXCLUSIVE"
-                    ? t("boatExperienceExclusive")
-                    : t("boatExperienceShared")}
-                </option>
-              ))}
-            </select>
+            />
           ) : (
-            <select
+            <BookingSelectField
+              id="service"
               value={serviceId}
-              onChange={(event) => {
-                setServiceId(event.target.value);
+              placeholder={t("experiencePlaceholder")}
+              options={serviceSelectOptions}
+              ariaLabel={t("experienceLabel")}
+              disabled={!boatId}
+              openSelect={openSelect}
+              onOpenChange={setOpenSelect}
+              onChange={(value) => {
+                setServiceId(value);
                 setDate("");
                 setCharterEndDate("");
               }}
-              disabled={!boatId}
-              className="w-full bg-transparent text-sm font-medium text-gray-700 outline-none disabled:cursor-not-allowed"
-              aria-label={t("experienceLabel")}
-              required
-            >
-              <option value="">{t("experiencePlaceholder")}</option>
-              {nonBoatServices.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {getExperienceTitle(service, locale)}
-                </option>
-              ))}
-            </select>
+            />
           )}
-        </motion.label>
+        </motion.div>
 
         <AnimatePresence mode="popLayout">
           {showBoatDuration && (
-            <motion.label
+            <motion.div
               key="boat-duration"
               layout
               initial={{ opacity: 0, y: 8, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-              className="rounded-xl border border-sky-100 bg-sky-50/60 px-3 py-4 text-left ring-1 ring-sky-100"
             >
-              <span className="sr-only">{t("durationLabel")}</span>
-              <select
+              <BookingSelectField
+                id="duration"
                 value={serviceId}
-                onChange={(event) => {
-                  setServiceId(event.target.value);
+                placeholder={t("durationPlaceholder")}
+                options={durationSelectOptions}
+                ariaLabel={t("durationLabel")}
+                tone="sky"
+                openSelect={openSelect}
+                onOpenChange={setOpenSelect}
+                onChange={(value) => {
+                  setServiceId(value);
                   setDate("");
                   setCharterEndDate("");
                 }}
-                className="w-full bg-transparent text-sm font-medium text-sky-950 outline-none"
-                aria-label={t("durationLabel")}
-                required
-              >
-                <option value="">{t("durationPlaceholder")}</option>
-                {boatDurationServices.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {durationLabel(service, t)}
-                  </option>
-                ))}
-              </select>
-            </motion.label>
+              />
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -328,24 +514,20 @@ export function BookingSearch({ services }: BookingSearchProps) {
                 <span className="w-5 shrink-0 text-right text-[11px] font-semibold uppercase text-gray-400">
                   {t("charterStartLabel")}
                 </span>
-                <label className="min-w-0 flex-1 rounded-xl border border-gray-200 px-3 py-4 text-left transition">
-                  <span className="sr-only">{t("charterStartLabel")}</span>
-                  <input
-                    type="date"
-                    min={minDate}
+                <div className="min-w-0 flex-1">
+                  <BookingDateField
                     value={date}
-                    onChange={(event) => {
-                      const nextDate = event.target.value;
+                    min={minDate}
+                    ariaLabel={t("charterStartLabel")}
+                    onOpenSelectChange={setOpenSelect}
+                    onChange={(nextDate) => {
                       setDate(nextDate);
                       if (charterEndDate && nextDate && charterEndDate < addIsoDays(nextDate, 2)) {
                         setCharterEndDate("");
                       }
                     }}
-                    className="w-full bg-transparent text-sm font-medium text-gray-700 outline-none"
-                    aria-label={t("charterStartLabel")}
-                    required
                   />
-                </label>
+                </div>
               </motion.div>
               <motion.div
                 key="charter-end-date"
@@ -359,42 +541,35 @@ export function BookingSearch({ services }: BookingSearchProps) {
                 <span className="w-5 shrink-0 text-right text-[11px] font-semibold uppercase text-gray-400">
                   {t("charterEndLabel")}
                 </span>
-                <label className="min-w-0 flex-1 rounded-xl border border-gray-200 px-3 py-4 text-left transition">
-                  <span className="sr-only">{t("charterEndLabel")}</span>
-                  <input
-                    type="date"
-                    min={charterEndMinDate}
+                <div className="min-w-0 flex-1">
+                  <BookingDateField
                     value={charterEndDate}
-                    onChange={(event) => setCharterEndDate(event.target.value)}
-                    className="w-full bg-transparent text-sm font-medium text-gray-700 outline-none"
-                    aria-label={t("charterEndLabel")}
-                    required
+                    min={charterEndMinDate}
+                    ariaLabel={t("charterEndLabel")}
+                    onOpenSelectChange={setOpenSelect}
+                    onChange={setCharterEndDate}
                   />
-                </label>
+                </div>
               </motion.div>
             </>
           )}
           {showDateField && !selectedIsCharter && (
-            <motion.label
+            <motion.div
               key="date"
               layout
               initial={{ opacity: 0, y: 8, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-              className="rounded-xl border border-gray-200 px-3 py-4 text-left transition"
             >
-              <span className="sr-only">{t("dateLabel")}</span>
-              <input
-                type="date"
-                min={minDate}
+              <BookingDateField
                 value={date}
-                onChange={(event) => setDate(event.target.value)}
-                className="w-full bg-transparent text-sm font-medium text-gray-700 outline-none"
-                aria-label={t("dateLabel")}
-                required
+                min={minDate}
+                ariaLabel={t("dateLabel")}
+                onOpenSelectChange={setOpenSelect}
+                onChange={setDate}
               />
-            </motion.label>
+            </motion.div>
           )}
         </AnimatePresence>
 

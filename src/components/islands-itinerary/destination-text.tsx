@@ -38,13 +38,13 @@ export function DestinationText({
           )}
 
           {/* Destination name */}
-          <h3 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold italic text-white leading-[1.05] tracking-tight mb-2">
+          <h3 className="font-heading text-3xl font-bold italic leading-[1.05] tracking-tight text-white sm:text-4xl md:text-6xl lg:text-7xl mb-2">
             {t(stop.nameKey)}
           </h3>
 
           {/* Island subtitle */}
           {stop.islandKey && (
-            <p className="text-white/30 text-lg font-light tracking-wide mb-5">
+            <p className="mb-4 text-base font-light tracking-wide text-white/30 sm:text-lg lg:mb-5">
               {t(stop.islandKey)}
             </p>
           )}

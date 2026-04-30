@@ -15,7 +15,7 @@
   },
   "hero": {
     "title": "Lascia la Terra Ferma",
-    "subtitle": "Scopri le Isole Egadi. Trimarano con chef, escursioni esclusive e cabin charter da Trapani",
+    "subtitle": "Scopri le Isole Egadi. Trimarano con chef, escursioni esclusive e charter da Trapani",
     "cta": "Esplora le Esperienze",
     "vehicleLabel": "Mezzo",
     "vehiclePlaceholder": "Scegli il mezzo",
@@ -45,7 +45,7 @@
       "short": "Chef rinomato, rotta personalizzata, lusso senza compromessi."
     },
     "cabinCharter": {
-      "title": "Cabin Charter",
+      "title": "Charter",
       "short": "Una settimana tra le Egadi. La tua casa è il mare."
     },
     "boatShared": {
@@ -163,8 +163,8 @@
     "periodDates": "Date"
   },
   "experiences": {
-    "title": "Le Nostre Esperienze",
-    "subtitle": "Scopri il modo perfetto per vivere le Isole Egadi"
+    "title": "Tour in barca alle Isole Egadi da Trapani",
+    "subtitle": "Scegli il tuo tour alle Egadi: trimarano gourmet con chef, charter, tour in barca 4 ore o 8 ore da Trapani. Prezzi e disponibilità online."
   },
   "boats": {
     "title": "Le Nostre Barche",
