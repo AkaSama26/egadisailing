@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -258,6 +258,7 @@ export function BookingSearch({ services }: BookingSearchProps) {
   const [date, setDate] = useState("");
   const [charterEndDate, setCharterEndDate] = useState("");
   const [openSelect, setOpenSelect] = useState<BookingSelectId | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   const minDate = useMemo(() => todayIso(), []);
 
   const boats = useMemo(() => {
@@ -367,9 +368,19 @@ export function BookingSearch({ services }: BookingSearchProps) {
       })),
     [boatDurationServices, t],
   );
+  const canSubmit = Boolean(serviceId) && (selectedIsCharter ? charterIsBookable : Boolean(date));
+  const dependentSelectDisabled = hydrated ? !boatId : false;
+  const submitDisabled = hydrated ? !canSubmit : false;
+
+  /* eslint-disable react-hooks/set-state-in-effect -- Post-mount flag keeps SSR/client disabled attributes identical during hydration. */
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canSubmit) return;
     if (!serviceId) {
       router.push(`/${locale}/experiences`);
       return;
@@ -391,8 +402,6 @@ export function BookingSearch({ services }: BookingSearchProps) {
     params.set("service", getExperiencePublicSlug(serviceId));
     router.push(`/${locale}/prenota?${params.toString()}`);
   }
-
-  const canSubmit = Boolean(serviceId) && (selectedIsCharter ? charterIsBookable : Boolean(date));
 
   return (
     <form
@@ -440,7 +449,7 @@ export function BookingSearch({ services }: BookingSearchProps) {
               placeholder={t("experiencePlaceholder")}
               options={boatExperienceSelectOptions}
               ariaLabel={t("experienceLabel")}
-              disabled={!boatId}
+              disabled={dependentSelectDisabled}
               openSelect={openSelect}
               onOpenChange={setOpenSelect}
               onChange={(value) => {
@@ -457,7 +466,7 @@ export function BookingSearch({ services }: BookingSearchProps) {
               placeholder={t("experiencePlaceholder")}
               options={serviceSelectOptions}
               ariaLabel={t("experienceLabel")}
-              disabled={!boatId}
+              disabled={dependentSelectDisabled}
               openSelect={openSelect}
               onOpenChange={setOpenSelect}
               onChange={(value) => {
@@ -577,7 +586,7 @@ export function BookingSearch({ services }: BookingSearchProps) {
         <motion.button
           layout
           type="submit"
-          disabled={!canSubmit}
+          disabled={submitDisabled}
           className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#0ea5e9] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#0284c7] disabled:cursor-not-allowed disabled:opacity-50 md:h-full md:w-16 md:px-0"
           aria-label="Search"
         >

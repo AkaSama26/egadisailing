@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { ScrollSection } from "@/components/scroll-section";
 import { SvgPhotoFrame } from "@/components/svg-photo-frame";
-import { db } from "@/lib/db";
+import { routing } from "@/i18n/routing";
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import {
@@ -94,7 +94,9 @@ function BoatSpecs({ boat }: { boat: ResolvedBoatContent }) {
 }
 
 export function generateStaticParams() {
-  return getPublicBoatSlugs().map((slug) => ({ slug }));
+  return routing.locales.flatMap((locale) =>
+    getPublicBoatSlugs().map((slug) => ({ locale, slug })),
+  );
 }
 
 export async function generateMetadata({
@@ -126,14 +128,7 @@ export default async function BoatDetailPage({
   if (slug !== boat.slug) redirect(`/${locale}/boats/${boat.slug}`);
 
   const t = copy(locale);
-  const activeServices = await db.service.findMany({
-    where: { active: true, id: { in: boat.serviceIds } },
-    select: { id: true },
-  });
-  const activeIds = new Set(activeServices.map((service) => service.id));
-  const services: ActiveService[] = boat.serviceIds
-    .filter((serviceId) => activeIds.has(serviceId))
-    .map((id) => ({ id }));
+  const services: ActiveService[] = boat.serviceIds.map((id) => ({ id }));
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}/${locale}/boats/${boat.slug}`;
   const json = {
