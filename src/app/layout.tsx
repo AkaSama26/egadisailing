@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Inter, Caveat } from "next/font/google";
 import { getLocale } from "next-intl/server";
+import { ServiceWorkerCleanup } from "@/components/service-worker-cleanup";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -53,7 +54,10 @@ export default async function RootLayout({
   const locale = await getLocale();
   return (
     <html lang={locale} className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <ServiceWorkerCleanup />
+        {children}
+      </body>
     </html>
   );
 }

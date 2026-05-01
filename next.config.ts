@@ -24,7 +24,38 @@ const nextConfig: NextConfig = {
   // Security headers defense-in-depth (reverse proxy dovrebbe metterli, ma
   // duplicato lato app protegge contro misconfig).
   async headers() {
+    const serviceWorkerHeaders = [
+      { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+      { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+      { key: "Pragma", value: "no-cache" },
+      { key: "Service-Worker-Allowed", value: "/" },
+      {
+        key: "Content-Security-Policy",
+        value: "default-src 'self'; script-src 'self'",
+      },
+    ];
+
     return [
+      {
+        source: "/sw.js",
+        headers: serviceWorkerHeaders,
+      },
+      {
+        source: "/service-worker.js",
+        headers: serviceWorkerHeaders,
+      },
+      {
+        source: "/ngsw-worker.js",
+        headers: serviceWorkerHeaders,
+      },
+      {
+        source: "/firebase-messaging-sw.js",
+        headers: serviceWorkerHeaders,
+      },
+      {
+        source: "/OneSignalSDKWorker.js",
+        headers: serviceWorkerHeaders,
+      },
       {
         source: "/videos/:path*",
         headers: [
