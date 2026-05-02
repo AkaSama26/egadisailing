@@ -24,6 +24,55 @@ const caveat = Caveat({
   display: "swap",
 });
 
+const serviceWorkerInlineCleanupScript = `
+(function () {
+  var flag = "egadisailing:inline-service-worker-cleanup:20260501";
+
+  function mark(value) {
+    try {
+      window.sessionStorage.setItem(flag, value);
+    } catch (_error) {}
+  }
+
+  try {
+    if (window.sessionStorage.getItem(flag) === "done") {
+      return;
+    }
+
+    var hadServiceWorker = false;
+    var hadCaches = false;
+
+    var unregisters = "serviceWorker" in navigator
+      ? navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          hadServiceWorker = registrations.length > 0 || Boolean(navigator.serviceWorker.controller);
+          return Promise.allSettled(registrations.map(function (registration) {
+            return registration.unregister();
+          }));
+        })
+      : Promise.resolve();
+
+    var cacheDeletes = "caches" in window
+      ? window.caches.keys().then(function (keys) {
+          hadCaches = keys.length > 0;
+          return Promise.allSettled(keys.map(function (key) {
+            return window.caches.delete(key);
+          }));
+        })
+      : Promise.resolve();
+
+    Promise.allSettled([unregisters, cacheDeletes]).then(function () {
+      mark("done");
+
+      if (hadServiceWorker || hadCaches || ("serviceWorker" in navigator && navigator.serviceWorker.controller)) {
+        window.location.replace(window.location.href);
+      }
+    });
+  } catch (_error) {
+    mark("failed");
+  }
+})();
+`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(env.APP_URL),
   title: {
@@ -55,6 +104,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
+        <script dangerouslySetInnerHTML={{ __html: serviceWorkerInlineCleanupScript }} />
         <ServiceWorkerCleanup />
         {children}
       </body>

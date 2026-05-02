@@ -7,6 +7,24 @@ RUN npm ci
 # Stage 2: Build
 FROM node:24-slim AS builder
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
+ARG APP_URL=http://localhost:3000
+ARG NEXTAUTH_URL=http://localhost:3000
+ARG SERVER_ACTIONS_ALLOWED_ORIGINS=egadisailing.com,www.egadisailing.com
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+ENV NODE_ENV=production
+ENV NEXT_PHASE=phase-production-build
+ENV DATABASE_URL=postgresql://egadisailing:build-placeholder@postgres:5432/egadisailing
+ENV REDIS_URL=redis://:build-placeholder@redis:6379
+ENV NEXTAUTH_SECRET=build-placeholder-nextauth-secret-000000000000000000
+ENV APP_URL=$APP_URL
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
+ENV SERVER_ACTIONS_ALLOWED_ORIGINS=$SERVER_ACTIONS_ALLOWED_ORIGINS
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
@@ -35,6 +53,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # Prisma CLI + transitive deps (R26-P3 dry-run fix):
 # Standalone build traccia solo deps runtime importate. Prisma CLI ha

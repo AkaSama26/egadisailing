@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { getExperiencePublicSlug, getListedExperienceIds } from "@/data/catalog/experiences";
 import { getPublicBoatSlugs } from "@/data/catalog/boats";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://egadisailing.com";
   const pages = [
@@ -19,11 +21,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/islands/marettimo",
   ];
 
-  const services = await db.service.findMany({
-    where: { active: true, id: { in: getListedExperienceIds() } },
-    select: { id: true, updatedAt: true },
-    orderBy: { priority: "desc" },
-  });
+  const listedExperienceIds = getListedExperienceIds();
+  let services = listedExperienceIds.map((id) => ({ id, updatedAt: new Date() }));
+
+  try {
+    services = await db.service.findMany({
+      where: { active: true, id: { in: listedExperienceIds } },
+      select: { id: true, updatedAt: true },
+      orderBy: { priority: "desc" },
+    });
+  } catch (err) {
+    if (process.env.NEXT_PHASE !== "phase-production-build") {
+      console.error("[sitemap] falling back to static catalog", err);
+    }
+  }
 
   const entries: MetadataRoute.Sitemap = [];
 

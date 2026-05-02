@@ -7,6 +7,8 @@
  * quando Redis/DB sono temporaneamente giu'.
  */
 export async function register() {
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
+
   // NEXT_RUNTIME is set by Next.js itself (not user-supplied env). Read directly
   // from process.env — env.ts schema validation is irrelevant for runtime sentinels.
   if (process.env.NEXT_RUNTIME === "nodejs") {

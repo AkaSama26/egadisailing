@@ -80,6 +80,10 @@ export default async function middleware(req: NextRequest) {
       // Round 11 B3: fallback a AUTH_SECRET (preferred v5) per migrazione
       // futura senza rompere middleware silenziosamente.
       secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+      // Auth.js v5 usa `__Secure-authjs.session-token` quando gira dietro
+      // HTTPS in production. Senza questo flag `getToken()` cerca il cookie
+      // non-secure e il middleware rimanda a /admin/login dopo un login valido.
+      secureCookie: process.env.NODE_ENV === "production",
     });
     if (!token || token.role !== "ADMIN") {
       const url = req.nextUrl.clone();

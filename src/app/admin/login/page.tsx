@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +12,22 @@ import {
 } from "@/components/ui/field";
 import { Ship } from "lucide-react";
 
+function safeAdminRedirectTarget(rawCallbackUrl: string | null): string {
+  if (!rawCallbackUrl) return "/admin";
+
+  try {
+    const parsed = new URL(rawCallbackUrl, window.location.origin);
+    const path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    if (parsed.origin !== window.location.origin) return "/admin";
+    if (!parsed.pathname.startsWith("/admin")) return "/admin";
+    if (parsed.pathname === "/admin/login") return "/admin";
+    return path;
+  } catch {
+    return "/admin";
+  }
+}
+
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -89,9 +102,9 @@ export default function LoginPage() {
       // ma sufficiente per essere notato).
       setSuccess(`Accesso effettuato come ${session.user.email ?? "admin"}. Reindirizzamento...`);
       setTimeout(() => {
-        router.push("/admin");
-        router.refresh();
-      }, 400);
+        const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+        window.location.replace(safeAdminRedirectTarget(callbackUrl));
+      }, 150);
     } catch (err) {
       setLoading(false);
       setError(

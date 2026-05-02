@@ -1,8 +1,8 @@
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: egadisailing-postgres
     restart: unless-stopped
-    # No port exposure in prod — only accessible via compose network.
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER required}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
@@ -17,22 +17,17 @@ services:
     networks:
       - internal
 
-  # R16 capacity: PgBouncer sidecar per ridurre pool exhaustion Ferragosto.
-  # pool_mode=transaction → Prisma runtime via questo per query normali.
-  # Migrations/advisory-locks continuano da DATABASE_URL direct su postgres.
   pgbouncer:
-    image: edoburu/pgbouncer:1.23.1
+    image: edoburu/pgbouncer:v1.25.1-p0
+    container_name: egadisailing-pgbouncer
     restart: unless-stopped
     environment:
-      DATABASES_HOST: postgres
-      DATABASES_PORT: 5432
-      DATABASES_USER: ${POSTGRES_USER}
-      DATABASES_PASSWORD: ${POSTGRES_PASSWORD}
-      DATABASES_DBNAME: ${POSTGRES_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       POOL_MODE: transaction
+      AUTH_TYPE: scram-sha-256
       DEFAULT_POOL_SIZE: 30
       MAX_CLIENT_CONN: 200
-      AUTH_TYPE: scram-sha-256
+      IGNORE_STARTUP_PARAMETERS: extra_float_digits,statement_timeout
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,6 +36,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: egadisailing-redis
     restart: unless-stopped
     command:
       - redis-server
@@ -65,27 +61,22 @@ services:
       - internal
 
   app:
-    # Build from repo root using Dockerfile. Replace with a pinned registry
-    # image (ghcr.io/...) once CI publishes builds.
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        APP_URL: ${APP_URL}
+        NEXTAUTH_URL: ${NEXTAUTH_URL}
+        SERVER_ACTIONS_ALLOWED_ORIGINS: ${SERVER_ACTIONS_ALLOWED_ORIGINS}
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+    container_name: egadisailing-app
     restart: unless-stopped
-    # R28-CRIT-5: grace period esteso per drain BullMQ workers (25s) +
-    # graceful close (5s) + margine HTTP in-flight Next (10s). Se un job
-    # Bokun e' in retry 22s (15s timeout + 1 retry 7s), il worker finisce
-    # prima del SIGKILL → no stalled recovery → no doppio POST upstream.
     stop_grace_period: 45s
     stop_signal: SIGTERM
     environment:
       NODE_ENV: production
-      # DATABASE_URL direct (migrations + advisory locks require session-pool).
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      # R24-A1-C3: `pgbouncer=true` disabilita prepared statements server-side
-      # — PgBouncer transaction-pool non garantisce che la stessa sessione
-      # fisica gestisca statement esteso protocol (prepare + execute). Senza
-      # questa flag, `pg: prepared statement "s0" already exists` sotto carico.
-      # DATABASE_URL_POOLED via PgBouncer — runtime queries only.
       DATABASE_URL_POOLED: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}?pgbouncer=true
       DATABASE_POOL_MAX: "30"
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
@@ -107,28 +98,30 @@ services:
       BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL:-noreply@egadisailing.com}
       BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-Egadisailing}
       BREVO_REPLY_TO: ${BREVO_REPLY_TO}
+      CONTACT_PHONE: ${CONTACT_PHONE}
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:?required}
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?required}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@egadisailing.com}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
-      SENTRY_DSN: ${SENTRY_DSN}
+      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-172.16.0.0/12}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-      SENTRY_RELEASE: ${SENTRY_RELEASE}
-      BOKUN_VENDOR_ID: ${BOKUN_VENDOR_ID}
-      BOKUN_ACCESS_KEY: ${BOKUN_ACCESS_KEY}
-      BOKUN_SECRET_KEY: ${BOKUN_SECRET_KEY}
-      BOKUN_WEBHOOK_SECRET: ${BOKUN_WEBHOOK_SECRET}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+      BOKUN_VENDOR_ID: ${BOKUN_VENDOR_ID:-}
+      BOKUN_ACCESS_KEY: ${BOKUN_ACCESS_KEY:-}
+      BOKUN_SECRET_KEY: ${BOKUN_SECRET_KEY:-}
+      BOKUN_WEBHOOK_SECRET: ${BOKUN_WEBHOOK_SECRET:-}
       BOKUN_API_URL: ${BOKUN_API_URL:-https://api.bokun.io}
       BOKUN_PRICE_MARKUP: ${BOKUN_PRICE_MARKUP:-1.15}
-      BOATAROUND_API_URL: ${BOATAROUND_API_URL}
-      BOATAROUND_API_TOKEN: ${BOATAROUND_API_TOKEN}
-      BOATAROUND_WEBHOOK_SECRET: ${BOATAROUND_WEBHOOK_SECRET}
-      IMAP_HOST: ${IMAP_HOST}
+      BOATAROUND_API_URL: ${BOATAROUND_API_URL:-https://partner-api.boataround.com}
+      BOATAROUND_API_TOKEN: ${BOATAROUND_API_TOKEN:-}
+      BOATAROUND_WEBHOOK_SECRET: ${BOATAROUND_WEBHOOK_SECRET:-}
+      IMAP_HOST: ${IMAP_HOST:-}
       IMAP_PORT: ${IMAP_PORT:-993}
-      IMAP_USER: ${IMAP_USER}
-      IMAP_PASSWORD: ${IMAP_PASSWORD}
+      IMAP_USER: ${IMAP_USER:-}
+      IMAP_PASSWORD: ${IMAP_PASSWORD:-}
+      IMAP_TLS: ${IMAP_TLS:-true}
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,50 +136,40 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - internal
-      - web
+      internal:
+      proxy:
+        aliases:
+          - egadisailing-app
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - app
-    networks:
-      - web
-
-  # pg_dump sidecar → offsite S3/B2 compatible bucket. Runs daily at 02:30.
-  # Configure via .env: BACKUP_S3_BUCKET, BACKUP_S3_ENDPOINT, BACKUP_S3_KEY,
-  # BACKUP_S3_SECRET, BACKUP_RETENTION_DAYS (default 30).
-  backup:
-    image: alpine:3.20
-    restart: unless-stopped
+  seed:
+    profiles:
+      - seed
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+      args:
+        APP_URL: ${APP_URL}
+        NEXTAUTH_URL: ${NEXTAUTH_URL}
+        SERVER_ACTIONS_ALLOWED_ORIGINS: ${SERVER_ACTIONS_ALLOWED_ORIGINS}
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
-      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
-      BACKUP_S3_KEY: ${BACKUP_S3_KEY}
-      BACKUP_S3_SECRET: ${BACKUP_S3_SECRET}
-      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
-    volumes:
-      - ./docker/backup.sh:/backup.sh:ro
-    command:
-      - sh
-      - -c
-      - |
-        apk add --no-cache postgresql-client aws-cli coreutils
-        crond -f -d 8 &
-        echo "30 2 * * * /backup.sh" | crontab -
-        crond -f
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET required}
+      APP_URL: ${APP_URL:?APP_URL required}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?required}
+      CRON_SECRET: ${CRON_SECRET:?CRON_SECRET required}
+      SERVER_ACTIONS_ALLOWED_ORIGINS: ${SERVER_ACTIONS_ALLOWED_ORIGINS:?required}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:?required}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:?required}
+      BREVO_API_KEY: ${BREVO_API_KEY:?required}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:?required}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?required}
+    command: ["npm", "run", "db:seed"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -195,12 +178,14 @@ services:
 
 volumes:
   pgdata:
+    name: egadisailing_pgdata
   redis_data:
-  caddy_data:
-  caddy_config:
+    name: egadisailing_redis_data
 
 networks:
   internal:
+    name: egadisailing_internal
     driver: bridge
-  web:
-    driver: bridge
+  proxy:
+    external: true
+    name: proxy
