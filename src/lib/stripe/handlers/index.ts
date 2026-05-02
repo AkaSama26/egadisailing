@@ -4,4 +4,5 @@ export { onPaymentIntentFailed, cleanupPendingAfterPiFailure } from "./payment-f
 export { onPaymentIntentCanceled } from "./payment-canceled";
 export { onChargeRefunded } from "./charge-refunded";
 export { onChargeDispute } from "./charge-dispute";
+export { onCheckoutSessionCompleted, onCheckoutSessionExpired } from "./checkout-session";
 export { handleAutoRefundOnConfirmedToCancelled } from "./auto-refund";

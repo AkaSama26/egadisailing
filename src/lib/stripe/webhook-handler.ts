@@ -7,6 +7,8 @@ import {
   onPaymentIntentCanceled,
   onChargeRefunded,
   onChargeDispute,
+  onCheckoutSessionCompleted,
+  onCheckoutSessionExpired,
 } from "./handlers";
 
 /**
@@ -48,6 +50,12 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<void> {
           // + admin manual cancel via cancelPaymentIntent helper. Senza questo
           // handler il booking restava PENDING fino al cron pending-gc (30min+).
           await onPaymentIntentCanceled(event.data.object);
+          break;
+        case "checkout.session.completed":
+          await onCheckoutSessionCompleted(event.data.object);
+          break;
+        case "checkout.session.expired":
+          await onCheckoutSessionExpired(event.data.object);
           break;
         case "charge.refunded":
           await onChargeRefunded(event.data.object);

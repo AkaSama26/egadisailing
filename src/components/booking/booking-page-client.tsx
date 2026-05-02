@@ -38,6 +38,7 @@ interface BookingPageClientProps {
   initialDurationType?: string;
   turnstileSiteKey: string;
   appUrl: string;
+  useStripeCheckout: boolean;
   initialStartDate?: string;
   initialEndDate?: string;
   initialDurationDays?: number;
@@ -112,6 +113,7 @@ export function BookingPageClient({
   initialDurationType,
   turnstileSiteKey,
   appUrl,
+  useStripeCheckout,
   initialStartDate,
   initialEndDate,
   initialDurationDays,
@@ -516,6 +518,7 @@ export function BookingPageClient({
               defaultDepositPercentage={selectedService.defaultDepositPercentage}
               turnstileSiteKey={turnstileSiteKey}
               appUrl={appUrl}
+              useStripeCheckout={useStripeCheckout}
               initialStartDate={initialStartDate}
               initialEndDate={initialEndDate}
               initialDurationDays={fixedDurationDays ?? initialDurationDays}

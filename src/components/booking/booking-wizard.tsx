@@ -152,6 +152,7 @@ interface Props {
   defaultPaymentSchedule: "FULL" | "DEPOSIT_BALANCE";
   defaultDepositPercentage: number | null;
   turnstileSiteKey: string;
+  useStripeCheckout: boolean;
   /** R26-A1-A4: canonical APP_URL server-side per Stripe return_url.
    *  `window.location.origin` sarebbe l'host del request — se l'utente
    *  arriva via IP staging o host non-canonical (misconfig Caddy), Stripe
@@ -397,10 +398,11 @@ export function BookingWizard(props: Props) {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/payment-intent", {
+      const res = await fetch(props.useStripeCheckout ? "/api/checkout-session" : "/api/payment-intent", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
+          locale: props.locale,
           serviceId: props.serviceId,
           // R26-A1-A2: manda raw ISO day `"YYYY-MM-DD"`. Il server applica
           // `parseDateLikelyLocalDay` (invariant #16). `new Date(ISO).toISOString()`
@@ -456,6 +458,13 @@ export function BookingWizard(props: Props) {
       }
       const body = await res.json();
       const payload = body.data ?? body; // tolleranza per envelope old/new
+      if (props.useStripeCheckout) {
+        if (!payload.checkoutUrl || typeof payload.checkoutUrl !== "string") {
+          throw new Error("Checkout Stripe non disponibile. Riprova tra poco.");
+        }
+        window.location.assign(payload.checkoutUrl);
+        return;
+      }
       setIntent({
         confirmationCode: payload.confirmationCode,
         clientSecret: payload.clientSecret,

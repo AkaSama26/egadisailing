@@ -125,15 +125,29 @@ export function mockStripeModule() {
     paymentIntentId: "pi_test",
     clientSecret: "pi_test_secret",
   });
+  const createCheckoutSession = vi.fn().mockResolvedValue({
+    checkoutSessionId: "cs_test",
+    checkoutUrl: "https://checkout.stripe.com/c/pay/cs_test",
+    paymentIntentId: "pi_test",
+    expiresAt: new Date(Date.now() + 30 * 60_000),
+  });
+  const expireCheckoutSession = vi.fn().mockResolvedValue({
+    id: "cs_test",
+    status: "expired",
+  });
   return {
     refundPayment,
     getChargeRefundState,
     cancelPaymentIntent,
     createPaymentIntent,
+    createCheckoutSession,
+    expireCheckoutSession,
     __refundPaymentMock: refundPayment,
     __getChargeRefundStateMock: getChargeRefundState,
     __cancelPaymentIntentMock: cancelPaymentIntent,
     __createPaymentIntentMock: createPaymentIntent,
+    __createCheckoutSessionMock: createCheckoutSession,
+    __expireCheckoutSessionMock: expireCheckoutSession,
   };
 }
 

@@ -235,6 +235,8 @@ CREATE TABLE "DirectBooking" (
     "depositAmount" DECIMAL(10,2),
     "balanceAmount" DECIMAL(10,2),
     "stripePaymentIntentId" TEXT,
+    "stripeCheckoutSessionId" TEXT,
+    "stripeCheckoutSessionExpiresAt" TIMESTAMP(3),
     "balanceReminderSentAt" TIMESTAMP(3),
     "balancePaidAt" TIMESTAMP(3),
 
@@ -516,6 +518,9 @@ CREATE INDEX "Booking_source_externalRef_idx" ON "Booking"("source", "externalRe
 CREATE UNIQUE INDEX "DirectBooking_stripePaymentIntentId_key" ON "DirectBooking"("stripePaymentIntentId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "DirectBooking_stripeCheckoutSessionId_key" ON "DirectBooking"("stripeCheckoutSessionId");
+
+-- CreateIndex
 CREATE INDEX "DirectBooking_paymentSchedule_balanceReminderSentAt_balance_idx" ON "DirectBooking"("paymentSchedule", "balanceReminderSentAt", "balancePaidAt");
 
 -- CreateIndex
@@ -646,4 +651,3 @@ ALTER TABLE "TripCrew" ADD CONSTRAINT "TripCrew_bookingId_fkey" FOREIGN KEY ("bo
 
 -- AddForeignKey
 ALTER TABLE "TripCrew" ADD CONSTRAINT "TripCrew_crewMemberId_fkey" FOREIGN KEY ("crewMemberId") REFERENCES "CrewMember"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-

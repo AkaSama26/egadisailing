@@ -401,13 +401,15 @@ model EmailOutbox {
 }
 
 model DirectBooking {
-  bookingId                 String          @id
-  paymentSchedule           PaymentSchedule
-  depositAmount             Decimal?        @db.Decimal(10, 2)
-  balanceAmount             Decimal?        @db.Decimal(10, 2)
-  stripePaymentIntentId     String?         @unique
-  balanceReminderSentAt     DateTime?
-  balancePaidAt             DateTime?
+  bookingId                      String          @id
+  paymentSchedule                PaymentSchedule
+  depositAmount                  Decimal?        @db.Decimal(10, 2)
+  balanceAmount                  Decimal?        @db.Decimal(10, 2)
+  stripePaymentIntentId          String?         @unique
+  stripeCheckoutSessionId        String?         @unique
+  stripeCheckoutSessionExpiresAt DateTime?
+  balanceReminderSentAt          DateTime?
+  balancePaidAt                  DateTime?
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 

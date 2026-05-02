@@ -61,6 +61,7 @@ export default async function BookingPage({
           defaultDepositPercentage={service.defaultDepositPercentage}
           turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
           appUrl={env.APP_URL}
+          useStripeCheckout={env.FEATURE_STRIPE_CHECKOUT_ENABLED}
           initialStartDate={initialStartDate}
           initialEndDate={initialEndDate}
           initialDurationDays={initialDurationDays}

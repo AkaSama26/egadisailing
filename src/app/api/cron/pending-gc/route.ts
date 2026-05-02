@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { cancelPaymentIntent } from "@/lib/stripe/payment-intents";
+import { expireCheckoutSession } from "@/lib/stripe/checkout-sessions";
 import {
   reconcileBoatDatesFromActiveBookings,
   releaseBookingDates,
@@ -51,6 +52,7 @@ export const GET = withCronGuard(
 
     let cancelled = 0;
     let piCancelled = 0;
+    let checkoutExpired = 0;
     const errors: Array<{ bookingId: string; error: string }> = [];
 
     // R14-REG-A4: cursor pagination via processBatchPaginated helper.
@@ -81,6 +83,12 @@ export const GET = withCronGuard(
       },
       processItem: async (b) => {
         try {
+          const checkoutSessionId = b.directBooking?.stripeCheckoutSessionId;
+          if (checkoutSessionId) {
+            const res = await expireCheckoutSession(checkoutSessionId);
+            if (res?.status === "expired") checkoutExpired++;
+          }
+
           const pi = b.directBooking?.stripePaymentIntentId;
           if (pi) {
             const res = await cancelPaymentIntent(pi).catch((err) => {
@@ -192,6 +200,7 @@ export const GET = withCronGuard(
         scanned: totalScanned,
         cancelled,
         piCancelled,
+        checkoutExpired,
         driftReleased,
         errors: errors.length,
       },
@@ -201,6 +210,7 @@ export const GET = withCronGuard(
       scanned: totalScanned,
       cancelled,
       piCancelled,
+      checkoutExpired,
       driftReleased,
       errors,
     };

@@ -60,6 +60,55 @@ export async function attachPaymentIntentToPendingDirectBooking(input: {
   }
 }
 
+export async function attachCheckoutSessionToPendingDirectBooking(input: {
+  bookingId: string;
+  checkoutSessionId: string;
+  checkoutSessionExpiresAt?: Date | null;
+  paymentIntentId?: string | null;
+}): Promise<void> {
+  const data: Record<string, unknown> = {
+    stripeCheckoutSessionId: input.checkoutSessionId,
+    stripeCheckoutSessionExpiresAt: input.checkoutSessionExpiresAt ?? null,
+  };
+  if (input.paymentIntentId) {
+    data.stripePaymentIntentId = input.paymentIntentId;
+  }
+
+  const result = await db.directBooking.updateMany({
+    where: {
+      bookingId: input.bookingId,
+      AND: [
+        {
+          OR: [
+            { stripeCheckoutSessionId: null },
+            { stripeCheckoutSessionId: input.checkoutSessionId },
+          ],
+        },
+        input.paymentIntentId
+          ? {
+              OR: [
+                { stripePaymentIntentId: null },
+                { stripePaymentIntentId: input.paymentIntentId },
+              ],
+            }
+          : {},
+      ],
+    },
+    data,
+  });
+
+  if (result.count === 0) {
+    logger.warn(
+      {
+        bookingId: input.bookingId,
+        checkoutSessionId: input.checkoutSessionId,
+        paymentIntentId: input.paymentIntentId,
+      },
+      "Pending DirectBooking already has a different Stripe checkout reference",
+    );
+  }
+}
+
 export async function cancelPendingDirectBookingAndReleaseHold(input: {
   bookingId: string;
   reason: string;

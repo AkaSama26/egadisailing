@@ -143,6 +143,7 @@ export default async function BookingIndexPage({
         initialDurationType={initialDurationType}
         turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
         appUrl={env.APP_URL}
+        useStripeCheckout={env.FEATURE_STRIPE_CHECKOUT_ENABLED}
         initialStartDate={initialStartDate}
         initialEndDate={initialEndDate}
         initialDurationDays={initialDurationDays}

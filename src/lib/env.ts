@@ -69,6 +69,10 @@ const envSchema = z.object({
   STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+  FEATURE_STRIPE_CHECKOUT_ENABLED: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
 
   // Brevo
   BREVO_API_KEY: z.string().optional(),

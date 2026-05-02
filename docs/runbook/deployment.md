@@ -151,7 +151,12 @@ restart app per chiuderlo. Rotation successiva via admin UI
    - `payment_intent.succeeded`
    - `payment_intent.payment_failed`
    - `payment_intent.canceled` (R24-S-ALTA-1)
+   - `checkout.session.completed`
+   - `checkout.session.expired`
    - `charge.refunded`
+   - `charge.dispute.created`
+   - `charge.dispute.updated`
+   - `charge.dispute.closed`
 4. Copia signing secret → `STRIPE_WEBHOOK_SECRET` in `.env`
 5. Restart app: `docker compose -f docker-compose.prod.yml restart app`
 6. Test: `stripe trigger payment_intent.succeeded` → verifica log +
@@ -159,6 +164,9 @@ restart app per chiuderlo. Rotation successiva via admin UI
 
 Fallback per webhook persi: cron `stripe-reconciliation` ogni 15min replaya
 eventi `/v1/events` ultimi 3gg (R24-P2 cursor cross-run via Redis).
+
+Per il rollout del Checkout hosted, segui anche
+`docs/runbook/stripe-checkout-production.md`.
 
 ## Fase 5 — Uptime + monitoring esterno
 
