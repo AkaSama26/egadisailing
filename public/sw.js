@@ -1,4 +1,4 @@
-const TOMBSTONE_VERSION = "egadisailing-sw-tombstone-20260501";
+const TOMBSTONE_VERSION = "egadisailing-sw-tombstone-20260502";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());

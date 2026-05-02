@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const CLEANUP_FLAG = "egadisailing:service-worker-cleanup:20260501";
+const CLEANUP_FLAG = "egadisailing:service-worker-cleanup:20260502";
 
 async function clearOriginCaches(): Promise<boolean> {
   if (!("caches" in window)) {
