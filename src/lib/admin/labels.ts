@@ -73,6 +73,33 @@ export const SERVICE_TYPE_LABEL: Record<string, string> = {
   SOCIAL_BOATING: "Social Boating",
 };
 
+export const SERVICE_TYPE_SHORT_LABEL: Record<string, string> = {
+  EXCLUSIVE_EXPERIENCE: "GOURM",
+  CABIN_CHARTER: "CHART",
+  BOAT_SHARED: "SHARE",
+  BOAT_EXCLUSIVE: "EXBAR",
+  SOCIAL_BOATING: "SOCIA",
+};
+
+export function serviceBookingCode(service: {
+  type?: string | null;
+  name?: string | null;
+}): string {
+  if (service.type && SERVICE_TYPE_SHORT_LABEL[service.type]) {
+    return SERVICE_TYPE_SHORT_LABEL[service.type];
+  }
+
+  const letters = (service.name ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.slice(0, 2))
+    .join("");
+
+  return letters.slice(0, 5) || "BOOK";
+}
+
 /** Health status cross-channel (ChannelSyncStatus.healthStatus). */
 export const HEALTH_STATUS_LABEL: Record<string, string> = {
   GREEN: "Operativo",

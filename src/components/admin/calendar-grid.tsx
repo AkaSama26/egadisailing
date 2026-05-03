@@ -1,9 +1,14 @@
-import { AVAILABILITY_STATUS_LABEL, labelOrRaw } from "@/lib/admin/labels";
+import {
+  AVAILABILITY_STATUS_LABEL,
+  labelOrRaw,
+  serviceBookingCode,
+} from "@/lib/admin/labels";
 
 export interface DayCellBooking {
   id: string;
   source: string;
   serviceName: string;
+  serviceType?: string | null;
   confirmationCode: string;
 }
 
@@ -21,6 +26,14 @@ const sourceColors: Record<string, string> = {
   SAMBOAT: "bg-cyan-100 text-cyan-800",
   CLICKANDBOAT: "bg-amber-100 text-amber-800",
   NAUTAL: "bg-rose-100 text-rose-800",
+};
+
+const serviceTypeColors: Record<string, string> = {
+  EXCLUSIVE_EXPERIENCE: "bg-fuchsia-100 text-fuchsia-800",
+  CABIN_CHARTER: "bg-indigo-100 text-indigo-800",
+  BOAT_SHARED: "bg-emerald-100 text-emerald-800",
+  BOAT_EXCLUSIVE: "bg-orange-100 text-orange-800",
+  SOCIAL_BOATING: "bg-cyan-100 text-cyan-800",
 };
 
 export interface CalendarGridProps {
@@ -57,22 +70,36 @@ export function CalendarGrid({ days, boatName, boatId, onDayClick }: CalendarGri
           const interactiveCls = isInteractive
             ? "cursor-pointer hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500"
             : "";
+          const bookingCodes = day.bookings.map((booking) =>
+            serviceBookingCode({
+              type: booking.serviceType,
+              name: booking.serviceName,
+            }),
+          );
 
           const content = (
             <>
               <div className="text-slate-600 text-[11px] font-medium">{dayNum}</div>
               <div className="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
-                {day.bookings.slice(0, 3).map((b) => (
-                  <span
-                    key={b.id}
-                    className={`px-1 rounded text-[9px] truncate ${
-                      sourceColors[b.source] ?? "bg-slate-100 text-slate-700"
-                    }`}
-                    title={`${b.confirmationCode} · ${b.serviceName}`}
-                  >
-                    {b.source.slice(0, 3)}
-                  </span>
-                ))}
+                {day.bookings.slice(0, 3).map((b) => {
+                  const bookingCode = serviceBookingCode({
+                    type: b.serviceType,
+                    name: b.serviceName,
+                  });
+                  return (
+                    <span
+                      key={b.id}
+                      className={`inline-flex h-4 max-w-full items-center rounded px-1 text-[9px] font-bold leading-none ${
+                        serviceTypeColors[b.serviceType ?? ""] ??
+                        sourceColors[b.source] ??
+                        "bg-slate-100 text-slate-700"
+                      }`}
+                      title={`${bookingCode} · ${b.confirmationCode} · ${b.serviceName} · ${b.source}`}
+                    >
+                      <span className="truncate">{bookingCode}</span>
+                    </span>
+                  );
+                })}
                 {day.bookings.length > 3 && (
                   <span className="text-[9px] text-slate-500">
                     +{day.bookings.length - 3}
@@ -100,7 +127,9 @@ export function CalendarGrid({ days, boatName, boatId, onDayClick }: CalendarGri
               type="button"
               onClick={() => onDayClick?.(dateIso)}
               className={`aspect-square border rounded p-1 flex flex-col text-left ${bg} ${interactiveCls}`}
-              aria-label={`${dayNum} — ${labelOrRaw(AVAILABILITY_STATUS_LABEL, day.status)}, ${day.bookings.length} prenotazioni`}
+              aria-label={`${dayNum} — ${labelOrRaw(AVAILABILITY_STATUS_LABEL, day.status)}, ${day.bookings.length} prenotazioni${
+                bookingCodes.length ? `: ${bookingCodes.join(", ")}` : ""
+              }`}
             >
               {content}
             </button>

@@ -10,6 +10,7 @@ export interface DayCellEnriched {
     source: BookingSource;
     status: BookingStatus;
     serviceName: string;
+    serviceType: string;
     customerName: string;
   }>;
   isAdminBlock: boolean;
@@ -29,7 +30,7 @@ export interface EnrichInput {
     boatId: string;
     startDate: Date;
     endDate: Date;
-    service: { name: string };
+    service: { name: string; type: string };
     customer: { firstName: string; lastName: string };
   }>;
   availability: Array<{
@@ -164,6 +165,7 @@ export function enrichDayCells(input: EnrichInput): Map<string, DayCellEnriched[
           source: b.source,
           status: b.status,
           serviceName: b.service.name,
+          serviceType: b.service.type,
           customerName: `${b.customer.firstName} ${b.customer.lastName}`.trim(),
         }));
       const blockInfo = isAdminBlock

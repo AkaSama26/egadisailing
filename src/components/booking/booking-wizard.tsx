@@ -794,7 +794,7 @@ function calendarDayClass({
   loading: boolean;
 }): string {
   return cnStep(
-    "relative flex aspect-square min-h-11 items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed sm:min-h-[76px] sm:items-start sm:justify-start sm:p-1.5 sm:text-left",
+    "relative flex aspect-square min-h-11 flex-col items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed sm:min-h-[76px] sm:items-stretch sm:justify-start sm:gap-1 sm:p-1.5 sm:text-left",
     selected &&
       "border-sky-700 bg-sky-700 text-white shadow-sm ring-2 ring-sky-200 hover:bg-sky-800",
     !selected && !status && "border-slate-200 bg-white text-slate-400",
@@ -1003,11 +1003,13 @@ function DateStep({
                   loading: calendarLoading && !day,
                 })}
               >
-                <span className="text-sm font-bold leading-none">{Number(date.slice(8, 10))}</span>
-                <span className="mt-1 hidden min-h-4 text-[11px] font-semibold leading-tight sm:block">
+                <span className="block w-full shrink-0 text-center text-sm font-bold leading-none sm:text-left">
+                  {Number(date.slice(8, 10))}
+                </span>
+                <span className="mt-1 hidden min-h-4 w-full max-w-full truncate text-center text-[11px] font-semibold leading-tight tabular-nums sm:mt-0 sm:block sm:text-left">
                   {day?.priceLabel ?? (calendarLoading ? "..." : "")}
                 </span>
-                <span className="mt-0.5 hidden min-h-4 text-[10px] leading-tight sm:block">
+                <span className="mt-0.5 hidden min-h-4 w-full max-w-full truncate text-center text-[10px] leading-tight sm:block sm:text-left">
                   {day?.reasonLabel ?? ""}
                 </span>
                 <span
