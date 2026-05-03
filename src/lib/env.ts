@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const emptyStringToUndefined = (value: unknown) => (value === "" ? undefined : value);
+const optionalUrl = () => z.preprocess(emptyStringToUndefined, z.string().url().optional());
+const defaultUrl = (value: string) =>
+  z.preprocess(emptyStringToUndefined, z.string().url().default(value));
+const optionalEmail = () => z.preprocess(emptyStringToUndefined, z.string().email().optional());
+
 /**
  * Schema di validazione delle variabili d'ambiente.
  * Eseguito una volta al boot: se qualcosa manca/è invalido, il processo fallisce subito.
@@ -25,7 +31,7 @@ const envSchema = z.object({
   //   2. Settare DATABASE_URL_POOLED="postgres://user:pass@pgbouncer:6432/db"
   //   3. DATABASE_URL resta direct connection per migrations
   // R16 capacity planning: obbligatorio pre-Ferragosto 2026.
-  DATABASE_URL_POOLED: z.string().url().optional(),
+  DATABASE_URL_POOLED: optionalUrl(),
   // R16 capacity planning: pool size del runtime (PgBouncer o direct).
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(200).default(20),
 
@@ -48,7 +54,7 @@ const envSchema = z.object({
   // App URL
   APP_URL: z.string().url().default("http://localhost:3000"),
   APP_LOCALES_DEFAULT: z.string().default("it"),
-  NEXT_PUBLIC_ASSET_CDN_URL: z.string().url().optional(),
+  NEXT_PUBLIC_ASSET_CDN_URL: optionalUrl(),
 
   // Server Actions allowed origins (comma-separated). Obbligatorio in prod
   // dietro reverse proxy (Round 10 Sec-C1). Es.:
@@ -78,7 +84,7 @@ const envSchema = z.object({
   BREVO_API_KEY: z.string().optional(),
   BREVO_SENDER_EMAIL: z.string().email().default("noreply@egadisailing.com"),
   BREVO_SENDER_NAME: z.string().default("Egadisailing"),
-  BREVO_REPLY_TO: z.string().email().optional(),
+  BREVO_REPLY_TO: optionalEmail(),
   // R29-#2: contatto cliente per email overbooking apology (WhatsApp /
   // telefono diretto admin). Opzionale: se unset, email mostra solo
   // contact email (BREVO_REPLY_TO). Format libero (`+39 xxx xxx xxxx`).
@@ -93,12 +99,12 @@ const envSchema = z.object({
   CRON_SECRET: z.string().default("dev-cron-please-change"),
 
   // Sentry (observability) — optional in dev, active prod quando DSN settato.
-  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_DSN: optionalUrl(),
   SENTRY_ENVIRONMENT: z.string().optional(),
   SENTRY_RELEASE: z.string().optional(),
 
   // Bokun (Plan 3)
-  BOKUN_API_URL: z.string().url().default("https://api.bokuntest.com"),
+  BOKUN_API_URL: defaultUrl("https://api.bokuntest.com"),
   BOKUN_VENDOR_ID: z.string().optional(),
   BOKUN_ACCESS_KEY: z.string().optional(),
   BOKUN_SECRET_KEY: z.string().optional(),
@@ -131,7 +137,7 @@ const envSchema = z.object({
   TELEGRAM_CHAT_ID: z.string().optional(),
 
   // Boataround (Plan 4)
-  BOATAROUND_API_URL: z.string().url().default("https://partner-api.boataround.com"),
+  BOATAROUND_API_URL: defaultUrl("https://partner-api.boataround.com"),
   BOATAROUND_API_TOKEN: z.string().optional(),
   BOATAROUND_WEBHOOK_SECRET: z.string().optional(),
 

@@ -6,20 +6,56 @@
 #
 # Environment da settare in .env prima di `docker compose up`:
 #   APP_DOMAIN=egadisailing.com
+#   CDN_DOMAIN=cdn.egadisailing.com
 #   ACME_EMAIL=ops@egadisailing.com  (per Let's Encrypt renewal notice)
 
 {
-	email {env.ACME_EMAIL}
+	email {$ACME_EMAIL}
 	# Global options
 	admin off
 	# Prod: rate-limit ACME via staging issuer during initial deploy testing:
 	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
 }
 
-{env.APP_DOMAIN} {
+{$CDN_DOMAIN} {
+	encode zstd gzip
+	root * /srv/cdn
+
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		Access-Control-Allow-Origin "https://{$APP_DOMAIN}"
+		-Server
+	}
+
+	@videos path /videos/*
+	header @videos Cache-Control "public, max-age=31536000, immutable"
+
+	@otherAssets path /images/* /favicon.ico /site.webmanifest /apple-touch-icon.png
+	header @otherAssets Cache-Control "public, max-age=604800, stale-while-revalidate=86400"
+
+	@probe path /.env /.git/* /wp-admin/* /phpMyAdmin/*
+	respond @probe 404
+
+	file_server
+
+	log {
+		output file /var/log/caddy/cdn-access.log {
+			roll_size 100mb
+			roll_keep 5
+			roll_keep_for 168h
+		}
+		format json
+		level INFO
+	}
+}
+
+{$APP_DOMAIN} {
 	# Redirect www → apex
-	@www host www.{env.APP_DOMAIN}
-	redir @www https://{env.APP_DOMAIN}{uri} permanent
+	@www host www.{$APP_DOMAIN}
+	redir @www https://{$APP_DOMAIN}{uri} permanent
 
 	encode zstd gzip
 
