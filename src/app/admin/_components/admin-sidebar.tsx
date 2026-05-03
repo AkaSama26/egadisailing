@@ -19,28 +19,52 @@ import {
   Ship,
   AlertCircle,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-/**
- * Sidebar admin — 12 sezioni (R29: Disponibilità unificata in Calendario).
- * Rotte in italiano (spec V2). `active` matching: `/admin` esatto
- * (dashboard home) + prefix-match per sottorotte.
- */
-const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/prenotazioni", label: "Prenotazioni", icon: ListChecks },
-  { href: "/admin/change-requests", label: "Cambi data", icon: CalendarClock },
-  { href: "/admin/calendario", label: "Calendario", icon: Calendar },
-  { href: "/admin/prezzi", label: "Prezzi", icon: Coins },
-  { href: "/admin/servizi", label: "Servizi", icon: Boxes },
-  { href: "/admin/clienti", label: "Clienti", icon: Users },
-  { href: "/admin/crew", label: "Crew", icon: UserCog },
-  { href: "/admin/finanza", label: "Finanza", icon: LineChart },
-  { href: "/admin/canali", label: "Canali", icon: Plug },
-  { href: "/admin/override-requests", label: "Priorita'", icon: AlertCircle },
-  { href: "/admin/meteo", label: "Meteo", icon: CloudSun },
-  { href: "/admin/sync-log", label: "Sync & Log", icon: Activity },
-  { href: "/admin/impostazioni", label: "Informazioni", icon: Settings },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+const navGroups: Array<{ label: string; items: NavItem[] }> = [
+  {
+    label: "Controllo",
+    items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "Operatività",
+    items: [
+      { href: "/admin/calendario", label: "Calendario", icon: Calendar },
+      { href: "/admin/prenotazioni", label: "Prenotazioni", icon: ListChecks },
+      { href: "/admin/clienti", label: "Clienti", icon: Users },
+      { href: "/admin/finanza", label: "Incassi", icon: LineChart },
+      { href: "/admin/prezzi", label: "Listino", icon: Coins },
+      { href: "/admin/crew", label: "Crew", icon: UserCog },
+    ],
+  },
+  {
+    label: "Azioni",
+    items: [
+      { href: "/admin/change-requests", label: "Cambi data", icon: CalendarClock },
+      { href: "/admin/override-requests", label: "Conflitti", icon: AlertCircle },
+      { href: "/admin/sync-log#manual-alerts", label: "Alert canali", icon: Plug },
+      { href: "/admin/sync-log#email-fallite", label: "Email fallite", icon: Activity },
+      { href: "/admin/meteo", label: "Meteo", icon: CloudSun },
+    ],
+  },
+  {
+    label: "Sistema",
+    items: [
+      { href: "/admin/canali", label: "Canali", icon: Plug },
+      { href: "/admin/sync-log", label: "Diagnostica", icon: Activity },
+      { href: "/admin/impostazioni", label: "Sistema", icon: Settings },
+      { href: "/admin/servizi", label: "Servizi", icon: Boxes },
+    ],
+  },
 ];
+
+const navItems = navGroups.flatMap((group) => group.items);
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -53,31 +77,38 @@ export function AdminSidebar() {
           <span>Egadisailing</span>
         </Link>
       </div>
-      <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
-        {navItems.map((item) => {
-          const active =
-            item.href === "/admin"
-              ? pathname === "/admin"
-              : pathname.startsWith(item.href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
-                active
-                  ? "bg-slate-100 text-slate-900 font-medium"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <Icon className="size-4" />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 space-y-4 p-2 overflow-y-auto">
+        {navGroups.map((group) => (
+          <div key={group.label} className="space-y-1">
+            <div className="px-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              {group.label}
+            </div>
+            {group.items.map((item) => {
+              const active =
+                item.href === "/admin"
+                  ? pathname === "/admin"
+                  : pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
+                    active
+                      ? "bg-slate-100 text-slate-900 font-medium"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon className="size-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
     </aside>
   );
 }
 
-export { navItems };
+export { navGroups, navItems };

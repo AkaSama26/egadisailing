@@ -536,6 +536,16 @@ function ReleaseForm({
         </label>
       </div>
 
+      {state.canRelease && (
+        <div className="flex items-start gap-2 p-3 mb-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
+          <AlertTriangle className="size-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <span>
+            Dopo il rilascio la data torna disponibile qui. Controlla anche i portali
+            non collegati via API e riapri manualmente la data dove necessario.
+          </span>
+        </div>
+      )}
+
       {state.releaseDisabledReason && !state.canRelease && (
         <div className="flex items-start gap-2 p-3 mb-3 rounded-lg bg-slate-100 text-sm text-slate-600">
           <Info className="size-4 flex-shrink-0 mt-0.5" aria-hidden="true" />

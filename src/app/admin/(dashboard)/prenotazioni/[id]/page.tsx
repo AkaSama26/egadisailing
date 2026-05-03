@@ -20,7 +20,7 @@ import {
   labelOrRaw,
 } from "@/lib/admin/labels";
 import {
-  cancelBooking,
+  cancelBookingFromForm,
   addBookingNote,
   registerManualPayment,
 } from "../actions";
@@ -72,7 +72,7 @@ export default async function BookingDetailPage({
     take: 5,
   });
 
-  const cancelAction = cancelBooking.bind(null, booking.id);
+  const cancelAction = cancelBookingFromForm.bind(null, booking.id);
   const canCancel = booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
   const isNonDirect = booking.source !== "DIRECT";
   const hasConflicts = conflicts.length > 0;
@@ -93,10 +93,24 @@ export default async function BookingDetailPage({
           </div>
         </div>
         {canCancel && (
-          <form action={cancelAction}>
+          <form action={cancelAction} className="flex flex-col gap-2 sm:w-72">
+            <label className="text-xs font-medium text-slate-600" htmlFor="cancel-confirmation-code">
+              Digita {booking.confirmationCode} per cancellare e rimborsare
+            </label>
+            <input
+              id="cancel-confirmation-code"
+              name="confirmationCode"
+              type="text"
+              autoComplete="off"
+              className="rounded-lg border border-red-200 px-3 py-2 text-sm font-mono"
+            />
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+              Dopo la cancellazione la data torna disponibile. Controlla i portali
+              non collegati via API e riapri manualmente la data dove necessario.
+            </p>
             <SubmitButton
-              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700"
-              confirmMessage={`Confermi la cancellazione di ${booking.confirmationCode}?\n\nVerranno rimborsati tutti i pagamenti completati su Stripe e rilasciate le date sul calendario. Operazione irreversibile.`}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              confirmMessage={`Confermi la cancellazione di ${booking.confirmationCode}?\n\nVerranno rimborsati tutti i pagamenti completati su Stripe e rilasciate le date sul calendario. Dopo dovrai controllare i portali non collegati via API e riaprire manualmente la data dove necessario. Operazione irreversibile.`}
               pendingLabel="Annullamento in corso..."
             >
               Cancella + refund

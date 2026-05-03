@@ -25,7 +25,7 @@ export default async function MeteoPage() {
     <div className="space-y-6">
       <PageHeader
         title="Meteo · prossimi 7 giorni"
-        subtitle="La previsione e' popolata dal cron meteo (Plan 6). Finche' il worker non e' attivo, questa pagina mostra solo l'elenco delle uscite programmate senza forecast associato."
+        subtitle="Controllo operativo delle uscite confermate con previsione disponibile."
       />
 
       <AdminCard>
@@ -68,7 +68,7 @@ export default async function MeteoPage() {
                         {fcData.precipMm !== undefined && <>precip {fcData.precipMm}mm</>}
                       </>
                     ) : (
-                      <span className="text-slate-400">forecast non disponibile</span>
+                      <span className="text-slate-400">previsione non disponibile</span>
                     )}
                   </div>
                 </li>

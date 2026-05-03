@@ -28,16 +28,16 @@ export default async function PrezzoDetailPage({
     <div className="space-y-6">
       <PageHeader
         title={period.label}
-        subtitle="Periodo legacy in sola lettura"
+        subtitle="Periodo storico in sola lettura"
         backHref="/admin/prezzi"
-        backLabel="Prezzi"
+        backLabel="Listino"
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
         <AdminCard tone="warn">
           <p className="text-sm text-amber-900">
-            Questo `PricingPeriod` resta consultabile solo come fallback temporaneo.
-            Le modifiche operative vanno fatte dalla matrice stagionale `ServicePrice`.
+            Questo periodo resta consultabile per storico. Le modifiche operative vanno
+            fatte dalla matrice stagionale.
           </p>
         </AdminCard>
 

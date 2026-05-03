@@ -7,6 +7,17 @@ import { StripePaymentForm } from "./stripe-payment-form";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
+import {
+  DEFAULT_PASSENGER_FARE_RULES,
+  estimatePaidUnitEquivalent,
+  estimatePassengerFareTotal,
+  normalizePassengerFareRules,
+  occupiedSeatCountForRules,
+  sanitizePassengerBreakdownForRules,
+  totalGuestCountFromBreakdown,
+  type PassengerFareCategory,
+  type PassengerFareRuleConfig,
+} from "@/lib/pricing/passenger-fare-rules-shared";
 
 type Step = "date" | "people" | "customer" | "review" | "payment" | "success";
 type CheckoutPaymentSchedule = "FULL" | "DEPOSIT_BALANCE";
@@ -163,6 +174,7 @@ interface Props {
   initialEndDate?: string;
   initialDurationDays?: number;
   fixedDurationDays?: number;
+  passengerFareRules?: PassengerFareRuleConfig[];
 }
 
 interface Customer {
@@ -181,6 +193,13 @@ interface PassengerBreakdown {
   infants: number;
 }
 
+const PASSENGER_CATEGORY_FIELD: Record<PassengerFareCategory, keyof PassengerBreakdown> = {
+  ADULT: "adults",
+  CHILD: "children",
+  FREE_CHILD: "freeChildren",
+  INFANT: "infants",
+};
+
 interface SelectedPrice {
   amount: number;
   pricingUnit: string;
@@ -190,13 +209,26 @@ function defaultPassengers(): PassengerBreakdown {
   return { adults: 1, children: 0, freeChildren: 0, infants: 0 };
 }
 
-function occupiedSeats(passengers: PassengerBreakdown): number {
-  return passengers.adults + passengers.children + passengers.freeChildren;
+function occupiedSeats(
+  passengers: PassengerBreakdown,
+  fareRules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
+): number {
+  return occupiedSeatCountForRules(passengers, fareRules);
 }
 
-function paidUnitsForClient(serviceType: string, passengers: PassengerBreakdown): number {
-  if (serviceType === "BOAT_SHARED") return passengers.adults + passengers.children * 0.5;
-  return occupiedSeats(passengers);
+function paidUnitsForClient(
+  serviceType: string,
+  passengers: PassengerBreakdown,
+  selectedPrice: SelectedPrice | null,
+  fareRules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
+): number {
+  return estimatePaidUnitEquivalent({
+    serviceType,
+    pricingUnit: selectedPrice?.pricingUnit ?? "PER_PERSON",
+    unitPrice: selectedPrice?.amount ?? 1,
+    passengers,
+    rules: fareRules,
+  });
 }
 
 function formatClientEur(amount: number): string {
@@ -221,10 +253,16 @@ function estimateTotalAmount(
   serviceType: string,
   passengers: PassengerBreakdown,
   selectedPrice: SelectedPrice | null,
+  fareRules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
 ): number | null {
   if (!selectedPrice) return null;
-  if (selectedPrice.pricingUnit === "PER_PACKAGE") return selectedPrice.amount;
-  return selectedPrice.amount * paidUnitsForClient(serviceType, passengers);
+  return estimatePassengerFareTotal({
+    serviceType,
+    pricingUnit: selectedPrice.pricingUnit,
+    unitPrice: selectedPrice.amount,
+    passengers,
+    rules: fareRules,
+  });
 }
 
 function estimatePaymentBreakdown(
@@ -301,6 +339,10 @@ export function BookingWizard(props: Props) {
   const [hydrated, setHydrated] = useState(false);
   const isCharter = props.serviceType === "CABIN_CHARTER";
   const fixedDurationDays = props.fixedDurationDays;
+  const passengerFareRules = useMemo(
+    () => normalizePassengerFareRules(props.passengerFareRules),
+    [props.passengerFareRules],
+  );
   const charterDurationDays = isCharter ? inclusiveDaysBetween(startDate, endDate) : null;
   const effectiveDurationDays = isCharter
     ? fixedDurationDays ?? charterDurationDays ?? durationDays
@@ -357,6 +399,18 @@ export function BookingWizard(props: Props) {
     isCharter,
   ]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    setPassengers((current) => {
+      const next = sanitizePassengerBreakdownForRules(current, passengerFareRules);
+      return next.adults === current.adults &&
+        next.children === current.children &&
+        next.freeChildren === current.freeChildren &&
+        next.infants === current.infants
+        ? current
+        : next;
+    });
+  }, [passengerFareRules]);
 
   // R26-A1-C1: persist draft ad ogni change. Skip finche' hydrated=false
   // (R26-P2-CRITICA: altrimenti overrite draft esistente con defaults).
@@ -493,7 +547,7 @@ export function BookingWizard(props: Props) {
           isCharter ? effectiveDurationDays : undefined,
         ),
         durationDays: isCharter ? effectiveDurationDays : undefined,
-        numPax: occupiedSeats(passengers),
+        numPax: occupiedSeats(passengers, passengerFareRules),
       });
       if (result.status === "blocked") {
         const reasonMsg =
@@ -601,6 +655,7 @@ export function BookingWizard(props: Props) {
             capacityMax={props.capacityMax}
             serviceType={props.serviceType}
             value={passengers}
+            fareRules={passengerFareRules}
             selectedPrice={selectedPrice}
             onChange={setPassengers}
             onBack={() => setStep("date")}
@@ -661,6 +716,7 @@ export function BookingWizard(props: Props) {
           )}
           durationDays={isCharter ? effectiveDurationDays : undefined}
           passengers={passengers}
+          fareRules={passengerFareRules}
           customer={customer}
           selectedPrice={selectedPrice}
           paymentSchedule={selectedPaymentSchedule}
@@ -1123,6 +1179,7 @@ function PeopleStep({
   capacityMax,
   serviceType,
   value,
+  fareRules,
   selectedPrice,
   onChange,
   onBack,
@@ -1132,15 +1189,16 @@ function PeopleStep({
   capacityMax: number;
   serviceType: string;
   value: PassengerBreakdown;
+  fareRules: PassengerFareRuleConfig[];
   selectedPrice: SelectedPrice | null;
   onChange: (n: PassengerBreakdown) => void;
   onBack?: () => void;
   onNext: () => void;
   checking?: boolean;
 }) {
-  const seats = occupiedSeats(value);
-  const paidUnits = paidUnitsForClient(serviceType, value);
-  const totalGuests = seats + value.infants;
+  const seats = occupiedSeats(value, fareRules);
+  const paidUnits = paidUnitsForClient(serviceType, value, selectedPrice, fareRules);
+  const totalGuests = totalGuestCountFromBreakdown(value);
   const capacityExceeded = seats > capacityMax;
   const canSubmit = !checking && !capacityExceeded && seats >= 1;
   const estimatedTotal =
@@ -1166,42 +1224,27 @@ function PeopleStep({
     >
       <h2 className="text-2xl font-bold">Chi sale a bordo?</h2>
       <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-        <PassengerCounter
-          id="wizard-adults"
-          label="Adulti"
-          hint="10+ anni"
-          value={value.adults}
-          min={0}
-          icon={<Users className="size-4" aria-hidden="true" />}
-          onChange={(n) => update("adults", n)}
-        />
-        <PassengerCounter
-          id="wizard-children"
-          label="Bambini"
-          hint="5-9 anni, meta' prezzo"
-          value={value.children}
-          min={0}
-          icon={<Users className="size-4" aria-hidden="true" />}
-          onChange={(n) => update("children", n)}
-        />
-        <PassengerCounter
-          id="wizard-free-children"
-          label="Bimbi piccoli"
-          hint="3-4 anni, gratis con posto"
-          value={value.freeChildren}
-          min={0}
-          icon={<Baby className="size-4" aria-hidden="true" />}
-          onChange={(n) => update("freeChildren", n)}
-        />
-        <PassengerCounter
-          id="wizard-infants"
-          label="Neonati"
-          hint="0-2 anni, senza posto"
-          value={value.infants}
-          min={0}
-          icon={<Baby className="size-4" aria-hidden="true" />}
-          onChange={(n) => update("infants", n)}
-        />
+        {fareRules.filter((rule) => rule.active).map((rule) => {
+          const field = PASSENGER_CATEGORY_FIELD[rule.category];
+          return (
+            <PassengerCounter
+              key={rule.category}
+              id={`wizard-${field}`}
+              label={rule.label}
+              hint={rule.ageLabel}
+              value={value[field]}
+              min={0}
+              icon={
+                rule.category === "ADULT" || rule.category === "CHILD" ? (
+                  <Users className="size-4" aria-hidden="true" />
+                ) : (
+                  <Baby className="size-4" aria-hidden="true" />
+                )
+              }
+              onChange={(n) => update(field, n)}
+            />
+          );
+        })}
       </div>
       <div
         className={cnStep(
@@ -1226,7 +1269,7 @@ function PeopleStep({
       </div>
       {totalGuests > 0 && (
         <p id="wizard-people-hint" className="text-sm text-gray-600">
-          Totale ospiti: {totalGuests}. I neonati 0-2 non occupano posto.
+          Totale ospiti: {totalGuests}.
         </p>
       )}
       {capacityExceeded && (
@@ -1333,6 +1376,7 @@ function ReviewStep({
   endDate,
   durationDays,
   passengers,
+  fareRules,
   customer,
   selectedPrice,
   paymentSchedule,
@@ -1350,6 +1394,7 @@ function ReviewStep({
   endDate: string;
   durationDays?: number;
   passengers: PassengerBreakdown;
+  fareRules: PassengerFareRuleConfig[];
   customer: Customer;
   selectedPrice: SelectedPrice | null;
   paymentSchedule: CheckoutPaymentSchedule;
@@ -1359,11 +1404,11 @@ function ReviewStep({
   onBack: () => void;
   onConfirm: () => void;
 }) {
-  const totalAmount = estimateTotalAmount(serviceType, passengers, selectedPrice);
+  const totalAmount = estimateTotalAmount(serviceType, passengers, selectedPrice, fareRules);
   const payment = estimatePaymentBreakdown(totalAmount, paymentSchedule, depositPercentage);
-  const seats = occupiedSeats(passengers);
-  const totalGuests = seats + passengers.infants;
-  const paidUnits = paidUnitsForClient(serviceType, passengers);
+  const seats = occupiedSeats(passengers, fareRules);
+  const totalGuests = totalGuestCountFromBreakdown(passengers);
+  const paidUnits = paidUnitsForClient(serviceType, passengers, selectedPrice, fareRules);
   const durationLabel =
     durationType === "MULTI_DAY" && durationDays
       ? `${durationDays} giornate`
@@ -1381,8 +1426,9 @@ function ReviewStep({
       ? `Acconto ${depositPercentage}%`
       : "Pagamento completo";
   const paidUnitsLabel = paidUnits.toLocaleString("it-IT");
-  const showGuestBreakdown =
-    passengers.children > 0 || passengers.freeChildren > 0 || passengers.infants > 0;
+  const showGuestBreakdown = fareRules.some(
+    (rule) => rule.active && passengers[PASSENGER_CATEGORY_FIELD[rule.category]] > 0,
+  );
   const guestAccountingDetails = [
     seats !== totalGuests ? `Posti occupati: ${seats}` : null,
     Math.abs(paidUnits - seats) > 0.001 ? `Quote paganti: ${paidUnitsLabel}` : null,
@@ -1464,14 +1510,12 @@ function ReviewStep({
           <div className="border-b border-slate-200 py-3">
             {showGuestBreakdown && (
               <div className="flex flex-wrap gap-2">
-                {passengers.adults > 0 && <SummaryPill label="Adulti" value={passengers.adults} />}
-                {passengers.children > 0 && (
-                  <SummaryPill label="Bambini 5-9" value={passengers.children} />
-                )}
-                {passengers.freeChildren > 0 && (
-                  <SummaryPill label="Bimbi 3-4" value={passengers.freeChildren} />
-                )}
-                {passengers.infants > 0 && <SummaryPill label="Neonati" value={passengers.infants} />}
+                {fareRules.filter((rule) => rule.active).map((rule) => {
+                  const value = passengers[PASSENGER_CATEGORY_FIELD[rule.category]];
+                  return value > 0 ? (
+                    <SummaryPill key={rule.category} label={rule.label} value={value} />
+                  ) : null;
+                })}
               </div>
             )}
             {guestAccountingDetails.length > 0 && (

@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import type { Prisma } from "@/generated/prisma/client";
 import {
   BookingSource,
   BookingStatus,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/admin/labels";
 
 interface Props {
-  searchParams: Promise<{ source?: string; status?: string }>;
+  searchParams: Promise<{ source?: string; status?: string; q?: string }>;
 }
 
 const SOURCES: BookingSource[] = [
@@ -37,12 +38,33 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
   const sp = await searchParams;
   const sourceFilter = isSource(sp.source) ? sp.source : undefined;
   const statusFilter = isStatus(sp.status) ? sp.status : undefined;
+  const q = sp.q?.trim();
+  const filters: Prisma.BookingWhereInput[] = [];
+
+  if (sourceFilter) filters.push({ source: sourceFilter });
+  if (statusFilter) filters.push({ status: statusFilter });
+  if (q) {
+    filters.push({
+      OR: [
+        { confirmationCode: { contains: q, mode: "insensitive" } },
+        {
+          customer: {
+            is: {
+              OR: [
+                { firstName: { contains: q, mode: "insensitive" } },
+                { lastName: { contains: q, mode: "insensitive" } },
+                { email: { contains: q, mode: "insensitive" } },
+                { phone: { contains: q, mode: "insensitive" } },
+              ],
+            },
+          },
+        },
+      ],
+    });
+  }
 
   const bookings = await db.booking.findMany({
-    where: {
-      ...(sourceFilter ? { source: sourceFilter } : {}),
-      ...(statusFilter ? { status: statusFilter } : {}),
-    },
+    where: filters.length > 0 ? { AND: filters } : undefined,
     include: {
       customer: { select: { firstName: true, lastName: true, email: true } },
       service: { select: { name: true } },
@@ -78,11 +100,15 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
       <div className="space-y-2">
         <div className="flex gap-2 flex-wrap">
           <span className="text-xs font-semibold text-slate-500 self-center mr-1">Canale:</span>
-          <FilterChip href="/admin/prenotazioni" label="Tutti" active={!sourceFilter} />
+          <FilterChip
+            href={bookingHref({ status: statusFilter, q })}
+            label="Tutti"
+            active={!sourceFilter}
+          />
           {SOURCES.map((s) => (
             <FilterChip
               key={s}
-              href={`/admin/prenotazioni?source=${s}${statusFilter ? `&status=${statusFilter}` : ""}`}
+              href={bookingHref({ source: s, status: statusFilter, q })}
               label={BOOKING_SOURCE_LABEL[s]}
               active={sourceFilter === s}
             />
@@ -91,14 +117,14 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
         <div className="flex gap-2 flex-wrap">
           <span className="text-xs font-semibold text-slate-500 self-center mr-1">Stato:</span>
           <FilterChip
-            href={sourceFilter ? `/admin/prenotazioni?source=${sourceFilter}` : "/admin/prenotazioni"}
+            href={bookingHref({ source: sourceFilter, q })}
             label="Tutti"
             active={!statusFilter}
           />
           {STATUSES.map((s) => (
             <FilterChip
               key={s}
-              href={`/admin/prenotazioni?${sourceFilter ? `source=${sourceFilter}&` : ""}status=${s}`}
+              href={bookingHref({ source: sourceFilter, status: s, q })}
               label={BOOKING_STATUS_LABEL[s]}
               active={statusFilter === s}
             />
@@ -107,12 +133,22 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
       </div>
 
       <p className="text-xs text-slate-500">
-        Mostrati i {rows.length} risultati più recenti (limite 200). Filtrare per ridurre lo scope.
+        Mostrati i {rows.length} risultati più recenti (limite 200)
+        {q ? ` per "${q}"` : ""}. Filtrare per ridurre lo scope.
       </p>
 
       <BookingTable rows={rows} />
     </div>
   );
+}
+
+function bookingHref(params: { source?: BookingSource; status?: BookingStatus; q?: string }): string {
+  const search = new URLSearchParams();
+  if (params.source) search.set("source", params.source);
+  if (params.status) search.set("status", params.status);
+  if (params.q) search.set("q", params.q);
+  const qs = search.toString();
+  return qs ? `/admin/prenotazioni?${qs}` : "/admin/prenotazioni";
 }
 
 function FilterChip({

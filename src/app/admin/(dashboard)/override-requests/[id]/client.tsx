@@ -98,20 +98,20 @@ export function OverrideDetailClient({
   return (
     <div className="space-y-6">
       <h1 id="main" className="text-3xl font-bold text-slate-900">
-        Override per prenotazione {request.newBookingCode}
+        Conflitto per prenotazione {request.newBookingCode}
       </h1>
       <AdminCard padding="sm" className="space-y-2">
-        <DetailRow label="Status" value={<StatusBadge status={request.status} kind="override" />} />
+        <DetailRow label="Stato" value={<StatusBadge status={request.status} kind="override" />} />
         <DetailRow
-          label="Nuovo booking"
+          label="Nuova prenotazione"
           value={`${request.newBookingCode} · ${request.newBookingCustomer} · ${request.newBookingServiceName} · ${request.newBookingStartDate} · ${request.newBookingNumPeople} persone`}
         />
-        <DetailRow label="Revenue nuovo" value={`€ ${request.newBookingRevenue}`} />
-        <DetailRow label="Revenue conflict" value={`€ ${request.conflictingRevenueTotal}`} />
-        <DetailRow label="Delta approvando" value={`€ ${request.deltaRevenue}`} />
-        <DetailRow label="Drop-dead" value={request.dropDeadAt.slice(0, 10)} />
+        <DetailRow label="Valore nuovo" value={`€ ${request.newBookingRevenue}`} />
+        <DetailRow label="Valore in conflitto" value={`€ ${request.conflictingRevenueTotal}`} />
+        <DetailRow label="Differenza approvando" value={`€ ${request.deltaRevenue}`} />
+        <DetailRow label="Scadenza decisione" value={request.dropDeadAt.slice(0, 10)} />
         <DetailRow
-          label="Sorgenti conflict"
+          label="Canali in conflitto"
           value={request.conflictSourceChannels.join(", ") || "—"}
         />
         {request.decisionNotes && (
@@ -130,7 +130,7 @@ export function OverrideDetailClient({
                   <th className="py-2 pr-4 font-medium">Sorgenti</th>
                   <th className="py-2 pr-4 font-medium">Booking</th>
                   <th className="py-2 pr-4 font-medium">Posti</th>
-                  <th className="py-2 pr-4 font-medium">Revenue</th>
+                  <th className="py-2 pr-4 font-medium">Valore</th>
                   <th className="py-2 font-medium">Refund stimato</th>
                 </tr>
               </thead>

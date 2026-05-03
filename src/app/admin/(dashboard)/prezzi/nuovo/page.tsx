@@ -7,19 +7,19 @@ export default async function NuovoPrezzoPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Nuovo prezzo legacy disattivato"
-        subtitle="I nuovi prezzi vanno gestiti dalla matrice stagionale ServicePrice."
+        title="Nuovo prezzo disattivato"
+        subtitle="I nuovi prezzi vanno gestiti dalla matrice stagionale."
         backHref="/admin/prezzi"
-        backLabel="Prezzi"
+        backLabel="Listino"
       />
 
       <AdminCard tone="warn">
         <p className="text-sm text-amber-900">
-          La creazione di nuovi `PricingPeriod` e&apos; bloccata. I periodi legacy restano
-          disponibili solo come fallback temporaneo del checkout.
+          La creazione da questa schermata e&apos; bloccata. Usa il listino stagionale per
+          modificare i prezzi operativi.
         </p>
         <Link href="/admin/prezzi" className={buttonVariants({ className: "mt-4" })}>
-          Torna alla matrice prezzi
+          Torna al listino
         </Link>
       </AdminCard>
     </div>

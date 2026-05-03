@@ -42,7 +42,7 @@ export default async function OverrideRequestsPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Richieste priorita’ (${requests.length})`} />
+      <PageHeader title={`Conflitti / overbooking (${requests.length})`} />
       <AdminStatusTabs
         active={status}
         tabs={[
@@ -70,9 +70,9 @@ export default async function OverrideRequestsPage({
               {formatItDay(r.newBooking.startDate)}
             </div>
             <div className="text-sm text-slate-600 flex items-center gap-2 flex-wrap">
-              <span>Revenue nuovo: &euro; {r.newBookingRevenue.toFixed(2)}</span>
+              <span>Valore nuovo: &euro; {r.newBookingRevenue.toFixed(2)}</span>
               <span>&middot;</span>
-              <span>Conflict: &euro; {r.conflictingRevenueTotal.toFixed(2)}</span>
+              <span>Valore in conflitto: &euro; {r.conflictingRevenueTotal.toFixed(2)}</span>
               <span>&middot;</span>
               <StatusBadge status={r.status} kind="override" />
             </div>

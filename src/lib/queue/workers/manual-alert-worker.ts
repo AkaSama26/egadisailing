@@ -43,6 +43,10 @@ export function startManualAlertWorker() {
         date: parseIsoDay(data.date),
         action: data.status === "AVAILABLE" ? "UNBLOCK" : "BLOCK",
         bookingId: data.originBookingId,
+        notes:
+          data.status === "AVAILABLE"
+            ? "La data e' tornata disponibile nel calendario interno: riaprire manualmente la disponibilita' sul portale esterno."
+            : "La data e' stata bloccata nel calendario interno: bloccare manualmente la disponibilita' sul portale esterno.",
       });
     },
   });

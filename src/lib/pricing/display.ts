@@ -20,6 +20,12 @@ export interface SeasonalDisplayPrice {
 export interface CharterDurationDisplayPrice {
   durationDays: number;
   amount: Decimal;
+  seasonKey?: string;
+  seasonLabel?: string;
+  startDate?: Date;
+  endDate?: Date;
+  priceBucket?: string;
+  legacyFallback: boolean;
 }
 
 function labelForAmount(amount: Decimal | null): string {
@@ -133,16 +139,62 @@ export async function getCharterDurationDisplayPrices(
   serviceId: string,
   year = 2026,
 ): Promise<CharterDurationDisplayPrice[]> {
-  const prices = await db.servicePrice.findMany({
-    where: { serviceId, year, priceBucket: null },
-    select: { durationDays: true, amount: true },
-    orderBy: { durationDays: "asc" },
-  });
+  const [seasons, prices] = await Promise.all([
+    db.season.findMany({
+      where: { year },
+      orderBy: { startDate: "asc" },
+    }),
+    db.servicePrice.findMany({
+      where: { serviceId, year, durationDays: { not: null } },
+      select: { durationDays: true, priceBucket: true, amount: true },
+      orderBy: [{ durationDays: "asc" }, { priceBucket: "asc" }],
+    }),
+  ]);
+
+  const seasonalPrices = prices.filter(
+    (price): price is typeof price & { durationDays: number; priceBucket: string } =>
+      price.durationDays != null && price.priceBucket != null,
+  );
+
+  if (seasonalPrices.length > 0 && seasons.length > 0) {
+    const priceByDurationBucket = new Map(
+      seasonalPrices.map((price) => [
+        `${price.durationDays}:${price.priceBucket}`,
+        new Decimal(price.amount.toString()),
+      ]),
+    );
+    const durations = Array.from(new Set(seasonalPrices.map((price) => price.durationDays))).sort(
+      (a, b) => a - b,
+    );
+
+    const rows: CharterDurationDisplayPrice[] = [];
+    for (const durationDays of durations) {
+      for (const season of seasons) {
+        const amount = priceByDurationBucket.get(`${durationDays}:${season.priceBucket}`);
+        if (!amount) continue;
+        rows.push({
+          durationDays,
+          amount,
+          seasonKey: season.key,
+          seasonLabel: season.label,
+          startDate: season.startDate,
+          endDate: season.endDate,
+          priceBucket: season.priceBucket,
+          legacyFallback: false,
+        });
+      }
+    }
+    return rows;
+  }
 
   return prices
-    .filter((price): price is typeof price & { durationDays: number } => price.durationDays != null)
+    .filter(
+      (price): price is typeof price & { durationDays: number; priceBucket: null } =>
+        price.durationDays != null && price.priceBucket == null,
+    )
     .map((price) => ({
       durationDays: price.durationDays,
       amount: new Decimal(price.amount.toString()),
+      legacyFallback: true,
     }));
 }

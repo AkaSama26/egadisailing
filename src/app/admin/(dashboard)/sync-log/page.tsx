@@ -94,10 +94,32 @@ async function loadQueueStatus(): Promise<QueueStatusInfo | QueueStatusUnreachab
 }
 
 export default async function SyncLogPage() {
-  const [queueStatus, manualAlerts, bokunEvents, boataroundEvents, charterEmails, auditEntries] =
+  const [
+    queueStatus,
+    manualAlerts,
+    failedEmails,
+    bokunEvents,
+    boataroundEvents,
+    charterEmails,
+    auditEntries,
+  ] =
     await Promise.all([
       loadQueueStatus(),
       listPendingManualAlerts(),
+      db.emailOutbox.findMany({
+        where: { status: "FAILED" },
+        select: {
+          id: true,
+          templateKey: true,
+          recipientEmail: true,
+          subject: true,
+          attempts: true,
+          lastError: true,
+          updatedAt: true,
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 30,
+      }),
       db.processedBokunEvent.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
       db.processedBoataroundEvent.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
       db.processedCharterEmail.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
@@ -106,7 +128,7 @@ export default async function SyncLogPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Sync & Log" />
+      <PageHeader title="Diagnostica" />
 
       <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">BullMQ queue · totali</h2>
@@ -170,7 +192,7 @@ export default async function SyncLogPage() {
         )}
       </AdminCard>
 
-      <AdminCard>
+      <AdminCard id="manual-alerts">
         <h2 className="font-bold text-slate-900 mb-3">
           Azioni da completare sui canali esterni ({manualAlerts.length})
         </h2>
@@ -210,6 +232,36 @@ export default async function SyncLogPage() {
                     </SubmitButton>
                   </form>
                 </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </AdminCard>
+
+      <AdminCard id="email-fallite">
+        <h2 className="font-bold text-slate-900 mb-3">
+          Email fallite ({failedEmails.length})
+        </h2>
+        {failedEmails.length === 0 ? (
+          <EmptyState message="Nessuna email fallita." />
+        ) : (
+          <ul className="text-sm divide-y divide-slate-100">
+            {failedEmails.map((email) => (
+              <li key={email.id} className="py-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900">{email.subject}</div>
+                    <div className="text-xs text-slate-500">
+                      {email.recipientEmail} · {email.templateKey} · tentativi {email.attempts}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-xs text-slate-500">
+                    <TimeIso datetime={email.updatedAt} />
+                  </span>
+                </div>
+                {email.lastError && (
+                  <p className="mt-1 break-words text-xs text-red-700">{email.lastError}</p>
+                )}
               </li>
             ))}
           </ul>

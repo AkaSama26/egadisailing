@@ -25,7 +25,28 @@ export default async function CalendarioPage({ searchParams }: Props) {
   const firstWeekday = (monthStart.getUTCDay() + 6) % 7;
 
   const [boats, bookings, availability, auditLogs] = await Promise.all([
-    db.boat.findMany({ orderBy: { name: "asc" } }),
+    db.boat.findMany({
+      where: {
+        OR: [
+          { services: { some: { active: true } } },
+          {
+            bookings: {
+              some: {
+                status: { in: ["CONFIRMED", "PENDING"] },
+                startDate: { lte: monthEnd },
+                endDate: { gte: monthStart },
+              },
+            },
+          },
+          {
+            availability: {
+              some: { date: { gte: monthStart, lte: monthEnd } },
+            },
+          },
+        ],
+      },
+      orderBy: { name: "asc" },
+    }),
     db.booking.findMany({
       where: {
         status: { in: ["CONFIRMED", "PENDING"] },

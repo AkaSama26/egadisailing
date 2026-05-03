@@ -10,6 +10,11 @@ import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { ValidationError } from "@/lib/errors";
 import { withAdminAction } from "@/lib/admin/with-admin-action";
+import {
+  PASSENGER_FARE_CATEGORIES,
+  PASSENGER_FARE_SERVICE_TYPE,
+  type PassengerFareCategory,
+} from "@/lib/pricing/passenger-fare-rules-shared";
 
 const upsertPricingPeriodSchema = z.object({
   id: z.string().optional(),
@@ -157,6 +162,7 @@ export const deletePricingPeriod = withAdminAction(
 
 const PRICE_BUCKETS = ["LOW", "MID", "HIGH"] as const;
 const SEASON_KEYS = ["LOW", "MID", "HIGH", "LATE_LOW"] as const;
+const PASSENGER_PRICING_MODES = ["MULTIPLIER", "FIXED"] as const;
 
 const servicePriceInputSchema = z.object({
   serviceId: z.string().min(1),
@@ -211,13 +217,30 @@ export const saveServicePriceMatrix = withAdminAction(
     const touchedServiceIds = Array.from(new Set(input.rows.map((row) => row.serviceId)));
     await db.$transaction(async (tx) => {
       await acquireTxAdvisoryLock(tx, "service-price-matrix", String(input.year));
+      const services = await tx.service.findMany({
+        where: { id: { in: touchedServiceIds } },
+        select: { id: true, type: true },
+      });
+      const serviceTypeById = new Map(services.map((service) => [service.id, service.type]));
       for (const row of input.rows) {
-        if (!row.priceBucket && !row.durationDays) {
-          throw new ValidationError("Ogni prezzo deve avere stagione o durata");
+        const serviceType = serviceTypeById.get(row.serviceId);
+        if (!serviceType) {
+          throw new ValidationError(`Servizio non trovato: ${row.serviceId}`);
         }
-        if (row.priceBucket && row.durationDays) {
-          throw new ValidationError("Un prezzo non puo' avere insieme stagione e durata");
+
+        if (serviceType === "CABIN_CHARTER") {
+          if (!row.priceBucket || !row.durationDays) {
+            throw new ValidationError("Ogni prezzo charter deve avere stagione e durata");
+          }
+          if (row.durationDays < 3 || row.durationDays > 7) {
+            throw new ValidationError("Il charter deve durare da 3 a 7 giornate");
+          }
+        } else {
+          if (!row.priceBucket || row.durationDays) {
+            throw new ValidationError("Ogni prezzo stagionale deve avere solo la stagione");
+          }
         }
+
         await upsertServicePrice(tx, input.year, row);
       }
     });
@@ -241,6 +264,123 @@ export const saveServicePriceMatrix = withAdminAction(
     if (dates.length > 0) {
       await scheduleBokunPricingSync({ dates, serviceIds: touchedServiceIds });
     }
+  },
+);
+
+const passengerFareRuleInputSchema = z.object({
+  category: z.enum(PASSENGER_FARE_CATEGORIES),
+  label: z.string().trim().min(1).max(40),
+  ageLabel: z.string().trim().min(1).max(40),
+  pricingMode: z.enum(PASSENGER_PRICING_MODES),
+  multiplier: z.number().min(0).max(10).nullable().optional(),
+  fixedAmount: z.number().min(0).max(100_000).nullable().optional(),
+  occupiesSeat: z.boolean(),
+  active: z.boolean(),
+  sortOrder: z.number().int().min(0).max(1000),
+});
+
+const savePassengerFareRulesSchema = z.object({
+  serviceType: z.literal(PASSENGER_FARE_SERVICE_TYPE),
+  rules: z.array(passengerFareRuleInputSchema).length(PASSENGER_FARE_CATEGORIES.length),
+});
+
+export const savePassengerFareRules = withAdminAction(
+  {
+    schema: savePassengerFareRulesSchema,
+    revalidatePaths: ["/admin/prezzi", "/", "/it/prenota", "/en/prenota"],
+  },
+  async (input, { userId }) => {
+    const seen = new Set<PassengerFareCategory>();
+    const normalized = input.rules.map((rule) => {
+      if (seen.has(rule.category)) {
+        throw new ValidationError(`Categoria duplicata: ${rule.category}`);
+      }
+      seen.add(rule.category);
+
+      if (rule.category === "ADULT") {
+        return {
+          ...rule,
+          pricingMode: "MULTIPLIER" as const,
+          multiplier: 1,
+          fixedAmount: null,
+          occupiesSeat: true,
+          active: true,
+        };
+      }
+
+      if (rule.pricingMode === "MULTIPLIER" && rule.multiplier == null) {
+        throw new ValidationError(`Percentuale mancante per ${rule.label}`);
+      }
+      if (rule.pricingMode === "FIXED" && rule.fixedAmount == null) {
+        throw new ValidationError(`Prezzo fisso mancante per ${rule.label}`);
+      }
+
+      return {
+        ...rule,
+        multiplier: rule.pricingMode === "MULTIPLIER" ? rule.multiplier : 0,
+        fixedAmount: rule.pricingMode === "FIXED" ? rule.fixedAmount : null,
+      };
+    });
+
+    await db.$transaction(async (tx) => {
+      await acquireTxAdvisoryLock(tx, "passenger-fare-rules", input.serviceType);
+      for (const rule of normalized) {
+        await tx.passengerFareRule.upsert({
+          where: {
+            serviceType_category: {
+              serviceType: input.serviceType,
+              category: rule.category,
+            },
+          },
+          update: {
+            label: rule.label,
+            ageLabel: rule.ageLabel,
+            pricingMode: rule.pricingMode,
+            multiplier: new Prisma.Decimal((rule.multiplier ?? 0).toFixed(3)),
+            fixedAmount:
+              rule.fixedAmount == null
+                ? null
+                : new Prisma.Decimal(rule.fixedAmount.toFixed(2)),
+            occupiesSeat: rule.occupiesSeat,
+            active: rule.active,
+            sortOrder: rule.sortOrder,
+          },
+          create: {
+            serviceType: input.serviceType,
+            category: rule.category,
+            label: rule.label,
+            ageLabel: rule.ageLabel,
+            pricingMode: rule.pricingMode,
+            multiplier: new Prisma.Decimal((rule.multiplier ?? 0).toFixed(3)),
+            fixedAmount:
+              rule.fixedAmount == null
+                ? null
+                : new Prisma.Decimal(rule.fixedAmount.toFixed(2)),
+            occupiesSeat: rule.occupiesSeat,
+            active: rule.active,
+            sortOrder: rule.sortOrder,
+          },
+        });
+      }
+    });
+
+    await auditLog({
+      userId,
+      action: AUDIT_ACTIONS.UPDATE,
+      entity: "PassengerFareRule",
+      entityId: input.serviceType,
+      after: {
+        serviceType: input.serviceType,
+        categories: normalized.map((rule) => ({
+          category: rule.category,
+          pricingMode: rule.pricingMode,
+          multiplier: rule.multiplier,
+          fixedAmount: rule.fixedAmount,
+          occupiesSeat: rule.occupiesSeat,
+          active: rule.active,
+        })),
+      },
+    });
   },
 );
 

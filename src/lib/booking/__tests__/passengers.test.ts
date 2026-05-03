@@ -5,6 +5,10 @@ import {
   paidUnitsForService,
   totalGuestCount,
 } from "@/lib/booking/passengers";
+import {
+  DEFAULT_PASSENGER_FARE_RULES,
+  estimatePassengerFareTotal,
+} from "@/lib/pricing/passenger-fare-rules-shared";
 
 describe("passenger breakdown pricing helpers", () => {
   it("calcola posti occupati: neonati 0-2 esclusi", () => {
@@ -29,6 +33,29 @@ describe("passenger breakdown pricing helpers", () => {
 
     expect(paidUnitsForService("BOAT_SHARED", passengers).toString()).toBe("3");
     expect(paidUnitsForService("BOAT_EXCLUSIVE", passengers).toString()).toBe("5");
+  });
+
+  it("applica regole configurabili per categorie passeggeri shared", () => {
+    const passengers = normalizePassengerBreakdown({
+      adults: 1,
+      children: 2,
+      freeChildren: 1,
+      infants: 1,
+    });
+    const rules = DEFAULT_PASSENGER_FARE_RULES.map((rule) =>
+      rule.category === "CHILD" ? { ...rule, multiplier: 0.25 } : rule,
+    );
+
+    expect(occupiedSeatCount(passengers, rules)).toBe(4);
+    expect(
+      estimatePassengerFareTotal({
+        serviceType: "BOAT_SHARED",
+        pricingUnit: "PER_PERSON",
+        unitPrice: 100,
+        passengers,
+        rules,
+      }),
+    ).toBe(150);
   });
 
   it("rifiuta prenotazioni composte solo da neonati", () => {

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { cn } from "@/lib/utils";
+import type { PassengerFareRuleConfig } from "@/lib/pricing/passenger-fare-rules-shared";
 
 export interface BookingServiceOption {
   id: string;
@@ -39,6 +40,7 @@ interface BookingPageClientProps {
   turnstileSiteKey: string;
   appUrl: string;
   useStripeCheckout: boolean;
+  passengerFareRules: PassengerFareRuleConfig[];
   initialStartDate?: string;
   initialEndDate?: string;
   initialDurationDays?: number;
@@ -114,6 +116,7 @@ export function BookingPageClient({
   turnstileSiteKey,
   appUrl,
   useStripeCheckout,
+  passengerFareRules,
   initialStartDate,
   initialEndDate,
   initialDurationDays,
@@ -519,6 +522,7 @@ export function BookingPageClient({
               turnstileSiteKey={turnstileSiteKey}
               appUrl={appUrl}
               useStripeCheckout={useStripeCheckout}
+              passengerFareRules={passengerFareRules}
               initialStartDate={initialStartDate}
               initialEndDate={initialEndDate}
               initialDurationDays={fixedDurationDays ?? initialDurationDays}

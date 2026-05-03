@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
@@ -30,6 +31,7 @@ import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
 import { isBoatSharedServiceType } from "@/lib/booking/boat-slot-availability";
 import { formatItDay } from "@/lib/dates";
+import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 
 /**
  * Admin action: cancella una prenotazione + refund Stripe dei payments
@@ -38,8 +40,35 @@ import { formatItDay } from "@/lib/dates";
  * Source channel usato per `releaseDates`: quello del booking (DIRECT/BOKUN/...).
  * Il fan-out non tornera' al canale origine (self-echo + source exclude).
  */
+const cancelBookingConfirmationSchema = z.object({
+  confirmationCode: z.string().trim().min(1),
+});
+
+export async function cancelBookingFromForm(
+  bookingId: string,
+  formData: FormData,
+): Promise<void> {
+  await requireAdmin();
+  const input = cancelBookingConfirmationSchema.parse({
+    confirmationCode: formData.get("confirmationCode"),
+  });
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: { confirmationCode: true },
+  });
+  if (!booking) throw new NotFoundError("Booking", bookingId);
+  if (input.confirmationCode !== booking.confirmationCode) {
+    throw new ValidationError(
+      "Per cancellare e rimborsare devi digitare il codice prenotazione esatto.",
+    );
+  }
+
+  await cancelBooking(bookingId);
+}
+
 export async function cancelBooking(bookingId: string): Promise<void> {
   const { userId } = await requireAdmin();
+  const auditContext = await adminActionRequestContext();
 
   // R25-A2-C1: Redis lease per-bookingId previene race concorrente (admin A
   // + admin B 2 tab sullo stesso booking). Senza, entrambi iterano payments
@@ -55,13 +84,17 @@ export async function cancelBooking(bookingId: string): Promise<void> {
   }
 
   try {
-    await doCancelBooking(bookingId, userId);
+    await doCancelBooking(bookingId, userId, auditContext);
   } finally {
     await releaseLease(lease);
   }
 }
 
-async function doCancelBooking(bookingId: string, userId: string | undefined): Promise<void> {
+async function doCancelBooking(
+  bookingId: string,
+  userId: string | undefined,
+  auditContext: { ip?: string; userAgent?: string },
+): Promise<void> {
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -222,6 +255,8 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
     action: AUDIT_ACTIONS.CANCEL,
     entity: "Booking",
     entityId: bookingId,
+    ip: auditContext.ip,
+    userAgent: auditContext.userAgent,
     before: { status: booking.status },
     after: {
       status: "CANCELLED",
@@ -373,6 +408,18 @@ async function doCancelBooking(bookingId: string, userId: string | undefined): P
   revalidatePath("/admin");
   revalidatePath("/admin/finanza");
   revalidatePath("/admin/calendario");
+}
+
+async function adminActionRequestContext(): Promise<{ ip?: string; userAgent?: string }> {
+  try {
+    const h = await headers();
+    return {
+      ip: getClientIp(h),
+      userAgent: getUserAgent(h) ?? undefined,
+    };
+  } catch {
+    return {};
+  }
 }
 
 const addBookingNoteSchema = z.object({

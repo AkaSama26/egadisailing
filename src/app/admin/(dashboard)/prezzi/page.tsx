@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { AdminCard } from "@/components/admin/admin-card";
 import { PageHeader } from "@/components/admin/page-header";
 import { PriceMatrixForm } from "./_components/price-matrix-form";
+import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
+import { PASSENGER_FARE_SERVICE_TYPE } from "@/lib/pricing/passenger-fare-rules-shared";
 
 const LIST_YEAR = 2026;
 
@@ -11,7 +13,7 @@ function isoDate(date: Date): string {
 }
 
 export default async function PrezziPage() {
-  const [services, prices, seasons, legacyPeriods] = await Promise.all([
+  const [services, prices, seasons, legacyPeriods, passengerFareRules] = await Promise.all([
     db.service.findMany({
       where: { active: true },
       select: {
@@ -41,6 +43,7 @@ export default async function PrezziPage() {
       orderBy: { startDate: "asc" },
     }),
     db.pricingPeriod.count({ where: { year: LIST_YEAR } }),
+    getPassengerFareRulesForServiceType(PASSENGER_FARE_SERVICE_TYPE),
   ]);
 
   const configuredServices = new Set(prices.map((price) => price.serviceId)).size;
@@ -50,8 +53,8 @@ export default async function PrezziPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Prezzi"
-        subtitle="Matrice listino stagionale usata da checkout, calendario e sync canali. I vecchi PricingPeriod restano solo fallback legacy."
+        title="Listino"
+        subtitle="Matrice stagionale usata da checkout, calendario e canali di vendita."
       />
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -88,8 +91,8 @@ export default async function PrezziPage() {
       {legacyPeriods > 0 && (
         <AdminCard tone="warn">
           <p className="text-sm text-amber-900">
-            Sono presenti {legacyPeriods} `PricingPeriod` legacy per il {LIST_YEAR}. Non crearne di nuovi:
-            vengono letti solo come fallback temporaneo quando manca una riga `ServicePrice`.
+            Ci sono {legacyPeriods} periodi storici per il {LIST_YEAR}. Per l'operativita'
+            quotidiana usa la matrice qui sotto.
           </p>
         </AdminCard>
       )}
@@ -118,6 +121,7 @@ export default async function PrezziPage() {
           endDate: isoDate(season.endDate),
           priceBucket: season.priceBucket as "LOW" | "MID" | "HIGH",
         }))}
+        passengerFareRules={passengerFareRules}
       />
     </div>
   );

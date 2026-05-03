@@ -51,6 +51,7 @@ export default async function ClientiPage({ searchParams }: Props) {
       ? {
           OR: [
             { email: { contains: q, mode: "insensitive" } },
+            { phone: { contains: q, mode: "insensitive" } },
             { firstName: { contains: q, mode: "insensitive" } },
             { lastName: { contains: q, mode: "insensitive" } },
           ],
@@ -80,7 +81,7 @@ export default async function ClientiPage({ searchParams }: Props) {
           name="q"
           type="search"
           defaultValue={q}
-          placeholder="Cerca per nome, cognome o email…"
+          placeholder="Cerca per nome, cognome, email o telefono..."
           className="flex-1 max-w-md border rounded px-3 py-2 text-sm"
         />
         <SubmitButton className="bg-slate-900 text-white rounded px-4 py-2 text-sm">

@@ -16,7 +16,7 @@ export default async function CanaliPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Canali" />
+      <PageHeader title="Canali" subtitle="Prenotazioni, stato operativo e problemi dei canali di vendita." />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {channels.map((c) => {
@@ -29,13 +29,13 @@ export default async function CanaliPage() {
                     {labelOrRaw(BOOKING_SOURCE_LABEL, c.channel)}
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Modalità: {mode ? labelOrRaw(CHANNEL_SYNC_MODE_LABEL, mode) : "-"}
+                    Gestione: {mode ? labelOrRaw(CHANNEL_SYNC_MODE_LABEL, mode) : "-"}
                   </p>
                 </div>
                 <StatusBadge status={c.healthStatus} kind="sync" />
               </div>
               <p className="text-sm text-slate-600">
-                Ultimo sync:{" "}
+                Ultimo aggiornamento:{" "}
                 <strong>{c.lastSyncAt ? <TimeIso datetime={c.lastSyncAt} /> : "mai"}</strong>
               </p>
               {c.lastError && (
@@ -47,7 +47,7 @@ export default async function CanaliPage() {
           );
         })}
         {channels.length === 0 && (
-          <EmptyState message="Nessun canale ancora sincronizzato. Le entry vengono create dal primo cron / webhook." />
+          <EmptyState message="Nessun canale ancora aggiornato." />
         )}
       </div>
     </div>

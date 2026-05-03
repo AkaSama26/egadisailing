@@ -2,8 +2,14 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { Save } from "lucide-react";
-import { saveSeasons, saveServicePriceMatrix } from "../actions";
+import { savePassengerFareRules, saveSeasons, saveServicePriceMatrix } from "../actions";
 import { AdminCard } from "@/components/admin/admin-card";
+import {
+  PASSENGER_FARE_SERVICE_TYPE,
+  normalizePassengerFareRules,
+  type PassengerFareRuleConfig,
+  type PassengerFarePricingMode,
+} from "@/lib/pricing/passenger-fare-rules-shared";
 
 type PriceBucket = "LOW" | "MID" | "HIGH";
 type SeasonKey = PriceBucket | "LATE_LOW";
@@ -47,10 +53,19 @@ interface PriceMatrixFormProps {
   services: MatrixService[];
   prices: MatrixPrice[];
   seasons: MatrixSeason[];
+  passengerFareRules: PassengerFareRuleConfig[];
 }
 
-function priceKey(serviceId: string, bucketOrDays: string | number): string {
-  return `${serviceId}:${bucketOrDays}`;
+function seasonalPriceKey(serviceId: string, bucket: string): string {
+  return `${serviceId}:season:${bucket}`;
+}
+
+function charterPriceKey(serviceId: string, days: number, bucket: string): string {
+  return `${serviceId}:charter:${days}:${bucket}`;
+}
+
+function legacyCharterPriceKey(serviceId: string, days: number): string {
+  return `${serviceId}:charter:${days}:legacy`;
 }
 
 function amountToInput(amount?: string): string {
@@ -62,6 +77,11 @@ function normalizeNumber(value: string): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+function normalizeNonNegativeNumber(value: string): number | null {
+  const parsed = Number(value.replace(",", "."));
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
 function serviceDurationLabel(service: MatrixService): string {
   if (service.durationType === "FULL_DAY") return "8h";
   if (service.durationType === "HALF_DAY_MORNING") return "4h mattina";
@@ -70,18 +90,29 @@ function serviceDurationLabel(service: MatrixService): string {
   return service.durationType;
 }
 
-export function PriceMatrixForm({ year, services, prices, seasons }: PriceMatrixFormProps) {
+export function PriceMatrixForm({
+  year,
+  services,
+  prices,
+  seasons,
+  passengerFareRules,
+}: PriceMatrixFormProps) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [fareRules, setFareRules] = useState<PassengerFareRuleConfig[]>(() =>
+    normalizePassengerFareRules(passengerFareRules),
+  );
   const [priceValues, setPriceValues] = useState<Record<string, string>>(() => {
     const values: Record<string, string> = {};
     for (const price of prices) {
       const key =
-        price.priceBucket != null
-          ? priceKey(price.serviceId, price.priceBucket)
-          : price.durationDays != null
-            ? priceKey(price.serviceId, price.durationDays)
-            : null;
+        price.durationDays != null && price.priceBucket != null
+          ? charterPriceKey(price.serviceId, price.durationDays, price.priceBucket)
+          : price.priceBucket != null
+            ? seasonalPriceKey(price.serviceId, price.priceBucket)
+            : price.durationDays != null
+              ? legacyCharterPriceKey(price.serviceId, price.durationDays)
+              : null;
       if (key) values[key] = amountToInput(price.amount);
     }
     return values;
@@ -142,6 +173,29 @@ export function PriceMatrixForm({ year, services, prices, seasons }: PriceMatrix
     }));
   }
 
+  function updateFareRule(
+    category: PassengerFareRuleConfig["category"],
+    patch: Partial<PassengerFareRuleConfig>,
+  ) {
+    setFareRules((current) =>
+      current.map((rule) => {
+        if (rule.category !== category) return rule;
+        if (rule.category === "ADULT") {
+          return {
+            ...rule,
+            ...patch,
+            pricingMode: "MULTIPLIER" as const,
+            multiplier: 1,
+            fixedAmount: null,
+            occupiesSeat: true,
+            active: true,
+          };
+        }
+        return { ...rule, ...patch };
+      }),
+    );
+  }
+
   function submitPrices() {
     setMessage(null);
     const rows: Array<{
@@ -154,7 +208,7 @@ export function PriceMatrixForm({ year, services, prices, seasons }: PriceMatrix
 
     for (const service of seasonalServices) {
       for (const column of SEASON_COLUMNS.filter((c) => !c.readOnly)) {
-        const amount = normalizeNumber(priceValues[priceKey(service.id, column.bucket)] ?? "");
+        const amount = normalizeNumber(priceValues[seasonalPriceKey(service.id, column.bucket)] ?? "");
         if (!amount) {
           setMessage(`Inserisci un prezzo valido per ${service.name} (${column.label})`);
           return;
@@ -171,18 +225,24 @@ export function PriceMatrixForm({ year, services, prices, seasons }: PriceMatrix
 
     if (charterService) {
       for (const days of CHARTER_DURATIONS) {
-        const amount = normalizeNumber(priceValues[priceKey(charterService.id, days)] ?? "");
-        if (!amount) {
-          setMessage(`Inserisci un prezzo charter valido per ${days} giornate`);
-          return;
+        for (const column of SEASON_COLUMNS.filter((c) => !c.readOnly)) {
+          const amount = normalizeNumber(
+            priceValues[charterPriceKey(charterService.id, days, column.bucket)] ??
+              priceValues[legacyCharterPriceKey(charterService.id, days)] ??
+              "",
+          );
+          if (!amount) {
+            setMessage(`Inserisci un prezzo charter valido per ${days} giornate (${column.label})`);
+            return;
+          }
+          rows.push({
+            serviceId: charterService.id,
+            priceBucket: column.bucket,
+            durationDays: days,
+            amount,
+            pricingUnit: "PER_PACKAGE",
+          });
         }
-        rows.push({
-          serviceId: charterService.id,
-          priceBucket: null,
-          durationDays: days,
-          amount,
-          pricingUnit: "PER_PACKAGE",
-        });
       }
     }
 
@@ -206,6 +266,48 @@ export function PriceMatrixForm({ year, services, prices, seasons }: PriceMatrix
         })),
       });
       setMessage(result.ok ? "Stagioni salvate." : result.message);
+    });
+  }
+
+  function submitPassengerFareRules() {
+    setMessage(null);
+
+    const rows = normalizePassengerFareRules(fareRules).map((rule) => {
+      const multiplier =
+        rule.pricingMode === "MULTIPLIER" ? normalizeNonNegativeNumber(String(rule.multiplier)) : 0;
+      const fixedAmount =
+        rule.pricingMode === "FIXED" ? normalizeNonNegativeNumber(String(rule.fixedAmount ?? 0)) : null;
+
+      if (rule.pricingMode === "MULTIPLIER" && multiplier == null) {
+        setMessage(`Inserisci una percentuale valida per ${rule.label}`);
+        return null;
+      }
+      if (rule.pricingMode === "FIXED" && fixedAmount == null) {
+        setMessage(`Inserisci un prezzo fisso valido per ${rule.label}`);
+        return null;
+      }
+
+      return {
+        category: rule.category,
+        label: rule.label,
+        ageLabel: rule.ageLabel,
+        pricingMode: rule.pricingMode,
+        multiplier,
+        fixedAmount,
+        occupiesSeat: rule.occupiesSeat,
+        active: rule.active,
+        sortOrder: rule.sortOrder,
+      };
+    });
+
+    if (rows.some((row) => row == null)) return;
+
+    startTransition(async () => {
+      const result = await savePassengerFareRules({
+        serviceType: PASSENGER_FARE_SERVICE_TYPE,
+        rules: rows.filter((row): row is NonNullable<typeof row> => row != null),
+      });
+      setMessage(result.ok ? "Categorie passeggeri salvate." : result.message);
     });
   }
 
@@ -283,7 +385,7 @@ export function PriceMatrixForm({ year, services, prices, seasons }: PriceMatrix
                     </div>
                   </td>
                   {SEASON_COLUMNS.map((column) => {
-                    const key = priceKey(service.id, column.bucket);
+                    const key = seasonalPriceKey(service.id, column.bucket);
                     const value = priceValues[key] ?? "";
                     return (
                       <td key={column.key} className="px-3 py-3 text-right">
@@ -308,27 +410,182 @@ export function PriceMatrixForm({ year, services, prices, seasons }: PriceMatrix
       </AdminCard>
 
       {charterService && (
-        <AdminCard title="Charter 3-7 giornate">
-          <div className="grid gap-3 sm:grid-cols-5">
-            {CHARTER_DURATIONS.map((days) => {
-              const key = priceKey(charterService.id, days);
-              return (
-                <label key={days} className="block text-sm font-medium text-slate-700">
-                  {days} giornate
-                  <input
-                    type="number"
-                    min={1}
-                    step="0.01"
-                    value={priceValues[key] ?? ""}
-                    onChange={(event) => updatePrice(key, event.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2 text-right font-mono text-sm"
-                  />
-                </label>
-              );
-            })}
+        <AdminCard title="Charter 3-7 giornate · stagionale">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">Durata</th>
+                  {SEASON_COLUMNS.map((column) => (
+                    <th key={column.key} className="px-3 py-2 text-right font-medium">
+                      {column.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {CHARTER_DURATIONS.map((days) => (
+                  <tr key={days} className="border-t border-slate-100">
+                    <td className="px-3 py-3 font-medium text-slate-900">{days} giornate</td>
+                    {SEASON_COLUMNS.map((column) => {
+                      const key = charterPriceKey(charterService.id, days, column.bucket);
+                      const legacyKey = legacyCharterPriceKey(charterService.id, days);
+                      const value = priceValues[key] ?? priceValues[legacyKey] ?? "";
+                      return (
+                        <td key={column.key} className="px-3 py-3 text-right">
+                          <input
+                            type="number"
+                            min={1}
+                            step="0.01"
+                            value={value}
+                            readOnly={column.readOnly}
+                            onChange={(event) => updatePrice(key, event.target.value)}
+                            className="w-28 rounded-md border border-slate-300 px-2 py-2 text-right font-mono text-sm read-only:bg-slate-100"
+                            aria-label={`Charter ${days} giornate ${column.label}`}
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </AdminCard>
       )}
+
+      <AdminCard title="Categorie passeggeri · barca condivisa">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium">Categoria</th>
+                <th className="px-3 py-2 text-left font-medium">Eta'</th>
+                <th className="px-3 py-2 text-left font-medium">Prezzo</th>
+                <th className="px-3 py-2 text-right font-medium">Valore</th>
+                <th className="px-3 py-2 text-center font-medium">Posto</th>
+                <th className="px-3 py-2 text-center font-medium">Attiva</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fareRules.map((rule) => {
+                const isAdult = rule.category === "ADULT";
+                return (
+                  <tr key={rule.category} className="border-t border-slate-100">
+                    <td className="px-3 py-3">
+                      <input
+                        type="text"
+                        value={rule.label}
+                        onChange={(event) => updateFareRule(rule.category, { label: event.target.value })}
+                        className="w-36 rounded-md border border-slate-300 px-2 py-2 text-sm"
+                        aria-label={`Nome categoria ${rule.category}`}
+                      />
+                    </td>
+                    <td className="px-3 py-3">
+                      <input
+                        type="text"
+                        value={rule.ageLabel}
+                        onChange={(event) => updateFareRule(rule.category, { ageLabel: event.target.value })}
+                        className="w-28 rounded-md border border-slate-300 px-2 py-2 text-sm"
+                        aria-label={`Eta' categoria ${rule.category}`}
+                      />
+                    </td>
+                    <td className="px-3 py-3">
+                      <select
+                        value={rule.pricingMode}
+                        disabled={isAdult}
+                        onChange={(event) =>
+                          updateFareRule(rule.category, {
+                            pricingMode: event.target.value as PassengerFarePricingMode,
+                          })
+                        }
+                        className="w-36 rounded-md border border-slate-300 px-2 py-2 text-sm disabled:bg-slate-100"
+                        aria-label={`Tipo prezzo ${rule.label}`}
+                      >
+                        <option value="MULTIPLIER">Percentuale</option>
+                        <option value="FIXED">Prezzo fisso</option>
+                      </select>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      {rule.pricingMode === "MULTIPLIER" ? (
+                        <div className="inline-flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={0}
+                            step="1"
+                            value={Math.round(rule.multiplier * 100)}
+                            disabled={isAdult}
+                            onChange={(event) =>
+                              updateFareRule(rule.category, {
+                                multiplier: Math.max(0, Number(event.target.value) / 100),
+                                fixedAmount: null,
+                              })
+                            }
+                            className="w-24 rounded-md border border-slate-300 px-2 py-2 text-right font-mono text-sm disabled:bg-slate-100"
+                            aria-label={`Percentuale ${rule.label}`}
+                          />
+                          <span className="text-slate-500">%</span>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={rule.fixedAmount ?? 0}
+                            onChange={(event) =>
+                              updateFareRule(rule.category, {
+                                fixedAmount: Math.max(0, Number(event.target.value)),
+                                multiplier: 0,
+                              })
+                            }
+                            className="w-24 rounded-md border border-slate-300 px-2 py-2 text-right font-mono text-sm"
+                            aria-label={`Prezzo fisso ${rule.label}`}
+                          />
+                          <span className="text-slate-500">€</span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={rule.occupiesSeat}
+                        disabled={isAdult}
+                        onChange={(event) =>
+                          updateFareRule(rule.category, { occupiesSeat: event.target.checked })
+                        }
+                        className="size-4 rounded border-slate-300"
+                        aria-label={`Occupa posto ${rule.label}`}
+                      />
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={rule.active}
+                        disabled={isAdult}
+                        onChange={(event) =>
+                          updateFareRule(rule.category, { active: event.target.checked })
+                        }
+                        className="size-4 rounded border-slate-300"
+                        aria-label={`Categoria attiva ${rule.label}`}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <button
+          type="button"
+          onClick={submitPassengerFareRules}
+          disabled={isPending}
+          className="mt-4 inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          <Save className="size-4" />
+          Salva categorie
+        </button>
+      </AdminCard>
 
       <div className="flex justify-end">
         <button

@@ -56,7 +56,7 @@ export default async function ImpostazioniPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Informazioni" />
+      <PageHeader title="Sistema" />
 
       <AdminCard className="space-y-2">
         <h2 className="font-bold text-slate-900">Account</h2>
@@ -69,8 +69,7 @@ export default async function ImpostazioniPage() {
         <div>
           <h2 className="font-bold text-slate-900">Stato canali</h2>
           <p className="text-xs text-slate-500 mt-1">
-            Health check real-time di ogni canale di vendita + cron di reconciliation.
-            Aggiornato automaticamente dai webhook, import e cron.
+            Stato operativo dei canali di vendita e degli aggiornamenti automatici.
           </p>
         </div>
 
@@ -147,8 +146,7 @@ export default async function ImpostazioniPage() {
           <li>Secret NextAuth + Cron</li>
         </ul>
         <p className="text-xs text-slate-500">
-          Per rotazione secret contattare il team tech. La UI admin per editing ENV e' fuori scope
-          (Plan 6).
+          Per rotazione secret o modifiche infrastrutturali contattare il team tech.
         </p>
       </AdminCard>
 

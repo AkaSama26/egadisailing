@@ -11,6 +11,8 @@ import {
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getDisplayPriceMap } from "@/lib/pricing/display";
+import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
+import { PASSENGER_FARE_SERVICE_TYPE } from "@/lib/pricing/passenger-fare-rules-shared";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
 
 function experienceKeyForOption(service: BookingServiceOption): string {
@@ -61,7 +63,10 @@ export default async function BookingIndexPage({
       },
     },
   });
-  const displayPrices = await getDisplayPriceMap(services.map((service) => service.id));
+  const [displayPrices, passengerFareRules] = await Promise.all([
+    getDisplayPriceMap(services.map((service) => service.id)),
+    getPassengerFareRulesForServiceType(PASSENGER_FARE_SERVICE_TYPE),
+  ]);
 
   const options: BookingServiceOption[] = services
     .sort((a, b) => compareExperienceOrder(a.id, b.id))
@@ -144,6 +149,7 @@ export default async function BookingIndexPage({
         turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
         appUrl={env.APP_URL}
         useStripeCheckout={env.FEATURE_STRIPE_CHECKOUT_ENABLED}
+        passengerFareRules={passengerFareRules}
         initialStartDate={initialStartDate}
         initialEndDate={initialEndDate}
         initialDurationDays={initialDurationDays}

@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 
-export interface AdminCardProps {
+export interface AdminCardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   /** Titolo header opzionale (render come h3) */
   title?: string;
@@ -30,10 +30,14 @@ export function AdminCard({
   padding = "md",
   tone = "default",
   className = "",
+  ...props
 }: AdminCardProps) {
   const base = tone === "default" ? "bg-white" : "";
   return (
-    <div className={`${base} rounded-xl border ${TONE[tone]} ${PADDING[padding]} ${className}`}>
+    <div
+      {...props}
+      className={`${base} rounded-xl border ${TONE[tone]} ${PADDING[padding]} ${className}`}
+    >
       {title && <h3 className="font-semibold text-slate-900 mb-3">{title}</h3>}
       {children}
     </div>

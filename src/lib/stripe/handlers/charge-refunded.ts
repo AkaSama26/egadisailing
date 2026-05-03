@@ -9,6 +9,7 @@ import {
 } from "@/lib/email/outbox";
 import { formatEurCents } from "@/lib/pricing/cents";
 import { env } from "@/lib/env";
+import { stripe } from "@/lib/stripe/server";
 
 export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   const payment = await db.payment.findFirst({
@@ -53,10 +54,10 @@ export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   //
   // Pattern robusto find-by-not-exists: il NUOVO refund e' quello non ancora
   // registrato come sibling Payment. Idempotency via unique stripeRefundId.
-  const allRefunds = charge.refunds?.data ?? [];
+  const allRefunds = await loadChargeRefunds(charge);
   if (allRefunds.length === 0) {
     throw new ValidationError(
-      "charge.refunded event without refunds.data — malformed payload",
+      "charge.refunded event without refund records — Stripe retry will resolve if data is delayed",
     );
   }
   const chargeRefundIds = allRefunds.map((r) => r.id);
@@ -203,4 +204,16 @@ export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
       logger.error({ err, bookingId: payment.bookingId, refundId }, "Refund receipt email enqueue failed");
     }
   }
+}
+
+async function loadChargeRefunds(charge: Stripe.Charge): Promise<Stripe.Refund[]> {
+  const embeddedRefunds = charge.refunds?.data ?? [];
+  if (embeddedRefunds.length > 0) return embeddedRefunds;
+
+  logger.warn(
+    { chargeId: charge.id },
+    "charge.refunded event without embedded refunds.data — loading refunds from Stripe",
+  );
+  const refunds = await stripe().refunds.list({ charge: charge.id, limit: 100 });
+  return refunds.data;
 }

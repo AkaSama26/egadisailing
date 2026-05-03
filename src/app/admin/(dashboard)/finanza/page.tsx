@@ -29,7 +29,7 @@ export default async function FinanzaPage() {
     }),
     db.booking.groupBy({
       by: ["source"],
-      where: { status: { in: ["CONFIRMED", "REFUNDED"] }, createdAt: { gte: yearStart } },
+      where: { status: "CONFIRMED", createdAt: { gte: yearStart } },
       _sum: { totalPrice: true },
       _count: true,
     }),
@@ -41,7 +41,7 @@ export default async function FinanzaPage() {
     }),
     db.service.findMany({ select: { id: true, name: true } }),
     db.payment.aggregate({
-      where: { status: "REFUNDED", processedAt: { gte: yearStart } },
+      where: { status: "REFUNDED", type: "REFUND", processedAt: { gte: yearStart } },
       _sum: { amount: true },
     }),
   ]);
@@ -51,24 +51,23 @@ export default async function FinanzaPage() {
   const monthRevenue = new Decimal(monthAgg._sum.amount?.toString() ?? "0");
   const yearRevenue = new Decimal(yearAgg._sum.amount?.toString() ?? "0");
   const yearRefunds = new Decimal(refundsYear._sum.amount?.toString() ?? "0");
-  const netYear = yearRevenue.minus(yearRefunds);
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Finanza" />
+      <PageHeader title="Incassi" />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Kpi label="Revenue mese" value={formatEur(monthRevenue)} />
-        <Kpi label="Revenue anno (lordo)" value={formatEur(yearRevenue)} />
+        <Kpi label="Incassato mese" value={formatEur(monthRevenue)} />
+        <Kpi label="Incassato stagione" value={formatEur(yearRevenue)} />
         <Kpi
-          label="Anno netto refund"
-          value={formatEur(netYear)}
-          hint={`Refund: ${formatEur(yearRefunds)}`}
+          label="Rimborsi stagione"
+          value={formatEur(yearRefunds)}
+          hint="Mostrati separatamente dagli incassi"
         />
       </div>
 
       <AdminCard>
-        <h2 className="font-bold text-slate-900 mb-3">Per canale (YTD)</h2>
+        <h2 className="font-bold text-slate-900 mb-3">Per canale stagione</h2>
         <ul className="text-sm divide-y divide-slate-100">
           {bySource.map((s) => (
             <li key={s.source} className="flex justify-between py-2">
@@ -87,7 +86,7 @@ export default async function FinanzaPage() {
       </AdminCard>
 
       <AdminCard>
-        <h2 className="font-bold text-slate-900 mb-3">Per servizio (YTD)</h2>
+        <h2 className="font-bold text-slate-900 mb-3">Per servizio stagione</h2>
         <ul className="text-sm divide-y divide-slate-100">
           {byService.map((s) => (
             <li key={s.serviceId} className="flex justify-between py-2">

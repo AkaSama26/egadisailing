@@ -662,7 +662,7 @@ export default async function ExperienceDetailPage({
                               {service.type === "CABIN_CHARTER" ? "Durata" : t("experience.periodLabel")}
                             </th>
                             <th className="p-4 text-left font-heading">
-                              {service.type === "CABIN_CHARTER" ? "Tipo" : t("experience.periodDates")}
+                              {service.type === "CABIN_CHARTER" ? "Stagione" : t("experience.periodDates")}
                             </th>
                             <th className="p-4 text-right font-heading">
                               {copy.priceHeader}
@@ -673,13 +673,15 @@ export default async function ExperienceDetailPage({
                           {service.type === "CABIN_CHARTER"
                             ? charterPrices.map((price, i) => (
                                 <tr
-                                  key={price.durationDays}
+                                  key={`${price.durationDays}:${price.seasonKey ?? "all"}`}
                                   className={i % 2 === 0 ? "bg-white" : "bg-[#f7f2e8]/55"}
                                 >
                                   <td className="p-4 font-medium text-[var(--color-ocean)]">
                                     {copy.daysLabel(price.durationDays)}
                                   </td>
-                                  <td className="p-4 text-slate-600">{copy.charterType}</td>
+                                  <td className="p-4 text-slate-600">
+                                    {price.seasonLabel ?? copy.charterType}
+                                  </td>
                                   <td className="p-4 text-right font-semibold text-[var(--color-gold)]">
                                     {formatEur(price.amount)}{" "}
                                     <span className="text-sm font-normal text-slate-500">

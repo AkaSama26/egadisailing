@@ -17,6 +17,10 @@ import { server } from "../helpers/msw-server";
 import { setupTestDb, resetTestDb, closeTestDb } from "../helpers/test-db";
 import { installRedisMock } from "../helpers/redis-mock";
 
+const stripeServerMocks = vi.hoisted(() => ({
+  refundsList: vi.fn(),
+}));
+
 // Shared prisma test instance. Inizializzato in beforeAll prima di ogni import
 // dei moduli sotto test — webhook-handler importa `@/lib/db` vero, quindi
 // redirectiamo il modulo per usare l'istanza test pglite.
@@ -68,6 +72,14 @@ vi.mock("@/lib/stripe/payment-intents", () => ({
     .mockResolvedValue({ id: "pi_mocked", client_secret: "pi_mocked_secret" }),
 }));
 
+vi.mock("@/lib/stripe/server", () => ({
+  stripe: () => ({
+    refunds: {
+      list: stripeServerMocks.refundsList,
+    },
+  }),
+}));
+
 // Mock email (Brevo) to avoid real HTTP
 vi.mock("@/lib/email/brevo", () => ({
   sendEmail: vi.fn().mockResolvedValue(true),
@@ -107,6 +119,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  stripeServerMocks.refundsList.mockReset();
 });
 
 function makeEvent<T extends string>(
@@ -423,6 +436,44 @@ describe("handleStripeEvent — integration", () => {
       where: { id: booking.id },
     });
     expect(bookingAfter.status).toBe("REFUNDED");
+  });
+
+  it("charge.refunded senza refunds.data → carica i refund da Stripe", async () => {
+    const { booking } = await seedBooking("CONFIRMED");
+    await db.payment.create({
+      data: {
+        bookingId: booking.id,
+        amount: "400.00",
+        type: "FULL",
+        method: "STRIPE",
+        status: "SUCCEEDED",
+        stripeChargeId: "ch_list_refunds",
+        processedAt: new Date(),
+      },
+    });
+    stripeServerMocks.refundsList.mockResolvedValueOnce({
+      data: [{ id: "re_listed_1", amount: 40000, created: 5000 }],
+    });
+
+    const { handleStripeEvent } = await import("@/lib/stripe/webhook-handler");
+    const refundEvent = makeEvent("charge.refunded", {
+      id: "ch_list_refunds",
+      amount: 40000,
+      amount_refunded: 40000,
+      refunds: { data: [] },
+    });
+
+    await handleStripeEvent(refundEvent);
+
+    expect(stripeServerMocks.refundsList).toHaveBeenCalledWith({
+      charge: "ch_list_refunds",
+      limit: 100,
+    });
+    const refund = await db.payment.findFirst({
+      where: { bookingId: booking.id, type: "REFUND" },
+    });
+    expect(refund?.stripeRefundId).toBe("re_listed_1");
+    expect(refund?.amount.toString()).toBe("400");
   });
 
   it("R23-S-CRITICA-2: webhook replay stesso refundId → idempotent skip", async () => {

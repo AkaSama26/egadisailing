@@ -1,5 +1,11 @@
 import Decimal from "decimal.js";
 import { z } from "zod";
+import {
+  DEFAULT_PASSENGER_FARE_RULES,
+  estimatePaidUnitEquivalent,
+  occupiedSeatCountForRules,
+  type PassengerFareRuleConfig,
+} from "@/lib/pricing/passenger-fare-rules-shared";
 
 export interface PassengerBreakdown {
   adults: number;
@@ -43,22 +49,37 @@ export function normalizePassengerBreakdown(
   });
 }
 
-export function occupiedSeatCount(passengers: PassengerBreakdown): number {
-  return passengers.adults + passengers.children + passengers.freeChildren;
+export function occupiedSeatCount(
+  passengers: PassengerBreakdown,
+  rules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
+): number {
+  return occupiedSeatCountForRules(passengers, rules);
 }
 
 export function totalGuestCount(passengers: PassengerBreakdown): number {
   return occupiedSeatCount(passengers) + passengers.infants;
 }
 
-export function paidTicketUnitsForShared(passengers: PassengerBreakdown): Decimal {
-  return new Decimal(passengers.adults).plus(new Decimal(passengers.children).mul(0.5));
+export function paidTicketUnitsForShared(
+  passengers: PassengerBreakdown,
+  rules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
+): Decimal {
+  return new Decimal(
+    estimatePaidUnitEquivalent({
+      serviceType: "BOAT_SHARED",
+      pricingUnit: "PER_PERSON",
+      unitPrice: 1,
+      passengers,
+      rules,
+    }),
+  );
 }
 
 export function paidUnitsForService(
   serviceType: string,
   passengers: PassengerBreakdown,
+  rules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
 ): Decimal {
-  if (serviceType === "BOAT_SHARED") return paidTicketUnitsForShared(passengers);
-  return new Decimal(occupiedSeatCount(passengers));
+  if (serviceType === "BOAT_SHARED") return paidTicketUnitsForShared(passengers, rules);
+  return new Decimal(occupiedSeatCount(passengers, rules));
 }

@@ -21,7 +21,7 @@ services:
   # pool_mode=transaction → Prisma runtime via questo per query normali.
   # Migrations/advisory-locks continuano da DATABASE_URL direct su postgres.
   pgbouncer:
-    image: edoburu/pgbouncer:1.23.1
+    image: edoburu/pgbouncer:v1.25.1-p0
     restart: unless-stopped
     environment:
       DATABASES_HOST: postgres

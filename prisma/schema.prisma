@@ -152,6 +152,25 @@ model ServicePrice {
   @@index([year, priceBucket])
 }
 
+model PassengerFareRule {
+  id           String   @id @default(cuid())
+  serviceType  String   @default("BOAT_SHARED")
+  category     String
+  label        String
+  ageLabel     String
+  pricingMode  String
+  multiplier   Decimal  @default(1.0) @db.Decimal(6, 3)
+  fixedAmount  Decimal? @db.Decimal(10, 2)
+  occupiesSeat Boolean  @default(true)
+  active       Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([serviceType, category])
+  @@index([serviceType, sortOrder])
+}
+
 model PricingPeriod {
   id             String   @id @default(cuid())
   serviceId      String

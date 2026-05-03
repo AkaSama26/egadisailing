@@ -3,12 +3,16 @@ import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors";
 import { toUtcDay } from "@/lib/dates";
-import { PRICING_UNITS, effectivePricingUnit, type PricingUnit } from "./units";
+import { effectivePricingUnit, type PricingUnit } from "./units";
 import {
   normalizePassengerBreakdown,
-  paidUnitsForService,
   type PassengerBreakdown,
 } from "@/lib/booking/passengers";
+import {
+  calculatePassengerFareTotal,
+  getPassengerFareRulesForServiceType,
+} from "@/lib/pricing/passenger-fare-rules";
+import type { PassengerFareRuleConfig } from "@/lib/pricing/passenger-fare-rules-shared";
 
 export interface PriceQuote {
   basePricePerPerson: Decimal;
@@ -30,6 +34,7 @@ export interface PriceQuote {
 export interface QuotePriceOptions {
   durationDays?: number;
   passengers?: Partial<PassengerBreakdown> | null;
+  passengerFareRules?: PassengerFareRuleConfig[];
 }
 
 interface PriceSource {
@@ -66,26 +71,6 @@ async function findSeasonalPriceSource(params: {
   const { service, dateOnly, durationDays } = params;
   const year = dateOnly.getUTCFullYear();
 
-  if (service.type === "CABIN_CHARTER") {
-    const resolvedDurationDays = resolveCharterDurationDays(service, durationDays);
-    const price = await db.servicePrice.findFirst({
-      where: {
-        serviceId: service.id,
-        year,
-        priceBucket: null,
-        durationDays: resolvedDurationDays,
-      },
-      orderBy: { updatedAt: "desc" },
-    });
-    if (!price) return null;
-    return {
-      amount: price.amount,
-      pricingUnit: effectivePricingUnit({ type: service.type, pricingUnit: price.pricingUnit }),
-      durationDays: resolvedDurationDays,
-      legacyFallback: false,
-    };
-  }
-
   const season = await db.season.findFirst({
     where: {
       year,
@@ -94,6 +79,41 @@ async function findSeasonalPriceSource(params: {
     },
     orderBy: { startDate: "desc" },
   });
+  if (service.type === "CABIN_CHARTER") {
+    const resolvedDurationDays = resolveCharterDurationDays(service, durationDays);
+    const seasonalPrice = season
+      ? await db.servicePrice.findFirst({
+          where: {
+            serviceId: service.id,
+            year,
+            priceBucket: season.priceBucket,
+            durationDays: resolvedDurationDays,
+          },
+          orderBy: { updatedAt: "desc" },
+        })
+      : null;
+    const price =
+      seasonalPrice ??
+      (await db.servicePrice.findFirst({
+        where: {
+          serviceId: service.id,
+          year,
+          priceBucket: null,
+          durationDays: resolvedDurationDays,
+        },
+        orderBy: { updatedAt: "desc" },
+      }));
+    if (!price) return null;
+    return {
+      amount: price.amount,
+      pricingUnit: effectivePricingUnit({ type: service.type, pricingUnit: price.pricingUnit }),
+      seasonKey: season?.key,
+      priceBucket: price.priceBucket ?? season?.priceBucket,
+      durationDays: resolvedDurationDays,
+      legacyFallback: price.priceBucket == null,
+    };
+  }
+
   if (!season) return null;
 
   const price = await db.servicePrice.findFirst({
@@ -189,9 +209,15 @@ export async function quotePrice(
   const finalPrice = basePrice;
   const pricingUnit = source.pricingUnit;
   const passengers = normalizePassengerBreakdown(options.passengers, numPeople);
-  const paidUnits = paidUnitsForService(service.type, passengers);
-  const total =
-    pricingUnit === PRICING_UNITS.PER_PACKAGE ? finalPrice : finalPrice.mul(paidUnits);
+  const passengerFareRules =
+    options.passengerFareRules ?? (await getPassengerFareRulesForServiceType(service.type));
+  const total = calculatePassengerFareTotal({
+    serviceType: service.type,
+    pricingUnit,
+    unitPrice: finalPrice,
+    passengers,
+    rules: passengerFareRules,
+  });
 
   return {
     basePricePerPerson: basePrice,
