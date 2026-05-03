@@ -1,6 +1,6 @@
 export const COOKIE_CONSENT_COOKIE_NAME = "egadi_cookie_consent" as const;
 export const COOKIE_CONSENT_POLICY_VERSION = "1.0" as const;
-export const COOKIE_CONSENT_REVISION = 1 as const;
+export const COOKIE_CONSENT_REVISION = 2 as const;
 export const COOKIE_CONSENT_EFFECTIVE_DATE = "3 maggio 2026" as const;
 
 export const COOKIE_CONSENT_CATEGORIES = {

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Cookie } from "lucide-react";
 import type { CookieConsentConfig } from "vanilla-cookieconsent";
 import {
   COOKIE_CONSENT_COOKIE_NAME,
   COOKIE_CONSENT_REVISION,
   COOKIE_CONSENT_TRANSLATIONS,
-  hasOptionalCookieConsentServices,
   normalizeCookieConsentLocale,
   type CookieConsentLocale,
   type CookieConsentPublicServices,
@@ -293,7 +293,7 @@ function buildConfig(
   return {
     mode: "opt-in",
     revision: COOKIE_CONSENT_REVISION,
-    autoShow: hasOptionalCookieConsentServices(services),
+    autoShow: true,
     hideFromBots: true,
     disablePageInteraction: false,
     manageScriptTags: true,
@@ -344,9 +344,15 @@ function buildConfig(
 }
 
 export function CookieConsentBanner({ locale, services }: CookieConsentBannerProps) {
+  const [ready, setReady] = useState(false);
+  const normalizedLocale = normalizeCookieConsentLocale(locale);
+  const { gaMeasurementId, googleAdsId, metaPixelId } = services;
+  const floatingLabel =
+    normalizedLocale === "it" ? "Preferenze cookie" : "Cookie preferences";
+
   useEffect(() => {
     let cancelled = false;
-    const normalizedLocale = normalizeCookieConsentLocale(locale);
+    const configuredServices = { gaMeasurementId, googleAdsId, metaPixelId };
 
     async function init() {
       const consent = await import("vanilla-cookieconsent");
@@ -377,7 +383,8 @@ export function CookieConsentBanner({ locale, services }: CookieConsentBannerPro
         }).catch(() => undefined);
       }
 
-      await consent.run(buildConfig(consent, normalizedLocale, services, logConsent));
+      await consent.run(buildConfig(consent, normalizedLocale, configuredServices, logConsent));
+      if (!cancelled) setReady(true);
     }
 
     void init();
@@ -385,7 +392,25 @@ export function CookieConsentBanner({ locale, services }: CookieConsentBannerPro
     return () => {
       cancelled = true;
     };
-  }, [locale, services.gaMeasurementId, services.googleAdsId, services.metaPixelId]);
+  }, [normalizedLocale, gaMeasurementId, googleAdsId, metaPixelId]);
 
-  return null;
+  function openPreferences() {
+    void import("vanilla-cookieconsent").then((consent) => {
+      consent.showPreferences();
+    });
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={floatingLabel}
+      title={floatingLabel}
+      disabled={!ready}
+      onClick={openPreferences}
+      className="fixed bottom-4 left-4 z-[60] inline-flex h-12 items-center gap-2 rounded-full border border-white/20 bg-[#071934] px-4 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-[#0c2d5e] focus:outline-none focus:ring-2 focus:ring-[#38bdf8] focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-0"
+    >
+      <Cookie aria-hidden="true" className="h-5 w-5" />
+      <span>{floatingLabel}</span>
+    </button>
+  );
 }
