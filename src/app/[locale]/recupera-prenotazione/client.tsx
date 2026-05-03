@@ -14,17 +14,23 @@ const initialVerify: VerifyOtpState = { status: "idle" };
 const RESEND_COOLDOWN_S = 60;
 
 export interface RecuperaPrenotazioneClientProps {
+  locale: string;
   turnstileSiteKey: string;
 }
 
-export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenotazioneClientProps) {
+export function RecuperaPrenotazioneClient({
+  locale,
+  turnstileSiteKey,
+}: RecuperaPrenotazioneClientProps) {
   const [reqState, requestAction, reqPending] = useActionState(requestOtp, initialRequest);
   const [verState, verifyAction, verPending] = useActionState(verifyOtpAndLogin, initialVerify);
   const [email, setEmail] = useState("");
+  const isEn = locale === "en";
   // R15-UX-12: cooldown 60s dopo invio OTP per evitare spam click → 429
   // grezzo. Il timer parte al cambio di `reqState` a "sent".
   const [cooldown, setCooldown] = useState(0);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Cooldown starts only after the server action confirms that the OTP was accepted. */
   useEffect(() => {
     // R15-REG-UX-12: deps su `sentAt` monotono. Un reinvio stessa email
     // genera nuovo sentAt server-side → React vede deps cambiate → effect
@@ -34,6 +40,7 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
       setCooldown(RESEND_COOLDOWN_S);
     }
   }, [reqState.status, reqState.sentAt]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -56,81 +63,101 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
   // backend applica normalizeEmail in modo equivalente.
   const verifyEmail = email;
   const canResend = !reqPending && cooldown === 0;
+  const copy = {
+    emailLabel: isEn ? "Booking email" : "Email della prenotazione",
+    emailPlaceholder: isEn ? "you@email.com" : "tu@email.com",
+    sendCode: isEn ? "Send code" : "Invia codice",
+    resendCode: isEn ? "Send again" : "Reinvia codice",
+    sending: isEn ? "Sending..." : "Invio...",
+    resendIn: (seconds: number) => (isEn ? `Send again in ${seconds}s` : `Reinvia tra ${seconds}s`),
+    sent: isEn
+      ? "If a booking exists for this email, you will receive a code. Check spam and promotions too."
+      : "Se esiste una prenotazione associata a questa email, riceverai un codice. Controlla anche spam o promozioni.",
+    codeTitle: isEn ? "Enter the code" : "Inserisci il codice",
+    codeText: isEn
+      ? "After verification you will enter your booking area."
+      : "Una volta verificato il codice accederai alla tua area prenotazioni.",
+    codeLabel: isEn ? "6-digit code" : "Codice a 6 cifre",
+    verifying: isEn ? "Checking..." : "Verifica...",
+    access: isEn ? "Open booking area" : "Accedi",
+  };
 
   return (
-    <div>
-      <form action={requestAction} className="space-y-3 mb-6">
-        <label className="block text-sm font-medium" htmlFor="req-email">
-          Email della prenotazione
+    <div className="space-y-6">
+      <form action={requestAction} className="space-y-4">
+        <label className="block text-sm font-bold text-slate-800" htmlFor="req-email">
+          {copy.emailLabel}
         </label>
         <input
           id="req-email"
           name="email"
           type="email"
-          placeholder="tu@email.com"
+          placeholder={copy.emailPlaceholder}
           required
           maxLength={320}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300"
+          className="w-full rounded-lg border border-slate-300 px-4 py-3 text-base outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
         />
         {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} />}
         <button
+          type="submit"
           disabled={!canResend}
-          className="w-full py-3 rounded-full bg-[#d97706] text-white font-bold disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center rounded-full bg-[#d97706] px-5 py-3 font-bold text-white transition hover:bg-[#b45309] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {reqPending
-            ? "Invio..."
+            ? copy.sending
             : cooldown > 0
-              ? `Reinvia tra ${cooldown}s`
+              ? copy.resendIn(cooldown)
               : otpSent
-                ? "Reinvia codice"
-                : "Invia codice"}
+                ? copy.resendCode
+                : copy.sendCode}
         </button>
         {reqState.status === "sent" && (
           <div
             role="status"
             aria-live="polite"
-            className="p-3 rounded-lg bg-emerald-50 text-emerald-700 text-sm"
+            className="rounded-lg bg-emerald-50 p-3 text-sm leading-6 text-emerald-800"
           >
-            Se esiste una prenotazione associata a <strong>{email || reqState.email}</strong>,
-            riceverai un codice via email. Controlla anche spam o promozioni.
+            {copy.sent}
+            <br />
+            <strong>{email || reqState.email}</strong>
           </div>
         )}
         {reqState.status === "error" && (
           <div
             role="alert"
             aria-live="assertive"
-            className="p-3 rounded-lg bg-red-50 text-red-700 text-sm"
+            className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
           >
             {reqState.message}
           </div>
         )}
       </form>
 
-      <hr className="my-6" />
+      <div className="border-t border-slate-200 pt-6">
+        <h3 className="text-lg font-bold text-slate-950">{copy.codeTitle}</h3>
+        <p className="mt-1 text-sm leading-6 text-slate-600">{copy.codeText}</p>
+      </div>
 
-      <h2 className="text-lg font-semibold mb-3">Inserisci il codice</h2>
-      <p className="mb-4 text-sm text-gray-600">
-        Una volta verificato il codice accederai alla tua area prenotazioni.
-      </p>
       <form action={verifyAction} className="space-y-3">
-        <label className="block text-sm font-medium" htmlFor="ver-email">
-          Email
+        <input type="hidden" name="locale" value={locale} />
+        <label className="block text-sm font-bold text-slate-800" htmlFor="ver-email">
+          {copy.emailLabel}
         </label>
         <input
           id="ver-email"
           name="email"
           type="email"
-          placeholder="tu@email.com"
+          placeholder={copy.emailPlaceholder}
           required
           value={verifyEmail}
           readOnly={otpSent}
           onChange={(e) => !otpSent && setEmail(e.target.value)}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 read-only:bg-gray-50 read-only:text-gray-600"
+          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition read-only:bg-slate-50 read-only:text-slate-600 focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
         />
-        <label className="block text-sm font-medium" htmlFor="ver-code">
-          Codice a 6 cifre
+        <label className="block text-sm font-bold text-slate-800" htmlFor="ver-code">
+          {copy.codeLabel}
         </label>
         <input
           id="ver-code"
@@ -140,19 +167,20 @@ export function RecuperaPrenotazioneClient({ turnstileSiteKey }: RecuperaPrenota
           maxLength={6}
           placeholder="______"
           required
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 tracking-[8px] text-center text-xl font-mono"
+          className="w-full rounded-lg border border-slate-300 px-4 py-3 text-center font-mono text-xl tracking-[8px] outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
         />
         <button
+          type="submit"
           disabled={verPending}
-          className="w-full py-3 rounded-full bg-[#0c3d5e] text-white font-bold disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center rounded-full bg-[#0c3d5e] px-5 py-3 font-bold text-white transition hover:bg-[#082f49] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {verPending ? "Verifica..." : "Accedi"}
+          {verPending ? copy.verifying : copy.access}
         </button>
         {verState.status === "error" && (
           <div
             role="alert"
             aria-live="assertive"
-            className="p-3 rounded-lg bg-red-50 text-red-700 text-sm"
+            className="rounded-lg bg-red-50 p-3 text-sm text-red-700"
           >
             {verState.message}
           </div>

@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
-import { EFFECTIVE_DATE } from "@/lib/legal/policy-version";
-import { env } from "@/lib/env";
+import {
+  COOKIE_CONSENT_COOKIE_NAME,
+  COOKIE_CONSENT_EFFECTIVE_DATE,
+  hasOptionalCookieConsentServices,
+} from "@/lib/cookie-consent/policy";
+import { getCookieConsentPublicServices } from "@/lib/cookie-consent/server";
+import { getSiteVerificationConfig } from "@/lib/site-verification";
 
 export async function generateMetadata({
   params,
@@ -12,30 +17,36 @@ export async function generateMetadata({
   return buildPageMetadata({
     title: "Cookie Policy",
     description:
-      "Cookie utilizzati dal sito Egadisailing: tecnici (sessione NextAuth), antispam Cloudflare Turnstile.",
+      "Cookie utilizzati dal sito Egadisailing: tecnici, consenso privacy, antispam, pagamenti e tracker opzionali solo dopo consenso.",
     path: "/cookie-policy",
     locale,
   });
 }
 
 export default function CookiePolicyPage() {
+  const services = getCookieConsentPublicServices();
+  const hasOptionalServices = hasOptionalCookieConsentServices(services);
+  const siteVerification = getSiteVerificationConfig();
+  const hasVerificationTags = Boolean(
+    siteVerification.googleSiteVerification ||
+      siteVerification.bingSiteVerification ||
+      siteVerification.metaDomainVerification,
+  );
+
   return (
     <div className="min-h-screen bg-white py-24 px-6">
       <article className="max-w-3xl mx-auto prose prose-slate">
         <h1 className="text-3xl font-bold text-slate-900">Cookie Policy</h1>
-        <p className="text-sm text-slate-500">In vigore dal {EFFECTIVE_DATE}</p>
-
-        {env.NODE_ENV !== "production" && (
-          <div className="mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
-            <strong>Nota (dev/staging):</strong> testo placeholder. Aggiornare con cookie banner
-            finale (es. Iubenda / Cookiebot) al go-live produzione.
-          </div>
-        )}
+        <p className="text-sm text-slate-500">
+          In vigore dal {COOKIE_CONSENT_EFFECTIVE_DATE}
+        </p>
 
         <h2>Cosa sono i cookie</h2>
         <p>
-          I cookie sono piccoli file di testo salvati sul tuo dispositivo. Li utilizziamo
-          esclusivamente per finalita' tecniche (sessione utente) e anti-bot (protezione form).
+          I cookie sono piccoli file di testo salvati sul tuo dispositivo. Egadisailing usa
+          cookie tecnici necessari per sicurezza, sessioni, lingua, pagamenti e protezione
+          anti-bot. Gli eventuali cookie analitici o marketing sono attivati solo dopo il
+          tuo consenso esplicito.
         </p>
 
         <h2>Cookie tecnici (sempre attivi)</h2>
@@ -49,6 +60,14 @@ export default function CookiePolicyPage() {
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <td>
+                <code>{COOKIE_CONSENT_COOKIE_NAME}</code>
+              </td>
+              <td>egadisailing.com</td>
+              <td>Memorizza le preferenze cookie e il consenso espresso</td>
+              <td>6 mesi</td>
+            </tr>
             <tr>
               <td>
                 <code>next-auth.session-token</code>
@@ -75,6 +94,70 @@ export default function CookiePolicyPage() {
             </tr>
           </tbody>
         </table>
+
+        {hasVerificationTags && (
+          <>
+            <h2>Tag di verifica proprieta'</h2>
+            <p>
+              Il sito puo' includere meta tag tecnici per verificare la proprieta' del
+              dominio su Google Search Console, Bing Webmaster Tools e Meta Business.
+              Questi tag sono presenti nel codice HTML della pagina, non impostano cookie
+              e non attivano tracciamento pubblicitario.
+            </p>
+          </>
+        )}
+
+        <h2>Cookie opzionali (solo dopo consenso)</h2>
+        {hasOptionalServices ? (
+          <table className="text-sm">
+            <thead>
+              <tr>
+                <th>Fornitore</th>
+                <th>Cookie indicativi</th>
+                <th>Finalita'</th>
+                <th>Durata</th>
+              </tr>
+            </thead>
+            <tbody>
+              {services.gaMeasurementId && (
+                <tr>
+                  <td>Google Analytics 4</td>
+                  <td>
+                    <code>_ga</code>, <code>_ga_*</code>, <code>_gid</code>
+                  </td>
+                  <td>Misurazione aggregata di visite e performance del sito</td>
+                  <td>Fino a 2 anni</td>
+                </tr>
+              )}
+              {services.googleAdsId && (
+                <tr>
+                  <td>Google Ads</td>
+                  <td>
+                    <code>_gcl_*</code>
+                  </td>
+                  <td>Misurazione conversioni pubblicitarie</td>
+                  <td>Fino a 90 giorni</td>
+                </tr>
+              )}
+              {services.metaPixelId && (
+                <tr>
+                  <td>Meta Pixel</td>
+                  <td>
+                    <code>_fbp</code>, <code>_fbc</code>
+                  </td>
+                  <td>Misurazione conversioni e campagne Meta</td>
+                  <td>Fino a 3 mesi</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        ) : (
+          <p>
+            Al momento non sono configurati cookie analitici o marketing. Se saranno
+            attivati, compariranno nel pannello preferenze e resteranno bloccati finche'
+            non avrai espresso consenso.
+          </p>
+        )}
 
         <h2>Cookie di terze parti (antispam)</h2>
         <table className="text-sm">
@@ -121,8 +204,11 @@ export default function CookiePolicyPage() {
 
         <h2>Gestione consenso</h2>
         <p>
-          Non utilizziamo cookie analitici ne' di marketing. I cookie tecnici non richiedono
-          consenso (art. 122 Codice Privacy) ma ti informiamo della loro presenza.
+          Puoi modificare o revocare il consenso in qualsiasi momento dal link
+          "Preferenze cookie" nel footer. Ogni scelta viene registrata con un identificativo
+          consenso, versione della policy, categorie accettate/rifiutate, hash della
+          configurazione mostrata, data e un hash dell'indirizzo IP per finalita' di prova
+          e accountability GDPR.
         </p>
 
         <h2>Contatti</h2>

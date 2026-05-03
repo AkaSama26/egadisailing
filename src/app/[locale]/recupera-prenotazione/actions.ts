@@ -16,6 +16,9 @@ import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 import { db } from "@/lib/db";
 import { emailSchema } from "@/lib/validation/common-zod";
 import { swallow } from "@/lib/result";
+import { routing } from "@/i18n/routing";
+
+const DEFAULT_RECOVERY_LOCALE = routing.defaultLocale;
 
 const requestSchema = z.object({
   email: emailSchema,
@@ -105,6 +108,7 @@ export async function requestOtp(
 const verifySchema = z.object({
   email: emailSchema,
   code: z.string().length(6).regex(/^\d{6}$/),
+  locale: z.enum(routing.locales).default(DEFAULT_RECOVERY_LOCALE),
 });
 
 export interface VerifyOtpState {
@@ -120,13 +124,15 @@ export async function verifyOtpAndLogin(
   const ip = getClientIp(h);
   const userAgent = getUserAgent(h);
 
-  const locale = env.APP_LOCALES_DEFAULT;
+  let locale: (typeof routing.locales)[number] = DEFAULT_RECOVERY_LOCALE;
 
   try {
     const parsed = verifySchema.parse({
       email: formData.get("email"),
       code: formData.get("code"),
+      locale: formData.get("locale") ?? DEFAULT_RECOVERY_LOCALE,
     });
+    locale = parsed.locale;
 
     // normalizeEmail invece di toLowerCase: applica Gmail alias dedup
     // (`mario+tag@gmail.com` → `mario@gmail.com`). Cosi' il lookup Customer

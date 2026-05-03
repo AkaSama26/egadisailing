@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
 import { ImageStack } from "@/components/image-stack";
 import { ArrowRight, Clock, Ship, Ticket } from "lucide-react";
+import { vatIncludedLabel } from "@/lib/pricing/vat-label";
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -214,7 +215,7 @@ export function ExperiencesList({
                   <p className="text-2xl font-semibold text-[var(--color-gold)]">
                     {experience.priceLabel}{" "}
                     <span className="text-base font-medium text-white/55">
-                      {experience.priceUnitLabel}
+                      {experience.priceUnitLabel} · {vatIncludedLabel(locale)}
                     </span>
                   </p>
                 )}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { CookiePreferencesButton } from "@/components/cookie-preferences-button";
 
 const quickLinks = [
   { key: "experiences", href: "/experiences" },
@@ -178,6 +179,7 @@ export function Footer() {
             >
               Cookie
             </Link>
+            <CookiePreferencesButton label={tFooter("cookiePreferences")} />
           </div>
         </div>
       </div>

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import { getCookieConsentPublicServices } from "@/lib/cookie-consent/server";
 
 export default async function LocaleLayout({
   children,
@@ -17,6 +19,7 @@ export default async function LocaleLayout({
     notFound();
   }
   const messages = await getMessages();
+  const cookieConsentServices = getCookieConsentPublicServices();
   return (
     <NextIntlClientProvider messages={messages}>
       {/* R19-A11y BLOCKER WCAG 2.4.1: skip link obbligatorio EAA 2025. Visibile
@@ -32,6 +35,7 @@ export default async function LocaleLayout({
         {children}
       </main>
       <Footer />
+      <CookieConsentBanner locale={locale} services={cookieConsentServices} />
     </NextIntlClientProvider>
   );
 }

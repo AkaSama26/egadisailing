@@ -6,9 +6,10 @@ import { db } from "@/lib/db";
 import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 import { buildTicketUrl, ticketSlotLabel } from "@/lib/booking/ticket";
 import { createQrSvg } from "@/lib/qr-code";
-import { formatEur, formatEurCents } from "@/lib/pricing/cents";
+import { formatEurWithVat, formatEurCentsWithVat } from "@/lib/pricing/vat";
 import { formatItDateTime, formatItDay } from "@/lib/dates";
 import { PrintTicketButton } from "./print-button";
+import { QrDownloadButton } from "@/components/qr-download-button";
 
 export const metadata: Metadata = {
   title: "Biglietto Egadisailing",
@@ -62,13 +63,13 @@ export default async function TicketPage({
     ["Codice", booking.confirmationCode],
     ["Canale", booking.source],
     ["Data prenotazione", formatItDateTime(booking.createdAt)],
-    ["Totale", formatEur(booking.totalPrice)],
-    ["Pagato", formatEur(paid)],
+    ["Totale", formatEurWithVat(booking.totalPrice, locale)],
+    ["Pagato", formatEurWithVat(paid, locale)],
   ];
   if (balanceCents > 0) {
     bookingRows.push([
       "Saldo in loco",
-      `${formatEurCents(balanceCents)} · da pagare prima della partenza, contanti preferiti`,
+      `${formatEurCentsWithVat(balanceCents, locale)} · da pagare prima della partenza, contanti preferiti`,
     ]);
   }
 
@@ -82,7 +83,14 @@ export default async function TicketPage({
           >
             Area prenotazioni
           </Link>
-          <PrintTicketButton />
+          <div className="flex flex-wrap justify-end gap-2">
+            <QrDownloadButton
+              svg={qrSvg}
+              fileName={`egadisailing-${booking.confirmationCode}-qr.svg`}
+              className="rounded border px-4 py-2"
+            />
+            <PrintTicketButton />
+          </div>
         </div>
 
         <section className="overflow-hidden rounded border border-slate-200 bg-white shadow-sm print:rounded-none print:border-0 print:shadow-none">
@@ -119,6 +127,11 @@ export default async function TicketPage({
               {!isValid && (
                 <p className="rounded bg-amber-50 p-3 text-sm font-semibold text-amber-900">
                   Questo biglietto non risulta confermato.
+                </p>
+              )}
+              {booking.checkedInAt && (
+                <p className="rounded bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">
+                  Check-in registrato il {formatItDateTime(booking.checkedInAt)}.
                 </p>
               )}
             </div>

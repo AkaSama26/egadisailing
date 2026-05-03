@@ -29,6 +29,7 @@ export function Navbar() {
   const tCommon = useTranslations("common");
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const recoveryHref = `/${locale}/recupera-prenotazione`;
 
   useEffect(() => {
     function handleScroll() {
@@ -84,6 +85,17 @@ export function Navbar() {
             className={cn(!isTransparent ? "text-gray-700" : "text-white")}
           />
           <Link
+            href={recoveryHref}
+            className={cn(
+              "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+              !isTransparent
+                ? "border-slate-200 text-slate-700 hover:bg-slate-50"
+                : "border-white/30 text-white hover:bg-white/10"
+            )}
+          >
+            {tCommon("recoverBooking")}
+          </Link>
+          <Link
             href={`/${locale}/prenota`}
             className={cn(
               buttonVariants({ size: "default" }),
@@ -138,6 +150,13 @@ export function Navbar() {
                   )}
                 >
                   {tCommon("bookNow")}
+                </Link>
+                <Link
+                  href={recoveryHref}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-2 block rounded-md border border-gray-200 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  {tCommon("recoverBooking")}
                 </Link>
               </div>
             </SheetContent>

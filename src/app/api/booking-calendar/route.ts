@@ -9,7 +9,7 @@ import { getClientIp, normalizeIpForRateLimit } from "@/lib/http/client-ip";
 import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { quotePrice } from "@/lib/pricing/service";
-import { formatEur } from "@/lib/pricing/cents";
+import { formatEurWithVat } from "@/lib/pricing/vat";
 import { deriveEndDate } from "@/lib/booking/helpers";
 import {
   decideBoatSlotAvailability,
@@ -27,6 +27,7 @@ const querySchema = z.object({
   start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   durationDays: z.coerce.number().int().min(3).max(7).optional(),
+  locale: z.enum(["it", "en"]).optional(),
 });
 
 type CalendarStatus = "available" | "request" | "unavailable";
@@ -86,8 +87,9 @@ async function evaluateCalendarDay(params: {
   date: Date;
   durationDays?: number;
   today: Date;
+  locale?: string;
 }): Promise<CalendarDay> {
-  const { service, date, durationDays, today } = params;
+  const { service, date, durationDays, today, locale } = params;
   const dateIso = isoDay(date);
   const endDate = deriveCalendarEndDate(date, service, durationDays);
 
@@ -156,7 +158,7 @@ async function evaluateCalendarDay(params: {
         date: dateIso,
         status: "unavailable",
         selectable: false,
-        priceLabel: formatEur(quote.totalPrice),
+        priceLabel: formatEurWithVat(quote.totalPrice, locale),
         priceHint: quote.pricingUnit === "PER_PACKAGE" ? "pacchetto" : "a persona",
         priceAmount: quote.totalPrice.toNumber(),
         pricingUnit: quote.pricingUnit,
@@ -211,7 +213,7 @@ async function evaluateCalendarDay(params: {
       date: dateIso,
       status: "available",
       selectable: true,
-      priceLabel: formatEur(quote.totalPrice),
+      priceLabel: formatEurWithVat(quote.totalPrice, locale),
       priceHint: quote.pricingUnit === "PER_PACKAGE" ? "pacchetto" : "a persona",
       priceAmount: quote.totalPrice.toNumber(),
       pricingUnit: quote.pricingUnit,
@@ -225,7 +227,7 @@ async function evaluateCalendarDay(params: {
       date: dateIso,
       status: "request",
       selectable: true,
-      priceLabel: formatEur(quote.totalPrice),
+      priceLabel: formatEurWithVat(quote.totalPrice, locale),
       priceHint: quote.pricingUnit === "PER_PACKAGE" ? "pacchetto" : "a persona",
       priceAmount: quote.totalPrice.toNumber(),
       pricingUnit: quote.pricingUnit,
@@ -238,7 +240,7 @@ async function evaluateCalendarDay(params: {
     date: dateIso,
     status: "unavailable",
     selectable: false,
-    priceLabel: formatEur(quote.totalPrice),
+    priceLabel: formatEurWithVat(quote.totalPrice, locale),
     priceHint: quote.pricingUnit === "PER_PACKAGE" ? "pacchetto" : "a persona",
     priceAmount: quote.totalPrice.toNumber(),
     pricingUnit: quote.pricingUnit,
@@ -303,6 +305,7 @@ export const GET = withErrorHandler(async (req: Request) => {
         date: day,
         durationDays: input.durationDays,
         today,
+        locale: input.locale,
       }),
     );
   }

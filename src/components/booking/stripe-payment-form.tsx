@@ -170,6 +170,7 @@ function InnerForm({
         </p>
       </div>
       <PaymentSummary
+        locale={locale}
         amountCents={amountCents}
         totalCents={totalCents}
         balanceCents={balanceCents}
@@ -223,7 +224,7 @@ function InnerForm({
           className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
         >
           <CreditCard className="size-4" aria-hidden="true" />
-          {processing ? "In elaborazione..." : `Paga ${formatEurCents(amountCents)}`}
+          {processing ? "In elaborazione..." : `Paga ${formatEurCentsWithVat(amountCents, locale)}`}
         </button>
       )}
     </form>
@@ -250,11 +251,21 @@ function formatEurCents(cents: number) {
   }).format(cents / 100);
 }
 
+function vatIncludedLabel(locale: string): string {
+  return locale === "en" ? "VAT included" : "IVA inclusa";
+}
+
+function formatEurCentsWithVat(cents: number, locale: string) {
+  return `${formatEurCents(cents)} · ${vatIncludedLabel(locale)}`;
+}
+
 function PaymentSummary({
+  locale,
   amountCents,
   totalCents,
   balanceCents,
 }: {
+  locale: string;
   amountCents: number;
   totalCents: number;
   balanceCents: number;
@@ -263,16 +274,16 @@ function PaymentSummary({
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
       <div className="flex items-center justify-between gap-4">
         <span>Totale prenotazione</span>
-        <strong className="text-slate-950">{formatEurCents(totalCents)}</strong>
+        <strong className="text-slate-950">{formatEurCentsWithVat(totalCents, locale)}</strong>
       </div>
       <div className="mt-2 flex items-center justify-between gap-4">
         <span>Da pagare ora</span>
-        <strong className="text-slate-950">{formatEurCents(amountCents)}</strong>
+        <strong className="text-slate-950">{formatEurCentsWithVat(amountCents, locale)}</strong>
       </div>
       {balanceCents > 0 && (
         <div className="mt-2 flex items-center justify-between gap-4 text-amber-700">
           <span>Saldo in loco</span>
-          <strong>{formatEurCents(balanceCents)}</strong>
+          <strong>{formatEurCentsWithVat(balanceCents, locale)}</strong>
         </div>
       )}
       {balanceCents > 0 && (

@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 const emptyStringToUndefined = (value: unknown) => (value === "" ? undefined : value);
+const optionalString = () => z.preprocess(emptyStringToUndefined, z.string().optional());
+const optionalSecret = (min: number) =>
+  z.preprocess(emptyStringToUndefined, z.string().min(min).optional());
 const optionalUrl = () => z.preprocess(emptyStringToUndefined, z.string().url().optional());
 const defaultUrl = (value: string) =>
   z.preprocess(emptyStringToUndefined, z.string().url().default(value));
@@ -55,6 +58,13 @@ const envSchema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   APP_LOCALES_DEFAULT: z.string().default("it"),
   NEXT_PUBLIC_ASSET_CDN_URL: optionalUrl(),
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: optionalString(),
+  NEXT_PUBLIC_GOOGLE_ADS_ID: optionalString(),
+  NEXT_PUBLIC_META_PIXEL_ID: optionalString(),
+  NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: optionalString(),
+  NEXT_PUBLIC_BING_SITE_VERIFICATION: optionalString(),
+  NEXT_PUBLIC_META_DOMAIN_VERIFICATION: optionalString(),
+  COOKIE_CONSENT_HASH_SECRET: optionalSecret(32),
 
   // Server Actions allowed origins (comma-separated). Obbligatorio in prod
   // dietro reverse proxy (Round 10 Sec-C1). Es.:
@@ -81,7 +91,10 @@ const envSchema = z.object({
     .transform((v) => v === "true"),
 
   // Brevo
-  BREVO_API_KEY: z.string().optional(),
+  EMAIL_DELIVERY_MODE: z
+    .enum(["log", "brevo"])
+    .default(process.env.NODE_ENV === "production" ? "brevo" : "log"),
+  BREVO_API_KEY: optionalString(),
   BREVO_SENDER_EMAIL: z.string().email().default("noreply@egadisailing.com"),
   BREVO_SENDER_NAME: z.string().default("Egadisailing"),
   BREVO_REPLY_TO: optionalEmail(),
@@ -176,6 +189,9 @@ function loadEnv() {
     }
     if (!parsed.data.BREVO_API_KEY) {
       throw new Error("BREVO_API_KEY required in production");
+    }
+    if (parsed.data.EMAIL_DELIVERY_MODE !== "brevo") {
+      throw new Error("EMAIL_DELIVERY_MODE must be brevo in production");
     }
     if (!parsed.data.TURNSTILE_SECRET_KEY || !parsed.data.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
       throw new Error("TURNSTILE_SECRET_KEY + NEXT_PUBLIC_TURNSTILE_SITE_KEY required in production");

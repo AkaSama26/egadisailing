@@ -12,6 +12,7 @@ import {
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { cn } from "@/lib/utils";
 import type { PassengerFareRuleConfig } from "@/lib/pricing/passenger-fare-rules-shared";
+import { vatIncludedLabel } from "@/lib/pricing/vat-label";
 
 export interface BookingServiceOption {
   id: string;
@@ -455,7 +456,7 @@ export function BookingPageClient({
                       {durationDetail(service)}
                     </span>
                     <span className="mt-4 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      {service.priceLabel} {service.priceUnitLabel}
+                      {service.priceLabel} {service.priceUnitLabel} · {vatIncludedLabel(locale)}
                     </span>
                   </button>
                 ))}

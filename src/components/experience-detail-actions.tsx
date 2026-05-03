@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { vatIncludedLabel } from "@/lib/pricing/vat-label";
 
 type CalendarStatus = "available" | "request" | "unavailable";
 
@@ -249,6 +250,9 @@ export function ExperienceBookingCard({
   const range = useMemo(() => (visibleMonth ? calendarRange(visibleMonth) : null), [visibleMonth]);
   const currentMonth = hydrated ? monthKey() : "";
   const selectedDay = selectedDate ? days[selectedDate] : undefined;
+  const vatLabel = vatIncludedLabel(locale);
+  const displayedPriceLabel = selectedDay?.priceLabel ?? priceLabel;
+  const displayedPriceHasVat = displayedPriceLabel.includes(vatLabel);
 
   useEffect(() => {
     if (!hydrated || !range) return;
@@ -258,6 +262,7 @@ export function ExperienceBookingCard({
       serviceId,
       start: range.start,
       end: range.end,
+      locale,
     });
     if (charterDurationDays) params.set("durationDays", String(charterDurationDays));
 
@@ -305,9 +310,12 @@ export function ExperienceBookingCard({
         {title}
       </p>
       <p className="mt-3 text-2xl font-bold text-[var(--color-ocean)] sm:mt-4 sm:text-3xl">
-        {selectedDay?.priceLabel ?? priceLabel}
+        {displayedPriceLabel}
       </p>
-      <p className="mt-1 text-sm text-slate-500">{priceUnit}</p>
+      <p className="mt-1 text-sm text-slate-500">
+        {priceUnit}
+        {!displayedPriceHasVat && ` · ${vatLabel}`}
+      </p>
       <p className="mt-4 text-sm leading-6 text-slate-600 sm:mt-5">{text}</p>
 
       <div className="mt-5 rounded-lg border border-slate-200 bg-[#f7f2e8]/45 p-2 sm:mt-6 sm:p-3">

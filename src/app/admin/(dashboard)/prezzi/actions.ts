@@ -10,6 +10,11 @@ import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
 import { acquireTxAdvisoryLock } from "@/lib/db/advisory-lock";
 import { ValidationError } from "@/lib/errors";
 import { withAdminAction } from "@/lib/admin/with-admin-action";
+import { routing } from "@/i18n/routing";
+import {
+  getExperiencePublicSlug,
+  getListedExperienceIds,
+} from "@/data/catalog/experiences";
 import {
   PASSENGER_FARE_CATEGORIES,
   PASSENGER_FARE_SERVICE_TYPE,
@@ -46,7 +51,7 @@ export const upsertPricingPeriod = withAdminAction(
   {
     schema: upsertPricingPeriodSchema,
     revalidatePaths: (input) => [
-      "/admin/prezzi",
+      ...pricingRevalidatePaths([input.serviceId]),
       ...(input.id ? [`/admin/prezzi/${input.id}`] : []),
     ],
   },
@@ -119,7 +124,7 @@ const deletePricingPeriodSchema = z.object({ id: z.string().min(1) });
 export const deletePricingPeriod = withAdminAction(
   {
     schema: deletePricingPeriodSchema,
-    revalidatePaths: ["/admin/prezzi"],
+    revalidatePaths: () => pricingRevalidatePaths(),
   },
   async (input, { userId }) => {
     const before = await db.pricingPeriod.findUnique({
@@ -163,6 +168,26 @@ export const deletePricingPeriod = withAdminAction(
 const PRICE_BUCKETS = ["LOW", "MID", "HIGH"] as const;
 const SEASON_KEYS = ["LOW", "MID", "HIGH", "LATE_LOW"] as const;
 const PASSENGER_PRICING_MODES = ["MULTIPLIER", "FIXED"] as const;
+
+const PUBLIC_PRICING_PATHS = [
+  "/",
+  ...routing.locales.flatMap((locale) => [
+    `/${locale}`,
+    `/${locale}/prenota`,
+    `/${locale}/experiences`,
+  ]),
+];
+
+function pricingRevalidatePaths(serviceIds = getListedExperienceIds()): string[] {
+  const uniqueServiceIds = Array.from(new Set(serviceIds));
+  const detailPaths = uniqueServiceIds.flatMap((serviceId) =>
+    routing.locales.map(
+      (locale) => `/${locale}/experiences/${getExperiencePublicSlug(serviceId)}`,
+    ),
+  );
+
+  return Array.from(new Set(["/admin/prezzi", ...PUBLIC_PRICING_PATHS, ...detailPaths]));
+}
 
 const servicePriceInputSchema = z.object({
   serviceId: z.string().min(1),
@@ -211,7 +236,8 @@ async function upsertServicePrice(
 export const saveServicePriceMatrix = withAdminAction(
   {
     schema: saveServicePriceMatrixSchema,
-    revalidatePaths: ["/admin/prezzi", "/"],
+    revalidatePaths: (input) =>
+      pricingRevalidatePaths(input.rows.map((row) => row.serviceId)),
   },
   async (input, { userId }) => {
     const touchedServiceIds = Array.from(new Set(input.rows.map((row) => row.serviceId)));
@@ -402,7 +428,7 @@ const saveSeasonsSchema = z.object({
 export const saveSeasons = withAdminAction(
   {
     schema: saveSeasonsSchema,
-    revalidatePaths: ["/admin/prezzi", "/"],
+    revalidatePaths: () => pricingRevalidatePaths(),
   },
   async (input, { userId }) => {
     const normalized = input.seasons

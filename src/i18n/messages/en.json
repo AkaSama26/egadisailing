@@ -1,7 +1,8 @@
 {
   "common": {
-    "bookNow": "Book Now",
-    "learnMore": "Learn More",
+  "bookNow": "Book Now",
+  "recoverBooking": "Find booking",
+  "learnMore": "Learn More",
     "contactUs": "Contact Us",
     "home": "Home",
     "about": "About Us",
@@ -68,6 +69,7 @@
     "rights": "All rights reserved",
     "privacy": "Privacy Policy",
     "terms": "Terms & Conditions",
+    "cookiePreferences": "Cookie preferences",
     "tagline": "Unique boat experiences in the Egadi Islands",
     "quickLinks": "Quick Links",
     "address": "Port of Trapani, Trapani (TP), Italy"

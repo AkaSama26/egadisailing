@@ -1,7 +1,8 @@
 {
   "common": {
-    "bookNow": "Prenota Ora",
-    "learnMore": "Scopri di più",
+  "bookNow": "Prenota Ora",
+  "recoverBooking": "Recupera prenotazione",
+  "learnMore": "Scopri di più",
     "contactUs": "Contattaci",
     "home": "Home",
     "about": "Chi Siamo",
@@ -68,6 +69,7 @@
     "rights": "Tutti i diritti riservati",
     "privacy": "Privacy Policy",
     "terms": "Termini e Condizioni",
+    "cookiePreferences": "Preferenze cookie",
     "tagline": "Esperienze in barca uniche nelle Isole Egadi",
     "quickLinks": "Link Rapidi",
     "address": "Porto di Trapani, Trapani (TP), Italia"

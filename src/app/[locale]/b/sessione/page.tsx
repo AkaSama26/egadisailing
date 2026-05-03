@@ -5,7 +5,7 @@ import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { getBookingSession } from "@/lib/session/verify";
 import { env } from "@/lib/env";
-import { formatEur } from "@/lib/pricing/cents";
+import { formatEurWithVat } from "@/lib/pricing/vat";
 import { LogoutButton } from "./logout-button";
 import { formatItDay, isoDay } from "@/lib/dates";
 import { OceanLayout } from "@/components/customer/ocean-layout";
@@ -60,7 +60,7 @@ export default async function SessionePage({
           <p>
             Fino a 15 giorni prima: rimborso completo. Da 14 a 7 giorni prima:
             rimborso del 50%. Da 6 giorni alla partenza: cancellazione senza rimborso.
-            Il cambio data e' sempre gratuito, se la nuova data e' disponibile.
+            Il cambio data e&apos; sempre gratuito, se la nuova data e&apos; disponibile.
           </p>
         </div>
         {bookings.length === 0 && (
@@ -101,11 +101,11 @@ export default async function SessionePage({
                 {formatItDay(b.startDate)} · {b.numPeople} persone
               </p>
               <p>
-                Totale {formatEur(total)} · Pagato {formatEur(paid)}
+                Totale {formatEurWithVat(total, locale)} · Pagato {formatEurWithVat(paid, locale)}
               </p>
               {balance.gt(0) && (
                 <p className="text-amber-700 font-semibold mt-2">
-                  Saldo da pagare: {formatEur(balance)}
+                  Saldo da pagare: {formatEurWithVat(balance, locale)}
                 </p>
               )}
               {b.status === "CONFIRMED" && (
@@ -165,7 +165,8 @@ export default async function SessionePage({
                   <div className="rounded-lg border border-gray-200 p-3">
                     <p className="font-semibold text-gray-900">{policy.label}</p>
                     <p className="mt-1 text-sm text-gray-600">
-                      Rimborso stimato: {formatEur(refundable)} su {formatEur(paid)} pagati.
+                      Rimborso stimato: {formatEurWithVat(refundable, locale)} su{" "}
+                      {formatEurWithVat(paid, locale)} pagati.
                     </p>
                     <form action={cancelCustomerBooking.bind(null, b.id)} className="mt-3">
                       <button

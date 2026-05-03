@@ -6,7 +6,7 @@ import { AdminCard } from "@/components/admin/admin-card";
 import { DetailRow } from "@/components/admin/detail-row";
 import { EmptyState } from "@/components/admin/empty-state";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { formatItDay } from "@/lib/dates";
+import { formatItDateTime, formatItDay } from "@/lib/dates";
 import { TimeIso } from "@/components/ui/time-iso";
 import { BOAT_EXCLUSIVE_SERVICE_TYPES } from "@/lib/booking/cross-channel-conflicts";
 import {
@@ -42,6 +42,7 @@ export default async function BookingDetailPage({
       directBooking: true,
       bokunBooking: { select: { bokunBookingId: true, channelName: true } },
       charterBooking: { select: { platformName: true, platformBookingRef: true } },
+      checkedInBy: { select: { name: true, email: true } },
     },
   });
   if (!booking) notFound();
@@ -181,6 +182,14 @@ export default async function BookingDetailPage({
             value={`${formatItDay(booking.startDate)} → ${formatItDay(booking.endDate)}`}
           />
           <DetailRow label="Persone" value={String(booking.numPeople)} />
+          <DetailRow
+            label="Check-in"
+            value={
+              booking.checkedInAt
+                ? `${formatItDateTime(booking.checkedInAt)} · ${booking.checkedInBy?.name ?? "staff"}`
+                : "Non registrato"
+            }
+          />
           <DetailRow label="Totale" value={formatEur(booking.totalPrice.toString())} />
           {booking.directBooking && (
             <>

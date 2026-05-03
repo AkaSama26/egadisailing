@@ -3,6 +3,8 @@ import { Poppins, Inter, Caveat } from "next/font/google";
 import { getLocale } from "next-intl/server";
 import { ServiceWorkerCleanup } from "@/components/service-worker-cleanup";
 import { env } from "@/lib/env";
+import { getSiteVerificationMetadata } from "@/lib/site-verification";
+import "vanilla-cookieconsent/dist/cookieconsent.css";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -73,6 +75,8 @@ const serviceWorkerInlineCleanupScript = `
 })();
 `;
 
+const siteVerification = getSiteVerificationMetadata();
+
 export const metadata: Metadata = {
   metadataBase: new URL(env.APP_URL),
   title: {
@@ -90,6 +94,7 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image" },
   icons: { icon: "/favicon.ico" },
+  ...(siteVerification ? { verification: siteVerification } : {}),
 };
 
 export default async function RootLayout({

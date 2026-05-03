@@ -32,6 +32,7 @@ import { getBoatContent } from "@/data/catalog/boats";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
+import { vatIncludedLabel } from "@/lib/pricing/vat-label";
 import {
   getCharterDurationDisplayPrices,
   getDisplayPrice,
@@ -314,11 +315,14 @@ export default async function ExperienceDetailPage({
   const pagePath = `/experiences/${getExperiencePublicSlug(service.id)}`;
   const bookingServiceParam = getExperiencePublicSlug(service.id);
   const bookingHref = `/${locale}/prenota?service=${bookingServiceParam}`;
+  const recoveryHref = `/${locale}/recupera-prenotazione`;
+  const recoveryLabel = locale === "en" ? "Find booking" : "Recupera prenotazione";
   const durationText = getServiceDurationLabel(service);
   const priceUnit =
     service.type === "CABIN_CHARTER" || service.pricingUnit === "PER_PACKAGE"
       ? getPriceUnitLabel(service.pricingUnit, service.type)
       : t("experience.perPerson");
+  const priceUnitWithVat = `${priceUnit} · ${vatIncludedLabel(locale)}`;
   const heroMedia = content.media.find((item) => item.src) ?? content.media[0];
   const heroImage = heroMedia?.src ?? FALLBACK_HERO_IMAGE;
   const gallery = content.media.filter((item) => item.src);
@@ -500,6 +504,12 @@ export default async function ExperienceDetailPage({
               >
                 {t("experience.itinerary")}
               </SmoothAnchorLink>
+              <Link
+                href={recoveryHref}
+                className="inline-flex w-full items-center justify-center rounded-lg border border-white/30 px-8 py-3 text-base font-semibold text-white transition hover:bg-white/10 sm:w-auto"
+              >
+                {recoveryLabel}
+              </Link>
             </div>
           </ScrollSection>
 
@@ -685,7 +695,7 @@ export default async function ExperienceDetailPage({
                                   <td className="p-4 text-right font-semibold text-[var(--color-gold)]">
                                     {formatEur(price.amount)}{" "}
                                     <span className="text-sm font-normal text-slate-500">
-                                      {priceUnit}
+                                      {priceUnitWithVat}
                                     </span>
                                   </td>
                                 </tr>
@@ -715,7 +725,7 @@ export default async function ExperienceDetailPage({
                                   <td className="p-4 text-right font-semibold text-[var(--color-gold)]">
                                     {period.amount ? formatEur(period.amount) : "Su richiesta"}{" "}
                                     <span className="text-sm font-normal text-slate-500">
-                                      {priceUnit}
+                                      {priceUnitWithVat}
                                     </span>
                                   </td>
                                 </tr>
@@ -749,6 +759,12 @@ export default async function ExperienceDetailPage({
               showIcon={false}
               className="mt-8 bg-white px-10 py-6 text-base font-semibold text-[var(--color-ocean)] hover:bg-white/90"
             />
+            <Link
+              href={recoveryHref}
+              className="ml-0 mt-3 inline-flex rounded-lg border border-white/25 px-8 py-3 text-sm font-semibold text-white transition hover:bg-white/10 sm:ml-3"
+            >
+              {recoveryLabel}
+            </Link>
           </section>
         </ScrollSection>
       </main>

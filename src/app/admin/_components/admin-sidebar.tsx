@@ -18,6 +18,8 @@ import {
   Settings,
   Ship,
   AlertCircle,
+  ShieldCheck,
+  ScanLine,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -37,6 +39,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: "/admin/calendario", label: "Calendario", icon: Calendar },
       { href: "/admin/prenotazioni", label: "Prenotazioni", icon: ListChecks },
+      { href: "/admin/check-in", label: "Check-in", icon: ScanLine },
       { href: "/admin/clienti", label: "Clienti", icon: Users },
       { href: "/admin/finanza", label: "Incassi", icon: LineChart },
       { href: "/admin/prezzi", label: "Listino", icon: Coins },
@@ -58,6 +61,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: "/admin/canali", label: "Canali", icon: Plug },
       { href: "/admin/sync-log", label: "Diagnostica", icon: Activity },
+      { href: "/admin/consensi", label: "Consensi", icon: ShieldCheck },
       { href: "/admin/impostazioni", label: "Sistema", icon: Settings },
       { href: "/admin/servizi", label: "Servizi", icon: Boxes },
     ],

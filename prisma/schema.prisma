@@ -25,6 +25,7 @@ model User {
   // 20260421180000_r26_schema_hardening (onDelete: SetNull).
   bookingNotes   BookingNote[] @relation("BookingNoteAuthor")
   resolvedAlerts ManualAlert[] @relation("ManualAlertResolver")
+  checkedInBookings Booking[] @relation("BookingCheckInUser")
   // Priority Override System (Fase 1 Trimarano) — tutte le richieste
   // decise da questo admin. FK onDelete: SetNull preserva audit storico.
   overrideDecisions OverrideRequest[]
@@ -350,10 +351,13 @@ model Booking {
 
   weatherLastAlertedRisk String?
   weatherLastAlertedAt   DateTime?
+  checkedInAt       DateTime?
+  checkedInByUserId String?
 
   customer       Customer                      @relation(fields: [customerId], references: [id])
   service        Service                       @relation(fields: [serviceId], references: [id])
   boat           Boat                          @relation(fields: [boatId], references: [id])
+  checkedInBy    User?                         @relation("BookingCheckInUser", fields: [checkedInByUserId], references: [id], onDelete: SetNull)
   directBooking  DirectBooking?
   bokunBooking   BokunBooking?
   charterBooking CharterBooking?
@@ -385,6 +389,8 @@ model Booking {
   // R18-Prisma: reconciliation cron Bokun legge (source=BOKUN, externalRef=id)
   // — prima seq-scan su `source,status` compound con filter post.
   @@index([source, externalRef])
+  @@index([checkedInAt])
+  @@index([checkedInByUserId])
 }
 
 model EmailOutbox {
@@ -492,6 +498,55 @@ model ConsentRecord {
   @@index([customerId])
   @@index([bookingId])
   @@index([acceptedAt])
+}
+
+/// GDPR/ePrivacy — prova delle scelte cookie/tracker del visitatore.
+///
+/// Separato da `ConsentRecord`: quello prova privacy/T&C della prenotazione,
+/// questo prova preferenze anonime o pre-login su cookie non tecnici.
+/// IP salvato solo come hash HMAC applicativo (`ipHash`) per minimizzazione.
+model CookieConsentEvent {
+  id                 String   @id @default(cuid())
+  consentId          String
+  action             String
+  acceptType         String
+  acceptedCategories String[] @default([])
+  rejectedCategories String[] @default([])
+  changedCategories  String[] @default([])
+  acceptedServices   Json
+  rejectedServices   Json
+  cookieRevision     Int
+  policyVersion      String
+  configHash         String
+  textHash           String
+  locale             String
+  sourcePath         String?
+  ipHash             String?
+  userAgent          String?
+  createdAt          DateTime @default(now())
+
+  @@index([consentId, createdAt])
+  @@index([action, createdAt])
+  @@index([policyVersion])
+  @@index([createdAt])
+}
+
+/// Snapshot versionato della configurazione/testi mostrati dal banner.
+/// Serve a dimostrare "cosa ha visto l'utente" per una data `policyVersion`.
+model CookieConsentPolicySnapshot {
+  id            String   @id @default(cuid())
+  policyVersion String   @unique
+  revision      Int
+  configHash    String
+  textHash      String
+  categories    Json
+  services      Json
+  translations  Json
+  effectiveDate String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model BokunBooking {

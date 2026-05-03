@@ -8,7 +8,8 @@ import {
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { toCents, formatEur, formatEurCents } from "@/lib/pricing/cents";
+import { toCents, formatEur } from "@/lib/pricing/cents";
+import { formatEurWithVat, formatEurCentsWithVat } from "@/lib/pricing/vat";
 import { parseBookingMetadata } from "../metadata";
 import { ValidationError } from "@/lib/errors";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
@@ -173,10 +174,10 @@ async function sendConfirmationEmail(bookingId: string, paidCents: number): Prom
     serviceName: booking.service.name,
     startDate: formatItDay(booking.startDate),
     numPeople: booking.numPeople,
-    totalPrice: formatEur(booking.totalPrice),
-    paidAmount: formatEurCents(paidCents),
+    totalPrice: formatEurWithVat(booking.totalPrice, env.APP_LOCALES_DEFAULT),
+    paidAmount: formatEurCentsWithVat(paidCents, env.APP_LOCALES_DEFAULT),
     balanceAmount: booking.directBooking?.balanceAmount
-      ? formatEur(booking.directBooking.balanceAmount)
+      ? formatEurWithVat(booking.directBooking.balanceAmount, env.APP_LOCALES_DEFAULT)
       : undefined,
     recoveryUrl: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/recupera-prenotazione`,
     ticketUrl: buildTicketUrl(booking.confirmationCode),

@@ -14,6 +14,7 @@ import {
   UserCheck,
   ArrowRight,
 } from "lucide-react";
+import { appendVatIncluded } from "@/lib/pricing/vat-label";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -334,7 +335,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
   const locale = useLocale();
   const priceFrom = (serviceIds: string[]) => {
     const price = getLowestPrice(services, serviceIds);
-    return price ? `${t("common.priceFrom")} €${price}` : undefined;
+    return price ? appendVatIncluded(`${t("common.priceFrom")} €${price}`, locale) : undefined;
   };
   const maxPax = (serviceIds: string[]) => getMaxCapacity(services, serviceIds);
   const featuredPackages: FeaturedPackage[] = [

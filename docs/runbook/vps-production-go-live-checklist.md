@@ -108,7 +108,9 @@ Da fare:
   - Brevo production key
   - Turnstile production keys
   - `ADMIN_EMAIL=info@egadisailing.com`
+  - `EMAIL_DELIVERY_MODE=brevo`
   - `BREVO_SENDER_EMAIL=noreply@egadisailing.com`
+  - `BREVO_SENDER_NAME=Egadisailing`
   - `BREVO_REPLY_TO=info@egadisailing.com`
 
 Accettazione:
@@ -219,8 +221,14 @@ Da fare:
 - Verificare dominio/sender Brevo.
 - Configurare `noreply@egadisailing.com` come sender.
 - Configurare `info@egadisailing.com` come reply-to/admin inbox.
+- In Brevo, autenticare il dominio mittente `egadisailing.com` con i record
+  DNS richiesti (Brevo code, DKIM, DMARC) prima del go-live.
+- Generare una API key Brevo SMTP/API dedicata alla VPS production e salvarla
+  come `BREVO_API_KEY`.
 - Testare invio cliente e admin.
 - Verificare outbox e worker email.
+- Smoke test tecnico:
+  `EMAIL_DELIVERY_MODE=brevo BREVO_TEST_TO=tuamail@example.com npm run brevo:smoke`
 
 Accettazione:
 

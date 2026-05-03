@@ -239,6 +239,18 @@ function formatClientEur(amount: number): string {
   }).format(amount);
 }
 
+function clientVatIncludedLabel(locale: string): string {
+  return locale === "en" ? "VAT included" : "IVA inclusa";
+}
+
+function appendClientVatIncluded(label: string, locale: string): string {
+  return `${label} · ${clientVatIncludedLabel(locale)}`;
+}
+
+function formatClientEurWithVat(amount: number, locale: string): string {
+  return appendClientVatIncluded(formatClientEur(amount), locale);
+}
+
 function formatIsoDateLabel(isoDate: string): string {
   if (!isoDate) return "-";
   return new Intl.DateTimeFormat("it-IT", {
@@ -400,6 +412,7 @@ export function BookingWizard(props: Props) {
   ]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Passenger rules can be admin-configured; sanitize restored draft when active rules change. */
   useEffect(() => {
     setPassengers((current) => {
       const next = sanitizePassengerBreakdownForRules(current, passengerFareRules);
@@ -411,6 +424,7 @@ export function BookingWizard(props: Props) {
         : next;
     });
   }, [passengerFareRules]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // R26-A1-C1: persist draft ad ogni change. Skip finche' hydrated=false
   // (R26-P2-CRITICA: altrimenti overrite draft esistente con defaults).
@@ -628,6 +642,7 @@ export function BookingWizard(props: Props) {
       {step === "date" && (
         <>
           <DateStep
+            locale={props.locale}
             serviceId={props.serviceId}
             value={startDate}
             endValue={endDate}
@@ -652,6 +667,7 @@ export function BookingWizard(props: Props) {
       {step === "people" && (
         <>
           <PeopleStep
+            locale={props.locale}
             capacityMax={props.capacityMax}
             serviceType={props.serviceType}
             value={passengers}
@@ -702,8 +718,9 @@ export function BookingWizard(props: Props) {
       )}
 
       {step === "review" && (
-        <ReviewStep
-          serviceName={props.serviceName}
+          <ReviewStep
+            locale={props.locale}
+            serviceName={props.serviceName}
           serviceType={props.serviceType}
           durationType={props.durationType}
           durationHours={props.durationHours}
@@ -897,6 +914,7 @@ function calendarStatusBadgeClass(status?: CalendarApiDay["status"]): string {
 }
 
 function DateStep({
+  locale,
   serviceId,
   value,
   endValue,
@@ -908,6 +926,7 @@ function DateStep({
   canContinue,
   onPriceChange,
 }: {
+  locale: string;
   serviceId: string;
   value: string;
   endValue: string;
@@ -945,6 +964,7 @@ function DateStep({
       serviceId,
       start: range.start,
       end: range.end,
+      locale,
     });
     if (isCharter && fixedDurationDays) {
       params.set("durationDays", String(fixedDurationDays));
@@ -978,7 +998,7 @@ function DateStep({
       });
 
     return () => controller.abort();
-  }, [fixedDurationDays, isCharter, range.end, range.start, serviceId]);
+  }, [fixedDurationDays, isCharter, locale, range.end, range.start, serviceId]);
 
   useEffect(() => {
     const day = value ? calendarDays[value] : null;
@@ -1176,6 +1196,7 @@ function DateStep({
 }
 
 function PeopleStep({
+  locale,
   capacityMax,
   serviceType,
   value,
@@ -1186,6 +1207,7 @@ function PeopleStep({
   onNext,
   checking,
 }: {
+  locale: string;
   capacityMax: number;
   serviceType: string;
   value: PassengerBreakdown;
@@ -1263,7 +1285,7 @@ function PeopleStep({
         <div className="col-span-2 sm:col-span-1">
           <div className="text-xs font-semibold uppercase text-slate-500">Totale stimato</div>
           <div className="font-bold tabular-nums">
-            {estimatedTotal != null ? formatClientEur(estimatedTotal) : "In caricamento"}
+            {estimatedTotal != null ? formatClientEurWithVat(estimatedTotal, locale) : "In caricamento"}
           </div>
         </div>
       </div>
@@ -1368,6 +1390,7 @@ function PassengerCounter({
 }
 
 function ReviewStep({
+  locale,
   serviceName,
   serviceType,
   durationType,
@@ -1386,6 +1409,7 @@ function ReviewStep({
   onBack,
   onConfirm,
 }: {
+  locale: string;
   serviceName: string;
   serviceType: string;
   durationType: string;
@@ -1464,7 +1488,10 @@ function ReviewStep({
             description="Blocchi subito la data pagando solo l'acconto."
             amount={
               payment
-                ? formatClientCents(Math.round((payment.totalCents * depositPercentage) / 100))
+                ? appendClientVatIncluded(
+                    formatClientCents(Math.round((payment.totalCents * depositPercentage) / 100)),
+                    locale,
+                  )
                 : "In calcolo"
             }
             onChange={() => onPaymentScheduleChange("DEPOSIT_BALANCE")}
@@ -1473,7 +1500,7 @@ function ReviewStep({
             checked={paymentSchedule === "FULL"}
             title="Pagamento completo"
             description="Saldi tutta la prenotazione adesso con carta."
-            amount={payment ? formatClientCents(payment.totalCents) : "In calcolo"}
+            amount={payment ? appendClientVatIncluded(formatClientCents(payment.totalCents), locale) : "In calcolo"}
             onChange={() => onPaymentScheduleChange("FULL")}
           />
         </div>
@@ -1542,7 +1569,7 @@ function ReviewStep({
             <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3">
               <SummaryMetric
                 label="Totale"
-                value={formatClientCents(payment.totalCents)}
+                value={appendClientVatIncluded(formatClientCents(payment.totalCents), locale)}
                 strong
               />
               <SummaryMetric
@@ -1551,14 +1578,18 @@ function ReviewStep({
                     ? `Ora (${payment.depositPercentage}%)`
                     : "Ora"
                 }
-                value={formatClientCents(payment.upfrontCents)}
+                value={appendClientVatIncluded(formatClientCents(payment.upfrontCents), locale)}
                 strong
                 highlight
               />
               <div className="col-span-2 sm:col-span-1">
                 <SummaryMetric
                   label="Saldo in loco"
-                  value={payment.balanceCents > 0 ? formatClientCents(payment.balanceCents) : "-"}
+                  value={
+                    payment.balanceCents > 0
+                      ? appendClientVatIncluded(formatClientCents(payment.balanceCents), locale)
+                      : "-"
+                  }
                 />
               </div>
             </div>

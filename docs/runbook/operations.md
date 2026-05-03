@@ -183,14 +183,30 @@ redis-cli -a $REDIS_PASSWORD DEL rlb:OTP_BLOCK_EMAIL:user@email.com
 ## Brevo email non arrivano
 
 **Diagnosi**:
+- Verificare env production:
+  - `EMAIL_DELIVERY_MODE=brevo`
+  - `BREVO_API_KEY=xkeysib-...`
+  - `BREVO_SENDER_EMAIL=noreply@egadisailing.com`
+  - `BREVO_REPLY_TO=info@egadisailing.com`
 - Check log `logger.error` per `Brevo sendEmail failed`
+- Dashboard admin → Diagnostica → "Email fallite"
 - Brevo dashboard → Transactional → Log email
-- Verificare `BREVO_SENDER_EMAIL` e' verificato (SPF/DKIM ok)
+- Verificare `BREVO_SENDER_EMAIL` e' verificato e il dominio ha DNS auth OK
+  (Brevo code, DKIM, DMARC)
 - Spam folder del cliente
 
 **Azione**:
 - Brevo quota superata (300/gg free) → upgrade piano
 - Sender non verificato → Brevo → Settings → Senders → verify domain
+- Retry outbox: `GET /api/cron/email-outbox` con Bearer `CRON_SECRET`
+
+**Smoke test produzione**:
+```bash
+EMAIL_DELIVERY_MODE=brevo BREVO_TEST_TO=tuamail@example.com npm run brevo:smoke
+```
+
+Risultato atteso: JSON con `delivered: true` e `messageId`, email visibile
+nei log transazionali Brevo e ricevuta dall'indirizzo test.
 
 <!-- BEGIN:OVERRIDE_SYSTEM -->
 ## Override system — Fase 1 Trimarano

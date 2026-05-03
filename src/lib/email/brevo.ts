@@ -31,13 +31,14 @@ export interface SendEmailResult {
 /**
  * Invia email transazionale via Brevo REST API.
  *
- * Failure-safe per design: in dev senza API key logga e prosegue (ritorna
- * `false`). In production rilancia ExternalServiceError (il chiamante
- * decide se bloccare).
+ * Failure-safe per design: in development con `EMAIL_DELIVERY_MODE=log`
+ * registra l'invio simulato e ritorna delivered=true senza chiamare Brevo.
+ * In production rilancia ExternalServiceError (il chiamante decide se
+ * bloccare).
  *
  * R14-REG-C1: ritorna `boolean` (true = consegnato a Brevo 2xx, false =
  * dev skip). `throw` invece di `return false` solo in prod con errori
- * upstream effettivi — cosi' il dispatcher distingue skip da fail e il
+ * upstream effettivi - cosi' il dispatcher distingue skip da fail e il
  * caller non marca falsi "anyOk=true".
  */
 export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
@@ -46,14 +47,20 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
 }
 
 export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendEmailResult> {
+  if (env.EMAIL_DELIVERY_MODE === "log") {
+    const messageId = `dev-log-${Date.now().toString(36)}`;
+    logger.info(
+      { subject: opts.subject, messageId },
+      "Email delivery log mode - Brevo API not called",
+    );
+    return { delivered: true, messageId };
+  }
+
   if (!env.BREVO_API_KEY) {
-    // In production, env.ts ha gia' enforced la presenza della key quindi
-    // arriveremo qui solo se mancante. Fail loud invece di silent-skip.
-    if (env.NODE_ENV === "production") {
-      throw new ExternalServiceError("Brevo", "BREVO_API_KEY not configured");
-    }
-    logger.warn({ subject: opts.subject }, "BREVO_API_KEY not set in dev — skipping email send");
-    return { delivered: false };
+    // In production env.ts fa fail-fast. In dev/staging, se qualcuno forza
+    // EMAIL_DELIVERY_MODE=brevo senza key, falliamo forte invece di creare
+    // falsi SENT.
+    throw new ExternalServiceError("Brevo", "BREVO_API_KEY not configured");
   }
 
   try {
@@ -69,7 +76,7 @@ export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendE
         // R24-A3-A1 + R24-P2-MEDIA: defense-in-depth anti header-injection.
         // `toName` deriva da `Customer.firstName + lastName`. Brevo REST
         // accetta JSON quindi CRLF nel campo non inietta header a livello
-        // edge, ma internamente Brevo costruisce RFC5322 — documentazione
+        // edge, ma internamente Brevo costruisce RFC5322 - documentazione
         // warn su newline. safePlain strip \r\n + control chars. Se dopo
         // sanitize la stringa e' vuota (whitespace-only input), passiamo
         // `undefined` per evitare "From  <email>" con name vuoto nel MUA.
@@ -93,7 +100,7 @@ export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendE
 
     if (!res.ok) {
       // R14-Area1-ALTA: body Brevo 4xx spesso include l'email destinataria
-      // e estratti del contenuto — niente raw body nel log. Solo status +
+      // e estratti del contenuto - niente raw body nel log. Solo status +
       // primo codice/messaggio JSON se presente.
       const errorBody = await res.text().catch(() => "");
       let code: string | undefined;
