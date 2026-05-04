@@ -393,9 +393,9 @@ export function LandingSections({ services }: LandingSectionsProps) {
           src: "/images/experience-polaroids/chef-a-bordo-rada.webp",
         },
         {
-          caption: "Sapori locali",
+          caption: "NEEL 43",
           color: "#DDA0DD",
-          src: "/images/experience-polaroids/chef-a-bordo-dettaglio-piatto.webp",
+          src: "/images/boats/neel-43/neel-43-hero.webp",
         },
       ],
     },

@@ -24,14 +24,11 @@ services:
     image: edoburu/pgbouncer:v1.25.1-p0
     restart: unless-stopped
     environment:
-      DATABASES_HOST: postgres
-      DATABASES_PORT: 5432
-      DATABASES_USER: ${POSTGRES_USER}
-      DATABASES_PASSWORD: ${POSTGRES_PASSWORD}
-      DATABASES_DBNAME: ${POSTGRES_DB}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       POOL_MODE: transaction
       DEFAULT_POOL_SIZE: 30
       MAX_CLIENT_CONN: 200
+      IGNORE_STARTUP_PARAMETERS: extra_float_digits,statement_timeout
       AUTH_TYPE: scram-sha-256
     depends_on:
       postgres:
