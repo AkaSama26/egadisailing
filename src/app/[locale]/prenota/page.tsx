@@ -14,6 +14,7 @@ import { getDisplayPriceMap } from "@/lib/pricing/display";
 import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
 import { PASSENGER_FARE_SERVICE_TYPE } from "@/lib/pricing/passenger-fare-rules-shared";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
+import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
 function experienceKeyForOption(service: BookingServiceOption): string {
   if (service.serviceType === "BOAT_SHARED") return `${service.boatId}:BOAT_SHARED`;
@@ -146,7 +147,7 @@ export default async function BookingIndexPage({
         initialBoatId={initialBoatId}
         initialExperienceKey={initialExperienceKey}
         initialDurationType={initialDurationType}
-        turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+        turnstileSiteKey={getPublicTurnstileSiteKey()}
         appUrl={env.APP_URL}
         useStripeCheckout={env.FEATURE_STRIPE_CHECKOUT_ENABLED}
         passengerFareRules={passengerFareRules}

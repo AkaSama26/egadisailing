@@ -18,6 +18,7 @@ declare global {
           action?: string;
           "response-field"?: boolean;
           "response-field-name"?: string;
+          appearance?: "always" | "execute" | "interaction-only";
         },
       ) => string;
       reset: (widgetId?: string) => void;
@@ -45,6 +46,8 @@ export interface TurnstileWidgetProps {
   responseFieldName?: string;
   /** Tema visuale; default auto (rispetta prefers-color-scheme). */
   theme?: "light" | "dark" | "auto";
+  /** Mostra il riquadro solo quando Cloudflare richiede interazione. */
+  appearance?: "always" | "execute" | "interaction-only";
   className?: string;
 }
 
@@ -80,6 +83,7 @@ export function TurnstileWidget(props: TurnstileWidgetProps) {
         widgetIdRef.current = window.turnstile.render(`#${CSS.escape(containerId)}`, {
           sitekey: props.siteKey,
           theme: props.theme ?? "auto",
+          appearance: props.appearance ?? "interaction-only",
           "response-field": true,
           "response-field-name": props.responseFieldName ?? "cf-turnstile-response",
           callback: (token: string) => props.onToken?.(token),

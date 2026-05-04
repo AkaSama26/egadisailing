@@ -7,6 +7,7 @@ import {
 } from "@/lib/cookie-consent/policy";
 import { getCookieConsentPublicServices } from "@/lib/cookie-consent/server";
 import { getSiteVerificationConfig } from "@/lib/site-verification";
+import { PUBLIC_COMPANY_LEGAL, PRIVACY_CONTACT_EMAIL, getEmailHref } from "@/lib/public-contact";
 
 export async function generateMetadata({
   params,
@@ -213,8 +214,8 @@ export default function CookiePolicyPage() {
 
         <h2>Contatti</h2>
         <p>
-          Per domande sulla cookie policy:{" "}
-          <a href="mailto:privacy@egadisailing.com">privacy@egadisailing.com</a>.
+          Per domande sulla cookie policy di {PUBLIC_COMPANY_LEGAL.name}:{" "}
+          <a href={getEmailHref(PRIVACY_CONTACT_EMAIL)}>{PRIVACY_CONTACT_EMAIL}</a>.
         </p>
       </article>
     </div>

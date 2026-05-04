@@ -13,8 +13,9 @@ import {
   Clock,
   UserCheck,
   ArrowRight,
+  Compass,
+  Sparkles,
 } from "lucide-react";
-import { appendVatIncluded } from "@/lib/pricing/vat-label";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -30,7 +31,6 @@ interface SerializedService {
   durationHours: number;
   capacityMax: number;
   pricingUnit: string;
-  minPrice: string | null;
 }
 
 interface LandingSectionsProps {
@@ -45,26 +45,27 @@ interface FeaturedPolaroid {
 
 interface FeaturedPackage {
   key: string;
+  eyebrow: string;
   title: string;
   subtitle: string;
   durationLabel: string;
   detailLabel: string;
-  priceLabel?: string;
+  chips: string[];
+  details: Array<{
+    title: string;
+    text: string;
+  }>;
   href: string;
   ctaLabel: string;
   polaroids: FeaturedPolaroid[];
 }
 
-function getLowestPrice(services: SerializedService[], serviceIds: string[]) {
-  return services
-    .filter((service) => serviceIds.includes(service.id) && service.minPrice)
-    .map((service) => ({
-      amount: Number(service.minPrice),
-      label: service.minPrice!,
-    }))
-    .filter((price) => Number.isFinite(price.amount))
-    .sort((a, b) => a.amount - b.amount)[0]?.label;
-}
+const featuredPackageOrder: Record<string, number> = {
+  "chef-a-bordo": 10,
+  charter: 20,
+  "barca-8-ore": 30,
+  "barca-4-ore": 40,
+};
 
 function getMaxCapacity(services: SerializedService[], serviceIds: string[]) {
   return Math.max(
@@ -178,6 +179,10 @@ function ExperienceRow({
         animation={isEven ? "fade-left" : "fade-right"}
         className={`space-y-6 ${isEven ? "lg:order-1" : "lg:order-2"}`}
       >
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+          {experience.eyebrow}
+        </p>
+
         <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
           {experience.title}
         </h2>
@@ -186,7 +191,7 @@ function ExperienceRow({
           {experience.subtitle}
         </p>
 
-        <div className="flex items-center gap-6 text-white/60 text-sm">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-white/70">
           <span className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             {experience.durationLabel}
@@ -195,13 +200,29 @@ function ExperienceRow({
             <UserCheck className="h-4 w-4" />
             {experience.detailLabel}
           </span>
+          {experience.chips.map((chip, chipIndex) => {
+            const Icon = chipIndex % 2 === 0 ? Compass : Sparkles;
+            return (
+              <span key={chip} className="flex items-center gap-2">
+                <Icon className="h-4 w-4" />
+                {chip}
+              </span>
+            );
+          })}
         </div>
 
-        {experience.priceLabel && (
-          <p className="text-xl font-semibold text-[var(--color-gold)]">
-            {experience.priceLabel}
-          </p>
-        )}
+        <div className="grid max-w-2xl gap-4 sm:grid-cols-3">
+          {experience.details.map((detail) => (
+            <div key={detail.title} className="border-l border-white/18 pl-4">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-white/85">
+                {detail.title}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-white/58">
+                {detail.text}
+              </p>
+            </div>
+          ))}
+        </div>
 
         <Link
           href={experience.href}
@@ -333,20 +354,31 @@ function ExperienceRow({
 export function LandingSections({ services }: LandingSectionsProps) {
   const t = useTranslations();
   const locale = useLocale();
-  const priceFrom = (serviceIds: string[]) => {
-    const price = getLowestPrice(services, serviceIds);
-    return price ? appendVatIncluded(`${t("common.priceFrom")} €${price}`, locale) : undefined;
-  };
   const maxPax = (serviceIds: string[]) => getMaxCapacity(services, serviceIds);
   const featuredPackages: FeaturedPackage[] = [
     {
       key: "chef-a-bordo",
+      eyebrow: "Premium privato",
       title: "Chef a bordo",
       subtitle:
-        "Il trimarano Egadisailing con chef, skipper e hostess per una giornata premium tra sapori locali, mare e soste in rada.",
+        "Il trimarano Egadisailing in esclusiva, con chef, skipper e hostess per una giornata curata tra sapori locali, mare e soste in rada.",
       durationLabel: "8 ore",
       detailLabel: `Max ${maxPax(["exclusive-experience"])} pax`,
-      priceLabel: priceFrom(["exclusive-experience"]),
+      chips: ["Pranzo in rada", "Chef e hostess"],
+      details: [
+        {
+          title: "Per chi",
+          text: "Coppie, famiglie o gruppi che vogliono l'esperienza piu completa e senza pensieri.",
+        },
+        {
+          title: "A bordo",
+          text: "Trimarano privato, crew dedicata, tavola preparata e tempi gestiti con calma.",
+        },
+        {
+          title: "Rotta",
+          text: "Favignana e Levanzo, con baie scelte in base a mare, vento e luce della giornata.",
+        },
+      ],
       href: `/${locale}/experiences/exclusive-experience`,
       ctaLabel: "Scopri di più",
       polaroids: [
@@ -369,12 +401,27 @@ export function LandingSections({ services }: LandingSectionsProps) {
     },
     {
       key: "charter",
+      eyebrow: "Esplora le Egadi",
       title: "Charter",
       subtitle:
-        "Da 3 a 7 giornate sul trimarano, con itinerario concordato tra Favignana, Levanzo e Marettimo in base alle tue preferenze.",
+        "Da 3 a 7 giornate sul trimarano, con rotta concordata tra Favignana, Levanzo e Marettimo e notti vissute vicino al mare.",
       durationLabel: "3-7 giornate",
       detailLabel: "Itinerario su misura",
-      priceLabel: priceFrom(["cabin-charter"]),
+      chips: ["Notti a bordo", "Rotta flessibile"],
+      details: [
+        {
+          title: "Per chi",
+          text: "Chi vuole dormire a bordo e vivere le Egadi senza il rientro obbligato della sera.",
+        },
+        {
+          title: "A bordo",
+          text: "Cabine, spazi comuni, cucina e skipper: il trimarano diventa una casa sul mare.",
+        },
+        {
+          title: "Rotta",
+          text: "Favignana, Levanzo e Marettimo entrano nel programma secondo durata e meteo.",
+        },
+      ],
       href: `/${locale}/experiences/charter`,
       ctaLabel: "Scopri di più",
       polaroids: [
@@ -397,19 +444,29 @@ export function LandingSections({ services }: LandingSectionsProps) {
     },
     {
       key: "barca-4-ore",
+      eyebrow: "Mezza giornata",
       title: "Barca 4 ore",
       subtitle:
-        "La formula agile per vivere le Egadi in mezza giornata, con bagno, relax e rotta scelta in base al mare.",
+        "La formula agile per vivere le Egadi in mezza giornata, con bagno, navigazione panoramica e rotta scelta in base al mare.",
       durationLabel: "4 ore",
       detailLabel: "Condiviso o esclusivo",
-      priceLabel: priceFrom([
-        "boat-shared-morning",
-        "boat-shared-afternoon",
-        "boat-exclusive-morning",
-        "boat-exclusive-afternoon",
-      ]),
-      href: `/${locale}/prenota?boat=boat&durationType=HALF_DAY_AFTERNOON`,
-      ctaLabel: "Prenota",
+      chips: ["Mattina o pomeriggio", "Rientro preciso"],
+      details: [
+        {
+          title: "Per chi",
+          text: "Perfetta se hai poco tempo ma vuoi comunque mare, tuffo e una rotta bella da ricordare.",
+        },
+        {
+          title: "A bordo",
+          text: "Posti condivisi o barca privata, con skipper e soste compatte nelle acque piu riparate.",
+        },
+        {
+          title: "Rotta",
+          text: "Favignana o Levanzo, scegliendo la cala migliore raggiungibile in sicurezza in 4 ore.",
+        },
+      ],
+      href: `/${locale}/experiences/boat-shared-afternoon`,
+      ctaLabel: "Scopri di più",
       polaroids: [
         {
           caption: "Tour agile",
@@ -430,14 +487,29 @@ export function LandingSections({ services }: LandingSectionsProps) {
     },
     {
       key: "barca-8-ore",
+      eyebrow: "Giornata intera",
       title: "Barca 8 ore",
       subtitle:
-        "Una giornata completa tra baie, snorkeling e tempo lento a bordo, disponibile in formula condivisa o esclusiva.",
+        "Una giornata completa tra baie, snorkeling e tempo lento a bordo, disponibile con posti condivisi o barca in esclusiva.",
       durationLabel: "8 ore",
       detailLabel: "Condiviso o esclusivo",
-      priceLabel: priceFrom(["boat-shared-full-day", "boat-exclusive-full-day"]),
-      href: `/${locale}/prenota?boat=boat&durationType=FULL_DAY`,
-      ctaLabel: "Prenota",
+      chips: ["Snorkeling", "Favignana e Levanzo"],
+      details: [
+        {
+          title: "Per chi",
+          text: "La scelta migliore se vuoi piu tempo in acqua, meno fretta e piu flessibilita tra le cale.",
+        },
+        {
+          title: "A bordo",
+          text: "Formula condivisa o privata, skipper incluso e soste gestite secondo il ritmo del gruppo.",
+        },
+        {
+          title: "Rotta",
+          text: "Giornata tra Favignana e Levanzo, con scalo a Favignana per pranzo, bagno, snorkeling e rientro morbido verso Trapani.",
+        },
+      ],
+      href: `/${locale}/experiences/boat-shared-full-day`,
+      ctaLabel: "Scopri di più",
       polaroids: [
         {
           caption: "Giornata intera",
@@ -456,7 +528,13 @@ export function LandingSections({ services }: LandingSectionsProps) {
         },
       ],
     },
-  ].filter((item) => item.detailLabel !== "Max 0 pax");
+  ]
+    .filter((item) => item.detailLabel !== "Max 0 pax")
+    .sort(
+      (a, b) =>
+        (featuredPackageOrder[a.key] ?? Number.MAX_SAFE_INTEGER) -
+        (featuredPackageOrder[b.key] ?? Number.MAX_SAFE_INTEGER),
+    );
 
   return (
     <div className="overflow-x-clip">
@@ -465,7 +543,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
       {/*  Background blends from hero video sea color to teal         */}
       {/* ============================================================ */}
       <section
-        className="relative py-32 px-4 md:px-8 lg:px-12"
+        className="egadi-water-reflection relative py-32 px-4 md:px-8 lg:px-12"
         style={{
           background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 60%, #071934 100%)",
         }}
@@ -498,12 +576,12 @@ export function LandingSections({ services }: LandingSectionsProps) {
       {/*  Section 3: La scelta giusta per il tour in barca alle Egadi */}
       {/* ============================================================ */}
       <section
-        className="relative overflow-hidden px-4 py-28 md:px-8 lg:px-12 lg:py-32"
+        className="egadi-water-reflection relative overflow-hidden px-4 py-28 md:px-8 lg:px-12 lg:py-32"
         style={{
           background: "linear-gradient(180deg, #071934 0%, #0a2a4a 38%, #0c3d5e 72%, #071934 100%)",
         }}
       >
-        <div className="mx-auto max-w-7xl">
+        <div className="relative z-10 mx-auto max-w-7xl">
           <ScrollSection animation="fade-up">
             <div className="mx-auto mb-20 max-w-7xl text-center">
               <div className="relative inline-block max-w-6xl">
@@ -749,12 +827,12 @@ export function LandingSections({ services }: LandingSectionsProps) {
       {/*  Section 4: Fatti convincere — Recensioni TripAdvisor        */}
       {/* ============================================================ */}
       <section
-        className="py-32 px-4 md:px-8 lg:px-12"
+        className="relative py-32 px-4 md:px-8 lg:px-12"
         style={{
           background: "linear-gradient(180deg, #071934 0%, #0a2a4a 50%, #071934 100%)",
         }}
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="relative z-10 max-w-7xl mx-auto">
           <ScrollSection animation="fade-up">
             <div className="text-center mb-20">
               <RevealTitle text="Fatti Convincere" />
@@ -819,12 +897,12 @@ export function LandingSections({ services }: LandingSectionsProps) {
       {/*  Section 5: CTA Finale con pennellata SVG + form pillola    */}
       {/* ============================================================ */}
       <section
-        className="py-32 px-4 md:px-8 lg:px-12"
+        className="relative py-32 px-4 md:px-8 lg:px-12"
         style={{
           background: "linear-gradient(180deg, #071934 0%, #0c3d5e 50%, #071934 100%)",
         }}
       >
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
           <ScrollSection animation="fade-up">
             <div className="relative inline-block mb-8">
               <h2 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-white relative z-10">

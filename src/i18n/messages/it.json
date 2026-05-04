@@ -72,7 +72,7 @@
     "cookiePreferences": "Preferenze cookie",
     "tagline": "Esperienze in barca uniche nelle Isole Egadi",
     "quickLinks": "Link Rapidi",
-    "address": "Porto di Trapani, Trapani (TP), Italia"
+    "address": "EGADI SAILING SRLS, Via Calipso 42, 91100 Trapani"
   },
   "about": {
     "title": "Chi Siamo",
@@ -92,9 +92,9 @@
   "contacts": {
     "title": "Contattaci",
     "subtitle": "Siamo qui per te",
-    "address": "Porto di Trapani, Trapani (TP), Italia",
+    "address": "Via dei Gladioli 15, 91100 Trapani",
     "email": "info@egadisailing.com",
-    "phone": "+39 000 000 0000",
+    "phone": "🇮🇹 +39 345 971 0696 · 🇬🇧 +39 340 145 4585",
     "formName": "Nome",
     "formEmail": "Email",
     "formMessage": "Messaggio",
@@ -210,7 +210,7 @@
       "stop5": { "name": "Rientro", "description": "Navigazione al tramonto verso Trapani" }
     },
     "exclusive": {
-      "stop1": { "name": "Accoglienza a bordo", "description": "Punto di incontro: Via dei Gladioli, 16, Trapani, Italy, 91100 Trapani." },
+      "stop1": { "name": "Accoglienza a bordo", "description": "Punto di incontro: Via dei Gladioli 15, 91100 Trapani." },
       "stop2": { "name": "Cala Azzurra", "island": "Favignana", "description": "Bagno in acque cristalline. Cala Azzurra, Favignana, Free municipal consortium of Trapani, Italy." },
       "stop3": { "name": "Cala Rossa", "island": "Favignana", "description": "Pranzo gourmet in rada. Cala Rossa, Favignana, Free municipal consortium of Trapani, Italy, 91023." },
       "stop4": { "name": "Show cooking a bordo", "description": "Lo chef locale prepara il pranzo in rada a Cala Rossa, Favignana." },

@@ -10,6 +10,7 @@ import { dispatchNotification, toDispatchResult } from "@/lib/notifications/disp
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { getAlternativeDatesIso } from "../alternative-dates";
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 
 export interface RejectOverrideResult {
   rejected: true;
@@ -111,7 +112,7 @@ export async function rejectOverride(
           refundAmount: request.newBooking.totalPrice.toFixed(2),
           alternativeDates,
           bookingPortalUrl: `${env.APP_URL}/b/sessione`,
-          contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+          contactEmail: PUBLIC_CONTACT_EMAIL,
         } as unknown as Record<string, unknown>,
       });
       const result = toDispatchResult(outcome);

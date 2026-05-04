@@ -6,6 +6,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { buttonVariants } from "@/components/ui/button";
+import { liquidGlassButton, liquidGlassButtonLight } from "@/lib/ui/liquid-glass";
+import { BRAND_LOGO_SRC } from "@/lib/public-assets";
 import {
   Sheet,
   SheetTrigger,
@@ -47,7 +49,7 @@ export function Navbar() {
       className={cn(
         "fixed top-0 left-0 w-full z-[200] transition-all duration-300",
         !isTransparent
-          ? "bg-white/90 backdrop-blur-md shadow-sm"
+          ? "border-b border-white/60 bg-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl backdrop-saturate-150"
           : "bg-transparent"
       )}
     >
@@ -56,11 +58,22 @@ export function Navbar() {
         <Link
           href={`/${locale}`}
           className={cn(
-            "font-heading text-xl font-bold tracking-tight transition-colors",
+            "group flex items-center gap-2 font-heading text-xl font-bold tracking-tight transition-colors",
             !isTransparent ? "text-[var(--color-ocean)]" : "text-white"
           )}
         >
-          Egadisailing
+          <span className="flex h-[3.25rem] w-[2.5rem] shrink-0 items-center justify-center">
+            <img
+              src={BRAND_LOGO_SRC}
+              alt=""
+              aria-hidden="true"
+              className={cn(
+                "h-full w-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.24)]",
+                isTransparent ? "brightness-0 invert" : "brightness-0",
+              )}
+            />
+          </span>
+          <span>Egadi Sailing</span>
         </Link>
 
         {/* Desktop nav links */}
@@ -87,10 +100,10 @@ export function Navbar() {
           <Link
             href={recoveryHref}
             className={cn(
-              "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+              "rounded-full px-4 py-2 text-sm font-semibold",
               !isTransparent
-                ? "border-slate-200 text-slate-700 hover:bg-slate-50"
-                : "border-white/30 text-white hover:bg-white/10"
+                ? liquidGlassButtonLight
+                : cn(liquidGlassButton, "text-white")
             )}
           >
             {tCommon("recoverBooking")}
@@ -112,10 +125,10 @@ export function Navbar() {
             <SheetTrigger
               render={<button type="button" />}
               className={cn(
-                "relative z-[210] inline-flex size-11 shrink-0 items-center justify-center rounded-md p-2 transition-colors",
+                "relative z-[210] inline-flex size-11 shrink-0 items-center justify-center rounded-full p-2",
                 scrolled
-                  ? "text-gray-700 hover:bg-gray-100"
-                  : "text-white hover:bg-transparent"
+                  ? liquidGlassButtonLight
+                  : cn(liquidGlassButton, "text-white")
               )}
             >
               <MenuIcon className="block size-7 stroke-[2.75]" />
@@ -154,7 +167,10 @@ export function Navbar() {
                 <Link
                   href={recoveryHref}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="mt-2 block rounded-md border border-gray-200 px-3 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                  className={cn(
+                    "mt-2 block rounded-full px-3 py-2.5 text-center text-sm font-semibold",
+                    liquidGlassButtonLight,
+                  )}
                 >
                   {tCommon("recoverBooking")}
                 </Link>

@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { routing } from "@/i18n/routing";
+import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 
 const localeLabels: Record<string, string> = {
   it: "IT",
@@ -62,7 +63,10 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     <div ref={ref} className={cn("relative", className)}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 rounded-md border border-white/30 px-2 py-1 text-sm font-medium transition-colors hover:bg-white/10"
+        className={cn(
+          "flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-medium text-inherit",
+          liquidGlassButton,
+        )}
         aria-label="Select language"
       >
         <svg

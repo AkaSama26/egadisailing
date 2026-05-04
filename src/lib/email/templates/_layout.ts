@@ -1,5 +1,6 @@
 import { escapeHtml, safeUrl } from "@/lib/html-escape";
 import { env } from "@/lib/env";
+import { PUBLIC_COMPANY_LEGAL } from "@/lib/public-contact";
 
 export { escapeHtml, safeUrl };
 
@@ -34,7 +35,7 @@ export function emailLayout(opts: {
       ${ctaBlock}
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0 16px;" />
       <p style="color: #6b7280; font-size: 12px; line-height: 1.5;">
-        Egadisailing Srl · Email transazionale relativa ai servizi richiesti.<br />
+        ${escapeHtml(PUBLIC_COMPANY_LEGAL.name)} · P.IVA ${escapeHtml(PUBLIC_COMPANY_LEGAL.vatNumber)} · Email transazionale relativa ai servizi richiesti.<br />
         Per assistenza rispondi a questa email o scrivici dai contatti ufficiali.
       </p>
       <p style="color: #6b7280; font-size: 12px;">

@@ -6,6 +6,7 @@ import { BookingWizard } from "@/components/booking/booking-wizard";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { getExperienceContent } from "@/data/catalog/experiences";
 import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
+import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
 // Round 11 SEO-M3: wizard di prenotazione non indexabile (no SEO value,
 // contiene codici/intent-dati sensibili).
@@ -61,7 +62,7 @@ export default async function BookingPage({
           capacityMax={service.capacityMax}
           defaultPaymentSchedule={service.defaultPaymentSchedule}
           defaultDepositPercentage={service.defaultDepositPercentage}
-          turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+          turnstileSiteKey={getPublicTurnstileSiteKey()}
           appUrl={env.APP_URL}
           useStripeCheckout={env.FEATURE_STRIPE_CHECKOUT_ENABLED}
           passengerFareRules={passengerFareRules}

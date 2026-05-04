@@ -22,6 +22,7 @@ import { SvgPhotoFrame } from "@/components/svg-photo-frame";
 import { routing } from "@/i18n/routing";
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import {
   getBoatContent,
   getBoatsPageContent,
@@ -149,7 +150,22 @@ export default async function BoatDetailPage({
         description: boat.seoDescription,
         image: boat.gallery.map((item) => absoluteUrl(item.src)),
         brand: { "@type": "Brand", name: "Egadisailing" },
-        provider: { "@type": "Organization", name: "Egadisailing", url: base },
+        provider: {
+          "@type": "Organization",
+          name: PUBLIC_COMPANY_LEGAL.name,
+          alternateName: "Egadi Sailing",
+          url: base,
+          email: PUBLIC_CONTACT_EMAIL,
+          taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "Via Calipso 42",
+            postalCode: "91100",
+            addressLocality: "Trapani",
+            addressRegion: "Sicilia",
+            addressCountry: "IT",
+          },
+        },
         ...(boat.externalUrl ? { sameAs: boat.externalUrl } : {}),
       },
       {

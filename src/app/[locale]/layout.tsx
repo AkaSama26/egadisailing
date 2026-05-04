@@ -5,6 +5,7 @@ import { routing } from "@/i18n/routing";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button";
 import { getCookieConsentPublicServices } from "@/lib/cookie-consent/server";
 
 export default async function LocaleLayout({
@@ -36,6 +37,7 @@ export default async function LocaleLayout({
       </main>
       <Footer />
       <CookieConsentBanner locale={locale} services={cookieConsentServices} />
+      <FloatingWhatsAppButton locale={locale} />
     </NextIntlClientProvider>
   );
 }

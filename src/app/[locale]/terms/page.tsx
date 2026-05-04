@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { CURRENT_POLICY_VERSION, EFFECTIVE_DATE } from "@/lib/legal/policy-version";
 import { env } from "@/lib/env";
+import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL, getEmailHref } from "@/lib/public-contact";
 
 export async function generateMetadata({
   params,
@@ -38,7 +39,10 @@ export default function TermsPage() {
         <h2>1. Oggetto del contratto</h2>
         <p>
           Il presente contratto disciplina la prenotazione di esperienze nautiche alle Isole Egadi
-          erogate da <strong>Egadisailing</strong>.
+          erogate da <strong>{PUBLIC_COMPANY_LEGAL.name}</strong>, con sede legale in{" "}
+          {PUBLIC_COMPANY_LEGAL.legalAddress}, P.IVA {PUBLIC_COMPANY_LEGAL.vatNumber}, PEC{" "}
+          <a href={getEmailHref(PUBLIC_COMPANY_LEGAL.pec)}>{PUBLIC_COMPANY_LEGAL.pec}</a>,
+          Codice Univoco {PUBLIC_COMPANY_LEGAL.recipientCode}.
         </p>
 
         <h2>2. Prenotazione e pagamento</h2>
@@ -83,7 +87,8 @@ export default function TermsPage() {
         <h2>7. Contatti</h2>
         <p>
           Per questioni contrattuali:{" "}
-          <a href="mailto:info@egadisailing.com">info@egadisailing.com</a>.
+          <a href={getEmailHref()}>{PUBLIC_CONTACT_EMAIL}</a>. PEC:{" "}
+          <a href={getEmailHref(PUBLIC_COMPANY_LEGAL.pec)}>{PUBLIC_COMPANY_LEGAL.pec}</a>.
         </p>
       </article>
     </div>

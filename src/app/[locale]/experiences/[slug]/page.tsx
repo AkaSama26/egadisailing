@@ -23,6 +23,7 @@ import {
   ExperienceBookingDialogButton,
   SmoothAnchorLink,
 } from "@/components/experience-detail-actions";
+import { ExperiencePresenceBadge } from "@/components/experience-presence-badge";
 import {
   getExperienceContent,
   getExperiencePublicSlug,
@@ -33,6 +34,7 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
 import { vatIncludedLabel } from "@/lib/pricing/vat-label";
+import { getExperienceItinerary } from "@/lib/experiences/itineraries";
 import {
   getCharterDurationDisplayPrices,
   getDisplayPrice,
@@ -40,6 +42,8 @@ import {
 } from "@/lib/pricing/display";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
+import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
+import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 
 const FALLBACK_HERO_IMAGE =
   "/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp";
@@ -185,6 +189,219 @@ function getDetailCopy(
   };
 }
 
+function getSeoExpansionCopy(
+  locale: string,
+  service: { type: string; durationType: string; durationHours: number; capacityMax: number },
+  durationText: string,
+  boatTitle?: string,
+) {
+  const isEn = locale === "en";
+  const isCharter = service.type === "CABIN_CHARTER";
+  const isPrivateBoat = service.type === "BOAT_EXCLUSIVE";
+  const isSharedBoat = service.type === "BOAT_SHARED";
+  const isGourmet = service.type === "EXCLUSIVE_EXPERIENCE";
+  const isHalfDay =
+    service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
+  const isFullDay = service.durationType === "FULL_DAY";
+
+  const routeText = isCharter
+    ? isEn
+      ? "Favignana, Levanzo and Marettimo can be combined across several days, always according to the weather."
+      : "Favignana, Levanzo e Marettimo possono entrare nella rotta su piu giornate, sempre in base al meteo."
+    : isFullDay
+      ? isEn
+        ? "The full day gives room for Favignana, Levanzo, swim stops and relaxed time at anchor."
+        : "La giornata intera lascia spazio a Favignana, Levanzo, soste bagno e tempo in rada senza fretta."
+      : isHalfDay
+        ? isEn
+          ? "The half day focuses on the best sheltered coves between Favignana and Levanzo."
+          : "La mezza giornata si concentra sulle cale piu riparate tra Favignana e Levanzo."
+    : isEn
+      ? "The crew plans the route between the most scenic and sheltered Egadi bays."
+      : "La crew costruisce la rotta tra le baie piu sceniche e riparate delle Egadi.";
+
+  const formulaText = isCharter
+    ? isEn
+      ? "A private trimaran charter with skipper, cabins and a day-by-day route."
+      : "Charter privato in trimarano con skipper, cabine e rotta costruita giorno per giorno."
+    : isPrivateBoat
+      ? isEn
+        ? "The boat is reserved for your group, with stops and rhythm shaped with the skipper."
+        : "La barca e riservata al tuo gruppo, con soste e ritmo concordati con lo skipper."
+      : isSharedBoat
+        ? isEn
+          ? "Book individual seats and share the experience with other guests."
+          : "Prenoti posti singoli e condividi l'esperienza con altri ospiti."
+        : isGourmet
+          ? isEn
+            ? "A premium private trimaran day with chef, skipper and hostess."
+            : "Giornata privata premium in trimarano con chef, skipper e hostess."
+          : isEn
+            ? "A curated Egadi experience with professional crew."
+            : "Un'esperienza alle Egadi curata dalla crew professionale.";
+
+  const whatYouSeeItems = isCharter
+    ? [
+        {
+          title: isEn ? "Nights at anchor" : "Notti in rada",
+          text: isEn
+            ? "Wake up close to sheltered bays and adjust each day without rushing."
+            : "Ti svegli vicino alle baie riparate e moduli ogni giornata senza fretta.",
+        },
+        {
+          title: isEn ? "Favignana, Levanzo, Marettimo" : "Favignana, Levanzo, Marettimo",
+          text: isEn
+            ? "The islands are chosen according to wind, sea and the length of your charter."
+            : "Le isole si scelgono in base a vento, mare e durata del charter.",
+        },
+        {
+          title: isEn ? "Life on board" : "Vita a bordo",
+          text: isEn
+            ? "Cabins, galley and shared spaces make the trimaran a small floating home."
+            : "Cabine, cucina e spazi comuni rendono il trimarano una piccola casa sul mare.",
+        },
+      ]
+    : isFullDay
+      ? [
+          {
+            title: isEn ? "More swim time" : "Piu tempo in acqua",
+            text: isEn
+              ? "Eight hours mean less pressure between coves and more time for snorkelling."
+              : "Otto ore significano meno pressione tra le cale e piu tempo per snorkeling e bagno.",
+          },
+          {
+            title: isEn ? "Favignana and Levanzo" : "Favignana e Levanzo",
+            text: isEn
+              ? "The crew can work across both islands when the sea conditions allow it."
+              : "La crew puo lavorare su entrambe le isole quando il mare lo permette.",
+          },
+          {
+            title: isEn ? "Slow return" : "Rientro morbido",
+            text: isEn
+              ? "The last stretch keeps the day relaxed, with light and views changing on the way back."
+              : "L'ultimo tratto resta rilassato, con luce e vista che cambiano durante il rientro.",
+          },
+        ]
+      : [
+          {
+            title: isEn ? "Clear schedule" : "Orari chiari",
+            text: isEn
+              ? "A compact slot for guests who want sea, swimming and a precise return."
+              : "Una fascia compatta per chi vuole mare, bagno e un rientro preciso.",
+          },
+          {
+            title: isEn ? "Sheltered coves" : "Cale riparate",
+            text: isEn
+              ? "The skipper chooses the safest and clearest waters reachable in half a day."
+              : "Lo skipper sceglie le acque piu sicure e limpide raggiungibili in mezza giornata.",
+          },
+          {
+            title: isEn ? "Scenic navigation" : "Navigazione panoramica",
+            text: isEn
+              ? "Enough route time to feel the Egadi from the water, even with a shorter experience."
+              : "Abbastanza navigazione per sentire le Egadi dal mare, anche in un'esperienza breve.",
+          },
+        ];
+
+  const faqs = isCharter
+    ? [
+        {
+          question: isEn ? "How many days can the Egadi charter last?" : "Quanto puo durare il charter alle Egadi?",
+          answer: isEn
+            ? "The charter can be planned from 3 to 7 days, with the route adjusted around weather, sea conditions and the pace you want on board."
+            : "Il charter puo essere pianificato da 3 a 7 giornate, con rotta adattata a meteo, mare e ritmo che vuoi a bordo.",
+        },
+        {
+          question: isEn ? "Is provisioning included?" : "La cambusa e inclusa?",
+          answer: isEn
+            ? "Provisioning is not included in the package price. It can be organised with the crew before departure, together with any pantry refills."
+            : "La cambusa non e inclusa nel prezzo del pacchetto. Puo essere organizzata con la crew prima della partenza, insieme a eventuali refill.",
+        },
+        {
+          question: isEn ? "Can we choose the route?" : "Possiamo scegliere la rotta?",
+          answer: isEn
+            ? "Yes. The itinerary is agreed with the skipper and then adapted day by day according to wind, sea and anchorage conditions."
+            : "Si. L'itinerario si concorda con lo skipper e poi viene adattato giorno per giorno in base a vento, mare e condizioni delle rade.",
+        },
+        {
+          question: isEn ? "Where does boarding take place?" : "Dove avviene l'imbarco?",
+          answer: isEn
+            ? "Boarding is in Trapani, at Via dei Gladioli 15, 91100 Trapani, unless the crew confirms a different operational meeting point."
+            : "L'imbarco e a Trapani, in Via dei Gladioli 15, 91100 Trapani, salvo diversa indicazione operativa della crew.",
+        },
+      ]
+    : [
+        {
+          question: isEn ? "Where does the Egadi boat tour depart from?" : "Da dove parte il tour in barca alle Egadi?",
+          answer: isEn
+            ? "Departure is from Trapani, meeting at Via dei Gladioli 15, 91100 Trapani, unless the crew sends a different operational update."
+            : "La partenza e da Trapani, con punto di incontro in Via dei Gladioli 15, 91100 Trapani, salvo diversa comunicazione operativa della crew.",
+        },
+        {
+          question: isEn ? "Is the route always fixed?" : "La rotta e sempre la stessa?",
+          answer: isEn
+            ? "No. The skipper chooses the safest and most enjoyable route according to wind, sea, crowding and the time available."
+            : "No. Lo skipper sceglie la rotta piu sicura e piacevole in base a vento, mare, affollamento e tempo disponibile.",
+        },
+        {
+          question: isEn ? "Is this experience shared or private?" : "Questa esperienza e condivisa o privata?",
+          answer: formulaText,
+        },
+        {
+          question: isEn ? "Should I choose 4 hours or 8 hours?" : "Meglio scegliere 4 ore o 8 ore?",
+          answer: isHalfDay
+            ? isEn
+              ? "Choose 4 hours if you want a compact, clear schedule. Choose 8 hours if you want more swim time and more flexibility between Favignana and Levanzo."
+              : "Scegli 4 ore se vuoi una fascia compatta e orari chiari. Scegli 8 ore se vuoi piu tempo in acqua e piu flessibilita tra Favignana e Levanzo."
+            : isEn
+              ? "The 8-hour tour is best if you want a full day, more swim stops and a slower rhythm. The 4-hour tour works better when you have limited time."
+              : "Il tour di 8 ore e ideale se vuoi una giornata completa, piu soste bagno e ritmo lento. Il 4 ore funziona meglio quando hai poco tempo.",
+        },
+      ];
+
+  return {
+    practicalEyebrow: isEn ? "Before booking" : "Prima di prenotare",
+    practicalTitle: isEn ? "Practical details" : "Dettagli pratici",
+    practicalItems: [
+      {
+        icon: Anchor,
+        title: isEn ? "Departure from Trapani" : "Partenza da Trapani",
+        text: isEn
+          ? "Meeting point: Via dei Gladioli 15, 91100 Trapani."
+          : "Punto di incontro: Via dei Gladioli 15, 91100 Trapani.",
+      },
+      {
+        icon: Clock,
+        title: isEn ? "Duration" : "Durata",
+        text: isCharter
+          ? isEn
+            ? "From 3 to 7 days, planned before departure."
+            : "Da 3 a 7 giornate, pianificate prima della partenza."
+          : durationText,
+      },
+      {
+        icon: Compass,
+        title: isEn ? "Route" : "Rotta",
+        text: routeText,
+      },
+      {
+        icon: Users,
+        title: isEn ? "Format and capacity" : "Formula e capienza",
+        text: `${formulaText}${boatTitle ? ` ${isEn ? "Boat" : "Barca"}: ${boatTitle}.` : ""} ${
+          isEn ? `Up to ${service.capacityMax} guests.` : `Fino a ${service.capacityMax} ospiti.`
+        }`,
+      },
+    ],
+    whatYouSeeTitle: isEn ? "What you will experience" : "Cosa vivrai a bordo",
+    whatYouSeeIntro: isEn
+      ? "Extra context for choosing the right experience before starting the booking flow."
+      : "Qualche dettaglio in piu per scegliere l'esperienza giusta prima di prenotare.",
+    whatYouSeeItems,
+    faqTitle: isEn ? "Questions about this experience" : "Domande su questa esperienza",
+    faqs,
+  };
+}
+
 const heroFrameLayouts = [
   "right-2 top-0 z-30 w-[25rem] rotate-2",
   "left-0 top-[10.5rem] z-20 w-[22.5rem] -rotate-5",
@@ -303,12 +520,13 @@ export default async function ExperienceDetailPage({
   if (!content) notFound();
 
   const boatContent = getBoatContent(service.boatId, locale);
-  const [seasonalPrices, charterPrices, displayPrice] = await Promise.all([
+  const [seasonalPrices, charterPrices, displayPrice, itinerary] = await Promise.all([
     getSeasonalDisplayPrices(service.id),
     service.type === "CABIN_CHARTER"
       ? getCharterDurationDisplayPrices(service.id)
       : Promise.resolve([]),
     getDisplayPrice(service.id),
+    getExperienceItinerary(service.id, locale, content.itinerary),
   ]);
 
   const copy = getDetailCopy(locale, service);
@@ -318,6 +536,7 @@ export default async function ExperienceDetailPage({
   const recoveryHref = `/${locale}/recupera-prenotazione`;
   const recoveryLabel = locale === "en" ? "Find booking" : "Recupera prenotazione";
   const durationText = getServiceDurationLabel(service);
+  const seoExpansion = getSeoExpansionCopy(locale, service, durationText, boatContent?.title);
   const priceUnit =
     service.type === "CABIN_CHARTER" || service.pricingUnit === "PER_PACKAGE"
       ? getPriceUnitLabel(service.pricingUnit, service.type)
@@ -354,6 +573,20 @@ export default async function ExperienceDetailPage({
   const siteBase = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${siteBase}/${locale}${pagePath}`;
   const bookingUrl = `${siteBase}${bookingHref}`;
+  const schemaDuration =
+    service.type === "CABIN_CHARTER"
+      ? "P3D"
+      : service.durationHours > 0
+        ? `PT${service.durationHours}H`
+        : undefined;
+  const touristTypes =
+    service.type === "CABIN_CHARTER"
+      ? ["Private charter", "Multi-day sailing", "Egadi Islands"]
+      : service.type === "BOAT_SHARED"
+        ? ["Shared boat tour", "Snorkelling", "Egadi Islands"]
+        : service.type === "BOAT_EXCLUSIVE"
+          ? ["Private boat tour", "Families", "Small groups"]
+          : ["Gourmet sailing experience", "Private group", "Egadi Islands"];
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -385,11 +618,33 @@ export default async function ExperienceDetailPage({
         "@id": `${pageUrl}#experience`,
         name: content.seoTitle,
         description: content.seoDescription,
+        duration: schemaDuration,
+        touristType: touristTypes,
         image: gallery.length > 0 ? gallery.map((item) => absoluteUrl(item.src!)) : [absoluteUrl(heroImage)],
+        itinerary: {
+          "@type": "ItemList",
+          itemListElement: itinerary.map((item, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: item.title ?? item.time,
+            description: item.text,
+          })),
+        },
         provider: {
           "@type": "Organization",
-          name: "Egadisailing",
+          name: PUBLIC_COMPANY_LEGAL.name,
+          alternateName: "Egadi Sailing",
           url: siteBase,
+          email: PUBLIC_CONTACT_EMAIL,
+          taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "Via Calipso 42",
+            postalCode: "91100",
+            addressLocality: "Trapani",
+            addressRegion: "Sicilia",
+            addressCountry: "IT",
+          },
         },
         brand: {
           "@type": "Brand",
@@ -402,6 +657,18 @@ export default async function ExperienceDetailPage({
           ...(displayPrice.amount ? { price: displayPrice.amount.toFixed(2) } : {}),
           availability: "https://schema.org/InStock",
         },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${pageUrl}#faq`,
+        mainEntity: seoExpansion.faqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+          },
+        })),
       },
     ],
   };
@@ -490,6 +757,7 @@ export default async function ExperienceDetailPage({
                 <Users className="h-4 w-4 text-[var(--color-gold)]" />
                 {service.capacityMax}
               </span>
+              <ExperiencePresenceBadge serviceId={service.id} locale={locale} />
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row">
@@ -500,13 +768,13 @@ export default async function ExperienceDetailPage({
               />
               <SmoothAnchorLink
                 targetId="itinerary"
-                className="inline-flex w-full items-center justify-center rounded-lg border border-white/30 px-8 py-3 text-base font-semibold text-white transition hover:bg-white/10 sm:w-auto"
+                className={`inline-flex w-full items-center justify-center rounded-lg px-8 py-3 text-base font-semibold text-white sm:w-auto ${liquidGlassButton}`}
               >
                 {t("experience.itinerary")}
               </SmoothAnchorLink>
               <Link
                 href={recoveryHref}
-                className="inline-flex w-full items-center justify-center rounded-lg border border-white/30 px-8 py-3 text-base font-semibold text-white transition hover:bg-white/10 sm:w-auto"
+                className={`inline-flex w-full items-center justify-center rounded-lg px-8 py-3 text-base font-semibold text-white sm:w-auto ${liquidGlassButton}`}
               >
                 {recoveryLabel}
               </Link>
@@ -549,6 +817,56 @@ export default async function ExperienceDetailPage({
               </section>
             </ScrollSection>
 
+            <ScrollSection animation="fade-up">
+              <section className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)]">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+                    {seoExpansion.practicalEyebrow}
+                  </p>
+                  <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
+                    {seoExpansion.practicalTitle}
+                  </h2>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {seoExpansion.practicalItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <article key={item.title} className="rounded-lg bg-white p-5 shadow-sm">
+                          <Icon className="h-5 w-5 text-[var(--color-gold)]" />
+                          <h3 className="mt-4 text-base font-semibold text-[var(--color-ocean)]">
+                            {item.title}
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            {item.text}
+                          </p>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-[var(--color-ocean)] p-6 text-white shadow-sm md:p-8">
+                  <h2 className="font-heading text-2xl font-bold sm:text-3xl">
+                    {seoExpansion.whatYouSeeTitle}
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-white/72">
+                    {seoExpansion.whatYouSeeIntro}
+                  </p>
+                  <div className="mt-6 divide-y divide-white/12">
+                    {seoExpansion.whatYouSeeItems.map((item) => (
+                      <article key={item.title} className="py-4 first:pt-0 last:pb-0">
+                        <h3 className="text-base font-semibold text-white">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-white/70">
+                          {item.text}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            </ScrollSection>
+
             {gallery.length > 0 && (
               <ScrollSection animation="fade-up">
                 <section className="min-w-0">
@@ -585,7 +903,7 @@ export default async function ExperienceDetailPage({
                   {t("experience.itinerary")}
                 </h2>
                 <div className="mt-6 space-y-3 sm:mt-8 sm:space-y-4">
-                  {content.itinerary.map((item, index) => (
+                  {itinerary.map((item, index) => (
                     <div
                       key={`${item.time}-${item.text}`}
                       className="grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:gap-4 sm:p-5 md:grid-cols-[7rem_minmax(0,1fr)] md:items-start"
@@ -653,6 +971,29 @@ export default async function ExperienceDetailPage({
                       </div>
                     ))}
                   </div>
+                </div>
+              </section>
+            </ScrollSection>
+
+            <ScrollSection animation="fade-up">
+              <section id="faq" className="scroll-mt-28">
+                <h2 className="font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
+                  {seoExpansion.faqTitle}
+                </h2>
+                <div className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-lg bg-white shadow-sm sm:mt-8">
+                  {seoExpansion.faqs.map((faq, index) => (
+                    <details key={faq.question} className="group p-5 open:bg-[#f7f2e8]/45 sm:p-6" open={index === 0}>
+                      <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left text-base font-semibold text-[var(--color-ocean)]">
+                        <span>{faq.question}</span>
+                        <span className="mt-1 text-xl leading-none text-[var(--color-gold)] transition group-open:rotate-45">
+                          +
+                        </span>
+                      </summary>
+                      <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
+                        {faq.answer}
+                      </p>
+                    </details>
+                  ))}
                 </div>
               </section>
             </ScrollSection>
@@ -761,7 +1102,7 @@ export default async function ExperienceDetailPage({
             />
             <Link
               href={recoveryHref}
-              className="ml-0 mt-3 inline-flex rounded-lg border border-white/25 px-8 py-3 text-sm font-semibold text-white transition hover:bg-white/10 sm:ml-3"
+              className={`ml-0 mt-3 inline-flex rounded-lg px-8 py-3 text-sm font-semibold text-white sm:ml-3 ${liquidGlassButton}`}
             >
               {recoveryLabel}
             </Link>

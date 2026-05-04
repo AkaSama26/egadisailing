@@ -35,6 +35,7 @@ import {
   enqueueTransactionalEmail,
 } from "@/lib/email/outbox";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 
 export async function logout(): Promise<void> {
   await revokeBookingSession();
@@ -197,7 +198,7 @@ export async function cancelCustomerBooking(bookingId: string): Promise<void> {
       retainedAmount: retainedCents > 0 ? formatEurCents(retainedCents) : undefined,
       policyLabel: policy.label,
       bookingPortalUrl: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/b/sessione`,
-      contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+      contactEmail: PUBLIC_CONTACT_EMAIL,
     });
     await enqueueTransactionalEmail({
       templateKey: "customer.booking-cancelled.self-service",

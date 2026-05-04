@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { CURRENT_POLICY_VERSION, EFFECTIVE_DATE } from "@/lib/legal/policy-version";
 import { env } from "@/lib/env";
+import {
+  PUBLIC_COMPANY_LEGAL,
+  PRIVACY_CONTACT_EMAIL,
+  PUBLIC_CONTACT_EMAIL,
+  getEmailHref,
+} from "@/lib/public-contact";
 
 export async function generateMetadata({
   params,
@@ -36,8 +42,13 @@ export default function PrivacyPolicyPage() {
 
         <h2>1. Titolare del trattamento</h2>
         <p>
-          Il titolare del trattamento dei dati personali e' <strong>Egadisailing</strong>,
-          contattabile all'indirizzo email <a href="mailto:info@egadisailing.com">info@egadisailing.com</a>.
+          Il titolare del trattamento dei dati personali e'{" "}
+          <strong>{PUBLIC_COMPANY_LEGAL.name}</strong>, con sede legale in{" "}
+          {PUBLIC_COMPANY_LEGAL.legalAddress}, P.IVA {PUBLIC_COMPANY_LEGAL.vatNumber}, PEC{" "}
+          <a href={getEmailHref(PUBLIC_COMPANY_LEGAL.pec)}>{PUBLIC_COMPANY_LEGAL.pec}</a>,
+          Codice Univoco {PUBLIC_COMPANY_LEGAL.recipientCode}. Per informazioni puoi contattarci
+          all'indirizzo email{" "}
+          <a href={getEmailHref()}>{PUBLIC_CONTACT_EMAIL}</a>.
         </p>
 
         <h2>2. Dati raccolti</h2>
@@ -85,7 +96,7 @@ export default function PrivacyPolicyPage() {
         <p>
           Ai sensi degli artt. 15-22 GDPR hai diritto a: accesso, rettifica, cancellazione,
           limitazione, portabilita', opposizione. Scrivi a{" "}
-          <a href="mailto:privacy@egadisailing.com">privacy@egadisailing.com</a> specificando il
+          <a href={getEmailHref(PRIVACY_CONTACT_EMAIL)}>{PRIVACY_CONTACT_EMAIL}</a> specificando il
           codice prenotazione.
         </p>
 

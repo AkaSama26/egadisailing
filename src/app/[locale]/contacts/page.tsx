@@ -2,8 +2,21 @@ import type { Metadata } from "next";
 import { ScrollSection } from "@/components/scroll-section";
 import { MapPin, Mail, Phone } from "lucide-react";
 import { buildPageMetadata } from "@/lib/seo/metadata";
-import { env } from "@/lib/env";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
+import {
+  PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_LOCATION,
+  getContactLocationLabel,
+  getEmailHref,
+  getOrderedWhatsAppContacts,
+  getPhoneHref,
+  getWhatsAppLabel,
+  getWhatsAppUrl,
+} from "@/lib/public-contact";
+import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 import { ContactForm } from "./contact-form";
+import { cn } from "@/lib/utils";
+import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 
 function IconInstagram({ className }: { className?: string }) {
   return (
@@ -21,14 +34,6 @@ function IconFacebook({ className }: { className?: string }) {
   );
 }
 
-function IconWhatsApp({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-    </svg>
-  );
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -36,9 +41,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return buildPageMetadata({
-    title: "Contattaci",
+    title: locale === "en" ? "Book or request information" : "Prenota o richiedi informazioni",
     description:
-      "Scrivici per prenotare la tua esperienza alle Isole Egadi. Porto di Trapani, WhatsApp, email.",
+      locale === "en"
+        ? "Book or request information for your boat trip in the Egadi Islands. Contact Egadisailing by WhatsApp, phone or email."
+        : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi. Contatta Egadisailing via WhatsApp, telefono o email.",
     path: "/contacts",
     locale,
   });
@@ -49,7 +56,22 @@ export default async function ContactsPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  await params;
+  const { locale } = await params;
+  const isEn = locale === "en";
+  const whatsappContacts = getOrderedWhatsAppContacts(locale);
+  const copy = {
+    title: isEn
+      ? "Book or request information for your boat trip in the Egadi Islands"
+      : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi",
+    subtitle: isEn
+      ? "Questions, bookings, or a little help choosing the right experience? We are here."
+      : "Hai domande, vuoi prenotare o semplicemente saperne di piu'? Siamo qui.",
+    locationLabel: isEn ? "Where we are" : "Dove siamo",
+    address: getContactLocationLabel(locale),
+    phoneLabel: isEn ? "Phone and WhatsApp" : "Telefono e WhatsApp",
+    writeTitle: isEn ? "Write to us" : "Scrivici",
+    writeSubtitle: isEn ? "We reply within 24 hours" : "Ti rispondiamo entro 24 ore",
+  };
   return (
     <div
       className="min-h-screen"
@@ -62,10 +84,10 @@ export default async function ContactsPage({
         <div className="max-w-7xl mx-auto">
           <ScrollSection animation="fade-up">
             <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6">
-              Parliamone
+              {copy.title}
             </h1>
             <p className="text-white/50 text-lg md:text-xl max-w-xl">
-              Hai domande, vuoi prenotare o semplicemente saperne di più? Siamo qui.
+              {copy.subtitle}
             </p>
           </ScrollSection>
         </div>
@@ -86,8 +108,8 @@ export default async function ContactsPage({
                       <MapPin className="h-5 w-5 text-[var(--color-gold)]" />
                     </div>
                     <div>
-                      <p className="text-white/30 text-xs uppercase tracking-wider mb-1">Dove siamo</p>
-                      <p className="text-white font-medium">Porto di Trapani, Trapani (TP), Italia</p>
+                      <p className="text-white/30 text-xs uppercase tracking-wider mb-1">{copy.locationLabel}</p>
+                      <p className="text-white font-medium">{copy.address}</p>
                     </div>
                   </div>
 
@@ -97,8 +119,8 @@ export default async function ContactsPage({
                     </div>
                     <div>
                       <p className="text-white/30 text-xs uppercase tracking-wider mb-1">Email</p>
-                      <a href="mailto:info@egadisailing.com" className="text-white font-medium hover:text-[var(--color-gold)] transition-colors">
-                        info@egadisailing.com
+                      <a href={getEmailHref()} className="text-white font-medium hover:text-[var(--color-gold)] transition-colors">
+                        {PUBLIC_CONTACT_EMAIL}
                       </a>
                     </div>
                   </div>
@@ -108,10 +130,19 @@ export default async function ContactsPage({
                       <Phone className="h-5 w-5 text-[var(--color-gold)]" />
                     </div>
                     <div>
-                      <p className="text-white/30 text-xs uppercase tracking-wider mb-1">Telefono</p>
-                      <a href="tel:+390000000000" className="text-white font-medium hover:text-[var(--color-gold)] transition-colors">
-                        +39 000 000 0000
-                      </a>
+                      <p className="text-white/30 text-xs uppercase tracking-wider mb-1">{copy.phoneLabel}</p>
+                      <div className="space-y-1">
+                        {whatsappContacts.map((contact) => (
+                          <a
+                            key={contact.key}
+                            href={getPhoneHref(contact)}
+                            className="block text-white font-medium hover:text-[var(--color-gold)] transition-colors"
+                          >
+                            <span aria-hidden="true">{contact.flag}</span>{" "}
+                            {getWhatsAppLabel(contact, locale)} · {contact.phoneDisplay}
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -120,22 +151,31 @@ export default async function ContactsPage({
               {/* WhatsApp + Social */}
               <ScrollSection animation="fade-left" delay={0.1}>
                 <div className="space-y-4">
-                  <a
-                    href="https://wa.me/PLACEHOLDER"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-3 w-full py-4 rounded-full bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold text-lg transition-colors shadow-lg"
-                  >
-                    <IconWhatsApp className="h-5 w-5" />
-                    Scrivici su WhatsApp
-                  </a>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {whatsappContacts.map((contact) => (
+                      <a
+                        key={contact.key}
+                        href={getWhatsAppUrl(contact, locale)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-3 w-full py-4 rounded-full bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold text-base transition-colors shadow-lg"
+                      >
+                        <WhatsAppIcon className="h-5 w-5" />
+                        <span aria-hidden="true">{contact.flag}</span>
+                        <span>{getWhatsAppLabel(contact, locale)}</span>
+                      </a>
+                    ))}
+                  </div>
 
                   <div className="flex gap-3">
                     <a
                       href="https://instagram.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-white/60 hover:text-white transition-colors"
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 rounded-full py-3 text-white/75 hover:text-white",
+                        liquidGlassButton,
+                      )}
                     >
                       <IconInstagram className="h-5 w-5" />
                       <span className="text-sm font-medium">Instagram</span>
@@ -144,7 +184,10 @@ export default async function ContactsPage({
                       href="https://facebook.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-white/60 hover:text-white transition-colors"
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 rounded-full py-3 text-white/75 hover:text-white",
+                        liquidGlassButton,
+                      )}
                     >
                       <IconFacebook className="h-5 w-5" />
                       <span className="text-sm font-medium">Facebook</span>
@@ -157,14 +200,14 @@ export default async function ContactsPage({
               <ScrollSection animation="fade-left" delay={0.2} className="flex-1">
                 <div className="rounded-xl overflow-hidden border border-white/[0.08] h-full min-h-[220px]">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3171.8!2d12.5!3d38.017!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sPorto+di+Trapani!5e0!3m2!1sit!2sit!4v1"
+                    src={PUBLIC_CONTACT_LOCATION.mapEmbedUrl}
                     width="100%"
                     height="100%"
                     style={{ border: 0, minHeight: "100%" }}
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="Porto di Trapani"
+                    title={copy.address}
                     className="w-full h-full"
                   />
                 </div>
@@ -175,13 +218,13 @@ export default async function ContactsPage({
             <ScrollSection animation="fade-right">
               <div className="p-8 md:p-10 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
                 <h2 className="font-heading text-3xl font-bold text-white mb-2">
-                  Scrivici
+                  {copy.writeTitle}
                 </h2>
                 <p className="text-white/40 text-sm mb-8">
-                  Ti rispondiamo entro 24 ore
+                  {copy.writeSubtitle}
                 </p>
 
-                <ContactForm turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""} />
+                <ContactForm turnstileSiteKey={getPublicTurnstileSiteKey()} />
               </div>
             </ScrollSection>
           </div>

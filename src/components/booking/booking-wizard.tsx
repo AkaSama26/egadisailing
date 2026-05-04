@@ -6,6 +6,7 @@ import { ArrowLeft, Baby, CalendarDays, Check, ChevronLeft, ChevronRight, Credit
 import { StripePaymentForm } from "./stripe-payment-form";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
 import {
   DEFAULT_PASSENGER_FARE_RULES,
@@ -515,7 +516,7 @@ export function BookingWizard(props: Props) {
         }
         if (res.status >= 500) {
           throw new Error(
-            `Problema tecnico momentaneo. Riprova tra qualche minuto o scrivici a info@egadisailing.com.${idSuffix}`,
+            `Problema tecnico momentaneo. Riprova tra qualche minuto o scrivici a ${PUBLIC_CONTACT_EMAIL}.${idSuffix}`,
           );
         }
         // Default (400/403/404 non intercettati sopra): usa messaggio server

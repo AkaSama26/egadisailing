@@ -28,6 +28,7 @@ import {
   type ResolvedBoatContent,
 } from "@/data/catalog/boats";
 import { getExperiencePublicSlug } from "@/data/catalog/experiences";
+import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 
 const SPEC_ICONS: Record<BoatSpecIcon, LucideIcon> = {
   cabins: DoorOpen,
@@ -256,7 +257,7 @@ export default async function BoatsPage({
                 <Link
                   key={boat.id}
                   href={`/${locale}/boats/${boat.slug}`}
-                  className="group flex min-w-0 items-center justify-between gap-4 rounded-lg border border-white/15 bg-white/10 p-4 backdrop-blur-md transition hover:bg-white/15"
+                  className={`group flex min-w-0 items-center justify-between gap-4 rounded-lg p-4 ${liquidGlassButton}`}
                 >
                   <span className="min-w-0">
                     <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">

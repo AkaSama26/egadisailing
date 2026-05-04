@@ -72,7 +72,7 @@
     "cookiePreferences": "Cookie preferences",
     "tagline": "Unique boat experiences in the Egadi Islands",
     "quickLinks": "Quick Links",
-    "address": "Port of Trapani, Trapani (TP), Italy"
+    "address": "EGADI SAILING SRLS, Via Calipso 42, 91100 Trapani"
   },
   "about": {
     "title": "About Us",
@@ -92,9 +92,9 @@
   "contacts": {
     "title": "Contact Us",
     "subtitle": "We are here for you",
-    "address": "Port of Trapani, Trapani (TP), Italy",
+    "address": "Via dei Gladioli 15, 91100 Trapani, Italy",
     "email": "info@egadisailing.com",
-    "phone": "+39 000 000 0000",
+    "phone": "🇮🇹 +39 345 971 0696 · 🇬🇧 +39 340 145 4585",
     "formName": "Name",
     "formEmail": "Email",
     "formMessage": "Message",
@@ -210,7 +210,7 @@
       "stop5": { "name": "Return", "description": "Sunset cruise back to Trapani" }
     },
     "exclusive": {
-      "stop1": { "name": "Welcome on board", "description": "Meeting point: Via dei Gladioli, 16, Trapani, Italy, 91100 Trapani." },
+      "stop1": { "name": "Welcome on board", "description": "Meeting point: Via dei Gladioli 15, 91100 Trapani, Italy." },
       "stop2": { "name": "Cala Azzurra", "island": "Favignana", "description": "Swim in crystal-clear water. Cala Azzurra, Favignana, Free municipal consortium of Trapani, Italy." },
       "stop3": { "name": "Cala Rossa", "island": "Favignana", "description": "Gourmet lunch at anchor. Cala Rossa, Favignana, Free municipal consortium of Trapani, Italy, 91023." },
       "stop4": { "name": "Show cooking on board", "description": "The local chef prepares lunch at anchor in Cala Rossa, Favignana." },

@@ -91,8 +91,8 @@ const gourmetItinerary = [
       en: "Welcome on board",
     },
     text: {
-      it: "Punto di incontro: Via dei Gladioli, 16, Trapani, Italy, 91100 Trapani.",
-      en: "Meeting point: Via dei Gladioli, 16, Trapani, Italy, 91100 Trapani.",
+      it: "Punto di incontro: Via dei Gladioli 15, 91100 Trapani.",
+      en: "Meeting point: Via dei Gladioli 15, 91100 Trapani, Italy.",
     },
   },
   {
@@ -984,7 +984,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
   },
   {
     key: "tour-barca-egadi-4-ore",
-    order: 30,
+    order: 40,
     serviceIds: [
       "boat-shared-morning",
       "boat-shared-afternoon",
@@ -1036,7 +1036,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
   },
   {
     key: "tour-barca-egadi-8-ore",
-    order: 40,
+    order: 30,
     serviceIds: ["boat-shared-full-day", "boat-exclusive-full-day"],
     title: {
       it: "Tour in barca Egadi 8 ore",

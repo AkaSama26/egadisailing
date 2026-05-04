@@ -34,7 +34,7 @@ export interface ContactFormState {
 }
 
 /**
- * Server Action che invia il messaggio contatti a `info@egadisailing.com`
+ * Server Action che invia il messaggio contatti all'inbox admin configurata
  * via Brevo. Protezioni:
  *  - Turnstile in prod (anti-bot)
  *  - Rate-limit 3 msg/h per IP + 3/h per email
@@ -95,7 +95,7 @@ export async function sendContactMessage(
     const safePlain = (s: string) =>
       s.replace(/[\r\n]+/g, " ").replace(/[\u0000-\u001F]/g, " ").trim();
     // R22-A2-MEDIA-3: IP + User-Agent rimossi dal body email. Inbox contatti
-    // e' condivisa (info@egadisailing.com) quindi inviare IP del cliente
+    // e' condivisa quindi inviare IP del cliente
     // in chiaro a tutti gli agenti che leggono e' disproportionate per GDPR.
     // IP+UA restano nei log server per antifraud (retention 90g art. 6(1)(f)).
     logger.info(

@@ -32,6 +32,7 @@ import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
 import { isBoatSharedServiceType } from "@/lib/booking/boat-slot-availability";
 import { formatItDay } from "@/lib/dates";
 import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
+import { PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PHONE_TEXT } from "@/lib/public-contact";
 
 /**
  * Admin action: cancella una prenotazione + refund Stripe dei payments
@@ -299,7 +300,7 @@ async function doCancelBooking(
         startDate: formatItDay(booking.startDate),
         refundAmount,
         bookingPortalUrl: `${env.APP_URL}/b/sessione`,
-        contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
+        contactEmail: PUBLIC_CONTACT_EMAIL,
       });
       await enqueueTransactionalEmail({
         templateKey: "customer.booking-cancelled.admin",
@@ -366,8 +367,8 @@ async function doCancelBooking(
         startDate: booking.startDate.toISOString().slice(0, 10),
         refundAmount: refundedCentsTotal > 0 ? formatEurCents(refundedCentsTotal) : "",
         refundChannel,
-        contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
-        contactPhone: env.CONTACT_PHONE,
+        contactEmail: PUBLIC_CONTACT_EMAIL,
+        contactPhone: PUBLIC_CONTACT_PHONE_TEXT,
         bookingUrl: `${env.APP_URL}/b/sessione`,
       });
       const delivered = await enqueueTransactionalEmail({

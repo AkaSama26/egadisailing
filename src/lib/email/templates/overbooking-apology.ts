@@ -36,7 +36,7 @@ export interface OverbookingApologyData {
 export function overbookingApologyTemplate(data: OverbookingApologyData) {
   const subject = `Ci scusiamo — prenotazione ${data.confirmationCode} annullata · Egadisailing`;
   const phoneLine = data.contactPhone
-    ? `<p><strong>Telefono/WhatsApp:</strong> <a href="tel:${escapeHtml(data.contactPhone)}">${escapeHtml(data.contactPhone)}</a></p>`
+    ? `<p><strong>Telefono/WhatsApp:</strong> ${escapeHtml(data.contactPhone)}</p>`
     : "";
 
   const refundHtml =

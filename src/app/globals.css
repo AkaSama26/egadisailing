@@ -152,6 +152,59 @@
   font-family: var(--font-inter), sans-serif;
 }
 
+.egadi-water-reflection {
+  position: relative;
+  isolation: isolate;
+}
+
+.egadi-water-reflection::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image:
+    url("/images/backgrounds/egadi-water-reflection.svg"),
+    url("/images/backgrounds/egadi-water-reflection.svg");
+  background-repeat: repeat-x, repeat-x;
+  background-size:
+    clamp(42rem, 78vw, 76rem) auto,
+    clamp(34rem, 62vw, 58rem) auto;
+  background-position:
+    center 20%,
+    center 78%;
+  opacity: 0.2;
+  mix-blend-mode: screen;
+}
+
+@media (max-width: 768px) {
+  .egadi-water-reflection::after {
+    background-size:
+      42rem auto,
+      34rem auto;
+    background-position:
+      center 24%,
+      center 84%;
+    opacity: 0.14;
+  }
+}
+
+.hero-experience-card {
+  width: min(82vw, 22.5rem);
+}
+
+@media (min-width: 640px) {
+  .hero-experience-card {
+    width: min(48vw, 22.5rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-experience-card {
+    width: calc((min(70rem, calc(100vw - 6rem)) - 2rem) / 3);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { CookiePreferencesButton } from "@/components/cookie-preferences-button";
+import {
+  PUBLIC_COMPANY_LEGAL,
+  PUBLIC_CONTACT_EMAIL,
+  getCompanyLegalLines,
+  getEmailHref,
+  getOrderedWhatsAppContacts,
+  getWhatsAppLabel,
+  getWhatsAppUrl,
+} from "@/lib/public-contact";
+import { BRAND_LOGO_SRC } from "@/lib/public-assets";
+import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 
 const quickLinks = [
   { key: "experiences", href: "/experiences" },
@@ -15,6 +26,8 @@ export function Footer() {
   const tNav = useTranslations("nav");
   const tFooter = useTranslations("footer");
   const tCommon = useTranslations("common");
+  const whatsappContacts = getOrderedWhatsAppContacts(locale);
+  const companyLegalLines = getCompanyLegalLines();
 
   return (
     <footer className="bg-[var(--color-ocean)] text-white">
@@ -24,9 +37,17 @@ export function Footer() {
           <div>
             <Link
               href={`/${locale}`}
-              className="font-heading text-2xl font-bold tracking-tight"
+              className="inline-flex items-center gap-3 font-heading text-2xl font-bold tracking-tight"
             >
-              Egadisailing
+              <span className="flex h-20 w-14 shrink-0 items-center justify-center">
+                <img
+                  src={BRAND_LOGO_SRC}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-full w-full object-contain brightness-0 invert drop-shadow-[0_10px_22px_rgba(0,0,0,0.25)]"
+                />
+              </span>
+              <span>Egadi Sailing</span>
             </Link>
             <p className="mt-3 text-sm leading-relaxed text-gray-300">
               {tFooter("tagline")}
@@ -38,7 +59,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
+                className={`rounded-full p-2 ${liquidGlassButton}`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -61,7 +82,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
+                className={`rounded-full p-2 ${liquidGlassButton}`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -82,7 +103,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TripAdvisor"
-                className="rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20"
+                className={`rounded-full p-2 ${liquidGlassButton}`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -134,23 +155,33 @@ export function Footer() {
               {tCommon("contacts")}
             </h3>
             <div className="mt-4 space-y-3 text-sm text-gray-300">
-              <p>{tFooter("address")}</p>
+              <div className="space-y-1">
+                {companyLegalLines.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
               <p>
                 <a
-                  href="mailto:info@egadisailing.com"
+                  href={getEmailHref()}
                   className="transition-colors hover:text-white"
                 >
-                  info@egadisailing.com
+                  {PUBLIC_CONTACT_EMAIL}
                 </a>
               </p>
-              <p>
-                <a
-                  href="tel:+390000000000"
-                  className="transition-colors hover:text-white"
-                >
-                  +39 000 000 0000
-                </a>
-              </p>
+              <div className="space-y-2">
+                {whatsappContacts.map((contact) => (
+                  <a
+                    key={contact.key}
+                    href={getWhatsAppUrl(contact, locale)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block transition-colors hover:text-white"
+                  >
+                    <span aria-hidden="true">{contact.flag}</span>{" "}
+                    WhatsApp {getWhatsAppLabel(contact, locale)} · {contact.phoneDisplay}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -159,7 +190,7 @@ export function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-gray-400 sm:flex-row lg:px-8">
-          <p>&copy; {new Date().getFullYear()} Egadisailing. {tFooter("rights")}.</p>
+          <p>&copy; {new Date().getFullYear()} {PUBLIC_COMPANY_LEGAL.name}. {tFooter("rights")}.</p>
           <div className="flex gap-4">
             <Link
               href={`/${locale}/privacy`}

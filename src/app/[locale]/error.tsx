@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { PUBLIC_CONTACT_EMAIL, getEmailHref } from "@/lib/public-contact";
 
 /**
  * Error boundary pubblico — mostra messaggio user-friendly IT invece del
@@ -28,10 +29,10 @@ export default function LocaleError({
           Si e' verificato un problema tecnico momentaneo. Riprova tra qualche
           istante oppure scrivici a{" "}
           <a
-            href="mailto:info@egadisailing.com"
+            href={getEmailHref()}
             className="text-[#d97706] underline"
           >
-            info@egadisailing.com
+            {PUBLIC_CONTACT_EMAIL}
           </a>{" "}
           indicando l&apos;ID di correlazione qui sotto.
         </p>

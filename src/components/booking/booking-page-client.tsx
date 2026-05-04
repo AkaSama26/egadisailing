@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { cn } from "@/lib/utils";
+import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 import type { PassengerFareRuleConfig } from "@/lib/pricing/passenger-fare-rules-shared";
 import { vatIncludedLabel } from "@/lib/pricing/vat-label";
 
@@ -484,7 +485,10 @@ export function BookingPageClient({
               <button
                 type="button"
                 onClick={() => resetToStep("boat")}
-                className="rounded-full border border-white/25 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-semibold text-white",
+                  liquidGlassButton,
+                )}
               >
                 Cambia selezione
               </button>

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { CalendarClock, KeyRound, LifeBuoy, MailCheck, Ticket } from "lucide-react";
-import { env } from "@/lib/env";
 import { RecuperaPrenotazioneClient } from "./client";
 import { OceanLayout } from "@/components/customer/ocean-layout";
+import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
 // R26-A1-A5: auth-adjacent page, noindex defense-in-depth oltre robots.txt.
 export const metadata: Metadata = {
@@ -87,7 +87,7 @@ export default async function RecuperaPrenotazionePage({
           </div>
           <RecuperaPrenotazioneClient
             locale={locale}
-            turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+            turnstileSiteKey={getPublicTurnstileSiteKey()}
           />
         </section>
       </main>

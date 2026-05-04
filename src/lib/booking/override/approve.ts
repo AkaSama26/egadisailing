@@ -15,6 +15,7 @@ import { dispatchNotification, toDispatchResult } from "@/lib/notifications/disp
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { getAlternativeDatesIso } from "../alternative-dates";
+import { PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PHONE_TEXT } from "@/lib/public-contact";
 
 export interface ApproveOverrideResult {
   approved: true;
@@ -197,7 +198,7 @@ export async function approveOverride(
           startDate: newBookingData.startDate.toISOString().slice(0, 10),
           numPeople: newBookingData.numPeople,
           bookingPortalUrl: `${env.APP_URL}/b/sessione`,
-          contactPhone: env.CONTACT_PHONE ?? "",
+          contactPhone: PUBLIC_CONTACT_PHONE_TEXT,
         } as unknown as Record<string, unknown>,
       });
     } catch (err) {
@@ -246,8 +247,8 @@ export async function approveOverride(
           startDate: conflict.startDate.toISOString().slice(0, 10),
           refundAmount: `${conflict.totalPrice.toFixed(2)}€`,
           refundChannel: "stripe",
-          contactEmail: env.BREVO_REPLY_TO ?? env.BREVO_SENDER_EMAIL,
-          contactPhone: env.CONTACT_PHONE,
+          contactEmail: PUBLIC_CONTACT_EMAIL,
+          contactPhone: PUBLIC_CONTACT_PHONE_TEXT,
           bookingUrl: `${env.APP_URL}/b/sessione`,
           voucherSoftText: "Per scusarci ti offriamo 2 drink gratis a bordo per persona alla prossima visita",
           rebookingSuggestions: alternativeDates,
