@@ -393,7 +393,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
           src: "/images/experience-polaroids/chef-a-bordo-rada.webp",
         },
         {
-          caption: "NEEL 43",
+          caption: "Trimarano unico",
           color: "#DDA0DD",
           src: "/images/boats/neel-43/neel-43-hero.webp",
         },
