@@ -45,7 +45,7 @@ async function main() {
       name: "Trimarano Egadisailing",
       type: "TRIMARAN",
       description:
-        "Trimarano luxury 60ft con 3 cabine, cucina, bagno. Perfetto per escursioni e cabin charter settimanali nelle Egadi.",
+        "Trimarano luxury 60ft con 3 cabine, cucina, 3 bagni. Perfetto per escursioni e cabin charter settimanali nelle Egadi.",
       length: 18.3,
       year: 2020,
       cabins: 3,

@@ -546,7 +546,7 @@ export const BOAT_CATALOG = {
       { icon: "cabins", value: "3", label: { it: "Cabine", en: "Cabins" } },
       { icon: "beds", value: "6", label: { it: "Posti letto", en: "Berths" } },
       { icon: "kitchen", value: "1", label: { it: "Cucina", en: "Galley" } },
-      { icon: "bath", value: "1", label: { it: "Bagno", en: "Bathroom" } },
+      { icon: "bath", value: "3", label: { it: "Bagni", en: "Bathrooms" } },
       { icon: "relax", value: "1", label: { it: "Area relax", en: "Relax area" } },
     ],
   },
