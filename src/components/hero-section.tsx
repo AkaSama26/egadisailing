@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
@@ -237,6 +237,32 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     }
   }, [shouldLoadVideo]);
 
+  const getLoopResetPoint = useCallback(
+    (track = cardsTrackRef.current) => {
+      if (!track) return 0;
+      const duplicateStart = track.children.item(experiences.length) as HTMLElement | null;
+      return duplicateStart?.offsetLeft ?? 0;
+    },
+    [experiences.length],
+  );
+
+  const applyCarouselTransform = useCallback(() => {
+    const track = cardsTrackRef.current;
+    if (!track) return;
+    const resetPoint = getLoopResetPoint(track);
+
+    if (resetPoint > 0) {
+      while (carouselPositionRef.current >= resetPoint) {
+        carouselPositionRef.current -= resetPoint;
+      }
+      while (carouselPositionRef.current < 0) {
+        carouselPositionRef.current += resetPoint;
+      }
+    }
+
+    track.style.transform = `translate3d(${-carouselPositionRef.current}px, 0, 0)`;
+  }, [getLoopResetPoint]);
+
   useEffect(() => {
     const track = cardsTrackRef.current;
     if (!track || experiences.length < 2) return;
@@ -261,7 +287,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
 
     frameId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frameId);
-  }, [experiences.length]);
+  }, [applyCarouselTransform, experiences.length]);
 
   useEffect(() => {
     return () => {
@@ -286,29 +312,6 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
 
     return () => window.clearInterval(intervalId);
   }, [experiences, hoveredExperienceKey]);
-
-  function getLoopResetPoint(track = cardsTrackRef.current) {
-    if (!track) return 0;
-    const duplicateStart = track.children.item(experiences.length) as HTMLElement | null;
-    return duplicateStart?.offsetLeft ?? 0;
-  }
-
-  function applyCarouselTransform() {
-    const track = cardsTrackRef.current;
-    if (!track) return;
-    const resetPoint = getLoopResetPoint(track);
-
-    if (resetPoint > 0) {
-      while (carouselPositionRef.current >= resetPoint) {
-        carouselPositionRef.current -= resetPoint;
-      }
-      while (carouselPositionRef.current < 0) {
-        carouselPositionRef.current += resetPoint;
-      }
-    }
-
-    track.style.transform = `translate3d(${-carouselPositionRef.current}px, 0, 0)`;
-  }
 
   function holdCardsAutoplay() {
     cardsAutoplayPausedRef.current = true;
@@ -523,6 +526,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                               imageIndex === 0
                             }
                             sizes="(min-width: 1024px) 27vw, (min-width: 640px) 48vw, 82vw"
+                            unoptimized
                             className={cn(
                               "object-cover transition-opacity duration-500",
                               image.src === activeImage.src ? "opacity-100" : "opacity-0",

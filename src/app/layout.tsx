@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Poppins, Inter, Caveat } from "next/font/google";
 import { getLocale } from "next-intl/server";
 import { ServiceWorkerCleanup } from "@/components/service-worker-cleanup";
@@ -109,7 +110,11 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        <script dangerouslySetInnerHTML={{ __html: serviceWorkerInlineCleanupScript }} />
+        <Script
+          id="egadisailing-service-worker-inline-cleanup"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: serviceWorkerInlineCleanupScript }}
+        />
         <ServiceWorkerCleanup />
         {children}
       </body>

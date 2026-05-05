@@ -102,6 +102,7 @@ export function ImageStack({ images, className }: ImageStackProps) {
                   fill
                   sizes="(max-width: 768px) 288px, (max-width: 1024px) 368px, 420px"
                   draggable={false}
+                  unoptimized
                   className="pointer-events-none select-none object-cover"
                 />
               )}

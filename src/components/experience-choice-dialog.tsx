@@ -423,6 +423,7 @@ function RecommendationImages({
           alt={image.alt}
           fill
           sizes="(max-width: 768px) calc(100vw - 4rem), 34rem"
+          unoptimized
           className={cn(
             "object-cover transition-opacity duration-700 ease-out",
             index === activeIndex ? "opacity-100" : "opacity-0",

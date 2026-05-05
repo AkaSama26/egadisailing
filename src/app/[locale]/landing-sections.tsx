@@ -405,6 +405,7 @@ function ExperienceRow({
                         alt={p.caption}
                         fill
                         sizes="45vw"
+                        unoptimized
                         className="object-cover"
                       />
                     )}
@@ -466,6 +467,7 @@ function ExperienceRow({
                       alt={p.caption}
                       fill
                       sizes="(min-width: 1024px) 24vw, 48vw"
+                      unoptimized
                       className="object-cover"
                     />
                   )}
