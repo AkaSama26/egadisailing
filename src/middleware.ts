@@ -27,8 +27,6 @@ function withLegacyCacheReset(req: NextRequest, response: NextResponse) {
     return response;
   }
 
-  response.headers.set("Clear-Site-Data", '"cache", "storage"');
-
   if (!response.headers.has("location")) {
     response.cookies.set(LEGACY_CACHE_RESET_COOKIE, LEGACY_CACHE_RESET_VERSION, {
       httpOnly: true,
