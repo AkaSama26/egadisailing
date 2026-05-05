@@ -1,5 +1,6 @@
 import { localize, type LocalizedString } from "./locales";
 import { getExperienceContent } from "./experiences";
+import { publicAsset } from "@/lib/public-assets";
 
 export type BoatSpecIcon = "cabins" | "beds" | "kitchen" | "bath" | "relax" | "users" | "engine";
 
@@ -837,7 +838,7 @@ export function getBoatContent(boatId: string, locale?: string | null): Resolved
     seoTitle: localize(entry.seoTitle, locale),
     seoDescription: localize(entry.seoDescription, locale),
     imageSrc: entry.imageSrc,
-    heroVideoSrc: entry.heroVideoSrc,
+    heroVideoSrc: entry.heroVideoSrc ? publicAsset(entry.heroVideoSrc) : undefined,
     imageAlt: localize(entry.imageAlt, locale),
     gallery: entry.gallery.map((item) => ({
       src: item.src,
