@@ -49,7 +49,7 @@ export function Navbar() {
       className={cn(
         "fixed top-0 left-0 w-full z-[200] transition-all duration-300",
         !isTransparent
-          ? "border-b border-white/60 bg-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl backdrop-saturate-150"
+          ? "bg-white/70 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl backdrop-saturate-150"
           : "bg-transparent"
       )}
     >

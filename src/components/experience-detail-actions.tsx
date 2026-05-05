@@ -427,7 +427,7 @@ export function ExperienceBookingCard({
         <Button
           size="lg"
           nativeButton={false}
-          className="mt-6 w-full bg-[var(--color-gold)] py-6 text-base font-semibold text-white hover:bg-[var(--color-gold)]/90"
+          className="mt-6 w-full !bg-[var(--color-gold)] py-6 text-base font-semibold !text-white hover:!bg-[#b86504] hover:!text-white"
           render={<a href={bookingHref} />}
         >
           <CalendarDays className="h-5 w-5" />
@@ -437,7 +437,7 @@ export function ExperienceBookingCard({
         <Button
           size="lg"
           disabled
-          className="mt-6 w-full bg-[var(--color-gold)] py-6 text-base font-semibold text-white hover:bg-[var(--color-gold)]/90 disabled:opacity-45"
+          className="mt-6 w-full !bg-[var(--color-gold)] py-6 text-base font-semibold !text-white hover:!bg-[#b86504] hover:!text-white disabled:opacity-45"
         >
           <CalendarDays className="h-5 w-5" />
           {bookNowLabel}

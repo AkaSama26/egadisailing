@@ -55,9 +55,9 @@ export function FloatingWhatsAppButton({ locale }: { locale: string }) {
         aria-expanded={open}
         title={label}
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-slate-900/20 transition hover:bg-[#20BD5A] focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2"
+        className="whatsapp-attention-button inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white transition hover:bg-[#20BD5A] focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2"
       >
-        <WhatsAppIcon className="h-6 w-6" />
+        <WhatsAppIcon className="block h-6 w-6 translate-x-px" />
       </button>
     </div>
   );

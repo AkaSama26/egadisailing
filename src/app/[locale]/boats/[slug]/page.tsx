@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
-  ArrowRight,
   Bath,
   BedDouble,
   Check,
@@ -17,8 +16,8 @@ import {
   UtensilsCrossed,
   type LucideIcon,
 } from "lucide-react";
+import { ExperienceBoatGallery } from "@/components/experience-boat-gallery";
 import { ScrollSection } from "@/components/scroll-section";
-import { SvgPhotoFrame } from "@/components/svg-photo-frame";
 import { routing } from "@/i18n/routing";
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
@@ -27,15 +26,10 @@ import {
   getBoatContent,
   getBoatsPageContent,
   getPublicBoatSlugs,
-  getPublicBoatServiceTitle,
   resolveBoatIdFromSlug,
   type BoatSpecIcon,
   type ResolvedBoatContent,
 } from "@/data/catalog/boats";
-import {
-  getExperienceContent,
-  getExperiencePublicSlug,
-} from "@/data/catalog/experiences";
 
 const SPEC_ICONS: Record<BoatSpecIcon, LucideIcon> = {
   cabins: DoorOpen,
@@ -47,22 +41,27 @@ const SPEC_ICONS: Record<BoatSpecIcon, LucideIcon> = {
   engine: Gauge,
 };
 
-interface ActiveService {
-  id: string;
-}
-
 function copy(locale: string) {
   const isEn = locale === "en";
   return {
     allBoats: isEn ? "All boats" : "Tutte le barche",
-    specs: isEn ? "Technical details" : "Dettagli tecnici",
-    idealFor: isEn ? "Ideal for" : "Ideale per",
-    routes: isEn ? "Routes and use" : "Rotte e utilizzo",
-    experiences: isEn ? "Experiences with this boat" : "Esperienze con questa barca",
-    gallery: isEn ? "Gallery" : "Gallery",
-    faq: isEn ? "Questions about this boat" : "Domande su questa barca",
-    book: isEn ? "View experience" : "Vedi esperienza",
-    fromTrapani: isEn ? "Departure from Trapani" : "Partenza da Trapani",
+    specs: isEn ? "On board" : "A bordo",
+    usageEyebrow: isEn ? "Best use" : "Utilizzo",
+    usageTitle: isEn ? "When to choose this boat" : "Quando scegliere questa barca",
+    routesEyebrow: isEn ? "Routes" : "Rotte",
+    routesTitle: isEn ? "How it moves through the Egadi" : "Come si muove tra le Egadi",
+    gallery: isEn ? "Boat gallery" : "Gallery della barca",
+    faqEyebrow: isEn ? "FAQ" : "FAQ",
+    faqTitle: isEn ? "Questions about this boat" : "Domande su questa barca",
+    routeIntro: isEn
+      ? "The route is never treated as a rigid checklist: it is shaped around the experience length, sea conditions and the most comfortable coves of the day."
+      : "La rotta non viene trattata come una lista rigida: viene costruita in base alla durata dell'esperienza, al mare e alle cale più comode della giornata.",
+    useIntro: isEn
+      ? "A quick way to understand whether this boat is the right fit before choosing the experience."
+      : "Un modo rapido per capire se questa è la barca giusta prima di scegliere l'esperienza.",
+    faqIntro: isEn
+      ? "Clear answers for guests who are choosing the boat without needing technical nautical knowledge."
+      : "Risposte chiare per chi sta scegliendo la barca senza dover conoscere dettagli nautici tecnici.",
   };
 }
 
@@ -77,20 +76,26 @@ function absoluteUrl(path: string): string {
 
 function BoatSpecs({ boat }: { boat: ResolvedBoatContent }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <ul className="mt-5 grid gap-4 border-y border-slate-200 py-6 sm:grid-cols-2">
       {boat.specs.map((spec) => {
         const Icon = SPEC_ICONS[spec.icon];
         return (
-          <div key={spec.label} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <Icon className="h-5 w-5 text-[var(--color-gold)]" />
-            <p className="mt-3 text-2xl font-bold text-[var(--color-ocean)]">{spec.value}</p>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-              {spec.label}
-            </p>
-          </div>
+          <li key={spec.label} className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f7f2e8] text-[var(--color-gold)]">
+              <Icon className="h-5 w-5" />
+            </span>
+            <span>
+              <span className="block text-2xl font-bold leading-none text-[var(--color-ocean)]">
+                {spec.value}
+              </span>
+              <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                {spec.label}
+              </span>
+            </span>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }
 
@@ -129,7 +134,6 @@ export default async function BoatDetailPage({
   if (slug !== boat.slug) redirect(`/${locale}/boats/${boat.slug}`);
 
   const t = copy(locale);
-  const services: ActiveService[] = boat.serviceIds.map((id) => ({ id }));
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}/${locale}/boats/${boat.slug}`;
   const json = {
@@ -147,7 +151,7 @@ export default async function BoatDetailPage({
         "@type": ["Product", "Vehicle"],
         "@id": `${pageUrl}#boat`,
         name: boat.seoTitle,
-        description: boat.seoDescription,
+        description: `${boat.seoDescription} ${boat.detail.paragraphs.join(" ")}`,
         image: boat.gallery.map((item) => absoluteUrl(item.src)),
         brand: { "@type": "Brand", name: "Egadisailing" },
         provider: {
@@ -170,6 +174,8 @@ export default async function BoatDetailPage({
       },
       {
         "@type": "FAQPage",
+        "@id": `${pageUrl}#faq`,
+        mainEntityOfPage: pageUrl,
         mainEntity: boat.faqs.map((item) => ({
           "@type": "Question",
           name: item.question,
@@ -182,22 +188,38 @@ export default async function BoatDetailPage({
     ],
   };
   const heroImage = boat.imageSrc ?? boat.gallery[0]?.src ?? "/images/trimarano.webp";
+  const heroVideoType = boat.heroVideoSrc?.endsWith(".webm") ? "video/webm" : "video/mp4";
 
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f7f2e8] text-slate-900">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(json) }} />
 
       <section className="relative isolate overflow-hidden bg-[#061a2d] px-4 pb-20 pt-28 text-white md:px-8 lg:px-12">
-        <Image
-          src={heroImage}
-          alt={boat.imageAlt}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover opacity-40"
-        />
+        {boat.heroVideoSrc ? (
+          <video
+            aria-hidden="true"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            poster={heroImage}
+            className="absolute inset-0 h-full w-full object-cover opacity-40"
+          >
+            <source src={boat.heroVideoSrc} type={heroVideoType} />
+          </video>
+        ) : (
+          <Image
+            src={heroImage}
+            alt={boat.imageAlt}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover opacity-40"
+          />
+        )}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,26,45,0.96),rgba(6,26,45,0.78)_48%,rgba(6,26,45,0.38))]" />
-        <div className="relative z-10 mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-end">
+        <div className="relative z-10 mx-auto max-w-7xl">
           <ScrollSection animation="fade-up">
             <Link
               href={`/${locale}/boats`}
@@ -216,147 +238,118 @@ export default async function BoatDetailPage({
               {boat.description}
             </p>
           </ScrollSection>
-
-          <ScrollSection animation="fade-left" delay={0.1}>
-            <div className="rounded-lg border border-white/15 bg-white/10 p-4 backdrop-blur">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
-                {t.specs}
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                {boat.specs.map((spec) => {
-                  const Icon = SPEC_ICONS[spec.icon];
-                  return (
-                    <div key={spec.label} className="rounded-lg bg-white/10 p-3">
-                      <Icon className="h-4 w-4 text-[var(--color-gold)]" />
-                      <p className="mt-2 text-xl font-bold">{spec.value}</p>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/55">
-                        {spec.label}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </ScrollSection>
         </div>
       </section>
 
       <main className="px-4 py-14 md:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="min-w-0 space-y-14">
-            <ScrollSection animation="fade-up">
-              <section>
-                <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)]">
-                  {t.idealFor}
-                </h2>
-                <div className="mt-6 grid gap-3 md:grid-cols-3">
-                  {boat.idealFor.map((item) => (
-                    <div key={item} className="rounded-lg bg-white p-5 shadow-sm">
-                      <Check className="h-5 w-5 text-[var(--color-turquoise)]" />
-                      <p className="mt-4 text-sm leading-6 text-slate-700">{item}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+        <div className="mx-auto max-w-7xl space-y-14">
+          <ScrollSection animation="fade-up">
+            <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
+                {boat.detail.eyebrow}
+              </p>
+              <h2 className="mt-3 max-w-4xl font-heading text-3xl font-bold leading-tight text-[var(--color-ocean)] md:text-4xl">
+                {boat.detail.title}
+              </h2>
+              <div className="mt-6 grid gap-5 text-base leading-8 text-slate-700 lg:grid-cols-3">
+                {boat.detail.paragraphs.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            </section>
+          </ScrollSection>
+
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)] lg:items-start">
+            <ScrollSection animation="fade-up" className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+              <ExperienceBoatGallery
+                title={t.gallery}
+                eyebrow={boat.eyebrow}
+                description={boat.description}
+                items={boat.gallery}
+              />
             </ScrollSection>
 
-            <ScrollSection animation="fade-up">
-              <section>
-                <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)]">
-                  {t.routes}
-                </h2>
-                <div className="mt-6 grid gap-3">
-                  {boat.routes.map((item) => (
-                    <div key={item} className="flex gap-3 rounded-lg bg-white p-4 shadow-sm">
-                      <Map className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-gold)]" />
-                      <p className="text-sm leading-6 text-slate-700">{item}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </ScrollSection>
+            <div className="space-y-6">
+              <ScrollSection animation="fade-up">
+                <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
+                    {t.specs}
+                  </p>
+                  <BoatSpecs boat={boat} />
+                </section>
+              </ScrollSection>
 
-            <ScrollSection animation="fade-up">
-              <section>
-                <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)]">
-                  {t.gallery}
-                </h2>
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
-                  {boat.gallery.map((item) => (
-                    <figure key={item.src} className="rounded-lg bg-white p-2 shadow-sm">
-                      <SvgPhotoFrame frameClassName="p-2 shadow-none" imageClassName="aspect-[4/3]">
-                        <Image
-                          src={item.src}
-                          alt={item.alt}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className="object-cover"
-                        />
-                      </SvgPhotoFrame>
-                      <figcaption className="px-4 py-3 text-sm font-semibold text-slate-600">
-                        {item.caption}
-                      </figcaption>
-                    </figure>
-                  ))}
-                </div>
-              </section>
-            </ScrollSection>
+              <ScrollSection animation="fade-up" delay={0.04}>
+                <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
+                    {t.usageEyebrow}
+                  </p>
+                  <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)]">
+                    {t.usageTitle}
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{t.useIntro}</p>
+                  <ul className="mt-6 divide-y divide-slate-200">
+                    {boat.idealFor.map((item) => (
+                      <li key={item} className="flex gap-3 py-4 first:pt-0 last:pb-0">
+                        <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-turquoise)]" />
+                        <p className="text-sm leading-6 text-slate-700">{item}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </ScrollSection>
 
-            <ScrollSection animation="fade-up">
-              <section>
-                <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)]">
-                  {t.faq}
-                </h2>
-                <div className="mt-6 grid gap-3">
-                  {boat.faqs.map((item) => (
-                    <div key={item.question} className="rounded-lg bg-white p-5 shadow-sm">
-                      <div className="flex gap-3">
-                        <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-gold)]" />
-                        <div>
-                          <h3 className="font-semibold text-[var(--color-ocean)]">{item.question}</h3>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">{item.answer}</p>
+              <ScrollSection animation="fade-up" delay={0.08}>
+                <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
+                    {t.routesEyebrow}
+                  </p>
+                  <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)]">
+                    {t.routesTitle}
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{t.routeIntro}</p>
+                  <ol className="mt-6 divide-y divide-slate-200">
+                    {boat.routes.map((item, index) => (
+                      <li key={item} className="flex gap-3 py-4 first:pt-0 last:pb-0">
+                        <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f7f2e8] text-xs font-bold text-[var(--color-gold)]">
+                          {index + 1}
+                        </span>
+                        <div className="flex gap-3">
+                          <Map className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-gold)]" />
+                          <p className="text-sm leading-6 text-slate-700">{item}</p>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </ScrollSection>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              </ScrollSection>
+            </div>
           </div>
 
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-lg border border-white bg-white p-5 shadow-xl">
+          <ScrollSection animation="fade-up">
+            <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
-                {t.experiences}
+                {t.faqEyebrow}
               </p>
-              <BoatSpecs boat={boat} />
-              <div className="mt-5 grid gap-3">
-                {services.map((service) => {
-                  const experience = getExperienceContent(service.id, locale);
-                  return (
-                    <Link
-                      key={service.id}
-                      href={`/${locale}/experiences/${getExperiencePublicSlug(service.id)}`}
-                      className="group rounded-lg border border-slate-200 p-4 transition hover:border-[var(--color-gold)] hover:bg-[#f7f2e8]/65"
-                    >
-                      <span className="text-sm font-semibold text-[var(--color-ocean)]">
-                        {getPublicBoatServiceTitle(service.id, locale)}
-                      </span>
-                      {experience?.subtitle && (
-                        <span className="mt-2 block text-xs leading-5 text-slate-500">
-                          {experience.subtitle}
-                        </span>
-                      )}
-                      <span className="mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-gold)]">
-                        {t.book}
-                        <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
-                      </span>
-                    </Link>
-                  );
-                })}
+              <div className="mt-3 max-w-3xl">
+                <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)]">
+                  {t.faqTitle}
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{t.faqIntro}</p>
               </div>
-            </div>
-          </aside>
+              <div className="mt-8 grid gap-x-8 gap-y-0 lg:grid-cols-2">
+                {boat.faqs.map((item) => (
+                  <article key={item.question} className="flex gap-4 border-t border-slate-200 py-5">
+                    <HelpCircle className="mt-1 h-5 w-5 shrink-0 text-[var(--color-gold)]" />
+                    <div>
+                      <h3 className="font-semibold text-[var(--color-ocean)]">{item.question}</h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">{item.answer}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </ScrollSection>
         </div>
       </main>
     </div>

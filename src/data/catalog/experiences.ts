@@ -245,7 +245,7 @@ const fullDayBoatItinerary = [
       en: "Sheltered coves",
     },
     text: {
-      it: "Prima sosta bagno tra Cala Rossa, Bue Marino, Cala Azzurra o una rada piu protetta.",
+      it: "Prima sosta bagno tra Cala Rossa, Bue Marino, Cala Azzurra o una rada più protetta.",
       en: "First swim stop between Cala Rossa, Bue Marino, Cala Azzurra or a more sheltered anchorage.",
     },
   },
@@ -271,7 +271,7 @@ const fullDayBoatItinerary = [
       en: "Cala Dogana or Cala Fredda",
     },
     text: {
-      it: "Seconda isola o seconda baia: una sosta piu tranquilla, scelta secondo mare e affollamento.",
+      it: "Seconda isola o seconda baia: una sosta più tranquilla, scelta secondo mare e affollamento.",
       en: "Second island or second bay: a quieter stop, chosen according to sea conditions and crowding.",
     },
   },
@@ -315,7 +315,7 @@ const halfDayMorningItinerary = [
       en: "Trapani harbour",
     },
     text: {
-      it: "Imbarco e briefing rapido con lo skipper per scegliere la rotta piu riparata della mattina.",
+      it: "Imbarco e briefing rapido con lo skipper per scegliere la rotta più riparata della mattina.",
       en: "Boarding and quick briefing with the skipper to choose the most sheltered morning route.",
     },
   },
@@ -330,7 +330,7 @@ const halfDayMorningItinerary = [
       en: "Favignana or Levanzo",
     },
     text: {
-      it: "Bagno e snorkeling nelle acque piu limpide raggiungibili in sicurezza in mezza giornata.",
+      it: "Bagno e snorkeling nelle acque più limpide raggiungibili in sicurezza in mezza giornata.",
       en: "Swimming and snorkelling in the clearest waters safely reachable in half a day.",
     },
   },
@@ -408,7 +408,7 @@ const halfDayAfternoonItinerary = [
       en: "Egadi Islands",
     },
     text: {
-      it: "Seconda sosta o navigazione lungo costa con luce piu morbida.",
+      it: "Seconda sosta o navigazione lungo costa con luce più morbida.",
       en: "Second stop or coastal navigation in softer light.",
     },
   },
@@ -470,7 +470,7 @@ export const EXPERIENCE_CATALOG = {
       en: "The trimaran reserved for you, with an onboard chef and a route shaped around the best Egadi conditions.",
     },
     detailDescription: {
-      it: "Una giornata privata sul trimarano Egadisailing: skipper, hostess e chef coordinano ritmo, tavola e soste bagno. E il pacchetto piu completo per chi vuole vivere le Egadi senza compromessi.",
+      it: "Una giornata privata sul trimarano Egadisailing: skipper, hostess e chef coordinano ritmo, tavola e soste bagno. È il pacchetto più completo per chi vuole vivere le Egadi senza compromessi.",
       en: "A private day on the Egadisailing trimaran: skipper, hostess and chef coordinate the pace, the table and the swim stops. This is the most complete package for experiencing the Egadi without compromise.",
     },
     seoTitle: {
@@ -478,8 +478,8 @@ export const EXPERIENCE_CATALOG = {
       en: "Gourmet trimaran experience in the Egadi Islands",
     },
     seoDescription: {
-      it: "Prenota il trimarano Egadisailing in esclusiva con chef a bordo, skipper e itinerario tra Favignana, Levanzo e Marettimo.",
-      en: "Book the Egadisailing trimaran privately with onboard chef, skipper and an itinerary around Favignana, Levanzo and Marettimo.",
+      it: "Prenota il trimarano Egadisailing in esclusiva con chef a bordo, skipper e itinerario tra Favignana e Levanzo.",
+      en: "Book the Egadisailing trimaran privately with onboard chef, skipper and an itinerary around Favignana and Levanzo.",
     },
     media: [
       {
@@ -631,7 +631,7 @@ export const EXPERIENCE_CATALOG = {
       en: "A seat on board for a full day of bays, snorkelling and slow time in the Egadi.",
     },
     detailDescription: {
-      it: "La formula piu semplice per vivere un tour in barca alle Isole Egadi da Trapani: scegli la data, prenota i posti e condividi la giornata con altri ospiti.",
+      it: "La formula più semplice per vivere un tour in barca alle Isole Egadi da Trapani: scegli la data, prenota i posti e condividi la giornata con altri ospiti.",
       en: "The easiest way to enjoy a boat tour in the Egadi Islands from Trapani: choose the date, book your seats and share the day with other guests.",
     },
     seoTitle: { it: "Tour in barca Egadi 8 ore condiviso", en: "Shared 8-hour boat tour in the Egadi" },
@@ -947,8 +947,8 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       en: "Gourmet trimaran experience in the Egadi Islands",
     },
     seoDescription: {
-      it: "Giornata privata sul trimarano Egadisailing con chef a bordo, skipper, hostess e rotta tra Favignana, Levanzo e Marettimo.",
-      en: "Private day on the Egadisailing trimaran with onboard chef, skipper, hostess and route around Favignana, Levanzo and Marettimo.",
+      it: "Giornata privata sul trimarano Egadisailing con chef a bordo, skipper, hostess e rotta tra Favignana e Levanzo.",
+      en: "Private day on the Egadisailing trimaran with onboard chef, skipper, hostess and route around Favignana and Levanzo.",
     },
     durationLabel: { it: "8 ore", en: "8 hours" },
     detailLabel: { it: "Chef, skipper e hostess", en: "Chef, skipper and hostess" },
@@ -980,7 +980,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     durationLabel: { it: "3-7 giornate", en: "3-7 days" },
     detailLabel: { it: "Itinerario su misura", en: "Tailored itinerary" },
     priceUnitLabel: { it: "per pacchetto", en: "per package" },
-    primaryCtaLabel: { it: "Scopri il charter", en: "View charter" },
+    primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
     primaryHref: "/experiences/charter",
     media: EXPERIENCE_CATALOG["cabin-charter"].media,
   },
@@ -1007,7 +1007,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     durationLabel: { it: "4 ore", en: "4 hours" },
     detailLabel: { it: "Barca in esclusiva", en: "Private boat" },
     priceUnitLabel: { it: "per barca", en: "per boat" },
-    primaryCtaLabel: { it: "Scopri il 4 ore", en: "View 4-hour tour" },
+    primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
     primaryHref: "/experiences/boat-exclusive-afternoon",
     media: EXPERIENCE_CATALOG["boat-exclusive-afternoon"].media,
     variants: [
@@ -1054,7 +1054,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     durationLabel: { it: "8 ore", en: "8 hours" },
     detailLabel: { it: "Condiviso o privato", en: "Shared or private" },
     priceUnitLabel: { it: "a persona o per barca", en: "per person or per boat" },
-    primaryCtaLabel: { it: "Scopri l'8 ore", en: "View 8-hour tour" },
+    primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
     primaryHref: "/experiences/boat-shared-full-day",
     media: EXPERIENCE_CATALOG["boat-shared-full-day"].media,
     variants: [

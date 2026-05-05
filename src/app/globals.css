@@ -193,6 +193,74 @@
   width: min(82vw, 22.5rem);
 }
 
+.whatsapp-attention-button {
+  position: relative;
+  isolation: isolate;
+  box-shadow:
+    0 16px 32px rgba(15, 23, 42, 0.2),
+    0 0 0 0 rgba(37, 211, 102, 0.34);
+  animation: whatsapp-button-nudge 4.6s ease-in-out infinite;
+}
+
+.whatsapp-attention-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(37, 211, 102, 0.32);
+  animation: whatsapp-button-ripple 2.6s ease-out infinite;
+}
+
+@keyframes whatsapp-button-nudge {
+  0%,
+  62%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  7% {
+    transform: translateY(-3px) scale(1.05);
+  }
+
+  14% {
+    transform: translateY(0) scale(1);
+  }
+
+  21% {
+    transform: translateY(-2px) scale(1.03);
+  }
+
+  28% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes whatsapp-button-ripple {
+  0%,
+  48%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+
+  8% {
+    opacity: 0.38;
+  }
+
+  38% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-attention-button,
+  .whatsapp-attention-button::before {
+    animation: none;
+  }
+}
+
 @media (min-width: 640px) {
   .hero-experience-card {
     width: min(48vw, 22.5rem);
