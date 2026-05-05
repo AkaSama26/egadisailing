@@ -246,6 +246,8 @@ async function main() {
     where: {
       id: {
         in: [
+          "boat-shared-morning",
+          "boat-shared-afternoon",
           "charter-3-days",
           "charter-4-days",
           "charter-5-days",

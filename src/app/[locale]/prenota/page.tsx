@@ -5,7 +5,7 @@ import { getBoatContent } from "@/data/catalog/boats";
 import {
   compareExperienceOrder,
   getExperienceContent,
-  getExperienceIds,
+  getPublicExperienceIds,
   resolveExperienceServiceIdFromSlug,
 } from "@/data/catalog/experiences";
 import { db } from "@/lib/db";
@@ -47,7 +47,7 @@ export default async function BookingIndexPage({
   const { locale } = await params;
   const sp = await searchParams;
   const services = await db.service.findMany({
-    where: { active: true, id: { in: getExperienceIds() } },
+    where: { active: true, id: { in: getPublicExperienceIds() } },
     select: {
       id: true,
       name: true,

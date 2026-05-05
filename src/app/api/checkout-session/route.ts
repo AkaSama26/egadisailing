@@ -22,6 +22,7 @@ import { emailSchema, personNameSchema } from "@/lib/validation/common-zod";
 import { RL_WINDOW } from "@/lib/timing";
 import { passengerBreakdownSchema } from "@/lib/booking/passengers";
 import { routing } from "@/i18n/routing";
+import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 
 export const runtime = "nodejs";
 
@@ -84,6 +85,9 @@ export const POST = withErrorHandler(async (req: Request) => {
 
   const body = await req.json();
   const input = schema.parse(body);
+  if (!isPublicBookingServiceEnabled(input.serviceId)) {
+    throw new ValidationError("Esperienza non disponibile");
+  }
 
   if (env.NODE_ENV === "production" || input.turnstileToken) {
     if (!input.turnstileToken) {

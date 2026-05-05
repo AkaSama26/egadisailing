@@ -19,6 +19,7 @@ import {
 } from "@/lib/booking/boat-slot-availability";
 import { checkOverrideEligibility } from "@/lib/booking/override-eligibility";
 import { resolveExperienceServiceIdFromSlug } from "@/data/catalog/experiences";
+import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 
 export const dynamic = "force-dynamic";
 
@@ -262,6 +263,12 @@ export const GET = withErrorHandler(async (req: Request) => {
   const searchParams = Object.fromEntries(new URL(req.url).searchParams);
   const input = querySchema.parse(searchParams);
   const requestedServiceId = resolveExperienceServiceIdFromSlug(input.serviceId);
+  if (!isPublicBookingServiceEnabled(requestedServiceId)) {
+    return NextResponse.json(
+      { error: { code: "NOT_FOUND", message: "Servizio non trovato" } },
+      { status: 404 },
+    );
+  }
   const start = parseIsoDay(input.start);
   const end = parseIsoDay(input.end);
   const days = Array.from(eachUtcDayInclusive(start, end));

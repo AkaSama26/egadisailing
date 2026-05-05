@@ -1,3 +1,5 @@
+import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
+
 import { localize, type LocalizedString } from "./locales";
 
 export interface ExperienceCatalogMedia {
@@ -724,7 +726,7 @@ export const EXPERIENCE_CATALOG = {
   "boat-shared-afternoon": {
     serviceId: "boat-shared-afternoon",
     order: 50,
-    listed: true,
+    listed: false,
     title: { it: "Tour in barca Egadi 4 ore pomeriggio condiviso", en: "Shared 4-hour afternoon Egadi boat tour" },
     subtitle: {
       it: "La formula agile del pomeriggio per vivere le Egadi in mezza giornata, con bagno, relax e rotta scelta in base al mare.",
@@ -985,43 +987,38 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
   {
     key: "tour-barca-egadi-4-ore",
     order: 40,
-    serviceIds: [
-      "boat-shared-morning",
-      "boat-shared-afternoon",
-      "boat-exclusive-morning",
-      "boat-exclusive-afternoon",
-    ],
+    serviceIds: ["boat-exclusive-morning", "boat-exclusive-afternoon"],
     title: {
       it: "Tour in barca Egadi 4 ore",
       en: "4-hour Egadi boat tour",
     },
     subtitle: {
-      it: "La formula agile per vivere le Egadi in mezza giornata, con bagno, relax e rotta scelta in base al mare. Disponibile condiviso o privato.",
-      en: "The agile half-day way to experience the Egadi, with swimming, relaxing and a route shaped by the sea. Available shared or private.",
+      it: "La formula agile per vivere le Egadi in mezza giornata, con barca riservata, bagno, relax e rotta scelta in base al mare.",
+      en: "The agile half-day way to experience the Egadi, with a reserved boat, swimming, relaxing and a route shaped by the sea.",
     },
     seoTitle: {
       it: "Tour in barca alle Egadi 4 ore da Trapani",
       en: "4-hour boat tour in the Egadi from Trapani",
     },
     seoDescription: {
-      it: "Tour in barca alle Egadi di 4 ore da Trapani, in formula condivisa o privata, con soste bagno e rotta flessibile.",
-      en: "4-hour boat tour in the Egadi from Trapani, shared or private, with swim stops and a flexible route.",
+      it: "Tour privato in barca alle Egadi di 4 ore da Trapani, con barca in esclusiva, soste bagno e rotta flessibile.",
+      en: "Private 4-hour boat tour in the Egadi from Trapani, with an exclusive boat, swim stops and a flexible route.",
     },
     durationLabel: { it: "4 ore", en: "4 hours" },
-    detailLabel: { it: "Condiviso o privato", en: "Shared or private" },
-    priceUnitLabel: { it: "a persona o per barca", en: "per person or per boat" },
+    detailLabel: { it: "Barca in esclusiva", en: "Private boat" },
+    priceUnitLabel: { it: "per barca", en: "per boat" },
     primaryCtaLabel: { it: "Scopri il 4 ore", en: "View 4-hour tour" },
-    primaryHref: "/experiences/boat-shared-afternoon",
-    media: EXPERIENCE_CATALOG["boat-shared-afternoon"].media,
+    primaryHref: "/experiences/boat-exclusive-afternoon",
+    media: EXPERIENCE_CATALOG["boat-exclusive-afternoon"].media,
     variants: [
       {
-        label: { it: "Condiviso pomeriggio", en: "Shared afternoon" },
+        label: { it: "Privato mattina", en: "Private morning" },
         description: {
-          it: "Posti singoli a bordo con altri ospiti.",
-          en: "Individual seats on board with other guests.",
+          it: "Barca riservata al mattino, con rientro intorno alle 13:00.",
+          en: "Boat reserved in the morning, returning around 13:00.",
         },
-        serviceId: "boat-shared-afternoon",
-        href: "/experiences/boat-shared-afternoon",
+        serviceId: "boat-exclusive-morning",
+        href: "/experiences/boat-exclusive-morning",
       },
       {
         label: { it: "Privato pomeriggio", en: "Private afternoon" },
@@ -1148,15 +1145,22 @@ export function getExperienceIds(): string[] {
   return Object.keys(EXPERIENCE_CATALOG);
 }
 
+export function getPublicExperienceIds(): string[] {
+  return getExperienceIds().filter(isPublicBookingServiceEnabled);
+}
+
 export function getListedExperienceIds(): string[] {
   return Object.values(EXPERIENCE_CATALOG)
-    .filter((entry) => entry.listed)
+    .filter((entry) => entry.listed && isPublicBookingServiceEnabled(entry.serviceId))
     .sort((a, b) => a.order - b.order)
     .map((entry) => entry.serviceId);
 }
 
 export function isExperienceListed(serviceId: string): boolean {
-  return getExperienceCatalogEntry(serviceId)?.listed ?? false;
+  return (
+    isPublicBookingServiceEnabled(serviceId) &&
+    (getExperienceCatalogEntry(serviceId)?.listed ?? false)
+  );
 }
 
 export function compareExperienceOrder(aServiceId: string, bServiceId: string): number {
@@ -1175,7 +1179,7 @@ export function getExperiencePackageContents(
       return {
         key: entry.key,
         order: entry.order,
-        serviceIds: [...entry.serviceIds],
+        serviceIds: entry.serviceIds.filter(isPublicBookingServiceEnabled),
         title: localize(entry.title, locale),
         subtitle: localize(entry.subtitle, locale),
         seoTitle: localize(entry.seoTitle, locale),
@@ -1191,12 +1195,14 @@ export function getExperiencePackageContents(
           color: item.color,
           src: item.src,
         })),
-        variants: variants.map((variant) => ({
-          label: localize(variant.label, locale),
-          description: localize(variant.description, locale),
-          serviceId: variant.serviceId,
-          href: variant.href,
-        })),
+        variants: variants
+          .filter((variant) => isPublicBookingServiceEnabled(variant.serviceId))
+          .map((variant) => ({
+            label: localize(variant.label, locale),
+            description: localize(variant.description, locale),
+            serviceId: variant.serviceId,
+            href: variant.href,
+          })),
       };
     });
 }
@@ -1204,5 +1210,5 @@ export function getExperiencePackageContents(
 export function getExperiencePackageServiceIds(): string[] {
   return Array.from(
     new Set(EXPERIENCE_PACKAGE_CATALOG.flatMap((entry) => [...entry.serviceIds])),
-  );
+  ).filter(isPublicBookingServiceEnabled);
 }

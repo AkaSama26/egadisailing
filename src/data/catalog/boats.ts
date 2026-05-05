@@ -90,8 +90,8 @@ const BOATS_PAGE_COPY = {
     en: "Boats in the Egadi from Trapani",
   },
   seoDescription: {
-    it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Neel 43 con chef e charter, Ciagal & Bertinetti 34 Offshore Open per tour privati o condivisi.",
-    en: "Discover Egadisailing boats for Egadi tours from Trapani: Neel 43 with chef and charter, Ciagal & Bertinetti 34 Offshore Open for private or shared tours.",
+    it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Neel 47 con chef e charter, Cigala & Bertinetti 34 Offshore Open per 4 ore private o 8 ore condivise/private.",
+    en: "Discover Egadisailing boats for Egadi tours from Trapani: Neel 47 with chef and charter, Cigala & Bertinetti 34 Offshore Open for private 4-hour or shared/private 8-hour tours.",
   },
   eyebrow: {
     it: "Flotta Egadisailing",
@@ -102,24 +102,24 @@ const BOATS_PAGE_COPY = {
     en: "Our boats to discover the Egadi from Trapani",
   },
   subtitle: {
-    it: "Dal Neel 43 con chef a bordo alla Ciagal & Bertinetti 34 Offshore Open per tour privati o condivisi: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
-    en: "From the Neel 43 with chef on board to the Ciagal & Bertinetti 34 Offshore Open for private or shared tours: choose the right pace for Favignana, Levanzo and Marettimo.",
+    it: "Dal Neel 47 con chef a bordo alla Cigala & Bertinetti 34 Offshore Open per 4 ore in esclusiva o 8 ore condivise/private: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
+    en: "From the Neel 47 with chef on board to the Cigala & Bertinetti 34 Offshore Open for private 4-hour or shared/private 8-hour tours: choose the right pace for Favignana, Levanzo and Marettimo.",
   },
   comparisonTitle: {
     it: "Due barche, due modi di vivere il mare",
     en: "Two boats, two ways to live the sea",
   },
   comparisonText: {
-    it: "Il Neel 43 e' pensato per comfort, chef e charter. La Ciagal & Bertinetti 34 Offshore Open e' la scelta agile per tour in giornata, privati o condivisi.",
-    en: "The Neel 43 is designed for comfort, chef experiences and charter. The Ciagal & Bertinetti 34 Offshore Open is the agile choice for day tours, private or shared.",
+    it: "Il Neel 47 e' pensato per comfort, chef e charter. La Cigala & Bertinetti 34 Offshore Open e' la scelta agile per 4 ore private o giornate da 8 ore condivise/private.",
+    en: "The Neel 47 is designed for comfort, chef experiences and charter. The Cigala & Bertinetti 34 Offshore Open is the agile choice for private 4-hour or shared/private 8-hour days.",
   },
   chooserTitle: {
     it: "Quale barca scegliere?",
     en: "Which boat should you choose?",
   },
   chooserText: {
-    it: "Se cerchi spazio, tavola e privacy scegli il Neel 43. Se vuoi una rotta snella tra le baie, scegli la Ciagal & Bertinetti 34 Offshore Open per tour da 4 o 8 ore.",
-    en: "If you want space, food and privacy, choose the Neel 43. If you want an agile route between bays, choose the Ciagal & Bertinetti 34 Offshore Open for 4 or 8-hour tours.",
+    it: "Se cerchi spazio, tavola e privacy scegli il Neel 47. Se vuoi una rotta snella tra le baie, scegli la Cigala & Bertinetti 34 Offshore Open per tour da 4 o 8 ore.",
+    en: "If you want space, food and privacy, choose the Neel 47. If you want an agile route between bays, choose the Cigala & Bertinetti 34 Offshore Open for 4 or 8-hour tours.",
   },
   detailCtaLabel: {
     it: "Scopri la barca",
@@ -142,17 +142,17 @@ const BOATS_PAGE_COPY = {
 export const BOAT_CATALOG = {
   trimarano: {
     id: "trimarano",
-    slug: "neel-43",
-    aliases: ["trimarano-egadisailing"],
-    externalUrl: "https://www.neel-trimarans.com/range/neel-43/",
+    slug: "neel-47",
+    aliases: ["trimarano-egadisailing", "neel-43"],
+    externalUrl: "https://www.neel-trimarans.com/range/neel-47/",
     order: 10,
     title: {
-      it: "Neel 43",
-      en: "Neel 43",
+      it: "Neel 47",
+      en: "Neel 47",
     },
     shortTitle: {
-      it: "Neel 43",
-      en: "Neel 43",
+      it: "Neel 47",
+      en: "Neel 47",
     },
     eyebrow: {
       it: "Comfort, chef e charter",
@@ -163,32 +163,32 @@ export const BOAT_CATALOG = {
       en: "The trimaran is the boat for the most complete Egadi experiences: wide spaces, cabins, galley and comfort for private days, chef on board and multi-day charter.",
     },
     seoTitle: {
-      it: "Neel 43 alle Egadi con chef a bordo",
-      en: "Neel 43 in the Egadi with chef on board",
+      it: "Neel 47 alle Egadi con chef a bordo",
+      en: "Neel 47 in the Egadi with chef on board",
     },
     seoDescription: {
-      it: "Scopri il Neel 43 Egadisailing da Trapani: esperienze gourmet, charter alle Egadi, cabine, cucina e comfort per gruppi privati.",
-      en: "Discover the Egadisailing Neel 43 from Trapani: gourmet experiences, Egadi charter, cabins, galley and comfort for private groups.",
+      it: "Scopri il Neel 47 Egadisailing da Trapani: esperienze gourmet, charter alle Egadi, cabine, cucina e comfort per gruppi privati.",
+      en: "Discover the Egadisailing Neel 47 from Trapani: gourmet experiences, Egadi charter, cabins, galley and comfort for private groups.",
     },
-    imageSrc: "/images/boats/neel-43/neel-43-hero.webp",
+    imageSrc: "/images/boats/neel-47/neel-47-hero.webp",
     imageAlt: {
-      it: "Neel 43 Egadisailing",
-      en: "Egadisailing Neel 43",
+      it: "Neel 47 Egadisailing",
+      en: "Egadisailing Neel 47",
     },
     gallery: [
       {
-        src: "/images/boats/neel-43/neel-43-hero.webp",
+        src: "/images/boats/neel-47/neel-47-hero.webp",
         alt: {
-          it: "Neel 43 Egadisailing in navigazione",
-          en: "Egadisailing Neel 43 sailing",
+          it: "Neel 47 Egadisailing in navigazione",
+          en: "Egadisailing Neel 47 sailing",
         },
-        caption: { it: "Neel 43 Egadisailing", en: "Egadisailing Neel 43" },
+        caption: { it: "Neel 47 Egadisailing", en: "Egadisailing Neel 47" },
       },
       {
         src: "/images/experience-polaroids/chef-a-bordo-cucina.webp",
         alt: {
-          it: "Chef a bordo del Neel 43 Egadisailing",
-          en: "Chef on board the Egadisailing Neel 43",
+          it: "Chef a bordo del Neel 47 Egadisailing",
+          en: "Chef on board the Egadisailing Neel 47",
         },
         caption: { it: "Chef a bordo", en: "Chef on board" },
       },
@@ -256,44 +256,44 @@ export const BOAT_CATALOG = {
   },
   boat: {
     id: "boat",
-    slug: "ciagal-bertinetti-34-offshore-open",
-    aliases: ["barca-egadisailing"],
+    slug: "cigala-bertinetti-34-offshore-open",
+    aliases: ["barca-egadisailing", "ciagal-bertinetti-34-offshore-open"],
     order: 20,
     title: {
-      it: "Ciagal & Bertinetti 34 Offshore Open",
-      en: "Ciagal & Bertinetti 34 Offshore Open",
+      it: "Cigala & Bertinetti 34 Offshore Open",
+      en: "Cigala & Bertinetti 34 Offshore Open",
     },
     shortTitle: {
-      it: "Ciagal & Bertinetti 34",
-      en: "Ciagal & Bertinetti 34",
+      it: "Cigala & Bertinetti 34",
+      en: "Cigala & Bertinetti 34",
     },
     eyebrow: {
-      it: "Tour privati e condivisi",
-      en: "Private and shared tours",
+      it: "4 ore esclusiva · 8 ore condivisa o privata",
+      en: "4 hours private · 8 hours shared or private",
     },
     description: {
-      it: "La Ciagal & Bertinetti 34 Offshore Open e' pensata per tour alle Egadi da 4 o 8 ore: agile, pratica e perfetta per scegliere tra posti condivisi o barca privata.",
-      en: "The Ciagal & Bertinetti 34 Offshore Open is designed for 4 or 8-hour Egadi tours: agile, practical and perfect for choosing between shared seats or a private boat.",
+      it: "La Cigala & Bertinetti 34 Offshore Open e' pensata per tour agili alle Egadi: 4 ore solo in esclusiva, oppure 8 ore con posti condivisi o barca privata.",
+      en: "The Cigala & Bertinetti 34 Offshore Open is designed for agile Egadi tours: 4 hours private only, or 8 hours with shared seats or a private boat.",
     },
     seoTitle: {
-      it: "Ciagal & Bertinetti 34 Offshore Open alle Egadi",
-      en: "Ciagal & Bertinetti 34 Offshore Open in the Egadi",
+      it: "Cigala & Bertinetti 34 Offshore Open alle Egadi",
+      en: "Cigala & Bertinetti 34 Offshore Open in the Egadi",
     },
     seoDescription: {
-      it: "Scopri la Ciagal & Bertinetti 34 Offshore Open per tour alle Egadi da Trapani: 4 ore o 8 ore, formula condivisa o privata, rotta tra Favignana e Levanzo.",
-      en: "Discover the Ciagal & Bertinetti 34 Offshore Open for Egadi tours from Trapani: 4 or 8 hours, shared or private, route between Favignana and Levanzo.",
+      it: "Scopri la Cigala & Bertinetti 34 Offshore Open per tour alle Egadi da Trapani: 4 ore in esclusiva o 8 ore condiviso/private, rotta tra Favignana e Levanzo.",
+      en: "Discover the Cigala & Bertinetti 34 Offshore Open for Egadi tours from Trapani: 4 hours private or 8 hours shared/private, route between Favignana and Levanzo.",
     },
-    imageSrc: "/images/boats/ciagal-bertinetti-34-offshore-open/ciagal-bertinetti-34-offshore-open-hero.webp",
+    imageSrc: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
     imageAlt: {
-      it: "Ciagal & Bertinetti 34 Offshore Open durante un tour alle Egadi",
-      en: "Ciagal & Bertinetti 34 Offshore Open during an Egadi tour",
+      it: "Cigala & Bertinetti 34 Offshore Open durante un tour alle Egadi",
+      en: "Cigala & Bertinetti 34 Offshore Open during an Egadi tour",
     },
     gallery: [
       {
-        src: "/images/boats/ciagal-bertinetti-34-offshore-open/ciagal-bertinetti-34-offshore-open-hero.webp",
+        src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
         alt: {
-          it: "Gruppo a bordo della Ciagal & Bertinetti 34 Offshore Open alle Egadi",
-          en: "Group on board the Ciagal & Bertinetti 34 Offshore Open in the Egadi",
+          it: "Gruppo a bordo della Cigala & Bertinetti 34 Offshore Open alle Egadi",
+          en: "Group on board the Cigala & Bertinetti 34 Offshore Open in the Egadi",
         },
         caption: { it: "Tour 8 ore", en: "8-hour tour" },
       },
@@ -315,9 +315,9 @@ export const BOAT_CATALOG = {
       },
     ],
     idealFor: [
-      { it: "Tour condivisi alle Egadi da 4 o 8 ore", en: "Shared 4 or 8-hour Egadi tours" },
+      { it: "Tour privati alle Egadi da 4 ore", en: "Private 4-hour Egadi tours" },
+      { it: "Tour condivisi o privati da 8 ore", en: "Shared or private 8-hour tours" },
       { it: "Gruppi che vogliono la barca privata", en: "Groups who want a private boat" },
-      { it: "Giornate agili tra Favignana e Levanzo", en: "Agile days between Favignana and Levanzo" },
     ],
     routes: [
       {
@@ -334,11 +334,9 @@ export const BOAT_CATALOG = {
       },
     ],
     serviceIds: [
-      "boat-shared-afternoon",
       "boat-exclusive-afternoon",
       "boat-shared-full-day",
       "boat-exclusive-full-day",
-      "boat-shared-morning",
       "boat-exclusive-morning",
     ],
     faqs: [
@@ -358,8 +356,8 @@ export const BOAT_CATALOG = {
           en: "Does the same boat also run shared tours?",
         },
         answer: {
-          it: "Si. I tour condivisi permettono di prenotare singoli posti e dividere la giornata con altri ospiti.",
-          en: "Yes. Shared tours let you book individual seats and share the day with other guests.",
+          it: "Si, ma solo sulla giornata intera da 8 ore. Il tour da 4 ore e' disponibile solo con barca in esclusiva.",
+          en: "Yes, but only on the 8-hour full day. The 4-hour tour is available as a private boat only.",
         },
       },
     ],

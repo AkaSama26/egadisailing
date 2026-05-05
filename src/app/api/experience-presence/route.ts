@@ -9,6 +9,7 @@ import { enforceRateLimit } from "@/lib/rate-limit/service";
 import { getRedisConnection } from "@/lib/queue";
 import { RL_WINDOW } from "@/lib/timing";
 import { ValidationError } from "@/lib/errors";
+import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +41,9 @@ export const POST = withErrorHandler(async (req: Request) => {
   });
 
   const input = payloadSchema.parse(await req.json());
+  if (!isPublicBookingServiceEnabled(input.serviceId)) {
+    throw new ValidationError("Esperienza non trovata");
+  }
   const service = await db.service.findUnique({
     where: { id: input.serviceId },
     select: { id: true, active: true },

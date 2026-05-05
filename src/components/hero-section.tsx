@@ -14,6 +14,7 @@ export interface HeroExperienceCard {
   key: string;
   title: string;
   subtitle: string;
+  priceLabel?: string | null;
   images: Array<{ src: string; alt: string }>;
   pills: string[];
   bookingHref: string;
@@ -548,6 +549,11 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                           <p className="mt-2 h-12 overflow-hidden text-sm font-medium leading-6 text-white [text-shadow:0_3px_16px_rgba(0,0,0,0.96),0_1px_3px_rgba(0,0,0,0.96)]">
                             {experience.subtitle}
                           </p>
+                          {experience.priceLabel && (
+                            <p className="mt-3 text-sm font-extrabold uppercase tracking-[0.08em] text-[var(--color-gold)] [text-shadow:0_3px_16px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
+                              {experience.priceLabel}
+                            </p>
+                          )}
                           <Link
                             href={experience.bookingHref}
                             tabIndex={isDuplicate ? -1 : undefined}

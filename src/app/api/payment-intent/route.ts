@@ -21,6 +21,7 @@ import { normalizeEmail } from "@/lib/email-normalize";
 import { emailSchema, personNameSchema } from "@/lib/validation/common-zod";
 import { RL_WINDOW } from "@/lib/timing";
 import { passengerBreakdownSchema } from "@/lib/booking/passengers";
+import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 
 export const runtime = "nodejs";
 
@@ -100,6 +101,9 @@ export const POST = withErrorHandler(async (req: Request) => {
 
   const body = await req.json();
   const input = schema.parse(body);
+  if (!isPublicBookingServiceEnabled(input.serviceId)) {
+    throw new ValidationError("Esperienza non disponibile");
+  }
 
   // Anti-bot: Turnstile enforced in production, optional in dev (allinea con
   // recupera-prenotazione OTP flow). Senza CAPTCHA, un bot pool bypassava il

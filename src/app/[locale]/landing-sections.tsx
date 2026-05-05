@@ -6,14 +6,18 @@ import { motion } from "framer-motion";
 import { ScrollSection } from "@/components/scroll-section";
 import { IslandsItinerary } from "@/components/islands-itinerary";
 import { BookingSearch } from "@/components/booking-search";
+import {
+  TestimonialsColumn,
+  type TestimonialColumnItem,
+} from "@/components/ui/testimonials-columns-1";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Star,
   Clock,
   UserCheck,
   ArrowRight,
   Compass,
+  ExternalLink,
   Sparkles,
 } from "lucide-react";
 
@@ -66,6 +70,140 @@ const featuredPackageOrder: Record<string, number> = {
   "barca-8-ore": 30,
   "barca-4-ore": 40,
 };
+
+const googleReviewsUrl =
+  "https://www.google.com/search?client=ubuntu-sn&sca_esv=393fe94135c43729&channel=fs&cs=1&sxsrf=ANbL-n7bmgag1xIRiMq9Vfe4ZvWT8D7YKg:1777968877317&q=Egadi+Sailing+Recensioni&rflfq=1&num=20&stick=H4sIAAAAAAAAAONgkxIxNLcwNrAwMTc1MjI3NDMwMzE2Md3AyPiKUcI1PTElUyE4MTMnMy9dISg1OTWvODM_L3MRK04pAJ4OsqhRAAAA&rldimm=17830847522716064345&tbm=lcl&hl=it-IT&sa=X&ved=2ahUKEwjy7-ia2qGUAxUZXEEAHSvCAkUQ9fQKegQIEBAG&biw=1784&bih=963&dpr=1#lkt=LocalPoiReviews";
+
+const tripadvisorReviewsUrl =
+  "https://www.tripadvisor.it/Attraction_Review-g494955-d33194161-Reviews-Egadi_Sailing-Trapani_Province_of_Trapani_Sicily.html";
+
+const googleReviews: TestimonialColumnItem[] = [
+  {
+    name: "Giulia Placenza",
+    role: "Google · 7 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a/ACg8ocIkAnMcIRZdDJKB_MtM3FdbXojP-y4fer33UaYWMs26G_BCcas=s120-c-rp-mo-br100",
+    text: "Esperienza bellissima e super consigliata. Dal catamarano totalmente in esclusiva e col massimo dei comfort, allo staff sempre gentile e professionale. Qualsiasi tuo desiderio, viene realizzato. Aperitivo sul mare splendente di Favignana con i prodotti migliori e tipici del territorio, trattati e preparati con cura dallo skipper Alessandro, il tutto sempre accompagnato da qualsiasi bevanda tu preferisca. Lo stesso vale per il pranzo, servito non appena arrivati a Levanzo. Una buonissima pasta con sugo di olive, capperi e pesce spada, tutto fresco, preso la mattina stessa della gita. E per non far mancare nulla e far vivere l'esperienza al massimo, al ritorno sono state aperte tutte le tre vele del catamarano, spettacolo inestimabile! Esperienza super consigliata per vivere una giornata di relax alle bellissime isole Egadi, con il massimo dei comfort, con un tri catamarano e uno staff a bordo in esclusiva solo per te!",
+  },
+  {
+    name: "Rebecca Vidale",
+    role: "Google · 9 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a/ACg8ocIrEsMDJfPtDHtag0CXghmrdp5NMgzulg6ku_5syqjn0fAC=s120-c-rp-mo-br100",
+    text: "Giornata meravigliosa, accompagnate da skipper Nico, super gentile e simpatico! Abbiamo potuto visitare le cale più belle di Favignana e Levanzo",
+  },
+  {
+    name: "Rocco Virgilio",
+    role: "Google · 8 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a/ACg8ocLMS_wwd7C_NP90NWpYcy922yoqjSpODgmdbIc72RxbK2QVyw=s120-c-rp-mo-br100",
+    text: "Esperienza unica tra le bellezze delle isole egadi non ci sono parole per descrivere la loro bellezza con il comandante Nico che ci ha fatto visitare le piu belle cale di Favignana e Levanzo consiglio di provare esperienza e professionalità distingue Egadi Sailing.",
+  },
+  {
+    name: "Federico Begnoni",
+    role: "Google · 7 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a-/ALV-UjUe40lmoQWKnNI59_iPAHHu50BAMWX6L2rv75uN1Fy8MNwTYnM=s120-c-rp-mo-br100",
+    text: "Tour privato giornaliero eseguito con Leo, abbiamo visitato Favignana e Levanto con un ottimo pranzo e aperitivi annessi, consiglio vivamente di prenotare questo tour tramite loro!",
+  },
+  {
+    name: "Vincenzo Orlacchio",
+    role: "Google · 9 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a/ACg8ocKjSgZBvJ52AENsPUVArA8l9l0gqJ-XwI2yOyMUWhmNG_zIOw=s120-c-rp-mo-ba3-br100",
+    text: "Bellissime esperienza, grazie al nostro skipper Niko che ci ha condotto per l'isola di Favignana, facendoci vedere tutte le bellezze di questo splendido territorio.",
+  },
+  {
+    name: "Marco Garuti",
+    role: "Google · 8 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a/ACg8ocL57nx3BJW99CNHxqhcGmOVaKnk-lXBZid_v32VlpQ3oFQncQ=s120-c-rp-mo-br100",
+    text: "Esperienza completa con il tour di Favignana e Levanzo, il nostro skipper Leo ci ha mostrato delle calette molto belle e ci ha raccontato un po' di storia delle Isole, rendendoci partecipe di tutto. Esperienza completa di cibo e alcol, mare bellissimo, non é mancato nulla!",
+  },
+  {
+    name: "Benito Di Girolamo",
+    role: "Google · 8 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a-/ALV-UjWIYjXdHuxS7HSh-l-cSl96sGZ-B8VdaPH1Tjz6RAe3fw6syiEz=s120-c-rp-mo-br100",
+    text: "Esperienza indimenticabile tra le acque delle Egadi, guidati da un equipaggio esperto e cordiale. Barca confortevole e ottima cucina locale a bordo. Un mix perfetto di relax e avventura, assolutamente consigliato!",
+  },
+  {
+    name: "Anto",
+    role: "Google · 9 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a/ACg8ocI44m48wSFDS11vPkpjkKcGBXI26rQ30Dc4n_GfDMDIskxEhQ=s120-c-rp-mo-br100",
+    text: "Giornata indimenticabile tra le acque cristalline di Favignana e Levanzo: panorami mozzafiato, tuffi e animazione spettacolare e relax assoluto. Un ringraziamento speciale allo skipper Niko, professionale, simpatico e attento, che ha reso l'esperienza ancora più piacevole!",
+  },
+  {
+    name: "Manuela Diana",
+    role: "Google · 9 mesi fa",
+    rating: 5,
+    image:
+      "https://lh3.googleusercontent.com/a-/ALV-UjVVZur27P6DRGXPrG2Tu6dnPwPNlzhDccz3Vq0ybhod_RaCoikz=s120-c-rp-mo-br100",
+    text: "31 luglio 2025 giornata memorabile. Organizzata alla perfezione Nico e Leo skipper meravigliosi abbiamo visto posti bellissimi fatti bagni con tanto tempo a disposizione ma soprattutto tante risate e anche emozioni condivise pazzesche. Grazie davvero di tutto......Manuela e Luciano da Roma",
+  },
+];
+
+const tripadvisorReviews: TestimonialColumnItem[] = [
+  {
+    name: "Veronica C",
+    role: "Tripadvisor · set 2025",
+    rating: 5,
+    text: "Abbiamo passato una giornata semplicemente indimenticabile con Niko e Ale. A bordo di un trimarano moderno, spazioso e super confortevole.",
+  },
+  {
+    name: "Marghe C",
+    role: "Tripadvisor · mag 2026",
+    rating: 5,
+    text: "Tutto magnifico la barca meravigliosa lo skipper Niko professionale, gentilissimo e bravissimo. Bellissima giornata.",
+  },
+  {
+    name: "Lory O",
+    role: "Tripadvisor · mag 2026",
+    rating: 5,
+    text: "Esperienza semplicemente fantastica! L'escursione in barca è stata uno dei momenti più belli della mia vacanza.",
+  },
+  {
+    name: "Maria C",
+    role: "Tripadvisor · mag 2026",
+    rating: 5,
+    text: "Giornata indimenticabile da rifare complimenti a tutto lo staff consiglio a chiunque di trascorrere una giornata a bordo divertimento assicurato",
+  },
+  {
+    name: "Vito G",
+    role: "Tripadvisor · mag 2026",
+    rating: 5,
+    text: "Esperienza magica, accoglienza top, cibo fantastico, posti mitici. La crew è stupenda e professionale e l'imbarcazione assolutamente unica!",
+  },
+];
+
+const mixedReviews = [
+  googleReviews[0],
+  tripadvisorReviews[0],
+  googleReviews[1],
+  tripadvisorReviews[1],
+  googleReviews[2],
+  tripadvisorReviews[2],
+  googleReviews[3],
+  tripadvisorReviews[3],
+  googleReviews[4],
+  tripadvisorReviews[4],
+  ...googleReviews.slice(5),
+].filter(Boolean);
+
+const reviewColumns = [
+  mixedReviews.filter((_, index) => index % 3 === 0),
+  mixedReviews.filter((_, index) => index % 3 === 1),
+  mixedReviews.filter((_, index) => index % 3 === 2),
+];
 
 function getMaxCapacity(services: SerializedService[], serviceIds: string[]) {
   return Math.max(
@@ -395,7 +533,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
         {
           caption: "Trimarano unico",
           color: "#DDA0DD",
-          src: "/images/boats/neel-43/neel-43-hero.webp",
+          src: "/images/boats/neel-47/neel-47-hero.webp",
         },
       ],
     },
@@ -447,9 +585,9 @@ export function LandingSections({ services }: LandingSectionsProps) {
       eyebrow: "Mezza giornata",
       title: "Barca 4 ore",
       subtitle:
-        "La formula agile per vivere le Egadi in mezza giornata, con bagno, navigazione panoramica e rotta scelta in base al mare.",
+        "La formula agile in esclusiva per vivere le Egadi in mezza giornata, con bagno, navigazione panoramica e rotta scelta in base al mare.",
       durationLabel: "4 ore",
-      detailLabel: "Condiviso o esclusivo",
+      detailLabel: "Solo esclusivo",
       chips: ["Mattina o pomeriggio", "Rientro preciso"],
       details: [
         {
@@ -458,14 +596,14 @@ export function LandingSections({ services }: LandingSectionsProps) {
         },
         {
           title: "A bordo",
-          text: "Posti condivisi o barca privata, con skipper e soste compatte nelle acque piu riparate.",
+          text: "Barca privata con skipper e soste compatte nelle acque piu riparate.",
         },
         {
           title: "Rotta",
           text: "Favignana o Levanzo, scegliendo la cala migliore raggiungibile in sicurezza in 4 ore.",
         },
       ],
-      href: `/${locale}/experiences/boat-shared-afternoon`,
+      href: `/${locale}/experiences/boat-exclusive-afternoon`,
       ctaLabel: "Scopri di più",
       polaroids: [
         {
@@ -824,7 +962,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
       </section>
 
       {/* ============================================================ */}
-      {/*  Section 4: Fatti convincere — Recensioni TripAdvisor        */}
+      {/*  Section 4: Fatti convincere — Recensioni Google             */}
       {/* ============================================================ */}
       <section
         className="relative py-32 px-4 md:px-8 lg:px-12"
@@ -837,58 +975,41 @@ export function LandingSections({ services }: LandingSectionsProps) {
             <div className="text-center mb-20">
               <RevealTitle text="Fatti Convincere" />
               <p className="text-white/50 text-lg mt-6">
-                Da chi ci ha già provato
+                Recensioni verificate da Google e Tripadvisor
               </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-4">
+                <a
+                  href={googleReviewsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] transition hover:text-[#f2b84b]"
+                >
+                  Leggi su Google <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                </a>
+                <a
+                  href={tripadvisorReviewsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] transition hover:text-[#f2b84b]"
+                >
+                  Leggi su Tripadvisor <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </div>
             </div>
           </ScrollSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Marco R.",
-                location: "Milano",
-                stars: 5,
-                text: "Un'esperienza indimenticabile! Lo chef ha preparato un pranzo straordinario con pesce freschissimo. Le acque delle Egadi sono un sogno. La crew è stata impeccabile.",
-              },
-              {
-                name: "Giulia M.",
-                location: "Roma",
-                stars: 5,
-                text: "La crew è stata fantastica, professionale e simpatica. Abbiamo visitato calette nascoste che non avremmo mai trovato da soli. Consigliatissimo a tutti!",
-              },
-              {
-                name: "Alessandro P.",
-                location: "Monaco",
-                stars: 5,
-                text: "Il charter è stato il viaggio più bello della nostra vita. Svegliarsi ogni mattina in un'isola diversa, con il mare cristallino. Torneremo sicuramente.",
-              },
-            ].map((testimonial, i) => (
-              <ScrollSection key={i} animation="fade-up" delay={i * 0.15}>
-                <div className="p-8 rounded-2xl bg-white/[0.06] backdrop-blur border border-white/[0.08] h-full flex flex-col">
-                  {/* TripAdvisor style header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-[#00aa6c] flex items-center justify-center text-white font-bold text-sm">
-                      {testimonial.name[0]}
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold text-sm">{testimonial.name}</p>
-                      <p className="text-white/40 text-xs">{testimonial.location}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: testimonial.stars }).map((_, j) => (
-                      <Star
-                        key={j}
-                        className="h-4 w-4 fill-[#00aa6c] text-[#00aa6c]"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-white/60 text-sm leading-relaxed flex-1 italic">
-                    &ldquo;{testimonial.text}&rdquo;
-                  </p>
-                </div>
-              </ScrollSection>
-            ))}
+          <div className="mx-auto mt-10 flex max-h-[660px] justify-center gap-6 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)]">
+            <TestimonialsColumn testimonials={reviewColumns[0]} duration={22} />
+            <TestimonialsColumn
+              testimonials={reviewColumns[1]}
+              className="hidden md:block"
+              duration={26}
+            />
+            <TestimonialsColumn
+              testimonials={reviewColumns[2]}
+              className="hidden lg:block"
+              duration={24}
+            />
           </div>
         </div>
       </section>

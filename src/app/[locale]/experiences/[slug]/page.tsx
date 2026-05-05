@@ -44,6 +44,7 @@ import { buildPageMetadata } from "@/lib/seo/metadata";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
 import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import { liquidGlassButton } from "@/lib/ui/liquid-glass";
+import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 
 const FALLBACK_HERO_IMAGE =
   "/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp";
@@ -490,6 +491,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   const serviceId = resolveExperienceServiceIdFromSlug(slug);
+  if (!isPublicBookingServiceEnabled(serviceId)) return { title: "Not Found" };
   const service = await db.service.findUnique({ where: { id: serviceId } });
   if (!service) return { title: "Not Found" };
   const content = getExperienceContent(service.id, locale);
@@ -512,6 +514,7 @@ export default async function ExperienceDetailPage({
   const { locale, slug } = await params;
   const t = await getTranslations();
   const serviceId = resolveExperienceServiceIdFromSlug(slug);
+  if (!isPublicBookingServiceEnabled(serviceId)) notFound();
 
   const service = await db.service.findUnique({ where: { id: serviceId } });
 
