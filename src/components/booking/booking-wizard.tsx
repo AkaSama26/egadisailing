@@ -5,9 +5,11 @@ import type { ReactNode } from "react";
 import { ArrowLeft, Baby, CalendarDays, Check, ChevronLeft, ChevronRight, CreditCard, ReceiptText, UserRound, Users } from "lucide-react";
 import { StripePaymentForm } from "./stripe-payment-form";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
+import { CustomerWeatherCard } from "@/components/weather/customer-weather-card";
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
+import type { PublicWeatherSummary } from "@/lib/weather/public-format";
 import {
   DEFAULT_PASSENGER_FARE_RULES,
   estimatePaidUnitEquivalent,
@@ -460,7 +462,7 @@ export function BookingWizard(props: Props) {
 
   useEffect(() => {
     if (!startDate || (isCharter && !priceLookupDurationDays)) {
-      setSelectedPrice(null);
+      queueMicrotask(() => setSelectedPrice(null));
       return;
     }
 
@@ -561,7 +563,7 @@ export function BookingWizard(props: Props) {
         }
         if (res.status === 409) {
           throw new Error(
-            `Queste date non sono piu' disponibili. Prova a sceglierne altre.${idSuffix}`,
+            `Queste date non sono più disponibili. Prova a sceglierne altre.${idSuffix}`,
           );
         }
         if (res.status >= 500) {
@@ -617,18 +619,18 @@ export function BookingWizard(props: Props) {
       if (result.status === "blocked") {
         const reasonMsg =
           result.reason === "within_15_day_cutoff"
-            ? "Questa data non e' piu' disponibile — troppo vicina all'esperienza (meno di 15 giorni)."
+            ? "Questa data non è più disponibile — troppo vicina all'esperienza (meno di 15 giorni)."
             : result.reason === "insufficient_revenue"
-            ? "Questa data e' gia' prenotata. Prova un'altra data."
+            ? "Questa data è già prenotata. Prova un'altra data."
             : result.reason === "boat_block"
-            ? "Questa data e' stata bloccata dall'amministrazione (manutenzione)."
+            ? "Questa data è stata bloccata dall'amministrazione (manutenzione)."
             : result.reason === "external_booking"
-            ? "Questa data e' gia' occupata da una prenotazione confermata su un portale esterno. Prova un'altra data."
+            ? "Questa data è già occupata da una prenotazione confermata su un portale esterno. Prova un'altra data."
             : result.reason === "feature_disabled"
             ? // Feature flag OFF: comportamento legacy — procediamo allo step
               // successivo, il controllo vero avverra' al createPendingDirectBooking.
               null
-            : "Questa data non e' disponibile per questo pacchetto.";
+            : "Questa data non è disponibile per questo pacchetto.";
         if (reasonMsg === null) {
           // feature disabled → legacy flow, avanza normalmente; il controllo
           // vero avverra' al createPendingDirectBooking.
@@ -654,8 +656,8 @@ export function BookingWizard(props: Props) {
         reason: "unknown",
         message:
           err instanceof Error
-            ? `Errore verifica disponibilita': ${err.message}`
-            : "Errore verifica disponibilita'. Riprova.",
+            ? `Errore verifica disponibilità: ${err.message}`
+            : "Errore verifica disponibilità. Riprova.",
       });
     }
   }
@@ -735,7 +737,7 @@ export function BookingWizard(props: Props) {
               aria-live="polite"
               className="pt-3 text-sm text-gray-600"
             >
-              Verifica disponibilita&apos; in corso...
+              Verifica disponibilità in corso...
             </div>
           )}
           {overrideCheck.status === "blocked" && (
@@ -893,6 +895,12 @@ interface CalendarApiDay {
   reasonLabel: string | null;
 }
 
+interface WeatherApiResponse {
+  data?: {
+    weather?: PublicWeatherSummary | null;
+  };
+}
+
 function calendarDayAriaLabel(date: string, day?: CalendarApiDay): string {
   const formatted = new Intl.DateTimeFormat("it-IT", {
     weekday: "long",
@@ -901,55 +909,64 @@ function calendarDayAriaLabel(date: string, day?: CalendarApiDay): string {
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00.000Z`));
-  if (!day) return `${formatted}, caricamento disponibilita'`;
+  if (!day) return `${formatted}, caricamento disponibilità`;
   const price = day.priceLabel ? `, ${day.priceLabel}` : "";
   return `${formatted}, ${day.reasonLabel ?? "non disponibile"}${price}`;
 }
 
 function calendarDayClass({
   selected,
+  rangeSelected,
   outOfMonth,
   status,
   loading,
 }: {
   selected: boolean;
+  rangeSelected: boolean;
   outOfMonth: boolean;
   status?: CalendarApiDay["status"];
   loading: boolean;
 }): string {
   return cnStep(
     "relative flex aspect-square min-h-11 flex-col items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed sm:min-h-[76px] sm:items-stretch sm:justify-start sm:gap-1 sm:p-1.5 sm:text-left",
-    selected &&
+    (selected || rangeSelected) &&
       "border-sky-700 bg-sky-700 text-white shadow-sm ring-2 ring-sky-200 hover:bg-sky-800",
-    !selected && !status && "border-slate-200 bg-white text-slate-400",
+    !selected && !rangeSelected && !status && "border-slate-200 bg-white text-slate-400",
     !selected &&
+      !rangeSelected &&
       status === "available" &&
       "border-emerald-200 bg-white text-slate-950 hover:bg-emerald-50",
     !selected &&
+      !rangeSelected &&
       status === "request" &&
       "border-amber-200 bg-amber-50 text-amber-950 hover:bg-amber-100",
-    !selected && status === "unavailable" && "border-slate-200 bg-slate-100 text-slate-400",
-    outOfMonth && !selected && "opacity-55",
+    !selected &&
+      !rangeSelected &&
+      status === "unavailable" &&
+      "border-slate-200 bg-slate-100 text-slate-400",
+    outOfMonth && !selected && !rangeSelected && "opacity-55",
     loading && "animate-pulse",
   );
 }
 
 function calendarDayDotClass({
   selected,
+  rangeSelected,
   status,
   loading,
 }: {
   selected: boolean;
+  rangeSelected: boolean;
   status?: CalendarApiDay["status"];
   loading: boolean;
 }): string {
   return cnStep(
     "mt-1 size-1.5 rounded-full sm:hidden",
-    selected && "bg-white",
-    !selected && status === "available" && "bg-emerald-500",
-    !selected && status === "request" && "bg-amber-500",
-    !selected && status === "unavailable" && "bg-slate-300",
-    !selected && !status && "bg-slate-200",
+    (selected || rangeSelected) && "bg-white",
+    !selected && !rangeSelected && status === "available" && "bg-emerald-500",
+    !selected && !rangeSelected && status === "request" && "bg-amber-500",
+    !selected && !rangeSelected && status === "unavailable" && "bg-slate-300",
+    !selected && !rangeSelected && !status && "bg-slate-200",
     loading && "animate-pulse",
   );
 }
@@ -995,6 +1012,9 @@ function DateStep({
   const [calendarDays, setCalendarDays] = useState<Record<string, CalendarApiDay>>({});
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [weatherSummary, setWeatherSummary] = useState<PublicWeatherSummary | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState(false);
   const charterDurationDays = isCharter ? inclusiveDaysBetween(value, endValue) : null;
   const charterIsTooShort =
     isCharter &&
@@ -1004,6 +1024,8 @@ function DateStep({
   const endMin = value ? addIsoDays(value, 2) : new Date().toISOString().slice(0, 10);
   const fixedEndDate =
     isCharter && fixedDurationDays && value ? addIsoDays(value, fixedDurationDays - 1) : "";
+  const selectedRangeEnd =
+    isCharter && value ? fixedEndDate || (endValue >= value ? endValue : value) : value;
   const range = useMemo(() => calendarRange(visibleMonth), [visibleMonth]);
   const currentMonth = new Date().toISOString().slice(0, 7);
   const canGoPrevious = visibleMonth > currentMonth;
@@ -1041,7 +1063,7 @@ function DateStep({
       })
       .catch((err) => {
         if ((err as Error).name !== "AbortError") {
-          setCalendarError("Non riesco a caricare disponibilita' e prezzi. Riprova tra poco.");
+          setCalendarError("Non riesco a caricare disponibilità e prezzi. Riprova tra poco.");
         }
       })
       .finally(() => {
@@ -1060,6 +1082,41 @@ function DateStep({
     }
   }, [calendarDays, onPriceChange, value]);
 
+  useEffect(() => {
+    if (!value) {
+      setWeatherSummary(null);
+      setWeatherLoading(false);
+      setWeatherError(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const params = new URLSearchParams({ date: value, locale });
+    setWeatherLoading(true);
+    setWeatherError(false);
+
+    fetch(`/api/weather?${params.toString()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("weather lookup failed");
+        const body = (await res.json()) as WeatherApiResponse;
+        setWeatherSummary(body.data?.weather ?? null);
+      })
+      .catch((err) => {
+        if ((err as Error).name !== "AbortError") {
+          setWeatherSummary(null);
+          setWeatherError(true);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setWeatherLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [locale, value]);
+
   return (
     <form
       className="space-y-4"
@@ -1070,7 +1127,7 @@ function DateStep({
     >
       <h2 className="text-2xl font-bold leading-tight">Scegli una data disponibile</h2>
       <fieldset className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:bg-slate-50 sm:p-4">
-        <legend className="sr-only">Calendario disponibilita&apos; e prezzi</legend>
+        <legend className="sr-only">Calendario disponibilità e prezzi</legend>
         <div className="mb-3 flex items-center justify-between gap-3">
           <button
             type="button"
@@ -1106,6 +1163,10 @@ function DateStep({
             const day = calendarDays[date];
             const outOfMonth = monthKeyFromIso(date) !== visibleMonth;
             const selected = value === date;
+            const rangeSelected = Boolean(
+              value && selectedRangeEnd && date >= value && date <= selectedRangeEnd,
+            );
+            const includedInSelectedRange = rangeSelected && !selected;
             const selectable = Boolean(day?.selectable);
             return (
               <button
@@ -1121,10 +1182,13 @@ function DateStep({
                   }
                   if (outOfMonth) setVisibleMonth(monthKeyFromIso(date));
                 }}
-                aria-pressed={selected}
-                aria-label={calendarDayAriaLabel(date, day)}
+                aria-pressed={selected || rangeSelected}
+                aria-label={`${calendarDayAriaLabel(date, day)}${
+                  includedInSelectedRange ? ", incluso nell'intervallo selezionato" : ""
+                }`}
                 className={calendarDayClass({
                   selected,
+                  rangeSelected,
                   outOfMonth,
                   status: day?.status,
                   loading: calendarLoading && !day,
@@ -1134,14 +1198,23 @@ function DateStep({
                   {Number(date.slice(8, 10))}
                 </span>
                 <span className="mt-1 hidden min-h-4 w-full max-w-full truncate text-center text-[11px] font-semibold leading-tight tabular-nums sm:mt-0 sm:block sm:text-left">
-                  {day?.priceLabel ?? (calendarLoading ? "..." : "")}
+                  {includedInSelectedRange
+                    ? locale === "en"
+                      ? "Included"
+                      : "Incluso"
+                    : day?.priceLabel ?? (calendarLoading ? "..." : "")}
                 </span>
                 <span className="mt-0.5 hidden min-h-4 w-full max-w-full truncate text-center text-[10px] leading-tight sm:block sm:text-left">
-                  {day?.reasonLabel ?? ""}
+                  {includedInSelectedRange
+                    ? locale === "en"
+                      ? "Selected range"
+                      : "Intervallo selezionato"
+                    : day?.reasonLabel ?? ""}
                 </span>
                 <span
                   className={calendarDayDotClass({
                     selected,
+                    rangeSelected,
                     status: day?.status,
                     loading: calendarLoading && !day,
                   })}
@@ -1172,28 +1245,47 @@ function DateStep({
         )}
       </fieldset>
       {value && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
-                Data selezionata
-              </p>
-              <p className="mt-1 font-bold">{formatIsoDateLabel(value)}</p>
-              {selectedDay?.priceHint && (
-                <p className="mt-1 text-xs leading-5 text-emerald-800">
-                  {selectedDay.priceHint}
+        <div className="space-y-3">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
+                  Data selezionata
                 </p>
-              )}
+                <p className="mt-1 font-bold">{formatIsoDateLabel(value)}</p>
+                {selectedDay?.priceHint && (
+                  <p className="mt-1 text-xs leading-5 text-emerald-800">
+                    {selectedDay.priceHint}
+                  </p>
+                )}
+              </div>
+              <span className={calendarStatusBadgeClass(selectedDay?.status)}>
+                {selectedDay?.reasonLabel ?? "Selezionata"}
+              </span>
             </div>
-            <span className={calendarStatusBadgeClass(selectedDay?.status)}>
-              {selectedDay?.reasonLabel ?? "Selezionata"}
-            </span>
+            {selectedDay?.priceLabel && (
+              <p className="mt-3 border-t border-emerald-200 pt-2 font-bold tabular-nums">
+                {selectedDay.priceLabel}
+              </p>
+            )}
           </div>
-          {selectedDay?.priceLabel && (
-            <p className="mt-3 border-t border-emerald-200 pt-2 font-bold tabular-nums">
-              {selectedDay.priceLabel}
+          {weatherLoading ? (
+            <div className="rounded-lg border border-sky-100 bg-sky-50/80 p-3 text-sm text-sky-900">
+              {locale === "en" ? "Loading weather forecast..." : "Carico previsione meteo..."}
+            </div>
+          ) : weatherSummary ? (
+            <CustomerWeatherCard
+              summary={weatherSummary}
+              locale={locale}
+              title={locale === "en" ? "Forecast for selected date" : "Meteo per la data selezionata"}
+            />
+          ) : weatherError ? (
+            <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              {locale === "en"
+                ? "Weather forecast is not available right now."
+                : "Previsione meteo non disponibile in questo momento."}
             </p>
-          )}
+          ) : null}
         </div>
       )}
       {isCharter && fixedDurationDays && (
@@ -1347,7 +1439,7 @@ function PeopleStep({
       )}
       {capacityExceeded && (
         <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          Hai selezionato piu&apos; posti della capacita&apos; disponibile.
+          Hai selezionato più posti della capacità disponibile.
         </p>
       )}
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -1523,7 +1615,7 @@ function ReviewStep({
         </p>
         <h2 className="mt-1 text-2xl font-bold">Riepilogo prenotazione</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Il pagamento verra&apos; aperto su Stripe solo dopo questa conferma.
+          Il pagamento verrà aperto su Stripe solo dopo questa conferma.
         </p>
       </div>
 
@@ -1558,7 +1650,7 @@ function ReviewStep({
         {paymentSchedule === "DEPOSIT_BALANCE" && (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
             La quota pagata online segue la policy di cancellazione. Il saldo restante
-            verra&apos; pagato in loco prima della partenza.
+            verrà pagato in loco prima della partenza.
           </p>
         )}
       </fieldset>
@@ -1654,7 +1746,7 @@ function ReviewStep({
 
       <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
         Il totale definitivo viene ricalcolato dal server al momento della conferma,
-        usando disponibilita&apos;, listino e sconti configurati. Il saldo, se presente,
+        usando disponibilità, listino e sconti configurati. Il saldo, se presente,
         si paga solo in loco prima della partenza.
       </p>
 

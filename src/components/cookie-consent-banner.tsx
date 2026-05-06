@@ -30,6 +30,14 @@ type FbqFunction = ((...args: unknown[]) => void) & {
   loaded?: boolean;
   version?: string;
 };
+type BingUetQueue = {
+  push: (...args: unknown[]) => number | void;
+};
+type BingUetConstructor = new (options: {
+  ti: string;
+  q?: unknown[];
+  enableAutoSpaTracking?: boolean;
+}) => BingUetQueue;
 
 declare global {
   interface Window {
@@ -39,6 +47,9 @@ declare global {
     _fbq?: FbqFunction;
     __egadiGtagLoadedIds?: Record<string, true>;
     __egadiMetaPixelLoadedIds?: Record<string, true>;
+    __egadiBingUetLoadedIds?: Record<string, true>;
+    uetq?: unknown[] | BingUetQueue;
+    UET?: BingUetConstructor;
   }
 }
 
@@ -128,6 +139,30 @@ function enableMetaPixel(consent: CookieConsentApi, pixelId: string) {
   window.fbq?.("track", "PageView");
 }
 
+function enableBingUet(consent: CookieConsentApi, tagId: string) {
+  window.__egadiBingUetLoadedIds = window.__egadiBingUetLoadedIds ?? {};
+  window.uetq = window.uetq ?? [];
+
+  if (!window.__egadiBingUetLoadedIds[tagId]) {
+    window.__egadiBingUetLoadedIds[tagId] = true;
+    const queued = Array.isArray(window.uetq) ? window.uetq : [];
+    void consent.loadScript("https://bat.bing.com/bat.js").then(() => {
+      if (!window.UET) return;
+      window.uetq = new window.UET({
+        ti: tagId,
+        q: queued,
+        enableAutoSpaTracking: true,
+      });
+      window.uetq.push("pageLoad");
+    });
+    return;
+  }
+
+  if (!Array.isArray(window.uetq)) {
+    window.uetq.push("pageLoad");
+  }
+}
+
 function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPublicServices) {
   const t = COOKIE_CONSENT_TRANSLATIONS[locale].preferencesModal;
   const rows: Array<Record<string, string>> = [
@@ -181,6 +216,18 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
           ? "Misurazione delle conversioni e campagne Meta."
           : "Meta campaign and conversion measurement.",
       expiration: "fino a 3 mesi",
+    });
+  }
+
+  if (services.bingUetTagId) {
+    rows.push({
+      name: "_uetsid, _uetvid, _uetmsclkid",
+      domain: "Microsoft Advertising / Bing",
+      description:
+        locale === "it"
+          ? "Misurazione conversioni e campagne Microsoft Advertising."
+          : "Microsoft Advertising campaign and conversion measurement.",
+      expiration: "fino a 13 mesi",
     });
   }
 
@@ -240,7 +287,7 @@ function buildConfig(
     });
   }
 
-  if (services.googleAdsId || services.metaPixelId) {
+  if (services.googleAdsId || services.metaPixelId || services.bingUetTagId) {
     const marketingServices: NonNullable<CookieConsentConfig["categories"][string]["services"]> = {};
     if (services.googleAdsId) {
       const googleAdsId = services.googleAdsId;
@@ -272,9 +319,26 @@ function buildConfig(
         cookies: [{ name: "_fbp" }, { name: "_fbc" }],
       };
     }
+    if (services.bingUetTagId) {
+      const bingUetTagId = services.bingUetTagId;
+      marketingServices.bingUet = {
+        label: t.preferencesModal.services.bingUet,
+        onAccept: () => {
+          enableBingUet(consent, bingUetTagId);
+        },
+        cookies: [{ name: /^_uet/ }, { name: "_uetmsclkid" }],
+      };
+    }
     categories.marketing = {
       autoClear: {
-        cookies: [{ name: /^_gcl_/ }, { name: "_gcl_au" }, { name: "_fbp" }, { name: "_fbc" }],
+        cookies: [
+          { name: /^_gcl_/ },
+          { name: "_gcl_au" },
+          { name: "_fbp" },
+          { name: "_fbc" },
+          { name: /^_uet/ },
+          { name: "_uetmsclkid" },
+        ],
       },
       services: marketingServices,
     };

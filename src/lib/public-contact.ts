@@ -1,5 +1,5 @@
 export const PUBLIC_CONTACT_EMAIL = "info@egadisailing.com";
-export const PRIVACY_CONTACT_EMAIL = "privacy@egadisailing.com";
+export const PRIVACY_CONTACT_EMAIL = PUBLIC_CONTACT_EMAIL;
 
 export const PUBLIC_COMPANY_LEGAL = {
   name: "EGADI SAILING SRLS",
@@ -7,6 +7,18 @@ export const PUBLIC_COMPANY_LEGAL = {
   vatNumber: "02925600815",
   pec: "egadiSailing@pec.it",
   recipientCode: "KRRH6B9",
+} as const;
+
+export const PUBLIC_TECHNICAL_MAINTAINER = {
+  name: "Marweb di Antonio Marino",
+  legalRepresentative: "Antonio Marino",
+  legalAddress: "Via F.sco Crispi 80, 91027 Paceco (TP)",
+  vatNumber: "02925820819",
+  pec: "antoniomarino96@pec.it",
+  roleIt:
+    "sviluppo, manutenzione tecnica, gestione codice, database, deploy e supporto applicativo",
+  roleEn:
+    "software development, technical maintenance, code, database, deployment and application support",
 } as const;
 
 export const PUBLIC_CONTACT_LOCATION = {

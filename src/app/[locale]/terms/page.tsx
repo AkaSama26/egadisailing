@@ -49,10 +49,10 @@ const TERMS_IT: TermsContent = {
     "Questo riepilogo aiuta la lettura ma non sostituisce le condizioni complete riportate sotto.",
   summaryItems: [
     "Cancellazione cliente: rimborso 100% fino a 30 giorni prima, 50% da 29 a 15 giorni prima, nessun rimborso sotto i 15 giorni e in caso di no-show.",
-    "Il cambio data non e' automatico: viene valutato dallo staff in base a disponibilita', operativita' e sicurezza.",
+    "Il cambio data non è automatico: viene valutato dallo staff in base a disponibilità, operatività e sicurezza.",
     "Se Egadisailing annulla per meteo-mare non sicuro o minimo partecipanti non raggiunto, il cliente sceglie cambio data gratuito o rimborso integrale.",
     "La rotta, gli orari operativi, le soste e la barca impiegata possono variare per sicurezza, meteo, mare, ordinanze o esigenze tecniche.",
-    "Il saldo non ancora pagato non viene richiesto dopo una cancellazione cliente; resta applicata la trattenuta sulla quota gia' pagata secondo la policy.",
+    "Il saldo non ancora pagato non viene richiesto dopo una cancellazione cliente; resta applicata la trattenuta sulla quota già pagata secondo la policy.",
   ],
   indexTitle: "Indice",
   legalLinksTitle: "Privacy, cookie e dati personali",
@@ -62,9 +62,9 @@ const TERMS_IT: TermsContent = {
   cookieLabel: "Cookie Policy",
   sections: [
     {
-      title: "1. Identita' del professionista e contatti",
+      title: "1. Identità del professionista e contatti",
       paragraphs: [
-        `Il venditore e prestatore dei servizi diretti e' ${companyIt}.`,
+        `Il venditore e prestatore dei servizi diretti è ${companyIt}.`,
         `Per assistenza contrattuale e prenotazioni: ${PUBLIC_CONTACT_EMAIL}. Per richieste privacy: ${PRIVACY_CONTACT_EMAIL}. Telefono/WhatsApp: ${PUBLIC_CONTACT_PHONE_TEXT}. Punto di incontro abituale, salvo diversa comunicazione operativa: ${PUBLIC_CONTACT_LOCATION.labelIt}.`,
       ],
     },
@@ -73,7 +73,7 @@ const TERMS_IT: TermsContent = {
       bullets: [
         "Questi Termini si applicano alle prenotazioni dirette concluse su egadisailing.com o tramite procedure di pagamento diretto Egadisailing.",
         "Per prenotazioni effettuate su portali esterni, marketplace, agenzie o OTA, pagamento, cancellazione e rimborso seguono anzitutto le condizioni del portale di acquisto.",
-        "Le regole operative di sicurezza, comportamento a bordo, documenti, puntualita', meteo e istruzioni dello skipper si applicano comunque a tutte le persone imbarcate.",
+        "Le regole operative di sicurezza, comportamento a bordo, documenti, puntualità, meteo e istruzioni dello skipper si applicano comunque a tutte le persone imbarcate.",
       ],
     },
     {
@@ -86,18 +86,18 @@ const TERMS_IT: TermsContent = {
     {
       title: "4. Diritto di recesso e policy contrattuale",
       paragraphs: [
-        "Ai sensi del Codice del Consumo, per i servizi riguardanti attivita' del tempo libero con data o periodo di esecuzione specifici il diritto di recesso ordinario di 14 giorni puo' essere escluso. Per le prenotazioni Egadisailing si applica quindi la policy contrattuale di cancellazione indicata in questi Termini.",
+        "Ai sensi del Codice del Consumo, per i servizi riguardanti attività del tempo libero con data o periodo di esecuzione specifici il diritto di recesso ordinario di 14 giorni può essere escluso. Per le prenotazioni Egadisailing si applica quindi la policy contrattuale di cancellazione indicata in questi Termini.",
         "Prima di concludere l'ordine il cliente riceve le informazioni essenziali sul servizio, sul prezzo, sul professionista, sui contatti, sul pagamento e sulle principali condizioni di cancellazione.",
       ],
     },
     {
       title: "5. Prenotazione, prezzo, acconto e saldo",
       bullets: [
-        "La prenotazione e' conclusa quando il pagamento online richiesto va a buon fine e il sistema invia o rende disponibile la conferma.",
+        "La prenotazione è conclusa quando il pagamento online richiesto va a buon fine e il sistema invia o rende disponibile la conferma.",
         "I prezzi sono espressi in Euro, IVA inclusa ove applicabile, salvo diversa indicazione nella scheda servizio.",
         "Per i servizi con acconto, la quota online blocca la prenotazione e il saldo residuo si paga in loco prima della partenza, salvo diversa indicazione scritta.",
         "Se dopo la prenotazione emerge un errore di prezzo manifestamente riconoscibile o un errore tecnico materiale, Egadisailing contatta il cliente per correggere l'ordine, proporre alternativa o rimborsare integralmente quanto pagato.",
-        "Dopo una cancellazione cliente, Egadisailing non richiede il saldo non ancora pagato; resta applicata la trattenuta sulla quota gia' pagata secondo la policy di cancellazione.",
+        "Dopo una cancellazione cliente, Egadisailing non richiede il saldo non ancora pagato; resta applicata la trattenuta sulla quota già pagata secondo la policy di cancellazione.",
       ],
     },
     {
@@ -113,7 +113,7 @@ const TERMS_IT: TermsContent = {
     {
       title: "7. Cambio data richiesto dal cliente",
       paragraphs: [
-        "Il cambio data non e' un diritto automatico. Ogni richiesta e' valutata dallo staff in base a disponibilita', tipo di servizio, meteo, operativita', stagionalita' e compatibilita' con le altre prenotazioni.",
+        "Il cambio data non è un diritto automatico. Ogni richiesta è valutata dallo staff in base a disponibilità, tipo di servizio, meteo, operatività, stagionalità e compatibilità con le altre prenotazioni.",
         "Se il cambio data viene approvato, la policy di cancellazione resta ancorata alla data originale della prenotazione, salvo diverso accordo scritto di Egadisailing.",
       ],
     },
@@ -121,8 +121,8 @@ const TERMS_IT: TermsContent = {
       title: "8. Ritardi, check-in e no-show",
       bullets: [
         "Il cliente deve presentarsi al punto di incontro con anticipo rispetto all'orario comunicato.",
-        "Egadisailing puo' concedere una tolleranza massima di 15 minuti, compatibilmente con traffico portuale, programma, meteo e rispetto degli altri ospiti.",
-        "Decorso tale termine, la partenza puo' avvenire senza il cliente ritardatario e il ritardo e' trattato come no-show, senza rimborso.",
+        "Egadisailing può concedere una tolleranza massima di 15 minuti, compatibilmente con traffico portuale, programma, meteo e rispetto degli altri ospiti.",
+        "Decorso tale termine, la partenza può avvenire senza il cliente ritardatario e il ritardo è trattato come no-show, senza rimborso.",
         "Il cliente deve portare documento valido e ogni informazione richiesta per check-in, sicurezza o adempimenti amministrativi.",
       ],
     },
@@ -130,20 +130,20 @@ const TERMS_IT: TermsContent = {
       title: "9. Meteo, mare, sicurezza e cancellazioni Egadisailing",
       paragraphs: [
         "La sicurezza prevale sempre su itinerario, preferenze del cliente, programma commerciale e orari indicativi.",
-        "Se Egadisailing annulla l'esperienza per condizioni meteo-marine non sicure, ordinanze, guasti, indisponibilita' tecnica, impossibilita' operativa o minimo partecipanti non raggiunto nei tour condivisi, il cliente puo' scegliere tra cambio data gratuito o rimborso integrale dell'importo pagato.",
+        "Se Egadisailing annulla l'esperienza per condizioni meteo-marine non sicure, ordinanze, guasti, indisponibilità tecnica, impossibilità operativa o minimo partecipanti non raggiunto nei tour condivisi, il cliente può scegliere tra cambio data gratuito o rimborso integrale dell'importo pagato.",
         "Non danno automaticamente diritto a rimborso le variazioni di rotta, baie, soste, durata delle soste, orario operativo o barca equivalente quando l'esperienza resta erogabile in sicurezza.",
       ],
     },
     {
       title: "10. Itinerario, skipper authority e barca equivalente",
       bullets: [
-        "Lo skipper/comandante decide rotta, velocita', soste, orari operativi, rada, eventuale rientro anticipato o modifica programma per sicurezza, comfort e normativa.",
-        "Egadisailing puo' sostituire la barca con mezzo equivalente o superiore per motivi tecnici, meteo, logistici o di sicurezza.",
+        "Lo skipper/comandante decide rotta, velocità, soste, orari operativi, rada, eventuale rientro anticipato o modifica programma per sicurezza, comfort e normativa.",
+        "Egadisailing può sostituire la barca con mezzo equivalente o superiore per motivi tecnici, meteo, logistici o di sicurezza.",
         "Le soste bagno, snorkeling, pranzo in rada, grotte, cale e destinazioni specifiche sono sempre subordinate a condizioni del giorno, affollamento, ordinanze e giudizio dello skipper.",
       ],
     },
     {
-      title: "11. Cosa e' incluso e cosa e' escluso",
+      title: "11. Cosa è incluso e cosa è escluso",
       bullets: [
         "Inclusi ed esclusi sono quelli indicati nella scheda servizio, nella conferma di prenotazione o in eventuale preventivo scritto.",
         "Salvo diversa indicazione, non sono inclusi transfer da/per hotel, parcheggio, extra non indicati, richieste speciali, cambusa charter, carburante extra fuori programma, tasse locali non previste o servizi di terzi.",
@@ -153,8 +153,8 @@ const TERMS_IT: TermsContent = {
     {
       title: "12. Charter multi-giorno",
       bullets: [
-        "Per i charter si applicano questi Termini piu' le condizioni specifiche indicate nella scheda servizio, nel preventivo o in eventuale allegato charter.",
-        "La cambusa e' esclusa salvo diversa indicazione scritta; la crew puo' supportare organizzazione, lista spesa o refill se concordato.",
+        "Per i charter si applicano questi Termini più le condizioni specifiche indicate nella scheda servizio, nel preventivo o in eventuale allegato charter.",
+        "La cambusa è esclusa salvo diversa indicazione scritta; la crew può supportare organizzazione, lista spesa o refill se concordato.",
         "Rotta, pernottamento in rada, isole visitate e durata delle navigazioni dipendono da meteo, mare, sicurezza e indicazioni dello skipper.",
         "Eventuali cauzioni, extra, skipper/hostess aggiuntivi, pulizie speciali, porti, ormeggi o servizi non inclusi sono dovuti solo se indicati o concordati per iscritto.",
       ],
@@ -162,8 +162,8 @@ const TERMS_IT: TermsContent = {
     {
       title: "13. Minori, condizioni fisiche, gravidanza e animali",
       bullets: [
-        "Il cliente deve comunicare prima della partenza presenza di minori, gravidanza, disabilita', condizioni mediche rilevanti, difficolta' motorie, allergie o esigenze che possano incidere sulla sicurezza.",
-        "Lo skipper puo' rifiutare o limitare l'imbarco se ritiene che condizioni del mare, barca, servizio scelto o stato del cliente non consentano un'esperienza sicura.",
+        "Il cliente deve comunicare prima della partenza presenza di minori, gravidanza, disabilità, condizioni mediche rilevanti, difficoltà motorie, allergie o esigenze che possano incidere sulla sicurezza.",
+        "Lo skipper può rifiutare o limitare l'imbarco se ritiene che condizioni del mare, barca, servizio scelto o stato del cliente non consentano un'esperienza sicura.",
         "Gli animali sono ammessi solo previa autorizzazione scritta dello staff, valutando barca, gruppo, meteo, igiene e sicurezza. Restano salvi i diritti applicabili per animali di assistenza ove previsti.",
       ],
     },
@@ -171,13 +171,13 @@ const TERMS_IT: TermsContent = {
       title: "14. Comportamento a bordo, alcol, fumo e danni",
       bullets: [
         "Il cliente deve rispettare le istruzioni di skipper e crew, usare correttamente dotazioni e non assumere comportamenti pericolosi o molesti.",
-        "Fumo consentito solo se autorizzato e nelle zone indicate. Consumo di alcol ammesso solo in modo moderato; lo staff puo' limitarlo o interromperlo per sicurezza.",
-        "Egadisailing puo' rifiutare imbarco, interrompere o modificare l'esperienza se un cliente mette a rischio se stesso, altri ospiti, crew, barca o ambiente.",
+        "Fumo consentito solo se autorizzato e nelle zone indicate. Consumo di alcol ammesso solo in modo moderato; lo staff può limitarlo o interromperlo per sicurezza.",
+        "Egadisailing può rifiutare imbarco, interrompere o modificare l'esperienza se un cliente mette a rischio se stesso, altri ospiti, crew, barca o ambiente.",
         "Il cliente risponde dei danni causati da condotta dolosa, negligente, imprudente o contraria alle istruzioni dello staff.",
       ],
     },
     {
-      title: "15. Oggetti personali, assicurazione e responsabilita'",
+      title: "15. Oggetti personali, assicurazione e responsabilità",
       paragraphs: [
         "Egadisailing dispone delle coperture assicurative previste dalla normativa applicabile. Il cliente resta responsabile dei propri effetti personali e deve custodire dispositivi, gioielli, denaro, documenti e oggetti di valore.",
         "Egadisailing non risponde di perdita, furto o danneggiamento di beni personali salvo dolo o colpa grave accertata.",
@@ -192,7 +192,7 @@ const TERMS_IT: TermsContent = {
     {
       title: "17. Reclami, fattura e comunicazioni",
       bullets: [
-        `Per reclami o richieste contrattuali il cliente puo' scrivere a ${PUBLIC_CONTACT_EMAIL} o alla PEC ${PUBLIC_COMPANY_LEGAL.pec}.`,
+        `Per reclami o richieste contrattuali il cliente può scrivere a ${PUBLIC_CONTACT_EMAIL} o alla PEC ${PUBLIC_COMPANY_LEGAL.pec}.`,
         "Eventuali reclami vanno inviati appena possibile e comunque con dettagli utili a identificare prenotazione, data, partecipanti e motivo.",
         "La fattura o ricevuta viene emessa secondo i dati forniti dal cliente e la normativa fiscale applicabile.",
         "Le comunicazioni transazionali possono essere inviate via email, telefono, WhatsApp o area prenotazione, in base ai contatti forniti dal cliente.",
@@ -201,15 +201,15 @@ const TERMS_IT: TermsContent = {
     {
       title: "18. Forza maggiore",
       paragraphs: [
-        "Egadisailing non e' responsabile per ritardi, modifiche o mancata esecuzione causati da eventi fuori dal proprio ragionevole controllo, inclusi condizioni meteo-marine, ordinanze, emergenze, scioperi, blocchi portuali, guasti improvvisi, indisponibilita' di servizi essenziali o eventi di forza maggiore.",
+        "Egadisailing non è responsabile per ritardi, modifiche o mancata esecuzione causati da eventi fuori dal proprio ragionevole controllo, inclusi condizioni meteo-marine, ordinanze, emergenze, scioperi, blocchi portuali, guasti improvvisi, indisponibilità di servizi essenziali o eventi di forza maggiore.",
       ],
     },
     {
       title: "19. Legge applicabile, foro e lingua",
       paragraphs: [
-        "I Termini sono regolati dalla legge italiana. Per i consumatori si applicano i fori e le tutele inderogabili previste dalla normativa applicabile; negli altri casi il foro competente e' Trapani.",
+        "I Termini sono regolati dalla legge italiana. Per i consumatori si applicano i fori e le tutele inderogabili previste dalla normativa applicabile; negli altri casi il foro competente è Trapani.",
         "I Termini sono pubblicati in italiano e inglese. Entrambe le versioni sono fornite per chiarezza verso clienti italiani e internazionali; in caso di divergenza interpretativa, prevale il testo italiano.",
-        "La piattaforma europea ODR per le controversie online e' stata dismessa dal 20 luglio 2025; non viene quindi indicato alcun link ODR.",
+        "La piattaforma europea ODR per le controversie online è stata dismessa dal 20 luglio 2025; non viene quindi indicato alcun link ODR.",
       ],
     },
   ],

@@ -34,6 +34,9 @@ export function getCookieConsentPublicServices(): CookieConsentPublicServices {
   if (env.NEXT_PUBLIC_META_PIXEL_ID) {
     services.metaPixelId = env.NEXT_PUBLIC_META_PIXEL_ID;
   }
+  if (env.NEXT_PUBLIC_BING_UET_TAG_ID) {
+    services.bingUetTagId = env.NEXT_PUBLIC_BING_UET_TAG_ID;
+  }
   return services;
 }
 

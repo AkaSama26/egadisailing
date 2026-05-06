@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { PUBLIC_CONTACT_EMAIL, getEmailHref } from "@/lib/public-contact";
 
 /**
@@ -23,10 +24,10 @@ export default function LocaleError({
     <div className="min-h-[60vh] flex items-center justify-center px-6 py-12">
       <div className="max-w-lg bg-white border border-red-200 rounded-2xl p-8 space-y-4 shadow-sm">
         <h2 className="text-2xl font-bold text-slate-900">
-          Qualcosa e' andato storto
+          Qualcosa è andato storto
         </h2>
         <p className="text-sm text-slate-700">
-          Si e' verificato un problema tecnico momentaneo. Riprova tra qualche
+          Si è verificato un problema tecnico momentaneo. Riprova tra qualche
           istante oppure scrivici a{" "}
           <a
             href={getEmailHref()}
@@ -49,12 +50,12 @@ export default function LocaleError({
           >
             Riprova
           </button>
-          <a
+          <Link
             href="/"
             className="bg-white border border-slate-300 text-slate-900 rounded-full px-5 py-2 text-sm font-semibold hover:bg-slate-50"
           >
             Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

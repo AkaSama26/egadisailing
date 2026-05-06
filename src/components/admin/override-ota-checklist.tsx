@@ -145,7 +145,7 @@ export function OverrideOtaChecklist({
                   onChange={(e) => updateState(c.conflictId, { adminDeclared: e.target.checked })}
                   className="mt-1"
                 />
-                <span>4. Dichiaro di aver completato i 3 passaggi sotto mia responsabilita&apos;</span>
+                <span>4. Dichiaro di aver completato i 3 passaggi sotto mia responsabilità</span>
               </label>
             </div>
             <AdminAlert

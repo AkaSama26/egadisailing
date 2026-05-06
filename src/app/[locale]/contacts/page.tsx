@@ -65,7 +65,7 @@ export default async function ContactsPage({
       : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi",
     subtitle: isEn
       ? "Questions, bookings, or a little help choosing the right experience? We are here."
-      : "Hai domande, vuoi prenotare o semplicemente saperne di piu'? Siamo qui.",
+      : "Hai domande, vuoi prenotare o semplicemente saperne di più? Siamo qui.",
     locationLabel: isEn ? "Where we are" : "Dove siamo",
     address: getContactLocationLabel(locale),
     phoneLabel: isEn ? "Phone and WhatsApp" : "Telefono e WhatsApp",

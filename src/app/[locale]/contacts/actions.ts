@@ -175,7 +175,7 @@ export async function sendContactMessage(
           ? "Controlla i campi del modulo."
           : err instanceof Error
             ? err.message
-            : "Errore sconosciuto, riprova piu' tardi.",
+            : "Errore sconosciuto, riprova più tardi.",
     };
   }
 }

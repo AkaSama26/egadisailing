@@ -25,7 +25,7 @@ function experienceKeyForOption(service: BookingServiceOption): string {
 export const metadata: Metadata = {
   title: "Prenota escursioni in barca alle Egadi online | Egadisailing",
   description:
-    "Prenota escursioni in barca alle Isole Egadi con calendario disponibilita', prezzi aggiornati e checkout sicuro Egadisailing.",
+    "Prenota escursioni in barca alle Isole Egadi con calendario disponibilità, prezzi aggiornati e checkout sicuro Egadisailing.",
   robots: { index: true, follow: true },
 };
 

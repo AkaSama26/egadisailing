@@ -152,7 +152,7 @@ function InnerForm({
       ) {
         onSuccess();
       } else {
-        setError("Il pagamento non e' stato completato. Controlla i dati e riprova.");
+        setError("Il pagamento non è stato completato. Controlla i dati e riprova.");
         setProcessing(false);
       }
     }

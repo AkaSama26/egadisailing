@@ -76,9 +76,6 @@ export default async function RecuperaPrenotazionePage({
         <section className="rounded-2xl bg-white p-6 shadow-2xl sm:p-8">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-sky-700">
-                Email + codice
-              </p>
               <h2 className="mt-1 text-2xl font-bold text-slate-950">
                 {isEn ? "Secure access" : "Accesso sicuro"}
               </h2>

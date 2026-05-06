@@ -71,7 +71,7 @@ export async function cancelCustomerBooking(bookingId: string): Promise<void> {
     );
   }
   if (booking.status !== "PENDING" && booking.status !== "CONFIRMED") {
-    throw new ValidationError("Questa prenotazione non puo' essere cancellata.");
+    throw new ValidationError("Questa prenotazione non può essere cancellata.");
   }
 
   if (booking.directBooking?.stripePaymentIntentId && booking.status === "PENDING") {
@@ -269,10 +269,10 @@ export async function requestCustomerReschedule(formData: FormData): Promise<voi
     );
   }
   if (booking.status !== "PENDING" && booking.status !== "CONFIRMED") {
-    throw new ValidationError("Questa prenotazione non puo' essere modificata.");
+    throw new ValidationError("Questa prenotazione non può essere modificata.");
   }
   if (newStartDate < parseDateLikelyLocalDay(new Date().toISOString().slice(0, 10))) {
-    throw new ValidationError("La nuova data non puo' essere nel passato.");
+    throw new ValidationError("La nuova data non può essere nel passato.");
   }
 
   const oldStartDate = booking.startDate;

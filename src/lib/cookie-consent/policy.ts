@@ -1,7 +1,7 @@
 export const COOKIE_CONSENT_COOKIE_NAME = "egadi_cookie_consent" as const;
-export const COOKIE_CONSENT_POLICY_VERSION = "1.0" as const;
-export const COOKIE_CONSENT_REVISION = 2 as const;
-export const COOKIE_CONSENT_EFFECTIVE_DATE = "3 maggio 2026" as const;
+export const COOKIE_CONSENT_POLICY_VERSION = "1.2" as const;
+export const COOKIE_CONSENT_REVISION = 5 as const;
+export const COOKIE_CONSENT_EFFECTIVE_DATE = "6 maggio 2026" as const;
 
 export const COOKIE_CONSENT_CATEGORIES = {
   necessary: {
@@ -33,6 +33,7 @@ export interface CookieConsentPublicServices {
   gaMeasurementId?: string;
   googleAdsId?: string;
   metaPixelId?: string;
+  bingUetTagId?: string;
 }
 
 export function normalizeCookieConsentLocale(locale: string): CookieConsentLocale {
@@ -40,7 +41,12 @@ export function normalizeCookieConsentLocale(locale: string): CookieConsentLocal
 }
 
 export function hasOptionalCookieConsentServices(services: CookieConsentPublicServices): boolean {
-  return Boolean(services.gaMeasurementId || services.googleAdsId || services.metaPixelId);
+  return Boolean(
+    services.gaMeasurementId ||
+      services.googleAdsId ||
+      services.metaPixelId ||
+      services.bingUetTagId,
+  );
 }
 
 export function getEnabledCookieConsentCategories(
@@ -48,7 +54,9 @@ export function getEnabledCookieConsentCategories(
 ): CookieConsentCategory[] {
   const categories: CookieConsentCategory[] = ["necessary"];
   if (services.gaMeasurementId) categories.push("analytics");
-  if (services.googleAdsId || services.metaPixelId) categories.push("marketing");
+  if (services.googleAdsId || services.metaPixelId || services.bingUetTagId) {
+    categories.push("marketing");
+  }
   return categories;
 }
 
@@ -74,7 +82,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
       serviceCounterLabel: "servizio|servizi",
       sections: {
         intro:
-          "Puoi scegliere per finalita'. I cookie tecnici restano attivi per sicurezza, sessione, lingua, pagamenti e protezione anti-bot.",
+          "Puoi scegliere per finalità. I cookie tecnici restano attivi per sicurezza, sessione, lingua, pagamenti e protezione anti-bot.",
         necessary:
           "Essenziali per navigazione, sessione admin/cliente, preferenze lingua, sicurezza, Stripe e Cloudflare Turnstile. Non possono essere disattivati.",
         analytics:
@@ -89,7 +97,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         headers: {
           name: "Nome",
           domain: "Fornitore",
-          description: "Finalita'",
+          description: "Finalità",
           expiration: "Durata",
         },
       },
@@ -97,6 +105,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         ga4: "Google Analytics 4",
         googleAds: "Google Ads",
         metaPixel: "Meta Pixel",
+        bingUet: "Microsoft Advertising / Bing",
       },
     },
   },
@@ -144,6 +153,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         ga4: "Google Analytics 4",
         googleAds: "Google Ads",
         metaPixel: "Meta Pixel",
+        bingUet: "Microsoft Advertising / Bing",
       },
     },
   },

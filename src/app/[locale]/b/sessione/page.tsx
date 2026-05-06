@@ -7,11 +7,14 @@ import { getBookingSession } from "@/lib/session/verify";
 import { env } from "@/lib/env";
 import { formatEurWithVat } from "@/lib/pricing/vat";
 import { LogoutButton } from "./logout-button";
-import { formatItDay, isoDay } from "@/lib/dates";
+import { formatItDay, isoDay, parseDateLikelyLocalDay } from "@/lib/dates";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { computeCustomerCancellationPolicy } from "@/lib/booking/cancellation-policy";
 import { cancelCustomerBooking, requestCustomerReschedule } from "./actions";
+import { getAllWeather } from "@/lib/weather/service";
+import { buildPublicWeatherSummary } from "@/lib/weather/public-format";
+import { CustomerWeatherCard } from "@/components/weather/customer-weather-card";
 
 // R26-A1-A5: PII area — noindex defense-in-depth oltre robots.txt. Bot che
 // ignora robots.txt (o config error serve la pagina con slug indexable)
@@ -27,19 +30,26 @@ export default async function SessionePage({
   const session = await getBookingSession();
   if (!session) redirect(`/${locale || env.APP_LOCALES_DEFAULT}/recupera-prenotazione`);
 
-  const bookings = await db.booking.findMany({
-    where: { customer: { email: session.email } },
-    include: {
-      service: true,
-      directBooking: true,
-      payments: true,
-      changeRequests: {
-        orderBy: { createdAt: "desc" },
-        take: 3,
+  const [bookings, weatherResult] = await Promise.all([
+    db.booking.findMany({
+      where: { customer: { email: session.email } },
+      include: {
+        service: true,
+        directBooking: true,
+        payments: true,
+        changeRequests: {
+          orderBy: { createdAt: "desc" },
+          take: 3,
+        },
       },
-    },
-    orderBy: { startDate: "desc" },
-  });
+      orderBy: { startDate: "desc" },
+    }),
+    getAllWeather()
+      .then((items) => ({ items, error: null as string | null }))
+      .catch((err) => ({ items: [], error: (err as Error).message })),
+  ]);
+  const today = parseDateLikelyLocalDay(new Date());
+  const weatherByDate = new Map(weatherResult.items.map((item) => [item.date, item]));
 
   return (
     <OceanLayout className="egadi-water-reflection overflow-hidden">
@@ -60,7 +70,7 @@ export default async function SessionePage({
           <p>
             Fino a 30 giorni prima: rimborso completo. Da 29 a 15 giorni prima:
             rimborso del 50%. Sotto i 15 giorni e in caso di no-show: cancellazione senza
-            rimborso. Il cambio data e&apos; soggetto a verifica e approvazione dello staff.
+            rimborso. Il cambio data è soggetto a verifica e approvazione dello staff.
           </p>
         </div>
         {bookings.length === 0 && (
@@ -88,6 +98,12 @@ export default async function SessionePage({
           const refundable = paid.mul(policy.refundMultiplier);
           const canManage =
             b.source === "DIRECT" && (b.status === "PENDING" || b.status === "CONFIRMED");
+          const weather =
+            b.startDate.getTime() >= today.getTime() &&
+            (b.status === "PENDING" || b.status === "CONFIRMED")
+              ? weatherByDate.get(isoDay(b.startDate))
+              : null;
+          const weatherSummary = weather ? buildPublicWeatherSummary(weather, locale) : null;
           return (
             <div key={b.id} className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex justify-between items-start mb-3">
@@ -108,6 +124,16 @@ export default async function SessionePage({
                   Saldo da pagare: {formatEurWithVat(balance, locale)}
                 </p>
               )}
+              {weatherSummary && (
+                <div className="mt-4">
+                  <CustomerWeatherCard
+                    summary={weatherSummary}
+                    locale={locale}
+                    title={locale === "en" ? "Forecast for your trip" : "Meteo per la tua uscita"}
+                    compact
+                  />
+                </div>
+              )}
               {b.status === "CONFIRMED" && (
                 <Link
                   href={`/${locale || env.APP_LOCALES_DEFAULT}/ticket/${b.confirmationCode}`}
@@ -121,8 +147,8 @@ export default async function SessionePage({
                   <div className="rounded-lg border border-gray-200 p-3">
                     <p className="font-semibold text-gray-900">Richiedi cambio data</p>
                     <p className="mt-1 text-sm text-gray-600">
-                      Lo staff verifica disponibilita&apos; e policy. La prenotazione resta sulla
-                      data attuale finche&apos; la richiesta non viene approvata.
+                      Lo staff verifica disponibilità e policy. La prenotazione resta sulla
+                      data attuale finché la richiesta non viene approvata.
                     </p>
                     {pendingChange && (
                       <p className="mt-2 rounded bg-sky-50 p-2 text-sm text-sky-800">

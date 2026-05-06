@@ -37,7 +37,7 @@ export function computeActionState(day: DayCellEnriched): ActionState {
     };
   }
   if (day.status === "BLOCKED" && day.isAdminBlock) {
-    return { canBlock: false, canRelease: true, blockDisabledReason: "Gia' bloccato" };
+    return { canBlock: false, canRelease: true, blockDisabledReason: "Già bloccato" };
   }
   if (day.status === "BLOCKED" && hasActiveBooking) {
     return {

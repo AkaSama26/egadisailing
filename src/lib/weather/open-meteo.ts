@@ -32,6 +32,10 @@ export async function fetchOpenMeteoForecast(days = 16): Promise<OpenMeteoForeca
   url.searchParams.set("longitude", String(TRAPANI_LON));
   url.searchParams.set("forecast_days", String(days));
   url.searchParams.set("timezone", "Europe/Rome");
+  url.searchParams.set("temperature_unit", "celsius");
+  url.searchParams.set("wind_speed_unit", "kmh");
+  url.searchParams.set("precipitation_unit", "mm");
+  url.searchParams.set("timeformat", "iso8601");
   url.searchParams.set(
     "daily",
     [
@@ -51,6 +55,8 @@ export async function fetchOpenMeteoForecast(days = 16): Promise<OpenMeteoForeca
   marineUrl.searchParams.set("longitude", String(TRAPANI_LON));
   marineUrl.searchParams.set("forecast_days", String(days));
   marineUrl.searchParams.set("timezone", "Europe/Rome");
+  marineUrl.searchParams.set("length_unit", "metric");
+  marineUrl.searchParams.set("timeformat", "iso8601");
   marineUrl.searchParams.set("daily", "wave_height_max");
 
   try {

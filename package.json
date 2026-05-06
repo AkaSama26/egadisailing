@@ -14,6 +14,7 @@
     "test:unit": "vitest run src",
     "test:integration": "vitest run tests/integration",
     "brevo:smoke": "tsx scripts/brevo-smoke-test.ts",
+    "telegram:smoke": "tsx scripts/telegram-smoke-test.ts",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",

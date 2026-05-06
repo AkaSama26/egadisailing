@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { islandMapData, islandOrder } from "./islands/data";
 import { IslandPoiStage } from "./islands/island-poi-stage";
 import type { IslandId, IslandPoi } from "./islands/types";
@@ -55,19 +55,19 @@ function getPoiDescription(poi: IslandPoi, islandLabel: string) {
 
   switch (getPoiType(poi.label)) {
     case "Grotta":
-      return `${poi.label} e' una cavita' naturale lungo il profilo di ${islandLabel}: un riferimento ideale per leggere la costa dal mare.`;
+      return `${poi.label} è una cavità naturale lungo il profilo di ${islandLabel}: un riferimento ideale per leggere la costa dal mare.`;
     case "Costa":
       return `${poi.label} identifica una cala, un approdo o un tratto costiero di ${islandLabel}, utile per orientarsi tra bagni, soste e passaggi riparati.`;
     case "Promontorio":
-      return `${poi.label} segna un'estremita' o un riferimento roccioso dell'isola, perfetto per capire il disegno della costa.`;
+      return `${poi.label} segna un'estremità o un riferimento roccioso dell'isola, perfetto per capire il disegno della costa.`;
     case "Sentiero":
-      return `${poi.label} e' un riferimento interno dei percorsi di ${islandLabel}, tra quote, crinali e passaggi panoramici.`;
+      return `${poi.label} è un riferimento interno dei percorsi di ${islandLabel}, tra quote, crinali e passaggi panoramici.`;
     case "Storia":
-      return `${poi.label} racconta la parte storica e materiale dell'isola, tra architetture, attivita' marinare e memoria del territorio.`;
+      return `${poi.label} racconta la parte storica e materiale dell'isola, tra architetture, attività marinare e memoria del territorio.`;
     case "Paese":
-      return `${poi.label} e' il centro abitato dell'isola, il punto piu' immediato per servizi, approdi e vita quotidiana.`;
+      return `${poi.label} è il centro abitato dell'isola, il punto più immediato per servizi, approdi e vita quotidiana.`;
     default:
-      return `${poi.label} e' uno dei riferimenti mappati su ${islandLabel}, utile per leggere l'isola con piu' precisione.`;
+      return `${poi.label} è uno dei riferimenti mappati su ${islandLabel}, utile per leggere l'isola con più precisione.`;
   }
 }
 
@@ -90,12 +90,9 @@ export function IslandsItinerary() {
       : selectedPoi.imageSrc ?? `/images/islands/${activeIsland.id}/poi/${selectedPoi.id}.webp`
     : activeIsland.imageSrc;
 
-  useEffect(() => {
-    setDetailImageFailed(false);
-  }, [activeIslandId, selectedPoiId]);
-
   function handleIslandChange(islandId: IslandId) {
     const nextIsland = islandMapData[islandId];
+    setDetailImageFailed(false);
     setActiveIslandId(islandId);
     setSelectedPoiId(nextIsland.pois[0]?.id ?? "");
   }
@@ -120,7 +117,7 @@ export function IslandsItinerary() {
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white/68 sm:text-lg">
             Cale, grotte, approdi e sentieri raccolti in una mappa visuale per esplorare
-            Favignana, Levanzo e Marettimo con uno sguardo piu' preciso.
+            Favignana, Levanzo e Marettimo con uno sguardo più preciso.
           </p>
         </div>
 
@@ -161,7 +158,10 @@ export function IslandsItinerary() {
                   alt={`Mappa SVG di ${activeIsland.label}`}
                   aspectClassName={activeIsland.aspectClassName}
                   height={activeIsland.height}
-                  onSelectPoi={(poi) => setSelectedPoiId(poi.id)}
+                  onSelectPoi={(poi) => {
+                    setDetailImageFailed(false);
+                    setSelectedPoiId(poi.id);
+                  }}
                   pois={activeIsland.pois}
                   selectedPoiId={selectedPoi?.id}
                   src={activeIsland.src}

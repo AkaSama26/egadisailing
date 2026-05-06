@@ -98,7 +98,7 @@ const googleReviews: TestimonialColumnItem[] = [
     rating: 5,
     image:
       "https://lh3.googleusercontent.com/a/ACg8ocLMS_wwd7C_NP90NWpYcy922yoqjSpODgmdbIc72RxbK2QVyw=s120-c-rp-mo-br100",
-    text: "Esperienza unica tra le bellezze delle isole egadi non ci sono parole per descrivere la loro bellezza con il comandante Nico che ci ha fatto visitare le piu belle cale di Favignana e Levanzo consiglio di provare esperienza e professionalità distingue Egadi Sailing.",
+    text: "Esperienza unica tra le bellezze delle Isole Egadi: non ci sono parole per descrivere la loro bellezza. Il comandante Nico ci ha fatto visitare le più belle cale di Favignana e Levanzo; consiglio di provare questa esperienza, la professionalità distingue Egadi Sailing.",
   },
   {
     name: "Federico Begnoni",
@@ -106,7 +106,7 @@ const googleReviews: TestimonialColumnItem[] = [
     rating: 5,
     image:
       "https://lh3.googleusercontent.com/a-/ALV-UjUe40lmoQWKnNI59_iPAHHu50BAMWX6L2rv75uN1Fy8MNwTYnM=s120-c-rp-mo-br100",
-    text: "Tour privato giornaliero eseguito con Leo, abbiamo visitato Favignana e Levanto con un ottimo pranzo e aperitivi annessi, consiglio vivamente di prenotare questo tour tramite loro!",
+    text: "Tour privato giornaliero eseguito con Leo, abbiamo visitato Favignana e Levanzo con un ottimo pranzo e aperitivi annessi, consiglio vivamente di prenotare questo tour tramite loro!",
   },
   {
     name: "Vincenzo Orlacchio",
@@ -114,7 +114,7 @@ const googleReviews: TestimonialColumnItem[] = [
     rating: 5,
     image:
       "https://lh3.googleusercontent.com/a/ACg8ocKjSgZBvJ52AENsPUVArA8l9l0gqJ-XwI2yOyMUWhmNG_zIOw=s120-c-rp-mo-ba3-br100",
-    text: "Bellissime esperienza, grazie al nostro skipper Niko che ci ha condotto per l'isola di Favignana, facendoci vedere tutte le bellezze di questo splendido territorio.",
+    text: "Bellissima esperienza, grazie al nostro skipper Niko che ci ha condotto per l'isola di Favignana, facendoci vedere tutte le bellezze di questo splendido territorio.",
   },
   {
     name: "Marco Garuti",
@@ -122,7 +122,7 @@ const googleReviews: TestimonialColumnItem[] = [
     rating: 5,
     image:
       "https://lh3.googleusercontent.com/a/ACg8ocL57nx3BJW99CNHxqhcGmOVaKnk-lXBZid_v32VlpQ3oFQncQ=s120-c-rp-mo-br100",
-    text: "Esperienza completa con il tour di Favignana e Levanzo, il nostro skipper Leo ci ha mostrato delle calette molto belle e ci ha raccontato un po' di storia delle Isole, rendendoci partecipe di tutto. Esperienza completa di cibo e alcol, mare bellissimo, non é mancato nulla!",
+    text: "Esperienza completa con il tour di Favignana e Levanzo, il nostro skipper Leo ci ha mostrato delle calette molto belle e ci ha raccontato un po' di storia delle Isole, rendendoci partecipi di tutto. Esperienza completa di cibo e alcol, mare bellissimo, non è mancato nulla!",
   },
   {
     name: "Benito Di Girolamo",
@@ -506,7 +506,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
       details: [
         {
           title: "Per chi",
-          text: "Coppie, famiglie o gruppi che vogliono l'esperienza piu completa e senza pensieri.",
+          text: "Coppie, famiglie o gruppi che vogliono l'esperienza più completa e senza pensieri.",
         },
         {
           title: "A bordo",
@@ -596,7 +596,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
         },
         {
           title: "A bordo",
-          text: "Barca privata con skipper e soste compatte nelle acque piu riparate.",
+          text: "Barca privata con skipper e soste compatte nelle acque più riparate.",
         },
         {
           title: "Rotta",
@@ -635,7 +635,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
       details: [
         {
           title: "Per chi",
-          text: "La scelta migliore se vuoi piu tempo in acqua, meno fretta e piu flessibilita tra le cale.",
+          text: "La scelta migliore se vuoi più tempo in acqua, meno fretta e più flessibilità tra le cale.",
         },
         {
           title: "A bordo",
@@ -783,7 +783,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
                   Lo chef prepara a bordo piatti ispirati alla cucina siciliana e al mare di Trapani,
                   trasformando la sosta in rada in un momento conviviale, curato e profondamente locale.
-                  Non e&apos; solo pranzo: e&apos; una parte viva dell&apos;esperienza Egadisailing.
+                  Non è solo pranzo: è una parte viva dell&apos;esperienza Egadisailing.
                 </p>
               </div>
               <Link
@@ -879,7 +879,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
                   </h2>
                   <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
                     Tuffati nelle sfumature turchesi di Cala Rossa, una delle baie
-                    piu&apos; iconiche di Favignana, con tempo per nuotare, rilassarti
+                    più iconiche di Favignana, con tempo per nuotare, rilassarti
                     e vivere il mare delle Egadi da vicino.
                   </p>
                 </div>

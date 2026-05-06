@@ -280,6 +280,13 @@ export default async function ConsensiPage({ searchParams }: Props) {
                 enabled={Boolean(trackingServices.metaPixelId)}
                 token={maskVerificationToken(trackingServices.metaPixelId)}
               />
+              <IntegrationRow
+                provider="Microsoft Advertising / Bing UET"
+                type="Conversioni advertising"
+                consentCategory="marketing"
+                enabled={Boolean(trackingServices.bingUetTagId)}
+                token={maskVerificationToken(trackingServices.bingUetTagId)}
+              />
             </tbody>
           </table>
         </div>

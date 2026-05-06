@@ -409,7 +409,7 @@ export function BookingPageClient({
           <SelectionCard
             stepLabel="Step 3"
             title="Scegli per quanto tempo"
-            subtitle="La durata determina il servizio reale usato da prezzi, disponibilita' e checkout."
+            subtitle="La durata determina il servizio reale usato da prezzi, disponibilità e checkout."
             onBack={() => resetToStep("experience")}
           >
             {selectedExperience.services[0]?.serviceType === "CABIN_CHARTER" ? (
@@ -498,7 +498,7 @@ export function BookingPageClient({
               <InfoTile icon={Clock3} label="Durata" value={selectedDurationLabel} />
               <InfoTile
                 icon={Users}
-                label="Capacita'"
+                label="Capacità"
                 value={`Fino a ${selectedService.capacityMax} persone`}
               />
               <InfoTile icon={CreditCard} label="Checkout" value={paymentLabel(selectedService)} />

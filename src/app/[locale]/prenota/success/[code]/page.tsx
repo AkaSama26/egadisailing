@@ -120,7 +120,7 @@ export default async function BookingSuccessPage({
                 </h1>
                 <p className="max-w-2xl text-base leading-7 text-slate-600">
                   {content?.subtitle ??
-                    "La tua esperienza alle Egadi e' registrata. Qui trovi riepilogo, itinerario, pagamenti e QR per il check-in."}
+                    "La tua esperienza alle Egadi è registrata. Qui trovi riepilogo, itinerario, pagamenti e QR per il check-in."}
                 </p>
               </div>
 

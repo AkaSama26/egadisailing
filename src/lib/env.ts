@@ -61,6 +61,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_GA_MEASUREMENT_ID: optionalString(),
   NEXT_PUBLIC_GOOGLE_ADS_ID: optionalString(),
   NEXT_PUBLIC_META_PIXEL_ID: optionalString(),
+  NEXT_PUBLIC_BING_UET_TAG_ID: optionalString(),
   NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: optionalString(),
   NEXT_PUBLIC_BING_SITE_VERIFICATION: optionalString(),
   NEXT_PUBLIC_META_DOMAIN_VERIFICATION: optionalString(),
