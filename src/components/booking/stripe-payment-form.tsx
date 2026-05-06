@@ -288,8 +288,7 @@ function PaymentSummary({
       )}
       {balanceCents > 0 && (
         <p className="mt-2 text-xs leading-5 text-amber-800">
-          Il saldo restante si paga solamente in loco prima della partenza.
-          Contanti preferiti.
+          Il saldo restante si paga in loco prima della partenza.
         </p>
       )}
     </div>

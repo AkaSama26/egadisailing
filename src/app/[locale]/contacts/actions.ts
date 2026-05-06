@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { env } from "@/lib/env";
 import { contactAutoReplyTemplate } from "@/lib/email/templates/customer-lifecycle";
+import { emailLayout } from "@/lib/email/templates/_layout";
 import {
   buildEmailIdempotencyKey,
   enqueueTransactionalEmail,
@@ -115,7 +116,7 @@ export async function sendContactMessage(
       templateKey: "admin.contact-message",
       recipientEmail: env.ADMIN_EMAIL,
       subject: `[Contatti] ${parsed.subject}`,
-      htmlContent: html,
+      htmlContent: emailLayout({ heading: `[Contatti] ${parsed.subject}`, bodyHtml: html }),
       textContent: `Da: ${safePlain(parsed.name)} <${safePlain(parsed.email)}>\n${parsed.message.replace(/\r\n/g, "\n")}`,
       // R22-A4-ALTA-1: Reply → cliente. Senza questo override, Reply va al
       // sender stesso (info@) → loop o bisogna copia/incollare from-line.

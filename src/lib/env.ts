@@ -92,10 +92,14 @@ const envSchema = z.object({
 
   // Brevo
   EMAIL_DELIVERY_MODE: z
-    .enum(["log", "brevo"])
+    .enum(["log", "brevo", "smtp"])
     .default(process.env.NODE_ENV === "production" ? "brevo" : "log"),
   BREVO_API_KEY: optionalString(),
-  BREVO_SENDER_EMAIL: z.string().email().default("noreply@egadisailing.com"),
+  BREVO_SMTP_HOST: z.string().default("smtp-relay.brevo.com"),
+  BREVO_SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  BREVO_SMTP_USER: optionalString(),
+  BREVO_SMTP_KEY: optionalSecret(16),
+  BREVO_SENDER_EMAIL: z.string().email().default("info@egadisailing.com"),
   BREVO_SENDER_NAME: z.string().default("Egadisailing"),
   BREVO_REPLY_TO: optionalEmail(),
   // Legacy fallback per template/integrazioni non ancora migrati.
@@ -144,7 +148,7 @@ const envSchema = z.object({
   OVERRIDE_CANCELLATION_RATE_HARD_BLOCK: z.coerce.number().min(0).max(1).default(0.05),
 
   // Admin notifications (Plan 6)
-  ADMIN_EMAIL: z.string().email().default("admin@egadisailing.com"),
+  ADMIN_EMAIL: z.string().email().default("info@egadisailing.com"),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_CHAT_ID: z.string().optional(),
 
@@ -186,11 +190,16 @@ function loadEnv() {
     if (!parsed.data.STRIPE_SECRET_KEY || !parsed.data.STRIPE_WEBHOOK_SECRET) {
       throw new Error("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET required in production");
     }
-    if (!parsed.data.BREVO_API_KEY) {
-      throw new Error("BREVO_API_KEY required in production");
+    if (parsed.data.EMAIL_DELIVERY_MODE === "brevo" && !parsed.data.BREVO_API_KEY) {
+      throw new Error("BREVO_API_KEY required in production when EMAIL_DELIVERY_MODE=brevo");
     }
-    if (parsed.data.EMAIL_DELIVERY_MODE !== "brevo") {
-      throw new Error("EMAIL_DELIVERY_MODE must be brevo in production");
+    if (
+      parsed.data.EMAIL_DELIVERY_MODE === "smtp" &&
+      (!parsed.data.BREVO_SMTP_USER || !parsed.data.BREVO_SMTP_KEY)
+    ) {
+      throw new Error(
+        "BREVO_SMTP_USER and BREVO_SMTP_KEY required in production when EMAIL_DELIVERY_MODE=smtp",
+      );
     }
     if (!parsed.data.TURNSTILE_SECRET_KEY || !parsed.data.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
       throw new Error("TURNSTILE_SECRET_KEY + NEXT_PUBLIC_TURNSTILE_SITE_KEY required in production");

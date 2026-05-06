@@ -3,13 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import Decimal from "decimal.js";
 import {
-  Anchor,
   CalendarDays,
   CheckCircle2,
   Clock,
   CreditCard,
-  Mail,
-  MapPinned,
   QrCode,
   Ship,
   Ticket,
@@ -26,10 +23,26 @@ import { getExperienceContent } from "@/data/catalog/experiences";
 import { getServiceDurationLabel } from "@/lib/services/display";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { QrDownloadButton } from "@/components/qr-download-button";
+import { PUBLIC_CONTACT_LOCATION, getContactLocationLabel } from "@/lib/public-contact";
 
 // R26-A1-A5: pagina post-payment con PII (confirmation code + email link).
 // noindex defense-in-depth.
 export const metadata: Metadata = { robots: { index: false, follow: false } };
+
+const TICKET_HERO_BY_BOAT = {
+  trimarano: {
+    src: "/images/boats/neel-47/neel-47-navigazione.webp",
+    alt: "Trimarano in navigazione alle Egadi",
+  },
+  motoscafo: {
+    src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
+    alt: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
+  },
+  boat: {
+    src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
+    alt: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
+  },
+} as const;
 
 export default async function BookingSuccessPage({
   params,
@@ -54,6 +67,12 @@ export default async function BookingSuccessPage({
   const ticketUrl = buildTicketUrl(booking.confirmationCode, locale);
   const qrSvg = createQrSvg(ticketUrl, { scale: 6, border: 4 });
   const heroMedia = content?.media.find((item) => item.src);
+  const ticketHero = getTicketHero({
+    boatId: booking.boat.id,
+    boatName: booking.boat.name,
+    fallbackSrc: heroMedia?.src,
+    fallbackAlt: heroMedia?.alt ?? content?.title ?? booking.service.name,
+  });
   const isOverrideRequest = booking.overrideRequest?.status === "PENDING";
   const statusView = getStatusView({
     status: booking.status,
@@ -72,11 +91,12 @@ export default async function BookingSuccessPage({
   const guestBreakdown = getGuestBreakdown(booking);
   const isTicketActive = booking.status === "CONFIRMED";
   const StatusIcon = statusView.icon;
+  const meetingPointLabel = getContactLocationLabel(locale);
 
   return (
-    <OceanLayout padding="sm">
-      <main className="mx-auto max-w-6xl space-y-4 text-slate-950">
-        <section className="overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <OceanLayout padding="sm" className="egadi-water-reflection overflow-hidden">
+      <main className="relative z-10 mx-auto max-w-6xl space-y-4 pt-14 text-slate-950 sm:pt-16">
+        <section className="relative overflow-hidden rounded-2xl bg-white shadow-2xl before:absolute before:left-0 before:top-1/2 before:z-20 before:size-14 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:bg-[#071934] before:content-['']">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-6 p-6 sm:p-8 lg:p-10">
               <div className="flex flex-wrap items-center gap-2">
@@ -117,10 +137,10 @@ export default async function BookingSuccessPage({
             </div>
 
             <div className="relative min-h-[22rem] bg-slate-900">
-              {heroMedia?.src ? (
+              {ticketHero ? (
                 <Image
-                  src={heroMedia.src}
-                  alt={heroMedia.alt ?? content?.title ?? booking.service.name}
+                  src={ticketHero.src}
+                  alt={ticketHero.alt}
                   fill
                   sizes="(max-width: 1024px) 100vw, 45vw"
                   className="object-cover"
@@ -155,7 +175,7 @@ export default async function BookingSuccessPage({
             <div className="mt-6 grid gap-5 sm:grid-cols-[220px_1fr] sm:items-center">
               <div>
                 <div
-                  className="mx-auto w-fit rounded-xl border border-slate-200 bg-white p-3"
+                  className="mx-auto w-fit rounded-xl bg-white p-3"
                   dangerouslySetInnerHTML={{ __html: qrSvg }}
                 />
                 {!isTicketActive && (
@@ -205,61 +225,75 @@ export default async function BookingSuccessPage({
               <CreditCard className="size-7 text-emerald-700" aria-hidden="true" />
             </div>
 
-            <dl className="mt-6 grid gap-4 sm:grid-cols-3">
-              <PaymentMetric label="Totale" value={formatEurWithVat(booking.totalPrice, locale)} />
-              <PaymentMetric label="Pagato online" value={formatEurCentsWithVat(paidCents, locale)} />
-              <PaymentMetric
-                label="Saldo in loco"
+            <dl className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+              <PaymentRow
+                label="Totale prenotazione"
+                value={formatEurWithVat(booking.totalPrice, locale)}
+              />
+              <PaymentRow
+                label="Saldato online"
+                value={formatEurCentsWithVat(paidCents, locale)}
+                tone="paid"
+              />
+              <PaymentRow
+                label="Da saldare in loco"
                 value={
                   balanceCents > 0
                     ? formatEurCentsWithVat(balanceCents, locale)
                     : formatEurCentsWithVat(0, locale)
                 }
+                tone={balanceCents > 0 ? "due" : "paid"}
               />
             </dl>
 
             {balanceCents > 0 ? (
               <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                Il saldo restante si paga prima della partenza. Porta il codice prenotazione e
-                chiedi allo staff se preferisci contanti o altro metodo disponibile in loco.
+                Il saldo restante si paga in loco prima della partenza.
               </div>
             ) : (
               <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                Non risulta saldo residuo sulla prenotazione.
+                Prenotazione saldata: non risulta saldo residuo.
               </div>
             )}
-
-            <div className="mt-5 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
-              <ActionLink href={`/${locale}/b/sessione`} icon={Anchor} label="Gestisci prenotazione" />
-              <ActionLink href={`mailto:${booking.customer.email}`} icon={Mail} label="Email registrata" />
-            </div>
           </section>
         </div>
 
         <section className="rounded-2xl bg-white p-6 shadow-xl sm:p-8">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div className="space-y-4">
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                Cosa hai prenotato
-              </p>
-              <h2 className="text-2xl font-bold text-slate-950">
-                Esperienza e dettagli operativi
-              </h2>
-              <p className="text-sm leading-6 text-slate-600">
-                {content?.detailDescription ??
-                  "Rotta, soste e timing vengono gestiti dalla crew in base alle condizioni del mare."}
-              </p>
-              <dl className="grid gap-2 border-t border-slate-200 pt-4 text-sm">
-                <InfoRow label="Esperienza" value={content?.title ?? booking.service.name} />
-                <InfoRow label="Servizio" value={booking.service.name} />
-                <InfoRow label="Formula" value={booking.service.pricingUnit === "PER_PACKAGE" ? "Pacchetto" : "A persona"} />
-                <InfoRow label="Canale" value={booking.source} />
-                <InfoRow label="Creato il" value={formatItDay(booking.createdAt)} />
-              </dl>
-              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950">
-                <MapPinned className="mb-2 size-5" aria-hidden="true" />
-                Punto di incontro: Porto di Trapani. Le indicazioni operative precise arrivano via
-                email e possono variare in base a barca, meteo e ormeggio del giorno.
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                  Dettagli esperienza
+                </p>
+                <h2 className="text-2xl font-bold text-slate-950">
+                  {content?.title ?? booking.service.name}
+                </h2>
+                <p className="text-sm leading-6 text-slate-600">
+                  {content?.detailDescription ??
+                    "Rotta, soste e timing vengono gestiti dalla crew in base alle condizioni del mare."}
+                </p>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                <div className="p-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+                    Punto d&apos;incontro
+                  </h3>
+                  <p className="mt-1 font-semibold text-slate-950">{meetingPointLabel}</p>
+                </div>
+                <div className="h-64 border-t border-slate-200">
+                  <iframe
+                    src={PUBLIC_CONTACT_LOCATION.mapEmbedUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0, minHeight: "100%" }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Mappa punto d'incontro Egadisailing"
+                    className="h-full w-full"
+                  />
+                </div>
               </div>
             </div>
 
@@ -327,32 +361,23 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PaymentMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="mt-1 text-xl font-bold text-slate-950">{value}</dd>
-    </div>
-  );
-}
-
-function ActionLink({
-  href,
-  icon: Icon,
+function PaymentRow({
   label,
+  value,
+  tone = "default",
 }: {
-  href: string;
-  icon: typeof Anchor;
   label: string;
+  value: string;
+  tone?: "default" | "paid" | "due";
 }) {
+  const valueClass =
+    tone === "paid" ? "text-emerald-700" : tone === "due" ? "text-amber-800" : "text-slate-950";
+
   return (
-    <Link
-      href={href}
-      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 font-semibold text-slate-800 transition hover:bg-slate-50"
-    >
-      <Icon className="size-4" aria-hidden="true" />
-      {label}
-    </Link>
+    <div className="grid gap-1 border-b border-slate-200 px-4 py-4 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-baseline">
+      <dt className="text-sm font-semibold text-slate-600">{label}</dt>
+      <dd className={`text-xl font-bold ${valueClass}`}>{value}</dd>
+    </div>
   );
 }
 
@@ -452,4 +477,24 @@ function fallbackItinerary(): Array<{ time: string; title?: string; location?: s
       text: "Rientro al porto secondo la fascia oraria prenotata.",
     },
   ];
+}
+
+function getTicketHero({
+  boatId,
+  boatName,
+  fallbackSrc,
+  fallbackAlt,
+}: {
+  boatId: string;
+  boatName: string;
+  fallbackSrc?: string;
+  fallbackAlt: string;
+}): { src: string; alt: string } | null {
+  const key = `${boatId} ${boatName}`.toLowerCase();
+  if (key.includes("trimarano") || key.includes("neel")) return TICKET_HERO_BY_BOAT.trimarano;
+  if (boatId === "boat" || key.includes("cigala") || key.includes("motoscafo")) {
+    return TICKET_HERO_BY_BOAT.boat;
+  }
+  if (fallbackSrc) return { src: fallbackSrc, alt: fallbackAlt };
+  return null;
 }

@@ -11,7 +11,7 @@ export function otpEmailTemplate(code: string): { subject: string; html: string;
         ${safeCode}
       </div>
       <p>
-        Dopo l'accesso potrai aprire il biglietto QR, cambiare data gratuitamente
+        Dopo l'accesso potrai aprire il biglietto QR, richiedere cambio data
         e richiedere cancellazione o rimborso secondo la policy.
       </p>
       <p style="color: #6b7280; font-size: 14px;">
@@ -24,7 +24,7 @@ export function otpEmailTemplate(code: string): { subject: string; html: string;
   });
   const text = `Codice recupero prenotazione Egadisailing: ${code}
 Valido per 15 minuti.
-Dopo l'accesso puoi aprire il biglietto QR, cambiare data gratuitamente e richiedere cancellazione o rimborso secondo la policy.
+Dopo l'accesso puoi aprire il biglietto QR, richiedere cambio data e richiedere cancellazione o rimborso secondo la policy.
 Non condividerlo con nessuno.`;
   return { subject, html, text };
 }

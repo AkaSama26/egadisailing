@@ -291,7 +291,7 @@ Crontab: `*/5 * * * * /home/ubuntu/bin/monitor.sh`.
 - [ ] Stripe LIVE webhook endpoint configurato con eventi `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`
 - [ ] Stripe test trigger LIVE: `stripe trigger payment_intent.succeeded --api-key sk_live_...`
 - [ ] Bokun webhook switch staging → prod URL
-- [ ] Brevo sender `noreply@egadisailing.com` verificato SPF+DKIM
+- [ ] Brevo sender `info@egadisailing.com` verificato SPF+DKIM
 - [ ] Turnstile site key LIVE (non dummy)
 - [ ] `/api/health?deep=1` tutti green
 - [ ] Backup test restore completato ieri

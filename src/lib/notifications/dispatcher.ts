@@ -6,6 +6,7 @@ import {
   buildEmailIdempotencyKey,
   enqueueTransactionalEmail,
 } from "@/lib/email/outbox";
+import { emailLayout } from "@/lib/email/templates/_layout";
 import { sendTelegramMessage } from "./telegram";
 import { escapeHtml, safeUrl } from "@/lib/html-escape";
 import { newBookingTemplate, type NewBookingPayload } from "./templates/new-booking";
@@ -140,6 +141,9 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
 
   const wantEmail = event.channels.includes("EMAIL");
   const wantTelegram = event.channels.includes("TELEGRAM") && !!rendered.telegram;
+  const htmlContent = rendered.html.includes("<html")
+    ? rendered.html
+    : emailLayout({ heading: rendered.subject, bodyHtml: rendered.html });
 
   // R14-REG-C1: `sendEmail` e `sendTelegramMessage` ora ritornano boolean
   // (true = delivered upstream 2xx, false = skip silenzioso / fail). Prima
@@ -158,7 +162,7 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
         recipientEmail: emailRecipient,
         recipientName: event.recipientName,
         subject: rendered.subject,
-        htmlContent: rendered.html,
+        htmlContent,
         textContent: rendered.text,
         payload: event.payload as Prisma.InputJsonValue,
         idempotencyKey:

@@ -1,14 +1,232 @@
+import crypto from "node:crypto";
+import net from "node:net";
+import tls from "node:tls";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { ExternalServiceError } from "@/lib/errors";
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+const SMTP_TIMEOUT_MS = 15_000;
 
 // R24-A3-A1: strip newline + control chars da toName per difesa header
 // injection. Brevo REST dovrebbe gestirlo ma documentazione warn +
 // altri provider (Mailgun, SendGrid) lo hanno avuto come CVE passato.
 function safePlain(s: string): string {
   return s.replace(/[\r\n]+/g, " ").replace(/[\u0000-\u001F]/g, " ").trim();
+}
+
+function safeHeader(s: string): string {
+  return safePlain(s).replace(/"/g, "'");
+}
+
+function encodeHeader(s: string): string {
+  const safe = safeHeader(s);
+  return /^[\x20-\x7E]*$/.test(safe)
+    ? safe
+    : `=?UTF-8?B?${Buffer.from(safe, "utf8").toString("base64")}?=`;
+}
+
+function formatAddress(email: string, name?: string): string {
+  const safeName = name ? safeHeader(name) : "";
+  if (!safeName) return `<${email}>`;
+
+  const encodedName = encodeHeader(safeName);
+  return encodedName.startsWith("=?")
+    ? `${encodedName} <${email}>`
+    : `"${encodedName}" <${email}>`;
+}
+
+function normalizeBodyLines(content: string): string {
+  return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n/g, "\r\n");
+}
+
+function dotStuff(content: string): string {
+  return normalizeBodyLines(content)
+    .split("\r\n")
+    .map((line) => (line.startsWith(".") ? `.${line}` : line))
+    .join("\r\n");
+}
+
+function buildSmtpMessage(opts: SendEmailOptions): { message: string; messageId: string } {
+  const boundary = `egadisailing-${crypto.randomBytes(16).toString("hex")}`;
+  const messageId = `<${crypto.randomUUID()}@egadisailing.com>`;
+  const replyTo =
+    opts.replyTo ??
+    (env.BREVO_REPLY_TO
+      ? { email: env.BREVO_REPLY_TO }
+      : { email: env.BREVO_SENDER_EMAIL, name: env.BREVO_SENDER_NAME });
+
+  const headers = [
+    `From: ${formatAddress(env.BREVO_SENDER_EMAIL, env.BREVO_SENDER_NAME)}`,
+    `To: ${formatAddress(opts.to, opts.toName)}`,
+    `Reply-To: ${formatAddress(replyTo.email, replyTo.name)}`,
+    `Subject: ${encodeHeader(opts.subject)}`,
+    `Message-ID: ${messageId}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+  ];
+
+  const text = opts.textContent ?? opts.htmlContent.replace(/<[^>]*>/g, " ");
+  const message = [
+    ...headers,
+    "",
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    normalizeBodyLines(text),
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: 8bit",
+    "",
+    normalizeBodyLines(opts.htmlContent),
+    `--${boundary}--`,
+    "",
+  ].join("\r\n");
+
+  return { message, messageId };
+}
+
+class SmtpSession {
+  private socket: net.Socket;
+  private buffer = "";
+
+  private constructor(socket: net.Socket) {
+    this.socket = socket;
+    this.socket.setEncoding("utf8");
+  }
+
+  static async connect(): Promise<SmtpSession> {
+    const socket =
+      env.BREVO_SMTP_PORT === 465
+        ? tls.connect({
+            host: env.BREVO_SMTP_HOST,
+            port: env.BREVO_SMTP_PORT,
+            servername: env.BREVO_SMTP_HOST,
+            timeout: SMTP_TIMEOUT_MS,
+          })
+        : net.connect({
+            host: env.BREVO_SMTP_HOST,
+            port: env.BREVO_SMTP_PORT,
+            timeout: SMTP_TIMEOUT_MS,
+          });
+
+    const session = new SmtpSession(socket);
+    await session.waitForReady();
+    await session.readResponse(220);
+    return session;
+  }
+
+  async startTlsIfNeeded(): Promise<void> {
+    if (this.socket instanceof tls.TLSSocket) return;
+
+    await this.command("EHLO egadisailing.com", 250);
+    await this.command("STARTTLS", 220);
+
+    const tlsSocket = tls.connect({
+      socket: this.socket,
+      servername: env.BREVO_SMTP_HOST,
+      timeout: SMTP_TIMEOUT_MS,
+    });
+    this.socket = tlsSocket;
+    this.socket.setEncoding("utf8");
+    this.buffer = "";
+    await this.waitForReady();
+  }
+
+  async command(command: string, expected: number | number[]): Promise<string> {
+    this.socket.write(`${command}\r\n`);
+    return this.readResponse(expected);
+  }
+
+  async data(message: string): Promise<string> {
+    await this.command("DATA", 354);
+    this.socket.write(`${dotStuff(message)}\r\n.\r\n`);
+    return this.readResponse(250);
+  }
+
+  async quit(): Promise<void> {
+    await this.command("QUIT", 221).catch(() => undefined);
+    this.socket.end();
+  }
+
+  destroy(): void {
+    this.socket.destroy();
+  }
+
+  private waitForReady(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        this.socket.off("secureConnect", onReady);
+        this.socket.off("connect", onReady);
+        this.socket.off("timeout", onTimeout);
+        this.socket.off("error", onError);
+      };
+      const onReady = () => {
+        cleanup();
+        resolve();
+      };
+      const onTimeout = () => {
+        cleanup();
+        reject(new Error("SMTP connection timeout"));
+      };
+      const onError = (err: Error) => {
+        cleanup();
+        reject(err);
+      };
+
+      if (this.socket instanceof tls.TLSSocket) {
+        this.socket.once("secureConnect", onReady);
+      } else {
+        this.socket.once("connect", onReady);
+      }
+      this.socket.once("timeout", onTimeout);
+      this.socket.once("error", onError);
+    });
+  }
+
+  private readResponse(expected: number | number[]): Promise<string> {
+    const expectedCodes = Array.isArray(expected) ? expected : [expected];
+
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timeout);
+        this.socket.off("data", onData);
+        this.socket.off("error", onError);
+      };
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error("SMTP response timeout"));
+      }, SMTP_TIMEOUT_MS);
+      const onError = (err: Error) => {
+        cleanup();
+        reject(err);
+      };
+      const onData = (chunk: Buffer | string) => {
+        this.buffer += chunk.toString();
+        const lines = this.buffer.split(/\r?\n/);
+        const lastComplete = this.buffer.endsWith("\n");
+        if (!lastComplete) {
+          this.buffer = lines.pop() ?? "";
+        } else {
+          this.buffer = "";
+        }
+
+        const responseLines = lastComplete ? lines.filter(Boolean) : lines.filter(Boolean);
+        const terminal = responseLines.find((line) => /^\d{3} /.test(line));
+        if (!terminal) return;
+
+        const code = Number(terminal.slice(0, 3));
+        cleanup();
+        const response = responseLines.join("\n");
+        if (expectedCodes.includes(code)) resolve(response);
+        else reject(new Error(`SMTP unexpected response ${code}`));
+      };
+
+      this.socket.on("data", onData);
+      this.socket.once("error", onError);
+    });
+  }
 }
 
 export interface SendEmailOptions {
@@ -54,6 +272,10 @@ export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendE
       "Email delivery log mode - Brevo API not called",
     );
     return { delivered: true, messageId };
+  }
+
+  if (env.EMAIL_DELIVERY_MODE === "smtp") {
+    return sendEmailViaSmtp(opts);
   }
 
   if (!env.BREVO_API_KEY) {
@@ -133,5 +355,34 @@ export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendE
     if (err instanceof ExternalServiceError) throw err;
     logger.error({ err: (err as Error).message }, "Brevo sendEmail failed");
     throw new ExternalServiceError("Brevo", "sendEmail failed");
+  }
+}
+
+async function sendEmailViaSmtp(opts: SendEmailOptions): Promise<SendEmailResult> {
+  if (!env.BREVO_SMTP_USER || !env.BREVO_SMTP_KEY) {
+    throw new ExternalServiceError("Brevo SMTP", "SMTP credentials not configured");
+  }
+
+  let session: SmtpSession | undefined;
+  const { message, messageId } = buildSmtpMessage(opts);
+
+  try {
+    session = await SmtpSession.connect();
+    await session.startTlsIfNeeded();
+    await session.command("EHLO egadisailing.com", 250);
+    await session.command("AUTH LOGIN", 334);
+    await session.command(Buffer.from(env.BREVO_SMTP_USER, "utf8").toString("base64"), 334);
+    await session.command(Buffer.from(env.BREVO_SMTP_KEY, "utf8").toString("base64"), 235);
+    await session.command(`MAIL FROM:<${env.BREVO_SENDER_EMAIL}>`, 250);
+    await session.command(`RCPT TO:<${opts.to}>`, [250, 251]);
+    await session.data(message);
+    await session.quit();
+
+    logger.info({ subject: opts.subject, messageId }, "Email sent via Brevo SMTP");
+    return { delivered: true, messageId };
+  } catch (err) {
+    session?.destroy();
+    logger.error({ err: (err as Error).message }, "Brevo SMTP send failed");
+    throw new ExternalServiceError("Brevo SMTP", "send failed");
   }
 }

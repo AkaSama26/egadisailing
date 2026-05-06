@@ -42,8 +42,8 @@ export default async function SessionePage({
   });
 
   return (
-    <OceanLayout>
-      <div className="max-w-3xl mx-auto space-y-4">
+    <OceanLayout className="egadi-water-reflection overflow-hidden">
+      <div className="relative z-10 max-w-3xl mx-auto space-y-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-white text-3xl font-bold">Le tue prenotazioni</h1>
           <LogoutButton />
@@ -52,15 +52,15 @@ export default async function SessionePage({
           Accesso come <strong className="text-white">{session.email}</strong>
         </p>
         <p className="text-white/75 text-sm">
-          Da questa area puoi aprire il biglietto QR, cambiare data gratuitamente e richiedere
+          Da questa area puoi aprire il biglietto QR, richiedere cambio data e richiedere
           cancellazione o rimborso per le prenotazioni dirette.
         </p>
         <div className="bg-white/10 border border-white/15 rounded-2xl p-4 text-white/80 text-sm">
-          <p className="font-semibold text-white mb-1">Cancellazioni e cambi data</p>
+        <p className="font-semibold text-white mb-1">Cancellazioni e cambi data</p>
           <p>
-            Fino a 15 giorni prima: rimborso completo. Da 14 a 7 giorni prima:
-            rimborso del 50%. Da 6 giorni alla partenza: cancellazione senza rimborso.
-            Il cambio data e&apos; sempre gratuito, se la nuova data e&apos; disponibile.
+            Fino a 30 giorni prima: rimborso completo. Da 29 a 15 giorni prima:
+            rimborso del 50%. Sotto i 15 giorni e in caso di no-show: cancellazione senza
+            rimborso. Il cambio data e&apos; soggetto a verifica e approvazione dello staff.
           </p>
         </div>
         {bookings.length === 0 && (

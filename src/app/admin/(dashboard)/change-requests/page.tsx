@@ -80,8 +80,8 @@ export default async function ChangeRequestsPage() {
       <PageHeader title="Richieste cambio data" />
       <p className="max-w-3xl text-sm text-slate-600">
         Le richieste arrivano dall&apos;area cliente. L&apos;admin approva solo dopo verifica
-        disponibilita&apos;; se la richiesta e&apos; sotto i 15 giorni, la policy rimborso resta
-        ancorata alla data originale.
+        disponibilita&apos;; quando una richiesta viene approvata, la policy rimborso resta
+        ancorata alla data originale salvo override esplicito.
       </p>
 
       <div className="space-y-4">
@@ -94,7 +94,7 @@ export default async function ChangeRequestsPage() {
           const booking = request.booking;
           const customerName = `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
           const isPending = request.status === "PENDING";
-          const risky = policy.daysUntilStart < 15;
+          const risky = policy.daysUntilStart < 30;
 
           return (
             <section key={request.id} className="rounded border border-slate-200 bg-white p-5 shadow-sm">
@@ -165,8 +165,8 @@ export default async function ChangeRequestsPage() {
 
               {risky && (
                 <p className="mt-4 rounded bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-                  Attenzione: richiesta sotto i 15 giorni. Se approvata, la policy rimborso resta
-                  ancorata alla data originale.
+                  Attenzione: la data originale e&apos; gia&apos; dentro una finestra con rimborso
+                  ridotto o nullo. Se approvata, la policy resta ancorata alla data originale.
                 </p>
               )}
 

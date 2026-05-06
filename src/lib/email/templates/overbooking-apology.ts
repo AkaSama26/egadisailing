@@ -1,18 +1,10 @@
 import { emailLayout, escapeHtml } from "./_layout";
 
-// R29-#2: template customer "overbooking apology" — hooked in
-// cancelBooking quando il booking cancellato ha un ManualAlert
-// CROSS_OTA_DOUBLE_BOOKING correlato. Prima: customer "perdente"
-// riceveva solo la cancellazione generica "Your booking was
-// cancelled" senza contesto → reputation damage + rischio legale
-// (doppia vendita). Ora: scusa formale + refund info +
-// date alternative + contatto diretto WhatsApp/email.
+// Template cliente per annullamento con assistenza: il testo resta
+// intenzionalmente generico e non espone dettagli interni di gestione.
 //
-// R29-AUDIT-FIX-UX: refund channel condizionale. Prima il template
-// diceva "5-10 giorni sulla tua carta" hardcoded → grammar rotta per
-// customer cash/bonifico (che non ha carta). Ora:
-//   - refundChannel="stripe" → "5-10 giorni sulla tua carta"
-//   - refundChannel="offline" → "ti contatteremo per il rimborso via bonifico"
+// R29-AUDIT-FIX-UX: refund channel condizionale per pagamenti online
+// e pagamenti gestiti fuori dal checkout.
 export type RefundChannel = "stripe" | "offline";
 
 export interface OverbookingApologyData {
@@ -34,7 +26,7 @@ export interface OverbookingApologyData {
 }
 
 export function overbookingApologyTemplate(data: OverbookingApologyData) {
-  const subject = `Ci scusiamo — prenotazione ${data.confirmationCode} annullata · Egadisailing`;
+  const subject = `Aggiornamento prenotazione ${data.confirmationCode} · Egadisailing`;
   const phoneLine = data.contactPhone
     ? `<p><strong>Telefono/WhatsApp:</strong> ${escapeHtml(data.contactPhone)}</p>`
     : "";
@@ -47,9 +39,8 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
           a seconda della tua banca.
         </p>`
       : `<p>
-          <strong>Rimborso:</strong> il pagamento era avvenuto offline (contanti
-          o bonifico). Ti contatteremo entro 24 ore via email o telefono per
-          concordare il bonifico di rimborso, oppure per offrirti il credito
+          <strong>Rimborso:</strong> ti contatteremo entro 24 ore via email o
+          telefono per gestire il rimborso, oppure per offrirti un credito
           utilizzabile su una data alternativa.
         </p>`;
 
@@ -65,22 +56,23 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
     heading: `Ci dispiace sinceramente, ${escapeHtml(data.customerName)}`,
     bodyHtml: `
       <p>
-        A causa di un problema di sincronizzazione tra i nostri canali di
-        vendita, la tua prenotazione <strong>${escapeHtml(data.confirmationCode)}</strong>
-        per <strong>${escapeHtml(data.serviceName)}</strong> del
-        <strong>${escapeHtml(data.startDate)}</strong> e' stata annullata
-        perche' lo stesso slot risultava gia' venduto su un altro canale.
+        Ci dispiace comunicarti che, a seguito della verifica operativa sulla
+        disponibilita', non possiamo confermare la prenotazione
+        <strong>${escapeHtml(data.confirmationCode)}</strong> per
+        <strong>${escapeHtml(data.serviceName)}</strong> del
+        <strong>${escapeHtml(data.startDate)}</strong>.
       </p>
       <p>
-        Questo e' un nostro errore e ce ne assumiamo la piena responsabilita'.
+        Ci scusiamo sinceramente per il disagio: vogliamo gestire la situazione
+        nel modo piu' semplice e rapido possibile.
       </p>
       ${refundHtml}
       ${voucherHtml}${rebookingHtml}
       <h3 style="margin-top:24px">Come possiamo rimediare</h3>
       <p>
         Siamo a tua disposizione per trovare una data alternativa. Contattaci
-        direttamente e ti risponderemo entro poche ore (anche weekend) con le
-        date disponibili piu' vicine.
+        direttamente e ti risponderemo entro poche ore con le disponibilita'
+        piu' adatte.
       </p>
       <p><strong>Email diretta:</strong> <a href="mailto:${escapeHtml(data.contactEmail)}">${escapeHtml(data.contactEmail)}</a></p>
       ${phoneLine}
@@ -96,7 +88,7 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
   const refundText =
     data.refundChannel === "stripe"
       ? `Rimborso processato: ${data.refundAmount} (5-10 giorni lavorativi sulla tua carta).`
-      : `Rimborso: pagamento avvenuto offline (contanti/bonifico). Ti contatteremo entro 24 ore per concordare il bonifico di rimborso o il credito per una data alternativa.`;
+      : `Rimborso: ti contatteremo entro 24 ore per gestire il rimborso o il credito per una data alternativa.`;
 
   const voucherText = data.voucherSoftText ? `\n\n${data.voucherSoftText}` : "";
   const rebookingText =
@@ -106,7 +98,7 @@ export function overbookingApologyTemplate(data: OverbookingApologyData) {
 
   const text = `${data.customerName}, ci dispiace.
 
-A causa di un problema di sincronizzazione tra i nostri canali, la prenotazione ${data.confirmationCode} per ${data.serviceName} del ${data.startDate} e' stata annullata.
+Non possiamo confermare la prenotazione ${data.confirmationCode} per ${data.serviceName} del ${data.startDate} dopo la verifica operativa sulla disponibilita'.
 
 ${refundText}${voucherText}${rebookingText}
 

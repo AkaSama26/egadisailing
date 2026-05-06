@@ -16,14 +16,14 @@ export function balanceReminderTemplate(data: BalanceReminderData) {
       <p>La tua esperienza <strong>${escapeHtml(data.serviceName)}</strong> del <strong>${escapeHtml(data.startDate)}</strong> si avvicina.</p>
       <p><strong>Saldo da pagare in loco: ${escapeHtml(data.balanceAmount)}</strong></p>
       <p style="color: #6b7280; font-size: 14px;">
-        Il saldo restante si paga solamente in loco prima della partenza. Contanti preferiti.
+        Il saldo restante si paga in loco prima della partenza.
       </p>
     `,
   });
 
   const text = `${data.customerName}, manca il saldo per ${data.serviceName} del ${data.startDate}.
 Saldo da pagare in loco: ${data.balanceAmount}
-Il saldo restante si paga solamente in loco prima della partenza. Contanti preferiti.`;
+Il saldo restante si paga in loco prima della partenza.`;
 
   return { subject, html, text };
 }

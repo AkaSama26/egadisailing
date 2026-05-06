@@ -14,7 +14,6 @@ import {
 } from "@/lib/email/outbox";
 import { formatEur } from "@/lib/pricing/cents";
 import { buildTicketUrl } from "@/lib/booking/ticket";
-import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
@@ -115,7 +114,6 @@ export const GET = withCronGuard(
       const tpl = reviewRequestTemplate({
         customerName,
         serviceName: booking.service.name,
-        reviewUrl: env.APP_URL,
       });
       const result = await enqueueTransactionalEmail({
         templateKey: "customer.review-request",

@@ -16,7 +16,7 @@
  * creazione — prova probatoria GDPR art. 7.3.
  */
 
-export const CURRENT_POLICY_VERSION = "1.0" as const;
+export const CURRENT_POLICY_VERSION = "1.1" as const;
 
 /**
  * Versioni ancora accettate server-side (Zod enum). Include la versione
@@ -29,9 +29,9 @@ export const CURRENT_POLICY_VERSION = "1.0" as const;
  * devi **aggiungere** la nuova prima del bump, **rimuovere** la vecchia
  * 30gg dopo (quando tutti i cache lato client sono scaduti).
  */
-export const ACCEPTED_POLICY_VERSIONS = ["1.0"] as const;
+export const ACCEPTED_POLICY_VERSIONS = ["1.0", "1.1"] as const;
 
 export type PolicyVersion = (typeof ACCEPTED_POLICY_VERSIONS)[number];
 
 /** Data di messa in vigore della `CURRENT_POLICY_VERSION`. */
-export const EFFECTIVE_DATE = "18 aprile 2026";
+export const EFFECTIVE_DATE = "6 maggio 2026";

@@ -103,8 +103,8 @@ const BOATS_PAGE_COPY = {
     en: "Boats in the Egadi from Trapani",
   },
   seoDescription: {
-    it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Neel 47 con chef e charter, Cigala & Bertinetti 34 Offshore Open per 4 ore private o 8 ore condivise/private.",
-    en: "Discover Egadisailing boats for Egadi tours from Trapani: Neel 47 with chef and charter, Cigala & Bertinetti 34 Offshore Open for private 4-hour or shared/private 8-hour tours.",
+    it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Trimarano con chef e charter, Cigala & Bertinetti 34 Offshore Open per 4 ore private o 8 ore condivise/private.",
+    en: "Discover Egadisailing boats for Egadi tours from Trapani: Trimarano with chef and charter, Cigala & Bertinetti 34 Offshore Open for private 4-hour or shared/private 8-hour tours.",
   },
   eyebrow: {
     it: "Flotta Egadisailing",
@@ -115,24 +115,24 @@ const BOATS_PAGE_COPY = {
     en: "Our boats to discover the Egadi from Trapani",
   },
   subtitle: {
-    it: "Dal Neel 47 con chef a bordo alla Cigala & Bertinetti 34 Offshore Open per 4 ore in esclusiva o 8 ore condivise/private: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
-    en: "From the Neel 47 with chef on board to the Cigala & Bertinetti 34 Offshore Open for private 4-hour or shared/private 8-hour tours: choose the right pace for Favignana, Levanzo and Marettimo.",
+    it: "Dal Trimarano con chef a bordo alla Cigala & Bertinetti 34 Offshore Open per 4 ore in esclusiva o 8 ore condivise/private: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
+    en: "From the Trimarano with chef on board to the Cigala & Bertinetti 34 Offshore Open for private 4-hour or shared/private 8-hour tours: choose the right pace for Favignana, Levanzo and Marettimo.",
   },
   comparisonTitle: {
     it: "Due barche, due modi di vivere il mare",
     en: "Two boats, two ways to live the sea",
   },
   comparisonText: {
-    it: "Il Neel 47 è pensato per comfort, chef e charter. La Cigala & Bertinetti 34 Offshore Open è la scelta agile per 4 ore private o giornate da 8 ore condivise/private.",
-    en: "The Neel 47 is designed for comfort, chef experiences and charter. The Cigala & Bertinetti 34 Offshore Open is the agile choice for private 4-hour or shared/private 8-hour days.",
+    it: "Il Trimarano è pensato per comfort, chef e charter. La Cigala & Bertinetti 34 Offshore Open è la scelta agile per 4 ore private o giornate da 8 ore condivise/private.",
+    en: "The Trimarano is designed for comfort, chef experiences and charter. The Cigala & Bertinetti 34 Offshore Open is the agile choice for private 4-hour or shared/private 8-hour days.",
   },
   chooserTitle: {
     it: "Quale barca scegliere?",
     en: "Which boat should you choose?",
   },
   chooserText: {
-    it: "Se cerchi spazio, tavola e privacy scegli il Neel 47. Se vuoi una rotta snella tra le baie, scegli la Cigala & Bertinetti 34 Offshore Open per tour da 4 o 8 ore.",
-    en: "If you want space, food and privacy, choose the Neel 47. If you want an agile route between bays, choose the Cigala & Bertinetti 34 Offshore Open for 4 or 8-hour tours.",
+    it: "Se cerchi spazio, tavola e privacy scegli il Trimarano. Se vuoi una rotta snella tra le baie, scegli la Cigala & Bertinetti 34 Offshore Open per tour da 4 o 8 ore.",
+    en: "If you want space, food and privacy, choose the Trimarano. If you want an agile route between bays, choose the Cigala & Bertinetti 34 Offshore Open for 4 or 8-hour tours.",
   },
   detailCtaLabel: {
     it: "Scopri la barca",
@@ -160,12 +160,12 @@ export const BOAT_CATALOG = {
     externalUrl: "https://www.neel-trimarans.com/range/neel-47/",
     order: 10,
     title: {
-      it: "Neel 47",
-      en: "Neel 47",
+      it: "Trimarano",
+      en: "Trimarano",
     },
     shortTitle: {
-      it: "Neel 47",
-      en: "Neel 47",
+      it: "Trimarano",
+      en: "Trimarano",
     },
     eyebrow: {
       it: "Comfort, chef e charter",
@@ -177,21 +177,21 @@ export const BOAT_CATALOG = {
     },
     detail: {
       eyebrow: {
-        it: "Trimarano Neel 47 per tour Egadi",
-        en: "Neel 47 trimaran for Egadi tours",
+        it: "Trimarano per tour Egadi",
+        en: "Trimarano trimaran for Egadi tours",
       },
       title: {
-        it: "Neel 47: il trimarano Egadisailing per vivere le Egadi con spazio, chef e comfort",
-        en: "Neel 47: the Egadisailing trimaran for space, chef experiences and comfort in the Egadi",
+        it: "Trimarano: comfort, chef e charter alle Egadi",
+        en: "Trimarano: the Egadisailing trimaran for space, chef experiences and comfort in the Egadi",
       },
       paragraphs: [
         {
-          it: "Il Neel 47 è il trimarano Egadisailing pensato per chi cerca un'esperienza in barca alle Isole Egadi più comoda, curata e privata rispetto a un classico tour veloce. È la scelta giusta per un tour Egadi da Trapani con chef a bordo, per una giornata gourmet tra Favignana e Levanzo o per un charter di più giorni con cabine, cucina e zone relax. La sua struttura a tre scafi offre ampiezza, stabilità e una sensazione di spazio che aiuta anche chi non è abituato alla vita in barca.",
-          en: "The Neel 47 is the Egadisailing trimaran for guests looking for a more comfortable, curated and private Egadi Islands boat experience than a classic fast tour. It is the right choice for an Egadi tour from Trapani with chef on board, for a gourmet day between Favignana and Levanzo or for a multi-day charter with cabins, galley and relax areas. Its three-hull layout offers space, stability and comfort even for guests who are not used to life on board.",
+          it: "Il Trimarano è pensato per chi cerca un'esperienza in barca alle Isole Egadi più comoda, curata e privata rispetto a un classico tour veloce. È la scelta giusta per un tour Egadi da Trapani con chef a bordo, per una giornata gourmet tra Favignana e Levanzo o per un charter di più giorni con cabine, cucina e zone relax. La sua struttura a tre scafi offre ampiezza, stabilità e una sensazione di spazio che aiuta anche chi non è abituato alla vita in barca.",
+          en: "The Trimarano is the Egadisailing trimaran for guests looking for a more comfortable, curated and private Egadi Islands boat experience than a classic fast tour. It is the right choice for an Egadi tour from Trapani with chef on board, for a gourmet day between Favignana and Levanzo or for a multi-day charter with cabins, galley and relax areas. Its three-hull layout offers space, stability and comfort even for guests who are not used to life on board.",
         },
         {
-          it: "A bordo il tempo non è solo navigazione: ci sono spazi per pranzare, rilassarsi, prendere il sole, cambiarsi e vivere la giornata con ritmo lento. Per l'esperienza gourmet la rotta viene costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo a base di pesce locale e prodotti del territorio. Nei programmi charter, invece, il Neel 47 permette di allargare il viaggio verso Marettimo e organizzare un itinerario più completo nell'arcipelago.",
-          en: "Time on board is not just navigation: there is space for lunch, relaxing, sunbathing, changing and enjoying the day at a slower pace. For the gourmet experience, the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and a lunch based on local fish and regional products. On charter programs, the Neel 47 can extend the trip towards Marettimo and create a more complete itinerary through the archipelago.",
+          it: "A bordo il tempo non è solo navigazione: ci sono spazi per pranzare, rilassarsi, prendere il sole, cambiarsi e vivere la giornata con ritmo lento. Per l'esperienza gourmet la rotta viene costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo a base di pesce locale e prodotti del territorio. Nei programmi charter, invece, il Trimarano permette di allargare il viaggio verso Marettimo e organizzare un itinerario più completo nell'arcipelago.",
+          en: "Time on board is not just navigation: there is space for lunch, relaxing, sunbathing, changing and enjoying the day at a slower pace. For the gourmet experience, the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and a lunch based on local fish and regional products. On charter programs, the Trimarano can extend the trip towards Marettimo and create a more complete itinerary through the archipelago.",
         },
         {
           it: "Chi cerca parole semplici può immaginarlo così: è la barca per un'esperienza premium alle Egadi, con skipper, crew, comfort reale e un modo più elegante di vivere il mare. Non serve essere esperti di vela o conoscere già le cale: la rotta, gli orari e le soste vengono gestiti dalla crew in base a meteo, mare e obiettivo della giornata.",
@@ -200,193 +200,193 @@ export const BOAT_CATALOG = {
       ],
     },
     seoTitle: {
-      it: "Neel 47 alle Egadi con chef a bordo",
-      en: "Neel 47 in the Egadi with chef on board",
+      it: "Trimarano alle Egadi con chef a bordo",
+      en: "Trimarano in the Egadi with chef on board",
     },
     seoDescription: {
-      it: "Neel 47 Egadisailing da Trapani per tour Egadi con chef a bordo, esperienza gourmet Favignana e Levanzo, charter alle Isole Egadi, cabine e comfort privato.",
-      en: "Egadisailing Neel 47 from Trapani for Egadi tours with chef on board, gourmet experience in Favignana and Levanzo, Egadi Islands charter, cabins and private comfort.",
+      it: "Trimarano da Trapani per tour Egadi con chef a bordo, esperienza gourmet Favignana e Levanzo, charter alle Isole Egadi, cabine e comfort privato.",
+      en: "Trimarano from Trapani for Egadi tours with chef on board, gourmet experience in Favignana and Levanzo, Egadi Islands charter, cabins and private comfort.",
     },
     imageSrc: "/images/boats/neel-47/neel-47-hero.webp",
     heroVideoSrc: "/images/boats/neel-47/hero-video.webm",
     imageAlt: {
-      it: "Neel 47 Egadisailing",
-      en: "Egadisailing Neel 47",
+      it: "Trimarano",
+      en: "Trimarano",
     },
     gallery: [
       {
         src: "/images/boats/neel-47/neel-47-hero.webp",
         alt: {
-          it: "Neel 47 Egadisailing in navigazione",
-          en: "Egadisailing Neel 47 sailing",
+          it: "Trimarano in navigazione",
+          en: "Trimarano sailing",
         },
-        caption: { it: "Neel 47 Egadisailing", en: "Egadisailing Neel 47" },
+        caption: { it: "Trimarano", en: "Trimarano" },
       },
       {
         src: "/images/boats/neel-47/neel-47-navigazione.webp",
         alt: {
-          it: "Neel 47 Egadisailing in navigazione davanti alla costa",
-          en: "Egadisailing Neel 47 sailing along the coast",
+          it: "Trimarano in navigazione davanti alla costa",
+          en: "Trimarano sailing along the coast",
         },
         caption: { it: "Navigazione alle Egadi", en: "Egadi sailing" },
       },
       {
         src: "/images/boats/neel-47/neel-47-favignana.webp",
         alt: {
-          it: "Neel 47 Egadisailing ormeggiato a Favignana",
-          en: "Egadisailing Neel 47 moored in Favignana",
+          it: "Trimarano ormeggiato a Favignana",
+          en: "Trimarano moored in Favignana",
         },
         caption: { it: "Favignana", en: "Favignana" },
       },
       {
         src: "/images/boats/neel-47/neel-47-vela-grandangolare.webp",
         alt: {
-          it: "Neel 47 Egadisailing con vela e vista grandangolare",
-          en: "Egadisailing Neel 47 with sail in a wide-angle view",
+          it: "Trimarano con vela e vista grandangolare",
+          en: "Trimarano with sail in a wide-angle view",
         },
         caption: { it: "Vista in navigazione", en: "Sailing view" },
       },
       {
         src: "/images/boats/neel-47/neel-47-vela-chiusa.webp",
         alt: {
-          it: "Neel 47 Egadisailing con vela chiusa",
-          en: "Egadisailing Neel 47 with sail closed",
+          it: "Trimarano con vela chiusa",
+          en: "Trimarano with sail closed",
         },
         caption: { it: "Dettaglio vela", en: "Sail detail" },
       },
       {
         src: "/images/boats/neel-47/neel-47-esterni.webp",
         alt: {
-          it: "Esterni del Neel 47 Egadisailing",
-          en: "Exterior view of the Egadisailing Neel 47",
+          it: "Esterni del Trimarano",
+          en: "Exterior view of the Trimarano",
         },
         caption: { it: "Esterni", en: "Exterior" },
       },
       {
         src: "/images/boats/neel-47/neel-47-prendisole.webp",
         alt: {
-          it: "Prendisole del Neel 47 Egadisailing",
-          en: "Sun deck of the Egadisailing Neel 47",
+          it: "Prendisole del Trimarano",
+          en: "Sun deck of the Trimarano",
         },
         caption: { it: "Prendisole", en: "Sun deck" },
       },
       {
         src: "/images/boats/neel-47/neel-47-ragazzo.webp",
         alt: {
-          it: "Ospite sul ponte del Neel 47 Egadisailing durante la navigazione",
-          en: "Guest on the deck of the Egadisailing Neel 47 while sailing",
+          it: "Ospite sul ponte del Trimarano durante la navigazione",
+          en: "Guest on the deck of the Trimarano while sailing",
         },
         caption: { it: "Vita sul ponte", en: "Deck life" },
       },
       {
         src: "/images/boats/neel-47/neel-47-.donna.webp",
         alt: {
-          it: "Ospite sul Neel 47 Egadisailing",
-          en: "Guest on the Egadisailing Neel 47",
+          it: "Ospite sul Trimarano",
+          en: "Guest on the Trimarano",
         },
         caption: { it: "Relax a bordo", en: "Relax on board" },
       },
       {
         src: "/images/boats/neel-47/neel-47-relax.webp",
         alt: {
-          it: "Ospiti in relax nel salone del Neel 47 Egadisailing",
-          en: "Guests relaxing in the saloon of the Egadisailing Neel 47",
+          it: "Ospiti in relax nel salone del Trimarano",
+          en: "Guests relaxing in the saloon of the Trimarano",
         },
         caption: { it: "Salone e relax", en: "Saloon and relax" },
       },
       {
         src: "/images/boats/neel-47/neel-47-relax1.webp",
         alt: {
-          it: "Ospiti seduti nel salone interno del Neel 47 Egadisailing",
-          en: "Guests seated in the interior saloon of the Egadisailing Neel 47",
+          it: "Ospiti seduti nel salone interno del Trimarano",
+          en: "Guests seated in the interior saloon of the Trimarano",
         },
         caption: { it: "Comfort interno", en: "Interior comfort" },
       },
       {
         src: "/images/boats/neel-47/neel-47-interno.webp",
         alt: {
-          it: "Interni del Neel 47 Egadisailing",
-          en: "Interior of the Egadisailing Neel 47",
+          it: "Interni del Trimarano",
+          en: "Interior of the Trimarano",
         },
         caption: { it: "Interni", en: "Interior" },
       },
       {
         src: "/images/boats/neel-47/neel-47-tavolo-a-bordo.webp",
         alt: {
-          it: "Tavolo a bordo del Neel 47 Egadisailing",
-          en: "Table on board the Egadisailing Neel 47",
+          it: "Tavolo a bordo del Trimarano",
+          en: "Table on board the Trimarano",
         },
         caption: { it: "Tavola a bordo", en: "Table on board" },
       },
       {
         src: "/images/boats/neel-47/neel-47-chef.webp",
         alt: {
-          it: "Chef e crew preparano l'aperitivo a bordo del Neel 47 Egadisailing",
-          en: "Chef and crew preparing the aperitif on board the Egadisailing Neel 47",
+          it: "Chef e crew preparano l'aperitivo a bordo del Trimarano",
+          en: "Chef and crew preparing the aperitif on board the Trimarano",
         },
         caption: { it: "Chef a bordo", en: "Chef on board" },
       },
       {
         src: "/images/boats/neel-47/neel-47-cucina.webp",
         alt: {
-          it: "Cucina del Neel 47 Egadisailing",
-          en: "Galley of the Egadisailing Neel 47",
+          it: "Cucina del Trimarano",
+          en: "Galley of the Trimarano",
         },
         caption: { it: "Cucina", en: "Galley" },
       },
       {
         src: "/images/boats/neel-47/neel-47-cucina1.webp",
         alt: {
-          it: "Dettaglio cucina del Neel 47 Egadisailing",
-          en: "Galley detail of the Egadisailing Neel 47",
+          it: "Dettaglio cucina del Trimarano",
+          en: "Galley detail of the Trimarano",
         },
         caption: { it: "Cucina e servizio", en: "Galley and service" },
       },
       {
         src: "/images/boats/neel-47/neel-47-aperitivo.webp",
         alt: {
-          it: "Aperitivo con vino e prodotti locali servito sul Neel 47 Egadisailing",
-          en: "Aperitif with wine and local products served on the Egadisailing Neel 47",
+          it: "Aperitivo con vino e prodotti locali servito sul Trimarano",
+          en: "Aperitif with wine and local products served on the Trimarano",
         },
         caption: { it: "Aperitivo", en: "Aperitif" },
       },
       {
         src: "/images/boats/neel-47/neel-47-aperitivo1.webp",
         alt: {
-          it: "Gamberi freschi serviti a bordo del Neel 47 Egadisailing",
-          en: "Fresh prawns served on board the Egadisailing Neel 47",
+          it: "Gamberi freschi serviti a bordo del Trimarano",
+          en: "Fresh prawns served on board the Trimarano",
         },
         caption: { it: "Prodotti locali", en: "Local products" },
       },
       {
         src: "/images/boats/neel-47/neel-47-cabina.webp",
         alt: {
-          it: "Cabina matrimoniale del Neel 47 Egadisailing",
-          en: "Double cabin of the Egadisailing Neel 47",
+          it: "Cabina matrimoniale del Trimarano",
+          en: "Double cabin of the Trimarano",
         },
         caption: { it: "Cabina matrimoniale", en: "Double cabin" },
       },
       {
         src: "/images/boats/neel-47/neel-47-cabina1.webp",
         alt: {
-          it: "Cabina del Neel 47 Egadisailing",
-          en: "Cabin of the Egadisailing Neel 47",
+          it: "Cabina del Trimarano",
+          en: "Cabin of the Trimarano",
         },
         caption: { it: "Cabina", en: "Cabin" },
       },
       {
         src: "/images/boats/neel-47/neel-47-cabina2.webp",
         alt: {
-          it: "Seconda cabina del Neel 47 Egadisailing",
-          en: "Second cabin of the Egadisailing Neel 47",
+          it: "Seconda cabina del Trimarano",
+          en: "Second cabin of the Trimarano",
         },
         caption: { it: "Seconda cabina", en: "Second cabin" },
       },
       {
         src: "/images/boats/neel-47/neel-47-bagno.webp",
         alt: {
-          it: "Bagno con doccia del Neel 47 Egadisailing",
-          en: "Bathroom with shower of the Egadisailing Neel 47",
+          it: "Bagno con doccia del Trimarano",
+          en: "Bathroom with shower of the Trimarano",
         },
         caption: { it: "Bagno", en: "Bathroom" },
       },
@@ -427,8 +427,8 @@ export const BOAT_CATALOG = {
           en: "Is the trimaran suitable for an experience with chef?",
         },
         answer: {
-          it: "Sì. Il Neel 47 ha cucina, tavolo, zone relax e spazi ampi per servire il pranzo a bordo senza trasformare la giornata in un semplice trasferimento in barca.",
-          en: "Yes. The Neel 47 has a galley, table, relax areas and wide spaces to serve lunch on board without turning the day into a simple boat transfer.",
+          it: "Sì. Il Trimarano ha cucina, tavolo, zone relax e spazi ampi per servire il pranzo a bordo senza trasformare la giornata in un semplice trasferimento in barca.",
+          en: "Yes. The Trimarano has a galley, table, relax areas and wide spaces to serve lunch on board without turning the day into a simple boat transfer.",
         },
       },
       {
@@ -437,8 +437,8 @@ export const BOAT_CATALOG = {
           en: "Can the trimaran be booked for several days?",
         },
         answer: {
-          it: "Sì. Il Neel 47 è la barca dedicata al charter alle Egadi: permette di vivere più giorni tra rada, cabine, cucina a bordo e rotte costruite con lo skipper.",
-          en: "Yes. The Neel 47 is the boat dedicated to Egadi charters: it allows multi-day programs with anchorages, cabins, onboard galley and routes shaped with the skipper.",
+          it: "Sì. Il Trimarano è la barca dedicata al charter alle Egadi: permette di vivere più giorni tra rada, cabine, cucina a bordo e rotte costruite con lo skipper.",
+          en: "Yes. The Trimarano is the boat dedicated to Egadi charters: it allows multi-day programs with anchorages, cabins, onboard galley and routes shaped with the skipper.",
         },
       },
       {
@@ -463,8 +463,8 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "La rotta del Neel 47 è sempre la stessa?",
-          en: "Is the Neel 47 route always the same?",
+          it: "La rotta del Trimarano è sempre la stessa?",
+          en: "Is the Trimarano route always the same?",
         },
         answer: {
           it: "No. La rotta viene definita in base al tipo di esperienza, alla durata e alle condizioni del mare. L'obiettivo è trovare baie belle ma anche comode e sicure.",
@@ -473,8 +473,8 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Il Neel 47 è indicato per chi non ha esperienza in barca?",
-          en: "Is the Neel 47 suitable for people with no boating experience?",
+          it: "Il Trimarano è indicato per chi non ha esperienza in barca?",
+          en: "Is the Trimarano suitable for people with no boating experience?",
         },
         answer: {
           it: "Sì. Non serve esperienza nautica: a bordo ci sono skipper e crew, gli spazi sono ampi e la navigazione viene gestita in modo da rendere la giornata semplice anche per chi è alla prima uscita.",
@@ -483,8 +483,8 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Cosa comprende una giornata gourmet sul Neel 47?",
-          en: "What is included in a gourmet day on the Neel 47?",
+          it: "Cosa comprende una giornata gourmet sul Trimarano?",
+          en: "What is included in a gourmet day on the Trimarano?",
         },
         answer: {
           it: "L'esperienza gourmet include skipper, hostess, cuoco privato, pranzo a base di pesce locale e prodotti del territorio, carburante, aperitivo, acqua, vino, bevande e attrezzatura da snorkeling. È pensata come esperienza privata, non come semplice noleggio barca.",
@@ -493,8 +493,8 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Il Neel 47 esce sempre verso Marettimo?",
-          en: "Does the Neel 47 always sail to Marettimo?",
+          it: "Il Trimarano esce sempre verso Marettimo?",
+          en: "Does the Trimarano always sail to Marettimo?",
         },
         answer: {
           it: "No. Nell'esperienza gourmet la rotta è tra Favignana e Levanzo. Marettimo può essere valutata nei programmi charter di più giorni, quando tempi, meteo e programma permettono una navigazione più ampia.",
@@ -503,8 +503,8 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Posso usare il Neel 47 per un evento privato?",
-          en: "Can I use the Neel 47 for a private event?",
+          it: "Posso usare il Trimarano per un evento privato?",
+          en: "Can I use the Trimarano for a private event?",
         },
         answer: {
           it: "Sì. Il trimarano viene scelto spesso per compleanni, anniversari, proposte, piccoli eventi aziendali e giornate speciali. La formula privata permette di gestire ritmo, pranzo, soste e atmosfera in modo più personale.",

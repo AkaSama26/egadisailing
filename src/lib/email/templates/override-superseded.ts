@@ -20,15 +20,16 @@ export function overrideSupersededTemplate(
     : "";
   const body = `
     <p>Ciao ${escapeHtml(data.customerName)},</p>
-    <p>Purtroppo un'altra richiesta sullo stesso slot e' arrivata prima della tua.
-    La tua prenotazione per <strong>${escapeHtml(data.serviceName)}</strong> del
+    <p>Ci dispiace comunicarti che, a seguito della verifica operativa sulla
+    disponibilita', non possiamo confermare la tua prenotazione per
+    <strong>${escapeHtml(data.serviceName)}</strong> del
     <strong>${escapeHtml(data.startDate)}</strong> (codice
-    <strong>${escapeHtml(data.confirmationCode)}</strong>) e' stata automaticamente annullata.</p>
+    <strong>${escapeHtml(data.confirmationCode)}</strong>).</p>
     <p>Riceverai il rimborso completo di &euro; <strong>${escapeHtml(data.refundAmount)}</strong>
     entro 5-10 giorni lavorativi.</p>
     ${altList}
     <p><a href="${safeUrl(data.bookingPortalUrl)}">Area prenotazioni</a></p>
   `;
-  const text = `Prenotazione ${data.confirmationCode} superseded. Rimborso € ${data.refundAmount}.`;
+  const text = `Prenotazione ${data.confirmationCode} non confermata. Rimborso € ${data.refundAmount}.`;
   return { subject, html: emailLayout({ heading: subject, bodyHtml: body }), text };
 }

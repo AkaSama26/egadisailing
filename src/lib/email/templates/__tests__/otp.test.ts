@@ -8,10 +8,10 @@ describe("otpEmailTemplate", () => {
     expect(tpl.subject).toContain("recuperare la prenotazione");
     expect(tpl.html).toContain("123456");
     expect(tpl.html).toContain("biglietto QR");
-    expect(tpl.html).toContain("cambiare data gratuitamente");
+    expect(tpl.html).toContain("richiedere cambio data");
     expect(tpl.html).toContain("rimborso");
     expect(tpl.text).toContain("123456");
-    expect(tpl.text).toContain("cambiare data gratuitamente");
+    expect(tpl.text).toContain("richiedere cambio data");
   });
 
   it("escapes the code before rendering html", () => {

@@ -109,7 +109,7 @@ Da fare:
   - Turnstile production keys
   - `ADMIN_EMAIL=info@egadisailing.com`
   - `EMAIL_DELIVERY_MODE=brevo`
-  - `BREVO_SENDER_EMAIL=noreply@egadisailing.com`
+  - `BREVO_SENDER_EMAIL=info@egadisailing.com`
   - `BREVO_SENDER_NAME=Egadisailing`
   - `BREVO_REPLY_TO=info@egadisailing.com`
 
@@ -219,7 +219,7 @@ Accettazione:
 Da fare:
 
 - Verificare dominio/sender Brevo.
-- Configurare `noreply@egadisailing.com` come sender.
+- Configurare `info@egadisailing.com` come sender.
 - Configurare `info@egadisailing.com` come reply-to/admin inbox.
 - In Brevo, autenticare il dominio mittente `egadisailing.com` con i record
   DNS richiesti (Brevo code, DKIM, DMARC) prima del go-live.

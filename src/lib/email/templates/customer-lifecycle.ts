@@ -1,4 +1,5 @@
 import { emailLayout, escapeHtml, safeUrl } from "./_layout";
+import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 
 export interface CustomerCancellationData {
   customerName: string;
@@ -166,7 +167,7 @@ export interface PreDepartureReminderData {
 export function preDepartureReminderTemplate(data: PreDepartureReminderData) {
   const subject = `Promemoria partenza · ${data.confirmationCode}`;
   const balance = data.balanceAmount
-    ? `<p><strong>Saldo da pagare in loco:</strong> ${escapeHtml(data.balanceAmount)}. Contanti preferiti.</p>`
+    ? `<p><strong>Saldo da pagare in loco:</strong> ${escapeHtml(data.balanceAmount)}.</p>`
     : "";
   const html = emailLayout({
     heading: "Ci vediamo presto a bordo",
@@ -187,21 +188,38 @@ export function preDepartureReminderTemplate(data: PreDepartureReminderData) {
 export interface ReviewRequestData {
   customerName: string;
   serviceName: string;
-  reviewUrl: string;
+  googleReviewUrl?: string;
+  tripadvisorReviewUrl?: string;
 }
 
 export function reviewRequestTemplate(data: ReviewRequestData) {
   const subject = `Com'e' andata a bordo?`;
+  const googleReviewUrl = data.googleReviewUrl ?? PUBLIC_REVIEW_LINKS.google;
+  const tripadvisorReviewUrl = data.tripadvisorReviewUrl ?? PUBLIC_REVIEW_LINKS.tripadvisor;
   const html = emailLayout({
     heading: "Grazie per essere saliti a bordo",
     bodyHtml: `
       <p>Ciao ${escapeHtml(data.customerName)},</p>
       <p>speriamo che l'esperienza <strong>${escapeHtml(data.serviceName)}</strong> sia stata speciale.</p>
-      <p>Una recensione ci aiuta moltissimo a far conoscere Egadisailing.</p>
+      <p>Una recensione ci aiuta moltissimo a far conoscere Egadisailing. Puoi lasciarla dove preferisci:</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 22px 0 10px;">
+        <tr>
+          <td align="center" style="padding: 0 0 12px;">
+            <a href="${safeUrl(googleReviewUrl)}" style="display: inline-block; min-width: 220px; background: #0c3d5e; color: #ffffff; padding: 13px 22px; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; line-height: 1.2;">
+              Recensisci su Google
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding: 0 0 12px;">
+            <a href="${safeUrl(tripadvisorReviewUrl)}" style="display: inline-block; min-width: 220px; background: #d97706; color: #ffffff; padding: 13px 22px; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; line-height: 1.2;">
+              Recensisci su Tripadvisor
+            </a>
+          </td>
+        </tr>
+      </table>
     `,
-    ctaText: "Lascia una recensione",
-    ctaUrl: safeUrl(data.reviewUrl),
   });
-  const text = `Grazie per essere saliti a bordo. Puoi lasciare una recensione qui: ${data.reviewUrl}`;
+  const text = `Grazie per essere saliti a bordo. Puoi lasciare una recensione su Google: ${googleReviewUrl} oppure su Tripadvisor: ${tripadvisorReviewUrl}`;
   return { subject, html, text };
 }

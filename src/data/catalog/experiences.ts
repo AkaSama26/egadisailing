@@ -470,7 +470,7 @@ export const EXPERIENCE_CATALOG = {
       en: "The trimaran reserved for you, with an onboard chef and a route shaped around the best Egadi conditions.",
     },
     detailDescription: {
-      it: "Una giornata privata sul trimarano Egadisailing: skipper, hostess e chef coordinano ritmo, tavola e soste bagno. È il pacchetto più completo per chi vuole vivere le Egadi senza compromessi.",
+      it: "Una giornata privata sul Trimarano: skipper, hostess e chef coordinano ritmo, tavola e soste bagno. È il pacchetto più completo per chi vuole vivere le Egadi senza compromessi.",
       en: "A private day on the Egadisailing trimaran: skipper, hostess and chef coordinate the pace, the table and the swim stops. This is the most complete package for experiencing the Egadi without compromise.",
     },
     seoTitle: {
@@ -478,14 +478,14 @@ export const EXPERIENCE_CATALOG = {
       en: "Gourmet trimaran experience in the Egadi Islands",
     },
     seoDescription: {
-      it: "Prenota il trimarano Egadisailing in esclusiva con chef a bordo, skipper e itinerario tra Favignana e Levanzo.",
+      it: "Prenota il Trimarano in esclusiva con chef a bordo, skipper e itinerario tra Favignana e Levanzo.",
       en: "Book the Egadisailing trimaran privately with onboard chef, skipper and an itinerary around Favignana and Levanzo.",
     },
     media: [
       {
         caption: { it: "Chef a bordo", en: "Chef on board" },
         alt: {
-          it: "Chef che cucina sul trimarano Egadisailing alle Isole Egadi",
+          it: "Chef che cucina sul Trimarano alle Isole Egadi",
           en: "Chef cooking on the Egadisailing trimaran in the Egadi Islands",
         },
         color: "#FFB6C1",
@@ -494,7 +494,7 @@ export const EXPERIENCE_CATALOG = {
       {
         caption: { it: "Aperitivo al tramonto", en: "Sunset aperitivo" },
         alt: {
-          it: "Tavola in rada sul trimarano Egadisailing con aperitivo al tramonto",
+          it: "Tavola in rada sul Trimarano con aperitivo al tramonto",
           en: "Table at anchor on the Egadisailing trimaran with sunset aperitivo",
         },
         color: "#FFDAB9",
@@ -548,7 +548,7 @@ export const EXPERIENCE_CATALOG = {
       {
         caption: { it: "Trimarano Egadi", en: "Egadi trimaran" },
         alt: {
-          it: "Trimarano Egadisailing in navigazione tra le Isole Egadi",
+          it: "Trimarano in navigazione tra le Isole Egadi",
           en: "Egadisailing trimaran sailing through the Egadi Islands",
         },
         color: "#ADD8E6",
@@ -939,7 +939,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       en: "Gourmet trimaran experience",
     },
     subtitle: {
-      it: "Il trimarano Egadisailing con chef, skipper e hostess per una giornata premium tra sapori locali, mare e soste in rada.",
+      it: "Il Trimarano con chef, skipper e hostess per una giornata premium tra sapori locali, mare e soste in rada.",
       en: "The Egadisailing trimaran with chef, skipper and hostess for a premium day of local flavours, sea and anchored swim stops.",
     },
     seoTitle: {
@@ -947,7 +947,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       en: "Gourmet trimaran experience in the Egadi Islands",
     },
     seoDescription: {
-      it: "Giornata privata sul trimarano Egadisailing con chef a bordo, skipper, hostess e rotta tra Favignana e Levanzo.",
+      it: "Giornata privata sul Trimarano con chef a bordo, skipper, hostess e rotta tra Favignana e Levanzo.",
       en: "Private day on the Egadisailing trimaran with onboard chef, skipper, hostess and route around Favignana and Levanzo.",
     },
     durationLabel: { it: "8 ore", en: "8 hours" },

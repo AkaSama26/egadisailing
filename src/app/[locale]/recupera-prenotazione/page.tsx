@@ -41,8 +41,8 @@ export default async function RecuperaPrenotazionePage({
   };
 
   return (
-    <OceanLayout padding="sm">
-      <main className="mx-auto grid max-w-6xl gap-6 px-3 py-24 text-slate-950 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+    <OceanLayout padding="sm" className="egadi-water-reflection overflow-hidden">
+      <main className="relative z-10 mx-auto grid max-w-6xl gap-6 px-3 py-24 text-slate-950 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <section className="rounded-2xl border border-white/15 bg-white/10 p-6 text-white shadow-2xl sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-sky-100">
             {copy.eyebrow}

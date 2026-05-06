@@ -42,7 +42,7 @@ async function main() {
     update: {},
     create: {
       id: "trimarano",
-      name: "Trimarano Egadisailing",
+      name: "Trimarano",
       type: "TRIMARAN",
       description:
         "Trimarano luxury 60ft con 3 cabine, cucina, 3 bagni. Perfetto per escursioni e cabin charter settimanali nelle Egadi.",
@@ -84,15 +84,15 @@ async function main() {
   const boat = await prisma.boat.upsert({
     where: { id: "boat" },
     update: {
-      name: "Barca",
+      name: "Cigala & Bertinetti 34",
       type: "MOTORBOAT",
-      description: "Barca Egadisailing per esperienze condivise ed esclusive alle Egadi.",
+      description: "Barca open Cigala & Bertinetti 34 Offshore Open per esperienze condivise ed esclusive alle Egadi.",
     },
     create: {
       id: "boat",
-      name: "Barca",
+      name: "Cigala & Bertinetti 34",
       type: "MOTORBOAT",
-      description: "Barca Egadisailing per esperienze condivise ed esclusive alle Egadi.",
+      description: "Barca open Cigala & Bertinetti 34 Offshore Open per esperienze condivise ed esclusive alle Egadi.",
       amenities: {
         seats: 12,
         shade: true,

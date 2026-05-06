@@ -77,7 +77,7 @@ Qualità pesata **6.2/10**. Core transazionale 8+/10, ma GDPR (2/10), infra (3/1
 2. **Domain + DNS** Cloudflare con DMARC/SPF per SamBoat/Click&Boat/Nautal
 3. **Decisione pricing unit Cabin Charter** (per-person vs per-boat)
 4. **Stripe LIVE account** (KYC + IBAN + webhook endpoint)
-5. **Email sender verificato Brevo** (noreply@egadisailing.com + reply-to)
+5. **Email sender verificato Brevo** (info@egadisailing.com + reply-to)
 
 **Senza #1 e #2: NO-GO indefinito.**
 

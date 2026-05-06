@@ -6,7 +6,6 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
-import { computeCustomerCancellationPolicy } from "@/lib/booking/cancellation-policy";
 import {
   acquireRescheduleAvailabilityLocks,
   applyBookingReschedule,
@@ -82,10 +81,7 @@ export async function approveChangeRequest(formData: FormData): Promise<void> {
     );
     if (!availability.available) throw new ConflictError(availability.reason);
 
-    const policyAtOriginalDate = computeCustomerCancellationPolicy(request.originalStartDate);
-    const anchorDate =
-      booking.cancellationPolicyAnchorDate ??
-      (policyAtOriginalDate.daysUntilStart < 15 ? request.originalStartDate : null);
+    const anchorDate = booking.cancellationPolicyAnchorDate ?? request.originalStartDate;
 
     await tx.booking.update({
       where: { id: booking.id },

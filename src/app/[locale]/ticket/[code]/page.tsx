@@ -10,6 +10,7 @@ import { formatEurWithVat, formatEurCentsWithVat } from "@/lib/pricing/vat";
 import { formatItDateTime, formatItDay } from "@/lib/dates";
 import { PrintTicketButton } from "./print-button";
 import { QrDownloadButton } from "@/components/qr-download-button";
+import { OceanLayout } from "@/components/customer/ocean-layout";
 
 export const metadata: Metadata = {
   title: "Biglietto Egadisailing",
@@ -69,17 +70,17 @@ export default async function TicketPage({
   if (balanceCents > 0) {
     bookingRows.push([
       "Saldo in loco",
-      `${formatEurCentsWithVat(balanceCents, locale)} · da pagare prima della partenza, contanti preferiti`,
+      `${formatEurCentsWithVat(balanceCents, locale)} · da pagare in loco prima della partenza`,
     ]);
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950 print:bg-white print:p-0">
-      <div className="mx-auto max-w-3xl space-y-4">
+    <OceanLayout padding="sm" className="egadi-water-reflection overflow-hidden print:bg-white print:p-0">
+      <div className="relative z-10 mx-auto max-w-3xl space-y-4 pt-20 text-slate-950 print:pt-0">
         <div className="flex items-center justify-between gap-3 print:hidden">
           <Link
             href={`/${locale}/b/sessione`}
-            className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white"
+            className="rounded-lg border border-white/20 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-white"
           >
             Area prenotazioni
           </Link>
@@ -161,7 +162,7 @@ export default async function TicketPage({
           </div>
         </section>
       </div>
-    </main>
+    </OceanLayout>
   );
 }
 

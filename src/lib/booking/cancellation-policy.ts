@@ -21,7 +21,7 @@ export function computeCustomerCancellationPolicy(
     (startDay.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
   );
 
-  if (daysUntilStart >= 15) {
+  if (daysUntilStart >= 30) {
     return {
       band: "FULL_REFUND",
       daysUntilStart,
@@ -31,7 +31,7 @@ export function computeCustomerCancellationPolicy(
     };
   }
 
-  if (daysUntilStart >= 7) {
+  if (daysUntilStart >= 15) {
     return {
       band: "HALF_REFUND",
       daysUntilStart,
@@ -49,4 +49,3 @@ export function computeCustomerCancellationPolicy(
     label: "Cancellazione senza rimborso",
   };
 }
-

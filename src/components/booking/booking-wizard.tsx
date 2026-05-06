@@ -360,6 +360,10 @@ export function BookingWizard(props: Props) {
   const effectiveDurationDays = isCharter
     ? fixedDurationDays ?? charterDurationDays ?? durationDays
     : durationDays;
+  const priceLookupDurationDays =
+    isCharter && effectiveDurationDays >= 3 && effectiveDurationDays <= 7
+      ? effectiveDurationDays
+      : undefined;
   const canContinueFromDate =
     !isCharter ||
     (Boolean(fixedDurationDays) && Boolean(startDate)) ||
@@ -453,6 +457,52 @@ export function BookingWizard(props: Props) {
     selectedPaymentSchedule,
     customer,
   ]);
+
+  useEffect(() => {
+    if (!startDate || (isCharter && !priceLookupDurationDays)) {
+      setSelectedPrice(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const params = new URLSearchParams({
+      serviceId: props.serviceId,
+      start: startDate,
+      end: startDate,
+      locale: props.locale,
+    });
+    if (priceLookupDurationDays) {
+      params.set("durationDays", String(priceLookupDurationDays));
+    }
+
+    fetch(`/api/booking-calendar?${params.toString()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("price lookup failed");
+        const body = (await res.json()) as { data?: { days?: CalendarApiDay[] } };
+        const day = body.data?.days?.find((item) => item.date === startDate);
+        if (day?.priceAmount != null && day.pricingUnit) {
+          const nextPrice = {
+            amount: day.priceAmount,
+            pricingUnit: day.pricingUnit,
+          };
+          setSelectedPrice((current) =>
+            current?.amount === nextPrice.amount && current.pricingUnit === nextPrice.pricingUnit
+              ? current
+              : nextPrice,
+          );
+        } else {
+          setSelectedPrice(null);
+        }
+      })
+      .catch((err) => {
+        if ((err as Error).name !== "AbortError") setSelectedPrice(null);
+      });
+
+    return () => controller.abort();
+  }, [isCharter, priceLookupDurationDays, props.locale, props.serviceId, startDate]);
 
   async function createIntent() {
     setError(null);
@@ -1507,8 +1557,8 @@ function ReviewStep({
         </div>
         {paymentSchedule === "DEPOSIT_BALANCE" && (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
-            L&apos;acconto non e&apos; rimborsabile. Il saldo restante verra&apos;
-            pagato in loco prima della partenza; i contanti sono preferiti.
+            La quota pagata online segue la policy di cancellazione. Il saldo restante
+            verra&apos; pagato in loco prima della partenza.
           </p>
         )}
       </fieldset>

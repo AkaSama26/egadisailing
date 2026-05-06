@@ -106,7 +106,7 @@ export function ExperienceChoiceDialog({
             introEyebrow: "Egadi Sailing concierge",
             introTitle: "Which sea day are you imagining?",
             introDescription:
-              "A few quick choices to find the right route between the Neel 47 and our agile open boat.",
+              "A few quick choices to find the right route between the Trimarano and our agile open boat.",
           }
         : {
             close: "Chiudi",
@@ -123,7 +123,7 @@ export function ExperienceChoiceDialog({
             introEyebrow: "Concierge Egadi Sailing",
             introTitle: "Che giornata di mare hai in mente?",
             introDescription:
-              "Poche scelte veloci per trovare la rotta giusta tra il Neel 47 e la nostra barca open più agile.",
+              "Poche scelte veloci per trovare la rotta giusta tra il Trimarano e la nostra barca open più agile.",
           },
     [isEn],
   );
@@ -545,7 +545,7 @@ function getItalianQuestion({
       return {
         eyebrow: "Pranzo",
         title: "Vuoi pranzare a bordo o pranzare sull'isola?",
-        description: "Il pranzo a bordo è il segnale giusto per il Neel 47 con chef, hostess e spazi premium.",
+        description: "Il pranzo a bordo è il segnale giusto per il Trimarano con chef, hostess e spazi premium.",
         choices: [
           {
             emoji: "🍽️",
@@ -565,12 +565,12 @@ function getItalianQuestion({
       return {
         eyebrow: "Stile",
         title: "Che tipo di giornata immaginate?",
-        description: "Qui scegliamo tra il comfort luxury del Neel 47 e la barca open più agile.",
+        description: "Qui scegliamo tra il comfort luxury del Trimarano e la barca open più agile.",
         choices: [
           {
             emoji: "✨",
             label: "Massimo comfort, spazio e ritmo lento",
-            description: "Neel 47, privacy, zone relax e una rotta più curata.",
+            description: "Trimarano, privacy, zone relax e una rotta più curata.",
             onSelect: () => moveTo("premiumDuration"),
           },
           {
@@ -585,7 +585,7 @@ function getItalianQuestion({
       return {
         eyebrow: "Tempo a bordo",
         title: "Una giornata premium o più giorni alle Egadi?",
-        description: "Il Neel 47 è pensato sia per una giornata curata sia per vivere le isole con pernottamento.",
+        description: "Il Trimarano è pensato sia per una giornata curata sia per vivere le isole con pernottamento.",
         choices: [
           {
             emoji: "🌅",
@@ -700,7 +700,7 @@ function getEnglishQuestion({
       return {
         eyebrow: "Lunch",
         title: "Would you like lunch on board or on the island?",
-        description: "Lunch on board points to the Neel 47 with chef, hostess and premium spaces.",
+        description: "Lunch on board points to the Trimarano with chef, hostess and premium spaces.",
         choices: [
           {
             emoji: "🍽️",
@@ -720,12 +720,12 @@ function getEnglishQuestion({
       return {
         eyebrow: "Style",
         title: "What kind of private day are you imagining?",
-        description: "Here we choose between the luxury comfort of the Neel 47 and the more agile open boat.",
+        description: "Here we choose between the luxury comfort of the Trimarano and the more agile open boat.",
         choices: [
           {
             emoji: "✨",
             label: "Maximum comfort, space and slow pace",
-            description: "Neel 47, privacy, relax areas and a more curated route.",
+            description: "Trimarano, privacy, relax areas and a more curated route.",
             onSelect: () => moveTo("premiumDuration"),
           },
           {
@@ -740,7 +740,7 @@ function getEnglishQuestion({
       return {
         eyebrow: "Time on board",
         title: "One premium day or several days in the Egadi?",
-        description: "The Neel 47 is designed for both a curated day and multi-day island living.",
+        description: "The Trimarano is designed for both a curated day and multi-day island living.",
         choices: [
           {
             emoji: "🌅",

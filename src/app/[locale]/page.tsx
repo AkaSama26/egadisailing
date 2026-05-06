@@ -210,20 +210,20 @@ function buildExperienceChoiceRecommendations({
     },
     gourmet: {
       emoji: "🍽️",
-      title: isEn ? "Gourmet Experience on the Neel 47" : "Esperienza Gourmet sul Neel 47",
+      title: isEn ? "Gourmet Experience on the Trimarano" : "Esperienza Gourmet sul Trimarano",
       boatLabel: isEn
-        ? "Neel 47 luxury · chef, skipper and hostess"
-        : "Neel 47 luxury · chef, skipper e hostess",
+        ? "Trimarano luxury · chef, skipper and hostess"
+        : "Trimarano luxury · chef, skipper e hostess",
       reason: isEn
         ? "You want the day to feel cared for: wide spaces, lunch prepared on board, privacy and a premium rhythm at anchor."
         : "Vuoi una giornata curata: spazi ampi, pranzo preparato a bordo, privacy e ritmo premium in rada.",
     },
     charter: {
       emoji: "🛏️",
-      title: isEn ? "Egadi Charter on the Neel 47" : "Charter Egadi sul Neel 47",
+      title: isEn ? "Egadi Charter on the Trimarano" : "Charter Egadi sul Trimarano",
       boatLabel: isEn
-        ? "Neel 47 luxury · cabins and tailored route"
-        : "Neel 47 luxury · cabine e rotta su misura",
+        ? "Trimarano luxury · cabins and tailored route"
+        : "Trimarano luxury · cabine e rotta su misura",
       reason: isEn
         ? "For several days at sea: cabins, quiet anchorages and a route across Favignana, Levanzo and Marettimo."
         : "Per vivere più giorni in mare: cabine, rade tranquille e rotta tra Favignana, Levanzo e Marettimo.",

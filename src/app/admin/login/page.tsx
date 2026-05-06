@@ -206,7 +206,7 @@ export default function LoginPage() {
         <div className="relative z-10 p-12 text-center">
           <Image
             src="/images/trimarano.webp"
-            alt="Trimarano Egadisailing"
+            alt="Trimarano"
             width={2752}
             height={1536}
             className="w-full max-w-lg h-auto drop-shadow-[0_20px_60px_rgba(14,165,233,0.3)]"

@@ -184,9 +184,10 @@ redis-cli -a $REDIS_PASSWORD DEL rlb:OTP_BLOCK_EMAIL:user@email.com
 
 **Diagnosi**:
 - Verificare env production:
-  - `EMAIL_DELIVERY_MODE=brevo`
-  - `BREVO_API_KEY=xkeysib-...`
-  - `BREVO_SENDER_EMAIL=noreply@egadisailing.com`
+  - `EMAIL_DELIVERY_MODE=smtp` oppure `brevo`
+  - `BREVO_SMTP_USER` + `BREVO_SMTP_KEY` se SMTP
+  - `BREVO_API_KEY=xkeysib-...` se REST API
+  - `BREVO_SENDER_EMAIL=info@egadisailing.com`
   - `BREVO_REPLY_TO=info@egadisailing.com`
 - Check log `logger.error` per `Brevo sendEmail failed`
 - Dashboard admin → Diagnostica → "Email fallite"
@@ -202,7 +203,7 @@ redis-cli -a $REDIS_PASSWORD DEL rlb:OTP_BLOCK_EMAIL:user@email.com
 
 **Smoke test produzione**:
 ```bash
-EMAIL_DELIVERY_MODE=brevo BREVO_TEST_TO=tuamail@example.com npm run brevo:smoke
+EMAIL_DELIVERY_MODE=smtp BREVO_TEST_TO=tuamail@example.com npm run brevo:smoke
 ```
 
 Risultato atteso: JSON con `delivered: true` e `messageId`, email visibile
