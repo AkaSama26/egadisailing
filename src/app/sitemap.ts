@@ -10,8 +10,50 @@ import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
+type SitemapEntry = MetadataRoute.Sitemap[number];
+type SitemapEntryOptions = Pick<SitemapEntry, "changeFrequency" | "priority" | "lastModified">;
+type LocalizedPaths = Record<(typeof routing.locales)[number], string>;
+
+function localizedUrl(baseUrl: string, locale: string, path: string): string {
+  return `${baseUrl}/${locale}${path}`;
+}
+
+function localizedAlternates(baseUrl: string, paths: LocalizedPaths): SitemapEntry["alternates"] {
+  const languages: Record<string, string> = {};
+  for (const locale of routing.locales) {
+    languages[locale] = localizedUrl(baseUrl, locale, paths[locale]);
+  }
+  languages["x-default"] = localizedUrl(
+    baseUrl,
+    routing.defaultLocale,
+    paths[routing.defaultLocale],
+  );
+  return { languages };
+}
+
+function sameLocalizedPath(path: string): LocalizedPaths {
+  return Object.fromEntries(routing.locales.map((locale) => [locale, path])) as LocalizedPaths;
+}
+
+function addLocalizedEntries(
+  entries: MetadataRoute.Sitemap,
+  baseUrl: string,
+  paths: LocalizedPaths,
+  options: SitemapEntryOptions,
+) {
+  const alternates = localizedAlternates(baseUrl, paths);
+  for (const locale of routing.locales) {
+    entries.push({
+      url: localizedUrl(baseUrl, locale, paths[locale]),
+      alternates,
+      ...options,
+    });
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = env.APP_URL.replace(/\/$/, "");
+  const now = new Date();
   const pages = [
     "",
     "/experiences",
@@ -48,81 +90,91 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const page of pages) {
-    for (const locale of routing.locales) {
-      entries.push({
-        url: `${baseUrl}/${locale}${page}`,
-        lastModified: new Date(),
+    addLocalizedEntries(
+      entries,
+      baseUrl,
+      sameLocalizedPath(page),
+      {
+        lastModified: now,
         changeFrequency: lowPriorityPages.has(page) ? "monthly" : "weekly",
         priority: page === "" ? 1 : lowPriorityPages.has(page) ? 0.3 : 0.8,
-      });
-    }
+      },
+    );
   }
 
   for (const slug of getPublicBoatSlugs()) {
-    for (const locale of routing.locales) {
-      entries.push({
-        url: `${baseUrl}/${locale}/boats/${slug}`,
-        lastModified: new Date(),
+    addLocalizedEntries(
+      entries,
+      baseUrl,
+      sameLocalizedPath(`/boats/${slug}`),
+      {
+        lastModified: now,
         changeFrequency: "weekly",
         priority: 0.75,
-      });
-    }
+      },
+    );
   }
 
   for (const slugs of favignanaGuideSlugPairs) {
-    entries.push({
-      url: `${baseUrl}/it/islands/favignana/${slugs.it}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.78,
-    });
-    entries.push({
-      url: `${baseUrl}/en/islands/favignana/${slugs.en}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.78,
-    });
+    addLocalizedEntries(
+      entries,
+      baseUrl,
+      {
+        it: `/islands/favignana/${slugs.it}`,
+        en: `/islands/favignana/${slugs.en}`,
+      },
+      {
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.78,
+      },
+    );
   }
 
   for (const slugs of levanzoGuideSlugPairs) {
-    entries.push({
-      url: `${baseUrl}/it/islands/levanzo/${slugs.it}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.76,
-    });
-    entries.push({
-      url: `${baseUrl}/en/islands/levanzo/${slugs.en}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.76,
-    });
+    addLocalizedEntries(
+      entries,
+      baseUrl,
+      {
+        it: `/islands/levanzo/${slugs.it}`,
+        en: `/islands/levanzo/${slugs.en}`,
+      },
+      {
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.76,
+      },
+    );
   }
 
   for (const slugs of marettimoGuideSlugPairs) {
-    entries.push({
-      url: `${baseUrl}/it/islands/marettimo/${slugs.it}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.76,
-    });
-    entries.push({
-      url: `${baseUrl}/en/islands/marettimo/${slugs.en}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.76,
-    });
+    addLocalizedEntries(
+      entries,
+      baseUrl,
+      {
+        it: `/islands/marettimo/${slugs.it}`,
+        en: `/islands/marettimo/${slugs.en}`,
+      },
+      {
+        lastModified: now,
+        changeFrequency: "weekly",
+        priority: 0.76,
+      },
+    );
   }
 
   for (const service of services) {
-    for (const locale of routing.locales) {
-      entries.push({
-        url: `${baseUrl}/${locale}/experiences/${getExperiencePublicSlug(service.id)}`,
+    const slug = getExperiencePublicSlug(service.id);
+    addLocalizedEntries(
+      entries,
+      baseUrl,
+      sameLocalizedPath(`/experiences/${slug}`),
+      {
         lastModified: service.updatedAt,
         changeFrequency: "weekly",
         priority: 0.8,
-      });
-    }
+      },
+    );
   }
 
   return entries;
