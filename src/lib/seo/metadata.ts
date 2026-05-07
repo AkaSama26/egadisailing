@@ -3,6 +3,10 @@ import { env } from "@/lib/env";
 import { routing } from "@/i18n/routing";
 
 const SITE_NAME = "Egadisailing";
+const OG_LOCALES: Record<string, string> = {
+  it: "it_IT",
+  en: "en_US",
+};
 
 export interface PageSeoOptions {
   /** Titolo specifico della pagina. Usato in `<title>` e og:title. */
@@ -55,7 +59,7 @@ export function buildPageMetadata(opts: PageSeoOptions): Metadata {
       description: opts.description,
       url: canonicalUrl,
       siteName: SITE_NAME,
-      locale: opts.locale,
+      locale: OG_LOCALES[opts.locale] ?? opts.locale,
       type: opts.ogType ?? "website",
       images: [{ url: imageUrl, width: 1200, height: 630, alt: opts.title }],
     },

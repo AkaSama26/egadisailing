@@ -58,7 +58,7 @@ export default async function ExperiencesPage({
     where: { active: true, id: { in: getExperiencePackageServiceIds() } },
     select: { id: true },
   });
-  const displayPrices = await getDisplayPriceMap(services.map((s) => s.id));
+  const displayPrices = await getDisplayPriceMap(services.map((s) => s.id), 2026, locale);
   const activeServiceIds = new Set(services.map((service) => service.id));
   const packages = getExperiencePackageContents(locale)
     .map((item) => {

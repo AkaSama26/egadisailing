@@ -79,7 +79,7 @@ function getDetailCopy(
       : isEn
         ? "Egadi boat experience"
         : "Esperienza in barca alle Egadi",
-    overviewTitle: isEn ? "The Experience" : "L'esperienza",
+	    overviewTitle: isEn ? "The experience" : "L'esperienza",
     overviewEyebrow: isEn ? "What makes it special" : "Perché sceglierla",
     bookingTitle: isEn ? "Plan this experience" : "Organizza questa esperienza",
     bookingText: isEn
@@ -360,8 +360,8 @@ function getSeoExpansionCopy(
           {
             question: isEn ? "Is the menu fixed?" : "Il menu è fisso?",
             answer: isEn
-              ? "No. The menu changes according to the fresh catch and the local products available. Sample menus can be shared before booking, so you can understand the style of the lunch served on board."
-              : "No. Il menu varia in base al pescato fresco e ai prodotti locali disponibili. Alcuni esempi di menu possono essere condivisi prima della prenotazione, così puoi capire lo stile del pranzo servito a bordo.",
+              ? "No. The menu changes according to the fresh catch and the local products available. You can view sample menus on this page to understand the style of the lunch served on board."
+              : "No. Il menu varia in base al pescato fresco e ai prodotti locali disponibili. In questa pagina trovi alcuni menu di esempio per capire lo stile del pranzo servito a bordo.",
           },
           {
             question: isEn ? "Can allergies or intolerances be managed?" : "Si possono gestire allergie o intolleranze?",
@@ -530,7 +530,7 @@ function getEditorialExperienceCopy(
           `${title} is ${boatTourFormat}. The departure is from Trapani, and the route is planned around the best conditions of the day between Favignana and Levanzo. This is important in the Egadi Islands: wind, sea state and crowding can change quickly, so a good boat tour is not about forcing a fixed itinerary. It is about choosing the coves where the water is clearer, the anchorage is more comfortable and the day feels relaxed from start to finish.`,
           "The experience is built around the things people usually hope to find when they search for a boat tour in the Egadi Islands: turquoise water, swim stops, snorkelling, views of the coast and enough time to enjoy the sea without feeling rushed. Cala Rossa, Cala Azzurra, Bue Marino and the quieter corners of Levanzo are the kind of places the skipper evaluates during the day, but the final choice always depends on the real sea conditions.",
           isSharedBoat
-            ? "The shared format is simple and practical. You book your seats, meet the crew in Trapani and share the day with other guests who want the same kind of experience: sea, swimming and a well-organised route. It is a good option if you want a complete Egadi boat tour with a lighter budget and a social atmosphere on board."
+	          ? "The shared format is simple and practical. You book your seats, meet the crew in Trapani and share the day with other guests who want the same kind of experience: sea, swimming and a well-organised route. It is a good option if you want a complete Egadi boat tour with a lighter budget and a sociable atmosphere on board."
             : isHalfDay
               ? "The 4-hour private tour is best when you want a compact experience: a clean schedule, privacy for your group and one or two well-chosen stops instead of a long list of places visited in a hurry. It works well for couples, families and travellers who want to enjoy the sea before or after another plan in Trapani."
               : "The private full-day format gives the skipper more freedom to shape the rhythm around your group. There is more time for swimming, more flexibility between Favignana and Levanzo and a calmer pace on board. It is the right choice if you want privacy, space and a route that can adapt to children, friends or a special occasion.",
@@ -558,14 +558,14 @@ function getEditorialExperienceCopy(
         `On board ${boat}, the value of the experience is not only the list of coves. It is the way the day is managed: departure without confusion, clear timing, swim stops chosen with care, relaxed navigation and practical attention to the group. Guests often remember Cala Rossa, Cala Azzurra, Bue Marino or the quiet edges of Levanzo, but the real difference is the feeling of being guided by a crew that knows when to stay, when to move and when a quieter bay will be better than the most famous name on the map.`,
         isCharter
           ? "For charter guests, the rhythm becomes even more important. A multi-day route lets the islands open slowly: a first swim after leaving Trapani, dinner at anchor when the weather is right, mornings close to clear water and the possibility to adapt the following day instead of forcing a fixed programme. The trimaran gives the charter a more comfortable base, with cabins, shared spaces and enough room to turn the boat into a small floating home."
-          : isGourmet
-            ? "For the gourmet experience, the boat becomes both route and table. The chef and crew coordinate the timing so lunch does not feel like an interruption but part of the day: a swim before anchoring, a calm service on board, local flavours and enough time after the meal to enjoy the water again. It is designed for guests who want privacy, comfort and a more curated way to experience the Egadi."
+	          : isGourmet
+	            ? "For the gourmet experience, the boat becomes both route and table. The chef and crew coordinate the timing so lunch does not feel like an interruption but part of the day: a swim before anchoring, calm service on board, local flavours and enough time after the meal to enjoy the water again. It is designed for guests who want privacy, comfort and a more curated way to experience the Egadi Islands."
           : isPrivateBoat
               ? "For private boat tours, flexibility is the strongest advantage. The boat is reserved for your group, so the skipper can adjust swim time, pace and stops without balancing different expectations on board. This is useful for families, couples, groups of friends and anyone who wants the Egadi with more privacy and a route that feels personal rather than standard."
-              : "For the shared full-day tour, the appeal is simplicity. You book your seats, meet the crew in Trapani and join a day that keeps the essentials: clear water, swim stops, scenic navigation and a social but organised atmosphere. It is a good choice when you want the full Egadi feeling without booking the entire boat privately.",
+	              : "For the shared full-day tour, the appeal is simplicity. You book your seats, meet the crew in Trapani and join a day that keeps the essentials: clear water, swim stops, scenic navigation and a sociable but organised atmosphere. It is a good choice when you want the full Egadi Islands experience without booking the entire boat privately.",
         `The route is intentionally described as flexible because the Egadi reward experience more than improvisation. A good day at sea depends on small decisions: where to anchor with less roll, which side of an island is clearer, when a famous cove is too crowded, and how long the group can stay in the water without turning the return into a rush. The crew keeps these details in balance so the trip feels natural, but behind that natural feeling there is planning, local knowledge and constant attention to comfort.`,
-        `This is especially important for guests comparing different experiences before booking. A private format gives more control over rhythm and privacy; a shared full day keeps the cost more accessible while preserving the main sea moments; a gourmet trimaran day adds service, food and space; a charter turns the islands into a slower journey. The goal of this page is to make those differences clear, so choosing the date is the last step, not the moment when you are still trying to understand what you are buying.`,
-        `The experience is also designed to help you decide before booking. The images show the boat and the mood on board, the itinerary explains the likely structure of the day, and the FAQ answers the practical questions that usually matter before choosing a date. Prices and availability remain in the booking panel, while this page gives the context: what the experience feels like, who it is best for, how the crew works and why a well-managed route around the Egadi can feel very different from a generic boat trip.`,
+	        `This is especially important for guests comparing different experiences before booking. A private format gives more control over rhythm and privacy; a shared full day keeps the cost more accessible while preserving the main sea moments; a gourmet trimaran day adds service, food and space; a charter turns the islands into a slower journey. The goal of this page is to make those differences clear, so choosing the date is the last step, not the moment when you are still trying to understand what you are buying.`,
+	        `The experience is also designed to help you decide before booking. The images show the boat and the atmosphere on board, the itinerary explains the likely structure of the day, and the FAQ answers the practical questions that usually matter before choosing a date. Prices and availability remain in the booking panel, while this page gives the context: what the experience feels like, who it is best for, how the crew works and why a well-managed route around the Egadi Islands can feel very different from a generic boat trip.`,
       ],
     };
   }
@@ -622,6 +622,82 @@ function getEditorialExperienceCopy(
       "La pagina è pensata anche per aiutarti a scegliere prima di prenotare. Le immagini mostrano la barca e il mood a bordo, l'itinerario spiega la struttura probabile dell'uscita e le FAQ rispondono alle domande pratiche che contano davvero prima di scegliere una data. Prezzi e disponibilità restano nel box di prenotazione, mentre qui trovi il contesto: cosa si vive, per chi è adatta l'esperienza, come lavora la crew e perché una rotta ben gestita alle Egadi può essere molto diversa da un semplice giro in barca.",
     ],
   };
+}
+
+function getGourmetMenuCopy(locale: string) {
+  const isEn = locale === "en";
+
+  return {
+    eyebrow: isEn ? "Chef on board" : "Chef a bordo",
+    title: isEn ? "Sample gourmet menus" : "Esempi di menu gourmet",
+    intro: isEn
+      ? "Three sample lunch styles served on board during the Gourmet Experience. The final menu is confirmed with the chef according to fresh catch, seasonality and guest needs."
+      : "Tre esempi di pranzo servito a bordo durante l'Esperienza Gourmet. Il menu definitivo viene concordato con lo chef in base a pescato fresco, stagione ed esigenze degli ospiti.",
+    seasonalNote: isEn
+      ? "Menus may vary according to availability. Allergies, intolerances and important dietary needs should be communicated before departure."
+      : "I menu possono variare in base alla disponibilità. Allergie, intolleranze ed esigenze alimentari importanti vanno comunicate prima della partenza.",
+  };
+}
+
+function getGourmetSampleMenus(locale: string) {
+  const isEn = locale === "en";
+
+  return [
+    {
+      title: isEn ? "Favignana Tuna Menu" : "Menu tonno di Favignana",
+      subtitle: isEn ? "Local fish, Sicilian flavours and a relaxed finish." : "Pesce locale, sapori siciliani e chiusura leggera.",
+      items: isEn
+        ? [
+            "Aperitif with traditional Sicilian seafood bruschetta",
+            "Fresh tuna roulade caught off Favignana",
+            "Aeolian-style pasta",
+            "Fresh fruit",
+            "Trapani wine and soft drinks included",
+          ]
+        : [
+            "Aperitivo di bruschette tipiche siciliane a base di pesce",
+            "Rollè di tonno fresco pescato a Favignana",
+            "Pasta all'eoliana",
+            "Frutta fresca",
+            "Vino trapanese e bibite incluse",
+          ],
+    },
+    {
+      title: isEn ? "Trapani Sea Menu" : "Menu mare trapanese",
+      subtitle: isEn ? "A softer seafood menu built around mussels and local wine." : "Una proposta di mare più delicata, con cozze e vino del territorio.",
+      items: isEn
+        ? [
+            "Trio of seafood mousses",
+            "Pasta with mussel ragout",
+            "Fresh fruit",
+            "Trapani wine and soft drinks included",
+          ]
+        : [
+            "Trittico di mousse di mare",
+            "Pasta con ragù di cozze",
+            "Frutta fresca",
+            "Vino trapanese e bibite incluse",
+          ],
+    },
+    {
+      title: isEn ? "Premium Raw Seafood Menu" : "Menu crudité premium",
+      subtitle: isEn ? "Available only on explicit request with a supplement." : "Disponibile solo su esplicita richiesta e con supplemento.",
+      badge: isEn ? "On request" : "Su richiesta",
+      items: isEn
+        ? [
+            "Seafood crudités",
+            "Pasta with Mazara del Vallo red prawns and pistachio pesto",
+            "Fresh fruit",
+            "Trapani wine and soft drinks included",
+          ]
+        : [
+            "Crudité di mare",
+            "Pasta con gambero rosso di Mazara del Vallo e pesto di pistacchio",
+            "Frutta fresca",
+            "Vino trapanese e bibite incluse",
+          ],
+    },
+  ];
 }
 
 const heroFrameLayouts = [
@@ -745,7 +821,7 @@ export default async function ExperienceDetailPage({
 
   const boatContent = getBoatContent(service.boatId, locale);
   const [displayPrice, itinerary] = await Promise.all([
-    getDisplayPrice(service.id),
+    getDisplayPrice(service.id, 2026, locale),
     getExperienceItinerary(service.id, locale, content.itinerary),
   ]);
 
@@ -755,24 +831,26 @@ export default async function ExperienceDetailPage({
   const bookingHref = `/${locale}/prenota?service=${bookingServiceParam}`;
   const recoveryHref = `/${locale}/recupera-prenotazione`;
   const recoveryLabel = locale === "en" ? "Find booking" : "Recupera prenotazione";
-  const durationText = getServiceDurationLabel(service);
+  const durationText = getServiceDurationLabel(service, locale);
   const seoExpansion = getSeoExpansionCopy(locale, service, durationText, boatContent?.title);
   const priceUnit =
     service.type === "CABIN_CHARTER" || service.pricingUnit === "PER_PACKAGE"
-      ? getPriceUnitLabel(service.pricingUnit, service.type)
+      ? getPriceUnitLabel(service.pricingUnit, service.type, locale)
       : t("experience.perPerson");
   const heroMedia = content.media.find((item) => item.src) ?? content.media[0];
   const heroImage = heroMedia?.src ?? FALLBACK_HERO_IMAGE;
   const gallery = content.media.filter((item) => item.src);
   const boatGallery = boatContent?.gallery ?? [];
   const editorial = getEditorialExperienceCopy(locale, service, content.title, boatContent?.title);
+  const gourmetMenuCopy = getGourmetMenuCopy(locale);
+  const gourmetMenus = service.type === "EXCLUSIVE_EXPERIENCE" ? getGourmetSampleMenus(locale) : [];
   const relatedExperiences = getListedExperienceIds()
     .filter((id) => id !== service.id)
     .map((id) => getExperienceContent(id, locale))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
     .slice(0, 3);
   const priceLabel = displayPrice.amount
-    ? `${t("experience.from")} ${formatEur(displayPrice.amount)}`
+    ? `${t("experience.from")} ${formatEur(displayPrice.amount, locale)}`
     : displayPrice.label;
   const charterDurationDays = service.type === "CABIN_CHARTER" ? 3 : undefined;
   const bookingInfoItems = [
@@ -1162,6 +1240,66 @@ export default async function ExperienceDetailPage({
                 </div>
               </section>
             </ScrollSection>
+
+            {gourmetMenus.length > 0 && (
+              <ScrollSection animation="fade-up">
+                <section id="sample-menus" className="scroll-mt-28">
+                  <div className="max-w-3xl">
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+                      {gourmetMenuCopy.eyebrow}
+                    </p>
+                    <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
+                      {gourmetMenuCopy.title}
+                    </h2>
+                    <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
+                      {gourmetMenuCopy.intro}
+                    </p>
+                  </div>
+
+                  <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                    {gourmetMenus.map((menu, index) => (
+                      <article
+                        key={menu.title}
+                        className="flex h-full flex-col rounded-lg bg-white p-5 shadow-sm sm:p-6"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-gold)]">
+                              {`Menu ${index + 1}`}
+                            </p>
+                            <h3 className="mt-2 font-heading text-xl font-bold text-[var(--color-ocean)]">
+                              {menu.title}
+                            </h3>
+                          </div>
+                          {menu.badge ? (
+                            <span className="shrink-0 rounded-full bg-[var(--color-gold)]/12 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-gold)]">
+                              {menu.badge}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-slate-600">
+                          {menu.subtitle}
+                        </p>
+                        <ul className="mt-5 space-y-3">
+                          {menu.items.map((item) => (
+                            <li key={item} className="flex items-start gap-3 text-sm leading-6 text-slate-700">
+                              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-turquoise)]/12">
+                                <Check className="h-3.5 w-3.5 text-[var(--color-turquoise)]" />
+                              </span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </article>
+                    ))}
+                  </div>
+
+                  <p className="mt-5 rounded-lg border border-[var(--color-gold)]/25 bg-white/65 p-4 text-sm leading-6 text-slate-600">
+                    {gourmetMenuCopy.seasonalNote}
+                  </p>
+                </section>
+              </ScrollSection>
+            )}
 
             <ScrollSection animation="fade-up">
               <section className="grid gap-8 lg:grid-cols-2">

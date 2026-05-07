@@ -10,9 +10,17 @@ import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
 // Round 11 SEO-M3: wizard di prenotazione non indexabile (no SEO value,
 // contiene codici/intent-dati sensibili).
-export const metadata: Metadata = {
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: locale === "en" ? "Complete your booking" : "Completa la prenotazione",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function BookingPage({
   params,

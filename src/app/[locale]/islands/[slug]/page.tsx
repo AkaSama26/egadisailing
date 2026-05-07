@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
 import { Button } from "@/components/ui/button";
 import { MapPin, ArrowLeft, Compass } from "lucide-react";
+import { env } from "@/lib/env";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 
 const validSlugs = ["favignana", "levanzo", "marettimo"] as const;
 
@@ -14,6 +16,53 @@ const gradients: Record<string, string> = {
   marettimo: "from-[#14b8a6] to-[#0d9488]",
 };
 
+const islandSeo: Record<
+  (typeof validSlugs)[number],
+  {
+    title: Record<string, string>;
+    description: Record<string, string>;
+  }
+> = {
+  favignana: {
+    title: {
+      it: "Favignana in Barca: Cala Rossa, Cala Azzurra e Tour da Trapani",
+      en: "Favignana by Boat: Cala Rossa, Cala Azzurra and Tours from Trapani",
+    },
+    description: {
+      it: "Guida a Favignana in barca: Cala Rossa, Cala Azzurra, Lido Burrone e le tappe migliori per un tour alle Egadi da Trapani.",
+      en: "Guide to Favignana by boat: Cala Rossa, Cala Azzurra, Lido Burrone and the best stops for an Egadi tour from Trapani.",
+    },
+  },
+  levanzo: {
+    title: {
+      it: "Levanzo in Barca: Cala Fredda, Cala Minnola e Tour alle Egadi",
+      en: "Levanzo by Boat: Cala Fredda, Cala Minnola and Egadi Tours",
+    },
+    description: {
+      it: "Guida a Levanzo in barca: Cala Fredda, Cala Minnola, Grotta del Genovese e le soste migliori per snorkeling alle Egadi.",
+      en: "Guide to Levanzo by boat: Cala Fredda, Cala Minnola, Grotta del Genovese and the best snorkelling stops in the Egadi Islands.",
+    },
+  },
+  marettimo: {
+    title: {
+      it: "Marettimo in Barca: Grotte Marine, Cala Bianca e Tour Egadi",
+      en: "Marettimo by Boat: Sea Caves, Cala Bianca and Egadi Tours",
+    },
+    description: {
+      it: "Guida a Marettimo in barca: grotte marine, Cala Bianca, Punta Troia e rotte per scoprire l'isola più selvaggia delle Egadi.",
+      en: "Guide to Marettimo by boat: sea caves, Cala Bianca, Punta Troia and routes to discover the wildest Egadi island.",
+    },
+  },
+};
+
+function localize(value: Record<string, string>, locale: string) {
+  return value[locale] ?? value.it;
+}
+
+function jsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -21,11 +70,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!validSlugs.includes(slug as any)) return { title: "Not Found" };
-  const t = await getTranslations({ locale, namespace: "islands" });
-  return {
-    title: `${t(`${slug}.name`)} — Egadisailing`,
-    description: t(`${slug}.description`),
-  };
+  const seo = islandSeo[slug as (typeof validSlugs)[number]];
+  return buildPageMetadata({
+    title: localize(seo.title, locale),
+    description: localize(seo.description, locale),
+    path: `/islands/${slug}`,
+    locale,
+  });
 }
 
 export default async function IslandDetailPage({
@@ -40,6 +91,31 @@ export default async function IslandDetailPage({
   }
 
   const t = await getTranslations("islands");
+  const base = env.APP_URL.replace(/\/$/, "");
+  const pageUrl = `${base}/${locale}/islands/${slug}`;
+  const json = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Egadisailing", item: `${base}/${locale}` },
+          { "@type": "ListItem", position: 2, name: t("title"), item: `${base}/${locale}/islands` },
+          { "@type": "ListItem", position: 3, name: t(`${slug}.name`), item: pageUrl },
+        ],
+      },
+      {
+        "@type": "TouristDestination",
+        name: t(`${slug}.name`),
+        description: t(`${slug}.description`),
+        url: pageUrl,
+        containedInPlace: {
+          "@type": "Place",
+          name: "Isole Egadi",
+        },
+      },
+    ],
+  };
 
   const highlights = t(`${slug}.highlights`)
     .split(",")
@@ -47,6 +123,7 @@ export default async function IslandDetailPage({
 
   return (
     <div className="bg-[#fefce8]/30 min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(json) }} />
       {/* Hero */}
       <section
         className={`pt-32 pb-20 px-6 md:px-12 lg:px-20 bg-gradient-to-br ${gradients[slug]}`}

@@ -81,8 +81,8 @@ const siteVerification = getSiteVerificationMetadata();
 export const metadata: Metadata = {
   metadataBase: new URL(env.APP_URL),
   title: {
-    template: "%s — Egadisailing",
-    default: "Egadisailing — Lascia la Terra Ferma",
+    template: "%s | Egadisailing",
+    default: "Egadisailing | Tour in barca alle Egadi da Trapani",
   },
   description:
     "Favignana, Levanzo, Marettimo ti aspettano. Con chef, skipper e il lusso del mare aperto.",
@@ -94,7 +94,11 @@ export const metadata: Metadata = {
     images: [{ url: "/og-default.jpg", width: 1200, height: 630 }],
   },
   twitter: { card: "summary_large_image" },
-  icons: { icon: "/favicon.ico" },
+  manifest: "/favicon_io/site.webmanifest",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon_io/apple-touch-icon.png",
+  },
   ...(siteVerification ? { verification: siteVerification } : {}),
 };
 

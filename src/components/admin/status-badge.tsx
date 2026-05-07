@@ -6,6 +6,7 @@ export type StatusKind = "booking" | "override" | "availability" | "sync" | "pay
 export interface StatusBadgeProps {
   status: string;
   kind: StatusKind;
+  locale?: string | null;
 }
 
 interface BadgeStyle {
@@ -51,20 +52,42 @@ const STYLES: Record<StatusKind, Record<string, BadgeStyle>> = {
  * Status badge unificato con icona Lucide (WCAG 1.4.1 — non solo colore).
  * Drop-in replacement per inline ternary blocks.
  */
-export function StatusBadge({ status, kind }: StatusBadgeProps) {
+const EN_LABELS: Partial<Record<StatusKind, Record<string, string>>> = {
+  booking: {
+    PENDING: "Pending",
+    CONFIRMED: "Confirmed",
+    CANCELLED: "Cancelled",
+    REFUNDED: "Refunded",
+  },
+  override: {
+    PENDING: "Pending",
+    APPROVED: "Approved",
+    REJECTED: "Rejected",
+    EXPIRED: "Expired",
+  },
+  payment: {
+    PENDING: "Pending",
+    SUCCEEDED: "Succeeded",
+    FAILED: "Failed",
+    REFUNDED: "Refunded",
+  },
+};
+
+export function StatusBadge({ status, kind, locale }: StatusBadgeProps) {
   const style = STYLES[kind][status] ?? {
     label: status,
     bg: "bg-slate-100",
     text: "text-slate-700",
     icon: AlertCircle,
   };
+  const label = locale === "en" ? EN_LABELS[kind]?.[status] ?? style.label : style.label;
   const Icon = style.icon;
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}
     >
       <Icon className="size-3" aria-hidden="true" />
-      <span>{style.label}</span>
+      <span>{label}</span>
     </span>
   );
 }

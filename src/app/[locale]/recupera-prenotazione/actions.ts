@@ -23,6 +23,7 @@ const DEFAULT_RECOVERY_LOCALE = routing.defaultLocale;
 const requestSchema = z.object({
   email: emailSchema,
   turnstileToken: z.string().optional(),
+  locale: z.enum(routing.locales).default(DEFAULT_RECOVERY_LOCALE),
 });
 
 export interface RequestOtpState {
@@ -47,7 +48,9 @@ export async function requestOtp(
     const parsed = requestSchema.parse({
       email: formData.get("email"),
       turnstileToken: formData.get("cf-turnstile-response") ?? undefined,
+      locale: formData.get("locale") ?? DEFAULT_RECOVERY_LOCALE,
     });
+    const isEn = parsed.locale === "en";
 
     // normalizeEmail invece di toLowerCase: applica Gmail alias dedup
     // (`mario+tag@gmail.com` → `mario@gmail.com`). Cosi' il lookup Customer
@@ -57,10 +60,16 @@ export async function requestOtp(
     // Turnstile enforced in production, optional in dev
     if (env.NODE_ENV === "production" || parsed.turnstileToken) {
       if (!parsed.turnstileToken) {
-        throw new ValidationError("CAPTCHA verification required");
+        throw new ValidationError(
+          isEn ? "CAPTCHA verification required" : "Verifica CAPTCHA richiesta",
+        );
       }
       const valid = await verifyTurnstileToken(parsed.turnstileToken, ip);
-      if (!valid) throw new ValidationError("CAPTCHA verification failed");
+      if (!valid) {
+        throw new ValidationError(
+          isEn ? "CAPTCHA verification failed" : "Verifica CAPTCHA non riuscita",
+        );
+      }
     }
 
     await enforceOtpRequestLimit(email, ip);
@@ -77,7 +86,7 @@ export async function requestOtp(
     if (customer) {
       const { code, otpId } = await createOtp(email, ip);
       try {
-        await sendOtpEmail(email, code);
+        await sendOtpEmail(email, code, parsed.locale);
       } catch (err) {
         // Email fallita: invalida l'OTP appena creato per evitare che l'utente
         // sia bloccato (rate-limit consumato) con codice fantasma.
@@ -100,7 +109,12 @@ export async function requestOtp(
   } catch (err) {
     return {
       status: "error",
-      message: err instanceof Error ? err.message : "Errore sconosciuto",
+      message:
+        err instanceof Error
+          ? err.message
+          : formData.get("locale") === "en"
+            ? "Unknown error"
+            : "Errore sconosciuto",
     };
   }
 }
@@ -133,6 +147,7 @@ export async function verifyOtpAndLogin(
       locale: formData.get("locale") ?? DEFAULT_RECOVERY_LOCALE,
     });
     locale = parsed.locale;
+    const isEn = locale === "en";
 
     // normalizeEmail invece di toLowerCase: applica Gmail alias dedup
     // (`mario+tag@gmail.com` → `mario@gmail.com`). Cosi' il lookup Customer
@@ -144,10 +159,16 @@ export async function verifyOtpAndLogin(
     if (!result.valid) {
       const msg =
         result.reason === "EXPIRED"
-          ? "Codice scaduto"
+          ? isEn
+            ? "Code expired"
+            : "Codice scaduto"
           : result.reason === "TOO_MANY_ATTEMPTS"
-            ? "Troppi tentativi, richiedi un nuovo codice"
-            : "Codice non valido";
+            ? isEn
+              ? "Too many attempts. Request a new code"
+              : "Troppi tentativi, richiedi un nuovo codice"
+            : isEn
+              ? "Invalid code"
+              : "Codice non valido";
       return { status: "error", message: msg };
     }
 
@@ -155,14 +176,24 @@ export async function verifyOtpAndLogin(
     // orfane su email arbitrarie (enumeration + quota DoS).
     const customer = await db.customer.findUnique({ where: { email } });
     if (!customer) {
-      return { status: "error", message: "Nessuna prenotazione trovata per questa email" };
+      return {
+        status: "error",
+        message: isEn
+          ? "No booking found for this email"
+          : "Nessuna prenotazione trovata per questa email",
+      };
     }
 
     await createBookingSession(email, ip, userAgent);
   } catch (err) {
     return {
       status: "error",
-      message: err instanceof Error ? err.message : "Errore sconosciuto",
+      message:
+        err instanceof Error
+          ? err.message
+          : locale === "en"
+            ? "Unknown error"
+            : "Errore sconosciuto",
     };
   }
 

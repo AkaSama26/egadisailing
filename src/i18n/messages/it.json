@@ -94,7 +94,7 @@
     "subtitle": "Siamo qui per te",
     "address": "Via dei Gladioli 15, 91100 Trapani",
     "email": "info@egadisailing.com",
-    "phone": "🇮🇹 +39 345 971 0696 · 🇬🇧 +39 340 145 4585",
+    "phone": "+39 345 971 0696 · +39 340 145 4585",
     "formName": "Nome",
     "formEmail": "Email",
     "formMessage": "Messaggio",
@@ -165,12 +165,12 @@
     "periodDates": "Date"
   },
   "experiences": {
-    "title": "Tour in barca alle Isole Egadi da Trapani",
-    "subtitle": "Scegli il tuo tour alle Egadi: trimarano gourmet con chef, charter, tour in barca 4 ore o 8 ore da Trapani. Prezzi e disponibilità online."
+    "title": "Tour in barca alle Egadi da Trapani",
+    "subtitle": "Scegli il tuo tour alle Egadi: chef a bordo, charter in trimarano, tour privati da 4 ore e tour da 8 ore condivisi o privati. Prezzi e disponibilità online."
   },
   "boats": {
-    "title": "Le Nostre Barche",
-    "subtitle": "Comfort e sicurezza per le tue avventure in mare",
+    "title": "Barche per tour alle Egadi da Trapani",
+    "subtitle": "Scegli tra il trimarano Neel 47 e la Cigala & Bertinetti 34 Offshore Open.",
     "length": "Lunghezza",
     "year": "Anno",
     "cabins": "Cabine",
@@ -179,8 +179,8 @@
     "specs": "Specifiche"
   },
   "faq": {
-    "title": "Domande Frequenti",
-    "subtitle": "Tutto quello che devi sapere prima di partire",
+    "title": "FAQ tour in barca alle Egadi",
+    "subtitle": "Tutto quello che devi sapere prima di prenotare un tour in barca alle Isole Egadi.",
     "q1": "Cosa devo portare?",
     "a1": "Crema solare (biodegradabile preferibilmente), costume da bagno, asciugamano personale, cappello per il sole e scarpe comode. Ti consigliamo anche di portare una felpa leggera per il rientro.",
     "q2": "Posso cancellare la prenotazione?",

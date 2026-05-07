@@ -54,10 +54,12 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const isEn = locale === "en";
   return buildPageMetadata({
-    title: "Privacy Policy",
-    description:
-      "Informativa privacy di Egadisailing su prenotazioni, pagamenti, contatti, cookie, sicurezza e servizi terzi utilizzati dall'app.",
+    title: isEn ? "Privacy Policy" : "Informativa privacy",
+    description: isEn
+      ? "Egadisailing Privacy Policy for bookings, payments, contact requests, cookies, security and third-party services used by the platform."
+      : "Informativa privacy di Egadisailing su prenotazioni, pagamenti, contatti, cookie, sicurezza e servizi terzi utilizzati dall'app.",
     path: "/privacy",
     locale,
   });

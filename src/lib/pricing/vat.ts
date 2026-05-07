@@ -8,10 +8,10 @@ export function formatEurWithVat(
   amount: Decimal | string | number | null | undefined,
   locale?: string,
 ): string {
-  const value = formatEur(amount);
+  const value = formatEur(amount, locale);
   return value ? appendVatIncluded(value, locale) : value;
 }
 
 export function formatEurCentsWithVat(cents: number, locale?: string): string {
-  return appendVatIncluded(formatEurCents(cents), locale);
+  return appendVatIncluded(formatEurCents(cents, locale), locale);
 }

@@ -99,8 +99,8 @@ export interface ResolvedBoatsPageContent {
 
 const BOATS_PAGE_COPY = {
   seoTitle: {
-    it: "Barche alle Egadi da Trapani",
-    en: "Boats in the Egadi from Trapani",
+    it: "Barche per tour alle Egadi da Trapani",
+    en: "Boats for Egadi Tours from Trapani",
   },
   seoDescription: {
     it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Trimarano con chef e charter, Cigala & Bertinetti 34 Offshore Open per 4 ore private o 8 ore condivise/private.",
@@ -112,7 +112,7 @@ const BOATS_PAGE_COPY = {
   },
   title: {
     it: "Le nostre barche per scoprire le Egadi da Trapani",
-    en: "Our boats to discover the Egadi from Trapani",
+    en: "Our boats for discovering the Egadi Islands from Trapani",
   },
   subtitle: {
     it: "Dal Trimarano con chef a bordo alla Cigala & Bertinetti 34 Offshore Open per 4 ore in esclusiva o 8 ore condivise/private: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
@@ -120,7 +120,7 @@ const BOATS_PAGE_COPY = {
   },
   comparisonTitle: {
     it: "Due barche, due modi di vivere il mare",
-    en: "Two boats, two ways to live the sea",
+    en: "Two boats, two ways to experience the sea",
   },
   comparisonText: {
     it: "Il Trimarano è pensato per comfort, chef e charter. La Cigala & Bertinetti 34 Offshore Open è la scelta agile per 4 ore private o giornate da 8 ore condivise/private.",
@@ -132,7 +132,7 @@ const BOATS_PAGE_COPY = {
   },
   chooserText: {
     it: "Se cerchi spazio, tavola e privacy scegli il Trimarano. Se vuoi una rotta snella tra le baie, scegli la Cigala & Bertinetti 34 Offshore Open per tour da 4 o 8 ore.",
-    en: "If you want space, food and privacy, choose the Trimarano. If you want an agile route between bays, choose the Cigala & Bertinetti 34 Offshore Open for 4 or 8-hour tours.",
+    en: "If you want space, food and privacy, choose the Trimarano. If you want an agile route between bays, choose the Cigala & Bertinetti 34 Offshore Open for 4- or 8-hour tours.",
   },
   detailCtaLabel: {
     it: "Scopri la barca",
@@ -173,25 +173,25 @@ export const BOAT_CATALOG = {
     },
     description: {
       it: "Il trimarano è la barca per le esperienze più complete alle Egadi: spazi ampi, cabine, cucina e comfort per giornate private, chef a bordo e charter di più giorni.",
-      en: "The trimaran is the boat for the most complete Egadi experiences: wide spaces, cabins, galley and comfort for private days, chef on board and multi-day charter.",
+      en: "The trimaran is the boat for the most complete Egadi experiences: spacious areas, cabins, galley and comfort for private day trips, chef experiences and multi-day charters.",
     },
     detail: {
       eyebrow: {
         it: "Trimarano per tour Egadi",
-        en: "Trimarano trimaran for Egadi tours",
+        en: "Trimarano for Egadi tours",
       },
       title: {
         it: "Trimarano: comfort, chef e charter alle Egadi",
-        en: "Trimarano: the Egadisailing trimaran for space, chef experiences and comfort in the Egadi",
+        en: "Trimarano: the Egadisailing trimaran for space, chef experiences and comfort in the Egadi Islands",
       },
       paragraphs: [
         {
           it: "Il Trimarano è pensato per chi cerca un'esperienza in barca alle Isole Egadi più comoda, curata e privata rispetto a un classico tour veloce. È la scelta giusta per un tour Egadi da Trapani con chef a bordo, per una giornata gourmet tra Favignana e Levanzo o per un charter di più giorni con cabine, cucina e zone relax. La sua struttura a tre scafi offre ampiezza, stabilità e una sensazione di spazio che aiuta anche chi non è abituato alla vita in barca.",
-          en: "The Trimarano is the Egadisailing trimaran for guests looking for a more comfortable, curated and private Egadi Islands boat experience than a classic fast tour. It is the right choice for an Egadi tour from Trapani with chef on board, for a gourmet day between Favignana and Levanzo or for a multi-day charter with cabins, galley and relax areas. Its three-hull layout offers space, stability and comfort even for guests who are not used to life on board.",
+          en: "The Trimarano is the Egadisailing trimaran for guests looking for a more comfortable, curated and private Egadi Islands boat experience than a classic fast tour. It is the right choice for an Egadi tour from Trapani with a chef on board, for a gourmet day between Favignana and Levanzo or for a multi-day charter with cabins, galley and relaxation areas. Its three-hull layout offers space, stability and comfort even for guests who are not used to life on board.",
         },
         {
           it: "A bordo il tempo non è solo navigazione: ci sono spazi per pranzare, rilassarsi, prendere il sole, cambiarsi e vivere la giornata con ritmo lento. Per l'esperienza gourmet la rotta viene costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo a base di pesce locale e prodotti del territorio. Nei programmi charter, invece, il Trimarano permette di allargare il viaggio verso Marettimo e organizzare un itinerario più completo nell'arcipelago.",
-          en: "Time on board is not just navigation: there is space for lunch, relaxing, sunbathing, changing and enjoying the day at a slower pace. For the gourmet experience, the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and a lunch based on local fish and regional products. On charter programs, the Trimarano can extend the trip towards Marettimo and create a more complete itinerary through the archipelago.",
+          en: "Time on board is not just navigation: there is space for lunch, relaxing, sunbathing, changing and enjoying the day at a slower pace. For the gourmet experience, the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and lunch based on local fish and regional products. On charter programmes, the Trimarano can extend the trip towards Marettimo and create a more complete itinerary through the archipelago.",
         },
         {
           it: "Chi cerca parole semplici può immaginarlo così: è la barca per un'esperienza premium alle Egadi, con skipper, crew, comfort reale e un modo più elegante di vivere il mare. Non serve essere esperti di vela o conoscere già le cale: la rotta, gli orari e le soste vengono gestiti dalla crew in base a meteo, mare e obiettivo della giornata.",
@@ -200,12 +200,12 @@ export const BOAT_CATALOG = {
       ],
     },
     seoTitle: {
-      it: "Trimarano alle Egadi con chef a bordo",
-      en: "Trimarano in the Egadi with chef on board",
+      it: "Neel 47 alle Egadi con chef a bordo",
+      en: "Neel 47 Trimaran with Chef in the Egadi",
     },
     seoDescription: {
       it: "Trimarano da Trapani per tour Egadi con chef a bordo, esperienza gourmet Favignana e Levanzo, charter alle Isole Egadi, cabine e comfort privato.",
-      en: "Trimarano from Trapani for Egadi tours with chef on board, gourmet experience in Favignana and Levanzo, Egadi Islands charter, cabins and private comfort.",
+      en: "Neel 47 trimaran from Trapani for Egadi tours with a chef on board, gourmet experiences in Favignana and Levanzo, charters, cabins and private comfort.",
     },
     imageSrc: "/images/boats/neel-47/neel-47-hero.webp",
     heroVideoSrc: "/images/boats/neel-47/hero-video.webm",
@@ -292,7 +292,7 @@ export const BOAT_CATALOG = {
           it: "Ospiti in relax nel salone del Trimarano",
           en: "Guests relaxing in the saloon of the Trimarano",
         },
-        caption: { it: "Salone e relax", en: "Saloon and relax" },
+        caption: { it: "Salone e relax", en: "Saloon and relaxation" },
       },
       {
         src: "/images/boats/neel-47/neel-47-relax1.webp",
@@ -394,11 +394,11 @@ export const BOAT_CATALOG = {
     idealFor: [
       {
         it: "Esperienze gourmet private con chef, pranzo a bordo e spazi comodi per vivere la giornata con calma.",
-        en: "Private gourmet experiences with chef, lunch on board and comfortable spaces for an easy-going day.",
+        en: "Private gourmet experiences with a chef, lunch on board and comfortable spaces for an easy-going day.",
       },
       {
         it: "Charter alle Egadi di più giorni, con cabine, cucina e zone relax pensate per dormire a bordo.",
-        en: "Multi-day Egadi charters with cabins, galley and relax areas designed for overnight stays on board.",
+        en: "Multi-day Egadi charters with cabins, galley and relaxation areas designed for overnight stays on board.",
       },
       {
         it: "Gruppi, famiglie e occasioni speciali che cercano privacy, comfort e una barca stabile anche per chi non è esperto.",
@@ -434,11 +434,11 @@ export const BOAT_CATALOG = {
       {
         question: {
           it: "Si può prenotare il trimarano per più giorni?",
-          en: "Can the trimaran be booked for several days?",
+          en: "Can the trimaran be booked for multiple days?",
         },
         answer: {
           it: "Sì. Il Trimarano è la barca dedicata al charter alle Egadi: permette di vivere più giorni tra rada, cabine, cucina a bordo e rotte costruite con lo skipper.",
-          en: "Yes. The Trimarano is the boat dedicated to Egadi charters: it allows multi-day programs with anchorages, cabins, onboard galley and routes shaped with the skipper.",
+          en: "Yes. The Trimarano is the boat dedicated to Egadi charters: it allows multi-day programmes with anchorages, cabins, on-board galley and routes shaped with the skipper.",
         },
       },
       {
@@ -458,7 +458,7 @@ export const BOAT_CATALOG = {
         },
         answer: {
           it: "Durante la giornata le cabine sono utili come appoggio per cambiarsi o riporre borse morbide. Per dormire a bordo, invece, bisogna scegliere un programma charter di più giorni.",
-          en: "During the day the cabins are useful for changing or storing soft bags. Sleeping on board is part of a multi-day charter program.",
+          en: "During the day, the cabins are useful for changing or storing soft bags. Sleeping on board is part of a multi-day charter programme.",
         },
       },
       {
@@ -488,7 +488,7 @@ export const BOAT_CATALOG = {
         },
         answer: {
           it: "L'esperienza gourmet include skipper, hostess, cuoco privato, pranzo a base di pesce locale e prodotti del territorio, carburante, aperitivo, acqua, vino, bevande e attrezzatura da snorkeling. È pensata come esperienza privata, non come semplice noleggio barca.",
-          en: "The gourmet experience includes skipper, hostess, private chef, lunch based on local fish and regional products, fuel, aperitif, water, wine, drinks and snorkelling equipment. It is designed as a private experience, not as a simple boat rental.",
+          en: "The gourmet experience includes skipper, hostess, private chef, lunch based on local fish and regional products, fuel, aperitif, water, wine, drinks and snorkelling equipment. It is designed as a private experience, not a simple boat rental.",
         },
       },
       {
@@ -498,7 +498,7 @@ export const BOAT_CATALOG = {
         },
         answer: {
           it: "No. Nell'esperienza gourmet la rotta è tra Favignana e Levanzo. Marettimo può essere valutata nei programmi charter di più giorni, quando tempi, meteo e programma permettono una navigazione più ampia.",
-          en: "No. On the gourmet experience the route is between Favignana and Levanzo. Marettimo can be considered on multi-day charter programs, when timing, weather and itinerary allow a wider navigation plan.",
+          en: "No. On the gourmet experience, the route is between Favignana and Levanzo. Marettimo can be considered on multi-day charter programmes, when timing, weather and itinerary allow a wider navigation plan.",
         },
       },
       {
@@ -569,7 +569,7 @@ export const BOAT_CATALOG = {
     },
     description: {
       it: "La Cigala & Bertinetti 34 Offshore Open è una barca aperta, veloce e comoda per muoversi tra le cale delle Egadi. A bordo trovi sedute per il gruppo, spazio per prendere il sole, accesso al mare per bagno e snorkeling, skipper e una navigazione pensata per soste frequenti tra Favignana e Levanzo.",
-      en: "The Cigala & Bertinetti 34 Offshore Open is an open, fast and comfortable boat for moving between the Egadi coves. On board you have seating for the group, space to enjoy the sun, sea access for swimming and snorkelling, a skipper and a route designed for frequent stops between Favignana and Levanzo.",
+      en: "The Cigala & Bertinetti 34 Offshore Open is an open, fast and comfortable boat for moving among coves in the Egadi Islands. On board you have seating for the group, space to enjoy the sun, sea access for swimming and snorkelling, a skipper and a route designed for frequent stops between Favignana and Levanzo.",
     },
     detail: {
       eyebrow: {
@@ -587,7 +587,7 @@ export const BOAT_CATALOG = {
         },
         {
           it: "È adatta sia ai tour privati da 4 ore, al mattino o al pomeriggio, sia ai tour da 8 ore condivisi o privati. Nei tour brevi la rotta si concentra sulle soste migliori raggiungibili con tempi comodi; nella giornata intera c'è più margine per muoversi tra Favignana e Levanzo, scegliere baie riparate, alternare navigazione e pause in acqua e vivere l'arcipelago con meno fretta.",
-          en: "It works both for private 4-hour morning or afternoon tours and for 8-hour shared or private tours. Short tours focus on the best stops that fit comfortably into the schedule; full-day tours allow more time to move between Favignana and Levanzo, choose sheltered bays, alternate navigation and water breaks and enjoy the archipelago without rushing.",
+          en: "It works for private 4-hour morning or afternoon tours and for 8-hour shared or private tours. Short tours focus on the best stops that fit comfortably into the schedule; full-day tours allow more time to move between Favignana and Levanzo, choose sheltered bays, alternate cruising and swim breaks and enjoy the archipelago without rushing.",
         },
         {
           it: "Per l'utente che non è esperto, la cosa importante è questa: a bordo ci sono skipper, sedute, spazio prendisole, accesso al mare e attrezzatura per vivere una giornata da tour Egadi senza dover decidere nulla di tecnico. La rotta viene adattata ogni giorno a vento, mare e affollamento delle cale, così il tour resta piacevole e sicuro.",
@@ -596,8 +596,8 @@ export const BOAT_CATALOG = {
       ],
     },
     seoTitle: {
-      it: "Cigala & Bertinetti 34 Offshore Open alle Egadi",
-      en: "Cigala & Bertinetti 34 Offshore Open in the Egadi",
+      it: "Cigala & Bertinetti 34 per tour Egadi da Trapani",
+      en: "Cigala & Bertinetti 34 for Egadi Tours from Trapani",
     },
     seoDescription: {
       it: "Cigala & Bertinetti 34 Offshore Open per tour Egadi da Trapani: barca open con skipper, snorkeling, soste bagno, Favignana, Levanzo e tour privati o condivisi.",
@@ -654,7 +654,7 @@ export const BOAT_CATALOG = {
     idealFor: [
       {
         it: "Tour privati da 4 ore al mattino o al pomeriggio, ideali se vuoi una barca tutta per il tuo gruppo senza impegnare l'intera giornata.",
-        en: "Private 4-hour morning or afternoon tours, ideal if you want the boat for your group without taking the whole day.",
+        en: "Private 4-hour morning or afternoon tours, ideal if you want the boat for your group without taking up the whole day.",
       },
       {
         it: "Tour da 8 ore condivisi o privati, con più tempo per soste bagno, snorkeling e spostamenti tra Favignana e Levanzo.",
@@ -672,7 +672,7 @@ export const BOAT_CATALOG = {
       },
       {
         it: "Nei tour da 8 ore si lavora tra Favignana e Levanzo, con più margine per snorkeling, baie riparate e pause più rilassate.",
-        en: "On 8-hour tours the route works between Favignana and Levanzo, with more margin for snorkelling, sheltered bays and slower breaks.",
+        en: "On 8-hour tours, the route works between Favignana and Levanzo, with more time for snorkelling, sheltered bays and slower breaks.",
       },
       {
         it: "La partenza è da Trapani e la rotta viene adattata ogni giorno a vento, mare e affollamento delle cale, così l'esperienza resta piacevole anche per chi non conosce le Egadi.",
@@ -743,7 +743,7 @@ export const BOAT_CATALOG = {
         },
         answer: {
           it: "La rotta può cambiare in base al mare e al vento. È una scelta normale e serve a fare soste più belle, comode e sicure durante la giornata.",
-          en: "The route can change depending on sea and wind. This is normal and helps choose stops that are more beautiful, comfortable and safe during the day.",
+          en: "The route can change depending on sea and wind. This is normal and helps the skipper choose stops that are more beautiful, comfortable and safe during the day.",
         },
       },
       {
@@ -773,7 +773,7 @@ export const BOAT_CATALOG = {
         },
         answer: {
           it: "No, è una barca open pensata per il mare di giorno. Ha sedute, spazio prendisole e accesso all'acqua, ma non è la barca adatta per dormire a bordo o per un charter con cabine.",
-          en: "No, it is an open boat designed for day use at sea. It has seating, sunbathing space and sea access, but it is not the right boat for sleeping on board or cabin charter programs.",
+          en: "No, it is an open boat designed for day use at sea. It has seating, sunbathing space and sea access, but it is not the right boat for sleeping on board or cabin charter programmes.",
         },
       },
       {

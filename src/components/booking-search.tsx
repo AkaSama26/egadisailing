@@ -75,11 +75,15 @@ function bookingExperienceKey(service: BookingSearchService) {
   return `${service.boatId}:${service.id}`;
 }
 
-function durationLabel(service: BookingSearchService, t: ReturnType<typeof useTranslations>) {
+function durationLabel(
+  service: BookingSearchService,
+  t: ReturnType<typeof useTranslations>,
+  locale: string,
+) {
   if (service.durationType === "FULL_DAY") return t("durationFullDay");
   if (service.durationType === "HALF_DAY_MORNING") return t("durationMorning");
   if (service.durationType === "HALF_DAY_AFTERNOON") return t("durationAfternoon");
-  return getServiceDurationLabel(service);
+  return getServiceDurationLabel(service, locale);
 }
 
 function BookingDateField({
@@ -364,9 +368,9 @@ export function BookingSearch({ services }: BookingSearchProps) {
     () =>
       boatDurationServices.map((service) => ({
         value: service.id,
-        label: durationLabel(service, t),
+        label: durationLabel(service, t, locale),
       })),
-    [boatDurationServices, t],
+    [boatDurationServices, locale, t],
   );
   const canSubmit = Boolean(serviceId) && (selectedIsCharter ? charterIsBookable : Boolean(date));
   const dependentSelectDisabled = hydrated ? !boatId : false;

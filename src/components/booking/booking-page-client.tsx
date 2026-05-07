@@ -59,12 +59,14 @@ interface ExperienceOption {
 
 const CHARTER_DURATION_DAYS = [3, 4, 5, 6, 7] as const;
 
-function paymentLabel(service: BookingServiceOption): string {
+function paymentLabel(service: BookingServiceOption, locale: string): string {
   if (service.defaultPaymentSchedule === "DEPOSIT_BALANCE") {
     const pct = service.defaultDepositPercentage ?? 30;
-    return `Acconto ${pct}% oggi, saldo solo in loco`;
+    return locale === "en"
+      ? `${pct}% deposit today, balance on site`
+      : `Acconto ${pct}% oggi, saldo solo in loco`;
   }
-  return "Pagamento completo al checkout";
+  return locale === "en" ? "Full payment at checkout" : "Pagamento completo al checkout";
 }
 
 function experienceKey(service: BookingServiceOption): string {
@@ -73,23 +75,30 @@ function experienceKey(service: BookingServiceOption): string {
   return `${service.boatId}:${service.id}`;
 }
 
-function experienceTitle(service: BookingServiceOption): string {
-  if (service.serviceType === "BOAT_SHARED") return "Barca condivisa";
-  if (service.serviceType === "BOAT_EXCLUSIVE") return "Barca in esclusiva";
+function experienceTitle(service: BookingServiceOption, locale: string): string {
+  if (service.serviceType === "BOAT_SHARED") {
+    return locale === "en" ? "Shared boat" : "Barca condivisa";
+  }
+  if (service.serviceType === "BOAT_EXCLUSIVE") {
+    return locale === "en" ? "Exclusive boat" : "Barca in esclusiva";
+  }
   return service.title;
 }
 
-function durationOptionLabel(service: BookingServiceOption): string {
-  if (service.durationType === "FULL_DAY") return "Giornata intera";
-  if (service.durationType === "HALF_DAY_MORNING") return "Mattina";
-  if (service.durationType === "HALF_DAY_AFTERNOON") return "Pomeriggio";
+function durationOptionLabel(service: BookingServiceOption, locale: string): string {
+  if (service.durationType === "FULL_DAY") return locale === "en" ? "Full day" : "Giornata intera";
+  if (service.durationType === "HALF_DAY_MORNING") return locale === "en" ? "Morning" : "Mattina";
+  if (service.durationType === "HALF_DAY_AFTERNOON") {
+    return locale === "en" ? "Afternoon" : "Pomeriggio";
+  }
   return service.durationLabel;
 }
 
-function durationDetail(service: BookingServiceOption): string {
-  if (service.durationType === "FULL_DAY") return `${service.durationHours} ore`;
-  if (service.durationType === "HALF_DAY_MORNING") return `${service.durationHours} ore`;
-  if (service.durationType === "HALF_DAY_AFTERNOON") return `${service.durationHours} ore`;
+function durationDetail(service: BookingServiceOption, locale: string): string {
+  const unit = locale === "en" ? (service.durationHours === 1 ? "hour" : "hours") : "ore";
+  if (service.durationType === "FULL_DAY") return `${service.durationHours} ${unit}`;
+  if (service.durationType === "HALF_DAY_MORNING") return `${service.durationHours} ${unit}`;
+  if (service.durationType === "HALF_DAY_AFTERNOON") return `${service.durationHours} ${unit}`;
   return service.durationLabel;
 }
 
@@ -123,6 +132,7 @@ export function BookingPageClient({
   initialEndDate,
   initialDurationDays,
 }: BookingPageClientProps) {
+  const copy = getBookingPageCopy(locale);
   const requestedService = services.find((service) => service.id === initialServiceId);
   const validInitialBoatId =
     initialBoatId && services.some((service) => service.boatId === initialBoatId)
@@ -193,8 +203,10 @@ export function BookingPageClient({
         serviceCount: (current?.serviceCount ?? 0) + 1,
       });
     }
-    return Array.from(map.values()).sort((a, b) => a.title.localeCompare(b.title, "it"));
-  }, [services]);
+    return Array.from(map.values()).sort((a, b) =>
+      a.title.localeCompare(b.title, locale === "en" ? "en" : "it"),
+    );
+  }, [locale, services]);
 
   const selectedBoatServices = useMemo(
     () => services.filter((service) => service.boatId === selectedBoatId),
@@ -211,7 +223,7 @@ export function BookingPageClient({
       } else {
         map.set(key, {
           key,
-          title: experienceTitle(service),
+          title: experienceTitle(service, locale),
           subtitle: service.subtitle,
           services: [service],
         });
@@ -221,7 +233,7 @@ export function BookingPageClient({
       ...option,
       services: option.services.sort(sortServicesForDuration),
     }));
-  }, [selectedBoatServices]);
+  }, [locale, selectedBoatServices]);
 
   const selectedExperience = useMemo(
     () => experienceOptions.find((option) => option.key === selectedExperienceKey),
@@ -239,8 +251,8 @@ export function BookingPageClient({
     Boolean(selectedExperience && nextStepAfterExperience(selectedExperience.services) === "duration");
   const selectedDurationLabel = selectedService
     ? selectedService.serviceType === "CABIN_CHARTER"
-      ? `${selectedCharterDays} giornate`
-      : `${durationOptionLabel(selectedService)} · ${durationDetail(selectedService)}`
+      ? `${selectedCharterDays} ${locale === "en" ? "days" : "giornate"}`
+      : `${durationOptionLabel(selectedService, locale)} · ${durationDetail(selectedService, locale)}`
     : "";
   const fixedDurationDays =
     selectedService?.serviceType === "CABIN_CHARTER" ? selectedCharterDays : undefined;
@@ -285,11 +297,11 @@ export function BookingPageClient({
     return (
       <div className="mx-auto max-w-4xl px-4 py-24 text-center text-white">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">
-          Prenotazioni
+          {copy.eyebrow}
         </p>
-        <h1 className="mt-3 text-4xl font-heading font-bold">Nessuna esperienza attiva</h1>
+        <h1 className="mt-3 text-4xl font-heading font-bold">{copy.emptyTitle}</h1>
         <p className="mt-4 text-white/75">
-          Al momento non ci sono servizi prenotabili online.
+          {copy.emptyText}
         </p>
       </div>
     );
@@ -299,25 +311,29 @@ export function BookingPageClient({
     <div className="mx-auto max-w-5xl px-3 py-24 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-3xl text-center text-white">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">
-          Prenotazioni
+          {copy.eyebrow}
         </p>
         <h1 className="mt-3 text-4xl font-heading font-bold md:text-6xl">
-          Prenota escursioni in barca alle Isole Egadi online
+          {copy.title}
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-white/78 md:text-lg">
-          Scegli mezzo, esperienza, durata e data disponibile con prezzo aggiornato.
-          Il checkout crea una prenotazione diretta sul calendario centrale Egadisailing.
+          {copy.subtitle}
         </p>
       </div>
 
-      <StepProgress currentStep={selectionStep} hasDurationStep={needsDurationStep} />
+      <StepProgress
+        currentStep={selectionStep}
+        hasDurationStep={needsDurationStep}
+        locale={locale}
+      />
 
       <section className="mt-8" aria-labelledby="booking-wizard-title">
         {selectionStep === "boat" && (
           <SelectionCard
             stepLabel="Step 1"
-            title="Scegli il mezzo"
-            subtitle="Ogni mezzo mostra solo le esperienze realmente collegate nel database."
+            title={copy.chooseBoatTitle}
+            subtitle={copy.chooseBoatSubtitle}
+            backLabel={copy.back}
           >
             <div className="grid gap-3 md:grid-cols-2">
               {boats.map((boat) => (
@@ -339,7 +355,7 @@ export function BookingPageClient({
                         {boat.title}
                       </span>
                       <span className="mt-1 block text-sm text-slate-600">
-                        {boat.serviceCount} opzioni prenotabili
+                        {boat.serviceCount} {copy.bookableOptions}
                       </span>
                     </span>
                     {selectedBoatId === boat.id && (
@@ -352,6 +368,7 @@ export function BookingPageClient({
             <SelectionActions
               canContinue={Boolean(selectedBoatId)}
               onContinue={() => setSelectionStep("experience")}
+              label={copy.continue}
             />
           </SelectionCard>
         )}
@@ -359,9 +376,10 @@ export function BookingPageClient({
         {selectionStep === "experience" && (
           <SelectionCard
             stepLabel="Step 2"
-            title="Scegli l'esperienza"
-            subtitle={`Esperienze disponibili per ${selectedBoatTitle || "il mezzo selezionato"}.`}
+            title={copy.chooseExperienceTitle}
+            subtitle={`${copy.availableFor} ${selectedBoatTitle || copy.selectedBoat}.`}
             onBack={() => resetToStep("boat")}
+            backLabel={copy.back}
           >
             <div className="grid gap-3 md:grid-cols-2">
               {experienceOptions.map((option) => (
@@ -392,7 +410,7 @@ export function BookingPageClient({
                   </span>
                   {nextStepAfterExperience(option.services) === "duration" && (
                     <span className="mt-4 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      Durata da scegliere
+                      {copy.durationToChoose}
                     </span>
                   )}
                 </button>
@@ -401,6 +419,7 @@ export function BookingPageClient({
             <SelectionActions
               canContinue={Boolean(selectedExperience)}
               onContinue={continueFromExperience}
+              label={copy.continue}
             />
           </SelectionCard>
         )}
@@ -408,9 +427,10 @@ export function BookingPageClient({
         {selectionStep === "duration" && selectedExperience && (
           <SelectionCard
             stepLabel="Step 3"
-            title="Scegli per quanto tempo"
-            subtitle="La durata determina il servizio reale usato da prezzi, disponibilità e checkout."
+            title={copy.chooseDurationTitle}
+            subtitle={copy.chooseDurationSubtitle}
             onBack={() => resetToStep("experience")}
+            backLabel={copy.back}
           >
             {selectedExperience.services[0]?.serviceType === "CABIN_CHARTER" ? (
               <div className="grid gap-3 sm:grid-cols-5">
@@ -431,7 +451,9 @@ export function BookingPageClient({
                     aria-pressed={selectedCharterDays === days}
                   >
                     <span className="block text-lg font-bold text-slate-950">{days}</span>
-                    <span className="text-sm text-slate-600">giornate</span>
+                    <span className="text-sm text-slate-600">
+                      {locale === "en" ? "days" : "giornate"}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -451,10 +473,10 @@ export function BookingPageClient({
                     aria-pressed={selectedServiceId === service.id}
                   >
                     <span className="block text-base font-bold text-slate-950">
-                      {durationOptionLabel(service)}
+                      {durationOptionLabel(service, locale)}
                     </span>
                     <span className="mt-1 block text-sm text-slate-600">
-                      {durationDetail(service)}
+                      {durationDetail(service, locale)}
                     </span>
                     <span className="mt-4 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
                       {service.priceLabel} {service.priceUnitLabel} · {vatIncludedLabel(locale)}
@@ -466,6 +488,7 @@ export function BookingPageClient({
             <SelectionActions
               canContinue={Boolean(selectedServiceId)}
               onContinue={() => setSelectionStep("booking")}
+              label={copy.continue}
             />
           </SelectionCard>
         )}
@@ -475,10 +498,10 @@ export function BookingPageClient({
             <div className="mb-4 flex flex-col gap-3 rounded-lg border border-white/15 bg-white/10 p-4 text-white sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-100">
-                  Percorso selezionato
+                  {copy.selectedPath}
                 </p>
                 <p className="mt-1 break-words text-xl font-bold">
-                  {selectedBoatTitle} · {experienceTitle(selectedService)}
+                  {selectedBoatTitle} · {experienceTitle(selectedService, locale)}
                 </p>
                 <p className="mt-1 text-sm text-white/75">{selectedDurationLabel}</p>
               </div>
@@ -490,22 +513,26 @@ export function BookingPageClient({
                   liquidGlassButton,
                 )}
               >
-                Cambia selezione
+                {copy.changeSelection}
               </button>
             </div>
 
             <div className="mb-4 grid gap-3 md:grid-cols-3">
-              <InfoTile icon={Clock3} label="Durata" value={selectedDurationLabel} />
+              <InfoTile icon={Clock3} label={copy.duration} value={selectedDurationLabel} />
               <InfoTile
                 icon={Users}
-                label="Capacità"
-                value={`Fino a ${selectedService.capacityMax} persone`}
+                label={copy.capacity}
+                value={`${copy.upTo} ${selectedService.capacityMax} ${copy.people}`}
               />
-              <InfoTile icon={CreditCard} label="Checkout" value={paymentLabel(selectedService)} />
+              <InfoTile
+                icon={CreditCard}
+                label="Checkout"
+                value={paymentLabel(selectedService, locale)}
+              />
             </div>
 
             <h2 id="booking-wizard-title" className="sr-only">
-              Wizard prenotazione {selectedService.title}
+              {copy.bookingWizard} {selectedService.title}
             </h2>
             <BookingWizard
               key={[
@@ -543,16 +570,26 @@ export function BookingPageClient({
 function StepProgress({
   currentStep,
   hasDurationStep,
+  locale,
 }: {
   currentStep: SelectionStep;
   hasDurationStep: boolean;
+  locale: string;
 }) {
-  const steps = [
-    { key: "boat", label: "Mezzo", shortLabel: "Mezzo" },
-    { key: "experience", label: "Esperienza", shortLabel: "Esperienza" },
-    { key: "duration", label: "Durata", shortLabel: "Durata" },
-    { key: "booking", label: "Data e checkout", shortLabel: "Checkout" },
-  ] as const;
+  const steps =
+    locale === "en"
+      ? ([
+          { key: "boat", label: "Boat", shortLabel: "Boat" },
+          { key: "experience", label: "Experience", shortLabel: "Experience" },
+          { key: "duration", label: "Duration", shortLabel: "Duration" },
+          { key: "booking", label: "Date and checkout", shortLabel: "Checkout" },
+        ] as const)
+      : ([
+          { key: "boat", label: "Mezzo", shortLabel: "Mezzo" },
+          { key: "experience", label: "Esperienza", shortLabel: "Esperienza" },
+          { key: "duration", label: "Durata", shortLabel: "Durata" },
+          { key: "booking", label: "Data e checkout", shortLabel: "Checkout" },
+        ] as const);
   const currentIndex = steps.findIndex((step) => step.key === currentStep);
 
   return (
@@ -584,12 +621,14 @@ function SelectionCard({
   title,
   subtitle,
   onBack,
+  backLabel = "Indietro",
   children,
 }: {
   stepLabel: string;
   title: string;
   subtitle: string;
   onBack?: () => void;
+  backLabel?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -614,7 +653,7 @@ function SelectionCard({
               onClick={onBack}
               className="self-start rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
-              Indietro
+              {backLabel}
             </button>
           )}
         </div>
@@ -627,9 +666,11 @@ function SelectionCard({
 function SelectionActions({
   canContinue,
   onContinue,
+  label = "Continua",
 }: {
   canContinue: boolean;
   onContinue: () => void;
+  label?: string;
 }) {
   return (
     <div className="mt-5 border-t border-slate-200 pt-5">
@@ -639,7 +680,7 @@ function SelectionActions({
         disabled={!canContinue}
         className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] px-5 py-3 font-bold text-white disabled:opacity-50"
       >
-        Continua
+        {label}
         <ChevronRight className="size-4" aria-hidden="true" />
       </button>
     </div>
@@ -666,4 +707,64 @@ function InfoTile({
       <p className="mt-1 font-bold">{value}</p>
     </div>
   );
+}
+
+function getBookingPageCopy(locale: string) {
+  if (locale === "en") {
+    return {
+      eyebrow: "Bookings",
+      title: "Book Egadi Islands boat tours online",
+      subtitle:
+        "Choose the boat, experience, duration and available date with updated pricing. Checkout creates a direct booking on the central Egadisailing calendar.",
+      emptyTitle: "No active experiences",
+      emptyText: "There are currently no services available to book online.",
+      chooseBoatTitle: "Choose the boat",
+      chooseBoatSubtitle: "Each boat only shows the experiences actually connected in the database.",
+      bookableOptions: "bookable options",
+      chooseExperienceTitle: "Choose the experience",
+      availableFor: "Experiences available for",
+      selectedBoat: "the selected boat",
+      durationToChoose: "Duration to choose",
+      chooseDurationTitle: "Choose the duration",
+      chooseDurationSubtitle:
+        "The duration determines the actual service used for prices, availability and checkout.",
+      continue: "Continue",
+      back: "Back",
+      selectedPath: "Selected path",
+      changeSelection: "Change selection",
+      duration: "Duration",
+      capacity: "Capacity",
+      upTo: "Up to",
+      people: "people",
+      bookingWizard: "Booking wizard",
+    };
+  }
+
+  return {
+    eyebrow: "Prenotazioni",
+    title: "Prenota escursioni in barca alle Isole Egadi online",
+    subtitle:
+      "Scegli mezzo, esperienza, durata e data disponibile con prezzo aggiornato. Il checkout crea una prenotazione diretta sul calendario centrale Egadisailing.",
+    emptyTitle: "Nessuna esperienza attiva",
+    emptyText: "Al momento non ci sono servizi prenotabili online.",
+    chooseBoatTitle: "Scegli il mezzo",
+    chooseBoatSubtitle: "Ogni mezzo mostra solo le esperienze realmente collegate nel database.",
+    bookableOptions: "opzioni prenotabili",
+    chooseExperienceTitle: "Scegli l'esperienza",
+    availableFor: "Esperienze disponibili per",
+    selectedBoat: "il mezzo selezionato",
+    durationToChoose: "Durata da scegliere",
+    chooseDurationTitle: "Scegli per quanto tempo",
+    chooseDurationSubtitle:
+      "La durata determina il servizio reale usato da prezzi, disponibilità e checkout.",
+    continue: "Continua",
+    back: "Indietro",
+    selectedPath: "Percorso selezionato",
+    changeSelection: "Cambia selezione",
+    duration: "Durata",
+    capacity: "Capacità",
+    upTo: "Fino a",
+    people: "persone",
+    bookingWizard: "Wizard prenotazione",
+  };
 }

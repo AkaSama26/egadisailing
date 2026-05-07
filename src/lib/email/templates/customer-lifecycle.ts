@@ -139,19 +139,29 @@ export function changeRequestRejectedTemplate(data: ChangeRequestData) {
 export interface ContactAutoReplyData {
   customerName: string;
   subject: string;
+  locale?: "it" | "en";
 }
 
 export function contactAutoReplyTemplate(data: ContactAutoReplyData) {
-  const subject = `Messaggio ricevuto · Egadisailing`;
+  const isEn = data.locale === "en";
+  const subject = isEn ? "Message received · Egadisailing" : "Messaggio ricevuto · Egadisailing";
   const html = emailLayout({
-    heading: "Messaggio ricevuto",
-    bodyHtml: `
-      <p>Ciao ${escapeHtml(data.customerName)},</p>
-      <p>abbiamo ricevuto il tuo messaggio: <strong>${escapeHtml(data.subject)}</strong>.</p>
-      <p>Ti risponderemo appena possibile, normalmente entro 24 ore.</p>
-    `,
+    heading: isEn ? "Message received" : "Messaggio ricevuto",
+    bodyHtml: isEn
+      ? `
+        <p>Hello ${escapeHtml(data.customerName)},</p>
+        <p>we have received your message: <strong>${escapeHtml(data.subject)}</strong>.</p>
+        <p>We will reply as soon as possible, usually within 24 hours.</p>
+      `
+      : `
+        <p>Ciao ${escapeHtml(data.customerName)},</p>
+        <p>abbiamo ricevuto il tuo messaggio: <strong>${escapeHtml(data.subject)}</strong>.</p>
+        <p>Ti risponderemo appena possibile, normalmente entro 24 ore.</p>
+      `,
   });
-  const text = `Ciao ${data.customerName}, abbiamo ricevuto il tuo messaggio: ${data.subject}. Ti risponderemo entro 24 ore.`;
+  const text = isEn
+    ? `Hello ${data.customerName}, we have received your message: ${data.subject}. We will reply within 24 hours.`
+    : `Ciao ${data.customerName}, abbiamo ricevuto il tuo messaggio: ${data.subject}. Ti risponderemo entro 24 ore.`;
   return { subject, html, text };
 }
 

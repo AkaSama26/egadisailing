@@ -85,6 +85,7 @@ export function RecuperaPrenotazioneClient({
   return (
     <div className="space-y-6">
       <form action={requestAction} className="space-y-4">
+        <input type="hidden" name="locale" value={locale} />
         <label className="block text-sm font-bold text-slate-800" htmlFor="req-email">
           {copy.emailLabel}
         </label>

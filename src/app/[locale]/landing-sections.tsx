@@ -492,46 +492,57 @@ function ExperienceRow({
 export function LandingSections({ services }: LandingSectionsProps) {
   const t = useTranslations();
   const locale = useLocale();
+  const isEn = locale === "en";
   const maxPax = (serviceIds: string[]) => getMaxCapacity(services, serviceIds);
   const featuredPackages: FeaturedPackage[] = [
     {
       key: "chef-a-bordo",
-      eyebrow: "Premium privato",
-      title: "Chef a bordo",
+      eyebrow: isEn ? "Private premium" : "Premium privato",
+      title: isEn ? "Chef on board" : "Chef a bordo",
       subtitle:
-        "Il Trimarano in esclusiva, con chef, skipper e hostess per una giornata curata tra sapori locali, mare e soste in rada.",
-      durationLabel: "8 ore",
-      detailLabel: `Max ${maxPax(["exclusive-experience"])} pax`,
-      chips: ["Pranzo in rada", "Chef e hostess"],
+        isEn
+          ? "The Trimarano reserved for you, with chef, skipper and hostess for a curated day of local flavours, sea and stops at anchor."
+          : "Il Trimarano in esclusiva, con chef, skipper e hostess per una giornata curata tra sapori locali, mare e soste in rada.",
+      durationLabel: isEn ? "8 hours" : "8 ore",
+      detailLabel: isEn
+        ? `Up to ${maxPax(["exclusive-experience"])} guests`
+        : `Max ${maxPax(["exclusive-experience"])} pax`,
+      chips: isEn ? ["Lunch at anchor", "Chef and hostess"] : ["Pranzo in rada", "Chef e hostess"],
       details: [
         {
-          title: "Per chi",
-          text: "Coppie, famiglie o gruppi che vogliono l'esperienza più completa e senza pensieri.",
+          title: isEn ? "Best for" : "Per chi",
+          text: isEn
+            ? "Couples, families or groups who want the most complete and effortless experience."
+            : "Coppie, famiglie o gruppi che vogliono l'esperienza più completa e senza pensieri.",
         },
         {
-          title: "A bordo",
-          text: "Trimarano privato, crew dedicata, tavola preparata e tempi gestiti con calma.",
+          title: isEn ? "On board" : "A bordo",
+          text: isEn
+            ? "Private Trimarano, dedicated crew, prepared table and a calmly managed schedule."
+            : "Trimarano privato, crew dedicata, tavola preparata e tempi gestiti con calma.",
         },
         {
-          title: "Rotta",
-          text: "Favignana e Levanzo, con baie scelte in base a mare, vento e luce della giornata.",
+          title: isEn ? "Route" : "Rotta",
+          text: isEn
+            ? "Favignana and Levanzo, with bays chosen according to sea, wind and the light of the day."
+            : "Favignana e Levanzo, con baie scelte in base a mare, vento e luce della giornata.",
         },
       ],
       href: `/${locale}/experiences/exclusive-experience`,
-      ctaLabel: "Scopri di più",
+      ctaLabel: isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
-          caption: "Chef a bordo",
+          caption: isEn ? "Chef on board" : "Chef a bordo",
           color: "#FFB6C1",
           src: "/images/experience-polaroids/chef-a-bordo-cucina.webp",
         },
         {
-          caption: "Aperitivo al tramonto",
+          caption: isEn ? "Sunset aperitivo" : "Aperitivo al tramonto",
           color: "#FFDAB9",
           src: "/images/experience-polaroids/chef-a-bordo-rada.webp",
         },
         {
-          caption: "Trimarano unico",
+          caption: isEn ? "Unique Trimarano" : "Trimarano unico",
           color: "#DDA0DD",
           src: "/images/boats/neel-47/neel-47-hero.webp",
         },
@@ -539,42 +550,50 @@ export function LandingSections({ services }: LandingSectionsProps) {
     },
     {
       key: "charter",
-      eyebrow: "Esplora le Egadi",
-      title: "Charter",
+      eyebrow: isEn ? "Explore the Egadi Islands" : "Esplora le Egadi",
+      title: isEn ? "Charter" : "Charter",
       subtitle:
-        "Da 3 a 7 giornate sul trimarano, con rotta concordata tra Favignana, Levanzo e Marettimo e notti vissute vicino al mare.",
-      durationLabel: "3-7 giornate",
-      detailLabel: "Itinerario su misura",
-      chips: ["Notti a bordo", "Rotta flessibile"],
+        isEn
+          ? "Three to seven days on the trimaran, with a route agreed between Favignana, Levanzo and Marettimo and nights spent close to the sea."
+          : "Da 3 a 7 giornate sul trimarano, con rotta concordata tra Favignana, Levanzo e Marettimo e notti vissute vicino al mare.",
+      durationLabel: isEn ? "3-7 days" : "3-7 giornate",
+      detailLabel: isEn ? "Tailored itinerary" : "Itinerario su misura",
+      chips: isEn ? ["Nights on board", "Flexible route"] : ["Notti a bordo", "Rotta flessibile"],
       details: [
         {
-          title: "Per chi",
-          text: "Chi vuole dormire a bordo e vivere le Egadi senza il rientro obbligato della sera.",
+          title: isEn ? "Best for" : "Per chi",
+          text: isEn
+            ? "Guests who want to sleep on board and experience the Egadi Islands without returning every evening."
+            : "Chi vuole dormire a bordo e vivere le Egadi senza il rientro obbligato della sera.",
         },
         {
-          title: "A bordo",
-          text: "Cabine, spazi comuni, cucina e skipper: il trimarano diventa una casa sul mare.",
+          title: isEn ? "On board" : "A bordo",
+          text: isEn
+            ? "Cabins, shared spaces, galley and skipper: the trimaran becomes a home at sea."
+            : "Cabine, spazi comuni, cucina e skipper: il trimarano diventa una casa sul mare.",
         },
         {
-          title: "Rotta",
-          text: "Favignana, Levanzo e Marettimo entrano nel programma secondo durata e meteo.",
+          title: isEn ? "Route" : "Rotta",
+          text: isEn
+            ? "Favignana, Levanzo and Marettimo become part of the plan according to duration and weather."
+            : "Favignana, Levanzo e Marettimo entrano nel programma secondo durata e meteo.",
         },
       ],
       href: `/${locale}/experiences/charter`,
-      ctaLabel: "Scopri di più",
+      ctaLabel: isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
-          caption: "Trimarano Egadi",
+          caption: isEn ? "Egadi Trimarano" : "Trimarano Egadi",
           color: "#ADD8E6",
           src: "/images/experience-polaroids/charter-trimarano-egadi.webp",
         },
         {
-          caption: "Vita a bordo",
+          caption: isEn ? "Life on board" : "Vita a bordo",
           color: "#B2DFDB",
           src: "/images/experience-polaroids/charter-cabina-bordo.webp",
         },
         {
-          caption: "Rada tranquilla",
+          caption: isEn ? "Quiet anchorage" : "Rada tranquilla",
           color: "#C5CAE9",
           src: "/images/experience-polaroids/charter-rada-tranquilla.webp",
         },
@@ -582,37 +601,45 @@ export function LandingSections({ services }: LandingSectionsProps) {
     },
     {
       key: "barca-4-ore",
-      eyebrow: "Mezza giornata",
-      title: "Barca 4 ore",
+      eyebrow: isEn ? "Half-day" : "Mezza giornata",
+      title: isEn ? "4-hour boat tour" : "Barca 4 ore",
       subtitle:
-        "La formula agile in esclusiva per vivere le Egadi in mezza giornata, con bagno, navigazione panoramica e rotta scelta in base al mare.",
-      durationLabel: "4 ore",
-      detailLabel: "Solo esclusivo",
-      chips: ["Mattina o pomeriggio", "Rientro preciso"],
+        isEn
+          ? "The agile private formula for experiencing the Egadi Islands in half a day, with swimming, scenic cruising and a route chosen according to the sea."
+          : "La formula agile in esclusiva per vivere le Egadi in mezza giornata, con bagno, navigazione panoramica e rotta scelta in base al mare.",
+      durationLabel: isEn ? "4 hours" : "4 ore",
+      detailLabel: isEn ? "Private only" : "Solo esclusivo",
+      chips: isEn ? ["Morning or afternoon", "Clear return time"] : ["Mattina o pomeriggio", "Rientro preciso"],
       details: [
         {
-          title: "Per chi",
-          text: "Perfetta se hai poco tempo ma vuoi comunque mare, tuffo e una rotta bella da ricordare.",
+          title: isEn ? "Best for" : "Per chi",
+          text: isEn
+            ? "Perfect if you have limited time but still want the sea, a swim and a memorable route."
+            : "Perfetta se hai poco tempo ma vuoi comunque mare, tuffo e una rotta bella da ricordare.",
         },
         {
-          title: "A bordo",
-          text: "Barca privata con skipper e soste compatte nelle acque più riparate.",
+          title: isEn ? "On board" : "A bordo",
+          text: isEn
+            ? "Private boat with skipper and compact stops in the most sheltered waters."
+            : "Barca privata con skipper e soste compatte nelle acque più riparate.",
         },
         {
-          title: "Rotta",
-          text: "Favignana o Levanzo, scegliendo la cala migliore raggiungibile in sicurezza in 4 ore.",
+          title: isEn ? "Route" : "Rotta",
+          text: isEn
+            ? "Favignana or Levanzo, choosing the best cove that can be reached safely in 4 hours."
+            : "Favignana o Levanzo, scegliendo la cala migliore raggiungibile in sicurezza in 4 ore.",
         },
       ],
       href: `/${locale}/experiences/boat-exclusive-afternoon`,
-      ctaLabel: "Scopri di più",
+      ctaLabel: isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
-          caption: "Tour agile",
+          caption: isEn ? "Agile tour" : "Tour agile",
           color: "#BFDBFE",
           src: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
         },
         {
-          caption: "Tuffo veloce",
+          caption: isEn ? "Quick swim" : "Tuffo veloce",
           color: "#A7F3D0",
           src: "/images/experience-polaroids/barca-4-ore-tuffo.webp",
         },
@@ -625,49 +652,57 @@ export function LandingSections({ services }: LandingSectionsProps) {
     },
     {
       key: "barca-8-ore",
-      eyebrow: "Giornata intera",
-      title: "Barca 8 ore",
+      eyebrow: isEn ? "Full day" : "Giornata intera",
+      title: isEn ? "8-hour boat tour" : "Barca 8 ore",
       subtitle:
-        "Una giornata completa tra baie, snorkeling e tempo lento a bordo, disponibile con posti condivisi o barca in esclusiva.",
-      durationLabel: "8 ore",
-      detailLabel: "Condiviso o esclusivo",
-      chips: ["Snorkeling", "Favignana e Levanzo"],
+        isEn
+          ? "A full day among bays, snorkelling and slow time on board, available as shared seats or a private boat."
+          : "Una giornata completa tra baie, snorkeling e tempo lento a bordo, disponibile con posti condivisi o barca in esclusiva.",
+      durationLabel: isEn ? "8 hours" : "8 ore",
+      detailLabel: isEn ? "Shared or private" : "Condiviso o esclusivo",
+      chips: isEn ? ["Snorkelling", "Favignana and Levanzo"] : ["Snorkeling", "Favignana e Levanzo"],
       details: [
         {
-          title: "Per chi",
-          text: "La scelta migliore se vuoi più tempo in acqua, meno fretta e più flessibilità tra le cale.",
+          title: isEn ? "Best for" : "Per chi",
+          text: isEn
+            ? "The best choice if you want more time in the water, less rush and more flexibility between coves."
+            : "La scelta migliore se vuoi più tempo in acqua, meno fretta e più flessibilità tra le cale.",
         },
         {
-          title: "A bordo",
-          text: "Formula condivisa o privata, skipper incluso e soste gestite secondo il ritmo del gruppo.",
+          title: isEn ? "On board" : "A bordo",
+          text: isEn
+            ? "Shared or private format, skipper included and stops managed around the rhythm of the group."
+            : "Formula condivisa o privata, skipper incluso e soste gestite secondo il ritmo del gruppo.",
         },
         {
-          title: "Rotta",
-          text: "Giornata tra Favignana e Levanzo, con scalo a Favignana per pranzo, bagno, snorkeling e rientro morbido verso Trapani.",
+          title: isEn ? "Route" : "Rotta",
+          text: isEn
+            ? "A day between Favignana and Levanzo, with a Favignana stop for lunch, swimming, snorkelling and an easy return towards Trapani."
+            : "Giornata tra Favignana e Levanzo, con scalo a Favignana per pranzo, bagno, snorkeling e rientro morbido verso Trapani.",
         },
       ],
       href: `/${locale}/experiences/boat-shared-full-day`,
-      ctaLabel: "Scopri di più",
+      ctaLabel: isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
-          caption: "Giornata intera",
+          caption: isEn ? "Full day" : "Giornata intera",
           color: "#A7F3D0",
           src: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
         },
         {
-          caption: "Snorkeling",
+          caption: isEn ? "Snorkelling" : "Snorkeling",
           color: "#BFDBFE",
           src: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
         },
         {
-          caption: "Tramonto",
+          caption: isEn ? "Sunset" : "Tramonto",
           color: "#FED7AA",
           src: "/images/experience-polaroids/barca-8-ore-tramonto.webp",
         },
       ],
     },
   ]
-    .filter((item) => item.detailLabel !== "Max 0 pax")
+    .filter((item) => !item.detailLabel.startsWith("Max 0") && !item.detailLabel.startsWith("Up to 0"))
     .sort(
       (a, b) =>
         (featuredPackageOrder[a.key] ?? Number.MAX_SAFE_INTEGER) -
@@ -730,7 +765,9 @@ export function LandingSections({ services }: LandingSectionsProps) {
                   viewport={{ once: true, margin: "-100px" }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
                 >
-                  La scelta giusta per il tuo tour in barca alle Isole Egadi
+                  {isEn
+                    ? "The right choice for your boat tour in the Egadi Islands"
+                    : "La scelta giusta per il tuo tour in barca alle Isole Egadi"}
                 </motion.h2>
                 <motion.svg
                   viewBox="0 0 400 20"
@@ -765,8 +802,9 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 </motion.svg>
               </div>
               <p className="mx-auto mt-8 max-w-3xl text-base leading-relaxed text-white/70 md:text-lg">
-                A bordo trovi rotte curate, sapori locali e una crew che conosce il mare delle Egadi:
-                dall&apos;esperienza con chef sul trimarano ai tour in barca tra Favignana e Levanzo.
+                {isEn
+                  ? "On board, you will find curated routes, local flavours and a crew that knows the Egadi sea: from the chef experience on the trimaran to boat tours between Favignana and Levanzo."
+                  : "A bordo trovi rotte curate, sapori locali e una crew che conosce il mare delle Egadi: dall'esperienza con chef sul trimarano ai tour in barca tra Favignana e Levanzo."}
               </p>
             </div>
           </ScrollSection>
@@ -774,23 +812,26 @@ export function LandingSections({ services }: LandingSectionsProps) {
           <div className="grid items-stretch gap-10 lg:min-h-[620px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
             <ScrollSection animation="fade-left" className="space-y-7">
               <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
-                Cooking experience
+                  {isEn ? "Cooking experience" : "Cooking experience"}
               </p>
               <div className="space-y-5">
                 <h2 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                  Chef a bordo durante il tuo tour alle Egadi
+                  {isEn
+                    ? "Chef on board during your Egadi tour"
+                    : "Chef a bordo durante il tuo tour alle Egadi"}
                 </h2>
                 <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
-                  Lo chef prepara a bordo piatti ispirati alla cucina siciliana e al mare di Trapani,
-                  trasformando la sosta in rada in un momento conviviale, curato e profondamente locale.
-                  Non è solo pranzo: è una parte viva dell&apos;esperienza Egadisailing.
+                  {isEn
+                    ? "The chef prepares dishes on board inspired by Sicilian cooking and the sea of Trapani, turning the stop at anchor into a convivial, curated and deeply local moment. It is not just lunch: it is a living part of the Egadisailing experience."
+                    : "Lo chef prepara a bordo piatti ispirati alla cucina siciliana e al mare di Trapani, trasformando la sosta in rada in un momento conviviale, curato e profondamente locale. Non è solo pranzo: è una parte viva dell'esperienza Egadisailing."}
                 </p>
               </div>
               <Link
                 href={`/${locale}/experiences/exclusive-experience`}
                 className="inline-flex items-center gap-2 text-base font-semibold text-[var(--color-gold)] transition-all hover:gap-3 md:text-lg"
               >
-                Scopri i menù <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                {isEn ? "Discover the menus" : "Scopri i menù"}{" "}
+                <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             </ScrollSection>
 
@@ -799,7 +840,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 <div className="relative z-10 h-full min-h-[520px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.28)]">
                   <Image
                     src="/images/egadisailing-experience/01-cooking-experience-chef-a-bordo.webp"
-                    alt="Chef a bordo durante un tour in barca alle Isole Egadi"
+	                    alt={isEn ? "Chef on board during a boat tour in the Egadi Islands" : "Chef a bordo durante un tour in barca alle Isole Egadi"}
                     fill
                     sizes="(min-width: 1024px) 50vw, 100vw"
                     className="object-cover"
@@ -827,7 +868,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
                   <Image
                     src="/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp"
-                    alt="Isole Egadi viste dal mare durante un tour in barca"
+	                    alt={isEn ? "Egadi Islands seen from the sea during a boat tour" : "Isole Egadi viste dal mare durante un tour in barca"}
                     fill
                     sizes="(min-width: 1024px) 52vw, 100vw"
                     className="object-cover"
@@ -851,16 +892,16 @@ export function LandingSections({ services }: LandingSectionsProps) {
             <ScrollSection animation="fade-right" className="order-1 flex items-center lg:order-2">
               <div className="space-y-7">
                 <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
-                  Prospettiva dal mare
+	                  {isEn ? "Perspective from the sea" : "Prospettiva dal mare"}
                 </p>
                 <div className="space-y-5">
                   <h2 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                    Le Isole Egadi come non le hai mai viste
+	                    {isEn ? "The Egadi Islands as you have never seen them" : "Le Isole Egadi come non le hai mai viste"}
                   </h2>
                   <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
-                    Scopri Favignana, Levanzo e Marettimo da una prospettiva diversa,
-                    tra baie raggiungibili solo via mare, soste in rada e scorci che
-                    cambiano con la luce del giorno.
+	                    {isEn
+	                      ? "Discover Favignana, Levanzo and Marettimo from a different perspective, among bays reachable only by sea, stops at anchor and views that change with the light of the day."
+	                      : "Scopri Favignana, Levanzo e Marettimo da una prospettiva diversa, tra baie raggiungibili solo via mare, soste in rada e scorci che cambiano con la luce del giorno."}
                   </p>
                 </div>
               </div>
@@ -875,12 +916,12 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 </p>
                 <div className="space-y-5">
                   <h2 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                    Nuota nelle acque cristalline di Cala Rossa
+	                    {isEn ? "Swim in the crystal-clear waters of Cala Rossa" : "Nuota nelle acque cristalline di Cala Rossa"}
                   </h2>
                   <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
-                    Tuffati nelle sfumature turchesi di Cala Rossa, una delle baie
-                    più iconiche di Favignana, con tempo per nuotare, rilassarti
-                    e vivere il mare delle Egadi da vicino.
+	                    {isEn
+	                      ? "Dive into the turquoise shades of Cala Rossa, one of Favignana's most iconic bays, with time to swim, relax and experience the Egadi sea up close."
+	                      : "Tuffati nelle sfumature turchesi di Cala Rossa, una delle baie più iconiche di Favignana, con tempo per nuotare, rilassarti e vivere il mare delle Egadi da vicino."}
                   </p>
                 </div>
               </div>
@@ -891,7 +932,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
                   <Image
                     src="/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp"
-                    alt="Donna che nuota nelle acque cristalline di Cala Rossa a Favignana"
+	                    alt={isEn ? "Woman swimming in the crystal-clear waters of Cala Rossa in Favignana" : "Donna che nuota nelle acque cristalline di Cala Rossa a Favignana"}
                     fill
                     sizes="(min-width: 1024px) 52vw, 100vw"
                     className="object-cover"
@@ -919,7 +960,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
                   <Image
                     src="/images/egadisailing-experience/04-aperitivo-tramonto-isole-egadi.webp"
-                    alt="Gruppo che fa aperitivo in barca al tramonto con le Isole Egadi sullo sfondo"
+	                    alt={isEn ? "Group enjoying an aperitivo on a boat at sunset with the Egadi Islands in the background" : "Gruppo che fa aperitivo in barca al tramonto con le Isole Egadi sullo sfondo"}
                     fill
                     sizes="(min-width: 1024px) 54vw, 100vw"
                     className="object-cover"
@@ -943,16 +984,16 @@ export function LandingSections({ services }: LandingSectionsProps) {
             <ScrollSection animation="fade-right" className="order-1 flex items-center lg:order-2">
               <div className="space-y-7">
                 <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
-                  Tramonto in rada
+	                  {isEn ? "Sunset at anchor" : "Tramonto in rada"}
                 </p>
                 <div className="space-y-5">
                   <h2 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                    Aperitivo al tramonto alle Isole Egadi
+	                    {isEn ? "Sunset aperitivo in the Egadi Islands" : "Aperitivo al tramonto alle Isole Egadi"}
                   </h2>
                   <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
-                    Brinda in rada mentre il sole scende dietro le Isole Egadi,
-                    con il gruppo a bordo, il mare intorno e quella luce dorata
-                    che trasforma il rientro in uno dei momenti più belli della giornata.
+	                    {isEn
+	                      ? "Raise a glass at anchor as the sun drops behind the Egadi Islands, with your group on board, the sea all around and that golden light that turns the return into one of the most beautiful moments of the day."
+	                      : "Brinda in rada mentre il sole scende dietro le Isole Egadi, con il gruppo a bordo, il mare intorno e quella luce dorata che trasforma il rientro in uno dei momenti più belli della giornata."}
                   </p>
                 </div>
               </div>
@@ -973,9 +1014,11 @@ export function LandingSections({ services }: LandingSectionsProps) {
         <div className="relative z-10 max-w-7xl mx-auto">
           <ScrollSection animation="fade-up">
             <div className="text-center mb-20">
-              <RevealTitle text="Fatti Convincere" />
+              <RevealTitle text={isEn ? "Let our guests convince you" : "Fatti convincere"} />
               <p className="text-white/50 text-lg mt-6">
-                Recensioni verificate da Google e Tripadvisor
+                {isEn
+                  ? "Verified reviews from Google and Tripadvisor"
+                  : "Recensioni verificate da Google e Tripadvisor"}
               </p>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-4">
                 <a
@@ -984,7 +1027,8 @@ export function LandingSections({ services }: LandingSectionsProps) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] transition hover:text-[#f2b84b]"
                 >
-                  Leggi su Google <ExternalLink className="h-4 w-4" aria-hidden="true" />
+	                  {isEn ? "Read on Google" : "Leggi su Google"}{" "}
+	                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 </a>
                 <a
                   href={tripadvisorReviewsUrl}
@@ -992,7 +1036,8 @@ export function LandingSections({ services }: LandingSectionsProps) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] transition hover:text-[#f2b84b]"
                 >
-                  Leggi su Tripadvisor <ExternalLink className="h-4 w-4" aria-hidden="true" />
+	                  {isEn ? "Read on Tripadvisor" : "Leggi su Tripadvisor"}{" "}
+	                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 </a>
               </div>
             </div>
@@ -1027,7 +1072,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
           <ScrollSection animation="fade-up">
             <div className="relative inline-block mb-8">
               <h2 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-white relative z-10">
-                Lascia la Terra Ferma
+	                {isEn ? "Leave the shore behind" : "Lascia la terra ferma"}
               </h2>
               {/* SVG brush stroke under title */}
               <svg
@@ -1062,7 +1107,9 @@ export function LandingSections({ services }: LandingSectionsProps) {
               </svg>
             </div>
             <p className="text-white/60 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
-              Prenota la tua esperienza nelle Isole Egadi. Scegli la data, sali a bordo.
+	              {isEn
+	                ? "Book your experience in the Egadi Islands. Choose your date, then come on board."
+	                : "Prenota la tua esperienza nelle Isole Egadi. Scegli la data, sali a bordo."}
             </p>
             <div className="flex justify-center">
               <BookingSearch services={services} />

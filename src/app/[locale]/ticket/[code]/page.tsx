@@ -7,22 +7,21 @@ import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 import { buildTicketUrl, ticketSlotLabel } from "@/lib/booking/ticket";
 import { createQrSvg } from "@/lib/qr-code";
 import { formatEurWithVat, formatEurCentsWithVat } from "@/lib/pricing/vat";
-import { formatItDateTime, formatItDay } from "@/lib/dates";
 import { PrintTicketButton } from "./print-button";
 import { QrDownloadButton } from "@/components/qr-download-button";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 
-export const metadata: Metadata = {
-  title: "Biglietto Egadisailing",
-  robots: { index: false, follow: false },
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "In attesa",
-  CONFIRMED: "Confermato",
-  CANCELLED: "Cancellato",
-  REFUNDED: "Rimborsato",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: locale === "en" ? "Booking ticket" : "Biglietto prenotazione",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function TicketPage({
   params,
@@ -41,36 +40,30 @@ export default async function TicketPage({
   });
   if (!booking) notFound();
 
+  const copy = getTicketCopy(locale);
   const ticketUrl = buildTicketUrl(booking.confirmationCode, locale);
   const qrSvg = createQrSvg(ticketUrl, { scale: 5, border: 4 });
   const paid = booking.payments
     .filter((p) => p.status === "SUCCEEDED" && p.type !== "REFUND")
     .reduce((acc, p) => acc.plus(p.amount.toString()), new Decimal(0));
   const customerName = `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
-  const statusLabel = STATUS_LABELS[booking.status] ?? booking.status;
+  const statusLabel = getTicketStatusLabel(booking.status, locale);
   const isValid = booking.status === "CONFIRMED";
   const paidCents = paid.mul(100).toNumber();
   const totalCents = new Decimal(booking.totalPrice.toString()).mul(100).toNumber();
   const balanceCents = Math.max(0, totalCents - paidCents);
-  const guestBreakdown = [
-    booking.adultCount ? `${booking.adultCount} adulti` : null,
-    booking.childCount ? `${booking.childCount} bambini 5-9` : null,
-    booking.freeChildSeatCount ? `${booking.freeChildSeatCount} bimbi 3-4` : null,
-    booking.infantCount ? `${booking.infantCount} neonati 0-2` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const guestBreakdown = getTicketGuestBreakdown(booking, locale);
   const bookingRows: Array<[string, string]> = [
-    ["Codice", booking.confirmationCode],
-    ["Canale", booking.source],
-    ["Data prenotazione", formatItDateTime(booking.createdAt)],
-    ["Totale", formatEurWithVat(booking.totalPrice, locale)],
-    ["Pagato", formatEurWithVat(paid, locale)],
+    [copy.code, booking.confirmationCode],
+    [copy.channel, booking.source],
+    [copy.bookingDate, formatPublicDateTime(booking.createdAt, locale)],
+    [copy.total, formatEurWithVat(booking.totalPrice, locale)],
+    [copy.paid, formatEurWithVat(paid, locale)],
   ];
   if (balanceCents > 0) {
     bookingRows.push([
-      "Saldo in loco",
-      `${formatEurCentsWithVat(balanceCents, locale)} · da pagare in loco prima della partenza`,
+      copy.balanceOnSite,
+      `${formatEurCentsWithVat(balanceCents, locale)} · ${copy.balanceNote}`,
     ]);
   }
 
@@ -82,15 +75,17 @@ export default async function TicketPage({
             href={`/${locale}/b/sessione`}
             className="rounded-lg border border-white/20 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-white"
           >
-            Area prenotazioni
+            {copy.bookingArea}
           </Link>
           <div className="flex flex-wrap justify-end gap-2">
             <QrDownloadButton
               svg={qrSvg}
               fileName={`egadisailing-${booking.confirmationCode}-qr.svg`}
               className="rounded border px-4 py-2"
-            />
-            <PrintTicketButton />
+            >
+              {copy.downloadQr}
+            </QrDownloadButton>
+            <PrintTicketButton label={copy.print} />
           </div>
         </div>
 
@@ -101,9 +96,9 @@ export default async function TicketPage({
             </p>
             <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h1 className="text-3xl font-bold">Biglietto</h1>
+                <h1 className="text-3xl font-bold">{copy.ticket}</h1>
                 <p className="text-sm text-white/75 print:text-slate-600">
-                  Codice prenotazione {booking.confirmationCode}
+                  {copy.bookingCode} {booking.confirmationCode}
                 </p>
               </div>
               <div
@@ -123,39 +118,39 @@ export default async function TicketPage({
                 dangerouslySetInnerHTML={{ __html: qrSvg }}
               />
               <p className="text-center text-xs text-slate-500">
-                Presenta questo QR al check-in.
+                {copy.presentQr}
               </p>
               {!isValid && (
                 <p className="rounded bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-                  Questo biglietto non risulta confermato.
+                  {copy.notConfirmed}
                 </p>
               )}
               {booking.checkedInAt && (
                 <p className="rounded bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">
-                  Check-in registrato il {formatItDateTime(booking.checkedInAt)}.
+                  {copy.checkedInAt} {formatPublicDateTime(booking.checkedInAt, locale)}.
                 </p>
               )}
             </div>
 
             <div className="space-y-5">
               <TicketBlock
-                title="Esperienza"
+                title={copy.experience}
                 rows={[
-                  ["Esperienza", booking.service.name],
-                  ["Mezzo", booking.boat.name],
-                  ["Data esperienza", formatItDay(booking.startDate)],
-                  ["Orario", ticketSlotLabel(booking.service.durationType)],
-                  ["Ospiti", guestBreakdown || String(booking.numPeople)],
-                  ["Posti occupati", String(booking.numPeople)],
+                  [copy.experience, booking.service.name],
+                  [copy.boat, booking.boat.name],
+                  [copy.experienceDate, formatPublicDay(booking.startDate, locale)],
+                  [copy.time, ticketSlotLabel(booking.service.durationType, locale)],
+                  [copy.guests, guestBreakdown || String(booking.numPeople)],
+                  [copy.seatsUsed, String(booking.numPeople)],
                 ]}
               />
-              <TicketBlock title="Prenotazione" rows={bookingRows} />
+              <TicketBlock title={copy.booking} rows={bookingRows} />
               <TicketBlock
-                title="Intestatario"
+                title={copy.holder}
                 rows={[
-                  ["Nome", customerName],
+                  [copy.name, customerName],
                   ["Email", booking.customer.email],
-                  ["Telefono", booking.customer.phone || "Non indicato"],
+                  [copy.phone, booking.customer.phone || copy.notProvided],
                 ]}
               />
             </div>
@@ -164,6 +159,129 @@ export default async function TicketPage({
       </div>
     </OceanLayout>
   );
+}
+
+function getTicketStatusLabel(status: string, locale?: string | null): string {
+  const isEn = locale === "en";
+  const labels: Record<string, string> = isEn
+    ? {
+        PENDING: "Pending",
+        CONFIRMED: "Confirmed",
+        CANCELLED: "Cancelled",
+        REFUNDED: "Refunded",
+      }
+    : {
+        PENDING: "In attesa",
+        CONFIRMED: "Confermato",
+        CANCELLED: "Cancellato",
+        REFUNDED: "Rimborsato",
+      };
+  return labels[status] ?? status;
+}
+
+function getTicketGuestBreakdown(
+  booking: {
+    numPeople: number;
+    adultCount: number;
+    childCount: number;
+    freeChildSeatCount: number;
+    infantCount: number;
+  },
+  locale?: string | null,
+): string {
+  const isEn = locale === "en";
+  return [
+    booking.adultCount ? `${booking.adultCount} ${isEn ? "adults" : "adulti"}` : null,
+    booking.childCount ? `${booking.childCount} ${isEn ? "children 5-9" : "bambini 5-9"}` : null,
+    booking.freeChildSeatCount
+      ? `${booking.freeChildSeatCount} ${isEn ? "children 3-4" : "bimbi 3-4"}`
+      : null,
+    booking.infantCount ? `${booking.infantCount} ${isEn ? "infants 0-2" : "neonati 0-2"}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function formatPublicDay(date: Date, locale?: string | null): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function formatPublicDateTime(date: Date, locale?: string | null): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getTicketCopy(locale?: string | null) {
+  if (locale === "en") {
+    return {
+      bookingArea: "Booking area",
+      downloadQr: "Download QR",
+      print: "Print",
+      ticket: "Ticket",
+      bookingCode: "Booking code",
+      presentQr: "Show this QR code at check-in.",
+      notConfirmed: "This ticket is not confirmed yet.",
+      checkedInAt: "Check-in registered on",
+      experience: "Experience",
+      boat: "Boat",
+      experienceDate: "Experience date",
+      time: "Time",
+      guests: "Guests",
+      seatsUsed: "Seats used",
+      booking: "Booking",
+      holder: "Holder",
+      name: "Name",
+      phone: "Phone",
+      notProvided: "Not provided",
+      code: "Code",
+      channel: "Channel",
+      bookingDate: "Booking date",
+      total: "Total",
+      paid: "Paid",
+      balanceOnSite: "Balance on site",
+      balanceNote: "to be paid on site before departure",
+    };
+  }
+
+  return {
+    bookingArea: "Area prenotazioni",
+    downloadQr: "Scarica QR",
+    print: "Stampa",
+    ticket: "Biglietto",
+    bookingCode: "Codice prenotazione",
+    presentQr: "Presenta questo QR al check-in.",
+    notConfirmed: "Questo biglietto non risulta confermato.",
+    checkedInAt: "Check-in registrato il",
+    experience: "Esperienza",
+    boat: "Mezzo",
+    experienceDate: "Data esperienza",
+    time: "Orario",
+    guests: "Ospiti",
+    seatsUsed: "Posti occupati",
+    booking: "Prenotazione",
+    holder: "Intestatario",
+    name: "Nome",
+    phone: "Telefono",
+    notProvided: "Non indicato",
+    code: "Codice",
+    channel: "Canale",
+    bookingDate: "Data prenotazione",
+    total: "Totale",
+    paid: "Pagato",
+    balanceOnSite: "Saldo in loco",
+    balanceNote: "da pagare in loco prima della partenza",
+  };
 }
 
 function TicketBlock({ title, rows }: { title: string; rows: Array<[string, string]> }) {

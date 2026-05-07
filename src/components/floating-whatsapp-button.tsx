@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CountryFlag } from "@/components/country-flag";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import {
   getOrderedWhatsAppContacts,
@@ -36,9 +37,7 @@ export function FloatingWhatsAppButton({ locale }: { locale: string }) {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition hover:bg-slate-50"
             >
-              <span aria-hidden="true" className="text-lg">
-                {contact.flag}
-              </span>
+              <CountryFlag code={contact.flagCode} className="h-4 w-6" />
               <span className="flex min-w-0 flex-col">
                 <span>{getWhatsAppLabel(contact, locale)}</span>
                 <span className="truncate text-xs font-medium text-slate-500">

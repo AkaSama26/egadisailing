@@ -3,11 +3,12 @@ import { routing } from "@/i18n/routing";
 import { db } from "@/lib/db";
 import { getExperiencePublicSlug, getListedExperienceIds } from "@/data/catalog/experiences";
 import { getPublicBoatSlugs } from "@/data/catalog/boats";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://egadisailing.com";
+  const baseUrl = env.APP_URL.replace(/\/$/, "");
   const pages = [
     "",
     "/experiences",
@@ -15,11 +16,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/islands",
     "/about",
     "/contacts",
+    "/prenota",
     "/faq",
+    "/privacy",
+    "/terms",
+    "/cookie-policy",
     "/islands/favignana",
     "/islands/levanzo",
     "/islands/marettimo",
   ];
+  const lowPriorityPages = new Set(["/privacy", "/terms", "/cookie-policy"]);
 
   const listedExperienceIds = getListedExperienceIds();
   let services = listedExperienceIds.map((id) => ({ id, updatedAt: new Date() }));
@@ -43,8 +49,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push({
         url: `${baseUrl}/${locale}${page}`,
         lastModified: new Date(),
-        changeFrequency: "weekly",
-        priority: page === "" ? 1 : 0.8,
+        changeFrequency: lowPriorityPages.has(page) ? "monthly" : "weekly",
+        priority: page === "" ? 1 : lowPriorityPages.has(page) ? 0.3 : 0.8,
       });
     }
   }

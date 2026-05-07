@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { CookiePreferencesButton } from "@/components/cookie-preferences-button";
+import { CountryFlag } from "@/components/country-flag";
 import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
@@ -11,6 +12,7 @@ import {
   getWhatsAppUrl,
 } from "@/lib/public-contact";
 import { BRAND_LOGO_SRC } from "@/lib/public-assets";
+import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 
 const quickLinks = [
@@ -19,6 +21,11 @@ const quickLinks = [
   { key: "islands", href: "/islands" },
   { key: "about", href: "/about" },
   { key: "contacts", href: "/contacts" },
+] as const;
+
+const reviewLinks = [
+  { href: PUBLIC_REVIEW_LINKS.google, label: "Google Reviews" },
+  { href: PUBLIC_REVIEW_LINKS.tripadvisor, label: "TripAdvisor" },
 ] as const;
 
 export function Footer() {
@@ -52,73 +59,32 @@ export function Footer() {
             <p className="mt-3 text-sm leading-relaxed text-gray-300">
               {tFooter("tagline")}
             </p>
-            {/* Social icons */}
+            {/* Review links */}
             <div className="mt-4 flex gap-3">
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className={`rounded-full p-2 ${liquidGlassButton}`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              {reviewLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  className={`rounded-full p-2 ${liquidGlassButton}`}
                 >
-                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                </svg>
-              </a>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className={`rounded-full p-2 ${liquidGlassButton}`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                </svg>
-              </a>
-              <a
-                href="https://tripadvisor.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="TripAdvisor"
-                className={`rounded-full p-2 ${liquidGlassButton}`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-              </a>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                  </svg>
+                </a>
+              ))}
             </div>
           </div>
 
@@ -175,9 +141,9 @@ export function Footer() {
                     href={getWhatsAppUrl(contact, locale)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block transition-colors hover:text-white"
+                    className="flex items-center gap-2 transition-colors hover:text-white"
                   >
-                    <span aria-hidden="true">{contact.flag}</span>{" "}
+                    <CountryFlag code={contact.flagCode} className="h-4 w-6" />
                     WhatsApp {getWhatsAppLabel(contact, locale)} · {contact.phoneDisplay}
                   </a>
                 ))}

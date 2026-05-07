@@ -7,7 +7,7 @@ import { getBookingSession } from "@/lib/session/verify";
 import { env } from "@/lib/env";
 import { formatEurWithVat } from "@/lib/pricing/vat";
 import { LogoutButton } from "./logout-button";
-import { formatItDay, isoDay, parseDateLikelyLocalDay } from "@/lib/dates";
+import { isoDay, parseDateLikelyLocalDay } from "@/lib/dates";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { computeCustomerCancellationPolicy } from "@/lib/booking/cancellation-policy";
@@ -19,7 +19,17 @@ import { CustomerWeatherCard } from "@/components/weather/customer-weather-card"
 // R26-A1-A5: PII area — noindex defense-in-depth oltre robots.txt. Bot che
 // ignora robots.txt (o config error serve la pagina con slug indexable)
 // non deve produrre cache snapshot con email + confirmation codes.
-export const metadata: Metadata = { robots: { index: false, follow: false } };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: locale === "en" ? "Your bookings" : "Le tue prenotazioni",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function SessionePage({
   params,
@@ -50,37 +60,35 @@ export default async function SessionePage({
   ]);
   const today = parseDateLikelyLocalDay(new Date());
   const weatherByDate = new Map(weatherResult.items.map((item) => [item.date, item]));
+  const copy = getSessionCopy(locale);
 
   return (
     <OceanLayout className="egadi-water-reflection overflow-hidden">
       <div className="relative z-10 max-w-3xl mx-auto space-y-4">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-white text-3xl font-bold">Le tue prenotazioni</h1>
-          <LogoutButton />
+          <h1 className="text-white text-3xl font-bold">{copy.title}</h1>
+          <LogoutButton label={copy.logout} />
         </div>
         <p className="text-white/60 text-sm">
-          Accesso come <strong className="text-white">{session.email}</strong>
+          {copy.signedInAs} <strong className="text-white">{session.email}</strong>
         </p>
         <p className="text-white/75 text-sm">
-          Da questa area puoi aprire il biglietto QR, richiedere cambio data e richiedere
-          cancellazione o rimborso per le prenotazioni dirette.
+          {copy.intro}
         </p>
         <div className="bg-white/10 border border-white/15 rounded-2xl p-4 text-white/80 text-sm">
-        <p className="font-semibold text-white mb-1">Cancellazioni e cambi data</p>
+        <p className="font-semibold text-white mb-1">{copy.policyTitle}</p>
           <p>
-            Fino a 30 giorni prima: rimborso completo. Da 29 a 15 giorni prima:
-            rimborso del 50%. Sotto i 15 giorni e in caso di no-show: cancellazione senza
-            rimborso. Il cambio data è soggetto a verifica e approvazione dello staff.
+            {copy.policyBody}
           </p>
         </div>
         {bookings.length === 0 && (
           <div className="bg-white rounded-2xl p-8 text-center space-y-4">
-            <p className="text-gray-600">Nessuna prenotazione trovata per {session.email}.</p>
+            <p className="text-gray-600">{copy.noBookings} {session.email}.</p>
             <Link
               href={`/${locale || env.APP_LOCALES_DEFAULT}`}
               className="inline-block px-6 py-3 rounded-full bg-[#d97706] text-white font-bold"
             >
-              Scopri le esperienze
+              {copy.discover}
             </Link>
           </div>
         )}
@@ -109,19 +117,19 @@ export default async function SessionePage({
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h2 className="text-xl font-bold">{b.service.name}</h2>
-                  <p className="text-gray-600 text-sm">Codice {b.confirmationCode}</p>
+                  <p className="text-gray-600 text-sm">{copy.code} {b.confirmationCode}</p>
                 </div>
-                <StatusBadge status={b.status} kind="booking" />
+                <StatusBadge status={b.status} kind="booking" locale={locale} />
               </div>
               <p>
-                {formatItDay(b.startDate)} · {b.numPeople} persone
+                {formatPublicDay(b.startDate, locale)} · {b.numPeople} {copy.people}
               </p>
               <p>
-                Totale {formatEurWithVat(total, locale)} · Pagato {formatEurWithVat(paid, locale)}
+                {copy.total} {formatEurWithVat(total, locale)} · {copy.paid} {formatEurWithVat(paid, locale)}
               </p>
               {balance.gt(0) && (
                 <p className="text-amber-700 font-semibold mt-2">
-                  Saldo da pagare: {formatEurWithVat(balance, locale)}
+                  {copy.balanceDue}: {formatEurWithVat(balance, locale)}
                 </p>
               )}
               {weatherSummary && (
@@ -139,26 +147,25 @@ export default async function SessionePage({
                   href={`/${locale || env.APP_LOCALES_DEFAULT}/ticket/${b.confirmationCode}`}
                   className="mt-4 inline-block rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
                 >
-                  Apri biglietto QR
+                  {copy.openQr}
                 </Link>
               )}
               {canManage ? (
                 <div className="mt-5 grid gap-4 border-t border-gray-100 pt-4 md:grid-cols-2">
                   <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="font-semibold text-gray-900">Richiedi cambio data</p>
+                    <p className="font-semibold text-gray-900">{copy.rescheduleTitle}</p>
                     <p className="mt-1 text-sm text-gray-600">
-                      Lo staff verifica disponibilità e policy. La prenotazione resta sulla
-                      data attuale finché la richiesta non viene approvata.
+                      {copy.rescheduleBody}
                     </p>
                     {pendingChange && (
                       <p className="mt-2 rounded bg-sky-50 p-2 text-sm text-sky-800">
-                        Richiesta in attesa per il {formatItDay(pendingChange.requestedStartDate)}.
+                        {copy.pendingChange} {formatPublicDay(pendingChange.requestedStartDate, locale)}.
                       </p>
                     )}
                     {latestChange && latestChange.status !== "PENDING" && (
                       <p className="mt-2 rounded bg-slate-50 p-2 text-sm text-slate-700">
-                        Ultima richiesta: {latestChange.status} ·{" "}
-                        {formatItDay(latestChange.requestedStartDate)}
+                        {copy.latestChange}: {latestChange.status} ·{" "}
+                        {formatPublicDay(latestChange.requestedStartDate, locale)}
                         {latestChange.adminNote ? ` · ${latestChange.adminNote}` : ""}
                       </p>
                     )}
@@ -176,38 +183,39 @@ export default async function SessionePage({
                           type="submit"
                           className="rounded bg-slate-900 px-3 py-1 text-sm font-semibold text-white"
                         >
-                          Richiedi
+                          {copy.request}
                         </button>
                       </div>
                       <textarea
                         name="note"
                         maxLength={1000}
                         rows={2}
-                        placeholder="Note opzionali per lo staff"
+                        placeholder={copy.optionalNote}
                         className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
                       />
                     </form>
                   </div>
                   <div className="rounded-lg border border-gray-200 p-3">
-                    <p className="font-semibold text-gray-900">{policy.label}</p>
+                    <p className="font-semibold text-gray-900">
+                      {formatPolicyLabel(policy.band, locale)}
+                    </p>
                     <p className="mt-1 text-sm text-gray-600">
-                      Rimborso stimato: {formatEurWithVat(refundable, locale)} su{" "}
-                      {formatEurWithVat(paid, locale)} pagati.
+                      {copy.estimatedRefund}: {formatEurWithVat(refundable, locale)} {copy.onPaid}{" "}
+                      {formatEurWithVat(paid, locale)}.
                     </p>
                     <form action={cancelCustomerBooking.bind(null, b.id)} className="mt-3">
                       <button
                         type="submit"
                         className="rounded bg-red-50 px-3 py-1 text-sm font-semibold text-red-700 hover:bg-red-100"
                       >
-                        Cancella prenotazione
+                        {copy.cancelBooking}
                       </button>
                     </form>
                   </div>
                 </div>
               ) : b.source !== "DIRECT" && (b.status === "PENDING" || b.status === "CONFIRMED") ? (
                 <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
-                  Questa prenotazione arriva da {b.source}: cancellazioni e cambi data vanno
-                  gestiti dal portale di acquisto.
+                  {copy.externalBookingPrefix} {b.source}: {copy.externalBookingSuffix}
                 </p>
               ) : null}
             </div>
@@ -216,4 +224,90 @@ export default async function SessionePage({
       </div>
     </OceanLayout>
   );
+}
+
+function formatPublicDay(date: Date, locale?: string | null): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function formatPolicyLabel(band: string, locale?: string | null): string {
+  if (locale === "en") {
+    if (band === "FULL_REFUND") return "Full refund";
+    if (band === "HALF_REFUND") return "50% refund";
+    return "Cancellation without refund";
+  }
+  if (band === "FULL_REFUND") return "Rimborso completo";
+  if (band === "HALF_REFUND") return "Rimborso 50%";
+  return "Cancellazione senza rimborso";
+}
+
+function getSessionCopy(locale?: string | null) {
+  if (locale === "en") {
+    return {
+      title: "Your bookings",
+      logout: "Log out",
+      signedInAs: "Signed in as",
+      intro:
+        "From this area you can open your QR ticket, request a date change and request cancellation or refund for direct bookings.",
+      policyTitle: "Cancellations and date changes",
+      policyBody:
+        "Up to 30 days before departure: full refund. From 29 to 15 days before departure: 50% refund. Under 15 days and in case of no-show: cancellation without refund. Date changes are subject to staff review and approval.",
+      noBookings: "No bookings found for",
+      discover: "Discover experiences",
+      code: "Code",
+      people: "people",
+      total: "Total",
+      paid: "Paid",
+      balanceDue: "Balance due",
+      openQr: "Open QR ticket",
+      rescheduleTitle: "Request a date change",
+      rescheduleBody:
+        "The staff will check availability and policy. The booking stays on the current date until the request is approved.",
+      pendingChange: "Pending request for",
+      latestChange: "Latest request",
+      request: "Request",
+      optionalNote: "Optional notes for the staff",
+      estimatedRefund: "Estimated refund",
+      onPaid: "out of",
+      cancelBooking: "Cancel booking",
+      externalBookingPrefix: "This booking comes from",
+      externalBookingSuffix: "cancellations and date changes must be managed through the purchase portal.",
+    };
+  }
+
+  return {
+    title: "Le tue prenotazioni",
+    logout: "Esci",
+    signedInAs: "Accesso come",
+    intro:
+      "Da questa area puoi aprire il biglietto QR, richiedere cambio data e richiedere cancellazione o rimborso per le prenotazioni dirette.",
+    policyTitle: "Cancellazioni e cambi data",
+    policyBody:
+      "Fino a 30 giorni prima: rimborso completo. Da 29 a 15 giorni prima: rimborso del 50%. Sotto i 15 giorni e in caso di no-show: cancellazione senza rimborso. Il cambio data è soggetto a verifica e approvazione dello staff.",
+    noBookings: "Nessuna prenotazione trovata per",
+    discover: "Scopri le esperienze",
+    code: "Codice",
+    people: "persone",
+    total: "Totale",
+    paid: "Pagato",
+    balanceDue: "Saldo da pagare",
+    openQr: "Apri biglietto QR",
+    rescheduleTitle: "Richiedi cambio data",
+    rescheduleBody:
+      "Lo staff verifica disponibilità e policy. La prenotazione resta sulla data attuale finché la richiesta non viene approvata.",
+    pendingChange: "Richiesta in attesa per il",
+    latestChange: "Ultima richiesta",
+    request: "Richiedi",
+    optionalNote: "Note opzionali per lo staff",
+    estimatedRefund: "Rimborso stimato",
+    onPaid: "su",
+    cancelBooking: "Cancella prenotazione",
+    externalBookingPrefix: "Questa prenotazione arriva da",
+    externalBookingSuffix: "cancellazioni e cambi data vanno gestiti dal portale di acquisto.",
+  };
 }

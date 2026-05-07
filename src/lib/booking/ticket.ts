@@ -10,7 +10,7 @@ export function buildTicketUrl(
   return `${baseUrl}/${encodeURIComponent(locale)}/ticket/${encodeURIComponent(code)}`;
 }
 
-export function ticketSlotLabel(durationType: string): string {
+export function ticketSlotLabel(durationType: string, locale?: string | null): string {
   switch (durationType) {
     case "FULL_DAY":
       return "10:00-18:00";
@@ -19,6 +19,6 @@ export function ticketSlotLabel(durationType: string): string {
     case "HALF_DAY_AFTERNOON":
       return "14:00-18:00";
     default:
-      return "Orario comunicato dallo staff";
+      return locale === "en" ? "Time confirmed by the staff" : "Orario comunicato dallo staff";
   }
 }

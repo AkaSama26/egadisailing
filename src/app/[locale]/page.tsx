@@ -16,9 +16,10 @@ import {
   getExperiencePublicSlug,
   resolveExperienceServiceIdFromSlug,
 } from "@/data/catalog/experiences";
+import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
 import { getDisplayPriceMap, type DisplayPrice } from "@/lib/pricing/display";
-import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
+import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL, WHATSAPP_CONTACTS } from "@/lib/public-contact";
 import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 
 const BOAT_SERVICE_TYPES = new Set(["BOAT_SHARED", "BOAT_EXCLUSIVE"]);
@@ -58,8 +59,8 @@ function lowestHeroPriceLabel(
 
   if (!lowest?.amount) return null;
   return locale === "en"
-    ? `From ${formatEur(lowest.amount)}`
-    : `A partire da ${formatEur(lowest.amount)}`;
+    ? `From ${formatEur(lowest.amount, locale)}`
+    : `A partire da ${formatEur(lowest.amount, locale)}`;
 }
 
 function packagePills(input: {
@@ -92,7 +93,7 @@ function heroCardCopy(
   const isEn = locale === "en";
   const copyByPackage: Record<string, { title: string; subtitle: string }> = {
     "esperienza-gourmet-trimarano": {
-      title: isEn ? "Chef on Board - Premium Experience" : "Chef a Bordo - Premium Experience",
+      title: isEn ? "Chef on board - premium experience" : "Chef a Bordo - Premium Experience",
       subtitle: isEn
         ? "Private trimaran, lunch and dedicated crew."
         : "Trimarano privato, pranzo e crew dedicata.",
@@ -185,7 +186,7 @@ function buildExperienceChoiceRecommendations({
         ? "Cigala & Bertinetti · shared seat"
         : "Cigala & Bertinetti · posto condiviso",
       reason: isEn
-        ? "The most complete shared day: more time between bays, snorkelling and a relaxed Egadi rhythm."
+        ? "The most complete shared day: more time between bays, snorkelling and a relaxed Egadi Islands rhythm."
         : "La giornata condivisa più completa: più tempo tra baie, snorkeling e ritmo lento alle Egadi.",
     },
     private4: {
@@ -195,7 +196,7 @@ function buildExperienceChoiceRecommendations({
         ? "Cigala & Bertinetti · private agile boat"
         : "Cigala & Bertinetti · barca privata agile",
       reason: isEn
-        ? "A private half day for your group: flexible route, swim stops and the lightness of the open boat."
+        ? "A private half-day for your group: flexible route, swim stops and the lightness of the open boat."
         : "Mezza giornata privata per il tuo gruppo: rotta flessibile, soste bagno e leggerezza della barca open.",
     },
     private8: {
@@ -212,17 +213,17 @@ function buildExperienceChoiceRecommendations({
       emoji: "🍽️",
       title: isEn ? "Gourmet Experience on the Trimarano" : "Esperienza Gourmet sul Trimarano",
       boatLabel: isEn
-        ? "Trimarano luxury · chef, skipper and hostess"
+        ? "Luxury Trimarano · chef, skipper and hostess"
         : "Trimarano luxury · chef, skipper e hostess",
       reason: isEn
-        ? "You want the day to feel cared for: wide spaces, lunch prepared on board, privacy and a premium rhythm at anchor."
+        ? "You want a day that feels cared for: wide spaces, lunch prepared on board, privacy and a premium rhythm at anchor."
         : "Vuoi una giornata curata: spazi ampi, pranzo preparato a bordo, privacy e ritmo premium in rada.",
     },
     charter: {
       emoji: "🛏️",
       title: isEn ? "Egadi Charter on the Trimarano" : "Charter Egadi sul Trimarano",
       boatLabel: isEn
-        ? "Trimarano luxury · cabins and tailored route"
+        ? "Luxury Trimarano · cabins and tailored route"
         : "Trimarano luxury · cabine e rotta su misura",
       reason: isEn
         ? "For several days at sea: cabins, quiet anchorages and a route across Favignana, Levanzo and Marettimo."
@@ -267,10 +268,14 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "hero" });
+  const isEn = locale === "en";
   return buildPageMetadata({
-    title: t("title"),
-    description: t("subtitle"),
+    title: isEn
+      ? "Egadi Islands Boat Tours from Trapani"
+      : "Tour in barca alle Isole Egadi da Trapani",
+    description: isEn
+      ? "Book Egadi Islands boat tours from Trapani: private and shared tours, chef on board, Neel 47 trimaran experiences and multi-day charters."
+      : "Prenota tour in barca alle Egadi da Trapani: esperienze private e condivise, chef a bordo, trimarano Neel 47 e charter di più giorni.",
     path: "/",
     locale,
   });
@@ -290,7 +295,11 @@ export default async function HomePage({
     orderBy: [{ boatId: "asc" }, { priority: "desc" }, { name: "asc" }],
   });
   const publicServices = services.filter((service) => isPublicBookingServiceEnabled(service.id));
-  const displayPrices = await getDisplayPriceMap(publicServices.map((service) => service.id));
+  const displayPrices = await getDisplayPriceMap(
+    publicServices.map((service) => service.id),
+    2026,
+    locale,
+  );
   const serializedServices = publicServices
     .map((s) => ({
       id: s.id,
@@ -364,6 +373,7 @@ export default async function HomePage({
     servicesById,
     displayPrices,
   });
+  const siteBase = env.APP_URL.replace(/\/$/, "");
 
   return (
     <>
@@ -372,12 +382,13 @@ export default async function HomePage({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "Organization",
+            "@type": ["Organization", "LocalBusiness", "TravelAgency"],
             name: PUBLIC_COMPANY_LEGAL.name,
             alternateName: "Egadi Sailing",
             description: "Boat experiences in the Egadi Islands, Sicily",
             email: PUBLIC_CONTACT_EMAIL,
             taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
+            priceRange: "€€€",
             address: {
               "@type": "PostalAddress",
               streetAddress: "Via Calipso 42",
@@ -386,7 +397,26 @@ export default async function HomePage({
               addressRegion: "Sicilia",
               addressCountry: "IT",
             },
-            url: "https://egadisailing.com",
+            contactPoint: WHATSAPP_CONTACTS.map((contact) => ({
+              "@type": "ContactPoint",
+              telephone: `+${contact.phoneE164}`,
+              contactType: "customer service",
+              availableLanguage: contact.key === "en" ? ["en", "it"] : ["it"],
+              areaServed: "IT",
+            })),
+            areaServed: [
+              "Isole Egadi",
+              "Favignana",
+              "Levanzo",
+              "Marettimo",
+              "Trapani",
+            ],
+            knowsAbout: [
+              "Boat tours in the Egadi Islands",
+              "Private boat charter",
+              "Sailing experiences in Sicily",
+            ],
+            url: siteBase,
           }),
         }}
       />

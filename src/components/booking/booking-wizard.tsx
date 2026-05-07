@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { ArrowLeft, Baby, CalendarDays, Check, ChevronLeft, ChevronRight, CreditCard, ReceiptText, UserRound, Users } from "lucide-react";
 import { StripePaymentForm } from "./stripe-payment-form";
+import { CountryFlag, type FlagCode } from "@/components/country-flag";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import { CustomerWeatherCard } from "@/components/weather/customer-weather-card";
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
@@ -35,6 +36,14 @@ const CHECKOUT_STEPS: Array<{
   { key: "customer", label: "Dati", icon: UserRound },
   { key: "review", label: "Riepilogo", icon: ReceiptText },
   { key: "payment", label: "Pagamento", icon: CreditCard },
+];
+
+const CHECKOUT_STEPS_EN: typeof CHECKOUT_STEPS = [
+  { key: "date", label: "Date", icon: CalendarDays },
+  { key: "people", label: "Guests", icon: Users },
+  { key: "customer", label: "Details", icon: UserRound },
+  { key: "review", label: "Summary", icon: ReceiptText },
+  { key: "payment", label: "Payment", icon: CreditCard },
 ];
 
 // R26-A1-C1: sessionStorage persistence per evitare conversion loss su tab-kill
@@ -103,9 +112,9 @@ function monthKeyFromIso(isoDate: string): string {
   return isoDate.slice(0, 7);
 }
 
-function monthLabel(monthIso: string): string {
+function monthLabel(monthIso: string, locale?: string | null): string {
   const date = new Date(`${monthIso}-01T00:00:00.000Z`);
-  return new Intl.DateTimeFormat("it-IT", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
     month: "long",
     year: "numeric",
     timeZone: "UTC",
@@ -189,6 +198,61 @@ interface Customer {
   language: string;
 }
 
+const PHONE_COUNTRIES: Array<{
+  code: string;
+  flagCode: FlagCode;
+  dialCode: string;
+  label: string;
+}> = [
+  { code: "IT", flagCode: "IT", dialCode: "+39", label: "Italia" },
+  { code: "GB", flagCode: "GB", dialCode: "+44", label: "United Kingdom" },
+  { code: "FR", flagCode: "FR", dialCode: "+33", label: "France" },
+  { code: "DE", flagCode: "DE", dialCode: "+49", label: "Deutschland" },
+  { code: "ES", flagCode: "ES", dialCode: "+34", label: "España" },
+  { code: "US", flagCode: "US", dialCode: "+1", label: "United States" },
+  { code: "CH", flagCode: "CH", dialCode: "+41", label: "Schweiz" },
+  { code: "NL", flagCode: "NL", dialCode: "+31", label: "Nederland" },
+  { code: "BE", flagCode: "BE", dialCode: "+32", label: "België" },
+  { code: "AT", flagCode: "AT", dialCode: "+43", label: "Österreich" },
+];
+
+function defaultPhoneCountryCode(locale: string): string {
+  return locale === "en" ? "GB" : "IT";
+}
+
+function countryByCode(code: string) {
+  return PHONE_COUNTRIES.find((country) => country.code === code) ?? PHONE_COUNTRIES[0];
+}
+
+function countryFromPhone(phone: string) {
+  const trimmed = phone.trim();
+  return [...PHONE_COUNTRIES]
+    .sort((a, b) => b.dialCode.length - a.dialCode.length)
+    .find((country) => trimmed.startsWith(country.dialCode));
+}
+
+function selectedPhoneCountry(phone: string, locale: string) {
+  return countryFromPhone(phone) ?? countryByCode(defaultPhoneCountryCode(locale));
+}
+
+function stripDialCode(phone: string, country: (typeof PHONE_COUNTRIES)[number]) {
+  const trimmed = phone.trim();
+  if (trimmed.startsWith(country.dialCode)) {
+    return trimmed.slice(country.dialCode.length).trimStart();
+  }
+  return trimmed.replace(/^\+\d{1,4}\s*/, "");
+}
+
+function composePhone(dialCode: string, nationalNumber: string) {
+  const normalized = nationalNumber.trim().replace(/^\+\d{1,4}\s*/, "");
+  return normalized ? `${dialCode} ${normalized}` : dialCode;
+}
+
+function hasNationalPhoneNumber(phone: string, locale: string) {
+  const country = selectedPhoneCountry(phone, locale);
+  return /\d/.test(stripDialCode(phone, country));
+}
+
 interface PassengerBreakdown {
   adults: number;
   children: number;
@@ -234,8 +298,8 @@ function paidUnitsForClient(
   });
 }
 
-function formatClientEur(amount: number): string {
-  return new Intl.NumberFormat("it-IT", {
+function formatClientEur(amount: number, locale?: string | null): string {
+  return new Intl.NumberFormat(locale === "en" ? "en-GB" : "it-IT", {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
@@ -251,12 +315,12 @@ function appendClientVatIncluded(label: string, locale: string): string {
 }
 
 function formatClientEurWithVat(amount: number, locale: string): string {
-  return appendClientVatIncluded(formatClientEur(amount), locale);
+  return appendClientVatIncluded(formatClientEur(amount, locale), locale);
 }
 
-function formatIsoDateLabel(isoDate: string): string {
+function formatIsoDateLabel(isoDate: string, locale?: string | null): string {
   if (!isoDate) return "-";
-  return new Intl.DateTimeFormat("it-IT", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -300,11 +364,12 @@ function estimatePaymentBreakdown(
   return { totalCents, upfrontCents: totalCents, balanceCents: 0, depositPercentage: null };
 }
 
-function formatClientCents(cents: number): string {
-  return formatClientEur(cents / 100);
+function formatClientCents(cents: number, locale?: string | null): string {
+  return formatClientEur(cents / 100, locale);
 }
 
 export function BookingWizard(props: Props) {
+  const copy = getWizardCopy(props.locale);
   // R26-A1-C1: initial state SSR-safe (match server HTML) — se il `useState`
   // initializer leggesse sessionStorage (client-only), React 19 hydration
   // mismatch perche' server rendera diverse attr `value=` / step diverso.
@@ -509,12 +574,12 @@ export function BookingWizard(props: Props) {
   async function createIntent() {
     setError(null);
     if (!consentPrivacy || !consentTerms) {
-      setError("Accetta Privacy Policy e Termini & Condizioni per continuare");
+      setError(copy.acceptPolicies);
       return;
     }
     // In prod il server richiede Turnstile token (enforce). In dev passa senza.
     if (props.turnstileSiteKey && !turnstileToken) {
-      setError("Completa la verifica CAPTCHA prima di continuare");
+      setError(copy.completeCaptcha);
       return;
     }
     setLoading(true);
@@ -557,31 +622,31 @@ export function BookingWizard(props: Props) {
           const retry = body?.error?.retryAfterSeconds;
           throw new Error(
             retry
-              ? `Troppe richieste. Riprova tra ${retry}s.${idSuffix}`
-              : `Troppe richieste, riprova tra qualche minuto.${idSuffix}`,
+              ? `${copy.tooManyRequestsRetry} ${retry}s.${idSuffix}`
+              : `${copy.tooManyRequests}${idSuffix}`,
           );
         }
         if (res.status === 409) {
           throw new Error(
-            `Queste date non sono più disponibili. Prova a sceglierne altre.${idSuffix}`,
+            `${copy.datesNoLongerAvailable}${idSuffix}`,
           );
         }
         if (res.status >= 500) {
           throw new Error(
-            `Problema tecnico momentaneo. Riprova tra qualche minuto o scrivici a ${PUBLIC_CONTACT_EMAIL}.${idSuffix}`,
+            `${copy.technicalIssue} ${PUBLIC_CONTACT_EMAIL}.${idSuffix}`,
           );
         }
         // Default (400/403/404 non intercettati sopra): usa messaggio server
         // (gia' italiano per i ValidationError dei nostri schemas Zod).
         throw new Error(
-          (body?.error?.message ?? "Errore creazione prenotazione") + idSuffix,
+          (body?.error?.message ?? copy.bookingCreationError) + idSuffix,
         );
       }
       const body = await res.json();
       const payload = body.data ?? body; // tolleranza per envelope old/new
       if (props.useStripeCheckout) {
         if (!payload.checkoutUrl || typeof payload.checkoutUrl !== "string") {
-          throw new Error("Checkout Stripe non disponibile. Riprova tra poco.");
+          throw new Error(copy.stripeCheckoutUnavailable);
         }
         window.location.assign(payload.checkoutUrl);
         return;
@@ -619,18 +684,18 @@ export function BookingWizard(props: Props) {
       if (result.status === "blocked") {
         const reasonMsg =
           result.reason === "within_15_day_cutoff"
-            ? "Questa data non è più disponibile — troppo vicina all'esperienza (meno di 15 giorni)."
+            ? copy.overrideTooClose
             : result.reason === "insufficient_revenue"
-            ? "Questa data è già prenotata. Prova un'altra data."
+            ? copy.overrideBooked
             : result.reason === "boat_block"
-            ? "Questa data è stata bloccata dall'amministrazione (manutenzione)."
+            ? copy.overrideBlockedByAdmin
             : result.reason === "external_booking"
-            ? "Questa data è già occupata da una prenotazione confermata su un portale esterno. Prova un'altra data."
+            ? copy.overrideExternalBooking
             : result.reason === "feature_disabled"
             ? // Feature flag OFF: comportamento legacy — procediamo allo step
               // successivo, il controllo vero avverra' al createPendingDirectBooking.
               null
-            : "Questa data non è disponibile per questo pacchetto.";
+            : copy.overrideUnavailable;
         if (reasonMsg === null) {
           // feature disabled → legacy flow, avanza normalmente; il controllo
           // vero avverra' al createPendingDirectBooking.
@@ -656,8 +721,8 @@ export function BookingWizard(props: Props) {
         reason: "unknown",
         message:
           err instanceof Error
-            ? `Errore verifica disponibilità: ${err.message}`
-            : "Errore verifica disponibilità. Riprova.",
+            ? `${copy.availabilityCheckPrefix}: ${err.message}`
+            : copy.availabilityCheckError,
       });
     }
   }
@@ -666,7 +731,7 @@ export function BookingWizard(props: Props) {
     <div className="max-w-full overflow-hidden rounded-lg bg-white shadow-2xl">
       <div className="border-b border-slate-200 bg-slate-50 px-5 py-5 sm:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-          Checkout diretto
+          {copy.directCheckout}
         </p>
         <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -674,10 +739,10 @@ export function BookingWizard(props: Props) {
               {props.serviceName}
             </h3>
             <p className="mt-1 text-sm text-slate-600">
-              Data, ospiti, dati cliente e pagamento online.
+              {copy.headerSubtitle}
             </p>
           </div>
-          <StepIndicator step={step} />
+          <StepIndicator step={step} locale={props.locale} />
         </div>
       </div>
 
@@ -737,7 +802,7 @@ export function BookingWizard(props: Props) {
               aria-live="polite"
               className="pt-3 text-sm text-gray-600"
             >
-              Verifica disponibilità in corso...
+              {copy.checkingAvailability}
             </div>
           )}
           {overrideCheck.status === "blocked" && (
@@ -827,19 +892,18 @@ export function BookingWizard(props: Props) {
 
       {step === "success" && intent && (
         <div className="text-center space-y-4 py-8">
-          <h2 className="text-3xl font-bold text-emerald-600">Pagamento completato</h2>
+          <h2 className="text-3xl font-bold text-emerald-600">{copy.paymentCompleted}</h2>
           <p className="text-lg">
-            Codice: <strong>{intent.confirmationCode}</strong>
+            {copy.code}: <strong>{intent.confirmationCode}</strong>
           </p>
           <p className="text-gray-600">
-            Stiamo finalizzando la prenotazione sul sistema centrale. Controlla la tua
-            email per i dettagli.
+            {copy.successText}
           </p>
           <a
             href={`/${props.locale}/prenota/success/${intent.confirmationCode}`}
             className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-slate-700"
           >
-            Apri riepilogo
+            {copy.openSummary}
           </a>
         </div>
       )}
@@ -848,12 +912,16 @@ export function BookingWizard(props: Props) {
   );
 }
 
-function StepIndicator({ step }: { step: Step }) {
-  const activeIndex = step === "success" ? CHECKOUT_STEPS.length : CHECKOUT_STEPS.findIndex((item) => item.key === step);
+function StepIndicator({ step, locale }: { step: Step; locale: string }) {
+  const steps = locale === "en" ? CHECKOUT_STEPS_EN : CHECKOUT_STEPS;
+  const activeIndex = step === "success" ? steps.length : steps.findIndex((item) => item.key === step);
 
   return (
-    <ol className="flex w-full items-center gap-1 text-xs font-semibold text-slate-500 sm:grid sm:w-auto sm:min-w-[360px] sm:grid-cols-5" aria-label="Stato checkout">
-      {CHECKOUT_STEPS.map((item, index) => {
+    <ol
+      className="flex w-full items-center gap-1 text-xs font-semibold text-slate-500 sm:grid sm:w-auto sm:min-w-[360px] sm:grid-cols-5"
+      aria-label={locale === "en" ? "Checkout status" : "Stato checkout"}
+    >
+      {steps.map((item, index) => {
         const Icon = item.icon;
         const active = index === activeIndex;
         const complete = index < activeIndex;
@@ -883,6 +951,277 @@ function cnStep(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+function getWizardCopy(locale: string) {
+  if (locale === "en") {
+    return {
+      directCheckout: "Direct checkout",
+      headerSubtitle: "Date, guests, customer details and online payment.",
+      acceptPolicies: "Accept the Privacy Policy and Terms & Conditions to continue",
+      completeCaptcha: "Complete CAPTCHA verification before continuing",
+      tooManyRequestsRetry: "Too many requests. Try again in",
+      tooManyRequests: "Too many requests. Try again in a few minutes.",
+      datesNoLongerAvailable: "These dates are no longer available. Try choosing different dates.",
+      technicalIssue: "Temporary technical issue. Try again in a few minutes or write to",
+      bookingCreationError: "Booking creation error",
+      stripeCheckoutUnavailable: "Stripe checkout is not available. Try again shortly.",
+      overrideTooClose:
+        "This date is no longer available because it is too close to the experience, less than 15 days away.",
+      overrideBooked: "This date is already booked. Try another date.",
+      overrideBlockedByAdmin: "This date has been blocked by the staff for maintenance.",
+      overrideExternalBooking:
+        "This date is already occupied by a confirmed booking on an external portal. Try another date.",
+      overrideUnavailable: "This date is not available for this package.",
+      availabilityCheckPrefix: "Availability check error",
+      availabilityCheckError: "Availability check error. Try again.",
+      checkingAvailability: "Checking availability...",
+      paymentCompleted: "Payment completed",
+      code: "Code",
+      successText:
+        "We are finalizing the booking on the central system. Check your email for the details.",
+      openSummary: "Open summary",
+    };
+  }
+
+  return {
+    directCheckout: "Checkout diretto",
+    headerSubtitle: "Data, ospiti, dati cliente e pagamento online.",
+    acceptPolicies: "Accetta Privacy Policy e Termini & Condizioni per continuare",
+    completeCaptcha: "Completa la verifica CAPTCHA prima di continuare",
+    tooManyRequestsRetry: "Troppe richieste. Riprova tra",
+    tooManyRequests: "Troppe richieste, riprova tra qualche minuto.",
+    datesNoLongerAvailable: "Queste date non sono più disponibili. Prova a sceglierne altre.",
+    technicalIssue: "Problema tecnico momentaneo. Riprova tra qualche minuto o scrivici a",
+    bookingCreationError: "Errore creazione prenotazione",
+    stripeCheckoutUnavailable: "Checkout Stripe non disponibile. Riprova tra poco.",
+    overrideTooClose:
+      "Questa data non è più disponibile perché troppo vicina all'esperienza, meno di 15 giorni.",
+    overrideBooked: "Questa data è già prenotata. Prova un'altra data.",
+    overrideBlockedByAdmin: "Questa data è stata bloccata dall'amministrazione per manutenzione.",
+    overrideExternalBooking:
+      "Questa data è già occupata da una prenotazione confermata su un portale esterno. Prova un'altra data.",
+    overrideUnavailable: "Questa data non è disponibile per questo pacchetto.",
+    availabilityCheckPrefix: "Errore verifica disponibilità",
+    availabilityCheckError: "Errore verifica disponibilità. Riprova.",
+    checkingAvailability: "Verifica disponibilità in corso...",
+    paymentCompleted: "Pagamento completato",
+    code: "Codice",
+    successText:
+      "Stiamo finalizzando la prenotazione sul sistema centrale. Controlla la tua email per i dettagli.",
+    openSummary: "Apri riepilogo",
+  };
+}
+
+function getDateStepCopy(locale: string) {
+  if (locale === "en") {
+    return {
+      title: "Choose an available date",
+      calendarLegend: "Availability and price calendar",
+      calendarUnavailable: "Calendar unavailable",
+      calendarLoadError: "We cannot load availability and prices right now. Try again shortly.",
+      previousMonth: "Previous month",
+      nextMonth: "Next month",
+      weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      includedInSelectedRange: ", included in the selected range",
+      available: "Available",
+      onRequest: "On request",
+      unavailable: "Unavailable",
+      selectedDate: "Selected date",
+      selected: "Selected",
+      selectedDuration: "Selected duration",
+      days: "days",
+      until: "until",
+      to: "To",
+      charterTooShort: "Charter requires at least 3 days.",
+      charterTooLong: "For charters longer than 7 days, contact the crew for a dedicated quote.",
+      next: "Next",
+    };
+  }
+
+  return {
+    title: "Scegli una data disponibile",
+    calendarLegend: "Calendario disponibilità e prezzi",
+    calendarUnavailable: "Calendario non disponibile",
+    calendarLoadError: "Non riesco a caricare disponibilità e prezzi. Riprova tra poco.",
+    previousMonth: "Mese precedente",
+    nextMonth: "Mese successivo",
+    weekdays: ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
+    includedInSelectedRange: ", incluso nell'intervallo selezionato",
+    available: "Libera",
+    onRequest: "Su richiesta",
+    unavailable: "Non disponibile",
+    selectedDate: "Data selezionata",
+    selected: "Selezionata",
+    selectedDuration: "Durata selezionata",
+    days: "giornate",
+    until: "fino al",
+    to: "A",
+    charterTooShort: "Il charter richiede almeno 3 giornate.",
+    charterTooLong:
+      "Per charter più lunghi di 7 giornate contatta la crew per un preventivo dedicato.",
+    next: "Avanti",
+  };
+}
+
+function getPeopleStepCopy(locale: string) {
+  if (locale === "en") {
+    return {
+      title: "Who is coming on board?",
+      seatsUsed: "Seats used",
+      paidUnits: "Paid units",
+      estimatedTotal: "Estimated total",
+      loading: "Loading",
+      totalGuests: "Total guests",
+      capacityExceeded: "You selected more seats than the available capacity.",
+      back: "Back",
+      next: "Next",
+      checking: "Checking...",
+      decrease: "Decrease",
+      increase: "Increase",
+    };
+  }
+
+  return {
+    title: "Chi sale a bordo?",
+    seatsUsed: "Posti occupati",
+    paidUnits: "Quote paganti",
+    estimatedTotal: "Totale stimato",
+    loading: "In caricamento",
+    totalGuests: "Totale ospiti",
+    capacityExceeded: "Hai selezionato più posti della capacità disponibile.",
+    back: "Indietro",
+    next: "Avanti",
+    checking: "Verifica...",
+    decrease: "Diminuisci",
+    increase: "Aumenta",
+  };
+}
+
+function getReviewStepCopy(locale: string) {
+  if (locale === "en") {
+    return {
+      days: "days",
+      hours: "hours",
+      oneGuest: "1 guest",
+      guests: "guests",
+      fullPayment: "Full payment",
+      seatsUsed: "Seats used",
+      paidUnits: "Paid units",
+      eyebrow: "Check before paying",
+      title: "Booking summary",
+      subtitle: "Stripe payment will open only after this confirmation.",
+      paymentQuestion: "How would you like to pay?",
+      recommended: "Recommended",
+      depositDescription: "Secure the date now by paying only the deposit.",
+      calculating: "Calculating",
+      fullPaymentDescription: "Pay the full booking now by card.",
+      depositNote:
+        "The amount paid online follows the cancellation policy. The remaining balance is paid on site before departure.",
+      summary: "Summary",
+      date: "Date",
+      duration: "Duration",
+      guestsLabel: "Guests",
+      customer: "Customer",
+      phone: "Phone",
+      payment: "Payment",
+      total: "Total",
+      now: "Now",
+      balanceOnSite: "Balance on site",
+      priceUnavailable:
+        "Price not available yet. Go back to the date and select a day with configured pricing.",
+      serverRecalculationNote:
+        "The final total is recalculated by the server at confirmation, using availability, pricing and configured discounts. Any balance is paid on site before departure.",
+      editDetails: "Edit details",
+      creatingPayment: "Creating payment...",
+      confirmAndPay: "Confirm and go to Stripe",
+    };
+  }
+
+  return {
+    days: "giornate",
+    hours: "ore",
+    oneGuest: "1 ospite",
+    guests: "ospiti",
+    fullPayment: "Pagamento completo",
+    seatsUsed: "Posti occupati",
+    paidUnits: "Quote paganti",
+    eyebrow: "Controlla prima di pagare",
+    title: "Riepilogo prenotazione",
+    subtitle: "Il pagamento verrà aperto su Stripe solo dopo questa conferma.",
+    paymentQuestion: "Come vuoi pagare?",
+    recommended: "Consigliato",
+    depositDescription: "Blocchi subito la data pagando solo l'acconto.",
+    calculating: "In calcolo",
+    fullPaymentDescription: "Saldi tutta la prenotazione adesso con carta.",
+    depositNote:
+      "La quota pagata online segue la policy di cancellazione. Il saldo restante verrà pagato in loco prima della partenza.",
+    summary: "Riepilogo",
+    date: "Data",
+    duration: "Durata",
+    guestsLabel: "Ospiti",
+    customer: "Cliente",
+    phone: "Telefono",
+    payment: "Pagamento",
+    total: "Totale",
+    now: "Ora",
+    balanceOnSite: "Saldo in loco",
+    priceUnavailable:
+      "Prezzo non ancora disponibile. Torna alla data e seleziona una giornata con listino.",
+    serverRecalculationNote:
+      "Il totale definitivo viene ricalcolato dal server al momento della conferma, usando disponibilità, listino e sconti configurati. Il saldo, se presente, si paga solo in loco prima della partenza.",
+    editDetails: "Modifica dati",
+    creatingPayment: "Creo il pagamento...",
+    confirmAndPay: "Conferma e vai a Stripe",
+  };
+}
+
+function getCustomerStepCopy(locale: string) {
+  if (locale === "en") {
+    return {
+      title: "Your details",
+      firstName: "First name",
+      lastName: "Last name",
+      phone: "Phone",
+      privacyPrefix: "I have read and accept the",
+      termsPrefix: "I accept the",
+      terms: "Terms & Conditions",
+      termsSuffix: "of booking, including the cancellation policy.",
+      back: "Back",
+      wait: "Please wait...",
+      continueToPayment: "Continue to payment",
+    };
+  }
+
+  return {
+    title: "I tuoi dati",
+    firstName: "Nome",
+    lastName: "Cognome",
+    phone: "Telefono",
+    privacyPrefix: "Ho letto e accetto la",
+    termsPrefix: "Accetto i",
+    terms: "Termini & Condizioni",
+    termsSuffix: "di prenotazione, inclusa la policy di cancellazione.",
+    back: "Indietro",
+    wait: "Attendere...",
+    continueToPayment: "Procedi al pagamento",
+  };
+}
+
+function passengerRuleLabel(rule: PassengerFareRuleConfig, locale: string): string {
+  if (locale !== "en") return rule.label;
+  if (rule.category === "ADULT") return "Adults";
+  if (rule.category === "CHILD") return "Children";
+  if (rule.category === "FREE_CHILD") return "Young children";
+  return "Infants";
+}
+
+function passengerRuleHint(rule: PassengerFareRuleConfig, locale: string): string {
+  if (locale !== "en") return rule.ageLabel;
+  if (rule.category === "ADULT") return "Age 10+";
+  if (rule.category === "CHILD") return "Age 5-9";
+  if (rule.category === "FREE_CHILD") return "Age 3-4";
+  return "Age 0-2";
+}
+
 interface CalendarApiDay {
   date: string;
   status: "available" | "request" | "unavailable";
@@ -901,17 +1240,22 @@ interface WeatherApiResponse {
   };
 }
 
-function calendarDayAriaLabel(date: string, day?: CalendarApiDay): string {
-  const formatted = new Intl.DateTimeFormat("it-IT", {
+function calendarDayAriaLabel(
+  date: string,
+  day?: CalendarApiDay,
+  locale?: string | null,
+): string {
+  const isEn = locale === "en";
+  const formatted = new Intl.DateTimeFormat(isEn ? "en-GB" : "it-IT", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00.000Z`));
-  if (!day) return `${formatted}, caricamento disponibilità`;
+  if (!day) return `${formatted}, ${isEn ? "loading availability" : "caricamento disponibilità"}`;
   const price = day.priceLabel ? `, ${day.priceLabel}` : "";
-  return `${formatted}, ${day.reasonLabel ?? "non disponibile"}${price}`;
+  return `${formatted}, ${day.reasonLabel ?? (isEn ? "unavailable" : "non disponibile")}${price}`;
 }
 
 function calendarDayClass({
@@ -1006,6 +1350,7 @@ function DateStep({
   canContinue: boolean;
   onPriceChange: (price: SelectedPrice | null) => void;
 }) {
+  const copy = getDateStepCopy(locale);
   const [visibleMonth, setVisibleMonth] = useState(() =>
     monthKeyFromIso(value || new Date().toISOString().slice(0, 10)),
   );
@@ -1053,7 +1398,7 @@ function DateStep({
       signal: controller.signal,
     })
       .then(async (res) => {
-        if (!res.ok) throw new Error("Calendario non disponibile");
+        if (!res.ok) throw new Error(copy.calendarUnavailable);
         const body = (await res.json()) as { data?: { days?: CalendarApiDay[] } };
         const next: Record<string, CalendarApiDay> = {};
         for (const day of body.data?.days ?? []) {
@@ -1063,7 +1408,7 @@ function DateStep({
       })
       .catch((err) => {
         if ((err as Error).name !== "AbortError") {
-          setCalendarError("Non riesco a caricare disponibilità e prezzi. Riprova tra poco.");
+          setCalendarError(copy.calendarLoadError);
         }
       })
       .finally(() => {
@@ -1125,34 +1470,34 @@ function DateStep({
         if (canContinue) onNext();
       }}
     >
-      <h2 className="text-2xl font-bold leading-tight">Scegli una data disponibile</h2>
+      <h2 className="text-2xl font-bold leading-tight">{copy.title}</h2>
       <fieldset className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:bg-slate-50 sm:p-4">
-        <legend className="sr-only">Calendario disponibilità e prezzi</legend>
+        <legend className="sr-only">{copy.calendarLegend}</legend>
         <div className="mb-3 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => setVisibleMonth((month) => shiftMonth(month, -1))}
             disabled={!canGoPrevious}
             className="inline-flex size-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 disabled:opacity-40"
-            aria-label="Mese precedente"
+            aria-label={copy.previousMonth}
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
           <p className="min-w-0 text-center text-base font-bold capitalize text-slate-950">
-            {monthLabel(visibleMonth)}
+            {monthLabel(visibleMonth, locale)}
           </p>
           <button
             type="button"
             onClick={() => setVisibleMonth((month) => shiftMonth(month, 1))}
             className="inline-flex size-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700"
-            aria-label="Mese successivo"
+            aria-label={copy.nextMonth}
           >
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </div>
 
         <div className="grid grid-cols-7 gap-0.5 text-center text-[11px] font-bold uppercase text-slate-500 sm:gap-1">
-          {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((day) => (
+          {copy.weekdays.map((day) => (
             <div key={day} className="py-1">
               {day}
             </div>
@@ -1183,8 +1528,8 @@ function DateStep({
                   if (outOfMonth) setVisibleMonth(monthKeyFromIso(date));
                 }}
                 aria-pressed={selected || rangeSelected}
-                aria-label={`${calendarDayAriaLabel(date, day)}${
-                  includedInSelectedRange ? ", incluso nell'intervallo selezionato" : ""
+                aria-label={`${calendarDayAriaLabel(date, day, locale)}${
+                  includedInSelectedRange ? copy.includedInSelectedRange : ""
                 }`}
                 className={calendarDayClass({
                   selected,
@@ -1227,15 +1572,15 @@ function DateStep({
         <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            Libera
+            {copy.available}
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-full bg-amber-500" aria-hidden="true" />
-            Su richiesta
+            {copy.onRequest}
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-full bg-slate-300" aria-hidden="true" />
-            Non disponibile
+            {copy.unavailable}
           </span>
         </div>
         {calendarError && (
@@ -1250,9 +1595,9 @@ function DateStep({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
-                  Data selezionata
+                  {copy.selectedDate}
                 </p>
-                <p className="mt-1 font-bold">{formatIsoDateLabel(value)}</p>
+                <p className="mt-1 font-bold">{formatIsoDateLabel(value, locale)}</p>
                 {selectedDay?.priceHint && (
                   <p className="mt-1 text-xs leading-5 text-emerald-800">
                     {selectedDay.priceHint}
@@ -1260,7 +1605,7 @@ function DateStep({
                 )}
               </div>
               <span className={calendarStatusBadgeClass(selectedDay?.status)}>
-                {selectedDay?.reasonLabel ?? "Selezionata"}
+                {selectedDay?.reasonLabel ?? copy.selected}
               </span>
             </div>
             {selectedDay?.priceLabel && (
@@ -1290,8 +1635,8 @@ function DateStep({
       )}
       {isCharter && fixedDurationDays && (
         <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900">
-          Durata selezionata: {fixedDurationDays} giornate
-          {fixedEndDate ? `, fino al ${fixedEndDate}` : ""}.
+          {copy.selectedDuration}: {fixedDurationDays} {copy.days}
+          {fixedEndDate ? `, ${copy.until} ${formatIsoDateLabel(fixedEndDate, locale)}` : ""}.
         </p>
       )}
       {isCharter && !fixedDurationDays && (
@@ -1301,7 +1646,7 @@ function DateStep({
               htmlFor="wizard-end-date"
               className="w-8 shrink-0 text-right text-sm font-medium text-gray-600"
             >
-              A
+              {copy.to}
             </label>
             <input
               id="wizard-end-date"
@@ -1316,12 +1661,12 @@ function DateStep({
           </div>
           {charterIsTooShort && (
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
-              Il charter richiede almeno 3 giornate.
+              {copy.charterTooShort}
             </p>
           )}
           {charterIsTooLong && (
             <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-sky-800">
-              Per charter più lunghi di 7 giornate contatta la crew per un preventivo dedicato.
+              {copy.charterTooLong}
             </p>
           )}
         </>
@@ -1331,7 +1676,7 @@ function DateStep({
         disabled={!canContinue}
         className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
       >
-        Avanti
+        {copy.next}
         <ChevronRight className="size-4" aria-hidden="true" />
       </button>
     </form>
@@ -1361,6 +1706,7 @@ function PeopleStep({
   onNext: () => void;
   checking?: boolean;
 }) {
+  const copy = getPeopleStepCopy(locale);
   const seats = occupiedSeats(value, fareRules);
   const paidUnits = paidUnitsForClient(serviceType, value, selectedPrice, fareRules);
   const totalGuests = totalGuestCountFromBreakdown(value);
@@ -1387,7 +1733,7 @@ function PeopleStep({
         if (canSubmit) onNext();
       }}
     >
-      <h2 className="text-2xl font-bold">Chi sale a bordo?</h2>
+      <h2 className="text-2xl font-bold">{copy.title}</h2>
       <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         {fareRules.filter((rule) => rule.active).map((rule) => {
           const field = PASSENGER_CATEGORY_FIELD[rule.category];
@@ -1395,8 +1741,8 @@ function PeopleStep({
             <PassengerCounter
               key={rule.category}
               id={`wizard-${field}`}
-              label={rule.label}
-              hint={rule.ageLabel}
+              label={passengerRuleLabel(rule, locale)}
+              hint={passengerRuleHint(rule, locale)}
               value={value[field]}
               min={0}
               icon={
@@ -1407,6 +1753,8 @@ function PeopleStep({
                 )
               }
               onChange={(n) => update(field, n)}
+              decrementText={copy.decrease}
+              incrementText={copy.increase}
             />
           );
         })}
@@ -1418,28 +1766,30 @@ function PeopleStep({
         )}
       >
         <div>
-          <div className="text-xs font-semibold uppercase text-slate-500">Posti occupati</div>
+          <div className="text-xs font-semibold uppercase text-slate-500">{copy.seatsUsed}</div>
           <div className="font-bold tabular-nums">{seats} / {capacityMax}</div>
         </div>
         <div>
-          <div className="text-xs font-semibold uppercase text-slate-500">Quote paganti</div>
-          <div className="font-bold tabular-nums">{paidUnits.toLocaleString("it-IT")}</div>
+          <div className="text-xs font-semibold uppercase text-slate-500">{copy.paidUnits}</div>
+          <div className="font-bold tabular-nums">
+            {paidUnits.toLocaleString(locale === "en" ? "en-GB" : "it-IT")}
+          </div>
         </div>
         <div className="col-span-2 sm:col-span-1">
-          <div className="text-xs font-semibold uppercase text-slate-500">Totale stimato</div>
+          <div className="text-xs font-semibold uppercase text-slate-500">{copy.estimatedTotal}</div>
           <div className="font-bold tabular-nums">
-            {estimatedTotal != null ? formatClientEurWithVat(estimatedTotal, locale) : "In caricamento"}
+            {estimatedTotal != null ? formatClientEurWithVat(estimatedTotal, locale) : copy.loading}
           </div>
         </div>
       </div>
       {totalGuests > 0 && (
         <p id="wizard-people-hint" className="text-sm text-gray-600">
-          Totale ospiti: {totalGuests}.
+          {copy.totalGuests}: {totalGuests}.
         </p>
       )}
       {capacityExceeded && (
         <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          Hai selezionato più posti della capacità disponibile.
+          {copy.capacityExceeded}
         </p>
       )}
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -1451,7 +1801,7 @@ function PeopleStep({
             className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 py-3 font-semibold disabled:opacity-50"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Indietro
+            {copy.back}
           </button>
         )}
         <button
@@ -1459,7 +1809,7 @@ function PeopleStep({
           disabled={!canSubmit}
           className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
         >
-          {checking ? "Verifica..." : "Avanti"}
+          {checking ? copy.checking : copy.next}
           {!checking && <ChevronRight className="size-4" aria-hidden="true" />}
         </button>
       </div>
@@ -1475,6 +1825,8 @@ function PassengerCounter({
   min,
   icon,
   onChange,
+  decrementText = "Diminuisci",
+  incrementText = "Aumenta",
 }: {
   id: string;
   label: string;
@@ -1483,6 +1835,8 @@ function PassengerCounter({
   min: number;
   icon: ReactNode;
   onChange: (n: number) => void;
+  decrementText?: string;
+  incrementText?: string;
 }) {
   return (
     <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-3">
@@ -1503,7 +1857,7 @@ function PassengerCounter({
           onClick={() => onChange(value - 1)}
           disabled={value <= min}
           className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-300 font-bold disabled:opacity-40 sm:size-11"
-          aria-label={`Diminuisci ${label}`}
+          aria-label={`${decrementText} ${label}`}
         >
           -
         </button>
@@ -1523,7 +1877,7 @@ function PassengerCounter({
           type="button"
           onClick={() => onChange(value + 1)}
           className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-300 font-bold sm:size-11"
-          aria-label={`Aumenta ${label}`}
+          aria-label={`${incrementText} ${label}`}
         >
           +
         </button>
@@ -1571,6 +1925,7 @@ function ReviewStep({
   onBack: () => void;
   onConfirm: () => void;
 }) {
+  const copy = getReviewStepCopy(locale);
   const totalAmount = estimateTotalAmount(serviceType, passengers, selectedPrice, fareRules);
   const payment = estimatePaymentBreakdown(totalAmount, paymentSchedule, depositPercentage);
   const seats = occupiedSeats(passengers, fareRules);
@@ -1578,27 +1933,29 @@ function ReviewStep({
   const paidUnits = paidUnitsForClient(serviceType, passengers, selectedPrice, fareRules);
   const durationLabel =
     durationType === "MULTI_DAY" && durationDays
-      ? `${durationDays} giornate`
+      ? `${durationDays} ${copy.days}`
       : durationHours >= 24
-        ? `${Math.ceil(durationHours / 24)} giornate`
-        : `${durationHours} ore`;
+        ? `${Math.ceil(durationHours / 24)} ${copy.days}`
+        : `${durationHours} ${copy.hours}`;
   const dateLabel =
     endDate && endDate !== startDate
-      ? `${formatIsoDateLabel(startDate)} - ${formatIsoDateLabel(endDate)}`
-      : formatIsoDateLabel(startDate);
-  const guestLabel = totalGuests === 1 ? "1 ospite" : `${totalGuests} ospiti`;
+      ? `${formatIsoDateLabel(startDate, locale)} - ${formatIsoDateLabel(endDate, locale)}`
+      : formatIsoDateLabel(startDate, locale);
+  const guestLabel = totalGuests === 1 ? copy.oneGuest : `${totalGuests} ${copy.guests}`;
   const customerName = `${customer.firstName} ${customer.lastName}`.trim();
   const paymentModeLabel =
     paymentSchedule === "DEPOSIT_BALANCE"
-      ? `Acconto ${depositPercentage}%`
-      : "Pagamento completo";
-  const paidUnitsLabel = paidUnits.toLocaleString("it-IT");
+      ? locale === "en"
+        ? `${depositPercentage}% deposit`
+        : `Acconto ${depositPercentage}%`
+      : copy.fullPayment;
+  const paidUnitsLabel = paidUnits.toLocaleString(locale === "en" ? "en-GB" : "it-IT");
   const showGuestBreakdown = fareRules.some(
     (rule) => rule.active && passengers[PASSENGER_CATEGORY_FIELD[rule.category]] > 0,
   );
   const guestAccountingDetails = [
-    seats !== totalGuests ? `Posti occupati: ${seats}` : null,
-    Math.abs(paidUnits - seats) > 0.001 ? `Quote paganti: ${paidUnitsLabel}` : null,
+    seats !== totalGuests ? `${copy.seatsUsed}: ${seats}` : null,
+    Math.abs(paidUnits - seats) > 0.001 ? `${copy.paidUnits}: ${paidUnitsLabel}` : null,
   ].filter(Boolean);
 
   return (
@@ -1611,46 +1968,52 @@ function ReviewStep({
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">
-          Controlla prima di pagare
+          {copy.eyebrow}
         </p>
-        <h2 className="mt-1 text-2xl font-bold">Riepilogo prenotazione</h2>
+        <h2 className="mt-1 text-2xl font-bold">{copy.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Il pagamento verrà aperto su Stripe solo dopo questa conferma.
+          {copy.subtitle}
         </p>
       </div>
 
       <fieldset className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4">
         <legend className="text-sm font-bold uppercase tracking-[0.12em] text-slate-500">
-          Come vuoi pagare?
+          {copy.paymentQuestion}
         </legend>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <PaymentChoiceCard
             checked={paymentSchedule === "DEPOSIT_BALANCE"}
-            title={`Acconto ${depositPercentage}%`}
-            badge="Consigliato"
-            description="Blocchi subito la data pagando solo l'acconto."
+            title={locale === "en" ? `${depositPercentage}% deposit` : `Acconto ${depositPercentage}%`}
+            badge={copy.recommended}
+            description={copy.depositDescription}
             amount={
               payment
                 ? appendClientVatIncluded(
-                    formatClientCents(Math.round((payment.totalCents * depositPercentage) / 100)),
+                    formatClientCents(
+                      Math.round((payment.totalCents * depositPercentage) / 100),
+                      locale,
+                    ),
                     locale,
                   )
-                : "In calcolo"
+                : copy.calculating
             }
             onChange={() => onPaymentScheduleChange("DEPOSIT_BALANCE")}
           />
           <PaymentChoiceCard
             checked={paymentSchedule === "FULL"}
-            title="Pagamento completo"
-            description="Saldi tutta la prenotazione adesso con carta."
-            amount={payment ? appendClientVatIncluded(formatClientCents(payment.totalCents), locale) : "In calcolo"}
+            title={copy.fullPayment}
+            description={copy.fullPaymentDescription}
+            amount={
+              payment
+                ? appendClientVatIncluded(formatClientCents(payment.totalCents, locale), locale)
+                : copy.calculating
+            }
             onChange={() => onPaymentScheduleChange("FULL")}
           />
         </div>
         {paymentSchedule === "DEPOSIT_BALANCE" && (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
-            La quota pagata online segue la policy di cancellazione. Il saldo restante
-            verrà pagato in loco prima della partenza.
+            {copy.depositNote}
           </p>
         )}
       </fieldset>
@@ -1659,7 +2022,7 @@ function ReviewStep({
         <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-sky-700">
-              Riepilogo
+              {copy.summary}
             </p>
             <h3 className="mt-1 break-words text-xl font-heading font-bold text-slate-950">
               {serviceName}
@@ -1671,9 +2034,9 @@ function ReviewStep({
         </div>
 
         <div className="grid grid-cols-2 gap-x-5 gap-y-4 border-b border-slate-200 py-4 sm:grid-cols-3">
-          <SummaryMetric label="Data" value={dateLabel} />
-          <SummaryMetric label="Durata" value={durationLabel} />
-          <SummaryMetric label="Ospiti" value={guestLabel} />
+          <SummaryMetric label={copy.date} value={dateLabel} />
+          <SummaryMetric label={copy.duration} value={durationLabel} />
+          <SummaryMetric label={copy.guestsLabel} value={guestLabel} />
         </div>
 
         {(showGuestBreakdown || guestAccountingDetails.length > 0) && (
@@ -1683,7 +2046,11 @@ function ReviewStep({
                 {fareRules.filter((rule) => rule.active).map((rule) => {
                   const value = passengers[PASSENGER_CATEGORY_FIELD[rule.category]];
                   return value > 0 ? (
-                    <SummaryPill key={rule.category} label={rule.label} value={value} />
+                    <SummaryPill
+                      key={rule.category}
+                      label={passengerRuleLabel(rule, locale)}
+                      value={value}
+                    />
                   ) : null;
                 })}
               </div>
@@ -1697,8 +2064,8 @@ function ReviewStep({
         )}
 
         <div className="grid grid-cols-2 gap-x-5 gap-y-4 border-b border-slate-200 py-4">
-          <SummaryMetric label="Cliente" value={customerName} />
-          <SummaryMetric label="Telefono" value={customer.phone} />
+          <SummaryMetric label={copy.customer} value={customerName} />
+          <SummaryMetric label={copy.phone} value={customer.phone} />
           <div className="col-span-2">
             <SummaryMetric label="Email" value={customer.email} />
           </div>
@@ -1706,31 +2073,31 @@ function ReviewStep({
 
         <div className="pt-4">
           <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
-            Pagamento
+            {copy.payment}
           </h4>
           {payment ? (
             <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3">
               <SummaryMetric
-                label="Totale"
-                value={appendClientVatIncluded(formatClientCents(payment.totalCents), locale)}
+                label={copy.total}
+                value={appendClientVatIncluded(formatClientCents(payment.totalCents, locale), locale)}
                 strong
               />
               <SummaryMetric
                 label={
                   paymentSchedule === "DEPOSIT_BALANCE"
-                    ? `Ora (${payment.depositPercentage}%)`
-                    : "Ora"
+                    ? `${copy.now} (${payment.depositPercentage}%)`
+                    : copy.now
                 }
-                value={appendClientVatIncluded(formatClientCents(payment.upfrontCents), locale)}
+                value={appendClientVatIncluded(formatClientCents(payment.upfrontCents, locale), locale)}
                 strong
                 highlight
               />
               <div className="col-span-2 sm:col-span-1">
                 <SummaryMetric
-                  label="Saldo in loco"
+                  label={copy.balanceOnSite}
                   value={
                     payment.balanceCents > 0
-                      ? appendClientVatIncluded(formatClientCents(payment.balanceCents), locale)
+                      ? appendClientVatIncluded(formatClientCents(payment.balanceCents, locale), locale)
                       : "-"
                   }
                 />
@@ -1738,16 +2105,14 @@ function ReviewStep({
             </div>
           ) : (
             <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
-              Prezzo non ancora disponibile. Torna alla data e seleziona una giornata con listino.
+              {copy.priceUnavailable}
             </p>
           )}
         </div>
       </div>
 
       <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
-        Il totale definitivo viene ricalcolato dal server al momento della conferma,
-        usando disponibilità, listino e sconti configurati. Il saldo, se presente,
-        si paga solo in loco prima della partenza.
+        {copy.serverRecalculationNote}
       </p>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -1758,14 +2123,14 @@ function ReviewStep({
           className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-3 text-center font-semibold disabled:opacity-50"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          Modifica dati
+          {copy.editDetails}
         </button>
         <button
           type="submit"
           disabled={!payment || loading}
           className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 text-center font-bold text-white disabled:opacity-50"
         >
-          {loading ? "Creo il pagamento..." : "Conferma e vai a Stripe"}
+          {loading ? copy.creatingPayment : copy.confirmAndPay}
           {!loading && <CreditCard className="size-4" aria-hidden="true" />}
         </button>
       </div>
@@ -1868,6 +2233,72 @@ function SummaryPill({ label, value }: { label: string; value: number }) {
   );
 }
 
+function PhoneNumberField({
+  locale,
+  value,
+  onChange,
+  label,
+}: {
+  locale: string;
+  value: string;
+  onChange: (phone: string) => void;
+  label: string;
+}) {
+  const country = selectedPhoneCountry(value, locale);
+  const nationalNumber = stripDialCode(value, country);
+
+  function handleCountryChange(countryCode: string) {
+    const nextCountry = countryByCode(countryCode);
+    onChange(composePhone(nextCountry.dialCode, nationalNumber));
+  }
+
+  function handleNumberChange(nextValue: string) {
+    if (nextValue.trim().startsWith("+")) {
+      onChange(nextValue);
+      return;
+    }
+    onChange(composePhone(country.dialCode, nextValue));
+  }
+
+  return (
+    <div>
+      <label htmlFor="wizard-phone" className="block text-sm font-medium mb-1">
+        {label}
+      </label>
+      <div className="grid grid-cols-[minmax(7.5rem,9.5rem)_minmax(0,1fr)] overflow-hidden rounded-lg border border-gray-300 bg-white focus-within:ring-2 focus-within:ring-[var(--color-gold)]/45">
+        <div className="flex min-w-0 items-center gap-2 border-r border-gray-200 bg-slate-50 px-3">
+          <CountryFlag code={country.flagCode} className="h-4 w-6" />
+          <select
+            aria-label={locale === "en" ? "Phone country code" : "Prefisso telefonico"}
+            autoComplete="tel-country-code"
+            className="min-w-0 flex-1 bg-transparent py-3 text-sm font-semibold text-slate-800 outline-none"
+            value={country.code}
+            onChange={(event) => handleCountryChange(event.target.value)}
+          >
+            {PHONE_COUNTRIES.map((phoneCountry) => (
+              <option key={phoneCountry.code} value={phoneCountry.code}>
+                {phoneCountry.label} {phoneCountry.dialCode}
+              </option>
+            ))}
+          </select>
+        </div>
+        <input
+          id="wizard-phone"
+          type="tel"
+          required
+          aria-required="true"
+          autoComplete="tel-national"
+          inputMode="tel"
+          placeholder={locale === "en" ? "7123 456789" : "333 123 4567"}
+          className="min-w-0 px-4 py-3 outline-none"
+          value={nationalNumber}
+          onChange={(event) => handleNumberChange(event.target.value)}
+        />
+      </div>
+    </div>
+  );
+}
+
 function CustomerStep({
   locale,
   value,
@@ -1899,11 +2330,12 @@ function CustomerStep({
   onConsentPrivacyChange: (v: boolean) => void;
   onConsentTermsChange: (v: boolean) => void;
 }) {
+  const copy = getCustomerStepCopy(locale);
   const valid = Boolean(
     value.email.trim() &&
       value.firstName.trim() &&
       value.lastName.trim() &&
-      value.phone.trim(),
+      hasNationalPhoneNumber(value.phone, locale),
   );
   return (
     <form
@@ -1913,7 +2345,7 @@ function CustomerStep({
         if (valid && !loading && consentPrivacy && consentTerms) onNext();
       }}
     >
-      <h2 className="text-2xl font-bold">I tuoi dati</h2>
+      <h2 className="text-2xl font-bold">{copy.title}</h2>
       {/* R19 WCAG 3.3.2 label visibility: placeholder-as-label era
            non-conforme (scompare al focus, screen reader incerto su quale
            campo). Ora label esplicita + aria-required. EAA 2025 blocker
@@ -1925,7 +2357,7 @@ function CustomerStep({
         <input
           id="wizard-email"
           type="email"
-          placeholder="mario@esempio.it"
+          placeholder={locale === "en" ? "you@example.com" : "mario@esempio.it"}
           required
           aria-required="true"
           autoComplete="email"
@@ -1937,7 +2369,7 @@ function CustomerStep({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label htmlFor="wizard-first-name" className="block text-sm font-medium mb-1">
-            Nome
+            {copy.firstName}
           </label>
           <input
             id="wizard-first-name"
@@ -1952,7 +2384,7 @@ function CustomerStep({
         </div>
         <div>
           <label htmlFor="wizard-last-name" className="block text-sm font-medium mb-1">
-            Cognome
+            {copy.lastName}
           </label>
           <input
             id="wizard-last-name"
@@ -1966,22 +2398,12 @@ function CustomerStep({
           />
         </div>
       </div>
-      <div>
-        <label htmlFor="wizard-phone" className="block text-sm font-medium mb-1">
-          Telefono
-        </label>
-        <input
-          id="wizard-phone"
-          type="tel"
-          required
-          aria-required="true"
-          autoComplete="tel"
-          placeholder="+39 333 123 4567"
-          className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3"
-          value={value.phone}
-          onChange={(e) => onChange({ ...value, phone: e.target.value })}
-        />
-      </div>
+      <PhoneNumberField
+        locale={locale}
+        label={copy.phone}
+        value={value.phone}
+        onChange={(phone) => onChange({ ...value, phone })}
+      />
       {turnstileSiteKey && (
         <div className="max-w-full overflow-x-auto pb-1">
           <TurnstileWidget
@@ -2005,7 +2427,7 @@ function CustomerStep({
             required
           />
           <span className="min-w-0 leading-6">
-            Ho letto e accetto la{" "}
+            {copy.privacyPrefix}{" "}
             <a
               href={`/${locale}/privacy`}
               target="_blank"
@@ -2026,16 +2448,16 @@ function CustomerStep({
             required
           />
           <span className="min-w-0 leading-6">
-            Accetto i{" "}
+            {copy.termsPrefix}{" "}
             <a
               href={`/${locale}/terms`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline"
             >
-              Termini &amp; Condizioni
+              {copy.terms}
             </a>{" "}
-            di prenotazione, inclusa la policy di cancellazione. *
+            {copy.termsSuffix} *
           </span>
         </label>
       </div>
@@ -2048,14 +2470,14 @@ function CustomerStep({
           className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-3 text-center font-semibold disabled:opacity-50"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          Indietro
+          {copy.back}
         </button>
         <button
           type="submit"
           disabled={!valid || loading || !consentPrivacy || !consentTerms}
           className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 text-center font-bold text-white disabled:opacity-50"
         >
-          {loading ? "Attendere..." : "Procedi al pagamento"}
+          {loading ? copy.wait : copy.continueToPayment}
           {!loading && <CreditCard className="size-4" aria-hidden="true" />}
         </button>
       </div>

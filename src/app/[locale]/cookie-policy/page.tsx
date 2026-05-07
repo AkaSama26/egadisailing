@@ -58,10 +58,12 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const isEn = locale === "en";
   return buildPageMetadata({
-    title: "Cookie Policy",
-    description:
-      "Cookie Policy Egadisailing: cookie tecnici, consenso, sessioni, pagamenti Stripe, Cloudflare, Google Maps e tracker opzionali solo dopo consenso.",
+    title: isEn ? "Cookie Policy" : "Cookie Policy",
+    description: isEn
+      ? "Egadisailing Cookie Policy: technical cookies, consent choices, booking sessions, Stripe payments, Cloudflare, Google Maps and optional trackers."
+      : "Cookie Policy Egadisailing: cookie tecnici, consenso, sessioni, pagamenti Stripe, Cloudflare, Google Maps e tracker opzionali solo dopo consenso.",
     path: "/cookie-policy",
     locale,
   });

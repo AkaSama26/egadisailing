@@ -62,7 +62,7 @@ export function StripePaymentForm(props: Props) {
   );
 
   if (!stripePublishableKey) {
-    return <PaymentSetupError />;
+    return <PaymentSetupError locale={props.locale} />;
   }
 
   return (
@@ -96,6 +96,7 @@ function InnerForm({
   onSuccess,
   onRetryNeeded,
 }: Props) {
+  const copy = getStripePaymentCopy(locale);
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
@@ -135,7 +136,7 @@ function InnerForm({
     });
 
     if (stripeError) {
-      setError(stripeError.message ?? "Errore pagamento");
+      setError(stripeError.message ?? copy.paymentError);
       // R15-UX-1: se l'errore e' terminale, il clientSecret non e' piu' usabile.
       // Esponiamo "Usa un altro metodo" che resetta il wizard per ricreare PI.
       const code = stripeError.code ?? "";
@@ -152,7 +153,7 @@ function InnerForm({
       ) {
         onSuccess();
       } else {
-        setError("Il pagamento non è stato completato. Controlla i dati e riprova.");
+        setError(copy.paymentIncomplete);
         setProcessing(false);
       }
     }
@@ -162,11 +163,11 @@ function InnerForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">
-          Pagamento sicuro
+          {copy.eyebrow}
         </p>
-        <h2 className="mt-1 text-2xl font-bold">Completa il checkout</h2>
+        <h2 className="mt-1 text-2xl font-bold">{copy.title}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          Inserisci i dati della carta o scegli un metodo supportato da Stripe.
+          {copy.subtitle}
         </p>
       </div>
       <PaymentSummary
@@ -182,7 +183,7 @@ function InnerForm({
             aria-live="polite"
             className="mb-3 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600"
           >
-            Caricamento form di pagamento...
+            {copy.loadingForm}
           </div>
         )}
         <PaymentElement
@@ -202,11 +203,11 @@ function InnerForm({
       <div className="grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
         <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
           <LockKeyhole className="size-4 text-emerald-600" aria-hidden="true" />
-          Dati carta gestiti da Stripe
+          {copy.stripeCardData}
         </div>
         <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2">
           <ShieldCheck className="size-4 text-emerald-600" aria-hidden="true" />
-          Conferma via email dopo il pagamento
+          {copy.emailConfirmation}
         </div>
       </div>
       {terminalError && onRetryNeeded ? (
@@ -215,7 +216,7 @@ function InnerForm({
           onClick={onRetryNeeded}
           className="w-full py-3 rounded-full bg-gray-900 text-white font-bold"
         >
-          Usa un altro metodo di pagamento
+          {copy.useAnotherMethod}
         </button>
       ) : (
         <button
@@ -224,28 +225,31 @@ function InnerForm({
           className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
         >
           <CreditCard className="size-4" aria-hidden="true" />
-          {processing ? "In elaborazione..." : `Paga ${formatEurCentsWithVat(amountCents, locale)}`}
+          {processing ? copy.processing : `${copy.pay} ${formatEurCentsWithVat(amountCents, locale)}`}
         </button>
       )}
     </form>
   );
 }
 
-function PaymentSetupError() {
+function PaymentSetupError({ locale }: { locale: string }) {
+  const isEn = locale === "en";
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-      <h2 className="text-lg font-bold">Pagamento non configurato</h2>
+      <h2 className="text-lg font-bold">
+        {isEn ? "Payment not configured" : "Pagamento non configurato"}
+      </h2>
       <p className="mt-1">
-        Manca la chiave pubblica Stripe. Imposta{" "}
+        {isEn ? "Stripe public key is missing. Set " : "Manca la chiave pubblica Stripe. Imposta "}
         <code className="rounded bg-amber-100 px-1 py-0.5">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>{" "}
-        e riavvia il dev server.
+        {isEn ? "and restart the dev server." : "e riavvia il dev server."}
       </p>
     </div>
   );
 }
 
-function formatEurCents(cents: number) {
-  return new Intl.NumberFormat("it-IT", {
+function formatEurCents(cents: number, locale: string) {
+  return new Intl.NumberFormat(locale === "en" ? "en-GB" : "it-IT", {
     style: "currency",
     currency: "EUR",
   }).format(cents / 100);
@@ -256,7 +260,7 @@ function vatIncludedLabel(locale: string): string {
 }
 
 function formatEurCentsWithVat(cents: number, locale: string) {
-  return `${formatEurCents(cents)} · ${vatIncludedLabel(locale)}`;
+  return `${formatEurCents(cents, locale)} · ${vatIncludedLabel(locale)}`;
 }
 
 function PaymentSummary({
@@ -270,27 +274,68 @@ function PaymentSummary({
   totalCents: number;
   balanceCents: number;
 }) {
+  const copy = getStripePaymentCopy(locale);
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
       <div className="flex items-center justify-between gap-4">
-        <span>Totale prenotazione</span>
+        <span>{copy.bookingTotal}</span>
         <strong className="text-slate-950">{formatEurCentsWithVat(totalCents, locale)}</strong>
       </div>
       <div className="mt-2 flex items-center justify-between gap-4">
-        <span>Da pagare ora</span>
+        <span>{copy.payNow}</span>
         <strong className="text-slate-950">{formatEurCentsWithVat(amountCents, locale)}</strong>
       </div>
       {balanceCents > 0 && (
         <div className="mt-2 flex items-center justify-between gap-4 text-amber-700">
-          <span>Saldo in loco</span>
+          <span>{copy.balanceOnSite}</span>
           <strong>{formatEurCentsWithVat(balanceCents, locale)}</strong>
         </div>
       )}
       {balanceCents > 0 && (
         <p className="mt-2 text-xs leading-5 text-amber-800">
-          Il saldo restante si paga in loco prima della partenza.
+          {copy.balanceNote}
         </p>
       )}
     </div>
   );
+}
+
+function getStripePaymentCopy(locale: string) {
+  if (locale === "en") {
+    return {
+      paymentError: "Payment error",
+      paymentIncomplete: "The payment was not completed. Check the details and try again.",
+      eyebrow: "Secure payment",
+      title: "Complete checkout",
+      subtitle: "Enter your card details or choose a payment method supported by Stripe.",
+      loadingForm: "Loading payment form...",
+      stripeCardData: "Card details managed by Stripe",
+      emailConfirmation: "Email confirmation after payment",
+      useAnotherMethod: "Use another payment method",
+      processing: "Processing...",
+      pay: "Pay",
+      bookingTotal: "Booking total",
+      payNow: "Pay now",
+      balanceOnSite: "Balance on site",
+      balanceNote: "The remaining balance is paid on site before departure.",
+    };
+  }
+
+  return {
+    paymentError: "Errore pagamento",
+    paymentIncomplete: "Il pagamento non è stato completato. Controlla i dati e riprova.",
+    eyebrow: "Pagamento sicuro",
+    title: "Completa il checkout",
+    subtitle: "Inserisci i dati della carta o scegli un metodo supportato da Stripe.",
+    loadingForm: "Caricamento form di pagamento...",
+    stripeCardData: "Dati carta gestiti da Stripe",
+    emailConfirmation: "Conferma via email dopo il pagamento",
+    useAnotherMethod: "Usa un altro metodo di pagamento",
+    processing: "In elaborazione...",
+    pay: "Paga",
+    bookingTotal: "Totale prenotazione",
+    payNow: "Da pagare ora",
+    balanceOnSite: "Saldo in loco",
+    balanceNote: "Il saldo restante si paga in loco prima della partenza.",
+  };
 }

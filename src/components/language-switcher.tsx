@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { routing } from "@/i18n/routing";
 import { liquidGlassButton } from "@/lib/ui/liquid-glass";
+import { CountryFlag, type FlagCode } from "@/components/country-flag";
 
 const localeLabels: Record<string, string> = {
   it: "IT",
@@ -33,6 +34,11 @@ const localeLabels: Record<string, string> = {
   ro: "RO",
   bg: "BG",
   sr: "SR",
+};
+
+const localeFlagCodes: Record<string, FlagCode> = {
+  it: "IT",
+  en: "GB",
 };
 
 export function LanguageSwitcher({ className }: { className?: string }) {
@@ -69,22 +75,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         )}
         aria-label="Select language"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="shrink-0"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-          <path d="M2 12h20" />
-        </svg>
+        <CountryFlag code={localeFlagCodes[locale] ?? "IT"} />
         {localeLabels[locale] ?? locale.toUpperCase()}
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -102,16 +93,17 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 max-h-64 w-32 overflow-y-auto rounded-md border bg-white py-1 shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-1 max-h-64 w-40 overflow-y-auto rounded-md border bg-white py-1 shadow-lg">
           {routing.locales.map((loc) => (
             <button
               key={loc}
               onClick={() => switchLocale(loc)}
               className={cn(
-                "block w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100",
+                "flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100",
                 loc === locale && "bg-gray-100 font-semibold text-gray-900"
               )}
             >
+              <CountryFlag code={localeFlagCodes[loc] ?? "IT"} />
               {localeLabels[loc] ?? loc.toUpperCase()}
             </button>
           ))}

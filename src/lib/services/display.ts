@@ -40,20 +40,37 @@ export function getExperienceTitle(
   return getExperienceDisplay(service, locale).title;
 }
 
-export function getServiceDurationLabel(service: ServiceDisplayInput): string {
-  if (service.type === "CABIN_CHARTER") return "3-7 giornate";
+export function getServiceDurationLabel(
+  service: ServiceDisplayInput,
+  locale?: string | null,
+): string {
+  const isEnglish = locale === "en";
+  const hours = service.durationHours;
+  const hourUnit = isEnglish ? (hours === 1 ? "hour" : "hours") : "ore";
+  if (service.type === "CABIN_CHARTER") return isEnglish ? "3-7 days" : "3-7 giornate";
   if (service.durationType === "MULTI_DAY") {
-    const days = Math.max(1, Math.ceil(service.durationHours / 24));
-    return `${days} giorni`;
+    const days = Math.max(1, Math.ceil(hours / 24));
+    return isEnglish ? `${days} ${days === 1 ? "day" : "days"}` : `${days} giorni`;
   }
-  if (service.durationType === "FULL_DAY") return `${service.durationHours} ore`;
-  if (service.durationType === "HALF_DAY_MORNING") return `${service.durationHours} ore`;
-  if (service.durationType === "HALF_DAY_AFTERNOON") return `${service.durationHours} ore`;
-  if (service.durationType === "WEEK") return "7 giorni";
-  return `${service.durationHours}h`;
+  if (service.durationType === "FULL_DAY") return `${hours} ${hourUnit}`;
+  if (service.durationType === "HALF_DAY_MORNING") return `${hours} ${hourUnit}`;
+  if (service.durationType === "HALF_DAY_AFTERNOON") return `${hours} ${hourUnit}`;
+  if (service.durationType === "WEEK") return isEnglish ? "7 days" : "7 giorni";
+  return isEnglish ? `${hours} ${hourUnit}` : `${hours}h`;
 }
 
-export function getPriceUnitLabel(pricingUnit?: string | null, serviceType?: string | null): string {
-  if (serviceType === "CABIN_CHARTER") return "per pacchetto";
-  return pricingUnit === "PER_PACKAGE" ? "per pacchetto" : "a persona";
+export function getPriceUnitLabel(
+  pricingUnit?: string | null,
+  serviceType?: string | null,
+  locale?: string | null,
+): string {
+  const isEnglish = locale === "en";
+  if (serviceType === "CABIN_CHARTER") return isEnglish ? "per package" : "per pacchetto";
+  return pricingUnit === "PER_PACKAGE"
+    ? isEnglish
+      ? "per package"
+      : "per pacchetto"
+    : isEnglish
+      ? "per person"
+      : "a persona";
 }

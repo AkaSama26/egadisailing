@@ -21,11 +21,20 @@ const EUR_FORMATTER = new Intl.NumberFormat("it-IT", {
   currency: "EUR",
 });
 
-export function formatEur(amount: Decimal | string | number | null | undefined): string {
+const EUR_FORMATTER_EN = new Intl.NumberFormat("en-GB", {
+  style: "currency",
+  currency: "EUR",
+});
+
+export function formatEur(
+  amount: Decimal | string | number | null | undefined,
+  locale?: string | null,
+): string {
   if (amount === null || amount === undefined) return "";
-  return EUR_FORMATTER.format(new Decimal(amount).toNumber());
+  const formatter = locale === "en" ? EUR_FORMATTER_EN : EUR_FORMATTER;
+  return formatter.format(new Decimal(amount).toNumber());
 }
 
-export function formatEurCents(cents: number): string {
-  return formatEur(fromCents(cents));
+export function formatEurCents(cents: number, locale?: string | null): string {
+  return formatEur(fromCents(cents), locale);
 }

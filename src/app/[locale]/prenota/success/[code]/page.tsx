@@ -17,7 +17,6 @@ import { db } from "@/lib/db";
 import { normalizeConfirmationCode } from "@/lib/booking/helpers";
 import { buildTicketUrl, ticketSlotLabel } from "@/lib/booking/ticket";
 import { createQrSvg } from "@/lib/qr-code";
-import { formatItDay } from "@/lib/dates";
 import { formatEurWithVat, formatEurCentsWithVat } from "@/lib/pricing/vat";
 import { getExperienceContent } from "@/data/catalog/experiences";
 import { getServiceDurationLabel } from "@/lib/services/display";
@@ -27,20 +26,39 @@ import { PUBLIC_CONTACT_LOCATION, getContactLocationLabel } from "@/lib/public-c
 
 // R26-A1-A5: pagina post-payment con PII (confirmation code + email link).
 // noindex defense-in-depth.
-export const metadata: Metadata = { robots: { index: false, follow: false } };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: locale === "en" ? "Booking confirmed" : "Prenotazione confermata",
+    robots: { index: false, follow: false },
+  };
+}
 
 const TICKET_HERO_BY_BOAT = {
   trimarano: {
     src: "/images/boats/neel-47/neel-47-navigazione.webp",
-    alt: "Trimarano in navigazione alle Egadi",
+    alt: {
+      it: "Trimarano in navigazione alle Egadi",
+      en: "Trimaran cruising in the Egadi Islands",
+    },
   },
   motoscafo: {
     src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
-    alt: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
+    alt: {
+      it: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
+      en: "Cigala & Bertinetti 34 Offshore Open Bacio cruising",
+    },
   },
   boat: {
     src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
-    alt: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
+    alt: {
+      it: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
+      en: "Cigala & Bertinetti 34 Offshore Open Bacio cruising",
+    },
   },
 } as const;
 
@@ -72,11 +90,13 @@ export default async function BookingSuccessPage({
     boatName: booking.boat.name,
     fallbackSrc: heroMedia?.src,
     fallbackAlt: heroMedia?.alt ?? content?.title ?? booking.service.name,
+    locale,
   });
   const isOverrideRequest = booking.overrideRequest?.status === "PENDING";
   const statusView = getStatusView({
     status: booking.status,
     isOverrideRequest,
+    locale,
   });
   const paidCents = booking.payments
     .filter((p) => p.status === "SUCCEEDED" && p.type !== "REFUND")
@@ -86,12 +106,13 @@ export default async function BookingSuccessPage({
   const totalCents = new Decimal(booking.totalPrice.toString()).mul(100).toNumber();
   const balanceCents = Math.max(0, totalCents - paidCents);
   const dateLabel = sameUtcDay(booking.startDate, booking.endDate)
-    ? formatItDay(booking.startDate)
-    : `${formatItDay(booking.startDate)} - ${formatItDay(booking.endDate)}`;
-  const guestBreakdown = getGuestBreakdown(booking);
+    ? formatPublicDay(booking.startDate, locale)
+    : `${formatPublicDay(booking.startDate, locale)} - ${formatPublicDay(booking.endDate, locale)}`;
+  const guestBreakdown = getGuestBreakdown(booking, locale);
   const isTicketActive = booking.status === "CONFIRMED";
   const StatusIcon = statusView.icon;
   const meetingPointLabel = getContactLocationLabel(locale);
+  const copy = getSuccessCopy(locale);
 
   return (
     <OceanLayout padding="sm" className="egadi-water-reflection overflow-hidden">
@@ -113,26 +134,26 @@ export default async function BookingSuccessPage({
 
               <div className="space-y-3">
                 <p className="text-sm font-semibold uppercase tracking-wide text-sky-700">
-                  Conferma prenotazione Egadisailing
+                  {copy.confirmationEyebrow}
                 </p>
                 <h1 className="max-w-3xl text-3xl font-bold leading-tight text-slate-950 sm:text-5xl">
                   {content?.title ?? booking.service.name}
                 </h1>
                 <p className="max-w-2xl text-base leading-7 text-slate-600">
                   {content?.subtitle ??
-                    "La tua esperienza alle Egadi è registrata. Qui trovi riepilogo, itinerario, pagamenti e QR per il check-in."}
+                    copy.heroFallback}
                 </p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <SummaryTile icon={CalendarDays} label="Data" value={dateLabel} />
+                <SummaryTile icon={CalendarDays} label={copy.date} value={dateLabel} />
                 <SummaryTile
                   icon={Clock}
-                  label="Orario"
-                  value={ticketSlotLabel(booking.service.durationType)}
+                  label={copy.time}
+                  value={ticketSlotLabel(booking.service.durationType, locale)}
                 />
-                <SummaryTile icon={Users} label="Ospiti" value={guestBreakdown} />
-                <SummaryTile icon={Ship} label="Barca" value={booking.boat.name} />
+                <SummaryTile icon={Users} label={copy.guests} value={guestBreakdown} />
+                <SummaryTile icon={Ship} label={copy.boat} value={booking.boat.name} />
               </div>
             </div>
 
@@ -151,8 +172,8 @@ export default async function BookingSuccessPage({
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <p className="text-sm text-white/75">Durata esperienza</p>
-                <p className="text-2xl font-bold">{getServiceDurationLabel(booking.service)}</p>
+                <p className="text-sm text-white/75">{copy.duration}</p>
+                <p className="text-2xl font-bold">{getServiceDurationLabel(booking.service, locale)}</p>
               </div>
             </div>
           </div>
@@ -163,10 +184,10 @@ export default async function BookingSuccessPage({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                  Biglietto QR
+                  {copy.qrEyebrow}
                 </p>
                 <h2 className="mt-1 text-2xl font-bold text-slate-950">
-                  Check-in al porto
+                  {copy.qrTitle}
                 </h2>
               </div>
               <QrCode className="size-7 text-sky-700" aria-hidden="true" />
@@ -180,33 +201,34 @@ export default async function BookingSuccessPage({
                 />
                 {!isTicketActive && (
                   <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-                    Il QR diventa valido al check-in solo dopo la conferma.
+                    {copy.qrInactive}
                   </p>
                 )}
               </div>
 
               <div className="space-y-4">
                 <p className="text-sm leading-6 text-slate-600">
-                  Presenta questo QR allo staff. Il gestore lo scannerizza dal telefono e registra
-                  il check-in sulla prenotazione.
+                  {copy.qrBody}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <QrDownloadButton
                     svg={qrSvg}
                     fileName={`egadisailing-${booking.confirmationCode}-qr.svg`}
-                  />
+                  >
+                    {copy.downloadQr}
+                  </QrDownloadButton>
                   <Link
                     href={`/${locale}/ticket/${booking.confirmationCode}`}
                     className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     <Ticket className="size-4" aria-hidden="true" />
-                    Apri biglietto
+                    {copy.openTicket}
                   </Link>
                 </div>
                 <dl className="grid gap-2 border-t border-slate-200 pt-4 text-sm">
-                  <InfoRow label="Intestatario" value={`${booking.customer.firstName} ${booking.customer.lastName}`.trim()} />
+                  <InfoRow label={copy.holder} value={`${booking.customer.firstName} ${booking.customer.lastName}`.trim()} />
                   <InfoRow label="Email" value={booking.customer.email} />
-                  <InfoRow label="Telefono" value={booking.customer.phone ?? "Non indicato"} />
+                  <InfoRow label={copy.phone} value={booking.customer.phone ?? copy.notProvided} />
                 </dl>
               </div>
             </div>
@@ -216,10 +238,10 @@ export default async function BookingSuccessPage({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                  Pagamento
+                  {copy.payment}
                 </p>
                 <h2 className="mt-1 text-2xl font-bold text-slate-950">
-                  Totale e saldo
+                  {copy.paymentTitle}
                 </h2>
               </div>
               <CreditCard className="size-7 text-emerald-700" aria-hidden="true" />
@@ -227,16 +249,16 @@ export default async function BookingSuccessPage({
 
             <dl className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
               <PaymentRow
-                label="Totale prenotazione"
+                label={copy.total}
                 value={formatEurWithVat(booking.totalPrice, locale)}
               />
               <PaymentRow
-                label="Saldato online"
+                label={copy.paidOnline}
                 value={formatEurCentsWithVat(paidCents, locale)}
                 tone="paid"
               />
               <PaymentRow
-                label="Da saldare in loco"
+                label={copy.balanceDue}
                 value={
                   balanceCents > 0
                     ? formatEurCentsWithVat(balanceCents, locale)
@@ -248,11 +270,11 @@ export default async function BookingSuccessPage({
 
             {balanceCents > 0 ? (
               <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                Il saldo restante si paga in loco prima della partenza.
+                {copy.balanceDueNote}
               </div>
             ) : (
               <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                Prenotazione saldata: non risulta saldo residuo.
+                {copy.noBalanceNote}
               </div>
             )}
           </section>
@@ -263,21 +285,21 @@ export default async function BookingSuccessPage({
             <div className="space-y-5">
               <div className="space-y-3">
                 <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                  Dettagli esperienza
+                  {copy.detailsEyebrow}
                 </p>
                 <h2 className="text-2xl font-bold text-slate-950">
                   {content?.title ?? booking.service.name}
                 </h2>
                 <p className="text-sm leading-6 text-slate-600">
                   {content?.detailDescription ??
-                    "Rotta, soste e timing vengono gestiti dalla crew in base alle condizioni del mare."}
+                    copy.detailsFallback}
                 </p>
               </div>
 
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
                 <div className="p-4">
                   <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">
-                    Punto d&apos;incontro
+                    {copy.meetingPoint}
                   </h3>
                   <p className="mt-1 font-semibold text-slate-950">{meetingPointLabel}</p>
                 </div>
@@ -290,7 +312,7 @@ export default async function BookingSuccessPage({
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="Mappa punto d'incontro Egadisailing"
+                    title={copy.mapTitle}
                     className="h-full w-full"
                   />
                 </div>
@@ -298,14 +320,14 @@ export default async function BookingSuccessPage({
             </div>
 
             <div>
-              <h3 className="text-lg font-bold text-slate-950">Itinerario previsto</h3>
+              <h3 className="text-lg font-bold text-slate-950">{copy.itinerary}</h3>
               <ol className="mt-4 space-y-4">
-                {(content?.itinerary ?? fallbackItinerary()).map((item, index) => (
+                {(content?.itinerary ?? fallbackItinerary(locale)).map((item, index) => (
                   <li key={`${item.time}-${index}`} className="grid grid-cols-[72px_1fr] gap-4">
                     <div className="text-sm font-bold text-sky-700">{item.time}</div>
                     <div className="border-b border-slate-200 pb-4 last:border-0">
                       <div className="font-semibold text-slate-950">
-                        {item.title ?? item.location ?? "Tappa"}
+                        {item.title ?? item.location ?? copy.stop}
                       </div>
                       {item.location && item.title && (
                         <div className="text-sm text-slate-500">{item.location}</div>
@@ -321,12 +343,12 @@ export default async function BookingSuccessPage({
 
         <section className="grid gap-4 lg:grid-cols-2">
           <ListSection
-            title="Incluso"
-            items={content?.includes ?? ["Skipper", "Soste bagno", "Rotta meteo-dipendente"]}
+            title={copy.included}
+            items={content?.includes ?? copy.fallbackIncludes}
           />
           <ListSection
-            title="Cosa portare"
-            items={content?.bringItems ?? ["Costume", "Asciugamano", "Crema solare"]}
+            title={copy.whatToBring}
+            items={content?.bringItems ?? copy.fallbackBringItems}
           />
         </section>
       </main>
@@ -400,40 +422,43 @@ function ListSection({ title, items }: { title: string; items: string[] }) {
 function getStatusView({
   status,
   isOverrideRequest,
+  locale,
 }: {
   status: string;
   isOverrideRequest: boolean;
+  locale?: string | null;
 }) {
+  const isEn = locale === "en";
   if (isOverrideRequest) {
     return {
-      label: "In attesa di conferma staff",
+      label: isEn ? "Waiting for staff confirmation" : "In attesa di conferma staff",
       badgeClass: "bg-amber-100 text-amber-950",
       icon: Clock,
     };
   }
   if (status === "CONFIRMED") {
     return {
-      label: "Prenotazione confermata",
+      label: isEn ? "Booking confirmed" : "Prenotazione confermata",
       badgeClass: "bg-emerald-100 text-emerald-950",
       icon: CheckCircle2,
     };
   }
   if (status === "CANCELLED") {
     return {
-      label: "Prenotazione cancellata",
+      label: isEn ? "Booking cancelled" : "Prenotazione cancellata",
       badgeClass: "bg-red-100 text-red-950",
       icon: Clock,
     };
   }
   if (status === "REFUNDED") {
     return {
-      label: "Prenotazione rimborsata",
+      label: isEn ? "Booking refunded" : "Prenotazione rimborsata",
       badgeClass: "bg-slate-100 text-slate-800",
       icon: CreditCard,
     };
   }
   return {
-    label: "Pagamento in elaborazione",
+    label: isEn ? "Payment processing" : "Pagamento in elaborazione",
     badgeClass: "bg-amber-100 text-amber-950",
     icon: Clock,
   };
@@ -445,21 +470,44 @@ function getGuestBreakdown(booking: {
   childCount: number;
   freeChildSeatCount: number;
   infantCount: number;
-}): string {
+}, locale?: string | null): string {
+  const isEn = locale === "en";
   const parts = [
-    booking.adultCount ? `${booking.adultCount} adulti` : null,
-    booking.childCount ? `${booking.childCount} bambini 5-9` : null,
-    booking.freeChildSeatCount ? `${booking.freeChildSeatCount} bimbi 3-4` : null,
-    booking.infantCount ? `${booking.infantCount} neonati 0-2` : null,
+    booking.adultCount ? `${booking.adultCount} ${isEn ? "adults" : "adulti"}` : null,
+    booking.childCount ? `${booking.childCount} ${isEn ? "children 5-9" : "bambini 5-9"}` : null,
+    booking.freeChildSeatCount ? `${booking.freeChildSeatCount} ${isEn ? "children 3-4" : "bimbi 3-4"}` : null,
+    booking.infantCount ? `${booking.infantCount} ${isEn ? "infants 0-2" : "neonati 0-2"}` : null,
   ].filter(Boolean);
-  return parts.length > 0 ? parts.join(", ") : `${booking.numPeople} ospiti`;
+  return parts.length > 0 ? parts.join(", ") : `${booking.numPeople} ${isEn ? "guests" : "ospiti"}`;
 }
 
 function sameUtcDay(a: Date, b: Date): boolean {
   return a.toISOString().slice(0, 10) === b.toISOString().slice(0, 10);
 }
 
-function fallbackItinerary(): Array<{ time: string; title?: string; location?: string; text: string }> {
+function fallbackItinerary(
+  locale?: string | null,
+): Array<{ time: string; title?: string; location?: string; text: string }> {
+  if (locale === "en") {
+    return [
+      {
+        time: "Boarding",
+        title: "Briefing",
+        text: "Welcome, booking check and safety briefing.",
+      },
+      {
+        time: "Route",
+        title: "Egadi Islands",
+        text: "Cruising and stops selected by the crew according to wind, sea and crowding.",
+      },
+      {
+        time: "Return",
+        title: "Trapani",
+        text: "Return to the harbour according to the booked time slot.",
+      },
+    ];
+  }
+
   return [
     {
       time: "Imbarco",
@@ -484,17 +532,113 @@ function getTicketHero({
   boatName,
   fallbackSrc,
   fallbackAlt,
+  locale,
 }: {
   boatId: string;
   boatName: string;
   fallbackSrc?: string;
   fallbackAlt: string;
+  locale?: string | null;
 }): { src: string; alt: string } | null {
   const key = `${boatId} ${boatName}`.toLowerCase();
-  if (key.includes("trimarano") || key.includes("neel")) return TICKET_HERO_BY_BOAT.trimarano;
+  const altLocale = locale === "en" ? "en" : "it";
+  if (key.includes("trimarano") || key.includes("neel")) {
+    const hero = TICKET_HERO_BY_BOAT.trimarano;
+    return { src: hero.src, alt: hero.alt[altLocale] };
+  }
   if (boatId === "boat" || key.includes("cigala") || key.includes("motoscafo")) {
-    return TICKET_HERO_BY_BOAT.boat;
+    const hero = TICKET_HERO_BY_BOAT.boat;
+    return { src: hero.src, alt: hero.alt[altLocale] };
   }
   if (fallbackSrc) return { src: fallbackSrc, alt: fallbackAlt };
   return null;
+}
+
+function formatPublicDay(date: Date, locale?: string | null): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function getSuccessCopy(locale?: string | null) {
+  if (locale === "en") {
+    return {
+      confirmationEyebrow: "Egadisailing booking confirmation",
+      heroFallback:
+        "Your Egadi Islands experience is registered. Here you will find your summary, itinerary, payments and check-in QR code.",
+      date: "Date",
+      time: "Time",
+      guests: "Guests",
+      boat: "Boat",
+      duration: "Experience duration",
+      qrEyebrow: "QR ticket",
+      qrTitle: "Harbour check-in",
+      qrInactive: "The QR code becomes valid for check-in only after confirmation.",
+      qrBody:
+        "Show this QR code to the staff. The manager will scan it from the phone and register check-in for the booking.",
+      openTicket: "Open ticket",
+      downloadQr: "Download QR",
+      holder: "Holder",
+      phone: "Phone",
+      notProvided: "Not provided",
+      payment: "Payment",
+      paymentTitle: "Total and balance",
+      total: "Booking total",
+      paidOnline: "Paid online",
+      balanceDue: "Balance due on site",
+      balanceDueNote: "The remaining balance is paid on site before departure.",
+      noBalanceNote: "Booking paid: there is no remaining balance.",
+      detailsEyebrow: "Experience details",
+      detailsFallback: "Route, stops and timing are managed by the crew according to sea conditions.",
+      meetingPoint: "Meeting point",
+      mapTitle: "Egadisailing meeting point map",
+      itinerary: "Expected itinerary",
+      stop: "Stop",
+      included: "Included",
+      whatToBring: "What to bring",
+      fallbackIncludes: ["Skipper", "Swim stops", "Weather-dependent route"],
+      fallbackBringItems: ["Swimsuit", "Towel", "Sunscreen"],
+    };
+  }
+
+  return {
+    confirmationEyebrow: "Conferma prenotazione Egadisailing",
+    heroFallback:
+      "La tua esperienza alle Egadi è registrata. Qui trovi riepilogo, itinerario, pagamenti e QR per il check-in.",
+    date: "Data",
+    time: "Orario",
+    guests: "Ospiti",
+    boat: "Barca",
+    duration: "Durata esperienza",
+    qrEyebrow: "Biglietto QR",
+    qrTitle: "Check-in al porto",
+    qrInactive: "Il QR diventa valido al check-in solo dopo la conferma.",
+    qrBody:
+      "Presenta questo QR allo staff. Il gestore lo scannerizza dal telefono e registra il check-in sulla prenotazione.",
+    openTicket: "Apri biglietto",
+    downloadQr: "Scarica QR",
+    holder: "Intestatario",
+    phone: "Telefono",
+    notProvided: "Non indicato",
+    payment: "Pagamento",
+    paymentTitle: "Totale e saldo",
+    total: "Totale prenotazione",
+    paidOnline: "Saldato online",
+    balanceDue: "Da saldare in loco",
+    balanceDueNote: "Il saldo restante si paga in loco prima della partenza.",
+    noBalanceNote: "Prenotazione saldata: non risulta saldo residuo.",
+    detailsEyebrow: "Dettagli esperienza",
+    detailsFallback: "Rotta, soste e timing vengono gestiti dalla crew in base alle condizioni del mare.",
+    meetingPoint: "Punto d'incontro",
+    mapTitle: "Mappa punto d'incontro Egadisailing",
+    itinerary: "Itinerario previsto",
+    stop: "Tappa",
+    included: "Incluso",
+    whatToBring: "Cosa portare",
+    fallbackIncludes: ["Skipper", "Soste bagno", "Rotta meteo-dipendente"],
+    fallbackBringItems: ["Costume", "Asciugamano", "Crema solare"],
+  };
 }

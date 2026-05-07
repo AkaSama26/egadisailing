@@ -5,10 +5,17 @@ import { OceanLayout } from "@/components/customer/ocean-layout";
 import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
 // R26-A1-A5: auth-adjacent page, noindex defense-in-depth oltre robots.txt.
-export const metadata: Metadata = {
-  title: "Recupera prenotazione | Egadisailing",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: locale === "en" ? "Find your booking" : "Recupera prenotazione",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function RecuperaPrenotazionePage({
   params,

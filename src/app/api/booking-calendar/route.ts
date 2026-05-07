@@ -61,26 +61,32 @@ function deriveCalendarEndDate(
   return toUtcDay(deriveEndDate(startDate, service.durationType, service.durationHours));
 }
 
-function reasonLabel(reason: string): string {
+function reasonLabel(reason: string, locale?: string | null): string {
+  const isEn = locale === "en";
   switch (reason) {
     case "boat_block":
-      return "Bloccata";
+      return isEn ? "Blocked" : "Bloccata";
     case "external_booking":
     case "full_day_priority":
-      return "Occupata";
+      return isEn ? "Booked" : "Occupata";
     case "within_15_day_cutoff":
-      return "Non prenotabile";
+      return isEn ? "Not bookable" : "Non prenotabile";
     case "insufficient_revenue":
-      return "Occupata";
+      return isEn ? "Booked" : "Occupata";
     case "sold_out":
-      return "Esaurita";
+      return isEn ? "Sold out" : "Esaurita";
     case "past":
-      return "Passata";
+      return isEn ? "Past date" : "Passata";
     case "missing_price":
-      return "Prezzo non configurato";
+      return isEn ? "Price not configured" : "Prezzo non configurato";
     default:
-      return "Non disponibile";
+      return isEn ? "Unavailable" : "Non disponibile";
   }
+}
+
+function priceHintLabel(pricingUnit: string, locale?: string | null): string {
+  if (pricingUnit === "PER_PACKAGE") return locale === "en" ? "package" : "pacchetto";
+  return locale === "en" ? "per person" : "a persona";
 }
 
 async function evaluateCalendarDay(params: {
@@ -104,7 +110,7 @@ async function evaluateCalendarDay(params: {
       priceAmount: null,
       pricingUnit: null,
       spotsRemaining: null,
-      reasonLabel: reasonLabel("past"),
+      reasonLabel: reasonLabel("past", locale),
     };
   }
 
@@ -121,7 +127,7 @@ async function evaluateCalendarDay(params: {
       priceAmount: null,
       pricingUnit: null,
       spotsRemaining: null,
-      reasonLabel: reasonLabel("missing_price"),
+      reasonLabel: reasonLabel("missing_price", locale),
     };
   }
 
@@ -160,11 +166,11 @@ async function evaluateCalendarDay(params: {
         status: "unavailable",
         selectable: false,
         priceLabel: formatEurWithVat(quote.totalPrice, locale),
-        priceHint: quote.pricingUnit === "PER_PACKAGE" ? "pacchetto" : "a persona",
+        priceHint: priceHintLabel(quote.pricingUnit, locale),
         priceAmount: quote.totalPrice.toNumber(),
         pricingUnit: quote.pricingUnit,
         spotsRemaining: 0,
-        reasonLabel: reasonLabel("sold_out"),
+        reasonLabel: reasonLabel("sold_out", locale),
       };
     }
 
@@ -215,11 +221,11 @@ async function evaluateCalendarDay(params: {
       status: "available",
       selectable: true,
       priceLabel: formatEurWithVat(quote.totalPrice, locale),
-      priceHint: quote.pricingUnit === "PER_PACKAGE" ? "pacchetto" : "a persona",
+      priceHint: priceHintLabel(quote.pricingUnit, locale),
       priceAmount: quote.totalPrice.toNumber(),
       pricingUnit: quote.pricingUnit,
       spotsRemaining,
-      reasonLabel: "Libera",
+      reasonLabel: locale === "en" ? "Available" : "Libera",
     };
   }
 
@@ -229,11 +235,11 @@ async function evaluateCalendarDay(params: {
       status: "request",
       selectable: true,
       priceLabel: formatEurWithVat(quote.totalPrice, locale),
-      priceHint: quote.pricingUnit === "PER_PACKAGE" ? "pacchetto" : "a persona",
+      priceHint: priceHintLabel(quote.pricingUnit, locale),
       priceAmount: quote.totalPrice.toNumber(),
       pricingUnit: quote.pricingUnit,
       spotsRemaining,
-      reasonLabel: "Su richiesta",
+      reasonLabel: locale === "en" ? "On request" : "Su richiesta",
     };
   }
 
@@ -242,11 +248,11 @@ async function evaluateCalendarDay(params: {
     status: "unavailable",
     selectable: false,
     priceLabel: formatEurWithVat(quote.totalPrice, locale),
-    priceHint: quote.pricingUnit === "PER_PACKAGE" ? "pacchetto" : "a persona",
+    priceHint: priceHintLabel(quote.pricingUnit, locale),
     priceAmount: quote.totalPrice.toNumber(),
     pricingUnit: quote.pricingUnit,
     spotsRemaining: null,
-    reasonLabel: reasonLabel(result.reason),
+    reasonLabel: reasonLabel(result.reason, locale),
   };
 }
 

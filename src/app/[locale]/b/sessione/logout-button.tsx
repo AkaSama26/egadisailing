@@ -2,14 +2,14 @@
 
 import { logout } from "./actions";
 
-export function LogoutButton() {
+export function LogoutButton({ label = "Esci" }: { label?: string }) {
   return (
     <form action={logout}>
       <button
         type="submit"
         className="text-white/80 hover:text-white text-sm underline underline-offset-4"
       >
-        Esci
+        {label}
       </button>
     </form>
   );

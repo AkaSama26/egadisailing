@@ -9,10 +9,25 @@ const initialState: ContactFormState = { status: "idle" };
 
 export interface ContactFormProps {
   turnstileSiteKey: string;
+  locale: string;
 }
 
-export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
+export function ContactForm({ turnstileSiteKey, locale }: ContactFormProps) {
   const [state, formAction, pending] = useActionState(sendContactMessage, initialState);
+  const isEn = locale === "en";
+  const copy = {
+    sentTitle: isEn ? "Message received" : "Messaggio ricevuto",
+    name: isEn ? "Name *" : "Nome *",
+    namePlaceholder: isEn ? "Your name" : "Il tuo nome",
+    emailPlaceholder: isEn ? "Your email" : "La tua email",
+    phone: isEn ? "Phone (optional)" : "Telefono (opzionale)",
+    subject: isEn ? "Subject *" : "Oggetto *",
+    subjectPlaceholder: isEn ? "Booking / Information / Groups / ..." : "Prenotazione / Informazioni / Gruppi / ...",
+    message: isEn ? "Message *" : "Messaggio *",
+    messagePlaceholder: isEn ? "Tell us what you are looking for..." : "Raccontaci cosa cerchi...",
+    sending: isEn ? "Sending..." : "Invio...",
+    send: isEn ? "Send message" : "Invia messaggio",
+  };
 
   if (state.status === "sent") {
     return (
@@ -21,7 +36,7 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
         aria-live="polite"
         className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-emerald-100"
       >
-        <h3 className="font-semibold text-lg mb-2">Messaggio ricevuto</h3>
+        <h3 className="font-semibold text-lg mb-2">{copy.sentTitle}</h3>
         <p className="text-sm">{state.message}</p>
       </div>
     );
@@ -29,10 +44,11 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
 
   return (
     <form action={formAction} className="space-y-6">
+      <input type="hidden" name="locale" value={isEn ? "en" : "it"} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="name" className="text-white/50 text-sm">
-            Nome *
+            {copy.name}
           </label>
           <input
             id="name"
@@ -41,7 +57,7 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
             required
             minLength={2}
             maxLength={120}
-            placeholder="Il tuo nome"
+            placeholder={copy.namePlaceholder}
             className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors"
           />
         </div>
@@ -55,7 +71,7 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
             type="email"
             required
             maxLength={320}
-            placeholder="La tua email"
+            placeholder={copy.emailPlaceholder}
             className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors"
           />
         </div>
@@ -63,7 +79,7 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
 
       <div className="space-y-2">
         <label htmlFor="phone" className="text-white/50 text-sm">
-          Telefono (opzionale)
+          {copy.phone}
         </label>
         <input
           id="phone"
@@ -77,7 +93,7 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
 
       <div className="space-y-2">
         <label htmlFor="subject" className="text-white/50 text-sm">
-          Oggetto *
+          {copy.subject}
         </label>
         <input
           id="subject"
@@ -86,14 +102,14 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
           required
           minLength={3}
           maxLength={200}
-          placeholder="Prenotazione / Informazioni / Gruppi / ..."
+          placeholder={copy.subjectPlaceholder}
           className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors"
         />
       </div>
 
       <div className="space-y-2">
         <label htmlFor="message" className="text-white/50 text-sm">
-          Messaggio *
+          {copy.message}
         </label>
         <textarea
           id="message"
@@ -102,7 +118,7 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
           minLength={10}
           maxLength={5000}
           rows={5}
-          placeholder="Raccontaci cosa cerchi..."
+          placeholder={copy.messagePlaceholder}
           className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors resize-none"
         />
       </div>
@@ -125,7 +141,7 @@ export function ContactForm({ turnstileSiteKey }: ContactFormProps) {
         className="w-full flex items-center justify-center gap-2 py-4 rounded-full bg-[var(--color-gold)] hover:bg-[var(--color-gold)]/90 text-[var(--color-ocean)] font-semibold text-lg transition-colors shadow-lg disabled:opacity-50"
       >
         <Send className="h-5 w-5" />
-        {pending ? "Invio..." : "Invia Messaggio"}
+        {pending ? copy.sending : copy.send}
       </button>
     </form>
   );

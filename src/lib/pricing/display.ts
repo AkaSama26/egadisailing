@@ -28,13 +28,16 @@ export interface CharterDurationDisplayPrice {
   legacyFallback: boolean;
 }
 
-function labelForAmount(amount: Decimal | null): string {
-  return amount ? `Da ${formatEur(amount)}` : "Prezzo su richiesta";
+function labelForAmount(amount: Decimal | null, locale?: string | null): string {
+  const isEnglish = locale === "en";
+  if (!amount) return isEnglish ? "Price on request" : "Prezzo su richiesta";
+  return isEnglish ? `From ${formatEur(amount, locale)}` : `Da ${formatEur(amount, locale)}`;
 }
 
 export async function getDisplayPrice(
   serviceId: string,
   year = 2026,
+  locale?: string | null,
 ): Promise<DisplayPrice> {
   const prices = await db.servicePrice.findMany({
     where: { serviceId, year },
@@ -44,7 +47,7 @@ export async function getDisplayPrice(
   });
   if (prices[0]) {
     const amount = new Decimal(prices[0].amount.toString());
-    return { amount, label: labelForAmount(amount), legacyFallback: false };
+    return { amount, label: labelForAmount(amount, locale), legacyFallback: false };
   }
 
   const legacy = await db.pricingPeriod.findFirst({
@@ -53,12 +56,13 @@ export async function getDisplayPrice(
     orderBy: { pricePerPerson: "asc" },
   });
   const amount = legacy ? new Decimal(legacy.pricePerPerson.toString()) : null;
-  return { amount, label: labelForAmount(amount), legacyFallback: Boolean(legacy) };
+  return { amount, label: labelForAmount(amount, locale), legacyFallback: Boolean(legacy) };
 }
 
 export async function getDisplayPriceMap(
   serviceIds: string[],
   year = 2026,
+  locale?: string | null,
 ): Promise<Map<string, DisplayPrice>> {
   const uniqueIds = Array.from(new Set(serviceIds));
   const [prices, legacyPrices] = await Promise.all([
@@ -80,7 +84,7 @@ export async function getDisplayPriceMap(
     const amount = new Decimal(price.amount.toString());
     result.set(price.serviceId, {
       amount,
-      label: labelForAmount(amount),
+      label: labelForAmount(amount, locale),
       legacyFallback: false,
     });
   }
@@ -90,14 +94,18 @@ export async function getDisplayPriceMap(
     const amount = new Decimal(price.pricePerPerson.toString());
     result.set(price.serviceId, {
       amount,
-      label: labelForAmount(amount),
+      label: labelForAmount(amount, locale),
       legacyFallback: true,
     });
   }
 
   for (const serviceId of uniqueIds) {
     if (!result.has(serviceId)) {
-      result.set(serviceId, { amount: null, label: labelForAmount(null), legacyFallback: false });
+      result.set(serviceId, {
+        amount: null,
+        label: labelForAmount(null, locale),
+        legacyFallback: false,
+      });
     }
   }
 

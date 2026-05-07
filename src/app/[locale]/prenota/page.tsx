@@ -13,6 +13,7 @@ import { env } from "@/lib/env";
 import { getDisplayPriceMap } from "@/lib/pricing/display";
 import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
 import { PASSENGER_FARE_SERVICE_TYPE } from "@/lib/pricing/passenger-fare-rules-shared";
+import { buildPageMetadata } from "@/lib/seo/metadata";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
 import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
@@ -22,12 +23,24 @@ function experienceKeyForOption(service: BookingServiceOption): string {
   return `${service.boatId}:${service.id}`;
 }
 
-export const metadata: Metadata = {
-  title: "Prenota escursioni in barca alle Egadi online | Egadisailing",
-  description:
-    "Prenota escursioni in barca alle Isole Egadi con calendario disponibilità, prezzi aggiornati e checkout sicuro Egadisailing.",
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isEn = locale === "en";
+  return buildPageMetadata({
+    title: isEn
+      ? "Book Egadi Islands Boat Tours Online"
+      : "Prenota Escursioni in Barca alle Egadi Online",
+    description: isEn
+      ? "Book boat tours in the Egadi Islands with live availability, updated prices and secure Egadisailing checkout."
+      : "Prenota escursioni in barca alle Isole Egadi con disponibilità live, prezzi aggiornati e checkout sicuro Egadisailing.",
+    path: "/prenota",
+    locale,
+  });
+}
 
 export default async function BookingIndexPage({
   params,
@@ -65,7 +78,7 @@ export default async function BookingIndexPage({
     },
   });
   const [displayPrices, passengerFareRules] = await Promise.all([
-    getDisplayPriceMap(services.map((service) => service.id)),
+    getDisplayPriceMap(services.map((service) => service.id), 2026, locale),
     getPassengerFareRulesForServiceType(PASSENGER_FARE_SERVICE_TYPE),
   ]);
 
@@ -86,9 +99,11 @@ export default async function BookingIndexPage({
         capacityMax: service.capacityMax,
         defaultPaymentSchedule: service.defaultPaymentSchedule,
         defaultDepositPercentage: service.defaultDepositPercentage,
-        priceLabel: displayPrices.get(service.id)?.label ?? "Prezzo su richiesta",
-        priceUnitLabel: getPriceUnitLabel(service.pricingUnit, service.type),
-        durationLabel: getServiceDurationLabel(service),
+        priceLabel:
+          displayPrices.get(service.id)?.label ??
+          (locale === "en" ? "Price on request" : "Prezzo su richiesta"),
+        priceUnitLabel: getPriceUnitLabel(service.pricingUnit, service.type, locale),
+        durationLabel: getServiceDurationLabel(service, locale),
       };
     });
 

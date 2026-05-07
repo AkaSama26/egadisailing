@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { CountryFlag } from "@/components/country-flag";
 import { ScrollSection } from "@/components/scroll-section";
-import { MapPin, Mail, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import {
@@ -13,26 +14,17 @@ import {
   getWhatsAppLabel,
   getWhatsAppUrl,
 } from "@/lib/public-contact";
+import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 import { ContactForm } from "./contact-form";
 import { cn } from "@/lib/utils";
 import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 
-function IconInstagram({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-    </svg>
-  );
-}
+const reviewLinks = [
+  { href: PUBLIC_REVIEW_LINKS.google, label: "Google Reviews" },
+  { href: PUBLIC_REVIEW_LINKS.tripadvisor, label: "TripAdvisor" },
+] as const;
 
-function IconFacebook({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385h-3.047v-3.47h3.047v-2.642c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953h-1.514c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385c5.738-.9 10.126-5.864 10.126-11.854z"/>
-    </svg>
-  );
-}
 
 export async function generateMetadata({
   params,
@@ -41,7 +33,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return buildPageMetadata({
-    title: locale === "en" ? "Book or request information" : "Prenota o richiedi informazioni",
+    title: locale === "en"
+      ? "Egadi Boat Tour Bookings and Contacts"
+      : "Prenotazioni e contatti per tour alle Egadi",
     description:
       locale === "en"
         ? "Book or request information for your boat trip in the Egadi Islands. Contact Egadisailing by WhatsApp, phone or email."
@@ -136,9 +130,9 @@ export default async function ContactsPage({
                           <a
                             key={contact.key}
                             href={getPhoneHref(contact)}
-                            className="block text-white font-medium hover:text-[var(--color-gold)] transition-colors"
+                            className="flex items-center gap-2 text-white font-medium hover:text-[var(--color-gold)] transition-colors"
                           >
-                            <span aria-hidden="true">{contact.flag}</span>{" "}
+                            <CountryFlag code={contact.flagCode} className="h-4 w-6" />
                             {getWhatsAppLabel(contact, locale)} · {contact.phoneDisplay}
                           </a>
                         ))}
@@ -161,37 +155,28 @@ export default async function ContactsPage({
                         className="flex items-center justify-center gap-3 w-full py-4 rounded-full bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold text-base transition-colors shadow-lg"
                       >
                         <WhatsAppIcon className="h-5 w-5" />
-                        <span aria-hidden="true">{contact.flag}</span>
+                        <CountryFlag code={contact.flagCode} className="h-4 w-6" />
                         <span>{getWhatsAppLabel(contact, locale)}</span>
                       </a>
                     ))}
                   </div>
 
                   <div className="flex gap-3">
-                    <a
-                      href="https://instagram.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        "flex-1 flex items-center justify-center gap-2 rounded-full py-3 text-white/75 hover:text-white",
-                        liquidGlassButton,
-                      )}
-                    >
-                      <IconInstagram className="h-5 w-5" />
-                      <span className="text-sm font-medium">Instagram</span>
-                    </a>
-                    <a
-                      href="https://facebook.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        "flex-1 flex items-center justify-center gap-2 rounded-full py-3 text-white/75 hover:text-white",
-                        liquidGlassButton,
-                      )}
-                    >
-                      <IconFacebook className="h-5 w-5" />
-                      <span className="text-sm font-medium">Facebook</span>
-                    </a>
+                    {reviewLinks.map((link) => (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-2 rounded-full py-3 text-white/75 hover:text-white",
+                          liquidGlassButton,
+                        )}
+                      >
+                        <Star className="h-5 w-5 fill-[var(--color-gold)] text-[var(--color-gold)]" />
+                        <span className="text-sm font-medium">{link.label}</span>
+                      </a>
+                    ))}
                   </div>
                 </div>
               </ScrollSection>
@@ -224,7 +209,7 @@ export default async function ContactsPage({
                   {copy.writeSubtitle}
                 </p>
 
-                <ContactForm turnstileSiteKey={getPublicTurnstileSiteKey()} />
+                <ContactForm turnstileSiteKey={getPublicTurnstileSiteKey()} locale={locale} />
               </div>
             </ScrollSection>
           </div>

@@ -21,6 +21,7 @@ import { emailSchema, freeTextSchema } from "@/lib/validation/common-zod";
 import { RL_WINDOW } from "@/lib/timing";
 
 const schema = z.object({
+  locale: z.enum(["it", "en"]).default("it"),
   name: z.string().min(2).max(120).regex(/^[^<>]*$/, "Caratteri non ammessi"),
   email: emailSchema,
   phone: z.string().max(32).optional(),
@@ -51,6 +52,7 @@ export async function sendContactMessage(
 
   try {
     const parsed = schema.parse({
+      locale: formData.get("locale") === "en" ? "en" : "it",
       name: formData.get("name"),
       email: formData.get("email"),
       phone: formData.get("phone") || undefined,
@@ -138,6 +140,7 @@ export async function sendContactMessage(
     const reply = contactAutoReplyTemplate({
       customerName: parsed.name,
       subject: parsed.subject,
+      locale: parsed.locale,
     });
     await enqueueTransactionalEmail({
       templateKey: "customer.contact.auto-reply",
@@ -161,7 +164,10 @@ export async function sendContactMessage(
 
     return {
       status: "sent",
-      message: "Messaggio inviato. Ti risponderemo entro 24 ore.",
+      message:
+        parsed.locale === "en"
+          ? "Message sent. We will reply within 24 hours."
+          : "Messaggio inviato. Ti risponderemo entro 24 ore.",
     };
   } catch (err) {
     logger.error(
@@ -172,10 +178,14 @@ export async function sendContactMessage(
       status: "error",
       message:
         err instanceof z.ZodError
-          ? "Controlla i campi del modulo."
+          ? formData.get("locale") === "en"
+            ? "Please check the form fields."
+            : "Controlla i campi del modulo."
           : err instanceof Error
             ? err.message
-            : "Errore sconosciuto, riprova più tardi.",
+            : formData.get("locale") === "en"
+              ? "Unknown error. Please try again later."
+              : "Errore sconosciuto, riprova più tardi.",
     };
   }
 }

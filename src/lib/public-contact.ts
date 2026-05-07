@@ -30,7 +30,7 @@ export const PUBLIC_CONTACT_LOCATION = {
 
 export type WhatsAppContact = {
   key: "it" | "en";
-  flag: string;
+  flagCode: "IT" | "GB";
   labelIt: string;
   labelEn: string;
   phoneDisplay: string;
@@ -42,7 +42,7 @@ export type WhatsAppContact = {
 export const WHATSAPP_CONTACTS: WhatsAppContact[] = [
   {
     key: "it",
-    flag: "🇮🇹",
+    flagCode: "IT",
     labelIt: "Italiano",
     labelEn: "Italian",
     phoneDisplay: "+39 345 971 0696",
@@ -52,7 +52,7 @@ export const WHATSAPP_CONTACTS: WhatsAppContact[] = [
   },
   {
     key: "en",
-    flag: "🇬🇧",
+    flagCode: "GB",
     labelIt: "Inglese",
     labelEn: "English",
     phoneDisplay: "+39 340 145 4585",
@@ -63,7 +63,7 @@ export const WHATSAPP_CONTACTS: WhatsAppContact[] = [
 ];
 
 export const PUBLIC_CONTACT_PHONE_TEXT = WHATSAPP_CONTACTS.map(
-  (contact) => `${contact.flag} ${contact.phoneDisplay}`,
+  (contact) => contact.phoneDisplay,
 ).join(" / ");
 
 export function getContactLocationLabel(locale?: string | null): string {

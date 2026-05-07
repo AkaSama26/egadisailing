@@ -102,11 +102,11 @@ export function ExperienceChoiceDialog({
             imageDotLabel: (index: number, total: number) =>
               `Show image ${index} of ${total}`,
             resultEyebrow: "Your route",
-            resultTitle: "This one fits you best",
+            resultTitle: "This is your best fit",
             introEyebrow: "Egadi Sailing concierge",
             introTitle: "Which sea day are you imagining?",
             introDescription:
-              "A few quick choices to find the right route between the Trimarano and our agile open boat.",
+              "A few quick choices to find the right route, between the Trimarano and our agile open boat.",
           }
         : {
             close: "Chiudi",
@@ -658,9 +658,9 @@ function getEnglishQuestion({
     case "soloPace":
       return {
         eyebrow: "Pace",
-        title: "Do you want a full relaxing day or a quick island loop?",
+        title: "Do you want a full day of relaxation or a quick island loop?",
         description:
-          "If you travel solo, you can book one seat on the shared 8-hour tour, or reserve the 4-hour tour privately.",
+          "If you are travelling solo, you can book one seat on the shared 8-hour tour or reserve the 4-hour tour privately.",
         choices: [
           {
             emoji: "🌊",
@@ -671,7 +671,7 @@ function getEnglishQuestion({
           {
             emoji: "⚡",
             label: "Private quick loop",
-            description: "A compact and flexible private half day.",
+            description: "A compact and flexible private half-day.",
             onSelect: () => recommend("private4"),
           },
         ],
@@ -679,13 +679,13 @@ function getEnglishQuestion({
     case "companyPrivacy":
       return {
         eyebrow: "Boat style",
-        title: "Would you like the boat to yourselves or are shared seats fine?",
+        title: "Would you like the boat to yourselves, or would shared seats be fine?",
         description: "This changes the rhythm: more social and accessible, or private and flexible.",
         choices: [
           {
             emoji: "🤝",
             label: "Shared is fine",
-            description: "Seats on board on the shared 8-hour tour.",
+            description: "Seats on the shared 8-hour tour.",
             onSelect: () => recommend("shared8"),
           },
           {
@@ -700,17 +700,17 @@ function getEnglishQuestion({
       return {
         eyebrow: "Lunch",
         title: "Would you like lunch on board or on the island?",
-        description: "Lunch on board points to the Trimarano with chef, hostess and premium spaces.",
+        description: "Lunch on board points to the Trimarano, with chef, hostess and premium spaces.",
         choices: [
           {
             emoji: "🍽️",
             label: "On board",
-            description: "Chef, table at anchor and a premium day.",
+            description: "Chef, a table at anchor and a premium day.",
             onSelect: () => recommend("gourmet"),
           },
           {
             emoji: "🏝️",
-            label: "On the island / flexible",
+            label: "On the island or flexible",
             description: "More freedom around lunch, with the focus on sea and route.",
             onSelect: () => moveTo("privateMood"),
           },
@@ -720,18 +720,18 @@ function getEnglishQuestion({
       return {
         eyebrow: "Style",
         title: "What kind of private day are you imagining?",
-        description: "Here we choose between the luxury comfort of the Trimarano and the more agile open boat.",
+        description: "Here we choose between the premium comfort of the Trimarano and the more agile open boat.",
         choices: [
           {
             emoji: "✨",
             label: "Maximum comfort, space and slow pace",
-            description: "Trimarano, privacy, relax areas and a more curated route.",
+            description: "Trimarano, privacy, relaxation areas and a more curated route.",
             onSelect: () => moveTo("premiumDuration"),
           },
           {
             emoji: "🚤",
             label: "Agile boat, swims and coves",
-            description: "Cigala & Bertinetti, clean route and flexible swim stops.",
+            description: "Cigala & Bertinetti, a streamlined route and flexible swim stops.",
             onSelect: () => moveTo("agilePace"),
           },
         ],
@@ -739,7 +739,7 @@ function getEnglishQuestion({
     case "premiumDuration":
       return {
         eyebrow: "Time on board",
-        title: "One premium day or several days in the Egadi?",
+        title: "One premium day or several days in the Egadi Islands?",
         description: "The Trimarano is designed for both a curated day and multi-day island living.",
         choices: [
           {
@@ -760,7 +760,7 @@ function getEnglishQuestion({
       return {
         eyebrow: "Duration",
         title: "Full day or quick loop?",
-        description: "The agile private boat stays yours, with the route chosen together with the skipper.",
+        description: "The agile private boat is reserved for you, with the route chosen together with the skipper.",
         choices: [
           {
             emoji: "🌊",
@@ -781,17 +781,17 @@ function getEnglishQuestion({
       return {
         eyebrow: "First choice",
         title: "Are you travelling solo or with others?",
-        description: "We start here, then point you to the most natural format.",
+        description: "We start here, then point you towards the most natural format.",
         choices: [
           {
             emoji: "🧍",
-            label: "I am solo",
+            label: "I’m travelling solo",
             description: "You can book a single seat on shared tours.",
             onSelect: () => moveTo("soloPace"),
           },
           {
             emoji: "👥",
-            label: "I am with others",
+            label: "I’m with others",
             description: "Let’s see whether shared seats or a reserved boat fit better.",
             onSelect: () => moveTo("companyPrivacy"),
           },
