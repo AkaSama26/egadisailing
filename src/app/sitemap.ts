@@ -3,6 +3,9 @@ import { routing } from "@/i18n/routing";
 import { db } from "@/lib/db";
 import { getExperiencePublicSlug, getListedExperienceIds } from "@/data/catalog/experiences";
 import { getPublicBoatSlugs } from "@/data/catalog/boats";
+import { favignanaGuideSlugPairs } from "@/data/favignana-guides";
+import { levanzoGuideSlugPairs } from "@/data/levanzo-guides";
+import { marettimoGuideSlugPairs } from "@/data/marettimo-guides";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +67,51 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.75,
       });
     }
+  }
+
+  for (const slugs of favignanaGuideSlugPairs) {
+    entries.push({
+      url: `${baseUrl}/it/islands/favignana/${slugs.it}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.78,
+    });
+    entries.push({
+      url: `${baseUrl}/en/islands/favignana/${slugs.en}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.78,
+    });
+  }
+
+  for (const slugs of levanzoGuideSlugPairs) {
+    entries.push({
+      url: `${baseUrl}/it/islands/levanzo/${slugs.it}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.76,
+    });
+    entries.push({
+      url: `${baseUrl}/en/islands/levanzo/${slugs.en}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.76,
+    });
+  }
+
+  for (const slugs of marettimoGuideSlugPairs) {
+    entries.push({
+      url: `${baseUrl}/it/islands/marettimo/${slugs.it}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.76,
+    });
+    entries.push({
+      url: `${baseUrl}/en/islands/marettimo/${slugs.en}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.76,
+    });
   }
 
   for (const service of services) {
