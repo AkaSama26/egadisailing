@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowLeft, Baby, CalendarDays, Check, ChevronLeft, ChevronRight, CreditCard, ReceiptText, UserRound, Users } from "lucide-react";
+import { ArrowLeft, Baby, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, CreditCard, ReceiptText, UserRound, Users } from "lucide-react";
+import { getCountries, getCountryCallingCode, type CountryCode } from "libphonenumber-js";
 import { StripePaymentForm } from "./stripe-payment-form";
 import { CountryFlag, type FlagCode } from "@/components/country-flag";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
@@ -198,44 +199,64 @@ interface Customer {
   language: string;
 }
 
-const PHONE_COUNTRIES: Array<{
-  code: string;
+type PhoneCountry = {
+  code: CountryCode;
   flagCode: FlagCode;
   dialCode: string;
   label: string;
-}> = [
-  { code: "IT", flagCode: "IT", dialCode: "+39", label: "Italia" },
-  { code: "GB", flagCode: "GB", dialCode: "+44", label: "United Kingdom" },
-  { code: "FR", flagCode: "FR", dialCode: "+33", label: "France" },
-  { code: "DE", flagCode: "DE", dialCode: "+49", label: "Deutschland" },
-  { code: "ES", flagCode: "ES", dialCode: "+34", label: "España" },
-  { code: "US", flagCode: "US", dialCode: "+1", label: "United States" },
-  { code: "CH", flagCode: "CH", dialCode: "+41", label: "Schweiz" },
-  { code: "NL", flagCode: "NL", dialCode: "+31", label: "Nederland" },
-  { code: "BE", flagCode: "BE", dialCode: "+32", label: "België" },
-  { code: "AT", flagCode: "AT", dialCode: "+43", label: "Österreich" },
-];
+  searchLabel: string;
+};
 
-function defaultPhoneCountryCode(locale: string): string {
+type PhoneCountryDropdownPosition = {
+  top: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+};
+
+const PHONE_COUNTRY_DROPDOWN_WIDTH = 176;
+const PHONE_COUNTRY_DROPDOWN_SEARCH_HEIGHT = 53;
+
+const phoneCountryDisplayNames = new Intl.DisplayNames(["it", "en"], { type: "region" });
+
+const PHONE_COUNTRIES: PhoneCountry[] = getCountries()
+  .map((code) => {
+    const label = phoneCountryDisplayNames.of(code) ?? code;
+    const dialCode = `+${getCountryCallingCode(code)}`;
+    return {
+      code,
+      flagCode: code,
+      dialCode,
+      label,
+      searchLabel: `${code} ${label} ${dialCode}`.toLocaleLowerCase("it-IT"),
+    };
+  })
+  .sort((a, b) => {
+    const byDialCode = Number(a.dialCode.slice(1)) - Number(b.dialCode.slice(1));
+    if (byDialCode !== 0) return byDialCode;
+    return a.label.localeCompare(b.label, "it");
+  });
+
+function defaultPhoneCountryCode(locale: string): CountryCode {
   return locale === "en" ? "GB" : "IT";
 }
 
-function countryByCode(code: string) {
+function countryByCode(code: string): PhoneCountry {
   return PHONE_COUNTRIES.find((country) => country.code === code) ?? PHONE_COUNTRIES[0];
 }
 
-function countryFromPhone(phone: string) {
+function countryFromPhone(phone: string): PhoneCountry | undefined {
   const trimmed = phone.trim();
   return [...PHONE_COUNTRIES]
     .sort((a, b) => b.dialCode.length - a.dialCode.length)
     .find((country) => trimmed.startsWith(country.dialCode));
 }
 
-function selectedPhoneCountry(phone: string, locale: string) {
+function selectedPhoneCountry(phone: string, locale: string): PhoneCountry {
   return countryFromPhone(phone) ?? countryByCode(defaultPhoneCountryCode(locale));
 }
 
-function stripDialCode(phone: string, country: (typeof PHONE_COUNTRIES)[number]) {
+function stripDialCode(phone: string, country: PhoneCountry) {
   const trimmed = phone.trim();
   if (trimmed.startsWith(country.dialCode)) {
     return trimmed.slice(country.dialCode.length).trimStart();
@@ -2233,6 +2254,168 @@ function SummaryPill({ label, value }: { label: string; value: number }) {
   );
 }
 
+function PhoneCountrySelect({
+  locale,
+  country,
+  onChange,
+}: {
+  locale: string;
+  country: PhoneCountry;
+  onChange: (country: PhoneCountry) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [dropdownPosition, setDropdownPosition] =
+    useState<PhoneCountryDropdownPosition | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const filteredCountries = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("it-IT");
+    if (!normalizedQuery) return PHONE_COUNTRIES;
+    return PHONE_COUNTRIES.filter((phoneCountry) =>
+      phoneCountry.searchLabel.includes(normalizedQuery),
+    );
+  }, [query]);
+
+  function updateDropdownPosition() {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const viewportPadding = 8;
+    const width = Math.min(
+      PHONE_COUNTRY_DROPDOWN_WIDTH,
+      window.innerWidth - viewportPadding * 2,
+    );
+    const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const spaceAbove = rect.top - viewportPadding;
+    const openAbove = spaceBelow < 260 && spaceAbove > spaceBelow;
+    const availableHeight = openAbove ? spaceAbove : spaceBelow;
+    const maxHeight = Math.min(320, Math.max(140, availableHeight));
+    const left = Math.min(
+      Math.max(viewportPadding, rect.left),
+      window.innerWidth - width - viewportPadding,
+    );
+    const top = openAbove
+      ? Math.max(viewportPadding, rect.top - maxHeight - 4)
+      : Math.min(rect.bottom + 4, window.innerHeight - maxHeight - viewportPadding);
+
+    setDropdownPosition({ top, left, width, maxHeight });
+  }
+
+  useEffect(() => {
+    if (!open) return;
+
+    updateDropdownPosition();
+
+    function onPointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", updateDropdownPosition);
+    window.addEventListener("scroll", updateDropdownPosition, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", updateDropdownPosition);
+      window.removeEventListener("scroll", updateDropdownPosition, true);
+    };
+  }, [open]);
+
+  function selectCountry(nextCountry: PhoneCountry) {
+    onChange(nextCountry);
+    setOpen(false);
+    setQuery("");
+  }
+
+  return (
+    <div ref={rootRef} className="relative min-w-0 border-r border-gray-200 bg-slate-50">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={locale === "en" ? "Phone country code" : "Prefisso telefonico"}
+        onClick={() => {
+          if (!open) updateDropdownPosition();
+          setOpen((current) => !current);
+        }}
+        className="flex h-full w-full min-w-0 items-center justify-center gap-2 px-3 py-3 text-sm font-semibold text-slate-800 outline-none transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]/45"
+      >
+        <CountryFlag code={country.flagCode} className="h-4 w-6" />
+        <span className="tabular-nums">{country.dialCode}</span>
+        <ChevronDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
+        <span className="sr-only">{country.label}</span>
+      </button>
+
+      {open && dropdownPosition && (
+        <div
+          className="fixed z-[100] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl shadow-slate-900/15"
+          style={{
+            top: dropdownPosition.top,
+            left: dropdownPosition.left,
+            width: dropdownPosition.width,
+            maxHeight: dropdownPosition.maxHeight,
+          }}
+        >
+          <div className="border-b border-slate-100 p-2">
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={locale === "en" ? "Search" : "Cerca"}
+              aria-label={locale === "en" ? "Search country code" : "Cerca prefisso"}
+              className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm outline-none focus:border-sky-500"
+            />
+          </div>
+          <div
+            role="listbox"
+            className="overflow-y-auto p-1"
+            style={{
+              maxHeight: Math.max(
+                80,
+                dropdownPosition.maxHeight - PHONE_COUNTRY_DROPDOWN_SEARCH_HEIGHT,
+              ),
+            }}
+          >
+            {filteredCountries.map((phoneCountry) => {
+              const selected = phoneCountry.code === country.code;
+              return (
+                <button
+                  key={phoneCountry.code}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  title={`${phoneCountry.label} ${phoneCountry.dialCode}`}
+                  onClick={() => selectCountry(phoneCountry)}
+                  className={cnStep(
+                    "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition",
+                    selected ? "bg-sky-50 text-sky-900" : "text-slate-800 hover:bg-slate-50",
+                  )}
+                >
+                  <CountryFlag code={phoneCountry.flagCode} className="h-4 w-6" />
+                  <span className="tabular-nums">{phoneCountry.dialCode}</span>
+                  <span className="sr-only">{phoneCountry.label}</span>
+                </button>
+              );
+            })}
+            {filteredCountries.length === 0 && (
+              <p className="px-3 py-3 text-center text-sm text-slate-500">
+                {locale === "en" ? "No code found" : "Nessun prefisso trovato"}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PhoneNumberField({
   locale,
   value,
@@ -2265,23 +2448,12 @@ function PhoneNumberField({
       <label htmlFor="wizard-phone" className="block text-sm font-medium mb-1">
         {label}
       </label>
-      <div className="grid grid-cols-[minmax(7.5rem,9.5rem)_minmax(0,1fr)] overflow-hidden rounded-lg border border-gray-300 bg-white focus-within:ring-2 focus-within:ring-[var(--color-gold)]/45">
-        <div className="flex min-w-0 items-center gap-2 border-r border-gray-200 bg-slate-50 px-3">
-          <CountryFlag code={country.flagCode} className="h-4 w-6" />
-          <select
-            aria-label={locale === "en" ? "Phone country code" : "Prefisso telefonico"}
-            autoComplete="tel-country-code"
-            className="min-w-0 flex-1 bg-transparent py-3 text-sm font-semibold text-slate-800 outline-none"
-            value={country.code}
-            onChange={(event) => handleCountryChange(event.target.value)}
-          >
-            {PHONE_COUNTRIES.map((phoneCountry) => (
-              <option key={phoneCountry.code} value={phoneCountry.code}>
-                {phoneCountry.label} {phoneCountry.dialCode}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="grid grid-cols-[minmax(7.25rem,8.5rem)_minmax(0,1fr)] rounded-lg border border-gray-300 bg-white focus-within:ring-2 focus-within:ring-[var(--color-gold)]/45">
+        <PhoneCountrySelect
+          locale={locale}
+          country={country}
+          onChange={(nextCountry) => handleCountryChange(nextCountry.code)}
+        />
         <input
           id="wizard-phone"
           type="tel"
