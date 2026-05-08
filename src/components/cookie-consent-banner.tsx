@@ -170,16 +170,27 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
       name: COOKIE_CONSENT_COOKIE_NAME,
       domain: "Egadisailing",
       description:
-        locale === "it"
-          ? "Memorizza le preferenze cookie espresse dall'utente."
-          : "Stores the user's cookie preferences.",
-      expiration: "6 mesi",
+        locale === "fr"
+          ? "Enregistre les préférences de cookies choisies par l'utilisateur."
+          : locale === "es"
+            ? "Guarda las preferencias de cookies elegidas por el usuario."
+            : locale === "en"
+              ? "Stores the user's cookie preferences."
+              : "Memorizza le preferenze cookie espresse dall'utente.",
+      expiration: locale === "fr" ? "6 mois" : locale === "es" ? "6 meses" : locale === "en" ? "6 months" : "6 mesi",
     },
     {
       name: "NEXT_LOCALE",
       domain: "Egadisailing",
-      description: locale === "it" ? "Memorizza la lingua selezionata." : "Stores the selected language.",
-      expiration: "1 anno",
+      description:
+        locale === "fr"
+          ? "Enregistre la langue sélectionnée."
+          : locale === "es"
+            ? "Guarda el idioma seleccionado."
+            : locale === "en"
+              ? "Stores the selected language."
+              : "Memorizza la lingua selezionata.",
+      expiration: locale === "fr" ? "1 an" : locale === "es" ? "1 año" : locale === "en" ? "1 year" : "1 anno",
     },
   ];
 
@@ -188,10 +199,15 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
       name: "_ga, _ga_*",
       domain: "Google Analytics",
       description:
-        locale === "it"
-          ? "Misurazione aggregata delle visite e delle performance del sito."
-          : "Aggregated measurement of visits and website performance.",
-      expiration: "fino a 2 anni",
+        locale === "fr"
+          ? "Mesure agrégée des visites et des performances du site."
+          : locale === "es"
+            ? "Medición agregada de visitas y rendimiento del sitio."
+            : locale === "en"
+              ? "Aggregated measurement of visits and website performance."
+              : "Misurazione aggregata delle visite e delle performance del sito.",
+      expiration:
+        locale === "fr" ? "jusqu'à 2 ans" : locale === "es" ? "hasta 2 años" : locale === "en" ? "up to 2 years" : "fino a 2 anni",
     });
   }
 
@@ -200,10 +216,15 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
       name: "_gcl_*",
       domain: "Google Ads",
       description:
-        locale === "it"
-          ? "Misurazione delle conversioni pubblicitarie."
-          : "Advertising conversion measurement.",
-      expiration: "fino a 90 giorni",
+        locale === "fr"
+          ? "Mesure des conversions publicitaires."
+          : locale === "es"
+            ? "Medición de conversiones publicitarias."
+            : locale === "en"
+              ? "Advertising conversion measurement."
+              : "Misurazione delle conversioni pubblicitarie.",
+      expiration:
+        locale === "fr" ? "jusqu'à 90 jours" : locale === "es" ? "hasta 90 días" : locale === "en" ? "up to 90 days" : "fino a 90 giorni",
     });
   }
 
@@ -212,10 +233,15 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
       name: "_fbp",
       domain: "Meta",
       description:
-        locale === "it"
-          ? "Misurazione delle conversioni e campagne Meta."
-          : "Meta campaign and conversion measurement.",
-      expiration: "fino a 3 mesi",
+        locale === "fr"
+          ? "Mesure des conversions et des campagnes Meta."
+          : locale === "es"
+            ? "Medición de conversiones y campañas Meta."
+            : locale === "en"
+              ? "Meta campaign and conversion measurement."
+              : "Misurazione delle conversioni e campagne Meta.",
+      expiration:
+        locale === "fr" ? "jusqu'à 3 mois" : locale === "es" ? "hasta 3 meses" : locale === "en" ? "up to 3 months" : "fino a 3 mesi",
     });
   }
 
@@ -224,10 +250,15 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
       name: "_uetsid, _uetvid, _uetmsclkid",
       domain: "Microsoft Advertising / Bing",
       description:
-        locale === "it"
-          ? "Misurazione conversioni e campagne Microsoft Advertising."
-          : "Microsoft Advertising campaign and conversion measurement.",
-      expiration: "fino a 13 mesi",
+        locale === "fr"
+          ? "Mesure des conversions et des campagnes Microsoft Advertising."
+          : locale === "es"
+            ? "Medición de conversiones y campañas Microsoft Advertising."
+            : locale === "en"
+              ? "Microsoft Advertising campaign and conversion measurement."
+              : "Misurazione conversioni e campagne Microsoft Advertising.",
+      expiration:
+        locale === "fr" ? "jusqu'à 13 mois" : locale === "es" ? "hasta 13 meses" : locale === "en" ? "up to 13 months" : "fino a 13 mesi",
     });
   }
 
@@ -251,7 +282,14 @@ function buildConfig(
   const sections: ConsentSection[] = [
     { title: t.preferencesModal.title, description: t.preferencesModal.sections.intro },
     {
-      title: locale === "it" ? "Cookie tecnici" : "Strictly necessary cookies",
+      title:
+        locale === "fr"
+          ? "Cookies strictement nécessaires"
+          : locale === "es"
+            ? "Cookies técnicas"
+            : locale === "en"
+              ? "Strictly necessary cookies"
+              : "Cookie tecnici",
       description: t.preferencesModal.sections.necessary,
       linkedCategory: "necessary",
       cookieTable: buildCookieTable(locale, services),
@@ -343,14 +381,21 @@ function buildConfig(
       services: marketingServices,
     };
     sections.push({
-      title: locale === "it" ? "Marketing e conversioni" : "Marketing and conversions",
+      title:
+        locale === "fr"
+          ? "Marketing et conversions"
+          : locale === "es"
+            ? "Marketing y conversiones"
+            : locale === "en"
+              ? "Marketing and conversions"
+              : "Marketing e conversioni",
       description: t.preferencesModal.sections.marketing,
       linkedCategory: "marketing",
     });
   }
 
   sections.push({
-    title: locale === "it" ? "Maggiori informazioni" : "More information",
+    title: locale === "fr" ? "Plus d'informations" : locale === "es" ? "Más información" : locale === "en" ? "More information" : "Maggiori informazioni",
     description: t.preferencesModal.sections.more,
   });
 
@@ -411,7 +456,13 @@ export function CookieConsentBanner({ locale, services }: CookieConsentBannerPro
   const normalizedLocale = normalizeCookieConsentLocale(locale);
   const { gaMeasurementId, googleAdsId, metaPixelId } = services;
   const floatingLabel =
-    normalizedLocale === "it" ? "Preferenze cookie" : "Cookie preferences";
+    normalizedLocale === "fr"
+      ? "Préférences cookies"
+      : normalizedLocale === "es"
+      ? "Preferencias de cookies"
+      : normalizedLocale === "en"
+      ? "Cookie preferences"
+      : "Preferenze cookie";
 
   useEffect(() => {
     let cancelled = false;

@@ -11,6 +11,9 @@ import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { getAlternativeDatesIso } from "../alternative-dates";
 import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
+import { formatEur } from "@/lib/pricing/cents";
 
 export interface RejectOverrideResult {
   rejected: true;
@@ -33,8 +36,8 @@ export async function rejectOverride(
     include: {
       newBooking: {
         include: {
-          customer: { select: { email: true, firstName: true, lastName: true } },
-          service: { select: { name: true } },
+          customer: { select: { email: true, firstName: true, lastName: true, language: true } },
+          service: { select: { id: true, name: true } },
         },
       },
     },
@@ -93,6 +96,7 @@ export async function rejectOverride(
       3,
     );
     try {
+      const locale = resolveEmailLocale(request.newBooking.customer.language);
       const outcome = await dispatchNotification({
         type: "OVERRIDE_REJECTED",
         channels: ["EMAIL"],
@@ -107,12 +111,17 @@ export async function rejectOverride(
             `${request.newBooking.customer.firstName ?? ""} ${request.newBooking.customer.lastName ?? ""}`.trim() ||
             "cliente",
           confirmationCode: request.newBooking.confirmationCode,
-          serviceName: request.newBooking.service.name,
-          startDate: request.newBooking.startDate.toISOString().slice(0, 10),
-          refundAmount: request.newBooking.totalPrice.toFixed(2),
+          serviceName: emailServiceName(
+            request.newBooking.service.id,
+            request.newBooking.service.name,
+            locale,
+          ),
+          startDate: formatEmailDay(request.newBooking.startDate, locale),
+          refundAmount: formatEur(request.newBooking.totalPrice, locale),
           alternativeDates,
-          bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+          bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
           contactEmail: PUBLIC_CONTACT_EMAIL,
+          locale,
         } as unknown as Record<string, unknown>,
       });
       const result = toDispatchResult(outcome);

@@ -1,0 +1,356 @@
+{
+  "common": {
+    "bookNow": "Réserver maintenant",
+    "recoverBooking": "Retrouver une réservation",
+    "learnMore": "En savoir plus",
+    "contactUs": "Nous contacter",
+    "home": "Accueil",
+    "about": "À propos",
+    "contacts": "Contact",
+    "faq": "FAQ",
+    "viewDetails": "Voir les détails",
+    "back": "Retour",
+    "next": "Suivant",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "success": "Opération réussie",
+    "priceFrom": "À partir de",
+    "perPerson": "par personne",
+    "fullDay": "Journée complète",
+    "halfDay": "Demi-journée",
+    "week": "Semaine",
+    "perBoat": "par bateau",
+    "duration": "Durée",
+    "capacity": "Capacité",
+    "included": "Inclus",
+    "notIncluded": "Non inclus"
+  },
+  "hero": {
+    "title": "Quittez la terre ferme",
+    "subtitle": "Découvrez les îles Égades : trimaran avec chef, excursions privées et charter depuis Trapani.",
+    "cta": "Voir les expériences",
+    "vehicleLabel": "Bateau",
+    "vehiclePlaceholder": "Choisir un bateau",
+    "experienceLabel": "Expérience",
+    "experiencePlaceholder": "Choisir une expérience",
+    "boatExperienceExclusive": "Expérience exclusive",
+    "boatExperienceShared": "Expérience partagée",
+    "durationLabel": "Durée",
+    "durationPlaceholder": "Choisir la durée",
+    "durationFullDay": "8 heures",
+    "durationMorning": "4 heures · matin",
+    "durationAfternoon": "4 heures · après-midi",
+    "charterStartLabel": "Du",
+    "charterEndLabel": "Au",
+    "charterTooShort": "Un charter nécessite au moins 3 jours.",
+    "charterTooLong": "Pour un charter de plus de 7 jours, contactez l'équipage pour un devis sur mesure.",
+    "dateLabel": "Date",
+    "datePlaceholder": "Sélectionner les dates"
+  },
+  "booking": {
+    "experienceLabel": "Expérience",
+    "experiencePlaceholder": "Choisir une expérience",
+    "boatExperienceExclusive": "Expérience exclusive",
+    "boatExperienceShared": "Expérience partagée",
+    "startDate": "Date",
+    "numPeople": "Nombre de personnes",
+    "customerName": "Nom complet",
+    "customerEmail": "E-mail",
+    "customerPhone": "Téléphone",
+    "submit": "Continuer vers le paiement",
+    "charterStartLabel": "À partir de",
+    "charterDaysLabel": "Nombre de jours",
+    "charterTooShort": "Un charter nécessite au moins 3 jours.",
+    "charterTooLong": "Pour un charter de plus de 7 jours, contactez l'équipage pour un devis sur mesure.",
+    "dateUnavailable": "Date non disponible",
+    "selectDate": "Sélectionner une date"
+  },
+  "services": {
+    "socialBoating": {
+      "title": "Social Boating",
+      "short": "Navigation, baignade et déjeuner de poisson frais. La façon la plus conviviale de découvrir les îles Égades."
+    },
+    "exclusive": {
+      "title": "Expérience exclusive",
+      "short": "Chef privé, itinéraire sur mesure et confort sans compromis."
+    },
+    "exclusiveExperience": {
+      "title": "Expérience exclusive",
+      "short": "Chef privé, itinéraire sur mesure et confort sans compromis."
+    },
+    "cabinCharter": {
+      "title": "Charter",
+      "short": "Plusieurs jours entre les îles Égades, avec la mer comme maison."
+    },
+    "charter": {
+      "title": "Charter",
+      "short": "Plusieurs jours entre les îles Égades, avec la mer comme maison."
+    },
+    "boatShared": {
+      "title": "Excursion partagée en bateau",
+      "short": "Une excursion en bateau aux îles Égades, idéale si vous réservez une ou plusieurs places."
+    },
+    "boatExclusive": {
+      "title": "Excursion privée en bateau",
+      "short": "Un bateau entièrement réservé pour vous et votre groupe."
+    }
+  },
+  "nav": {
+    "experiences": "Expériences",
+    "boats": "Nos bateaux",
+    "islands": "Îles Égades",
+    "about": "À propos",
+    "contacts": "Contact",
+    "contact": "Contact",
+    "book": "Réserver",
+    "faq": "FAQ"
+  },
+  "footer": {
+    "rights": "Tous droits réservés",
+    "privacy": "Confidentialité",
+    "terms": "Conditions générales",
+    "cookiePreferences": "Préférences de cookies",
+    "tagline": "Expériences uniques en bateau aux îles Égades",
+    "quickLinks": "Liens rapides",
+    "address": "EGADI SAILING SRLS, Via Calipso 42, 91100 Trapani"
+  },
+  "about": {
+    "title": "À propos",
+    "subtitle": "La passion de la mer depuis 2010",
+    "heroText": "Egadisailing naît d'une passion pour la mer et d'un amour profond pour les îles Égades. Depuis 2010, nous proposons des expériences en bateau à celles et ceux qui veulent découvrir l'une des plus belles zones de mer de Méditerranée.",
+    "storyText": "Tout a commencé avec un bateau et une idée simple : faire vivre à chaque invité la magie des îles Égades telle que nous la vivons chaque jour. Aujourd'hui, avec une flotte soignée et un équipage passionné, chaque sortie devient un souvenir à part.",
+    "valuesTitle": "Nos valeurs",
+    "value1Title": "Passion de la mer",
+    "value1Desc": "La mer est notre maison. Chaque journée à bord est l'occasion de partager la beauté des îles Égades avec nos invités.",
+    "value2Title": "Hospitalité sicilienne",
+    "value2Desc": "Un accueil chaleureux, des repas préparés avec soin et une vraie attention aux détails : la tradition sicilienne à bord.",
+    "value3Title": "Respect du milieu marin",
+    "value3Desc": "Nous naviguons de manière responsable afin de protéger l'écosystème marin des îles Égades pour les générations futures.",
+    "crewTitle": "Notre équipage",
+    "crewText": "Notre équipe réunit des professionnels de la mer : skippers expérimentés, chefs passionnés et hôtesses attentives. Tous partagent le même amour des îles Égades et de l'hospitalité."
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Nous sommes là pour vous aider",
+    "address": "Via dei Gladioli 15, 91100 Trapani, Italie",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "formName": "Nom",
+    "formEmail": "E-mail",
+    "formMessage": "Message",
+    "formSend": "Envoyer le message",
+    "whatsapp": "Écrivez-nous sur WhatsApp",
+    "findUs": "Où nous trouver",
+    "writeUs": "Écrivez-nous"
+  },
+  "contacts": {
+    "title": "Contact",
+    "subtitle": "Nous sommes là pour vous aider",
+    "address": "Via dei Gladioli 15, 91100 Trapani, Italie",
+    "email": "info@egadisailing.com",
+    "phone": "+39 345 971 0696 · +39 340 145 4585",
+    "formName": "Nom",
+    "formEmail": "E-mail",
+    "formMessage": "Message",
+    "formSend": "Envoyer le message",
+    "whatsapp": "Écrivez-nous sur WhatsApp",
+    "findUs": "Où nous trouver",
+    "writeUs": "Écrivez-nous"
+  },
+  "islands": {
+    "title": "Les îles Égades",
+    "subtitle": "Trois joyaux au cœur de la Méditerranée",
+    "sectionLabel": "Découvrir l'itinéraire",
+    "discoverExperiences": "Découvrir les expériences liées à cette île",
+    "favignana": {
+      "name": "Favignana",
+      "description": "La plus grande des îles Égades, célèbre pour Cala Rossa et ses eaux turquoise. Surnommée le papillon sur la mer pour sa forme, Favignana offre des plages spectaculaires, un centre charmant et l'ancienne tonnara Florio, témoin de son histoire maritime.",
+      "highlights": "Cala Rossa, Cala Azzurra, Bue Marino, Ex Stabilimento Florio"
+    },
+    "levanzo": {
+      "name": "Levanzo",
+      "description": "La plus petite et la plus silencieuse, connue pour la Grotta del Genovese. Avec peu d'habitants, Levanzo est une île paisible où le temps ralentit. Ses eaux transparentes et sa vie marine en font une destination parfaite pour le snorkeling.",
+      "highlights": "Grotta del Genovese, Cala Minnola, Cala Fredda, Faraglione"
+    },
+    "marettimo": {
+      "name": "Marettimo",
+      "description": "La plus lointaine et la plus sauvage, idéale pour les grottes marines, la randonnée et les criques préservées. Marettimo révèle un visage plus montagneux et plus aventureux de l'archipel.",
+      "highlights": "Grotta del Cammello, Punta Troia, Cala Bianca, Scalo Maestro"
+    }
+  },
+  "experience": {
+    "includes": "Ce qui est inclus",
+    "bring": "À apporter",
+    "notIncludes": "Non inclus",
+    "itinerary": "Itinéraire",
+    "pricing": "Prix et saisonnalité",
+    "reviews": "Avis",
+    "bookNow": "Réserver maintenant",
+    "from": "À partir de",
+    "perPerson": "par personne",
+    "duration": "Durée",
+    "people": "personnes",
+    "capacity": "Capacité maximale",
+    "crew": "Équipage à bord",
+    "boat": "Bateau",
+    "meetingPoint": "Point de rendez-vous",
+    "whatToBring": "À apporter",
+    "allExperiences": "Toutes les expériences",
+    "include1": "Skipper professionnel",
+    "include2": "Déjeuner de poisson frais préparé par le chef",
+    "include3": "Équipement de snorkeling",
+    "include4": "Carburant",
+    "include5": "Eau et boissons sans alcool",
+    "include6": "Assurance",
+    "bring1": "Maillot de bain",
+    "bring2": "Serviette",
+    "bring3": "Crème solaire",
+    "bring4": "Lunettes de soleil",
+    "bring5": "Chapeau",
+    "itin1Time": "09:00",
+    "itin1Text": "Départ du port de Trapani",
+    "itin2Time": "10:00",
+    "itin2Text": "Arrivée à Favignana — Cala Rossa, baignade et snorkeling",
+    "itin3Time": "12:30",
+    "itin3Text": "Déjeuner à bord préparé par le chef",
+    "itin4Time": "14:00",
+    "itin4Text": "Navigation vers Levanzo",
+    "itin5Time": "15:30",
+    "itin5Text": "Grotta del Genovese, baignade en eaux cristallines",
+    "itin6Time": "17:00",
+    "itin6Text": "Retour au port de Trapani",
+    "periodLabel": "Période",
+    "periodPrice": "Prix par personne",
+    "seasonalPrices": "Prix par saison",
+    "periodDates": "Dates"
+  },
+  "experiences": {
+    "title": "Excursions en bateau aux îles Égades depuis Trapani",
+    "subtitle": "Choisissez votre excursion aux îles Égades : chef à bord, charter en trimaran, tours privés de 4 heures et excursions partagées ou privées de 8 heures. Prix et disponibilités en ligne."
+  },
+  "boats": {
+    "title": "Bateaux pour excursions aux îles Égades depuis Trapani",
+    "subtitle": "Choisissez entre le trimaran Neel 47 et le Cigala & Bertinetti 34 Offshore Open.",
+    "length": "Longueur",
+    "year": "Année",
+    "guests": "Invités",
+    "cabins": "Cabines",
+    "meters": "m",
+    "crew": "Équipage",
+    "availableServices": "Expériences disponibles",
+    "specs": "Caractéristiques"
+  },
+  "faq": {
+    "title": "FAQ sur les excursions en bateau aux îles Égades",
+    "subtitle": "Tout ce qu'il faut savoir avant de réserver une excursion en bateau aux îles Égades.",
+    "q1": "Que dois-je apporter ?",
+    "a1": "De préférence une crème solaire biodégradable, un maillot de bain, une serviette personnelle, un chapeau et des chaussures confortables. Nous conseillons aussi un vêtement léger pour le retour.",
+    "q2": "Puis-je annuler ma réservation ?",
+    "a2": "Oui. Jusqu'à 30 jours avant le départ, le remboursement est intégral ; de 29 à 15 jours avant, 50 % est remboursé ; dans les 15 jours précédant la sortie ou en cas de no-show, l'annulation n'est pas remboursable. Les changements de date sont évalués selon les disponibilités.",
+    "q3": "Que se passe-t-il en cas de mauvais temps ?",
+    "a3": "Nous surveillons constamment la météo marine. Si les conditions ne permettent pas de sortir en sécurité, nous vous contacterons pour reprogrammer l'expérience ou procéder à un remboursement complet.",
+    "q4": "Les enfants peuvent-ils participer ?",
+    "a4": "Oui, les enfants sont les bienvenus à bord. Pour les très jeunes enfants, moins de 3 ans, contactez-nous avant de réserver. Des gilets de sauvetage enfants sont disponibles.",
+    "q5": "Le déjeuner est-il inclus ?",
+    "a5": "Pour l'expérience premium avec chef, le déjeuner est inclus. Pour les autres excursions, les inclusions exactes sont indiquées dans la fiche de l'expérience.",
+    "q6": "Où embarque-t-on ?",
+    "a6": "L'embarquement se fait à Trapani. Les indications précises et le point de rendez-vous sont envoyés par e-mail après confirmation de la réservation."
+  },
+  "itinerary": {
+    "tabs": {
+      "socialBoating": "Social Boating",
+      "exclusive": "Gourmet",
+      "cabinCharter": "Charter",
+      "boatShared": "4 heures",
+      "boatExclusive": "8 heures"
+    },
+    "socialBoating": {
+      "stop1": { "name": "Départ", "description": "Embarquement au port de Trapani, boisson de bienvenue et briefing du skipper." },
+      "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "Baignade dans l'une des eaux turquoise les plus célèbres de Méditerranée, avec snorkeling sur les fonds de Posidonie." },
+      "stop3": { "name": "Déjeuner à bord", "description": "Le chef prépare du poisson frais avec vue sur la mer." },
+      "stop4": { "name": "Bue Marino", "island": "Favignana", "description": "Côte spectaculaire, grottes marines et eaux cristallines entre les falaises." },
+      "stop5": { "name": "Retour", "description": "Navigation de retour vers Trapani dans la lumière de fin de journée." }
+    },
+    "exclusiveExperience": {
+      "stop1": { "name": "Accueil à bord", "description": "Point de rendez-vous : Via dei Gladioli 15, 91100 Trapani, Italie." },
+      "stop2": { "name": "Cala Azzurra", "island": "Favignana", "description": "Baignade dans les eaux transparentes de Cala Azzurra, Favignana." },
+      "stop3": { "name": "Cala Rossa", "island": "Favignana", "description": "Déjeuner gourmet au mouillage devant Cala Rossa, Favignana." },
+      "stop4": { "name": "Cuisine en direct à bord", "description": "Le chef local prépare le déjeuner à bord à Cala Rossa, Favignana." },
+      "stop5": { "name": "Déjeuner avec vue sur la mer", "description": "Déjeuner gourmet avec vue sur Cala Rossa, Favignana." },
+      "stop6": { "name": "Détente à Cala Rossa", "island": "Favignana", "description": "Temps pour se détendre et se baigner dans les eaux de Cala Rossa." },
+      "stop7": { "name": "Cala Dogana", "island": "Levanzo", "description": "Arrêt près de Cala Dogana, Levanzo." },
+      "stop8": { "name": "Cala Fredda", "island": "Levanzo", "description": "Nature, silence et eau turquoise à Cala Fredda, Levanzo." },
+      "stop9": { "name": "Apéritif au coucher du soleil", "description": "Pendant la navigation de retour entre les îles Égades." },
+      "stop10": { "name": "Retour au port", "description": "Fin de l'expérience et retour à Trapani." }
+    },
+    "exclusive": {
+      "stop1": { "name": "Accueil à bord", "description": "Point de rendez-vous : Via dei Gladioli 15, 91100 Trapani, Italie." },
+      "stop2": { "name": "Cala Azzurra", "island": "Favignana", "description": "Baignade dans les eaux transparentes de Cala Azzurra, Favignana." },
+      "stop3": { "name": "Cala Rossa", "island": "Favignana", "description": "Déjeuner gourmet au mouillage devant Cala Rossa, Favignana." },
+      "stop4": { "name": "Cuisine en direct à bord", "description": "Le chef local prépare le déjeuner à bord à Cala Rossa, Favignana." },
+      "stop5": { "name": "Déjeuner avec vue sur la mer", "description": "Déjeuner gourmet avec vue sur Cala Rossa, Favignana." },
+      "stop6": { "name": "Détente à Cala Rossa", "island": "Favignana", "description": "Temps pour se détendre et se baigner dans les eaux de Cala Rossa." },
+      "stop7": { "name": "Cala Dogana", "island": "Levanzo", "description": "Arrêt près de Cala Dogana, Levanzo." },
+      "stop8": { "name": "Cala Fredda", "island": "Levanzo", "description": "Nature, silence et eau turquoise à Cala Fredda, Levanzo." },
+      "stop9": { "name": "Apéritif au coucher du soleil", "description": "Pendant la navigation de retour entre les îles Égades." },
+      "stop10": { "name": "Retour au port", "description": "Fin de l'expérience et retour à Trapani." }
+    },
+    "charter": {
+      "stop1": { "name": "Itinéraire sur mesure", "description": "L'itinéraire du charter est préparé avec les invités entre Favignana, Levanzo et Marettimo, selon les envies, le rythme, la mer, la météo et le désir de criques, villages, baignade ou détente à bord." }
+    },
+    "cabinCharter": {
+      "stop1": { "name": "Itinéraire sur mesure", "description": "L'itinéraire du charter est préparé avec les invités entre Favignana, Levanzo et Marettimo, selon les envies, le rythme, la mer, la météo et le désir de criques, villages, baignade ou détente à bord." }
+    },
+    "boatShared": {
+      "stop1": { "name": "Départ", "description": "Rendez-vous au port de Trapani et départ vers les îles." },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Tour de l'île avec arrêts dans les plus belles criques." },
+      "stop3": { "name": "Levanzo", "island": "Levanzo", "description": "Baignade et snorkeling en eaux cristallines." },
+      "stop4": { "name": "Retour", "description": "Retour à Trapani en fin d'après-midi." }
+    },
+    "boatExclusive": {
+      "stop1": { "name": "Départ", "description": "Départ privé avec horaire convenu." },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Les criques les plus exclusives avec des arrêts plus longs." },
+      "stop3": { "name": "Déjeuner à bord", "description": "Déjeuner avec produits typiques siciliens." },
+      "stop4": { "name": "Levanzo", "island": "Levanzo", "description": "Criques tranquilles et snorkeling en eaux préservées." },
+      "stop5": { "name": "Retour", "description": "Retour détendu dans la lumière du soir." }
+    }
+  },
+  "landing": {
+    "experiencesTitle": "Prêt à partir ?",
+    "experiencesSubtitle": "",
+    "islandsTitle": "Les îles Égades",
+    "islandsSubtitle": "Trois joyaux au cœur de la Méditerranée",
+    "whyTitle": "Pourquoi Egadisailing",
+    "whyChef": "Chef à bord",
+    "whyChefDesc": "Déjeuner de poisson frais préparé par notre chef, avec ingrédients locaux et recettes siciliennes.",
+    "whyLuxury": "Luxe accessible",
+    "whyLuxuryDesc": "Des expériences premium à des prix raisonnables, pour vivre la mer comme vous le méritez.",
+    "whyCrew": "Équipage expert",
+    "whyCrewDesc": "Skipper professionnel, chef et hôtesse pour une expérience sûre et soignée.",
+    "whyIslands": "Îles préservées",
+    "whyIslandsDesc": "Des eaux parmi les plus claires de Méditerranée, grottes marines et criques cachées.",
+    "testimonialsTitle": "Ce que disent nos invités",
+    "ctaTitle": "Réservez votre expérience",
+    "ctaSubtitle": "Choisissez votre aventure aux îles Égades",
+    "ctaButton": "Voir les expériences"
+  },
+  "home": {
+    "experiencesTitle": "Prêt à partir ?",
+    "experiencesSubtitle": "",
+    "islandsTitle": "Les îles Égades",
+    "islandsSubtitle": "Trois joyaux au cœur de la Méditerranée",
+    "whyTitle": "Pourquoi Egadisailing",
+    "whyChef": "Chef à bord",
+    "whyChefDesc": "Déjeuner de poisson frais préparé par notre chef, avec ingrédients locaux et recettes siciliennes.",
+    "whyLuxury": "Luxe accessible",
+    "whyLuxuryDesc": "Des expériences premium à des prix raisonnables, pour vivre la mer comme vous le méritez.",
+    "whyCrew": "Équipage expert",
+    "whyCrewDesc": "Skipper professionnel, chef et hôtesse pour une expérience sûre et soignée.",
+    "whyIslands": "Îles préservées",
+    "whyIslandsDesc": "Des eaux parmi les plus claires de Méditerranée, grottes marines et criques cachées.",
+    "testimonialsTitle": "Ce que disent nos invités",
+    "ctaTitle": "Réservez votre expérience",
+    "ctaSubtitle": "Choisissez votre aventure aux îles Égades",
+    "ctaButton": "Voir les expériences"
+  }
+}

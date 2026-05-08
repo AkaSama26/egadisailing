@@ -191,11 +191,13 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
   const [hoveredExperienceKey, setHoveredExperienceKey] = useState<string | null>(null);
   const [hoverImageIndex, setHoverImageIndex] = useState(0);
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   const copy = {
-    eyebrow: isEn ? "Choose your experience" : "Scegli la tua esperienza",
-    book: isEn ? "Book now" : "Prenota ora",
-    previous: isEn ? "Previous experiences" : "Esperienze precedenti",
-    next: isEn ? "Next experiences" : "Esperienze successive",
+    eyebrow: isEs ? "Elige tu experiencia" : isFr ? "Choisissez votre expérience" : isEn ? "Choose your experience" : "Scegli la tua esperienza",
+    book: isEs ? "Reservar ahora" : isFr ? "Réserver" : isEn ? "Book now" : "Prenota ora",
+    previous: isEs ? "Experiencias anteriores" : isFr ? "Expériences précédentes" : isEn ? "Previous experiences" : "Esperienze precedenti",
+    next: isEs ? "Experiencias siguientes" : isFr ? "Expériences suivantes" : isEn ? "Next experiences" : "Esperienze successive",
   };
 
   useEffect(() => {

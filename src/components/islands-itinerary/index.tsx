@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { useLocale } from "next-intl";
 import { islandMapData, islandOrder } from "./islands/data";
 import { IslandPoiStage } from "./islands/island-poi-stage";
 import type { IslandId, IslandPoi } from "./islands/types";
@@ -50,28 +51,56 @@ function getPoiType(label: string) {
   return "Punto";
 }
 
-function getPoiDescription(poi: IslandPoi, islandLabel: string) {
+function getPoiDescription(poi: IslandPoi, islandLabel: string, locale: string) {
   if (poi.description) return poi.description;
+  const isEs = locale === "es";
+  const isEn = locale === "en";
+  const isFr = locale === "fr";
 
   switch (getPoiType(poi.label)) {
     case "Grotta":
+      if (isEs) return `${poi.label} es una cavidad natural en la costa de ${islandLabel}: una referencia ideal para leer la isla desde el mar.`;
+      if (isFr) return `${poi.label} est une cavité naturelle sur la côte de ${islandLabel} : un repère idéal pour lire l'île depuis la mer.`;
+      if (isEn) return `${poi.label} is a natural cave along the coastline of ${islandLabel}: an ideal reference point to read the island from the sea.`;
       return `${poi.label} è una cavità naturale lungo il profilo di ${islandLabel}: un riferimento ideale per leggere la costa dal mare.`;
     case "Costa":
+      if (isEs) return `${poi.label} identifica una cala, un desembarcadero o un tramo costero de ${islandLabel}, útil para orientarse entre baños, paradas y pasos resguardados.`;
+      if (isFr) return `${poi.label} désigne une crique, un débarcadère ou un tronçon côtier de ${islandLabel}, utile pour s'orienter entre baignades, arrêts et passages abrités.`;
+      if (isEn) return `${poi.label} marks a cove, landing point or coastal stretch of ${islandLabel}, useful for orienting swim stops and sheltered passages.`;
       return `${poi.label} identifica una cala, un approdo o un tratto costiero di ${islandLabel}, utile per orientarsi tra bagni, soste e passaggi riparati.`;
     case "Promontorio":
+      if (isEs) return `${poi.label} marca un extremo o una referencia rocosa de la isla, perfecto para entender el dibujo de la costa.`;
+      if (isFr) return `${poi.label} marque une extrémité ou un repère rocheux de l'île, parfait pour comprendre le dessin de la côte.`;
+      if (isEn) return `${poi.label} marks an edge or rocky reference point of the island, perfect for understanding the shape of the coast.`;
       return `${poi.label} segna un'estremità o un riferimento roccioso dell'isola, perfetto per capire il disegno della costa.`;
     case "Sentiero":
+      if (isEs) return `${poi.label} es una referencia interior de las rutas de ${islandLabel}, entre alturas, crestas y pasos panorámicos.`;
+      if (isFr) return `${poi.label} est un repère intérieur des sentiers de ${islandLabel}, entre hauteurs, crêtes et passages panoramiques.`;
+      if (isEn) return `${poi.label} is an inland reference on ${islandLabel}'s trails, among heights, ridges and panoramic passages.`;
       return `${poi.label} è un riferimento interno dei percorsi di ${islandLabel}, tra quote, crinali e passaggi panoramici.`;
     case "Storia":
+      if (isEs) return `${poi.label} cuenta la parte histórica y material de la isla, entre arquitectura, actividades marineras y memoria del territorio.`;
+      if (isFr) return `${poi.label} raconte la partie historique et matérielle de l'île, entre architecture, activités maritimes et mémoire du territoire.`;
+      if (isEn) return `${poi.label} tells the historical and material side of the island, between architecture, seafaring work and local memory.`;
       return `${poi.label} racconta la parte storica e materiale dell'isola, tra architetture, attività marinare e memoria del territorio.`;
     case "Paese":
+      if (isEs) return `${poi.label} es el núcleo habitado de la isla, el punto más inmediato para servicios, atraques y vida cotidiana.`;
+      if (isFr) return `${poi.label} est le village de l'île, le point le plus immédiat pour les services, les débarcadères et la vie quotidienne.`;
+      if (isEn) return `${poi.label} is the island village, the most immediate point for services, landings and daily life.`;
       return `${poi.label} è il centro abitato dell'isola, il punto più immediato per servizi, approdi e vita quotidiana.`;
     default:
+      if (isEs) return `${poi.label} es una de las referencias mapeadas en ${islandLabel}, útil para leer la isla con más precisión.`;
+      if (isFr) return `${poi.label} est l'un des repères cartographiés sur ${islandLabel}, utile pour lire l'île avec plus de précision.`;
+      if (isEn) return `${poi.label} is one of the mapped reference points on ${islandLabel}, useful for reading the island more precisely.`;
       return `${poi.label} è uno dei riferimenti mappati su ${islandLabel}, utile per leggere l'isola con più precisione.`;
   }
 }
 
 export function IslandsItinerary() {
+  const locale = useLocale();
+  const isEs = locale === "es";
+  const isEn = locale === "en";
+  const isFr = locale === "fr";
   const [activeIslandId, setActiveIslandId] = useState<IslandId>("favignana");
   const [selectedPoiId, setSelectedPoiId] = useState<string>(
     islandMapData.favignana.pois[0]?.id ?? "",
@@ -100,7 +129,7 @@ export function IslandsItinerary() {
   return (
     <section
       id="egadi-map"
-      aria-label="Mappa interattiva delle Isole Egadi"
+      aria-label={isEs ? "Mapa interactivo de las Islas Egadi" : isFr ? "Carte interactive des îles Égades" : isEn ? "Interactive map of the Egadi Islands" : "Mappa interattiva delle Isole Egadi"}
       className="egadi-water-reflection overflow-hidden bg-[#071934] px-4 py-24 text-white sm:px-8 lg:px-12 lg:py-28"
       style={{
         background:
@@ -110,14 +139,19 @@ export function IslandsItinerary() {
       <div className="mx-auto max-w-7xl">
         <div className="max-w-4xl">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-gold)]">
-            Isole Egadi
+            {isEs ? "Islas Egadi" : isFr ? "Îles Égades" : isEn ? "Egadi Islands" : "Isole Egadi"}
           </p>
           <h1 className="mt-4 font-heading text-4xl font-bold leading-none sm:text-5xl lg:text-7xl">
-            La mappa delle Isole Egadi
+            {isEs ? "El mapa de las Islas Egadi" : isFr ? "La carte des îles Égades" : isEn ? "The map of the Egadi Islands" : "La mappa delle Isole Egadi"}
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white/68 sm:text-lg">
-            Cale, grotte, approdi e sentieri raccolti in una mappa visuale per esplorare
-            Favignana, Levanzo e Marettimo con uno sguardo più preciso.
+            {isEs
+              ? "Calas, cuevas, desembarcaderos y senderos reunidos en un mapa visual para explorar Favignana, Levanzo y Marettimo con una mirada más precisa."
+              : isFr
+                ? "Criques, grottes, débarcadères et sentiers réunis dans une carte visuelle pour explorer Favignana, Levanzo et Marettimo avec un regard plus précis."
+              : isEn
+                ? "Coves, caves, landing points and trails gathered in a visual map to explore Favignana, Levanzo and Marettimo with a more precise view."
+                : "Cale, grotte, approdi e sentieri raccolti in una mappa visuale per esplorare Favignana, Levanzo e Marettimo con uno sguardo più preciso."}
           </p>
         </div>
 
@@ -125,7 +159,7 @@ export function IslandsItinerary() {
           <div className="flex h-[34rem] flex-col overflow-hidden rounded-lg border border-white/10 bg-white/[0.045] sm:h-[40rem] lg:h-[42rem]">
             <div
               className="grid grid-cols-3 gap-2 border-b border-white/10 bg-white/[0.035] p-2"
-              aria-label="Seleziona isola"
+              aria-label={isEs ? "Selecciona isla" : isFr ? "Sélectionner une île" : isEn ? "Select island" : "Seleziona isola"}
               role="tablist"
             >
               {islandOrder.map((islandId) => {
@@ -195,7 +229,7 @@ export function IslandsItinerary() {
                     {selectedPoi.label}
                   </h2>
                   <p className="mt-4 text-base leading-7 text-white/68">
-                    {getPoiDescription(selectedPoi, activeIsland.label)}
+                    {getPoiDescription(selectedPoi, activeIsland.label, locale)}
                   </p>
                 </div>
               </div>

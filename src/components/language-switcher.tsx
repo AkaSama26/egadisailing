@@ -39,7 +39,118 @@ const localeLabels: Record<string, string> = {
 const localeFlagCodes: Record<string, FlagCode> = {
   it: "IT",
   en: "GB",
+  es: "ES",
+  fr: "FR",
 };
+
+const localizedSegments: Record<string, Record<string, string>> = {
+  about: { it: "about", en: "about", es: "sobre-nosotros", fr: "a-propos" },
+  boats: { it: "boats", en: "boats", es: "barcos", fr: "bateaux" },
+  contacts: { it: "contacts", en: "contacts", es: "contacto", fr: "contact" },
+  "cookie-policy": {
+    it: "cookie-policy",
+    en: "cookie-policy",
+    es: "politica-de-cookies",
+    fr: "politique-de-cookies",
+  },
+  experiences: { it: "experiences", en: "experiences", es: "experiencias", fr: "experiences" },
+  faq: { it: "faq", en: "faq", es: "preguntas-frecuentes", fr: "questions-frequentes" },
+  islands: { it: "islands", en: "islands", es: "islas", fr: "iles" },
+  prenota: { it: "prenota", en: "prenota", es: "reservar", fr: "reserver" },
+  privacy: { it: "privacy", en: "privacy", es: "privacidad", fr: "confidentialite" },
+  "recupera-prenotazione": {
+    it: "recupera-prenotazione",
+    en: "recupera-prenotazione",
+    es: "recuperar-reserva",
+    fr: "retrouver-reservation",
+  },
+  terms: { it: "terms", en: "terms", es: "terminos-y-condiciones", fr: "conditions-generales" },
+  ticket: { it: "ticket", en: "ticket", es: "billete", fr: "billet" },
+};
+
+const segmentAliases = new Map(
+  Object.entries(localizedSegments).flatMap(([internal, byLocale]) =>
+    Object.values(byLocale).map((segment) => [segment, internal] as const),
+  ),
+);
+
+const experienceSlugsByService: Record<string, Record<string, string>> = {
+  "exclusive-experience": {
+    it: "exclusive-experience",
+    en: "exclusive-experience",
+    es: "chef-a-bordo-neel-47",
+    fr: "chef-a-bord-neel-47",
+  },
+  "cabin-charter": { it: "charter", en: "charter", es: "charter-islas-egadi", fr: "charter-iles-egades" },
+  "boat-shared-full-day": {
+    it: "boat-shared-full-day",
+    en: "boat-shared-full-day",
+    es: "excursion-compartida-islas-egadi-8-horas",
+    fr: "excursion-partagee-iles-egades-8-heures",
+  },
+  "boat-exclusive-full-day": {
+    it: "boat-exclusive-full-day",
+    en: "boat-exclusive-full-day",
+    es: "excursion-privada-islas-egadi-8-horas",
+    fr: "excursion-privee-iles-egades-8-heures",
+  },
+  "boat-exclusive-morning": {
+    it: "boat-exclusive-morning",
+    en: "boat-exclusive-morning",
+    es: "excursion-privada-islas-egadi-4-horas-manana",
+    fr: "excursion-privee-iles-egades-4-heures-matin",
+  },
+  "boat-exclusive-afternoon": {
+    it: "boat-exclusive-afternoon",
+    en: "boat-exclusive-afternoon",
+    es: "excursion-privada-islas-egadi-4-horas-tarde",
+    fr: "excursion-privee-iles-egades-4-heures-apres-midi",
+  },
+};
+
+const experienceSlugAliases = new Map(
+  Object.entries(experienceSlugsByService).flatMap(([serviceId, byLocale]) => [
+    [serviceId, serviceId] as const,
+    ...Object.values(byLocale).map((slug) => [slug, serviceId] as const),
+  ]),
+);
+
+function switchPathLocale(pathname: string, newLocale: string) {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return `/${newLocale}`;
+  segments.shift();
+
+  if (segments[0]) {
+    const internal = segmentAliases.get(segments[0]);
+    if (internal) {
+      segments[0] = localizedSegments[internal]?.[newLocale] ?? internal;
+    }
+  }
+
+  if (segments[0] === localizedSegments.experiences[newLocale] && segments[1]) {
+    const serviceId = experienceSlugAliases.get(segments[1]);
+    if (serviceId) {
+      segments[1] = experienceSlugsByService[serviceId]?.[newLocale] ?? serviceId;
+    }
+  }
+
+  if (
+    segments[0] === localizedSegments.prenota[newLocale] &&
+    segments[1] === "success" &&
+    (newLocale === "es" || newLocale === "fr")
+  ) {
+    segments[1] = newLocale === "es" ? "confirmacion" : "confirmation";
+  } else if (
+    segments[0] === localizedSegments.prenota[newLocale] &&
+    (segments[1] === "confirmacion" || segments[1] === "confirmation") &&
+    newLocale !== "es" &&
+    newLocale !== "fr"
+  ) {
+    segments[1] = "success";
+  }
+
+  return `/${[newLocale, ...segments].join("/")}`;
+}
 
 export function LanguageSwitcher({ className }: { className?: string }) {
   const locale = useLocale();
@@ -59,9 +170,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   }, []);
 
   function switchLocale(newLocale: string) {
-    const segments = pathname.split("/");
-    segments[1] = newLocale;
-    router.push(segments.join("/"));
+    router.push(switchPathLocale(pathname, newLocale));
     setOpen(false);
   }
 

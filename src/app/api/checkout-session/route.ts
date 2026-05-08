@@ -23,6 +23,8 @@ import { RL_WINDOW } from "@/lib/timing";
 import { passengerBreakdownSchema } from "@/lib/booking/passengers";
 import { routing } from "@/i18n/routing";
 import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
+import { localizedPath } from "@/lib/i18n/paths";
+import { getExperiencePublicSlug } from "@/data/catalog/experiences";
 
 export const runtime = "nodejs";
 
@@ -147,8 +149,8 @@ export const POST = withErrorHandler(async (req: Request) => {
       customerEmail: normalizeEmail(input.customer.email),
       clientReferenceId: booking.bookingId,
       productName: "Egadisailing experience",
-      successUrl: `${baseUrl}/${locale}/prenota/success/${booking.confirmationCode}?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${baseUrl}/${locale}/prenota/${input.serviceId}`,
+      successUrl: `${baseUrl}${localizedPath(locale, `/prenota/success/${booking.confirmationCode}`)}?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}${localizedPath(locale, `/prenota/${getExperiencePublicSlug(input.serviceId, locale)}`)}`,
       metadata,
     });
     checkoutSessionId = session.checkoutSessionId;

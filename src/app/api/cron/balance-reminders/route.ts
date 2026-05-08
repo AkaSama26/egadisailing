@@ -3,7 +3,7 @@ import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { db } from "@/lib/db";
-import { addDays, formatItDay, parseDateLikelyLocalDay } from "@/lib/dates";
+import { addDays, parseDateLikelyLocalDay } from "@/lib/dates";
 import {
   preDepartureReminderTemplate,
   reviewRequestTemplate,
@@ -14,6 +14,7 @@ import {
 } from "@/lib/email/outbox";
 import { formatEur } from "@/lib/pricing/cents";
 import { buildTicketUrl } from "@/lib/booking/ticket";
+import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
 
 export const runtime = "nodejs";
 
@@ -49,7 +50,7 @@ export const GET = withCronGuard(
       },
       include: {
         customer: true,
-        service: { select: { name: true } },
+        service: { select: { id: true, name: true } },
         directBooking: true,
       },
       take: 100,
@@ -58,15 +59,17 @@ export const GET = withCronGuard(
     let reminderQueued = 0;
     for (const booking of reminders) {
       const customerName = `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
+      const locale = resolveEmailLocale(booking.customer.language);
       const tpl = preDepartureReminderTemplate({
         customerName,
         confirmationCode: booking.confirmationCode,
-        serviceName: booking.service.name,
-        startDate: formatItDay(booking.startDate),
+        serviceName: emailServiceName(booking.service.id, booking.service.name, locale),
+        startDate: formatEmailDay(booking.startDate, locale),
         balanceAmount: booking.directBooking?.balanceAmount
-          ? formatEur(booking.directBooking.balanceAmount)
+          ? formatEur(booking.directBooking.balanceAmount, locale)
           : undefined,
-        ticketUrl: buildTicketUrl(booking.confirmationCode),
+        ticketUrl: buildTicketUrl(booking.confirmationCode, locale),
+        locale,
       });
       const result = await enqueueTransactionalEmail({
         templateKey: "customer.pre-departure-reminder",
@@ -103,7 +106,7 @@ export const GET = withCronGuard(
       },
       include: {
         customer: true,
-        service: { select: { name: true } },
+        service: { select: { id: true, name: true } },
       },
       take: 100,
     });
@@ -111,9 +114,11 @@ export const GET = withCronGuard(
     let reviewQueued = 0;
     for (const booking of reviewBookings) {
       const customerName = `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
+      const locale = resolveEmailLocale(booking.customer.language);
       const tpl = reviewRequestTemplate({
         customerName,
-        serviceName: booking.service.name,
+        serviceName: emailServiceName(booking.service.id, booking.service.name, locale),
+        locale,
       });
       const result = await enqueueTransactionalEmail({
         templateKey: "customer.review-request",

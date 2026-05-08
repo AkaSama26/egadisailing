@@ -8,34 +8,87 @@ export type FavignanaGuideSlug =
   | "cala-rossa"
   | "bue-marino-cave-tufo"
   | "bue-marino-tuff-quarries"
+  | "bue-marino-canteras-toba"
   | "snorkeling-favignana"
   | "snorkeling-in-favignana"
+  | "snorkel-en-favignana"
   | "come-arrivare-da-trapani-e-muoversi"
   | "how-to-get-from-trapani-and-get-around"
+  | "como-llegar-desde-trapani-y-moverse"
   | "tour-in-barca-favignana-levanzo"
-  | "favignana-levanzo-boat-tour";
+  | "favignana-levanzo-boat-tour"
+  | "que-ver-en-favignana"
+  | "mejores-playas-calas-favignana"
+  | "favignana-en-un-dia"
+  | "excursion-barco-favignana-levanzo"
+  | "que-voir-a-favignana"
+  | "plus-belles-plages-criques-favignana"
+  | "favignana-en-une-journee"
+  | "bue-marino-carrieres-tuf"
+  | "snorkeling-a-favignana"
+  | "comment-venir-depuis-trapani-et-se-deplacer"
+  | "excursion-bateau-favignana-levanzo";
 
 export const favignanaGuideSlugPairs = [
-  { it: "cosa-vedere-top-10", en: "top-10-things-to-see" },
-  { it: "dove-fare-il-bagno-spiagge-cale", en: "best-beaches-coves" },
-  { it: "favignana-in-un-giorno", en: "favignana-in-one-day" },
-  { it: "cala-rossa", en: "cala-rossa" },
-  { it: "bue-marino-cave-tufo", en: "bue-marino-tuff-quarries" },
-  { it: "snorkeling-favignana", en: "snorkeling-in-favignana" },
+  {
+    it: "cosa-vedere-top-10",
+    en: "top-10-things-to-see",
+    es: "que-ver-en-favignana",
+    fr: "que-voir-a-favignana",
+  },
+  {
+    it: "dove-fare-il-bagno-spiagge-cale",
+    en: "best-beaches-coves",
+    es: "mejores-playas-calas-favignana",
+    fr: "plus-belles-plages-criques-favignana",
+  },
+  {
+    it: "favignana-in-un-giorno",
+    en: "favignana-in-one-day",
+    es: "favignana-en-un-dia",
+    fr: "favignana-en-une-journee",
+  },
+  { it: "cala-rossa", en: "cala-rossa", es: "cala-rossa", fr: "cala-rossa" },
+  {
+    it: "bue-marino-cave-tufo",
+    en: "bue-marino-tuff-quarries",
+    es: "bue-marino-canteras-toba",
+    fr: "bue-marino-carrieres-tuf",
+  },
+  {
+    it: "snorkeling-favignana",
+    en: "snorkeling-in-favignana",
+    es: "snorkel-en-favignana",
+    fr: "snorkeling-a-favignana",
+  },
   {
     it: "come-arrivare-da-trapani-e-muoversi",
     en: "how-to-get-from-trapani-and-get-around",
+    es: "como-llegar-desde-trapani-y-moverse",
+    fr: "comment-venir-depuis-trapani-et-se-deplacer",
   },
-  { it: "tour-in-barca-favignana-levanzo", en: "favignana-levanzo-boat-tour" },
-] as const satisfies Array<{ it: FavignanaGuideSlug; en: FavignanaGuideSlug }>;
+  {
+    it: "tour-in-barca-favignana-levanzo",
+    en: "favignana-levanzo-boat-tour",
+    es: "excursion-barco-favignana-levanzo",
+    fr: "excursion-bateau-favignana-levanzo",
+  },
+] as const satisfies Array<{
+  it: FavignanaGuideSlug;
+  en: FavignanaGuideSlug;
+  es: FavignanaGuideSlug;
+  fr: FavignanaGuideSlug;
+}>;
 
-export type FavignanaGuideLocale = "it" | "en";
+export type FavignanaGuideLocale = "it" | "en" | "es" | "fr";
 
 export function getFavignanaGuideSlugForLocale(
   slug: string,
   locale: FavignanaGuideLocale,
 ): FavignanaGuideSlug | undefined {
-  const pair = favignanaGuideSlugPairs.find((item) => item.it === slug || item.en === slug);
+  const pair = favignanaGuideSlugPairs.find(
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+  );
   return pair?.[locale];
 }
 

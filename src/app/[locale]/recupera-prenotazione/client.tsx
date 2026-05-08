@@ -26,6 +26,8 @@ export function RecuperaPrenotazioneClient({
   const [verState, verifyAction, verPending] = useActionState(verifyOtpAndLogin, initialVerify);
   const [email, setEmail] = useState("");
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   // R15-UX-12: cooldown 60s dopo invio OTP per evitare spam click → 429
   // grezzo. Il timer parte al cambio di `reqState` a "sent".
   const [cooldown, setCooldown] = useState(0);
@@ -64,22 +66,31 @@ export function RecuperaPrenotazioneClient({
   const verifyEmail = email;
   const canResend = !reqPending && cooldown === 0;
   const copy = {
-    emailLabel: isEn ? "Booking email" : "Email della prenotazione",
-    emailPlaceholder: isEn ? "you@email.com" : "tu@email.com",
-    sendCode: isEn ? "Send code" : "Invia codice",
-    resendCode: isEn ? "Send again" : "Reinvia codice",
-    sending: isEn ? "Sending..." : "Invio...",
-    resendIn: (seconds: number) => (isEn ? `Send again in ${seconds}s` : `Reinvia tra ${seconds}s`),
-    sent: isEn
+    emailLabel: isEs ? "Email de la reserva" : isFr ? "Email de la réservation" : isEn ? "Booking email" : "Email della prenotazione",
+    emailPlaceholder: isEs ? "tu@email.com" : isEn ? "you@email.com" : "tu@email.com",
+    sendCode: isEs ? "Enviar código" : isFr ? "Envoyer le code" : isEn ? "Send code" : "Invia codice",
+    resendCode: isEs ? "Enviar de nuevo" : isFr ? "Renvoyer" : isEn ? "Send again" : "Reinvia codice",
+    sending: isEs ? "Enviando..." : isFr ? "Envoi..." : isEn ? "Sending..." : "Invio...",
+    resendIn: (seconds: number) =>
+      isEs ? `Enviar de nuevo en ${seconds}s` : isFr ? `Renvoyer dans ${seconds}s` : isEn ? `Send again in ${seconds}s` : `Reinvia tra ${seconds}s`,
+    sent: isEs
+      ? "Si existe una reserva asociada a este email, recibirás un código. Revisa también spam y promociones."
+      : isFr
+      ? "Si une réservation est associée à cet email, vous recevrez un code. Vérifiez aussi les spams et promotions."
+      : isEn
       ? "If a booking exists for this email, you will receive a code. Check spam and promotions too."
       : "Se esiste una prenotazione associata a questa email, riceverai un codice. Controlla anche spam o promozioni.",
-    codeTitle: isEn ? "Enter the code" : "Inserisci il codice",
-    codeText: isEn
+    codeTitle: isEs ? "Introduce el código" : isFr ? "Saisissez le code" : isEn ? "Enter the code" : "Inserisci il codice",
+    codeText: isEs
+      ? "Después de la verificación entrarás en tu área de reserva."
+      : isFr
+      ? "Après la vérification, vous accéderez à votre espace réservation."
+      : isEn
       ? "After verification you will enter your booking area."
       : "Una volta verificato il codice accederai alla tua area prenotazioni.",
-    codeLabel: isEn ? "6-digit code" : "Codice a 6 cifre",
-    verifying: isEn ? "Checking..." : "Verifica...",
-    access: isEn ? "Open booking area" : "Accedi",
+    codeLabel: isEs ? "Código de 6 cifras" : isFr ? "Code à 6 chiffres" : isEn ? "6-digit code" : "Codice a 6 cifre",
+    verifying: isEs ? "Comprobando..." : isFr ? "Vérification..." : isEn ? "Checking..." : "Verifica...",
+    access: isEs ? "Abrir área de reserva" : isFr ? "Ouvrir l'espace réservation" : isEn ? "Open booking area" : "Accedi",
   };
 
   return (

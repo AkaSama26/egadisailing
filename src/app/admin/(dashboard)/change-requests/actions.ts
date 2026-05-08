@@ -23,7 +23,8 @@ import {
   buildEmailIdempotencyKey,
   enqueueTransactionalEmail,
 } from "@/lib/email/outbox";
-import { formatItDay } from "@/lib/dates";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
 
 const requestIdSchema = z.string().min(1);
 
@@ -45,7 +46,7 @@ export async function approveChangeRequest(formData: FormData): Promise<void> {
         booking: {
           include: {
             service: true,
-            customer: { select: { email: true, firstName: true, lastName: true } },
+            customer: { select: { email: true, firstName: true, lastName: true, language: true } },
           },
         },
       },
@@ -140,13 +141,15 @@ export async function approveChangeRequest(formData: FormData): Promise<void> {
     const customerName =
       `${approved.booking.customer.firstName ?? ""} ${approved.booking.customer.lastName ?? ""}`.trim() ||
       "cliente";
+    const locale = resolveEmailLocale(approved.booking.customer.language);
     const tpl = changeRequestApprovedTemplate({
       customerName,
       confirmationCode: approved.booking.confirmationCode,
-      serviceName: approved.booking.service.name,
-      originalDate: formatItDay(approved.request.originalStartDate),
-      requestedDate: formatItDay(approved.request.requestedStartDate),
-      bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+      serviceName: emailServiceName(approved.booking.service.id, approved.booking.service.name, locale),
+      originalDate: formatEmailDay(approved.request.originalStartDate, locale),
+      requestedDate: formatEmailDay(approved.request.requestedStartDate, locale),
+      bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
+      locale,
     });
     await enqueueTransactionalEmail({
       templateKey: "customer.change-request.approved",
@@ -189,8 +192,8 @@ export async function rejectChangeRequest(formData: FormData): Promise<void> {
       include: {
         booking: {
           include: {
-            customer: { select: { id: true, email: true, firstName: true, lastName: true } },
-            service: { select: { name: true } },
+            customer: { select: { id: true, email: true, firstName: true, lastName: true, language: true } },
+            service: { select: { id: true, name: true } },
           },
         },
       },
@@ -226,14 +229,16 @@ export async function rejectChangeRequest(formData: FormData): Promise<void> {
     const customerName =
       `${request.booking.customer.firstName ?? ""} ${request.booking.customer.lastName ?? ""}`.trim() ||
       "cliente";
+    const locale = resolveEmailLocale(request.booking.customer.language);
     const tpl = changeRequestRejectedTemplate({
       customerName,
       confirmationCode: request.booking.confirmationCode,
-      serviceName: request.booking.service.name,
-      originalDate: formatItDay(request.originalStartDate),
-      requestedDate: formatItDay(request.requestedStartDate),
-      bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+      serviceName: emailServiceName(request.booking.service.id, request.booking.service.name, locale),
+      originalDate: formatEmailDay(request.originalStartDate, locale),
+      requestedDate: formatEmailDay(request.requestedStartDate, locale),
+      bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
       adminNote: input.adminNote?.trim() || undefined,
+      locale,
     });
     await enqueueTransactionalEmail({
       templateKey: "customer.change-request.rejected",

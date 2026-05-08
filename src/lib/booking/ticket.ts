@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { localizedPath } from "@/lib/i18n/paths";
 import { normalizeConfirmationCode } from "./helpers";
 
 export function buildTicketUrl(
@@ -7,7 +8,7 @@ export function buildTicketUrl(
 ): string {
   const baseUrl = env.APP_URL.replace(/\/$/, "");
   const code = normalizeConfirmationCode(confirmationCode);
-  return `${baseUrl}/${encodeURIComponent(locale)}/ticket/${encodeURIComponent(code)}`;
+  return `${baseUrl}${localizedPath(locale, `/ticket/${encodeURIComponent(code)}`)}`;
 }
 
 export function ticketSlotLabel(durationType: string, locale?: string | null): string {
@@ -19,6 +20,12 @@ export function ticketSlotLabel(durationType: string, locale?: string | null): s
     case "HALF_DAY_AFTERNOON":
       return "14:00-18:00";
     default:
-      return locale === "en" ? "Time confirmed by the staff" : "Orario comunicato dallo staff";
+      return locale === "es"
+        ? "Hora confirmada por el equipo"
+        : locale === "fr"
+          ? "Horaire confirmé par l'équipe"
+        : locale === "en"
+          ? "Time confirmed by the staff"
+          : "Orario comunicato dallo staff";
   }
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { localizedPath } from "@/lib/i18n/paths";
 import { CURRENT_POLICY_VERSION, EFFECTIVE_DATE } from "@/lib/legal/policy-version";
 import {
   PRIVACY_CONTACT_EMAIL,
@@ -35,7 +36,11 @@ type TermsContent = {
 
 const companyIt = `${PUBLIC_COMPANY_LEGAL.name}, sede legale ${PUBLIC_COMPANY_LEGAL.legalAddress}, P.IVA ${PUBLIC_COMPANY_LEGAL.vatNumber}, PEC ${PUBLIC_COMPANY_LEGAL.pec}, Codice Univoco ${PUBLIC_COMPANY_LEGAL.recipientCode}`;
 const companyEn = `${PUBLIC_COMPANY_LEGAL.name}, registered office ${PUBLIC_COMPANY_LEGAL.legalAddress}, VAT no. ${PUBLIC_COMPANY_LEGAL.vatNumber}, certified email ${PUBLIC_COMPANY_LEGAL.pec}, recipient code ${PUBLIC_COMPANY_LEGAL.recipientCode}`;
+const companyEs = `${PUBLIC_COMPANY_LEGAL.name}, domicilio social ${PUBLIC_COMPANY_LEGAL.legalAddress}, NIF/IVA ${PUBLIC_COMPANY_LEGAL.vatNumber}, PEC ${PUBLIC_COMPANY_LEGAL.pec}, código destinatario ${PUBLIC_COMPANY_LEGAL.recipientCode}`;
+const companyFr = `${PUBLIC_COMPANY_LEGAL.name}, siège social ${PUBLIC_COMPANY_LEGAL.legalAddress}, TVA ${PUBLIC_COMPANY_LEGAL.vatNumber}, PEC ${PUBLIC_COMPANY_LEGAL.pec}, code destinataire ${PUBLIC_COMPANY_LEGAL.recipientCode}`;
 const EFFECTIVE_DATE_EN = "6 May 2026";
+const EFFECTIVE_DATE_ES = "6 de mayo de 2026";
+const EFFECTIVE_DATE_FR = "6 mai 2026";
 
 const TERMS_IT: TermsContent = {
   title: "Termini e Condizioni",
@@ -393,7 +398,219 @@ const TERMS_EN: TermsContent = {
   ],
 };
 
+const TERMS_ES: TermsContent = {
+  title: "Términos y condiciones",
+  description:
+    "Términos y condiciones de reserva Egadisailing para excursiones en barco, cancelaciones, reembolsos, seguridad, meteorología y charter.",
+  versionLabel: `Versión ${CURRENT_POLICY_VERSION} · En vigor desde el ${EFFECTIVE_DATE_ES}`,
+  intro:
+    "Estos Términos regulan las reservas directas realizadas en egadisailing.com. Antes del pago, el cliente declara haberlos leído y aceptado junto con la Política de privacidad.",
+  summaryTitle: "Resumen rápido",
+  summaryDisclaimer:
+    "Este resumen facilita la lectura, pero no sustituye las condiciones completas indicadas abajo.",
+  summaryItems: [
+    "Cancelación del cliente: reembolso del 100% hasta 30 días antes, 50% de 29 a 15 días antes, sin reembolso con menos de 15 días o no-show.",
+    "El cambio de fecha no es automático: el equipo lo evalúa según disponibilidad, operativa y seguridad.",
+    "Si Egadisailing cancela por meteorología/mar no seguro o mínimo de participantes no alcanzado, el cliente elige cambio de fecha gratuito o reembolso íntegro.",
+    "Ruta, horarios, paradas y barco pueden variar por seguridad, meteorología, normativa o necesidades técnicas.",
+    "Tras una cancelación del cliente, no se solicita el saldo no pagado; se aplica la retención sobre el importe ya abonado según la política.",
+  ],
+  indexTitle: "Índice",
+  legalLinksTitle: "Privacidad, cookies y datos personales",
+  legalLinksIntro:
+    "El tratamiento de datos personales y el uso de cookies están regulados por los documentos dedicados:",
+  privacyLabel: "Política de privacidad",
+  cookieLabel: "Política de cookies",
+  sections: [
+    {
+      title: "1. Identidad del profesional y contactos",
+      paragraphs: [
+        `El vendedor y prestador de los servicios directos es ${companyEs}.`,
+        `Para asistencia contractual y reservas: ${PUBLIC_CONTACT_EMAIL}. Para solicitudes de privacidad: ${PRIVACY_CONTACT_EMAIL}. Teléfono/WhatsApp: ${PUBLIC_CONTACT_PHONE_TEXT}. Punto de encuentro habitual, salvo comunicación operativa distinta: ${PUBLIC_CONTACT_LOCATION.labelIt}.`,
+      ],
+    },
+    {
+      title: "2. Ámbito de aplicación",
+      bullets: [
+        "Estos Términos se aplican a reservas directas realizadas en egadisailing.com o mediante procedimientos de pago directo Egadisailing.",
+        "Las reservas realizadas en portales externos, marketplaces, agencias u OTA siguen ante todo las condiciones del portal de compra.",
+        "Las reglas de seguridad, puntualidad, comportamiento a bordo e instrucciones del patrón se aplican a todas las personas embarcadas.",
+      ],
+    },
+    {
+      title: "3. Naturaleza de los servicios",
+      paragraphs: [
+        "Egadisailing ofrece experiencias náuticas, tours, jornadas privadas o compartidas, experiencias gourmet y charter con fecha o periodo específico.",
+        "Imágenes, rutas, bahías, horarios y programas describen la experiencia esperada, pero no garantizan una ruta rígida ni paradas idénticas en cada salida.",
+      ],
+    },
+    {
+      title: "4. Reserva, precio, depósito y saldo",
+      bullets: [
+        "La reserva queda concluida cuando el pago online solicitado se completa correctamente y el sistema envía o pone a disposición la confirmación.",
+        "Los precios se expresan en euros, IVA incluido cuando corresponda, salvo indicación distinta en la ficha del servicio.",
+        "En servicios con depósito, el importe online bloquea la reserva y el saldo se paga en destino antes de la salida, salvo indicación escrita distinta.",
+        "Si aparece un error técnico o de precio manifiesto, Egadisailing contactará al cliente para corregir la orden, proponer alternativa o reembolsar lo pagado.",
+      ],
+    },
+    {
+      title: "5. Cancelación voluntaria del cliente",
+      bullets: [
+        "Hasta 30 días antes de la salida: reembolso íntegro del importe pagado online.",
+        "De 29 a 15 días antes de la salida: reembolso del 50% del importe pagado online.",
+        "Con menos de 15 días: sin reembolso.",
+        "En caso de no-show o embarque no realizado por causa imputable al cliente: sin reembolso.",
+      ],
+    },
+    {
+      title: "6. Cambios de fecha, retrasos y no-show",
+      paragraphs: [
+        "El cambio de fecha no es un derecho automático. Cada solicitud se valora según disponibilidad, tipo de servicio, meteorología, operativa y otras reservas.",
+        "El cliente debe presentarse en el punto de encuentro con antelación. Tras la tolerancia operativa comunicada, la salida puede realizarse sin el cliente retrasado y tratarse como no-show.",
+      ],
+    },
+    {
+      title: "7. Meteorología, mar y seguridad",
+      paragraphs: [
+        "La seguridad prevalece siempre sobre itinerario, preferencias del cliente, programa comercial y horarios orientativos.",
+        "Si Egadisailing cancela por condiciones meteorológicas o marítimas no seguras, ordenanzas, averías, imposibilidad operativa o mínimo de participantes no alcanzado, el cliente puede elegir cambio de fecha gratuito o reembolso íntegro.",
+        "Cambios de ruta, bahías, paradas, horarios o barco equivalente no dan automáticamente derecho a reembolso cuando la experiencia sigue siendo realizable con seguridad.",
+      ],
+    },
+    {
+      title: "8. Itinerario, autoridad del patrón y barco equivalente",
+      bullets: [
+        "El patrón decide ruta, velocidad, paradas, horarios, fondeo, regreso anticipado o cambios de programa por seguridad, comodidad y normativa.",
+        "Egadisailing puede sustituir el barco por uno equivalente o superior por motivos técnicos, meteorológicos, logísticos o de seguridad.",
+        "Baños, snorkel, comida a bordo al fondeo, cuevas, calas y destinos específicos dependen siempre de las condiciones del día.",
+      ],
+    },
+    {
+      title: "9. Qué está incluido, menores, salud y comportamiento",
+      bullets: [
+        "Incluidos y excluidos son los indicados en la ficha del servicio, confirmación de reserva o presupuesto escrito.",
+        "Alergias, intolerancias, embarazo, discapacidad, condiciones médicas o presencia de menores deben comunicarse antes de la salida.",
+        "El cliente debe respetar instrucciones de patrón y tripulación. Egadisailing puede rechazar el embarque o interrumpir la experiencia ante conductas peligrosas o molestas.",
+      ],
+    },
+    {
+      title: "10. Ley aplicable, jurisdicción e idioma",
+      paragraphs: [
+        "Estos Términos se rigen por la ley italiana. Los consumidores conservan los fueros y protecciones imperativas previstos por la normativa aplicable; en los demás casos el tribunal competente es Trapani.",
+        "Los Términos se publican en italiano, inglés y español para facilitar la comprensión de clientes internacionales. En caso de divergencia interpretativa, prevalece el texto italiano.",
+        "La plataforma europea ODR para litigios online fue cerrada el 20 de julio de 2025; por tanto no se indica ningún enlace ODR.",
+      ],
+    },
+  ],
+};
+
+const TERMS_FR: TermsContent = {
+  title: "Conditions générales",
+  description:
+    "Conditions générales de réservation Egadisailing pour excursions en bateau, annulations, remboursements, sécurité, météo et charter.",
+  versionLabel: `Version ${CURRENT_POLICY_VERSION} · En vigueur depuis le ${EFFECTIVE_DATE_FR}`,
+  intro:
+    "Ces Conditions régissent les réservations directes effectuées sur egadisailing.com. Avant le paiement, le client déclare les avoir lues et acceptées avec la Politique de confidentialité.",
+  summaryTitle: "Résumé rapide",
+  summaryDisclaimer:
+    "Ce résumé facilite la lecture mais ne remplace pas les conditions complètes ci-dessous.",
+  summaryItems: [
+    "Annulation client : remboursement 100 % jusqu'à 30 jours avant, 50 % de 29 à 15 jours avant, aucun remboursement sous 15 jours et en cas de no-show.",
+    "Le changement de date n'est pas automatique : il est évalué selon disponibilité, organisation et sécurité.",
+    "Si Egadisailing annule pour météo/mer non sûre ou minimum de participants non atteint, le client choisit changement de date gratuit ou remboursement intégral.",
+    "Route, horaires, arrêts et bateau peuvent varier pour sécurité, météo, mer, ordonnances ou raisons techniques.",
+    "Le solde non encore payé n'est pas demandé après une annulation client ; la retenue sur l'acompte déjà payé suit la policy.",
+  ],
+  indexTitle: "Sommaire",
+  legalLinksTitle: "Confidentialité, cookies et données personnelles",
+  legalLinksIntro:
+    "Le traitement des données personnelles et l'utilisation des cookies sont régis par les documents dédiés :",
+  privacyLabel: "Politique de confidentialité",
+  cookieLabel: "Politique de cookies",
+  sections: [
+    {
+      title: "1. Identité du professionnel et contacts",
+      paragraphs: [
+        `Le vendeur et prestataire des services directs est ${companyFr}.`,
+        `Pour assistance contractuelle et réservations : ${PUBLIC_CONTACT_EMAIL}. Pour demandes privacy : ${PRIVACY_CONTACT_EMAIL}. Téléphone/WhatsApp : ${PUBLIC_CONTACT_PHONE_TEXT}. Point de rencontre habituel, sauf communication opérationnelle différente : ${PUBLIC_CONTACT_LOCATION.labelFr}.`,
+      ],
+    },
+    {
+      title: "2. Champ d'application",
+      bullets: [
+        "Ces Conditions s'appliquent aux réservations directes conclues sur egadisailing.com ou via procédures de paiement direct Egadisailing.",
+        "Pour les réservations effectuées via portails externes, marketplaces, agences ou OTA, paiement, annulation et remboursement suivent d'abord les conditions du canal d'achat.",
+        "Les règles de sécurité, comportement à bord, documents, ponctualité, météo et instructions du skipper s'appliquent à toutes les personnes embarquées.",
+      ],
+    },
+    {
+      title: "3. Nature des services et date spécifique",
+      paragraphs: [
+        "Egadisailing propose des expériences nautiques, excursions, journées privées ou partagées, expériences gourmet et charters avec date ou période d'exécution spécifique.",
+        "Images, descriptions de route, criques, horaires et programmes décrivent l'expérience attendue, mais ne garantissent pas une route rigide ou des arrêts identiques à chaque sortie.",
+      ],
+    },
+    {
+      title: "4. Droit de rétractation et policy contractuelle",
+      bullets: [
+        "Les services touristiques et de loisir fournis à une date ou période spécifique peuvent être exclus du droit de rétractation prévu pour les contrats à distance.",
+        "Les annulations, remboursements et changements suivent donc la policy contractuelle indiquée dans ces Conditions et dans la confirmation de réservation.",
+      ],
+    },
+    {
+      title: "5. Paiements, acompte, solde et confirmations",
+      bullets: [
+        "Les montants, taxes incluses le cas échéant, acompte, solde et échéances sont indiqués avant le paiement.",
+        "Le paiement est traité par Stripe ou par les moyens indiqués. Egadisailing ne conserve pas les données complètes de carte.",
+        "La réservation est confirmée uniquement après paiement ou confirmation écrite de l'équipe.",
+      ],
+    },
+    {
+      title: "6. Annulation client, no-show et changement de date",
+      bullets: [
+        "Jusqu'à 30 jours avant la date : remboursement intégral des sommes payées.",
+        "De 29 à 15 jours avant : remboursement de 50 % des sommes payées.",
+        "Moins de 15 jours avant ou no-show : aucun remboursement.",
+        "Le changement de date est soumis à disponibilité, météo, organisation et accord de l'équipe.",
+      ],
+    },
+    {
+      title: "7. Annulation ou modification par Egadisailing",
+      bullets: [
+        "Egadisailing peut annuler, reporter ou modifier l'expérience en cas de météo/mer non sûre, panne, force majeure, ordonnances, sécurité ou minimum de participants non atteint.",
+        "Dans ces cas, lorsque l'expérience ne peut pas être effectuée, le client peut choisir un changement de date gratuit ou un remboursement intégral des sommes payées.",
+      ],
+    },
+    {
+      title: "8. Météo, sécurité, skipper, route et bateau",
+      bullets: [
+        "Le skipper décide route, vitesse, arrêts, horaires, mouillage, retour anticipé ou changements de programme pour sécurité, confort et réglementation.",
+        "Egadisailing peut remplacer le bateau par un bateau équivalent ou supérieur pour raisons techniques, météo, logistiques ou de sécurité.",
+        "Baignades, snorkeling, déjeuner à bord au mouillage, grottes, criques et destinations spécifiques dépendent toujours des conditions du jour.",
+      ],
+    },
+    {
+      title: "9. Inclus, mineurs, santé et comportement",
+      bullets: [
+        "Inclus et exclus sont ceux indiqués dans la fiche du service, la confirmation de réservation ou le devis écrit.",
+        "Allergies, intolérances, grossesse, handicap, conditions médicales ou présence de mineurs doivent être communiqués avant le départ.",
+        "Le client doit respecter les instructions du skipper et de l'équipage. Egadisailing peut refuser l'embarquement ou interrompre l'expérience en cas de comportement dangereux ou gênant.",
+      ],
+    },
+    {
+      title: "10. Loi applicable, juridiction et langue",
+      paragraphs: [
+        "Ces Conditions sont régies par le droit italien. Les consommateurs conservent les protections impératives prévues par la réglementation applicable ; dans les autres cas, le tribunal compétent est Trapani.",
+        "Les Conditions sont publiées en italien, anglais, espagnol et français pour faciliter la compréhension des clients internationaux. En cas de divergence d'interprétation, le texte italien prévaut.",
+        "La plateforme européenne ODR pour les litiges en ligne a fermé le 20 juillet 2025 ; aucun lien ODR n'est donc indiqué.",
+      ],
+    },
+  ],
+};
+
 function getContent(locale: string): TermsContent {
+  if (locale === "es") return TERMS_ES;
+  if (locale === "fr") return TERMS_FR;
   return locale === "en" ? TERMS_EN : TERMS_IT;
 }
 
@@ -420,6 +637,8 @@ export default async function TermsPage({
   const { locale } = await params;
   const content = getContent(locale);
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
 
   return (
     <OceanLayout padding="sm" className="egadi-water-reflection overflow-hidden">
@@ -491,13 +710,13 @@ export default async function TermsPage({
           <p className="mt-2 text-sm leading-7 text-slate-700">{content.legalLinksIntro}</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <a
-              href={`/${locale}/privacy`}
+              href={localizedPath(locale, "/privacy")}
               className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
             >
               {content.privacyLabel}
             </a>
             <a
-              href={`/${locale}/cookie-policy`}
+              href={localizedPath(locale, "/cookie-policy")}
               className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900"
             >
               {content.cookieLabel}
@@ -506,7 +725,7 @@ export default async function TermsPage({
               href={getEmailHref()}
               className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900"
             >
-              {isEn ? "Contact us" : "Contattaci"}
+              {isEs ? "Contáctanos" : isFr ? "Nous contacter" : isEn ? "Contact us" : "Contattaci"}
             </a>
           </div>
         </section>

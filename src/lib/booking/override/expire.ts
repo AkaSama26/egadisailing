@@ -6,6 +6,9 @@ import { logger } from "@/lib/logger";
 import { postCommitCancelBooking } from "../post-commit-cancel";
 import { dispatchNotification, toDispatchResult } from "@/lib/notifications/dispatcher";
 import { getAlternativeDatesIso } from "../alternative-dates";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
+import { formatEur } from "@/lib/pricing/cents";
 
 export interface ExpireDropDeadResult {
   expired: number;
@@ -55,8 +58,8 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
                 startDate: true,
                 confirmationCode: true,
                 totalPrice: true,
-                customer: { select: { email: true, firstName: true, lastName: true } },
-                service: { select: { name: true } },
+                customer: { select: { email: true, firstName: true, lastName: true, language: true } },
+                service: { select: { id: true, name: true } },
               },
             },
           },
@@ -86,6 +89,7 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
             req.newBooking.startDate,
             3,
           );
+          const locale = resolveEmailLocale(req.newBooking.customer.language);
           const outcome = await dispatchNotification({
             type: "OVERRIDE_EXPIRED",
             channels: ["EMAIL"],
@@ -100,11 +104,16 @@ export async function expireDropDeadRequests(): Promise<ExpireDropDeadResult> {
                 `${req.newBooking.customer.firstName ?? ""} ${req.newBooking.customer.lastName ?? ""}`.trim() ||
                 "cliente",
               confirmationCode: req.newBooking.confirmationCode,
-              serviceName: req.newBooking.service?.name ?? "",
-              startDate: req.newBooking.startDate.toISOString().slice(0, 10),
-              refundAmount: req.newBooking.totalPrice?.toFixed(2) ?? "0.00",
+              serviceName: emailServiceName(
+                req.newBooking.service?.id,
+                req.newBooking.service?.name,
+                locale,
+              ),
+              startDate: formatEmailDay(req.newBooking.startDate, locale),
+              refundAmount: formatEur(req.newBooking.totalPrice ?? "0.00", locale),
               alternativeDates,
-              bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+              bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
+              locale,
             } as unknown as Record<string, unknown>,
           });
           const result = toDispatchResult(outcome);

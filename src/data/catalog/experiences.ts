@@ -1086,8 +1086,51 @@ const EXPERIENCE_PUBLIC_SLUGS: Partial<Record<ExperienceServiceId, string>> = {
   "cabin-charter": "charter",
 };
 
+const EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE: Partial<
+  Record<ExperienceServiceId, Partial<Record<"it" | "en" | "es" | "fr", string>>>
+> = {
+  "exclusive-experience": {
+    es: "chef-a-bordo-neel-47",
+    fr: "chef-a-bord-neel-47",
+  },
+  "cabin-charter": {
+    it: "charter",
+    en: "charter",
+    es: "charter-islas-egadi",
+    fr: "charter-iles-egades",
+  },
+  "boat-shared-full-day": {
+    es: "excursion-compartida-islas-egadi-8-horas",
+    fr: "excursion-partagee-iles-egades-8-heures",
+  },
+  "boat-exclusive-full-day": {
+    es: "excursion-privada-islas-egadi-8-horas",
+    fr: "excursion-privee-iles-egades-8-heures",
+  },
+  "boat-exclusive-morning": {
+    es: "excursion-privada-islas-egadi-4-horas-manana",
+    fr: "excursion-privee-iles-egades-4-heures-matin",
+  },
+  "boat-exclusive-afternoon": {
+    es: "excursion-privada-islas-egadi-4-horas-tarde",
+    fr: "excursion-privee-iles-egades-4-heures-apres-midi",
+  },
+};
+
 const EXPERIENCE_SLUG_ALIASES: Record<string, ExperienceServiceId> = {
   charter: "cabin-charter",
+  "chef-a-bordo-neel-47": "exclusive-experience",
+  "charter-islas-egadi": "cabin-charter",
+  "excursion-compartida-islas-egadi-8-horas": "boat-shared-full-day",
+  "excursion-privada-islas-egadi-8-horas": "boat-exclusive-full-day",
+  "excursion-privada-islas-egadi-4-horas-manana": "boat-exclusive-morning",
+  "excursion-privada-islas-egadi-4-horas-tarde": "boat-exclusive-afternoon",
+  "chef-a-bord-neel-47": "exclusive-experience",
+  "charter-iles-egades": "cabin-charter",
+  "excursion-partagee-iles-egades-8-heures": "boat-shared-full-day",
+  "excursion-privee-iles-egades-8-heures": "boat-exclusive-full-day",
+  "excursion-privee-iles-egades-4-heures-matin": "boat-exclusive-morning",
+  "excursion-privee-iles-egades-4-heures-apres-midi": "boat-exclusive-afternoon",
 };
 
 export function isExperienceServiceId(serviceId: string): serviceId is ExperienceServiceId {
@@ -1098,14 +1141,443 @@ export function resolveExperienceServiceIdFromSlug(slug: string): string {
   return EXPERIENCE_SLUG_ALIASES[slug] ?? slug;
 }
 
-export function getExperiencePublicSlug(serviceId: string): string {
-  return isExperienceServiceId(serviceId)
-    ? EXPERIENCE_PUBLIC_SLUGS[serviceId] ?? serviceId
-    : serviceId;
+export function getExperiencePublicSlug(serviceId: string, locale?: string | null): string {
+  if (!isExperienceServiceId(serviceId)) return serviceId;
+  if (locale) {
+    const localized = EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE[serviceId]?.[locale as "it" | "en" | "es" | "fr"];
+    if (localized) return localized;
+  }
+  return EXPERIENCE_PUBLIC_SLUGS[serviceId] ?? serviceId;
 }
 
 export function getExperienceCatalogEntry(serviceId: string): ExperienceCatalogEntry | null {
   return isExperienceServiceId(serviceId) ? EXPERIENCE_CATALOG[serviceId] : null;
+}
+
+const spanishBringItems = [
+  "Bañador",
+  "Toalla personal",
+  "Protector solar reef-safe",
+  "Gafas de sol y sombrero",
+  "Bolsa blanda fácil de guardar",
+];
+
+const spanishPrivateBoatIncludes = [
+  "Barco reservado para tu grupo",
+  "Patrón profesional",
+  "Combustible incluido según ruta prevista",
+  "Paradas de baño y snorkel",
+  "Agua y refrescos",
+  "Ruta ajustada a mar y viento",
+];
+
+const spanishSharedBoatIncludes = [
+  "Plaza individual a bordo",
+  "Patrón profesional",
+  "Combustible incluido",
+  "Paradas de baño y snorkel",
+  "Agua a bordo",
+  "Ruta elegida según condiciones del mar",
+];
+
+const SPANISH_EXPERIENCE_OVERRIDES: Partial<
+  Record<
+    ExperienceServiceId,
+    Partial<
+      Pick<
+        ResolvedExperienceContent,
+        | "title"
+        | "subtitle"
+        | "detailDescription"
+        | "seoTitle"
+        | "seoDescription"
+        | "itinerary"
+        | "includes"
+        | "bringItems"
+      >
+    >
+  >
+> = {
+  "exclusive-experience": {
+    title: "Chef a Bordo - Premium Experience",
+    subtitle:
+      "Día privado en el Neel 47 con chef, patrón y azafata entre Favignana y Levanzo.",
+    detailDescription:
+      "Una experiencia gourmet privada en trimarán para descubrir las Islas Egadi con ritmo lento, comida a bordo y la comodidad del Neel 47.",
+    seoTitle: "Chef a bordo en Neel 47 por las Islas Egadi",
+    seoDescription:
+      "Experiencia gourmet privada en trimarán Neel 47 desde Trapani, con chef a bordo, patrón, azafata, comida siciliana y ruta entre Favignana y Levanzo.",
+    itinerary: [
+      {
+        time: "09:30",
+        title: "Bienvenida a bordo",
+        text: "Punto de encuentro: Via dei Gladioli 15, 91100 Trapani.",
+      },
+      {
+        time: "11:30",
+        title: "Cala Azzurra",
+        location: "Favignana",
+        text: "Primer baño en aguas claras, con la ruta ajustada por la tripulación según viento y mar.",
+      },
+      {
+        time: "12:30",
+        title: "Cala Rossa",
+        location: "Favignana",
+        text: "Fondeo en una de las calas más famosas de Favignana para vivir la parte gourmet de la jornada.",
+      },
+      {
+        time: "13:00",
+        title: "Cocina en vivo a bordo",
+        text: "El chef prepara la comida con pescado local y productos sicilianos.",
+      },
+      {
+        time: "14:30",
+        title: "Relax y baño",
+        location: "Favignana",
+        text: "Tiempo para nadar, descansar en cubierta y disfrutar del espacio del trimarán.",
+      },
+      {
+        time: "16:00",
+        title: "Levanzo",
+        location: "Levanzo",
+        text: "Parada entre Cala Dogana, Cala Fredda u otra zona protegida según las condiciones del día.",
+      },
+      {
+        time: "18:00",
+        title: "Regreso a Trapani",
+        text: "Navegación de vuelta con aperitivo y llegada al puerto.",
+      },
+    ],
+    includes: [
+      "Neel 47 en privado",
+      "Patrón, chef y azafata",
+      "Comida gourmet a bordo",
+      "Vino trapanese, agua y refrescos",
+      "Aperitivo",
+      "Equipo de snorkel",
+      "Combustible incluido",
+    ],
+    bringItems: spanishBringItems,
+  },
+  "cabin-charter": {
+    title: "Charter Islas Egadi",
+    subtitle:
+      "De 3 a 7 días en trimarán entre Favignana, Levanzo y Marettimo, con ruta a medida.",
+    detailDescription:
+      "Un charter privado para vivir las Islas Egadi con más tiempo: noches al fondeo, camarotes, cocina y una ruta flexible diseñada con la tripulación.",
+    seoTitle: "Charter en trimarán por las Islas Egadi desde Trapani",
+    seoDescription:
+      "Charter privado en Neel 47 por las Islas Egadi, de 3 a 7 días, con patrón, camarotes, noches al fondeo y ruta por Favignana, Levanzo y Marettimo.",
+    itinerary: [
+      {
+        time: "Día 1",
+        title: "Embarque en Trapani",
+        text: "Briefing de seguridad, organización de la cambusa y primera rada entre Favignana y Levanzo.",
+      },
+      {
+        time: "Día 2",
+        title: "Favignana",
+        text: "Cala Rossa, Bue Marino y paradas de baño elegidas según mar, viento y afluencia.",
+      },
+      {
+        time: "Día 3",
+        title: "Levanzo",
+        text: "Rada tranquila, aguas claras y regreso suave a Trapani si eliges el charter de 3 días.",
+      },
+      {
+        time: "Días 4-7",
+        title: "Marettimo y ruta extendida",
+        text: "Extensión hacia Marettimo, noches al fondeo y programa adaptado día a día con la tripulación.",
+      },
+    ],
+    includes: [
+      "Trimarán con camarotes",
+      "Patrón",
+      "Hostess extra bajo petición",
+      "Cocina y zonas comunes",
+      "Planificación de ruta según meteorología",
+      "Equipo de snorkel",
+      "Cambusa no incluida",
+    ],
+    bringItems: [
+      "Equipaje blando",
+      "Bañadores y ropa ligera",
+      "Sudadera para la noche",
+      "Protector solar reef-safe",
+      "Documentos personales",
+    ],
+  },
+  "boat-shared-full-day": {
+    title: "Excursión compartida Islas Egadi 8 horas",
+    subtitle:
+      "Una plaza a bordo para un día completo entre calas, snorkel y mar desde Trapani.",
+    detailDescription:
+      "La forma más sencilla de vivir una excursión en barco por las Islas Egadi: eliges fecha, reservas tu plaza y compartes la jornada con otros huéspedes.",
+    seoTitle: "Excursión compartida en barco a las Islas Egadi 8 horas",
+    seoDescription:
+      "Tour compartido de 8 horas por las Islas Egadi desde Trapani, con paradas de baño, snorkel y reserva online por persona.",
+    itinerary: [
+      {
+        time: "10:00",
+        title: "Salida desde Trapani",
+        location: "Puerto de Trapani",
+        text: "Embarque, briefing de seguridad y ruta definida por el patrón según viento y mar.",
+      },
+      {
+        time: "11:00",
+        title: "Favignana",
+        text: "Navegación hacia las calas más adecuadas del día, con tiempo para baño y snorkel.",
+      },
+      {
+        time: "13:00",
+        title: "Pausa en el mar",
+        text: "Tiempo relajado a bordo y posibilidad de comer según la fórmula elegida.",
+      },
+      {
+        time: "15:30",
+        title: "Levanzo o costa protegida",
+        text: "Segunda parte de la ruta entre aguas claras y zonas más resguardadas.",
+      },
+      {
+        time: "18:00",
+        title: "Regreso",
+        text: "Llegada al puerto de Trapani tras una jornada completa en el archipiélago.",
+      },
+    ],
+    includes: spanishSharedBoatIncludes,
+    bringItems: spanishBringItems,
+  },
+  "boat-exclusive-full-day": {
+    title: "Excursión privada Islas Egadi 8 horas",
+    subtitle:
+      "Barco reservado para tu grupo durante un día completo entre calas, snorkel y ruta flexible.",
+    detailDescription:
+      "Una jornada privada y flexible por las Islas Egadi, con salida desde Trapani y paradas decididas con el patrón según viento, mar y ritmo del grupo.",
+    seoTitle: "Excursión privada en barco a las Islas Egadi 8 horas",
+    seoDescription:
+      "Reserva una excursión privada de 8 horas por las Islas Egadi desde Trapani, con patrón, paradas de baño y ruta flexible.",
+    includes: spanishPrivateBoatIncludes,
+    bringItems: spanishBringItems,
+  },
+  "boat-exclusive-morning": {
+    title: "Excursión privada Islas Egadi 4 horas por la mañana",
+    subtitle:
+      "Medio día privado por la mañana, con barco reservado y ruta elegida con el patrón.",
+    detailDescription:
+      "Tour privado de 4 horas desde Trapani, ideal para grupos que quieren mar, privacidad y una salida compacta con baño.",
+    seoTitle: "Excursión privada Islas Egadi 4 horas por la mañana",
+    seoDescription:
+      "Tour privado de 4 horas por la mañana en las Islas Egadi desde Trapani, con patrón, paradas de baño y ruta flexible.",
+    includes: spanishPrivateBoatIncludes,
+    bringItems: spanishBringItems,
+  },
+  "boat-exclusive-afternoon": {
+    title: "Excursión privada Islas Egadi 4 horas por la tarde",
+    subtitle:
+      "Medio día privado por la tarde para disfrutar de las Egadi con baño, descanso y una ruta flexible.",
+    detailDescription:
+      "Barco reservado durante 4 horas por la tarde desde Trapani, pensado para grupos que buscan privacidad, baño y una ruta sencilla de organizar.",
+    seoTitle: "Excursión privada Islas Egadi 4 horas por la tarde",
+    seoDescription:
+      "Reserva una excursión privada de 4 horas por la tarde en las Islas Egadi desde Trapani, con patrón, baño y ruta flexible.",
+    includes: spanishPrivateBoatIncludes,
+    bringItems: spanishBringItems,
+  },
+};
+
+const frenchBringItems = [
+  "Maillot de bain et serviette",
+  "Crème solaire respectueuse de la mer",
+  "Lunettes de soleil et chapeau",
+  "Sac souple facile à ranger",
+];
+
+const frenchPrivateBoatIncludes = [
+  "Bateau réservé pour votre groupe",
+  "Skipper professionnel",
+  "Carburant inclus selon l'itinéraire prévu",
+  "Arrêts baignade et snorkeling",
+  "Eau et boissons fraîches",
+  "Route adaptée à la mer et au vent",
+];
+
+const frenchSharedBoatIncludes = [
+  "Place individuelle à bord",
+  "Skipper professionnel",
+  "Carburant inclus",
+  "Arrêts baignade et snorkeling",
+  "Eau à bord",
+  "Route choisie selon les conditions de mer",
+];
+
+const FRENCH_EXPERIENCE_OVERRIDES: Partial<
+  Record<
+    ExperienceServiceId,
+    Partial<
+      Pick<
+        ResolvedExperienceContent,
+        | "title"
+        | "subtitle"
+        | "detailDescription"
+        | "seoTitle"
+        | "seoDescription"
+        | "itinerary"
+        | "includes"
+        | "bringItems"
+      >
+    >
+  >
+> = {
+  "exclusive-experience": {
+    title: "Chef à Bord - Premium Experience",
+    subtitle:
+      "Journée privée sur le Neel 47 avec chef, skipper et hôtesse entre Favignana et Levanzo.",
+    detailDescription:
+      "Une expérience gourmet privée en trimaran pour découvrir les îles Égades avec un rythme lent, déjeuner à bord et le confort du Neel 47.",
+    seoTitle: "Chef à bord sur Neel 47 aux îles Égades",
+    seoDescription:
+      "Expérience gourmet privée en trimaran Neel 47 depuis Trapani, avec chef à bord, skipper, hôtesse, déjeuner sicilien et itinéraire entre Favignana et Levanzo.",
+    itinerary: [
+      { time: "09:30", title: "Accueil à bord", text: "Point de rencontre : Via dei Gladioli 15, 91100 Trapani." },
+      {
+        time: "11:30",
+        title: "Cala Azzurra",
+        location: "Favignana",
+        text: "Premier bain dans une eau claire, avec route ajustée par l'équipage selon le vent et la mer.",
+      },
+      {
+        time: "12:30",
+        title: "Cala Rossa",
+        location: "Favignana",
+        text: "Mouillage dans l'une des criques les plus célèbres de Favignana pour vivre le moment gourmet de la journée.",
+      },
+      { time: "13:00", title: "Cuisine en direct à bord", text: "Le chef prépare le déjeuner avec poisson local et produits siciliens." },
+      {
+        time: "14:30",
+        title: "Relax et baignade",
+        location: "Favignana",
+        text: "Temps pour nager, se détendre sur le pont et profiter de l'espace du trimaran.",
+      },
+      {
+        time: "16:00",
+        title: "Levanzo",
+        location: "Levanzo",
+        text: "Arrêt entre Cala Dogana, Cala Fredda ou une zone protégée selon les conditions du jour.",
+      },
+      { time: "18:00", title: "Retour à Trapani", text: "Navigation de retour avec apéritif et arrivée au port." },
+    ],
+    includes: [
+      "Neel 47 en privé",
+      "Skipper, chef et hôtesse",
+      "Déjeuner gourmet à bord",
+      "Vin de Trapani, eau et boissons fraîches",
+      "Apéritif",
+      "Équipement de snorkeling",
+      "Carburant inclus",
+    ],
+    bringItems: frenchBringItems,
+  },
+  "cabin-charter": {
+    title: "Charter aux îles Égades",
+    subtitle:
+      "De 3 à 7 jours en trimaran entre Favignana, Levanzo et Marettimo, avec itinéraire sur mesure.",
+    detailDescription:
+      "Un charter privé pour vivre les îles Égades avec plus de temps : nuits au mouillage, cabines, cuisine et route flexible conçue avec l'équipage.",
+    seoTitle: "Charter en trimaran aux îles Égades depuis Trapani",
+    seoDescription:
+      "Charter privé en Neel 47 aux îles Égades, de 3 à 7 jours, avec skipper, cabines, nuits au mouillage et route vers Favignana, Levanzo et Marettimo.",
+    itinerary: [
+      { time: "Jour 1", title: "Embarquement à Trapani", text: "Briefing sécurité, organisation de l'avitaillement et premier mouillage entre Favignana et Levanzo." },
+      { time: "Jour 2", title: "Favignana", text: "Cala Rossa, Bue Marino et arrêts baignade choisis selon mer, vent et affluence." },
+      { time: "Jour 3", title: "Levanzo", text: "Mouillage calme, eaux claires et retour doux à Trapani si vous choisissez le charter de 3 jours." },
+      { time: "Jours 4-7", title: "Marettimo et route étendue", text: "Extension vers Marettimo, nuits au mouillage et programme adapté jour après jour avec l'équipage." },
+    ],
+    includes: [
+      "Trimaran avec cabines",
+      "Skipper",
+      "Hôtesse en supplément sur demande",
+      "Cuisine et espaces communs",
+      "Planification de route selon la météo",
+      "Équipement de snorkeling",
+      "Avitaillement non inclus",
+    ],
+    bringItems: [
+      "Bagage souple",
+      "Maillots et vêtements légers",
+      "Sweat pour le soir",
+      "Crème solaire respectueuse de la mer",
+      "Documents personnels",
+    ],
+  },
+  "boat-shared-full-day": {
+    title: "Excursion partagée îles Égades 8 heures",
+    subtitle:
+      "Une place à bord pour une journée complète entre criques, snorkeling et mer depuis Trapani.",
+    detailDescription:
+      "La façon la plus simple de vivre une excursion en bateau aux îles Égades : choisissez la date, réservez votre place et partagez la journée avec d'autres hôtes.",
+    seoTitle: "Excursion partagée en bateau aux îles Égades 8 heures",
+    seoDescription:
+      "Tour partagé de 8 heures aux îles Égades depuis Trapani, avec arrêts baignade, snorkeling et réservation en ligne par personne.",
+    itinerary: [
+      { time: "10:00", title: "Départ de Trapani", location: "Port de Trapani", text: "Embarquement, briefing sécurité et route définie par le skipper selon le vent et la mer." },
+      { time: "11:00", title: "Favignana", text: "Navigation vers les criques les plus adaptées du jour, avec temps pour baignade et snorkeling." },
+      { time: "13:00", title: "Pause en mer", text: "Temps détendu à bord et possibilité de déjeuner selon la formule choisie." },
+      { time: "15:30", title: "Levanzo ou côte protégée", text: "Deuxième partie de la route entre eaux claires et zones plus abritées." },
+      { time: "18:00", title: "Retour", text: "Arrivée au port de Trapani après une journée complète dans l'archipel." },
+    ],
+    includes: frenchSharedBoatIncludes,
+    bringItems: frenchBringItems,
+  },
+  "boat-exclusive-full-day": {
+    title: "Excursion privée îles Égades 8 heures",
+    subtitle:
+      "Bateau réservé pour votre groupe pendant une journée complète entre criques, snorkeling et route flexible.",
+    detailDescription:
+      "Une journée privée et flexible aux îles Égades, avec départ de Trapani et arrêts décidés avec le skipper selon le vent, la mer et le rythme du groupe.",
+    seoTitle: "Excursion privée en bateau aux îles Égades 8 heures",
+    seoDescription:
+      "Réservez une excursion privée de 8 heures aux îles Égades depuis Trapani, avec skipper, arrêts baignade et route flexible.",
+    includes: frenchPrivateBoatIncludes,
+    bringItems: frenchBringItems,
+  },
+  "boat-exclusive-morning": {
+    title: "Excursion privée îles Égades 4 heures le matin",
+    subtitle:
+      "Demi-journée privée le matin, avec bateau réservé et route choisie avec le skipper.",
+    detailDescription:
+      "Tour privé de 4 heures depuis Trapani, idéal pour les groupes qui veulent mer, intimité et sortie compacte avec baignade.",
+    seoTitle: "Excursion privée îles Égades 4 heures le matin",
+    seoDescription:
+      "Tour privé de 4 heures le matin aux îles Égades depuis Trapani, avec skipper, arrêts baignade et route flexible.",
+    includes: frenchPrivateBoatIncludes,
+    bringItems: frenchBringItems,
+  },
+  "boat-exclusive-afternoon": {
+    title: "Excursion privée îles Égades 4 heures l'après-midi",
+    subtitle:
+      "Demi-journée privée l'après-midi pour profiter des Égades avec baignade, détente et route flexible.",
+    detailDescription:
+      "Bateau réservé pendant 4 heures l'après-midi depuis Trapani, pensé pour les groupes qui cherchent intimité, baignade et organisation simple.",
+    seoTitle: "Excursion privée îles Égades 4 heures l'après-midi",
+    seoDescription:
+      "Réservez une excursion privée de 4 heures l'après-midi aux îles Égades depuis Trapani, avec skipper, baignade et route flexible.",
+    includes: frenchPrivateBoatIncludes,
+    bringItems: frenchBringItems,
+  },
+};
+
+function applyLocalizedExperienceOverride(
+  content: ResolvedExperienceContent,
+  locale?: string | null,
+): ResolvedExperienceContent {
+  const overrides =
+    locale === "es"
+      ? SPANISH_EXPERIENCE_OVERRIDES
+      : locale === "fr"
+        ? FRENCH_EXPERIENCE_OVERRIDES
+        : undefined;
+  const override = overrides?.[content.serviceId as ExperienceServiceId];
+  return override ? { ...content, ...override } : content;
 }
 
 export function getExperienceContent(
@@ -1115,7 +1587,7 @@ export function getExperienceContent(
   const entry = getExperienceCatalogEntry(serviceId);
   if (!entry) return null;
 
-  return {
+  return applyLocalizedExperienceOverride({
     serviceId: entry.serviceId,
     order: entry.order,
     listed: entry.listed,
@@ -1138,7 +1610,7 @@ export function getExperienceContent(
     })),
     includes: entry.includes.map((item) => localize(item, locale)),
     bringItems: entry.bringItems.map((item) => localize(item, locale)),
-  };
+  }, locale);
 }
 
 export function getExperienceIds(): string[] {
@@ -1169,6 +1641,211 @@ export function compareExperienceOrder(aServiceId: string, bServiceId: string): 
   return a - b;
 }
 
+function experienceHref(serviceId: string, locale?: string | null): string {
+  const base = locale === "es" ? "/experiencias" : "/experiences";
+  return `${base}/${getExperiencePublicSlug(serviceId, locale)}`;
+}
+
+const SPANISH_PACKAGE_OVERRIDES: Record<
+  string,
+  Partial<
+    Pick<
+      ResolvedExperiencePackageContent,
+      | "title"
+      | "subtitle"
+      | "seoTitle"
+      | "seoDescription"
+      | "durationLabel"
+      | "detailLabel"
+      | "priceUnitLabel"
+      | "primaryCtaLabel"
+    >
+  >
+> = {
+  "esperienza-gourmet-trimarano": {
+    title: "Chef a Bordo - Premium Experience",
+    subtitle:
+      "Neel 47 con chef, patrón y azafata para una jornada premium entre sabores locales, mar y calas protegidas.",
+    seoTitle: "Chef a bordo en Neel 47 por las Islas Egadi",
+    seoDescription:
+      "Día privado en trimarán Neel 47 con chef a bordo, patrón, azafata y ruta entre Favignana y Levanzo.",
+    durationLabel: "8 horas",
+    detailLabel: "Chef, patrón y azafata",
+    priceUnitLabel: "por paquete",
+    primaryCtaLabel: "Ver paquete",
+  },
+  "charter-egadi": {
+    title: "Charter Islas Egadi",
+    subtitle:
+      "De 3 a 7 días en el trimarán, con itinerario a medida entre Favignana, Levanzo y Marettimo.",
+    seoTitle: "Charter en trimarán Neel 47 por las Islas Egadi",
+    seoDescription:
+      "Charter en trimarán por las Islas Egadi de 3 a 7 días, con patrón, camarotes y ruta flexible desde Trapani.",
+    durationLabel: "3-7 días",
+    detailLabel: "Itinerario a medida",
+    priceUnitLabel: "por paquete",
+    primaryCtaLabel: "Ver paquete",
+  },
+  "tour-barca-egadi-4-ore": {
+    title: "Excursión privada Islas Egadi 4 horas",
+    subtitle:
+      "La fórmula ágil de medio día, con barco reservado, baño, descanso y ruta elegida según el mar.",
+    seoTitle: "Excursión privada Islas Egadi 4 horas desde Trapani",
+    seoDescription:
+      "Tour privado de 4 horas por las Islas Egadi desde Trapani, con barco exclusivo, paradas de baño y ruta flexible.",
+    durationLabel: "4 horas",
+    detailLabel: "Barco privado",
+    priceUnitLabel: "por barco",
+    primaryCtaLabel: "Ver paquete",
+  },
+  "tour-barca-egadi-8-ore": {
+    title: "Excursión en barco Islas Egadi 8 horas",
+    subtitle:
+      "Un día completo entre calas, snorkel y tiempo relajado a bordo. Puedes elegir plazas compartidas o barco privado.",
+    seoTitle: "Excursión en barco Islas Egadi 8 horas desde Trapani",
+    seoDescription:
+      "Tour de 8 horas por las Islas Egadi desde Trapani, compartido o privado, con snorkel, paradas de baño y jornada completa.",
+    durationLabel: "8 horas",
+    detailLabel: "Compartido o privado",
+    priceUnitLabel: "por persona o por barco",
+    primaryCtaLabel: "Ver paquete",
+  },
+};
+
+const FRENCH_PACKAGE_OVERRIDES: Record<
+  string,
+  Partial<
+    Pick<
+      ResolvedExperiencePackageContent,
+      | "title"
+      | "subtitle"
+      | "seoTitle"
+      | "seoDescription"
+      | "durationLabel"
+      | "detailLabel"
+      | "priceUnitLabel"
+      | "primaryCtaLabel"
+    >
+  >
+> = {
+  "esperienza-gourmet-trimarano": {
+    title: "Chef à Bord - Premium Experience",
+    subtitle:
+      "Neel 47 avec chef, skipper et hôtesse pour une journée premium entre saveurs locales, mer et criques protégées.",
+    seoTitle: "Chef à bord sur Neel 47 aux îles Égades",
+    seoDescription:
+      "Journée privée en trimaran Neel 47 avec chef à bord, skipper, hôtesse et itinéraire entre Favignana et Levanzo.",
+    durationLabel: "8 heures",
+    detailLabel: "Chef, skipper et hôtesse",
+    priceUnitLabel: "par forfait",
+    primaryCtaLabel: "Voir le forfait",
+  },
+  "charter-egadi": {
+    title: "Charter aux îles Égades",
+    subtitle:
+      "De 3 à 7 jours en trimaran, avec itinéraire sur mesure entre Favignana, Levanzo et Marettimo.",
+    seoTitle: "Charter en trimaran Neel 47 aux îles Égades",
+    seoDescription:
+      "Charter en trimaran aux îles Égades de 3 à 7 jours, avec skipper, cabines et route flexible depuis Trapani.",
+    durationLabel: "3-7 jours",
+    detailLabel: "Itinéraire sur mesure",
+    priceUnitLabel: "par forfait",
+    primaryCtaLabel: "Voir le forfait",
+  },
+  "tour-barca-egadi-4-ore": {
+    title: "Excursion privée îles Égades 4 heures",
+    subtitle:
+      "La formule agile de demi-journée, avec bateau réservé, baignade, détente et route choisie selon la mer.",
+    seoTitle: "Excursion privée îles Égades 4 heures depuis Trapani",
+    seoDescription:
+      "Tour privé de 4 heures aux îles Égades depuis Trapani, avec bateau exclusif, arrêts baignade et route flexible.",
+    durationLabel: "4 heures",
+    detailLabel: "Bateau privé",
+    priceUnitLabel: "par bateau",
+    primaryCtaLabel: "Voir le forfait",
+  },
+  "tour-barca-egadi-8-ore": {
+    title: "Excursion en bateau îles Égades 8 heures",
+    subtitle:
+      "Une journée complète entre criques, snorkeling et temps détendu à bord. Places partagées ou bateau privé.",
+    seoTitle: "Excursion en bateau îles Égades 8 heures depuis Trapani",
+    seoDescription:
+      "Tour de 8 heures aux îles Égades depuis Trapani, partagé ou privé, avec snorkeling, arrêts baignade et journée complète.",
+    durationLabel: "8 heures",
+    detailLabel: "Partagé ou privé",
+    priceUnitLabel: "par personne ou par bateau",
+    primaryCtaLabel: "Voir le forfait",
+  },
+};
+
+function applyLocalizedPackageOverride(
+  content: ResolvedExperiencePackageContent,
+  locale?: string | null,
+): ResolvedExperiencePackageContent {
+  const overrides =
+    locale === "es"
+      ? SPANISH_PACKAGE_OVERRIDES
+      : locale === "fr"
+        ? FRENCH_PACKAGE_OVERRIDES
+        : undefined;
+  if (!overrides) return content;
+  const override = overrides[content.key];
+  const primaryServiceByPackage: Record<string, string> = {
+    "esperienza-gourmet-trimarano": "exclusive-experience",
+    "charter-egadi": "cabin-charter",
+    "tour-barca-egadi-4-ore": "boat-exclusive-afternoon",
+    "tour-barca-egadi-8-ore": "boat-shared-full-day",
+  };
+  const variants = content.variants.map((variant) => {
+    if (variant.serviceId === "boat-exclusive-morning") {
+      return {
+        ...variant,
+        label: locale === "fr" ? "Privé le matin" : "Privado por la mañana",
+        description:
+          locale === "fr"
+            ? "Bateau réservé le matin, avec retour autour de 13:00."
+            : "Barco reservado por la mañana, con regreso alrededor de las 13:00.",
+        href: experienceHref(variant.serviceId, locale),
+      };
+    }
+    if (variant.serviceId === "boat-exclusive-afternoon") {
+      return {
+        ...variant,
+        label: locale === "fr" ? "Privé l'après-midi" : "Privado por la tarde",
+        description:
+          locale === "fr" ? "Bateau réservé pour votre groupe." : "Barco reservado para tu grupo.",
+        href: experienceHref(variant.serviceId, locale),
+      };
+    }
+    if (variant.serviceId === "boat-shared-full-day") {
+      return {
+        ...variant,
+        label: locale === "fr" ? "Partagé" : "Compartido",
+        description:
+          locale === "fr" ? "Places individuelles pour une journée complète." : "Plazas individuales para un día completo.",
+        href: experienceHref(variant.serviceId, locale),
+      };
+    }
+    if (variant.serviceId === "boat-exclusive-full-day") {
+      return {
+        ...variant,
+        label: locale === "fr" ? "Privé" : "Privado",
+        description:
+          locale === "fr" ? "Journée complète avec bateau réservé." : "Día completo con barco reservado.",
+        href: experienceHref(variant.serviceId, locale),
+      };
+    }
+    return { ...variant, href: experienceHref(variant.serviceId, locale) };
+  });
+
+  return {
+    ...content,
+    ...override,
+    primaryHref: experienceHref(primaryServiceByPackage[content.key] ?? content.serviceIds[0] ?? "", locale),
+    variants,
+  };
+}
+
 export function getExperiencePackageContents(
   locale?: string | null,
 ): ResolvedExperiencePackageContent[] {
@@ -1176,7 +1853,7 @@ export function getExperiencePackageContents(
     .sort((a, b) => a.order - b.order)
     .map((entry) => {
       const variants = "variants" in entry ? entry.variants : [];
-      return {
+      return applyLocalizedPackageOverride({
         key: entry.key,
         order: entry.order,
         serviceIds: entry.serviceIds.filter(isPublicBookingServiceEnabled),
@@ -1203,7 +1880,7 @@ export function getExperiencePackageContents(
             serviceId: variant.serviceId,
             href: variant.href,
           })),
-      };
+      }, locale);
     });
 }
 

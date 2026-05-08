@@ -10,6 +10,8 @@ import {
 import { formatEurCents } from "@/lib/pricing/cents";
 import { env } from "@/lib/env";
 import { stripe } from "@/lib/stripe/server";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import { resolveEmailLocale } from "@/lib/email/templates/locale";
 
 export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
   const payment = await db.payment.findFirst({
@@ -18,7 +20,7 @@ export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
       booking: {
         include: {
           service: { select: { type: true } },
-          customer: { select: { id: true, email: true, firstName: true, lastName: true } },
+          customer: { select: { id: true, email: true, firstName: true, lastName: true, language: true } },
         },
       },
     },
@@ -176,12 +178,14 @@ export async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
       const customerName =
         `${payment.booking.customer.firstName ?? ""} ${payment.booking.customer.lastName ?? ""}`.trim() ||
         "cliente";
+      const locale = resolveEmailLocale(payment.booking.customer.language);
       const tpl = refundReceiptTemplate({
         customerName,
         confirmationCode: payment.booking.confirmationCode,
-        refundAmount: formatEurCents(refundAmountCents),
+        refundAmount: formatEurCents(refundAmountCents, locale),
         refundType: isFullRefund ? "full" : "partial",
-        bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+        bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
+        locale,
       });
       await enqueueTransactionalEmail({
         templateKey: "customer.refund-receipt",

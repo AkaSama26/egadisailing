@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { getToken } from "next-auth/jwt";
 import { routing } from "./i18n/routing";
+import { favignanaGuideSlugPairs } from "./data/favignana-guides";
+import { levanzoGuideSlugPairs } from "./data/levanzo-guides";
+import { marettimoGuideSlugPairs } from "./data/marettimo-guides";
 import {
   isLegacyServiceWorkerPath,
   LEGACY_CACHE_RESET_COOKIE,
@@ -12,202 +15,79 @@ import {
 
 const intlMiddleware = createIntlMiddleware(routing);
 
-const FAVIGNANA_GUIDE_SLUG_PAIRS = [
-  { it: "cosa-vedere-top-10", en: "top-10-things-to-see" },
-  { it: "dove-fare-il-bagno-spiagge-cale", en: "best-beaches-coves" },
-  { it: "favignana-in-un-giorno", en: "favignana-in-one-day" },
-  { it: "cala-rossa", en: "cala-rossa" },
-  { it: "bue-marino-cave-tufo", en: "bue-marino-tuff-quarries" },
-  { it: "snorkeling-favignana", en: "snorkeling-in-favignana" },
-  {
-    it: "come-arrivare-da-trapani-e-muoversi",
-    en: "how-to-get-from-trapani-and-get-around",
-  },
-  { it: "tour-in-barca-favignana-levanzo", en: "favignana-levanzo-boat-tour" },
-] as const;
+type PublicLocale = (typeof routing.locales)[number];
+type GuideIsland = "favignana" | "levanzo" | "marettimo";
+type GuidePair = { it: string; en: string; es: string; fr: string };
 
-const FAVIGNANA_GUIDE_SLUGS = new Set(
-  FAVIGNANA_GUIDE_SLUG_PAIRS.flatMap((guide) => [guide.it, guide.en]),
-);
+const GUIDE_SLUG_PAIRS = {
+  favignana: favignanaGuideSlugPairs,
+  levanzo: levanzoGuideSlugPairs,
+  marettimo: marettimoGuideSlugPairs,
+} as const satisfies Record<GuideIsland, readonly GuidePair[]>;
 
-const LEVANZO_GUIDE_SLUG_PAIRS = [
-  { it: "cosa-vedere", en: "what-to-see" },
-  { it: "spiagge-cale", en: "beaches-coves" },
-  { it: "grotta-del-genovese", en: "grotta-del-genovese" },
-  { it: "levanzo-in-un-giorno", en: "levanzo-in-one-day" },
-  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani" },
-  { it: "snorkeling-cala-minnola-calcara", en: "snorkeling-cala-minnola-calcara" },
-  { it: "tour-in-barca-da-trapani", en: "boat-tour-from-trapani" },
-] as const;
-
-const LEVANZO_GUIDE_SLUGS = new Set(
-  LEVANZO_GUIDE_SLUG_PAIRS.flatMap((guide) => [guide.it, guide.en]),
-);
-
-const MARETTIMO_GUIDE_SLUG_PAIRS = [
-  { it: "cosa-vedere", en: "what-to-see" },
-  { it: "grotte-marine", en: "sea-caves" },
-  { it: "spiagge-cale", en: "beaches-coves" },
-  { it: "cala-bianca", en: "cala-bianca" },
-  { it: "marettimo-in-un-giorno", en: "marettimo-in-one-day" },
-  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani" },
-  { it: "trekking-sentieri", en: "hiking-trails" },
-  { it: "tour-in-barca-charter-egadi", en: "boat-tour-egadi-charter" },
-] as const;
-
-const MARETTIMO_GUIDE_SLUGS = new Set(
-  MARETTIMO_GUIDE_SLUG_PAIRS.flatMap((guide) => [guide.it, guide.en]),
-);
-
-function getLevanzoGuideSlugPair(slug: string) {
-  return LEVANZO_GUIDE_SLUG_PAIRS.find((guide) => guide.it === slug || guide.en === slug) ?? null;
-}
-
-function getFavignanaGuideSlugPair(slug: string) {
+function findGuideSlugPair(island: GuideIsland, slug: string) {
   return (
-    FAVIGNANA_GUIDE_SLUG_PAIRS.find((guide) => guide.it === slug || guide.en === slug) ?? null
+    GUIDE_SLUG_PAIRS[island].find(
+      (guide) => guide.it === slug || guide.en === slug || guide.es === slug || guide.fr === slug,
+    ) ?? null
   );
 }
 
-function getMarettimoGuideSlugPair(slug: string) {
-  return (
-    MARETTIMO_GUIDE_SLUG_PAIRS.find((guide) => guide.it === slug || guide.en === slug) ?? null
+function parseIslandGuidePath(pathname: string) {
+  const match = pathname.match(
+    /^\/(it|en|es|fr)\/(?:islands|islas|iles)\/(favignana|levanzo|marettimo)\/([^/]+)\/?$/,
   );
+  if (!match) return null;
+  const locale = match[1] as PublicLocale;
+  return {
+    locale,
+    island: match[2] as GuideIsland,
+    slug: match[3],
+    usesCanonicalSegment:
+      locale === "es"
+        ? pathname.startsWith("/es/islas/")
+        : locale === "fr"
+          ? pathname.startsWith("/fr/iles/")
+          : pathname.includes("/islands/"),
+  };
 }
 
-function getIslandGuideSlug(
-  pathname: string,
-  island: "favignana" | "levanzo" | "marettimo",
-  slugs: Set<string>,
-) {
-  const match = pathname.match(new RegExp(`^/(?:it|en)/islands/${island}/([^/]+)/?$`));
-  const slug = match?.[1];
-  return slug && slugs.has(slug) ? slug : null;
+function externalGuidePath(locale: PublicLocale, island: GuideIsland, slug: string) {
+  const base = locale === "es" ? "islas" : locale === "fr" ? "iles" : "islands";
+  return `/${locale}/${base}/${island}/${slug}`;
 }
 
 function withIslandGuideAlternates(req: NextRequest, response: NextResponse) {
-  const favignanaGuideSlug = getIslandGuideSlug(
-    req.nextUrl.pathname,
-    "favignana",
-    FAVIGNANA_GUIDE_SLUGS,
+  const parsed = parseIslandGuidePath(req.nextUrl.pathname);
+  if (!parsed) return response;
+
+  const guidePair = findGuideSlugPair(parsed.island, parsed.slug);
+  if (!guidePair) return response;
+
+  const italianUrl = `${req.nextUrl.origin}${externalGuidePath("it", parsed.island, guidePair.it)}`;
+  const englishUrl = `${req.nextUrl.origin}${externalGuidePath("en", parsed.island, guidePair.en)}`;
+  const spanishUrl = `${req.nextUrl.origin}${externalGuidePath("es", parsed.island, guidePair.es)}`;
+  const frenchUrl = `${req.nextUrl.origin}${externalGuidePath("fr", parsed.island, guidePair.fr)}`;
+  response.headers.set(
+    "link",
+    `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${spanishUrl}>; rel="alternate"; hreflang="es", <${frenchUrl}>; rel="alternate"; hreflang="fr", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
   );
-
-  if (favignanaGuideSlug) {
-    const favignanaGuidePair = getFavignanaGuideSlugPair(favignanaGuideSlug);
-
-    if (!favignanaGuidePair) {
-      return response;
-    }
-
-    const italianUrl = `${req.nextUrl.origin}/it/islands/favignana/${favignanaGuidePair.it}`;
-    const englishUrl = `${req.nextUrl.origin}/en/islands/favignana/${favignanaGuidePair.en}`;
-    response.headers.set(
-      "link",
-      `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
-    );
-
-    return response;
-  }
-
-  const levanzoGuideSlug = getIslandGuideSlug(
-    req.nextUrl.pathname,
-    "levanzo",
-    LEVANZO_GUIDE_SLUGS,
-  );
-
-  if (levanzoGuideSlug) {
-    const levanzoGuidePair = getLevanzoGuideSlugPair(levanzoGuideSlug);
-
-    if (!levanzoGuidePair) {
-      return response;
-    }
-
-    const italianUrl = `${req.nextUrl.origin}/it/islands/levanzo/${levanzoGuidePair.it}`;
-    const englishUrl = `${req.nextUrl.origin}/en/islands/levanzo/${levanzoGuidePair.en}`;
-    response.headers.set(
-      "link",
-      `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
-    );
-  }
-
-  const marettimoGuideSlug = getIslandGuideSlug(
-    req.nextUrl.pathname,
-    "marettimo",
-    MARETTIMO_GUIDE_SLUGS,
-  );
-
-  if (marettimoGuideSlug) {
-    const marettimoGuidePair = getMarettimoGuideSlugPair(marettimoGuideSlug);
-
-    if (!marettimoGuidePair) {
-      return response;
-    }
-
-    const italianUrl = `${req.nextUrl.origin}/it/islands/marettimo/${marettimoGuidePair.it}`;
-    const englishUrl = `${req.nextUrl.origin}/en/islands/marettimo/${marettimoGuidePair.en}`;
-    response.headers.set(
-      "link",
-      `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
-    );
-  }
 
   return response;
 }
 
-function getFavignanaEnglishGuideRedirect(req: NextRequest) {
-  const match = req.nextUrl.pathname.match(/^\/en\/islands\/favignana\/([^/]+)\/?$/);
-  const slug = match?.[1];
+function getIslandGuideRedirect(req: NextRequest) {
+  const parsed = parseIslandGuidePath(req.nextUrl.pathname);
+  if (!parsed) return null;
 
-  if (!slug) {
-    return null;
-  }
+  const guidePair = findGuideSlugPair(parsed.island, parsed.slug);
+  if (!guidePair) return null;
 
-  const favignanaGuidePair = getFavignanaGuideSlugPair(slug);
-
-  if (!favignanaGuidePair || favignanaGuidePair.en === slug) {
-    return null;
-  }
+  const canonicalSlug = guidePair[parsed.locale];
+  if (parsed.usesCanonicalSegment && canonicalSlug === parsed.slug) return null;
 
   const url = req.nextUrl.clone();
-  url.pathname = `/en/islands/favignana/${favignanaGuidePair.en}`;
-  return NextResponse.redirect(url, 308);
-}
-
-function getLevanzoEnglishGuideRedirect(req: NextRequest) {
-  const match = req.nextUrl.pathname.match(/^\/en\/islands\/levanzo\/([^/]+)\/?$/);
-  const slug = match?.[1];
-
-  if (!slug) {
-    return null;
-  }
-
-  const levanzoGuidePair = getLevanzoGuideSlugPair(slug);
-
-  if (!levanzoGuidePair || levanzoGuidePair.en === slug) {
-    return null;
-  }
-
-  const url = req.nextUrl.clone();
-  url.pathname = `/en/islands/levanzo/${levanzoGuidePair.en}`;
-  return NextResponse.redirect(url, 308);
-}
-
-function getMarettimoEnglishGuideRedirect(req: NextRequest) {
-  const match = req.nextUrl.pathname.match(/^\/en\/islands\/marettimo\/([^/]+)\/?$/);
-  const slug = match?.[1];
-
-  if (!slug) {
-    return null;
-  }
-
-  const marettimoGuidePair = getMarettimoGuideSlugPair(slug);
-
-  if (!marettimoGuidePair || marettimoGuidePair.en === slug) {
-    return null;
-  }
-
-  const url = req.nextUrl.clone();
-  url.pathname = `/en/islands/marettimo/${marettimoGuidePair.en}`;
+  url.pathname = externalGuidePath(parsed.locale, parsed.island, canonicalSlug);
   return NextResponse.redirect(url, 308);
 }
 
@@ -291,22 +171,10 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const favignanaEnglishGuideRedirect = getFavignanaEnglishGuideRedirect(req);
+  const islandGuideRedirect = getIslandGuideRedirect(req);
 
-  if (favignanaEnglishGuideRedirect) {
-    return favignanaEnglishGuideRedirect;
-  }
-
-  const levanzoEnglishGuideRedirect = getLevanzoEnglishGuideRedirect(req);
-
-  if (levanzoEnglishGuideRedirect) {
-    return levanzoEnglishGuideRedirect;
-  }
-
-  const marettimoEnglishGuideRedirect = getMarettimoEnglishGuideRedirect(req);
-
-  if (marettimoEnglishGuideRedirect) {
-    return marettimoEnglishGuideRedirect;
+  if (islandGuideRedirect) {
+    return islandGuideRedirect;
   }
 
   return withLegacyCacheReset(req, withIslandGuideAlternates(req, intlMiddleware(req)));

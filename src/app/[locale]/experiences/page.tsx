@@ -9,6 +9,7 @@ import {
   getExperiencePackageServiceIds,
 } from "@/data/catalog/experiences";
 import { env } from "@/lib/env";
+import { localizedPath } from "@/lib/i18n/paths";
 import { getDisplayPriceMap, type DisplayPrice } from "@/lib/pricing/display";
 
 function lowestPriceLabel(
@@ -72,11 +73,18 @@ export default async function ExperiencesPage({
       };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
-  const pageUrl = `${env.APP_URL.replace(/\/$/, "")}/${locale}/experiences`;
+  const pageUrl = `${env.APP_URL.replace(/\/$/, "")}${localizedPath(locale, "/experiences")}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: locale === "en" ? "Egadi boat tour packages" : "Pacchetti tour in barca alle Egadi",
+    name:
+      locale === "es"
+        ? "Paquetes de excursiones en barco por las Islas Egadi"
+        : locale === "fr"
+          ? "Forfaits d'excursions en bateau aux îles Égades"
+        : locale === "en"
+          ? "Egadi boat tour packages"
+          : "Pacchetti tour in barca alle Egadi",
     itemListElement: packages.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,

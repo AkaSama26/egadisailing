@@ -1,43 +1,66 @@
 export type MarettimoGuideSlug =
   | "cosa-vedere"
   | "what-to-see"
+  | "que-ver-en-marettimo"
   | "grotte-marine"
   | "sea-caves"
+  | "cuevas-marinas"
   | "spiagge-cale"
   | "beaches-coves"
+  | "playas-calas-marettimo"
   | "cala-bianca"
   | "marettimo-in-un-giorno"
   | "marettimo-in-one-day"
+  | "marettimo-en-un-dia"
   | "come-arrivare-da-trapani"
   | "how-to-get-from-trapani"
+  | "como-llegar-desde-trapani"
   | "trekking-sentieri"
   | "hiking-trails"
+  | "senderismo-rutas"
   | "tour-in-barca-charter-egadi"
-  | "boat-tour-egadi-charter";
+  | "boat-tour-egadi-charter"
+  | "excursion-barco-charter-egadi"
+  | "que-voir-a-marettimo"
+  | "grottes-marines"
+  | "plages-criques-marettimo"
+  | "marettimo-en-une-journee"
+  | "comment-venir-depuis-trapani"
+  | "randonnee-sentiers"
+  | "excursion-bateau-charter-egades";
 
 export const marettimoGuideSlugPairs = [
-  { it: "cosa-vedere", en: "what-to-see" },
-  { it: "grotte-marine", en: "sea-caves" },
-  { it: "spiagge-cale", en: "beaches-coves" },
-  { it: "cala-bianca", en: "cala-bianca" },
-  { it: "marettimo-in-un-giorno", en: "marettimo-in-one-day" },
-  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani" },
-  { it: "trekking-sentieri", en: "hiking-trails" },
-  { it: "tour-in-barca-charter-egadi", en: "boat-tour-egadi-charter" },
-] as const satisfies Array<{ it: MarettimoGuideSlug; en: MarettimoGuideSlug }>;
+  { it: "cosa-vedere", en: "what-to-see", es: "que-ver-en-marettimo", fr: "que-voir-a-marettimo" },
+  { it: "grotte-marine", en: "sea-caves", es: "cuevas-marinas", fr: "grottes-marines" },
+  { it: "spiagge-cale", en: "beaches-coves", es: "playas-calas-marettimo", fr: "plages-criques-marettimo" },
+  { it: "cala-bianca", en: "cala-bianca", es: "cala-bianca", fr: "cala-bianca" },
+  { it: "marettimo-in-un-giorno", en: "marettimo-in-one-day", es: "marettimo-en-un-dia", fr: "marettimo-en-une-journee" },
+  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani", es: "como-llegar-desde-trapani", fr: "comment-venir-depuis-trapani" },
+  { it: "trekking-sentieri", en: "hiking-trails", es: "senderismo-rutas", fr: "randonnee-sentiers" },
+  {
+    it: "tour-in-barca-charter-egadi",
+    en: "boat-tour-egadi-charter",
+    es: "excursion-barco-charter-egadi",
+    fr: "excursion-bateau-charter-egades",
+  },
+] as const satisfies Array<{ it: MarettimoGuideSlug; en: MarettimoGuideSlug; es: MarettimoGuideSlug; fr: MarettimoGuideSlug }>;
 
-export type MarettimoGuideLocale = "it" | "en";
+export type MarettimoGuideLocale = "it" | "en" | "es" | "fr";
 
 export function getMarettimoGuideSlugForLocale(
   slug: string,
   locale: MarettimoGuideLocale,
 ): MarettimoGuideSlug | undefined {
-  const pair = marettimoGuideSlugPairs.find((item) => item.it === slug || item.en === slug);
+  const pair = marettimoGuideSlugPairs.find(
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+  );
   return pair?.[locale];
 }
 
 export function isMarettimoGuideSlug(slug: string): slug is MarettimoGuideSlug {
-  return marettimoGuideSlugPairs.some((item) => item.it === slug || item.en === slug);
+  return marettimoGuideSlugPairs.some(
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+  );
 }
 
 export const marettimoGuideSlugs = [

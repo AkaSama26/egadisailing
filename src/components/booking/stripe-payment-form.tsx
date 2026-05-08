@@ -47,7 +47,14 @@ export function StripePaymentForm(props: Props) {
   const options = useMemo(
     () => ({
       clientSecret: props.clientSecret,
-      locale: props.locale === "en" ? ("en" as const) : ("it" as const),
+      locale:
+        props.locale === "es"
+          ? ("es" as const)
+          : props.locale === "fr"
+            ? ("fr" as const)
+            : props.locale === "en"
+              ? ("en" as const)
+              : ("it" as const),
       appearance: {
         theme: "stripe" as const,
         variables: {
@@ -130,7 +137,7 @@ function InnerForm({
       confirmParams: {
         // R26-A1-A4: canonical APP_URL (server-side) per Stripe return_url.
         // `window.location.origin` era fragile (staging via IP, proxy misconfig).
-        return_url: `${appUrl}/${locale}/prenota/success/${confirmationCode}`,
+        return_url: `${appUrl}${successReturnPath(locale, confirmationCode)}`,
       },
       redirect: "if_required",
     });
@@ -234,29 +241,43 @@ function InnerForm({
 
 function PaymentSetupError({ locale }: { locale: string }) {
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
       <h2 className="text-lg font-bold">
-        {isEn ? "Payment not configured" : "Pagamento non configurato"}
+        {isEs ? "Pago no configurado" : isFr ? "Paiement non configuré" : isEn ? "Payment not configured" : "Pagamento non configurato"}
       </h2>
       <p className="mt-1">
-        {isEn ? "Stripe public key is missing. Set " : "Manca la chiave pubblica Stripe. Imposta "}
+        {isEs
+          ? "Falta la clave pública de Stripe. Configura "
+          : isFr
+            ? "La clé publique Stripe manque. Configurez "
+            : isEn
+              ? "Stripe public key is missing. Set "
+              : "Manca la chiave pubblica Stripe. Imposta "}
         <code className="rounded bg-amber-100 px-1 py-0.5">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>{" "}
-        {isEn ? "and restart the dev server." : "e riavvia il dev server."}
+        {isEs
+          ? "y reinicia el dev server."
+          : isFr
+            ? "et redémarrez le serveur de développement."
+            : isEn
+              ? "and restart the dev server."
+              : "e riavvia il dev server."}
       </p>
     </div>
   );
 }
 
 function formatEurCents(cents: number, locale: string) {
-  return new Intl.NumberFormat(locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.NumberFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
     style: "currency",
     currency: "EUR",
   }).format(cents / 100);
 }
 
 function vatIncludedLabel(locale: string): string {
-  return locale === "en" ? "VAT included" : "IVA inclusa";
+  return locale === "es" ? "IVA incluido" : locale === "fr" ? "TVA incluse" : locale === "en" ? "VAT included" : "IVA inclusa";
 }
 
 function formatEurCentsWithVat(cents: number, locale: string) {
@@ -301,6 +322,46 @@ function PaymentSummary({
 }
 
 function getStripePaymentCopy(locale: string) {
+  if (locale === "fr") {
+    return {
+      paymentError: "Erreur de paiement",
+      paymentIncomplete: "Le paiement n'a pas été finalisé. Vérifiez les informations et réessayez.",
+      eyebrow: "Paiement sécurisé",
+      title: "Finalisez le checkout",
+      subtitle: "Saisissez les données de votre carte ou choisissez un moyen de paiement accepté par Stripe.",
+      loadingForm: "Chargement du formulaire de paiement...",
+      stripeCardData: "Données de carte gérées par Stripe",
+      emailConfirmation: "Confirmation par email après le paiement",
+      useAnotherMethod: "Utiliser un autre moyen de paiement",
+      processing: "Traitement en cours...",
+      pay: "Payer",
+      bookingTotal: "Total de la réservation",
+      payNow: "À payer maintenant",
+      balanceOnSite: "Solde sur place",
+      balanceNote: "Le solde restant est réglé sur place avant le départ.",
+    };
+  }
+
+  if (locale === "es") {
+    return {
+      paymentError: "Error de pago",
+      paymentIncomplete: "El pago no se ha completado. Comprueba los datos e inténtalo de nuevo.",
+      eyebrow: "Pago seguro",
+      title: "Completa el checkout",
+      subtitle: "Introduce los datos de tu tarjeta o elige un método de pago admitido por Stripe.",
+      loadingForm: "Cargando formulario de pago...",
+      stripeCardData: "Datos de tarjeta gestionados por Stripe",
+      emailConfirmation: "Confirmación por email después del pago",
+      useAnotherMethod: "Usar otro método de pago",
+      processing: "Procesando...",
+      pay: "Pagar",
+      bookingTotal: "Total de la reserva",
+      payNow: "Pagar ahora",
+      balanceOnSite: "Saldo en destino",
+      balanceNote: "El saldo restante se paga en destino antes de la salida.",
+    };
+  }
+
   if (locale === "en") {
     return {
       paymentError: "Payment error",
@@ -338,4 +399,11 @@ function getStripePaymentCopy(locale: string) {
     balanceOnSite: "Saldo in loco",
     balanceNote: "Il saldo restante si paga in loco prima della partenza.",
   };
+}
+
+function successReturnPath(locale: string, confirmationCode: string): string {
+  const code = encodeURIComponent(confirmationCode);
+  if (locale === "es") return `/es/reservar/confirmacion/${code}`;
+  if (locale === "fr") return `/fr/reserver/confirmation/${code}`;
+  return `/${locale}/prenota/success/${code}`;
 }

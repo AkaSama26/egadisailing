@@ -25,20 +25,25 @@ import {
   type MarettimoGuideSection,
 } from "@/data/marettimo-guides";
 import { marettimoGuidesEn } from "@/data/marettimo-guides-en";
+import { marettimoGuidesEs } from "@/data/marettimo-guides-es";
+import { marettimoGuidesFr } from "@/data/marettimo-guides-fr";
 import { env } from "@/lib/env";
+import { localizedPath } from "@/lib/i18n/paths";
 
 export const dynamicParams = false;
 
-const guideLocales = ["it", "en"] as const;
+const guideLocales = ["it", "en", "es", "fr"] as const;
 type GuideLocale = (typeof guideLocales)[number];
 
 const guidesByLocale = {
   it: marettimoGuides,
   en: marettimoGuidesEn,
+  es: marettimoGuidesEs,
+  fr: marettimoGuidesFr,
 } satisfies Record<GuideLocale, MarettimoGuide[]>;
 
 function isGuideLocale(locale: string): locale is GuideLocale {
-  return locale === "it" || locale === "en";
+  return locale === "it" || locale === "en" || locale === "es" || locale === "fr";
 }
 
 function getLocalizedGuide(locale: GuideLocale, slug: string): MarettimoGuide | undefined {
@@ -83,6 +88,44 @@ const guideUi = {
     sourcesTitle: "Always check current timetables, visits and rules",
     sourcesText:
       "Sea connections, access, Marine Protected Area rules and site openings can change. For operational details, always refer to official sources.",
+  },
+  es: {
+    backLabel: "Marettimo",
+    heroLabel: "Guía de Marettimo",
+    asideEyebrow: "En esta guía",
+    asideAriaLabel: "Índice de la guía",
+    quickAnswer: "Respuesta rápida",
+    quickAnswerTitle: "En breve",
+    itemEyebrow: "Para tener en cuenta",
+    chapterLabel: (index: number) => `Capítulo ${index + 1}`,
+    faqEyebrow: "FAQ",
+    faqTitle: (title: string) => `Preguntas frecuentes sobre ${title.toLowerCase()}`,
+    relatedEyebrow: "Sigue explorando",
+    relatedTitle: "Más páginas útiles sobre Marettimo",
+    relatedLabel: "Leer la guía",
+    sourcesEyebrow: "Fuentes oficiales y actualizaciones",
+    sourcesTitle: "Comprueba siempre horarios, visitas y normas actualizadas",
+    sourcesText:
+      "Conexiones marítimas, accesos, normas del Área Marina Protegida y aperturas de sitios pueden cambiar. Para detalles operativos, consulta siempre fuentes oficiales.",
+  },
+  fr: {
+    backLabel: "Marettimo",
+    heroLabel: "Guide de Marettimo",
+    asideEyebrow: "Dans ce guide",
+    asideAriaLabel: "Sommaire du guide",
+    quickAnswer: "Réponse rapide",
+    quickAnswerTitle: "En bref",
+    itemEyebrow: "À retenir",
+    chapterLabel: (index: number) => `Chapitre ${index + 1}`,
+    faqEyebrow: "FAQ",
+    faqTitle: (title: string) => `Questions fréquentes sur ${title.toLowerCase()}`,
+    relatedEyebrow: "Continuer l'exploration",
+    relatedTitle: "Autres pages utiles sur Marettimo",
+    relatedLabel: "Lire le guide",
+    sourcesEyebrow: "Sources officielles et mises à jour",
+    sourcesTitle: "Vérifiez toujours les horaires, visites et règles à jour",
+    sourcesText:
+      "Liaisons maritimes, accès, règles de l'Aire Marine Protégée et ouvertures de sites peuvent changer. Pour les détails pratiques, consultez toujours les sources officielles.",
   },
 } satisfies Record<
   GuideLocale,
@@ -138,6 +181,66 @@ const sourceLinksByLocale = {
       href: "https://www.carontetourist.it/en",
     },
   ],
+  es: [
+    {
+      label: "West of Sicily - Marettimo",
+      href: "https://www.westofsicily.com/it/localita/marettimo",
+    },
+    {
+      label: "West of Sicily - cuevas de Marettimo",
+      href: "https://www.westofsicily.com/it/mare-natura/le-grotte-di-marettimo",
+    },
+    {
+      label: "Comune di Favignana - Castillo de Punta Troia",
+      href: "https://www.comune.favignana.tp.it/it/vivere/castello-di-punta-troia",
+    },
+    {
+      label: "Área Marina Protegida Islas Egadi",
+      href: "https://www.ampisoleegadi.it/",
+    },
+    {
+      label: "Visit Sicily - Wreck of the Cannons",
+      href: "https://www.visitsicily.info/en/itinerario/marettimo-wreck-of-the-cannons/",
+    },
+    {
+      label: "Liberty Lines",
+      href: "https://www.libertylines.it/",
+    },
+    {
+      label: "Caronte & Tourist / Siremar",
+      href: "https://www.carontetourist.it/en",
+    },
+  ],
+  fr: [
+    {
+      label: "West of Sicily - Marettimo",
+      href: "https://www.westofsicily.com/it/localita/marettimo",
+    },
+    {
+      label: "West of Sicily - grottes de Marettimo",
+      href: "https://www.westofsicily.com/it/mare-natura/le-grotte-di-marettimo",
+    },
+    {
+      label: "Comune di Favignana - château de Punta Troia",
+      href: "https://www.comune.favignana.tp.it/it/vivere/castello-di-punta-troia",
+    },
+    {
+      label: "Aire Marine Protégée des îles Égades",
+      href: "https://www.ampisoleegadi.it/",
+    },
+    {
+      label: "Visit Sicily - Wreck of the Cannons",
+      href: "https://www.visitsicily.info/en/itinerario/marettimo-wreck-of-the-cannons/",
+    },
+    {
+      label: "Liberty Lines",
+      href: "https://www.libertylines.it/",
+    },
+    {
+      label: "Caronte & Tourist / Siremar",
+      href: "https://www.carontetourist.it/en",
+    },
+  ],
 } satisfies Record<GuideLocale, typeof marettimoGuideSourceLinks>;
 
 function jsonLd(data: unknown): string {
@@ -150,15 +253,29 @@ function absoluteUrl(path: string): string {
 }
 
 function getGuideUrl(locale: GuideLocale, slug: string): string {
-  return `/${locale}/islands/marettimo/${slug}`;
+  return localizedPath(locale, `/islands/marettimo/${slug}`);
 }
 
 function buildGuideJsonLd(guide: MarettimoGuide, locale: GuideLocale) {
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}${getGuideUrl(locale, guide.slug)}`;
-  const inLanguage = locale === "en" ? "en-US" : "it-IT";
-  const islandsName = locale === "en" ? "Egadi Islands" : "Isole Egadi";
-  const islandsBreadcrumb = locale === "en" ? "Egadi Islands" : "Le Isole Egadi";
+  const inLanguage = locale === "en" ? "en-US" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : "it-IT";
+  const islandsName =
+    locale === "en"
+      ? "Egadi Islands"
+      : locale === "es"
+        ? "Islas Egadi"
+        : locale === "fr"
+          ? "Îles Égades"
+          : "Isole Egadi";
+  const islandsBreadcrumb =
+    locale === "en"
+      ? "Egadi Islands"
+      : locale === "es"
+        ? "Islas Egadi"
+        : locale === "fr"
+          ? "Îles Égades"
+          : "Le Isole Egadi";
   const graph: unknown[] = [
     {
       "@type": "BreadcrumbList",
@@ -168,13 +285,13 @@ function buildGuideJsonLd(guide: MarettimoGuide, locale: GuideLocale) {
           "@type": "ListItem",
           position: 2,
           name: islandsBreadcrumb,
-          item: `${base}/${locale}/islands`,
+          item: `${base}${localizedPath(locale, "/islands")}`,
         },
         {
           "@type": "ListItem",
           position: 3,
           name: "Marettimo",
-          item: `${base}/${locale}/islands/marettimo`,
+          item: `${base}${localizedPath(locale, "/islands/marettimo")}`,
         },
         { "@type": "ListItem", position: 4, name: guide.shortTitle, item: pageUrl },
       ],
@@ -270,7 +387,14 @@ export async function generateMetadata({
 
   if (!guide) {
     return {
-      title: locale === "en" ? "Page not found" : "Pagina non trovata",
+      title:
+        locale === "es"
+          ? "Página no encontrada"
+          : locale === "fr"
+            ? "Page introuvable"
+            : locale === "en"
+              ? "Page not found"
+              : "Pagina non trovata",
       robots: { index: false, follow: false },
     };
   }
@@ -279,7 +403,12 @@ export async function generateMetadata({
   const canonical = `${base}${getGuideUrl(locale, guide.slug)}`;
   const italianSlug = getMarettimoGuideSlugForLocale(guide.slug, "it") ?? guide.slug;
   const englishSlug = getMarettimoGuideSlugForLocale(guide.slug, "en") ?? guide.slug;
+  const spanishSlug = getMarettimoGuideSlugForLocale(guide.slug, "es") ?? guide.slug;
   const image = absoluteUrl(guide.heroImage);
+  const ogLocale = locale === "en" ? "en_US" : locale === "es" ? "es_ES" : locale === "fr" ? "fr_FR" : "it_IT";
+  const alternateOgLocales = ["it", "en", "es"]
+    .filter((item) => item !== locale)
+    .map((item) => (item === "en" ? "en_US" : item === "es" ? "es_ES" : "it_IT"));
 
   return {
     title: guide.metaTitle,
@@ -290,6 +419,7 @@ export async function generateMetadata({
       languages: {
         it: `${base}${getGuideUrl("it", italianSlug)}`,
         en: `${base}${getGuideUrl("en", englishSlug)}`,
+        es: `${base}${getGuideUrl("es", spanishSlug)}`,
         "x-default": `${base}${getGuideUrl("it", italianSlug)}`,
       },
     },
@@ -298,8 +428,8 @@ export async function generateMetadata({
       description: guide.metaDescription,
       url: canonical,
       siteName: "Egadisailing",
-      locale: locale === "en" ? "en_US" : "it_IT",
-      alternateLocale: locale === "en" ? ["it_IT"] : ["en_US"],
+      locale: ogLocale,
+      alternateLocale: alternateOgLocales,
       type: "article",
       images: [{ url: image, width: 1200, height: 630, alt: guide.heroAlt }],
     },
@@ -410,7 +540,7 @@ function Hero({
       <div className="mx-auto flex min-h-[calc(82svh-10rem)] min-w-0 max-w-7xl flex-col justify-center">
         <div className="mb-8 flex flex-wrap items-center gap-3 text-sm font-semibold">
           <Link
-            href={`/${locale}/islands/marettimo`}
+            href={localizedPath(locale, "/islands/marettimo")}
             className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white/78 backdrop-blur transition hover:border-white/40 hover:bg-white/16 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -680,7 +810,7 @@ const ctaCopyByLocale = {
       title: "Vuoi includere Marettimo senza comprimere tempi e rientri?",
       description:
         "Il charter in trimarano è la formula più naturale per valutare Marettimo con margine: rotta meteo-dipendente, notti in rada quando possibile e programma aggiornato con la crew.",
-      href: "/it/experiences/charter",
+      href: "/experiences/charter",
       label: "Scopri il charter Egadi",
       image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
       imageAlt: "Trimarano durante un charter alle Isole Egadi",
@@ -692,7 +822,7 @@ const ctaCopyByLocale = {
       title: "Marettimo può essere valutata su rotta privata, ma solo con il mare giusto",
       description:
         "Una barca privata permette più flessibilità, ma la rotta verso Marettimo viene sempre confermata in base a vento, mare, durata e sicurezza.",
-      href: "/it/experiences/boat-exclusive-full-day",
+      href: "/experiences/boat-exclusive-full-day",
       label: "Vedi il tour privato",
       image:
         "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
@@ -707,7 +837,7 @@ const ctaCopyByLocale = {
       title: "Want to include Marettimo without rushing timings and return routes?",
       description:
         "A trimaran charter is the most natural way to approach Marettimo with margin: weather-dependent route, nights at anchor when possible and an itinerary updated with the crew.",
-      href: "/en/experiences/charter",
+      href: "/experiences/charter",
       label: "View the Egadi charter",
       image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
       imageAlt: "Trimaran during an Egadi Islands charter",
@@ -719,13 +849,67 @@ const ctaCopyByLocale = {
       title: "Marettimo can be considered on a private route, but only with the right sea",
       description:
         "A private boat gives more flexibility, but the route to Marettimo is always confirmed according to wind, sea state, duration and safety.",
-      href: "/en/experiences/boat-exclusive-full-day",
+      href: "/experiences/boat-exclusive-full-day",
       label: "View the private tour",
       image:
         "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
       imageAlt: "Private Cigala and Bertinetti boat in the Egadi Islands",
       icon: Waves,
       routeNotePrefix: "Guide context",
+    },
+  },
+  es: {
+    charter: {
+      eyebrow: "Charter Islas Egadi",
+      title: "¿Quieres incluir Marettimo sin comprimir tiempos y regresos?",
+      description:
+        "El charter en trimarán es la forma más natural de acercarse a Marettimo con margen: ruta según meteorología, noches al fondeo cuando es posible y programa actualizado con la tripulación.",
+      href: "/experiences/charter",
+      label: "Ver el charter Egadi",
+      image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+      imageAlt: "Trimarán durante un charter por las Islas Egadi",
+      icon: Sparkles,
+      routeNotePrefix: "Contexto de la guía",
+    },
+    private: {
+      eyebrow: "Ruta privada a valorar",
+      title: "Marettimo puede valorarse en ruta privada, pero solo con el mar adecuado",
+      description:
+        "Un barco privado ofrece más flexibilidad, pero la ruta hacia Marettimo se confirma siempre según viento, estado del mar, duración y seguridad.",
+      href: "/experiences/boat-exclusive-full-day",
+      label: "Ver el tour privado",
+      image:
+        "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
+      imageAlt: "Barco privado Cigala y Bertinetti en las Islas Egadi",
+      icon: Waves,
+      routeNotePrefix: "Contexto de la guía",
+    },
+  },
+  fr: {
+    charter: {
+      eyebrow: "Charter aux îles Égades",
+      title: "Vous voulez inclure Marettimo sans comprimer les temps et le retour ?",
+      description:
+        "Le charter en trimaran est la formule la plus naturelle pour approcher Marettimo avec de la marge : itinéraire selon la météo, nuits au mouillage lorsque c'est possible et programme ajusté avec l'équipage.",
+      href: "/experiences/charter",
+      label: "Voir le charter Égades",
+      image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+      imageAlt: "Trimaran pendant un charter aux îles Égades",
+      icon: Sparkles,
+      routeNotePrefix: "Contexte du guide",
+    },
+    private: {
+      eyebrow: "Itinéraire privé à évaluer",
+      title: "Marettimo peut se prévoir en privé, mais seulement avec la bonne mer",
+      description:
+        "Un bateau privé offre plus de flexibilité, mais la route vers Marettimo est toujours confirmée selon le vent, l'état de la mer, la durée et la sécurité.",
+      href: "/experiences/boat-exclusive-full-day",
+      label: "Voir le tour privé",
+      image:
+        "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
+      imageAlt: "Bateau privé Cigala et Bertinetti aux îles Égades",
+      icon: Waves,
+      routeNotePrefix: "Contexte du guide",
     },
   },
 } satisfies Record<
@@ -781,7 +965,7 @@ function GuideCta({
             {cta.routeNotePrefix}: {guideTitle}
           </p>
           <Link
-            href={cta.href}
+            href={localizedPath(locale, cta.href)}
             className="mt-6 inline-flex items-center gap-2 rounded-md bg-[var(--color-gold)] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#c8952b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             {cta.label}
@@ -795,13 +979,51 @@ function GuideCta({
 
 function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideLocale }) {
   const experiences =
-    locale === "en"
+    locale === "es"
+      ? [
+          {
+            title: "Charter Islas Egadi",
+            description:
+              "De 3 a 7 días en trimarán, con Marettimo evaluada dentro de una ruta flexible.",
+            href: "/experiences/charter",
+            image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+            meta: "Varios días",
+          },
+          {
+            title: "Excursión privada Egadi 8 horas",
+            description:
+              "Barco reservado y ruta flexible, siempre confirmada según condiciones del mar.",
+            href: "/experiences/boat-exclusive-full-day",
+            image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+            meta: "Privado",
+          },
+        ]
+      : locale === "fr"
+      ? [
+          {
+            title: "Charter aux îles Égades",
+            description:
+              "Trois à sept jours en trimaran, avec Marettimo intégrée dans un itinéraire flexible.",
+            href: "/experiences/charter",
+            image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+            meta: "Plusieurs jours",
+          },
+          {
+            title: "Excursion privée Égades 8 heures",
+            description:
+              "Un bateau réservé et une route flexible, toujours confirmée selon les conditions de mer.",
+            href: "/experiences/boat-exclusive-full-day",
+            image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+            meta: "Privé",
+          },
+        ]
+      : locale === "en"
       ? [
           {
             title: "Egadi charter",
             description:
               "Three to seven days on the trimaran, with Marettimo evaluated within the route.",
-            href: "/en/experiences/charter",
+            href: "/experiences/charter",
             image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
             meta: "Multi-day",
           },
@@ -809,7 +1031,7 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
             title: "Private 8-hour Egadi tour",
             description:
               "A reserved boat and flexible route, always confirmed according to sea conditions.",
-            href: "/en/experiences/boat-exclusive-full-day",
+            href: "/experiences/boat-exclusive-full-day",
             image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
             meta: "Private",
           },
@@ -818,14 +1040,14 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
           {
             title: "Charter Egadi",
             description: "Da 3 a 7 giornate sul trimarano, con Marettimo da valutare nella rotta.",
-            href: "/it/experiences/charter",
+            href: "/experiences/charter",
             image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
             meta: "Più giorni",
           },
           {
             title: "Tour Egadi 8 ore privato",
             description: "Barca riservata e rotta flessibile, confermata in base al mare.",
-            href: "/it/experiences/boat-exclusive-full-day",
+            href: "/experiences/boat-exclusive-full-day",
             image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
             meta: "Privato",
           },
@@ -835,15 +1057,29 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
     <aside className="mt-8 rounded-lg border border-[#d9c79d] bg-[#fbf7ee] p-6 sm:p-8">
       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#b58a27]">
         <ShipWheel className="h-4 w-4" aria-hidden="true" />
-        {locale === "en" ? "Compare experiences" : "Confronta le esperienze"}
+        {locale === "es"
+          ? "Compara experiencias"
+          : locale === "fr"
+            ? "Comparer les expériences"
+            : locale === "en"
+              ? "Compare experiences"
+              : "Confronta le esperienze"}
       </p>
       <h3 className="mt-3 font-heading text-2xl font-bold leading-tight text-[#092337]">
-        {locale === "en"
+        {locale === "es"
+          ? "Marettimo necesita el formato adecuado"
+          : locale === "fr"
+          ? "Marettimo demande le bon format"
+          : locale === "en"
           ? "Marettimo needs the right format"
           : "Marettimo va scelta con il formato giusto"}
       </h3>
       <p className="mt-3 text-sm leading-6 text-[#425f6f]">
-        {locale === "en"
+        {locale === "es"
+          ? `Para ${guideTitle.toLowerCase()}, la elección más sólida es tener margen: charter si quieres incluirla de verdad, tour privado solo si condiciones y tiempos lo permiten.`
+          : locale === "fr"
+          ? `Pour ${guideTitle.toLowerCase()}, le choix le plus solide est de garder de la marge : charter si vous voulez vraiment l'inclure, tour privé seulement si les conditions et le timing le permettent.`
+          : locale === "en"
           ? `For ${guideTitle.toLowerCase()}, the strongest choice is margin: charter if you really want to include it, private tour only if conditions and timing allow.`
           : `Per ${guideTitle.toLowerCase()}, la soluzione più solida è avere margine: charter se vuoi includerla davvero, tour privato solo se condizioni e tempi lo permettono.`}
       </p>
@@ -851,7 +1087,7 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
         {experiences.map((experience) => (
           <Link
             key={experience.href}
-            href={experience.href}
+            href={localizedPath(locale, experience.href)}
             className="group overflow-hidden rounded-lg border border-[#d9c79d] bg-white transition hover:-translate-y-1 hover:border-[#b58a27] hover:shadow-[0_14px_42px_rgba(10,38,55,0.1)]"
           >
             <div className="relative aspect-[16/10]">
@@ -866,7 +1102,13 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
               </h4>
               <p className="mt-2 text-sm leading-6 text-[#425f6f]">{experience.description}</p>
               <span className="mt-4 inline-flex items-center text-sm font-bold text-[#092337]">
-                {locale === "en" ? "View experience" : "Guarda esperienza"}
+                {locale === "es"
+                  ? "Ver experiencia"
+                  : locale === "fr"
+                    ? "Voir l'expérience"
+                    : locale === "en"
+                      ? "View experience"
+                      : "Guarda esperienza"}
                 <ArrowRight
                   className="ml-2 h-4 w-4 transition group-hover:translate-x-1"
                   aria-hidden="true"

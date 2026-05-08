@@ -17,7 +17,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return {
-    title: locale === "en" ? "Complete your booking" : "Completa la prenotazione",
+    title:
+      locale === "es"
+        ? "Completa tu reserva"
+        : locale === "fr"
+          ? "Finalisez votre réservation"
+        : locale === "en"
+          ? "Complete your booking"
+          : "Completa la prenotazione",
     robots: { index: false, follow: false },
   };
 }
@@ -58,7 +65,7 @@ export default async function BookingPage({
     <OceanLayout>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-white text-4xl md:text-5xl font-heading font-bold mb-8 text-center">
-          Prenota {serviceTitle}
+          {locale === "es" ? "Reserva" : locale === "fr" ? "Réserver" : locale === "en" ? "Book" : "Prenota"} {serviceTitle}
         </h1>
         <BookingWizard
           locale={locale}

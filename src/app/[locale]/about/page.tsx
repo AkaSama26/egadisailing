@@ -4,57 +4,76 @@ import Link from "next/link";
 import { ArrowRight, Anchor, Compass, Utensils } from "lucide-react";
 import { ScrollSection } from "@/components/scroll-section";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 const crew = [
   {
-    role: "Skipper",
+    role: { it: "Skipper", en: "Skipper", es: "Patrón", fr: "Skipper" },
     image: "/images/about/skipper.webp",
     alt: {
       it: "Skipper Egadisailing durante una navigazione alle Isole Egadi",
       en: "Egadisailing skipper sailing through the Egadi Islands",
+      es: "Patrón de Egadisailing navegando por las Islas Egadi",
+      fr: "Skipper Egadisailing en navigation aux îles Égades",
     },
     icon: Anchor,
     description: {
       it: "Guida la rotta, legge vento e mare, sceglie le cale più riparate e rende la navigazione sicura, fluida e piacevole.",
       en: "Guides the route, reads wind and sea conditions, chooses the most sheltered coves and keeps the navigation safe, smooth and enjoyable.",
+      es: "Guía la ruta, lee el viento y el mar, elige las calas más protegidas y mantiene la navegación segura, fluida y agradable.",
+      fr: "Guide la route, lit le vent et la mer, choisit les criques les plus abritées et garde une navigation sûre, fluide et agréable.",
     },
     note: {
       it: "Rotte sicure, ritmo giusto, conoscenza vera delle Egadi.",
       en: "Safe routes, the right rhythm and real knowledge of the Egadi Islands.",
+      es: "Rutas seguras, buen ritmo y conocimiento real de las Islas Egadi.",
+      fr: "Routes sûres, bon rythme et vraie connaissance des îles Égades.",
     },
   },
   {
-    role: "Hostess",
+    role: { it: "Hostess", en: "Hostess", es: "Azafata", fr: "Hôtesse" },
     image: "/images/about/hostess.webp",
     alt: {
       it: "Hostess Egadisailing che accoglie gli ospiti a bordo",
       en: "Egadisailing hostess welcoming guests on board",
+      es: "Azafata de Egadisailing recibiendo a los huéspedes a bordo",
+      fr: "Hôtesse Egadisailing accueillant les invités à bord",
     },
     icon: Compass,
     description: {
       it: "Si prende cura dell'accoglienza, dei dettagli a bordo e del comfort degli ospiti, dal primo sorriso fino al rientro in porto.",
       en: "Takes care of the welcome, the details on board and guest comfort, from the first smile to the return to harbour.",
+      es: "Cuida la bienvenida, los detalles a bordo y el confort de los huéspedes desde el primer saludo hasta el regreso a puerto.",
+      fr: "Prend soin de l'accueil, des détails à bord et du confort des invités, du premier sourire au retour au port.",
     },
     note: {
       it: "Presenza discreta, attenzione concreta, ospitalità siciliana.",
       en: "Discreet presence, practical care and Sicilian hospitality.",
+      es: "Presencia discreta, atención real y hospitalidad siciliana.",
+      fr: "Présence discrète, attention concrète et hospitalité sicilienne.",
     },
   },
   {
-    role: "Chef",
+    role: { it: "Chef", en: "Chef", es: "Chef", fr: "Chef" },
     image: "/images/about/chef.webp",
     alt: {
       it: "Chef Egadisailing che prepara un pranzo a bordo",
       en: "Egadisailing chef preparing lunch on board",
+      es: "Chef de Egadisailing preparando la comida a bordo",
+      fr: "Chef Egadisailing préparant le déjeuner à bord",
     },
     icon: Utensils,
     description: {
       it: "Porta in tavola sapori del territorio, ingredienti freschi e piatti pensati per essere gustati con il mare intorno.",
       en: "Brings local flavours, fresh ingredients and dishes designed to be enjoyed with the sea all around.",
+      es: "Lleva a la mesa sabores locales, ingredientes frescos y platos pensados para disfrutarse con el mar alrededor.",
+      fr: "Apporte à table les saveurs du territoire, des ingrédients frais et des plats pensés pour être dégustés avec la mer autour.",
     },
     note: {
       it: "Cucina di bordo, prodotti locali, pranzo vista Egadi.",
       en: "On-board cooking, local produce and lunch with views of the Egadi Islands.",
+      es: "Cocina a bordo, producto local y comida con vistas a las Islas Egadi.",
+      fr: "Cuisine à bord, produits locaux et déjeuner avec vue sur les Égades.",
     },
   },
 ] as const;
@@ -66,11 +85,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   return buildPageMetadata({
-    title: isEn
+    title: isEs
+      ? "Tripulación local para excursiones en barco a las Islas Egadi"
+      : isFr
+      ? "Équipage local pour excursions en bateau aux îles Égades"
+      : isEn
       ? "Local Crew for Egadi Boat Tours"
       : "Crew locale per escursioni in barca alle Egadi",
-    description: isEn
+    description: isEs
+	      ? "Conoce a Egadisailing y Nicolò Genna: armador, patrón, azafata y chef para excursiones en barco por las Islas Egadi desde Trapani."
+      : isFr
+      ? "Découvrez Egadisailing et Nicolò Genna : armateur, skipper, hôtesse et chef pour excursions en bateau aux îles Égades depuis Trapani."
+      : isEn
       ? "Meet Egadisailing and Nicolò Genna: owner, skipper, hostess and chef for boat tours in the Egadi Islands from Trapani."
       : "Scopri Egadisailing e Nicolò Genna: armatore, skipper, hostess e chef per escursioni in barca alle Isole Egadi da Trapani.",
     path: "/about",
@@ -85,29 +114,68 @@ export default async function AboutPage({
 }) {
   const { locale } = await params;
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const crewLocale: "it" | "en" | "es" | "fr" = isFr ? "fr" : isEs ? "es" : isEn ? "en" : "it";
   const copy = {
-    eyebrow: isEn ? "About us" : "Chi siamo",
-    title: isEn
+    eyebrow: isEs ? "Sobre nosotros" : isFr ? "À propos" : isEn ? "About us" : "Chi siamo",
+    title: isEs
+      ? "El mar de las Egadi, contado por quienes lo viven cada día"
+      : isFr
+      ? "La mer des Égades, racontée par celles et ceux qui la vivent chaque jour"
+      : isEn
       ? "The Egadi sea, told by those who live it every day"
       : "Il mare delle Egadi, raccontato da chi lo vive ogni giorno",
-    intro: isEn
+    intro: isEs
+      ? "Egadisailing nace en Trapani de una pasión sencilla: llevar a los huéspedes entre Favignana, Levanzo y Marettimo con el cuidado de una tripulación local, barcos preparados y una hospitalidad profundamente siciliana."
+      : isFr
+      ? "Egadisailing naît à Trapani d'une passion simple : emmener les invités entre Favignana, Levanzo et Marettimo avec le soin d'un équipage local, des bateaux préparés et une hospitalité profondément sicilienne."
+      : isEn
       ? "Egadisailing was born in Trapani from a simple passion: bringing guests between Favignana, Levanzo and Marettimo with the care of a local crew, well-prepared boats and a way of welcoming people that feels deeply Sicilian."
       : "Egadisailing nasce a Trapani da una passione semplice: portare gli ospiti tra Favignana, Levanzo e Marettimo con la cura di una crew locale, barche preparate e un modo di accogliere che sa di Sicilia.",
-    chips: isEn
+    chips: isEs
+      ? ["Excursiones desde Trapani", "Tripulación local", "Cocina a bordo"]
+      : isFr
+      ? ["Excursions depuis Trapani", "Équipage local", "Cuisine à bord"]
+      : isEn
       ? ["Tours from Trapani", "Local crew", "On-board cooking"]
       : ["Escursioni da Trapani", "Crew locale", "Cucina a bordo"],
-    ownerLabel: isEn ? "Owner" : "Armatore",
-    ownerAlt: isEn
+    ownerLabel: isEs ? "Armador" : isFr ? "Armateur" : isEn ? "Owner" : "Armatore",
+    ownerAlt: isEs
+      ? "Nicolò Genna, armador de Egadisailing a bordo en las Islas Egadi"
+      : isFr
+      ? "Nicolò Genna, armateur Egadisailing à bord aux îles Égades"
+      : isEn
       ? "Nicolò Genna, Egadisailing owner on board in the Egadi Islands"
       : "Nicolò Genna, armatore Egadisailing a bordo alle Isole Egadi",
-    ownerText: isEn
+    ownerText: isEs
+      ? "Creció con las Islas Egadi frente a él y convirtió ese conocimiento en una forma de navegar basada en hospitalidad, rutas bien elegidas y respeto por el mar."
+      : isFr
+      ? "Il a grandi avec les îles Égades devant lui et a transformé cette connaissance en une façon de naviguer fondée sur l'hospitalité, des routes bien choisies et le respect de la mer."
+      : isEn
       ? "He grew up with the Egadi Islands in front of him and turned that knowledge into a way of sailing built on hospitality, well-chosen routes and respect for the sea."
       : "È cresciuto con le Egadi davanti agli occhi e ha trasformato quella conoscenza in un modo di navigare fatto di accoglienza, rotte scelte bene e rispetto per il mare.",
-    storyEyebrow: isEn ? "Our story" : "La nostra storia",
-    storyTitle: isEn
+    storyEyebrow: isEs ? "Nuestra historia" : isFr ? "Notre histoire" : isEn ? "Our story" : "La nostra storia",
+    storyTitle: isEs
+      ? "Una familia de mar, una base en Trapani y las Islas Egadi delante"
+      : isFr
+      ? "Une famille de mer, une base à Trapani et les îles Égades devant"
+      : isEn
       ? "A seafaring family, a base in Trapani and the Egadi Islands ahead"
       : "Una famiglia di mare, una base a Trapani, le Egadi davanti",
-    storyParagraphs: isEn
+    storyParagraphs: isEs
+      ? [
+          "Crecimos con las Islas Egadi en el horizonte. Las hemos visto cambiar con la luz de la mañana, con el mistral, con el siroco y con esos días de calma en los que el mar parece una lámina de cristal.",
+          "Para nosotros, una excursión en barco no es solo una lista de paradas. Es elegir el momento adecuado para entrar en una cala, entender dónde el agua está más limpia y crear una hospitalidad sencilla, cuidada y memorable.",
+          "Egadisailing reúne experiencia local, seguridad, confort en navegación y cocina a bordo. Es nuestra forma de compartir Favignana, Levanzo y Marettimo con quienes quieren descubrirlas sin prisas.",
+        ]
+      : isFr
+      ? [
+          "Nous avons grandi avec les îles Égades à l'horizon. Nous les avons vues changer avec la lumière du matin, le Mistral, le Sirocco et ces journées calmes où la mer ressemble à une plaque de verre.",
+          "Pour nous, une excursion en bateau n'est pas une simple liste d'arrêts. C'est choisir le bon moment pour entrer dans une baie, comprendre où l'eau est plus claire et créer une hospitalité simple, soignée et mémorable.",
+          "Egadisailing réunit expérience locale, sécurité, confort en navigation et cuisine à bord. C'est notre façon de partager Favignana, Levanzo et Marettimo avec des invités qui veulent les découvrir sans se presser.",
+        ]
+      : isEn
       ? [
           "We grew up with the Egadi Islands on the horizon. We have watched them change with the morning light, with the Mistral, with the Sirocco and with those calm days when the sea looks like glass and every cove becomes a small landing place.",
           "For us, a boat trip is not just a sequence of stops. It means choosing the right moment to enter a bay, understanding where the water is clearer, leaving space for silence when it is needed and creating an on-board hospitality that is simple, careful and memorable.",
@@ -118,19 +186,31 @@ export default async function AboutPage({
           "Per noi un'escursione in barca non è solo una sequenza di soste. È scegliere il momento giusto per entrare in una baia, capire dove il mare è più pulito, lasciare spazio al silenzio quando serve e creare a bordo un'ospitalità semplice, curata, memorabile.",
           "Egadisailing mette insieme esperienza locale, attenzione alla sicurezza, comfort in navigazione e cucina di bordo. È il nostro modo di condividere Favignana, Levanzo e Marettimo con chi vuole scoprirle senza fretta.",
         ],
-    crewEyebrow: isEn ? "The crew" : "La crew",
-    crewTitle: isEn ? "The people who welcome you on board" : "Le persone che ti accompagnano a bordo",
-    crewIntro: isEn
+    crewEyebrow: isEs ? "La tripulación" : isFr ? "L'équipage" : isEn ? "The crew" : "La crew",
+    crewTitle: isEs ? "Las personas que te acompañan a bordo" : isFr ? "Les personnes qui vous accompagnent à bord" : isEn ? "The people who welcome you on board" : "Le persone che ti accompagnano a bordo",
+    crewIntro: isEs
+      ? "Patrón, azafata y chef trabajan juntos para que cada salida tenga una ruta segura, una atención cercana y sabores que hablan del territorio."
+      : isFr
+      ? "Skipper, hôtesse et chef travaillent ensemble pour que chaque sortie ait une route sûre, une attention proche et des saveurs qui parlent du territoire."
+      : isEn
       ? "Skipper, hostess and chef work together so every outing has a safe route, attentive hospitality and flavours that tell the story of the territory."
       : "Skipper, hostess e chef lavorano insieme perché ogni uscita abbia una rotta sicura, un'accoglienza attenta e sapori capaci di raccontare il territorio.",
-    ctaEyebrow: isEn ? "Come on board" : "Sali a bordo",
-    ctaTitle: isEn
+    ctaEyebrow: isEs ? "Sube a bordo" : isFr ? "Montez à bord" : isEn ? "Come on board" : "Sali a bordo",
+    ctaTitle: isEs
+      ? "La mejor forma de conocernos es pasar un día en el mar"
+      : isFr
+      ? "La meilleure façon de nous connaître est de passer une journée en mer"
+      : isEn
       ? "The best way to get to know us is to spend a day at sea"
       : "Il modo migliore per conoscerci è vivere una giornata in mare",
-    ctaText: isEn
+    ctaText: isEs
+      ? "Elige la experiencia que mejor encaja contigo y déjate guiar entre calas, rutas y sabores de las Islas Egadi."
+      : isFr
+      ? "Choisissez l'expérience qui vous correspond le mieux et laissez-nous vous guider entre criques, routes et saveurs des îles Égades."
+      : isEn
       ? "Choose the experience that fits you best and let us guide you through the coves, routes and flavours of the Egadi Islands."
       : "Scegli l'esperienza più adatta e lasciati guidare tra le cale, le rotte e i sapori delle Egadi.",
-    ctaLabel: isEn ? "Discover the experiences" : "Scopri le esperienze",
+    ctaLabel: isEs ? "Ver experiencias" : isFr ? "Voir les expériences" : isEn ? "Discover the experiences" : "Scopri le esperienze",
   };
 
   return (
@@ -239,12 +319,12 @@ export default async function AboutPage({
               const Icon = member.icon;
 
               return (
-                <ScrollSection key={member.role} animation="fade-up" delay={index * 0.12}>
+	                <ScrollSection key={member.role.it} animation="fade-up" delay={index * 0.12}>
                   <article className="h-full overflow-hidden rounded-lg border border-white/10 bg-white/[0.05] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
                     <div className="relative aspect-[4/5] bg-white/[0.04]">
 	                      <Image
 	                        src={member.image}
-	                        alt={isEn ? member.alt.en : member.alt.it}
+	                        alt={member.alt[crewLocale]}
                         fill
                         sizes="(min-width: 768px) 31vw, 100vw"
                         className="object-cover"
@@ -255,13 +335,13 @@ export default async function AboutPage({
                         <Icon className="h-5 w-5" aria-hidden="true" />
                       </div>
                       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-gold)]">
-                        {member.role}
+	                        {member.role[crewLocale]}
                       </p>
 	                      <p className="mt-3 text-base leading-7 text-white/72">
-	                        {isEn ? member.description.en : member.description.it}
+	                      {member.description[crewLocale]}
 	                      </p>
 	                      <p className="mt-5 border-t border-white/10 pt-5 text-sm font-medium leading-6 text-white">
-	                        {isEn ? member.note.en : member.note.it}
+	                        {member.note[crewLocale]}
                       </p>
                     </div>
                   </article>
@@ -285,7 +365,7 @@ export default async function AboutPage({
               {copy.ctaText}
             </p>
             <Link
-              href={`/${locale}/experiences`}
+              href={localizedStaticPath(locale, "/experiences")}
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#092337] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#123d5a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58a27]"
             >
               {copy.ctaLabel}

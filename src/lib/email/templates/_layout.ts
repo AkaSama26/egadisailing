@@ -2,6 +2,8 @@ import { escapeHtml, safeUrl } from "@/lib/html-escape";
 import { env } from "@/lib/env";
 import { PUBLIC_COMPANY_LEGAL } from "@/lib/public-contact";
 import { BRAND_LOGO_SRC } from "@/lib/public-assets";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
+import { resolveEmailLocale } from "./locale";
 
 export { escapeHtml, safeUrl };
 
@@ -22,7 +24,9 @@ export function emailLayout(opts: {
   bodyHtml: string; // HTML gia' sanitizzato dal chiamante
   ctaText?: string;
   ctaUrl?: string;
+  locale?: string | null;
 }): string {
+  const locale = resolveEmailLocale(opts.locale);
   const ctaBlock =
     opts.ctaText && opts.ctaUrl
       ? `<div style="margin: 30px 0 6px; text-align: center;">
@@ -31,9 +35,26 @@ export function emailLayout(opts: {
           </a>
         </div>`
       : "";
-  const privacyUrl = `${env.APP_URL}/privacy`;
-  const termsUrl = `${env.APP_URL}/terms`;
+  const privacyUrl = `${env.APP_URL}${localizedStaticPath(locale, "/privacy")}`;
+  const termsUrl = `${env.APP_URL}${localizedStaticPath(locale, "/terms")}`;
   const logoUrl = safeUrl(absoluteAssetUrl(BRAND_LOGO_SRC));
+  const footerCopy =
+    locale === "en"
+      ? "Transactional email about the services you requested.<br />For support, reply to this email or contact us through the official channels."
+      : locale === "es"
+        ? "Email transaccional relacionado con los servicios solicitados.<br />Para recibir ayuda, responde a este email o escríbenos a través de los contactos oficiales."
+        : locale === "fr"
+          ? "Email transactionnel lié aux services demandés.<br />Pour toute assistance, répondez à cet email ou contactez-nous via les canaux officiels."
+          : "Email transazionale relativa ai servizi richiesti.<br />Per assistenza rispondi a questa email o scrivici dai contatti ufficiali.";
+  const termsLabel =
+    locale === "en"
+      ? "Terms"
+      : locale === "es"
+        ? "Condiciones"
+        : locale === "fr"
+          ? "Conditions"
+          : "Termini";
+  const vatLabel = locale === "it" ? "P.IVA" : "VAT";
 
   return `<!DOCTYPE html>
 <html>
@@ -81,13 +102,12 @@ export function emailLayout(opts: {
             <tr>
               <td class="email-pad" style="background: #f8fafc; padding: 20px 34px 26px; border: 1px solid #dbe7ef; border-top: 1px solid #e2e8f0; border-radius: 0 0 18px 18px;">
                 <p style="margin: 0 0 10px; color: #64748b; font-size: 12px; line-height: 1.55;">
-                  ${escapeHtml(PUBLIC_COMPANY_LEGAL.name)} · P.IVA ${escapeHtml(PUBLIC_COMPANY_LEGAL.vatNumber)} · Email transazionale relativa ai servizi richiesti.<br />
-                  Per assistenza rispondi a questa email o scrivici dai contatti ufficiali.
+                  ${escapeHtml(PUBLIC_COMPANY_LEGAL.name)} · ${vatLabel} ${escapeHtml(PUBLIC_COMPANY_LEGAL.vatNumber)} · ${footerCopy}
                 </p>
                 <p style="margin: 0; color: #64748b; font-size: 12px; line-height: 1.5;">
                   <a href="${safeUrl(privacyUrl)}" style="color: #0c3d5e; text-decoration: underline;">Privacy</a>
                   ·
-                  <a href="${safeUrl(termsUrl)}" style="color: #0c3d5e; text-decoration: underline;">Termini</a>
+                  <a href="${safeUrl(termsUrl)}" style="color: #0c3d5e; text-decoration: underline;">${escapeHtml(termsLabel)}</a>
                 </p>
               </td>
             </tr>

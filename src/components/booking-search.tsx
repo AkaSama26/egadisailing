@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { getExperiencePublicSlug } from "@/data/catalog/experiences";
 import { getExperienceTitle, getServiceDurationLabel } from "@/lib/services/display";
 import { cn } from "@/lib/utils";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 export interface BookingSearchService {
   id: string;
@@ -386,7 +387,7 @@ export function BookingSearch({ services }: BookingSearchProps) {
     event.preventDefault();
     if (!canSubmit) return;
     if (!serviceId) {
-      router.push(`/${locale}/experiences`);
+      router.push(localizedStaticPath(locale, "/experiences"));
       return;
     }
     const params = new URLSearchParams();
@@ -403,8 +404,8 @@ export function BookingSearch({ services }: BookingSearchProps) {
       params.set("experience", bookingExperienceKey(selectedService));
       params.set("durationType", selectedService.durationType);
     }
-    params.set("service", getExperiencePublicSlug(serviceId));
-    router.push(`/${locale}/prenota?${params.toString()}`);
+    params.set("service", getExperiencePublicSlug(serviceId, locale));
+    router.push(`${localizedStaticPath(locale, "/prenota")}?${params.toString()}`);
   }
 
   return (
@@ -592,10 +593,10 @@ export function BookingSearch({ services }: BookingSearchProps) {
           type="submit"
           disabled={submitDisabled}
           className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#0ea5e9] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#0284c7] disabled:cursor-not-allowed disabled:opacity-50 md:h-full md:w-16 md:px-0"
-          aria-label="Search"
+          aria-label={locale === "es" ? "Buscar" : locale === "fr" ? "Rechercher" : locale === "en" ? "Search" : "Cerca"}
         >
           <Search className="w-5 h-5" />
-          <span className="md:sr-only">Cerca</span>
+          <span className="md:sr-only">{locale === "es" ? "Buscar" : locale === "fr" ? "Rechercher" : locale === "en" ? "Search" : "Cerca"}</span>
         </motion.button>
       </div>
       {charterIsTooShort && (

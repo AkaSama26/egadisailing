@@ -26,12 +26,29 @@ const EUR_FORMATTER_EN = new Intl.NumberFormat("en-GB", {
   currency: "EUR",
 });
 
+const EUR_FORMATTER_ES = new Intl.NumberFormat("es-ES", {
+  style: "currency",
+  currency: "EUR",
+});
+
+const EUR_FORMATTER_FR = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+});
+
 export function formatEur(
   amount: Decimal | string | number | null | undefined,
   locale?: string | null,
 ): string {
   if (amount === null || amount === undefined) return "";
-  const formatter = locale === "en" ? EUR_FORMATTER_EN : EUR_FORMATTER;
+  const formatter =
+    locale === "en"
+      ? EUR_FORMATTER_EN
+      : locale === "es"
+        ? EUR_FORMATTER_ES
+        : locale === "fr"
+          ? EUR_FORMATTER_FR
+          : EUR_FORMATTER;
   return formatter.format(new Decimal(amount).toNumber());
 }
 

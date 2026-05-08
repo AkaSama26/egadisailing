@@ -24,11 +24,25 @@ export function CustomerWeatherCard({
   locale = "it",
   compact = false,
 }: CustomerWeatherCardProps) {
-  const l = locale.toLowerCase().startsWith("en") ? "en" : "it";
+  const l = locale.toLowerCase().startsWith("es")
+    ? "es"
+    : locale.toLowerCase().startsWith("fr")
+      ? "fr"
+    : locale.toLowerCase().startsWith("en")
+      ? "en"
+      : "it";
   const [unitSystem, setUnitSystem] = useState<WeatherUnitSystem>(
     summary.defaultUnitSystem ?? "metric",
   );
-  const resolvedTitle = title ?? (l === "en" ? "Weather forecast" : "Meteo previsto");
+  const resolvedTitle =
+    title ??
+    (l === "es"
+      ? "Previsión meteorológica"
+      : l === "fr"
+        ? "Prévisions météo"
+        : l === "en"
+          ? "Weather forecast"
+          : "Meteo previsto");
   const labels = METRIC_LABELS[l];
   const selectedUnits = summary.units?.[unitSystem] ?? {
     metrics: summary.metrics,
@@ -117,6 +131,26 @@ const METRIC_LABELS = {
     units: "Units",
     metric: "Metric",
     imperial: "Imperial",
+  },
+  es: {
+    wind: "Viento",
+    gusts: "Rachas",
+    waves: "Oleaje",
+    rain: "Lluvia",
+    temperature: "Temp.",
+    units: "Unidades",
+    metric: "Métrico",
+    imperial: "Imperial",
+  },
+  fr: {
+    wind: "Vent",
+    gusts: "Rafales",
+    waves: "Houle",
+    rain: "Pluie",
+    temperature: "Temp.",
+    units: "Unités",
+    metric: "Métrique",
+    imperial: "Impérial",
   },
 };
 

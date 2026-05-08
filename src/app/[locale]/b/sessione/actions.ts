@@ -36,6 +36,13 @@ import {
 } from "@/lib/email/outbox";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import {
+  emailServiceName,
+  formatEmailDay,
+  genericExperienceName,
+  resolveEmailLocale,
+} from "@/lib/email/templates/locale";
 
 export async function logout(): Promise<void> {
   await revokeBookingSession();
@@ -56,7 +63,7 @@ export async function cancelCustomerBooking(bookingId: string): Promise<void> {
   const booking = await db.booking.findUnique({
     where: { id },
     include: {
-      customer: { select: { email: true } },
+      customer: { select: { email: true, language: true } },
       directBooking: true,
       payments: true,
       service: { select: { type: true } },
@@ -189,16 +196,42 @@ export async function cancelCustomerBooking(bookingId: string): Promise<void> {
   });
 
   try {
+    const locale = resolveEmailLocale(booking.customer.language);
+    const policyLabel =
+      policy.band === "FULL_REFUND"
+        ? locale === "en"
+          ? "Full refund"
+          : locale === "es"
+            ? "Reembolso completo"
+            : locale === "fr"
+              ? "Remboursement complet"
+              : policy.label
+        : policy.band === "HALF_REFUND"
+          ? locale === "en"
+            ? "50% refund"
+            : locale === "es"
+              ? "Reembolso del 50%"
+              : locale === "fr"
+                ? "Remboursement de 50 %"
+                : policy.label
+          : locale === "en"
+            ? "Cancellation without refund"
+            : locale === "es"
+              ? "Cancelación sin reembolso"
+              : locale === "fr"
+                ? "Annulation sans remboursement"
+                : policy.label;
     const tpl = customerCancellationTemplate({
       customerName: session.email,
       confirmationCode: booking.confirmationCode,
-      serviceName: "la tua esperienza",
-      startDate: formatItDay(booking.startDate),
-      refundAmount: refundedCents > 0 ? formatEurCents(refundedCents) : undefined,
-      retainedAmount: retainedCents > 0 ? formatEurCents(retainedCents) : undefined,
-      policyLabel: policy.label,
-      bookingPortalUrl: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/b/sessione`,
+      serviceName: genericExperienceName(locale),
+      startDate: formatEmailDay(booking.startDate, locale),
+      refundAmount: refundedCents > 0 ? formatEurCents(refundedCents, locale) : undefined,
+      retainedAmount: retainedCents > 0 ? formatEurCents(retainedCents, locale) : undefined,
+      policyLabel,
+      bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
       contactEmail: PUBLIC_CONTACT_EMAIL,
+      locale,
     });
     await enqueueTransactionalEmail({
       templateKey: "customer.booking-cancelled.self-service",
@@ -256,7 +289,7 @@ export async function requestCustomerReschedule(formData: FormData): Promise<voi
   const booking = await db.booking.findUnique({
     where: { id: input.bookingId },
     include: {
-      customer: { select: { email: true } },
+      customer: { select: { email: true, language: true } },
       service: true,
     },
   });
@@ -329,13 +362,15 @@ export async function requestCustomerReschedule(formData: FormData): Promise<voi
   });
 
   try {
+    const locale = resolveEmailLocale(booking.customer.language);
     const tpl = changeRequestReceivedTemplate({
       customerName: session.email,
       confirmationCode: booking.confirmationCode,
-      serviceName: booking.service.name,
-      originalDate: formatItDay(oldStartDate),
-      requestedDate: formatItDay(newStartDate),
-      bookingPortalUrl: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/b/sessione`,
+      serviceName: emailServiceName(booking.service.id, booking.service.name, locale),
+      originalDate: formatEmailDay(oldStartDate, locale),
+      requestedDate: formatEmailDay(newStartDate, locale),
+      bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
+      locale,
     });
     await enqueueTransactionalEmail({
       templateKey: "customer.change-request.received",

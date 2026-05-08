@@ -63,30 +63,34 @@ function deriveCalendarEndDate(
 
 function reasonLabel(reason: string, locale?: string | null): string {
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   switch (reason) {
     case "boat_block":
-      return isEn ? "Blocked" : "Bloccata";
+      return isEs ? "Bloqueada" : isFr ? "Bloquée" : isEn ? "Blocked" : "Bloccata";
     case "external_booking":
     case "full_day_priority":
-      return isEn ? "Booked" : "Occupata";
+      return isEs ? "Reservada" : isFr ? "Réservée" : isEn ? "Booked" : "Occupata";
     case "within_15_day_cutoff":
-      return isEn ? "Not bookable" : "Non prenotabile";
+      return isEs ? "No reservable" : isFr ? "Non réservable" : isEn ? "Not bookable" : "Non prenotabile";
     case "insufficient_revenue":
-      return isEn ? "Booked" : "Occupata";
+      return isEs ? "Reservada" : isFr ? "Réservée" : isEn ? "Booked" : "Occupata";
     case "sold_out":
-      return isEn ? "Sold out" : "Esaurita";
+      return isEs ? "Agotada" : isFr ? "Complet" : isEn ? "Sold out" : "Esaurita";
     case "past":
-      return isEn ? "Past date" : "Passata";
+      return isEs ? "Fecha pasada" : isFr ? "Date passée" : isEn ? "Past date" : "Passata";
     case "missing_price":
-      return isEn ? "Price not configured" : "Prezzo non configurato";
+      return isEs ? "Precio no configurado" : isFr ? "Prix non configuré" : isEn ? "Price not configured" : "Prezzo non configurato";
     default:
-      return isEn ? "Unavailable" : "Non disponibile";
+      return isEs ? "No disponible" : isFr ? "Indisponible" : isEn ? "Unavailable" : "Non disponibile";
   }
 }
 
 function priceHintLabel(pricingUnit: string, locale?: string | null): string {
-  if (pricingUnit === "PER_PACKAGE") return locale === "en" ? "package" : "pacchetto";
-  return locale === "en" ? "per person" : "a persona";
+  if (pricingUnit === "PER_PACKAGE") {
+    return locale === "es" ? "paquete" : locale === "fr" ? "forfait" : locale === "en" ? "package" : "pacchetto";
+  }
+  return locale === "es" ? "por persona" : locale === "fr" ? "par personne" : locale === "en" ? "per person" : "a persona";
 }
 
 async function evaluateCalendarDay(params: {
@@ -225,7 +229,7 @@ async function evaluateCalendarDay(params: {
       priceAmount: quote.totalPrice.toNumber(),
       pricingUnit: quote.pricingUnit,
       spotsRemaining,
-      reasonLabel: locale === "en" ? "Available" : "Libera",
+      reasonLabel: locale === "es" ? "Disponible" : locale === "fr" ? "Disponible" : locale === "en" ? "Available" : "Libera",
     };
   }
 
@@ -239,7 +243,7 @@ async function evaluateCalendarDay(params: {
       priceAmount: quote.totalPrice.toNumber(),
       pricingUnit: quote.pricingUnit,
       spotsRemaining,
-      reasonLabel: locale === "en" ? "On request" : "Su richiesta",
+      reasonLabel: locale === "es" ? "Bajo petición" : locale === "fr" ? "Sur demande" : locale === "en" ? "On request" : "Su richiesta",
     };
   }
 

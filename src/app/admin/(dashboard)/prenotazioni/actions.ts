@@ -30,9 +30,15 @@ import { logger } from "@/lib/logger";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
 import { isBoatSharedServiceType } from "@/lib/booking/boat-slot-availability";
-import { formatItDay } from "@/lib/dates";
 import { getClientIp, getUserAgent } from "@/lib/http/client-ip";
 import { PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PHONE_TEXT } from "@/lib/public-contact";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import {
+  emailServiceName,
+  formatEmailDay,
+  genericExperienceName,
+  resolveEmailLocale,
+} from "@/lib/email/templates/locale";
 
 /**
  * Admin action: cancella una prenotazione + refund Stripe dei payments
@@ -101,8 +107,8 @@ async function doCancelBooking(
     include: {
       payments: true,
       directBooking: true,
-      customer: { select: { firstName: true, lastName: true, email: true } },
-      service: { select: { name: true, type: true } },
+      customer: { select: { firstName: true, lastName: true, email: true, language: true } },
+      service: { select: { id: true, name: true, type: true } },
     },
   });
   if (!booking) throw new NotFoundError("Booking", bookingId);
@@ -289,18 +295,20 @@ async function doCancelBooking(
 
   if (booking.customer?.email) {
     try {
+      const locale = resolveEmailLocale(booking.customer.language);
       const refundAmount =
-        refundedCentsTotal > 0 ? formatEurCents(refundedCentsTotal) : undefined;
+        refundedCentsTotal > 0 ? formatEurCents(refundedCentsTotal, locale) : undefined;
       const tpl = customerCancellationTemplate({
         customerName:
           `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
           "cliente",
         confirmationCode: booking.confirmationCode,
-        serviceName: booking.service?.name ?? "la tua esperienza",
-        startDate: formatItDay(booking.startDate),
+        serviceName: emailServiceName(booking.service?.id, booking.service?.name, locale),
+        startDate: formatEmailDay(booking.startDate, locale),
         refundAmount,
-        bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+        bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
         contactEmail: PUBLIC_CONTACT_EMAIL,
+        locale,
       });
       await enqueueTransactionalEmail({
         templateKey: "customer.booking-cancelled.admin",
@@ -358,18 +366,22 @@ async function doCancelBooking(
       // sulla carta". Offline → "ti contatteremo per bonifico". Prima il
       // template era hardcoded "sulla tua carta" anche per customer cash.
       const refundChannel = refundedCentsTotal > 0 ? "stripe" : "offline";
+      const locale = resolveEmailLocale(booking.customer.language);
       const tpl = overbookingApologyTemplate({
         customerName:
           `${booking.customer.firstName ?? ""} ${booking.customer.lastName ?? ""}`.trim() ||
           "cliente",
         confirmationCode: booking.confirmationCode,
-        serviceName: booking.service?.name ?? "la tua esperienza",
-        startDate: booking.startDate.toISOString().slice(0, 10),
-        refundAmount: refundedCentsTotal > 0 ? formatEurCents(refundedCentsTotal) : "",
+        serviceName: booking.service
+          ? emailServiceName(booking.service.id, booking.service.name, locale)
+          : genericExperienceName(locale),
+        startDate: formatEmailDay(booking.startDate, locale),
+        refundAmount: refundedCentsTotal > 0 ? formatEurCents(refundedCentsTotal, locale) : "",
         refundChannel,
         contactEmail: PUBLIC_CONTACT_EMAIL,
         contactPhone: PUBLIC_CONTACT_PHONE_TEXT,
-        bookingUrl: `${env.APP_URL}/b/sessione`,
+        bookingUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
+        locale,
       });
       const delivered = await enqueueTransactionalEmail({
         templateKey: "customer.overbooking-apology",

@@ -23,6 +23,7 @@ import { getServiceDurationLabel } from "@/lib/services/display";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { QrDownloadButton } from "@/components/qr-download-button";
 import { PUBLIC_CONTACT_LOCATION, getContactLocationLabel } from "@/lib/public-contact";
+import { localizedPath } from "@/lib/i18n/paths";
 
 // R26-A1-A5: pagina post-payment con PII (confirmation code + email link).
 // noindex defense-in-depth.
@@ -33,7 +34,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return {
-    title: locale === "en" ? "Booking confirmed" : "Prenotazione confermata",
+    title:
+      locale === "es"
+        ? "Reserva confirmada"
+        : locale === "fr"
+          ? "Réservation confirmée"
+        : locale === "en"
+          ? "Booking confirmed"
+          : "Prenotazione confermata",
     robots: { index: false, follow: false },
   };
 }
@@ -41,24 +49,30 @@ export async function generateMetadata({
 const TICKET_HERO_BY_BOAT = {
   trimarano: {
     src: "/images/boats/neel-47/neel-47-navigazione.webp",
-    alt: {
-      it: "Trimarano in navigazione alle Egadi",
-      en: "Trimaran cruising in the Egadi Islands",
-    },
+      alt: {
+        it: "Trimarano in navigazione alle Egadi",
+        en: "Trimaran cruising in the Egadi Islands",
+        es: "Trimarán navegando por las Islas Egadi",
+        fr: "Trimaran en navigation aux îles Égades",
+      },
   },
   motoscafo: {
     src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
-    alt: {
-      it: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
-      en: "Cigala & Bertinetti 34 Offshore Open Bacio cruising",
-    },
+      alt: {
+        it: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
+        en: "Cigala & Bertinetti 34 Offshore Open Bacio cruising",
+        es: "Cigala & Bertinetti 34 Offshore Open Bacio navegando",
+        fr: "Cigala & Bertinetti 34 Offshore Open Bacio en navigation",
+      },
   },
   boat: {
     src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
-    alt: {
-      it: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
-      en: "Cigala & Bertinetti 34 Offshore Open Bacio cruising",
-    },
+      alt: {
+        it: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
+        en: "Cigala & Bertinetti 34 Offshore Open Bacio cruising",
+        es: "Cigala & Bertinetti 34 Offshore Open Bacio navegando",
+        fr: "Cigala & Bertinetti 34 Offshore Open Bacio en navigation",
+      },
   },
 } as const;
 
@@ -218,7 +232,7 @@ export default async function BookingSuccessPage({
                     {copy.downloadQr}
                   </QrDownloadButton>
                   <Link
-                    href={`/${locale}/ticket/${booking.confirmationCode}`}
+                    href={localizedPath(locale, `/ticket/${booking.confirmationCode}`)}
                     className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     <Ticket className="size-4" aria-hidden="true" />
@@ -429,36 +443,44 @@ function getStatusView({
   locale?: string | null;
 }) {
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   if (isOverrideRequest) {
     return {
-      label: isEn ? "Waiting for staff confirmation" : "In attesa di conferma staff",
+      label: isEs
+        ? "Esperando confirmación del equipo"
+        : isFr
+          ? "En attente de confirmation de l'équipe"
+          : isEn
+            ? "Waiting for staff confirmation"
+            : "In attesa di conferma staff",
       badgeClass: "bg-amber-100 text-amber-950",
       icon: Clock,
     };
   }
   if (status === "CONFIRMED") {
     return {
-      label: isEn ? "Booking confirmed" : "Prenotazione confermata",
+      label: isEs ? "Reserva confirmada" : isFr ? "Réservation confirmée" : isEn ? "Booking confirmed" : "Prenotazione confermata",
       badgeClass: "bg-emerald-100 text-emerald-950",
       icon: CheckCircle2,
     };
   }
   if (status === "CANCELLED") {
     return {
-      label: isEn ? "Booking cancelled" : "Prenotazione cancellata",
+      label: isEs ? "Reserva cancelada" : isFr ? "Réservation annulée" : isEn ? "Booking cancelled" : "Prenotazione cancellata",
       badgeClass: "bg-red-100 text-red-950",
       icon: Clock,
     };
   }
   if (status === "REFUNDED") {
     return {
-      label: isEn ? "Booking refunded" : "Prenotazione rimborsata",
+      label: isEs ? "Reserva reembolsada" : isFr ? "Réservation remboursée" : isEn ? "Booking refunded" : "Prenotazione rimborsata",
       badgeClass: "bg-slate-100 text-slate-800",
       icon: CreditCard,
     };
   }
   return {
-    label: isEn ? "Payment processing" : "Pagamento in elaborazione",
+    label: isEs ? "Pago en proceso" : isFr ? "Paiement en cours" : isEn ? "Payment processing" : "Pagamento in elaborazione",
     badgeClass: "bg-amber-100 text-amber-950",
     icon: Clock,
   };
@@ -472,13 +494,15 @@ function getGuestBreakdown(booking: {
   infantCount: number;
 }, locale?: string | null): string {
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   const parts = [
-    booking.adultCount ? `${booking.adultCount} ${isEn ? "adults" : "adulti"}` : null,
-    booking.childCount ? `${booking.childCount} ${isEn ? "children 5-9" : "bambini 5-9"}` : null,
-    booking.freeChildSeatCount ? `${booking.freeChildSeatCount} ${isEn ? "children 3-4" : "bimbi 3-4"}` : null,
-    booking.infantCount ? `${booking.infantCount} ${isEn ? "infants 0-2" : "neonati 0-2"}` : null,
+    booking.adultCount ? `${booking.adultCount} ${isEs ? "adultos" : isFr ? "adultes" : isEn ? "adults" : "adulti"}` : null,
+    booking.childCount ? `${booking.childCount} ${isEs ? "niños 5-9" : isFr ? "enfants 5-9" : isEn ? "children 5-9" : "bambini 5-9"}` : null,
+    booking.freeChildSeatCount ? `${booking.freeChildSeatCount} ${isEs ? "niños 3-4" : isFr ? "enfants 3-4" : isEn ? "children 3-4" : "bimbi 3-4"}` : null,
+    booking.infantCount ? `${booking.infantCount} ${isEs ? "bebés 0-2" : isFr ? "bébés 0-2" : isEn ? "infants 0-2" : "neonati 0-2"}` : null,
   ].filter(Boolean);
-  return parts.length > 0 ? parts.join(", ") : `${booking.numPeople} ${isEn ? "guests" : "ospiti"}`;
+  return parts.length > 0 ? parts.join(", ") : `${booking.numPeople} ${isEs ? "huéspedes" : isFr ? "invités" : isEn ? "guests" : "ospiti"}`;
 }
 
 function sameUtcDay(a: Date, b: Date): boolean {
@@ -488,6 +512,46 @@ function sameUtcDay(a: Date, b: Date): boolean {
 function fallbackItinerary(
   locale?: string | null,
 ): Array<{ time: string; title?: string; location?: string; text: string }> {
+  if (locale === "fr") {
+    return [
+      {
+        time: "Embarquement",
+        title: "Briefing",
+        text: "Accueil, vérification de la réservation et briefing de sécurité.",
+      },
+      {
+        time: "Route",
+        title: "Îles Égades",
+        text: "Navigation et arrêts choisis par l'équipage selon le vent, la mer et l'affluence.",
+      },
+      {
+        time: "Retour",
+        title: "Trapani",
+        text: "Retour au port selon le créneau horaire réservé.",
+      },
+    ];
+  }
+
+  if (locale === "es") {
+    return [
+      {
+        time: "Embarque",
+        title: "Briefing",
+        text: "Bienvenida, comprobación de la reserva y briefing de seguridad.",
+      },
+      {
+        time: "Ruta",
+        title: "Islas Egadi",
+        text: "Navegación y paradas elegidas por la tripulación según viento, mar y afluencia.",
+      },
+      {
+        time: "Regreso",
+        title: "Trapani",
+        text: "Regreso al puerto según la franja horaria reservada.",
+      },
+    ];
+  }
+
   if (locale === "en") {
     return [
       {
@@ -541,7 +605,7 @@ function getTicketHero({
   locale?: string | null;
 }): { src: string; alt: string } | null {
   const key = `${boatId} ${boatName}`.toLowerCase();
-  const altLocale = locale === "en" ? "en" : "it";
+  const altLocale = locale === "es" ? "es" : locale === "fr" ? "fr" : locale === "en" ? "en" : "it";
   if (key.includes("trimarano") || key.includes("neel")) {
     const hero = TICKET_HERO_BY_BOAT.trimarano;
     return { src: hero.src, alt: hero.alt[altLocale] };
@@ -555,7 +619,7 @@ function getTicketHero({
 }
 
 function formatPublicDay(date: Date, locale?: string | null): string {
-  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
     timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
@@ -564,6 +628,86 @@ function formatPublicDay(date: Date, locale?: string | null): string {
 }
 
 function getSuccessCopy(locale?: string | null) {
+  if (locale === "fr") {
+    return {
+      confirmationEyebrow: "Confirmation de réservation Egadisailing",
+      heroFallback:
+        "Votre expérience aux îles Égades est enregistrée. Vous trouverez ici le résumé, l'itinéraire, les paiements et le QR code pour le check-in.",
+      date: "Date",
+      time: "Horaire",
+      guests: "Invités",
+      boat: "Bateau",
+      duration: "Durée de l'expérience",
+      qrEyebrow: "Billet QR",
+      qrTitle: "Check-in au port",
+      qrInactive: "Le QR code sera valable pour le check-in uniquement après confirmation.",
+      qrBody:
+        "Présentez ce QR code à l'équipe. Le responsable le scannera depuis son téléphone et enregistrera le check-in de la réservation.",
+      openTicket: "Ouvrir le billet",
+      downloadQr: "Télécharger le QR",
+      holder: "Titulaire",
+      phone: "Téléphone",
+      notProvided: "Non indiqué",
+      payment: "Paiement",
+      paymentTitle: "Total et solde",
+      total: "Total de la réservation",
+      paidOnline: "Payé en ligne",
+      balanceDue: "Solde à régler sur place",
+      balanceDueNote: "Le solde restant est réglé sur place avant le départ.",
+      noBalanceNote: "Réservation payée : aucun solde restant.",
+      detailsEyebrow: "Détails de l'expérience",
+      detailsFallback: "Route, arrêts et horaires sont gérés par l'équipage selon l'état de la mer.",
+      meetingPoint: "Point de rendez-vous",
+      mapTitle: "Carte du point de rendez-vous Egadisailing",
+      itinerary: "Itinéraire prévu",
+      stop: "Arrêt",
+      included: "Inclus",
+      whatToBring: "À apporter",
+      fallbackIncludes: ["Skipper", "Arrêts baignade", "Route selon la météo"],
+      fallbackBringItems: ["Maillot de bain", "Serviette", "Crème solaire"],
+    };
+  }
+
+  if (locale === "es") {
+    return {
+      confirmationEyebrow: "Confirmación de reserva Egadisailing",
+      heroFallback:
+        "Tu experiencia en las Islas Egadi está registrada. Aquí encuentras resumen, itinerario, pagos y código QR para el check-in.",
+      date: "Fecha",
+      time: "Hora",
+      guests: "Huéspedes",
+      boat: "Barco",
+      duration: "Duración de la experiencia",
+      qrEyebrow: "Ticket QR",
+      qrTitle: "Check-in en el puerto",
+      qrInactive: "El QR será válido para el check-in solo después de la confirmación.",
+      qrBody:
+        "Muestra este QR al equipo. El responsable lo escaneará desde el teléfono y registrará el check-in de la reserva.",
+      openTicket: "Abrir ticket",
+      downloadQr: "Descargar QR",
+      holder: "Titular",
+      phone: "Teléfono",
+      notProvided: "No indicado",
+      payment: "Pago",
+      paymentTitle: "Total y saldo",
+      total: "Total de la reserva",
+      paidOnline: "Pagado online",
+      balanceDue: "Saldo pendiente en destino",
+      balanceDueNote: "El saldo restante se paga en destino antes de la salida.",
+      noBalanceNote: "Reserva pagada: no queda saldo pendiente.",
+      detailsEyebrow: "Detalles de la experiencia",
+      detailsFallback: "Ruta, paradas y horarios son gestionados por la tripulación según el estado del mar.",
+      meetingPoint: "Punto de encuentro",
+      mapTitle: "Mapa del punto de encuentro Egadisailing",
+      itinerary: "Itinerario previsto",
+      stop: "Parada",
+      included: "Incluido",
+      whatToBring: "Qué llevar",
+      fallbackIncludes: ["Patrón", "Paradas de baño", "Ruta según meteorología"],
+      fallbackBringItems: ["Bañador", "Toalla", "Protector solar"],
+    };
+  }
+
   if (locale === "en") {
     return {
       confirmationEyebrow: "Egadisailing booking confirmation",

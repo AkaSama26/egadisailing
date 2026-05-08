@@ -16,6 +16,9 @@ import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { getAlternativeDatesIso } from "../alternative-dates";
 import { PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PHONE_TEXT } from "@/lib/public-contact";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
+import { formatEur } from "@/lib/pricing/cents";
 
 export interface ApproveOverrideResult {
   approved: true;
@@ -156,8 +159,8 @@ export async function approveOverride(
   const newBookingData = await db.booking.findUnique({
     where: { id: request.newBookingId },
     include: {
-      customer: { select: { id: true, email: true, firstName: true, lastName: true } },
-      service: { select: { name: true } },
+      customer: { select: { id: true, email: true, firstName: true, lastName: true, language: true } },
+      service: { select: { id: true, name: true } },
     },
   });
   if (newBookingData) {
@@ -179,6 +182,7 @@ export async function approveOverride(
 
   if (newBookingData?.customer?.email) {
     try {
+      const locale = resolveEmailLocale(newBookingData.customer.language);
       await dispatchNotification({
         type: "OVERRIDE_APPROVED",
         channels: ["EMAIL"],
@@ -194,11 +198,12 @@ export async function approveOverride(
             `${newBookingData.customer.firstName ?? ""} ${newBookingData.customer.lastName ?? ""}`.trim() ||
             "cliente",
           confirmationCode: newBookingData.confirmationCode,
-          serviceName: newBookingData.service.name,
-          startDate: newBookingData.startDate.toISOString().slice(0, 10),
+          serviceName: emailServiceName(newBookingData.service.id, newBookingData.service.name, locale),
+          startDate: formatEmailDay(newBookingData.startDate, locale),
           numPeople: newBookingData.numPeople,
-          bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+          bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
           contactPhone: PUBLIC_CONTACT_PHONE_TEXT,
+          locale,
         } as unknown as Record<string, unknown>,
       });
     } catch (err) {
@@ -214,8 +219,8 @@ export async function approveOverride(
     const conflict = await db.booking.findUnique({
       where: { id: conflictId },
       include: {
-        customer: { select: { firstName: true, lastName: true, email: true } },
-        service: { select: { name: true } },
+        customer: { select: { firstName: true, lastName: true, email: true, language: true } },
+        service: { select: { id: true, name: true } },
       },
     });
     if (!conflict?.customer?.email) continue;
@@ -230,6 +235,15 @@ export async function approveOverride(
     // The dispatcher renders the overbookingApology template and enqueues it
     // in the transactional email outbox.
     try {
+      const locale = resolveEmailLocale(conflict.customer.language);
+      const voucherSoftText =
+        locale === "en"
+          ? "To apologize, we offer you 2 complimentary drinks per person on your next visit"
+          : locale === "es"
+            ? "Para disculparnos, te ofrecemos 2 bebidas gratis por persona en tu próxima visita"
+            : locale === "fr"
+              ? "Pour nous excuser, nous vous offrons 2 boissons par personne lors de votre prochaine visite"
+              : "Per scusarci ti offriamo 2 drink gratis a bordo per persona alla prossima visita";
       const outcome = await dispatchNotification({
         type: "OVERRIDE_APOLOGY_LOSER",
         channels: ["EMAIL"],
@@ -243,15 +257,16 @@ export async function approveOverride(
         payload: {
           customerName: `${conflict.customer.firstName} ${conflict.customer.lastName}`.trim() || "cliente",
           confirmationCode: conflict.confirmationCode,
-          serviceName: conflict.service.name,
-          startDate: conflict.startDate.toISOString().slice(0, 10),
-          refundAmount: `${conflict.totalPrice.toFixed(2)}€`,
+          serviceName: emailServiceName(conflict.service.id, conflict.service.name, locale),
+          startDate: formatEmailDay(conflict.startDate, locale),
+          refundAmount: formatEur(conflict.totalPrice, locale),
           refundChannel: "stripe",
           contactEmail: PUBLIC_CONTACT_EMAIL,
           contactPhone: PUBLIC_CONTACT_PHONE_TEXT,
-          bookingUrl: `${env.APP_URL}/b/sessione`,
-          voucherSoftText: "Per scusarci ti offriamo 2 drink gratis a bordo per persona alla prossima visita",
+          bookingUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
+          voucherSoftText,
           rebookingSuggestions: alternativeDates,
+          locale,
         } as unknown as Record<string, unknown>,
       });
       const result = toDispatchResult(outcome);

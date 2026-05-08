@@ -29,9 +29,14 @@ export interface CharterDurationDisplayPrice {
 }
 
 function labelForAmount(amount: Decimal | null, locale?: string | null): string {
-  const isEnglish = locale === "en";
-  if (!amount) return isEnglish ? "Price on request" : "Prezzo su richiesta";
-  return isEnglish ? `From ${formatEur(amount, locale)}` : `Da ${formatEur(amount, locale)}`;
+  if (!amount) {
+    if (locale === "fr") return "Prix sur demande";
+    if (locale === "es") return "Precio bajo petición";
+    return locale === "en" ? "Price on request" : "Prezzo su richiesta";
+  }
+  if (locale === "fr") return `À partir de ${formatEur(amount, locale)}`;
+  if (locale === "es") return `Desde ${formatEur(amount, locale)}`;
+  return locale === "en" ? `From ${formatEur(amount, locale)}` : `Da ${formatEur(amount, locale)}`;
 }
 
 export async function getDisplayPrice(

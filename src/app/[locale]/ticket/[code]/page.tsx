@@ -10,6 +10,7 @@ import { formatEurWithVat, formatEurCentsWithVat } from "@/lib/pricing/vat";
 import { PrintTicketButton } from "./print-button";
 import { QrDownloadButton } from "@/components/qr-download-button";
 import { OceanLayout } from "@/components/customer/ocean-layout";
+import { localizedPath } from "@/lib/i18n/paths";
 
 export async function generateMetadata({
   params,
@@ -18,7 +19,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return {
-    title: locale === "en" ? "Booking ticket" : "Biglietto prenotazione",
+    title:
+      locale === "es"
+        ? "Billete de reserva"
+        : locale === "fr"
+          ? "Billet de réservation"
+        : locale === "en"
+          ? "Booking ticket"
+          : "Biglietto prenotazione",
     robots: { index: false, follow: false },
   };
 }
@@ -72,7 +80,7 @@ export default async function TicketPage({
       <div className="relative z-10 mx-auto max-w-3xl space-y-4 pt-20 text-slate-950 print:pt-0">
         <div className="flex items-center justify-between gap-3 print:hidden">
           <Link
-            href={`/${locale}/b/sessione`}
+            href={localizedPath(locale, "/b/sessione")}
             className="rounded-lg border border-white/20 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-white"
           >
             {copy.bookingArea}
@@ -163,7 +171,23 @@ export default async function TicketPage({
 
 function getTicketStatusLabel(status: string, locale?: string | null): string {
   const isEn = locale === "en";
-  const labels: Record<string, string> = isEn
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const labels: Record<string, string> = isEs
+    ? {
+        PENDING: "Pendiente",
+        CONFIRMED: "Confirmado",
+        CANCELLED: "Cancelado",
+        REFUNDED: "Reembolsado",
+      }
+    : isFr
+    ? {
+        PENDING: "En attente",
+        CONFIRMED: "Confirmé",
+        CANCELLED: "Annulé",
+        REFUNDED: "Remboursé",
+      }
+    : isEn
     ? {
         PENDING: "Pending",
         CONFIRMED: "Confirmed",
@@ -190,20 +214,22 @@ function getTicketGuestBreakdown(
   locale?: string | null,
 ): string {
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   return [
-    booking.adultCount ? `${booking.adultCount} ${isEn ? "adults" : "adulti"}` : null,
-    booking.childCount ? `${booking.childCount} ${isEn ? "children 5-9" : "bambini 5-9"}` : null,
+    booking.adultCount ? `${booking.adultCount} ${isEs ? "adultos" : isFr ? "adultes" : isEn ? "adults" : "adulti"}` : null,
+    booking.childCount ? `${booking.childCount} ${isEs ? "niños 5-9" : isFr ? "enfants 5-9" : isEn ? "children 5-9" : "bambini 5-9"}` : null,
     booking.freeChildSeatCount
-      ? `${booking.freeChildSeatCount} ${isEn ? "children 3-4" : "bimbi 3-4"}`
+      ? `${booking.freeChildSeatCount} ${isEs ? "niños 3-4" : isFr ? "enfants 3-4" : isEn ? "children 3-4" : "bimbi 3-4"}`
       : null,
-    booking.infantCount ? `${booking.infantCount} ${isEn ? "infants 0-2" : "neonati 0-2"}` : null,
+    booking.infantCount ? `${booking.infantCount} ${isEs ? "bebés 0-2" : isFr ? "bébés 0-2" : isEn ? "infants 0-2" : "neonati 0-2"}` : null,
   ]
     .filter(Boolean)
     .join(", ");
 }
 
 function formatPublicDay(date: Date, locale?: string | null): string {
-  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
     timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
@@ -212,7 +238,7 @@ function formatPublicDay(date: Date, locale?: string | null): string {
 }
 
 function formatPublicDateTime(date: Date, locale?: string | null): string {
-  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
     timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
@@ -223,6 +249,68 @@ function formatPublicDateTime(date: Date, locale?: string | null): string {
 }
 
 function getTicketCopy(locale?: string | null) {
+  if (locale === "fr") {
+    return {
+      bookingArea: "Espace réservation",
+      downloadQr: "Télécharger le QR",
+      print: "Imprimer",
+      ticket: "Billet",
+      bookingCode: "Code de réservation",
+      presentQr: "Présentez ce QR code au check-in.",
+      notConfirmed: "Ce billet n'est pas encore confirmé.",
+      checkedInAt: "Check-in enregistré le",
+      experience: "Expérience",
+      boat: "Bateau",
+      experienceDate: "Date de l'expérience",
+      time: "Horaire",
+      guests: "Invités",
+      seatsUsed: "Places occupées",
+      booking: "Réservation",
+      holder: "Titulaire",
+      name: "Nom",
+      phone: "Téléphone",
+      notProvided: "Non indiqué",
+      code: "Code",
+      channel: "Canal",
+      bookingDate: "Date de réservation",
+      total: "Total",
+      paid: "Payé",
+      balanceOnSite: "Solde sur place",
+      balanceNote: "à payer sur place avant le départ",
+    };
+  }
+
+  if (locale === "es") {
+    return {
+      bookingArea: "Área de reserva",
+      downloadQr: "Descargar QR",
+      print: "Imprimir",
+      ticket: "Billete",
+      bookingCode: "Código de reserva",
+      presentQr: "Muestra este código QR en el check-in.",
+      notConfirmed: "Este billete aún no está confirmado.",
+      checkedInAt: "Check-in registrado el",
+      experience: "Experiencia",
+      boat: "Barco",
+      experienceDate: "Fecha de la experiencia",
+      time: "Hora",
+      guests: "Huéspedes",
+      seatsUsed: "Plazas ocupadas",
+      booking: "Reserva",
+      holder: "Titular",
+      name: "Nombre",
+      phone: "Teléfono",
+      notProvided: "No indicado",
+      code: "Código",
+      channel: "Canal",
+      bookingDate: "Fecha de reserva",
+      total: "Total",
+      paid: "Pagado",
+      balanceOnSite: "Saldo en destino",
+      balanceNote: "a pagar en destino antes de la salida",
+    };
+  }
+
   if (locale === "en") {
     return {
       bookingArea: "Booking area",

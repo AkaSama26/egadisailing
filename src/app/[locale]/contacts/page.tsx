@@ -32,12 +32,22 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   return buildPageMetadata({
-    title: locale === "en"
-      ? "Egadi Boat Tour Bookings and Contacts"
-      : "Prenotazioni e contatti per tour alle Egadi",
+    title: isEs
+      ? "Reservas y contactos para excursiones en barco a las Islas Egadi"
+      : isFr
+        ? "Réservations et contacts pour excursions en bateau aux îles Égades"
+      : locale === "en"
+        ? "Egadi Boat Tour Bookings and Contacts"
+        : "Prenotazioni e contatti per tour alle Egadi",
     description:
-      locale === "en"
+      isEs
+        ? "Reserva o solicita información para tu excursión en barco a las Islas Egadi. Contacta con Egadisailing por WhatsApp, teléfono o email."
+        : isFr
+        ? "Réservez ou demandez des informations pour votre excursion en bateau aux îles Égades. Contactez Egadisailing par WhatsApp, téléphone ou email."
+        : locale === "en"
         ? "Book or request information for your boat trip in the Egadi Islands. Contact Egadisailing by WhatsApp, phone or email."
         : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi. Contatta Egadisailing via WhatsApp, telefono o email.",
     path: "/contacts",
@@ -52,19 +62,29 @@ export default async function ContactsPage({
 }) {
   const { locale } = await params;
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   const whatsappContacts = getOrderedWhatsAppContacts(locale);
   const copy = {
-    title: isEn
+    title: isEs
+      ? "Reserva o solicita información para tu excursión en barco a las Islas Egadi"
+      : isFr
+      ? "Réservez ou demandez des informations pour votre excursion en bateau aux îles Égades"
+      : isEn
       ? "Book or request information for your boat trip in the Egadi Islands"
       : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi",
-    subtitle: isEn
+    subtitle: isEs
+      ? "¿Tienes preguntas, quieres reservar o necesitas ayuda para elegir la experiencia adecuada? Estamos aquí."
+      : isFr
+      ? "Des questions, une réservation ou besoin d'aide pour choisir la bonne expérience ? Nous sommes là."
+      : isEn
       ? "Questions, bookings, or a little help choosing the right experience? We are here."
       : "Hai domande, vuoi prenotare o semplicemente saperne di più? Siamo qui.",
-    locationLabel: isEn ? "Where we are" : "Dove siamo",
+    locationLabel: isEs ? "Dónde estamos" : isFr ? "Où nous sommes" : isEn ? "Where we are" : "Dove siamo",
     address: getContactLocationLabel(locale),
-    phoneLabel: isEn ? "Phone and WhatsApp" : "Telefono e WhatsApp",
-    writeTitle: isEn ? "Write to us" : "Scrivici",
-    writeSubtitle: isEn ? "We reply within 24 hours" : "Ti rispondiamo entro 24 ore",
+    phoneLabel: isEs ? "Teléfono y WhatsApp" : isFr ? "Téléphone et WhatsApp" : isEn ? "Phone and WhatsApp" : "Telefono e WhatsApp",
+    writeTitle: isEs ? "Escríbenos" : isFr ? "Écrivez-nous" : isEn ? "Write to us" : "Scrivici",
+    writeSubtitle: isEs ? "Respondemos en 24 horas" : isFr ? "Nous répondons sous 24 heures" : isEn ? "We reply within 24 hours" : "Ti rispondiamo entro 24 ore",
   };
   return (
     <div

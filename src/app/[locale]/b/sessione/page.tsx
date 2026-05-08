@@ -15,6 +15,8 @@ import { cancelCustomerBooking, requestCustomerReschedule } from "./actions";
 import { getAllWeather } from "@/lib/weather/service";
 import { buildPublicWeatherSummary } from "@/lib/weather/public-format";
 import { CustomerWeatherCard } from "@/components/weather/customer-weather-card";
+import { localizedPath } from "@/lib/i18n/paths";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 // R26-A1-A5: PII area — noindex defense-in-depth oltre robots.txt. Bot che
 // ignora robots.txt (o config error serve la pagina con slug indexable)
@@ -26,7 +28,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   return {
-    title: locale === "en" ? "Your bookings" : "Le tue prenotazioni",
+    title:
+      locale === "es"
+        ? "Tus reservas"
+        : locale === "fr"
+          ? "Vos réservations"
+          : locale === "en"
+            ? "Your bookings"
+            : "Le tue prenotazioni",
     robots: { index: false, follow: false },
   };
 }
@@ -38,7 +47,9 @@ export default async function SessionePage({
 }) {
   const { locale } = await params;
   const session = await getBookingSession();
-  if (!session) redirect(`/${locale || env.APP_LOCALES_DEFAULT}/recupera-prenotazione`);
+  if (!session) {
+    redirect(localizedStaticPath(locale || env.APP_LOCALES_DEFAULT, "/recupera-prenotazione"));
+  }
 
   const [bookings, weatherResult] = await Promise.all([
     db.booking.findMany({
@@ -137,14 +148,22 @@ export default async function SessionePage({
                   <CustomerWeatherCard
                     summary={weatherSummary}
                     locale={locale}
-                    title={locale === "en" ? "Forecast for your trip" : "Meteo per la tua uscita"}
+                    title={
+                      locale === "es"
+                        ? "Previsión para tu salida"
+                        : locale === "fr"
+                          ? "Prévisions pour votre sortie"
+                          : locale === "en"
+                            ? "Forecast for your trip"
+                            : "Meteo per la tua uscita"
+                    }
                     compact
                   />
                 </div>
               )}
               {b.status === "CONFIRMED" && (
                 <Link
-                  href={`/${locale || env.APP_LOCALES_DEFAULT}/ticket/${b.confirmationCode}`}
+                  href={localizedPath(locale || env.APP_LOCALES_DEFAULT, `/ticket/${b.confirmationCode}`)}
                   className="mt-4 inline-block rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
                 >
                   {copy.openQr}
@@ -227,7 +246,7 @@ export default async function SessionePage({
 }
 
 function formatPublicDay(date: Date, locale?: string | null): string {
-  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
     timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
@@ -236,6 +255,16 @@ function formatPublicDay(date: Date, locale?: string | null): string {
 }
 
 function formatPolicyLabel(band: string, locale?: string | null): string {
+  if (locale === "es") {
+    if (band === "FULL_REFUND") return "Reembolso completo";
+    if (band === "HALF_REFUND") return "Reembolso del 50%";
+    return "Cancelación sin reembolso";
+  }
+  if (locale === "fr") {
+    if (band === "FULL_REFUND") return "Remboursement complet";
+    if (band === "HALF_REFUND") return "Remboursement de 50 %";
+    return "Annulation sans remboursement";
+  }
   if (locale === "en") {
     if (band === "FULL_REFUND") return "Full refund";
     if (band === "HALF_REFUND") return "50% refund";
@@ -247,6 +276,71 @@ function formatPolicyLabel(band: string, locale?: string | null): string {
 }
 
 function getSessionCopy(locale?: string | null) {
+  if (locale === "fr") {
+    return {
+      title: "Vos réservations",
+      logout: "Se déconnecter",
+      signedInAs: "Connecté en tant que",
+      intro:
+        "Depuis cet espace, vous pouvez ouvrir votre billet QR, demander un changement de date et demander une annulation ou un remboursement pour les réservations directes.",
+      policyTitle: "Annulations et changements de date",
+      policyBody:
+        "Jusqu'à 30 jours avant le départ : remboursement complet. De 29 à 15 jours avant le départ : remboursement de 50 %. Moins de 15 jours avant et en cas de non-présentation : annulation sans remboursement. Les changements de date sont soumis à vérification et approbation de l'équipe.",
+      noBookings: "Aucune réservation trouvée pour",
+      discover: "Voir les expériences",
+      code: "Code",
+      people: "personnes",
+      total: "Total",
+      paid: "Payé",
+      balanceDue: "Solde à payer",
+      openQr: "Ouvrir le billet QR",
+      rescheduleTitle: "Demander un changement de date",
+      rescheduleBody:
+        "L'équipe vérifiera les disponibilités et la politique. La réservation reste à la date actuelle jusqu'à l'approbation de la demande.",
+      pendingChange: "Demande en attente pour le",
+      latestChange: "Dernière demande",
+      request: "Demander",
+      optionalNote: "Notes optionnelles pour l'équipe",
+      estimatedRefund: "Remboursement estimé",
+      onPaid: "sur",
+      cancelBooking: "Annuler la réservation",
+      externalBookingPrefix: "Cette réservation provient de",
+      externalBookingSuffix: "les annulations et changements de date doivent être gérés depuis le portail d'achat.",
+    };
+  }
+
+  if (locale === "es") {
+    return {
+      title: "Tus reservas",
+      logout: "Salir",
+      signedInAs: "Acceso como",
+      intro:
+        "Desde esta área puedes abrir tu billete QR, solicitar un cambio de fecha y pedir cancelación o reembolso para reservas directas.",
+      policyTitle: "Cancelaciones y cambios de fecha",
+      policyBody:
+        "Hasta 30 días antes de la salida: reembolso completo. De 29 a 15 días antes: reembolso del 50%. Menos de 15 días antes y en caso de no presentarse: cancelación sin reembolso. Los cambios de fecha están sujetos a revisión y aprobación del equipo.",
+      noBookings: "No se encontraron reservas para",
+      discover: "Ver experiencias",
+      code: "Código",
+      people: "personas",
+      total: "Total",
+      paid: "Pagado",
+      balanceDue: "Saldo pendiente",
+      openQr: "Abrir billete QR",
+      rescheduleTitle: "Solicitar cambio de fecha",
+      rescheduleBody:
+        "El equipo comprobará disponibilidad y política. La reserva permanece en la fecha actual hasta que la solicitud sea aprobada.",
+      pendingChange: "Solicitud pendiente para",
+      latestChange: "Última solicitud",
+      request: "Solicitar",
+      optionalNote: "Notas opcionales para el equipo",
+      estimatedRefund: "Reembolso estimado",
+      onPaid: "de",
+      cancelBooking: "Cancelar reserva",
+      externalBookingPrefix: "Esta reserva procede de",
+      externalBookingSuffix: "las cancelaciones y cambios de fecha deben gestionarse desde el portal de compra.",
+    };
+  }
   if (locale === "en") {
     return {
       title: "Your bookings",

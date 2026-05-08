@@ -30,11 +30,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   return buildPageMetadata({
-    title: isEn
+    title: isEs
+      ? "Reserva excursiones en barco por las Islas Egadi online"
+      : isFr
+      ? "Réserver une excursion en bateau aux îles Égades en ligne"
+      : isEn
       ? "Book Egadi Islands Boat Tours Online"
       : "Prenota Escursioni in Barca alle Egadi Online",
-    description: isEn
+    description: isEs
+      ? "Reserva excursiones en barco por las Islas Egadi con disponibilidad en vivo, precios actualizados y checkout seguro Egadisailing."
+      : isFr
+      ? "Réservez une excursion en bateau aux îles Égades avec disponibilités en direct, prix à jour et checkout sécurisé Egadisailing."
+      : isEn
       ? "Book boat tours in the Egadi Islands with live availability, updated prices and secure Egadisailing checkout."
       : "Prenota escursioni in barca alle Isole Egadi con disponibilità live, prezzi aggiornati e checkout sicuro Egadisailing.",
     path: "/prenota",
@@ -101,7 +111,13 @@ export default async function BookingIndexPage({
         defaultDepositPercentage: service.defaultDepositPercentage,
         priceLabel:
           displayPrices.get(service.id)?.label ??
-          (locale === "en" ? "Price on request" : "Prezzo su richiesta"),
+          (locale === "es"
+            ? "Precio bajo petición"
+            : locale === "fr"
+              ? "Prix sur demande"
+              : locale === "en"
+                ? "Price on request"
+                : "Prezzo su richiesta"),
         priceUnitLabel: getPriceUnitLabel(service.pricingUnit, service.type, locale),
         durationLabel: getServiceDurationLabel(service, locale),
       };

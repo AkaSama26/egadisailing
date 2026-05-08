@@ -59,9 +59,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   return buildPageMetadata({
-    title: isEn ? "Cookie Policy" : "Cookie Policy",
-    description: isEn
+    title: isEs ? "Política de cookies" : isFr ? "Politique de cookies" : isEn ? "Cookie Policy" : "Cookie Policy",
+    description: isEs
+      ? "Política de cookies Egadisailing: cookies técnicos, consentimiento, sesiones, pagos Stripe, Cloudflare, Google Maps y rastreadores opcionales solo tras consentimiento."
+      : isFr
+      ? "Politique de cookies Egadisailing : cookies techniques, consentement, sessions, paiements Stripe, Cloudflare, Google Maps et traceurs optionnels uniquement après consentement."
+      : isEn
       ? "Egadisailing Cookie Policy: technical cookies, consent choices, booking sessions, Stripe payments, Cloudflare, Google Maps and optional trackers."
       : "Cookie Policy Egadisailing: cookie tecnici, consenso, sessioni, pagamenti Stripe, Cloudflare, Google Maps e tracker opzionali solo dopo consenso.",
     path: "/cookie-policy",
@@ -69,7 +75,224 @@ export async function generateMetadata({
   });
 }
 
-export default function CookiePolicyPage() {
+function FrenchCookiePolicyPage() {
+  const services = getCookieConsentPublicServices();
+  const hasOptionalServices = hasOptionalCookieConsentServices(services);
+  const siteVerification = getSiteVerificationConfig();
+  const hasVerificationTags = Boolean(
+    siteVerification.googleSiteVerification ||
+      siteVerification.bingSiteVerification ||
+      siteVerification.metaDomainVerification,
+  );
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#071934_0%,#0b3154_22rem,#f8fafc_22rem,#ffffff_100%)] px-4 pb-20 pt-32 sm:px-6">
+      <article className="mx-auto max-w-5xl">
+        <header className="pb-10 text-white">
+          <p className={eyebrowClass}>Préférences et outils techniques</p>
+          <h1 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">
+            Politique de cookies Egadisailing
+          </h1>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-white/75 md:text-lg">
+            Cookies techniques, sessions, consentement, local storage, paiements,
+            anti-bot, cartes, services externes et outils optionnels chargés uniquement après consentement.
+          </p>
+          <p className="mt-4 text-sm text-white/55">
+            En vigueur depuis le {COOKIE_CONSENT_EFFECTIVE_DATE}
+          </p>
+        </header>
+
+        <div className="space-y-6">
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Introduction</p>
+            <h2 className={headingClass}>1. Cookies et outils similaires</h2>
+            <p className={paragraphClass}>
+              Les cookies sont de petits fichiers enregistrés par le navigateur. Certains sont
+              nécessaires au fonctionnement du site ; d'autres peuvent mesurer visites ou campagnes.
+              L'application peut aussi utiliser local storage et session storage pour préférences
+              temporaires ou identifiants techniques.
+            </p>
+            <p className={paragraphClass}>
+              Egadisailing utilise des cookies techniques nécessaires à navigation, langue,
+              sécurité, sessions, récupération de réservation, paiements et protection anti-bot.
+              Les outils analytiques, marketing ou mesure de campagnes sont chargés seulement
+              après votre consentement lorsque nécessaire.
+            </p>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Toujours actifs</p>
+            <h2 className={headingClass}>2. Cookies techniques et nécessaires</h2>
+            <LegalTable headers={["Nom", "Fournisseur", "Finalité", "Durée"]}>
+              <tr><Td><code>{COOKIE_CONSENT_COOKIE_NAME}</code></Td><Td>Egadisailing</Td><Td>Enregistre les préférences cookies exprimées par l'utilisateur</Td><Td>6 mois</Td></tr>
+              <tr><Td><code>NEXT_LOCALE</code></Td><Td>Egadisailing</Td><Td>Enregistre la langue sélectionnée</Td><Td>1 an</Td></tr>
+              <tr><Td><code>egadi-booking-session</code></Td><Td>Egadisailing</Td><Td>Session de l'espace client pour consulter la réservation</Td><Td>7 jours</Td></tr>
+              <tr><Td><code>authjs.session-token</code></Td><Td>Auth.js / Egadisailing</Td><Td>Session sécurisée de l'espace administrateur</Td><Td>Jusqu'à 8 heures</Td></tr>
+              <tr><Td><code>__stripe_mid</code>, <code>__stripe_sid</code>, <code>m</code></Td><Td>Stripe</Td><Td>Paiements, prévention fraude et sécurité checkout</Td><Td>Variable selon politique Stripe</Td></tr>
+              <tr><Td>Noms variables Cloudflare</Td><Td>Cloudflare Turnstile</Td><Td>Vérification anti-bot dans formulaires et checkout</Td><Td>Variable selon politique Cloudflare</Td></tr>
+              <tr><Td>Noms variables Google Maps</Td><Td>Google</Td><Td>Chargement de la carte intégrée dans la page contact</Td><Td>Variable selon politique Google</Td></tr>
+            </LegalTable>
+          </section>
+
+          {hasVerificationTags && (
+            <section className={sectionClass}>
+              <p className={eyebrowClass}>Vérification de domaine</p>
+              <h2 className={headingClass}>3. Meta tags de vérification de propriété</h2>
+              <p className={paragraphClass}>
+                Le site peut inclure des meta tags techniques pour vérifier la propriété du
+                domaine dans Google Search Console, Bing Webmaster Tools et Meta Business.
+                Ces tags sont dans le HTML, n'installent pas de cookies et n'activent pas de suivi publicitaire.
+              </p>
+            </section>
+          )}
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Optionnels</p>
+            <h2 className={headingClass}>Outils analytiques et marketing</h2>
+            <p className={paragraphClass}>
+              {hasOptionalServices
+                ? "Les outils optionnels configurés sont chargés uniquement après votre consentement. Vous pouvez changer d'avis depuis le panneau de préférences cookies."
+                : "Aucun outil optionnel n'est actuellement actif. S'ils sont ajoutés à l'avenir, ils seront chargés seulement après votre consentement lorsque nécessaire."}
+            </p>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Vos choix</p>
+            <h2 className={headingClass}>Préférences et contact</h2>
+            <p className={paragraphClass}>
+              Vous pouvez modifier ou retirer le consentement depuis les préférences cookies
+              lorsque le bandeau ou le lien sont disponibles. Vous pouvez aussi gérer les cookies
+              depuis votre navigateur. Pour demandes privacy, écrivez à{" "}
+              <a className="font-semibold text-[#0b6694]" href={getEmailHref(PRIVACY_CONTACT_EMAIL)}>
+                {PUBLIC_CONTACT_EMAIL}
+              </a>
+              .
+            </p>
+          </section>
+        </div>
+      </article>
+    </div>
+  );
+}
+
+function SpanishCookiePolicyPage() {
+  const services = getCookieConsentPublicServices();
+  const hasOptionalServices = hasOptionalCookieConsentServices(services);
+  const siteVerification = getSiteVerificationConfig();
+  const hasVerificationTags = Boolean(
+    siteVerification.googleSiteVerification ||
+      siteVerification.bingSiteVerification ||
+      siteVerification.metaDomainVerification,
+  );
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#071934_0%,#0b3154_22rem,#f8fafc_22rem,#ffffff_100%)] px-4 pb-20 pt-32 sm:px-6">
+      <article className="mx-auto max-w-5xl">
+        <header className="pb-10 text-white">
+          <p className={eyebrowClass}>Preferencias y herramientas técnicas</p>
+          <h1 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">
+            Política de cookies Egadisailing
+          </h1>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-white/75 md:text-lg">
+	            Cookies técnicas, sesiones, consentimiento, local storage, pagos, anti-bot,
+            mapas, servicios externos y herramientas opcionales cargadas solo tras consentimiento.
+          </p>
+          <p className="mt-4 text-sm text-white/55">
+            En vigor desde el {COOKIE_CONSENT_EFFECTIVE_DATE}
+          </p>
+        </header>
+
+        <div className="space-y-6">
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Introducción</p>
+            <h2 className={headingClass}>1. Qué son las cookies y herramientas similares</h2>
+            <p className={paragraphClass}>
+              Las cookies son pequeños archivos guardados por el navegador. Algunas son
+              necesarias para que el sitio funcione; otras pueden medir visitas o campañas
+              publicitarias. La aplicación también puede usar local storage y session storage
+              para guardar preferencias temporales o identificadores técnicos.
+            </p>
+            <p className={paragraphClass}>
+	              Egadisailing usa cookies técnicas necesarias para navegación, idioma, seguridad,
+              sesiones, recuperación de reserva, pagos y protección anti-bot. Herramientas
+              analíticas, marketing o medición de campañas se cargan solo tras tu consentimiento.
+            </p>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Siempre activos</p>
+	            <h2 className={headingClass}>2. Cookies técnicas y necesarias</h2>
+            <LegalTable headers={["Nombre", "Proveedor", "Finalidad", "Duración"]}>
+              <tr><Td><code>{COOKIE_CONSENT_COOKIE_NAME}</code></Td><Td>Egadisailing</Td><Td>Guarda las preferencias de cookies expresadas por el usuario</Td><Td>6 meses</Td></tr>
+              <tr><Td><code>NEXT_LOCALE</code></Td><Td>Egadisailing</Td><Td>Guarda el idioma seleccionado</Td><Td>1 año</Td></tr>
+              <tr><Td><code>egadi-booking-session</code></Td><Td>Egadisailing</Td><Td>Sesión del área cliente para consultar la reserva</Td><Td>7 días</Td></tr>
+              <tr><Td><code>authjs.session-token</code></Td><Td>Auth.js / Egadisailing</Td><Td>Sesión segura del área administrativa</Td><Td>Hasta 8 horas</Td></tr>
+              <tr><Td><code>__stripe_mid</code>, <code>__stripe_sid</code>, <code>m</code></Td><Td>Stripe</Td><Td>Pagos, prevención de fraude y seguridad del checkout</Td><Td>Variable según política Stripe</Td></tr>
+              <tr><Td>Nombres variables Cloudflare</Td><Td>Cloudflare Turnstile</Td><Td>Verificación anti-bot en formularios y checkout</Td><Td>Variable según política Cloudflare</Td></tr>
+              <tr><Td>Nombres variables Google Maps</Td><Td>Google</Td><Td>Carga del mapa incorporado en la página de contacto</Td><Td>Variable según política Google</Td></tr>
+            </LegalTable>
+          </section>
+
+          {hasVerificationTags && (
+            <section className={sectionClass}>
+              <p className={eyebrowClass}>Verificación de dominio</p>
+              <h2 className={headingClass}>3. Meta tags de verificación de propiedad</h2>
+              <p className={paragraphClass}>
+                El sitio puede incluir meta tags técnicos para verificar la propiedad del
+                dominio en Google Search Console, Bing Webmaster Tools y Meta Business. Estos
+                tags están en el HTML, no instalan cookies y no activan seguimiento publicitario.
+              </p>
+            </section>
+          )}
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Browser storage</p>
+            <h2 className={headingClass}>Local storage y session storage</h2>
+            <p className={paragraphClass}>
+              El sitio puede usar almacenamiento local para recordar preferencias no sensibles,
+              borradores temporales del checkout o estados de interfaz. Algunos datos se borran
+              al cerrar la sesión o al terminar la navegación.
+            </p>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Opcionales</p>
+            <h2 className={headingClass}>Herramientas analíticas y marketing</h2>
+            <p className={paragraphClass}>
+              {hasOptionalServices
+                ? "Las herramientas opcionales configuradas se cargan solo después de tu consentimiento. Puedes cambiar de idea desde el panel de preferencias cookie."
+                : "Actualmente no hay herramientas opcionales activas. Si se añaden en el futuro, se cargarán solo después de tu consentimiento cuando sea necesario."}
+            </p>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Tus opciones</p>
+            <h2 className={headingClass}>Preferencias y contacto</h2>
+            <p className={paragraphClass}>
+              Puedes modificar o retirar el consentimiento desde las preferencias de cookies
+              cuando el banner o el enlace estén disponibles. También puedes gestionar cookies
+              desde la configuración del navegador. Para solicitudes de privacidad escribe a{" "}
+              <a className="font-semibold text-[#0b6694]" href={getEmailHref(PRIVACY_CONTACT_EMAIL)}>
+                {PUBLIC_CONTACT_EMAIL}
+              </a>
+              .
+            </p>
+          </section>
+        </div>
+      </article>
+    </div>
+  );
+}
+
+export default async function CookiePolicyPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  if (locale === "es") return <SpanishCookiePolicyPage />;
+  if (locale === "fr") return <FrenchCookiePolicyPage />;
+
   const services = getCookieConsentPublicServices();
   const hasOptionalServices = hasOptionalCookieConsentServices(services);
   const siteVerification = getSiteVerificationConfig();

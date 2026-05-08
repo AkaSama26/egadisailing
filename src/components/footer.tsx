@@ -14,6 +14,7 @@ import {
 import { BRAND_LOGO_SRC } from "@/lib/public-assets";
 import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { liquidGlassButton } from "@/lib/ui/liquid-glass";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 const quickLinks = [
   { key: "experiences", href: "/experiences" },
@@ -43,7 +44,7 @@ export function Footer() {
           {/* Brand column */}
           <div>
             <Link
-              href={`/${locale}`}
+              href={localizedStaticPath(locale, "/")}
               className="inline-flex items-center gap-3 font-heading text-2xl font-bold tracking-tight"
             >
               <span className="flex h-20 w-14 shrink-0 items-center justify-center">
@@ -97,7 +98,7 @@ export function Footer() {
               {quickLinks.map((link) => (
                 <li key={link.key}>
                   <Link
-                    href={`/${locale}${link.href}`}
+                    href={localizedStaticPath(locale, link.href)}
                     className="text-sm text-gray-300 transition-colors hover:text-white"
                   >
                     {tNav(link.key)}
@@ -106,7 +107,7 @@ export function Footer() {
               ))}
               <li>
                 <Link
-                  href={`/${locale}/faq`}
+                  href={localizedStaticPath(locale, "/faq")}
                   className="text-sm text-gray-300 transition-colors hover:text-white"
                 >
                   {tCommon("faq")}
@@ -159,19 +160,19 @@ export function Footer() {
           <p>&copy; {new Date().getFullYear()} {PUBLIC_COMPANY_LEGAL.name}. {tFooter("rights")}.</p>
           <div className="flex gap-4">
             <Link
-              href={`/${locale}/privacy`}
+              href={localizedStaticPath(locale, "/privacy")}
               className="transition-colors hover:text-white"
             >
               {tFooter("privacy")}
             </Link>
             <Link
-              href={`/${locale}/terms`}
+              href={localizedStaticPath(locale, "/terms")}
               className="transition-colors hover:text-white"
             >
               {tFooter("terms")}
             </Link>
             <Link
-              href={`/${locale}/cookie-policy`}
+              href={localizedStaticPath(locale, "/cookie-policy")}
               className="transition-colors hover:text-white"
             >
               Cookie

@@ -29,6 +29,8 @@ import {
 } from "@/data/catalog/boats";
 import { getExperiencePublicSlug } from "@/data/catalog/experiences";
 import { liquidGlassButton } from "@/lib/ui/liquid-glass";
+import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 const SPEC_ICONS: Record<BoatSpecIcon, LucideIcon> = {
   cabins: DoorOpen,
@@ -165,7 +167,7 @@ function BoatHubSection({
                 </a>
               )}
               <Link
-                href={`/${locale}/experiences`}
+                href={localizedStaticPath(locale, "/experiences")}
                 className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-[var(--color-ocean)] transition hover:bg-white"
               >
                 {experiencesLabel}
@@ -177,7 +179,7 @@ function BoatHubSection({
                 {services.slice(0, 4).map((service) => (
                   <Link
                     key={service.id}
-                    href={`/${locale}/experiences/${getExperiencePublicSlug(service.id)}`}
+                    href={localizedPath(locale, `/experiences/${getExperiencePublicSlug(service.id, locale)}`)}
                     className="flex items-center justify-between gap-4 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-[var(--color-ocean)] shadow-sm transition hover:shadow-md"
                   >
                     {getPublicBoatServiceTitle(service.id, locale)}
@@ -211,7 +213,6 @@ export default async function BoatsPage({
     select: { id: true, boatId: true },
   });
   const siteBase = env.APP_URL.replace(/\/$/, "");
-  const pageUrl = `${siteBase}/${locale}/boats`;
   const json = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -220,7 +221,7 @@ export default async function BoatsPage({
     itemListElement: boats.map((boat, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `${pageUrl}/${boat.slug}`,
+      url: localizedAbsoluteUrl(siteBase, locale, `/boats/${boat.slug}`),
       name: boat.seoTitle,
       description: boat.seoDescription,
     })),
@@ -233,7 +234,15 @@ export default async function BoatsPage({
       <section className="relative isolate flex min-h-[100svh] items-center overflow-hidden bg-[#061a2d] px-4 py-24 text-white sm:py-28 md:px-8 lg:px-12">
         <Image
           src="/videos/hero-poster.webp"
-          alt="Barche Egadisailing alle Isole Egadi"
+          alt={
+            locale === "es"
+              ? "Barcos Egadisailing en las Islas Egadi"
+              : locale === "fr"
+                ? "Bateaux Egadisailing aux îles Égades"
+                : locale === "en"
+                  ? "Egadisailing boats in the Egadi Islands"
+                  : "Barche Egadisailing alle Isole Egadi"
+          }
           fill
           priority
           sizes="100vw"
@@ -256,7 +265,7 @@ export default async function BoatsPage({
               {boats.map((boat) => (
                 <Link
                   key={boat.id}
-                  href={`/${locale}/boats/${boat.slug}`}
+                  href={localizedPath(locale, `/boats/${boat.slug}`)}
                   className={`group flex min-w-0 items-center justify-between gap-4 rounded-lg p-4 ${liquidGlassButton}`}
                 >
                   <span className="min-w-0">
@@ -309,7 +318,7 @@ export default async function BoatsPage({
                   </p>
                 </div>
                 <Link
-                  href={`/${locale}/experiences`}
+                  href={localizedStaticPath(locale, "/experiences")}
                   className="inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[var(--color-ocean)] transition hover:bg-white/90"
                 >
                   {copy.experiencesCtaLabel}

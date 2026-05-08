@@ -12,7 +12,14 @@ import {
 export function FloatingWhatsAppButton({ locale }: { locale: string }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const label = locale === "en" ? "WhatsApp support" : "Assistenza WhatsApp";
+  const label =
+    locale === "es"
+      ? "Asistencia por WhatsApp"
+      : locale === "fr"
+        ? "Assistance WhatsApp"
+        : locale === "en"
+          ? "WhatsApp support"
+          : "Assistenza WhatsApp";
   const contacts = getOrderedWhatsAppContacts(locale);
 
   useEffect(() => {

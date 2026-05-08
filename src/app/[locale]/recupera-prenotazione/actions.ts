@@ -20,6 +20,45 @@ import { routing } from "@/i18n/routing";
 
 const DEFAULT_RECOVERY_LOCALE = routing.defaultLocale;
 
+function recoveryCopy(locale: string) {
+  const isEs = locale === "es";
+  const isEn = locale === "en";
+  const isFr = locale === "fr";
+  return {
+    captchaRequired: isEs
+      ? "Verificación CAPTCHA obligatoria"
+      : isFr
+        ? "Vérification CAPTCHA obligatoire"
+      : isEn
+        ? "CAPTCHA verification required"
+        : "Verifica CAPTCHA richiesta",
+    captchaFailed: isEs
+      ? "Verificación CAPTCHA fallida"
+      : isFr
+        ? "Échec de la vérification CAPTCHA"
+      : isEn
+        ? "CAPTCHA verification failed"
+        : "Verifica CAPTCHA non riuscita",
+    unknownError: isEs ? "Error desconocido" : isFr ? "Erreur inconnue" : isEn ? "Unknown error" : "Errore sconosciuto",
+    codeExpired: isEs ? "Código caducado" : isFr ? "Code expiré" : isEn ? "Code expired" : "Codice scaduto",
+    tooManyAttempts: isEs
+      ? "Demasiados intentos. Solicita un nuevo código"
+      : isFr
+        ? "Trop de tentatives. Demandez un nouveau code"
+      : isEn
+        ? "Too many attempts. Request a new code"
+        : "Troppi tentativi, richiedi un nuovo codice",
+    invalidCode: isEs ? "Código no válido" : isFr ? "Code invalide" : isEn ? "Invalid code" : "Codice non valido",
+    noBooking: isEs
+      ? "No se ha encontrado ninguna reserva para este email"
+      : isFr
+        ? "Aucune réservation trouvée pour cet email"
+      : isEn
+        ? "No booking found for this email"
+        : "Nessuna prenotazione trovata per questa email",
+  };
+}
+
 const requestSchema = z.object({
   email: emailSchema,
   turnstileToken: z.string().optional(),
@@ -50,7 +89,7 @@ export async function requestOtp(
       turnstileToken: formData.get("cf-turnstile-response") ?? undefined,
       locale: formData.get("locale") ?? DEFAULT_RECOVERY_LOCALE,
     });
-    const isEn = parsed.locale === "en";
+    const copy = recoveryCopy(parsed.locale);
 
     // normalizeEmail invece di toLowerCase: applica Gmail alias dedup
     // (`mario+tag@gmail.com` → `mario@gmail.com`). Cosi' il lookup Customer
@@ -60,15 +99,11 @@ export async function requestOtp(
     // Turnstile enforced in production, optional in dev
     if (env.NODE_ENV === "production" || parsed.turnstileToken) {
       if (!parsed.turnstileToken) {
-        throw new ValidationError(
-          isEn ? "CAPTCHA verification required" : "Verifica CAPTCHA richiesta",
-        );
+        throw new ValidationError(copy.captchaRequired);
       }
       const valid = await verifyTurnstileToken(parsed.turnstileToken, ip);
       if (!valid) {
-        throw new ValidationError(
-          isEn ? "CAPTCHA verification failed" : "Verifica CAPTCHA non riuscita",
-        );
+        throw new ValidationError(copy.captchaFailed);
       }
     }
 
@@ -86,7 +121,11 @@ export async function requestOtp(
     if (customer) {
       const { code, otpId } = await createOtp(email, ip);
       try {
-        await sendOtpEmail(email, code, parsed.locale);
+        if (parsed.locale === DEFAULT_RECOVERY_LOCALE) {
+          await sendOtpEmail(email, code);
+        } else {
+          await sendOtpEmail(email, code, parsed.locale);
+        }
       } catch (err) {
         // Email fallita: invalida l'OTP appena creato per evitare che l'utente
         // sia bloccato (rate-limit consumato) con codice fantasma.
@@ -112,9 +151,7 @@ export async function requestOtp(
       message:
         err instanceof Error
           ? err.message
-          : formData.get("locale") === "en"
-            ? "Unknown error"
-            : "Errore sconosciuto",
+          : recoveryCopy(String(formData.get("locale") ?? DEFAULT_RECOVERY_LOCALE)).unknownError,
     };
   }
 }
@@ -147,7 +184,7 @@ export async function verifyOtpAndLogin(
       locale: formData.get("locale") ?? DEFAULT_RECOVERY_LOCALE,
     });
     locale = parsed.locale;
-    const isEn = locale === "en";
+    const copy = recoveryCopy(locale);
 
     // normalizeEmail invece di toLowerCase: applica Gmail alias dedup
     // (`mario+tag@gmail.com` → `mario@gmail.com`). Cosi' il lookup Customer
@@ -159,16 +196,10 @@ export async function verifyOtpAndLogin(
     if (!result.valid) {
       const msg =
         result.reason === "EXPIRED"
-          ? isEn
-            ? "Code expired"
-            : "Codice scaduto"
+          ? copy.codeExpired
           : result.reason === "TOO_MANY_ATTEMPTS"
-            ? isEn
-              ? "Too many attempts. Request a new code"
-              : "Troppi tentativi, richiedi un nuovo codice"
-            : isEn
-              ? "Invalid code"
-              : "Codice non valido";
+            ? copy.tooManyAttempts
+            : copy.invalidCode;
       return { status: "error", message: msg };
     }
 
@@ -178,9 +209,7 @@ export async function verifyOtpAndLogin(
     if (!customer) {
       return {
         status: "error",
-        message: isEn
-          ? "No booking found for this email"
-          : "Nessuna prenotazione trovata per questa email",
+        message: copy.noBooking,
       };
     }
 
@@ -191,11 +220,9 @@ export async function verifyOtpAndLogin(
       message:
         err instanceof Error
           ? err.message
-          : locale === "en"
-            ? "Unknown error"
-            : "Errore sconosciuto",
+          : recoveryCopy(locale).unknownError,
     };
   }
 
-  redirect(`/${locale}/b/sessione`);
+  redirect(locale === "es" ? "/es/b/sesion" : locale === "fr" ? "/fr/b/session" : `/${locale}/b/sessione`);
 }

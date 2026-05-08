@@ -62,11 +62,21 @@ const CHARTER_DURATION_DAYS = [3, 4, 5, 6, 7] as const;
 function paymentLabel(service: BookingServiceOption, locale: string): string {
   if (service.defaultPaymentSchedule === "DEPOSIT_BALANCE") {
     const pct = service.defaultDepositPercentage ?? 30;
-    return locale === "en"
+    return locale === "es"
+      ? `${pct}% de depósito hoy, saldo en destino`
+      : locale === "fr"
+        ? `${pct}% d'acompte aujourd'hui, solde sur place`
+      : locale === "en"
       ? `${pct}% deposit today, balance on site`
       : `Acconto ${pct}% oggi, saldo solo in loco`;
   }
-  return locale === "en" ? "Full payment at checkout" : "Pagamento completo al checkout";
+  return locale === "es"
+    ? "Pago completo en checkout"
+    : locale === "fr"
+      ? "Paiement complet au checkout"
+    : locale === "en"
+      ? "Full payment at checkout"
+      : "Pagamento completo al checkout";
 }
 
 function experienceKey(service: BookingServiceOption): string {
@@ -77,25 +87,54 @@ function experienceKey(service: BookingServiceOption): string {
 
 function experienceTitle(service: BookingServiceOption, locale: string): string {
   if (service.serviceType === "BOAT_SHARED") {
-    return locale === "en" ? "Shared boat" : "Barca condivisa";
+    return locale === "es"
+      ? "Barco compartido"
+      : locale === "fr"
+        ? "Bateau partagé"
+        : locale === "en"
+          ? "Shared boat"
+          : "Barca condivisa";
   }
   if (service.serviceType === "BOAT_EXCLUSIVE") {
-    return locale === "en" ? "Exclusive boat" : "Barca in esclusiva";
+    return locale === "es"
+      ? "Barco exclusivo"
+      : locale === "fr"
+        ? "Bateau privatisé"
+        : locale === "en"
+          ? "Exclusive boat"
+          : "Barca in esclusiva";
   }
   return service.title;
 }
 
 function durationOptionLabel(service: BookingServiceOption, locale: string): string {
-  if (service.durationType === "FULL_DAY") return locale === "en" ? "Full day" : "Giornata intera";
-  if (service.durationType === "HALF_DAY_MORNING") return locale === "en" ? "Morning" : "Mattina";
+  if (service.durationType === "FULL_DAY") {
+    return locale === "es" ? "Día completo" : locale === "fr" ? "Journée complète" : locale === "en" ? "Full day" : "Giornata intera";
+  }
+  if (service.durationType === "HALF_DAY_MORNING") {
+    return locale === "es" ? "Mañana" : locale === "fr" ? "Matin" : locale === "en" ? "Morning" : "Mattina";
+  }
   if (service.durationType === "HALF_DAY_AFTERNOON") {
-    return locale === "en" ? "Afternoon" : "Pomeriggio";
+    return locale === "es" ? "Tarde" : locale === "fr" ? "Après-midi" : locale === "en" ? "Afternoon" : "Pomeriggio";
   }
   return service.durationLabel;
 }
 
 function durationDetail(service: BookingServiceOption, locale: string): string {
-  const unit = locale === "en" ? (service.durationHours === 1 ? "hour" : "hours") : "ore";
+  const unit =
+    locale === "es"
+      ? service.durationHours === 1
+        ? "hora"
+        : "horas"
+      : locale === "en"
+        ? service.durationHours === 1
+          ? "hour"
+          : "hours"
+        : locale === "fr"
+          ? service.durationHours === 1
+            ? "heure"
+            : "heures"
+        : "ore";
   if (service.durationType === "FULL_DAY") return `${service.durationHours} ${unit}`;
   if (service.durationType === "HALF_DAY_MORNING") return `${service.durationHours} ${unit}`;
   if (service.durationType === "HALF_DAY_AFTERNOON") return `${service.durationHours} ${unit}`;
@@ -204,7 +243,7 @@ export function BookingPageClient({
       });
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.title.localeCompare(b.title, locale === "en" ? "en" : "it"),
+      a.title.localeCompare(b.title, locale === "es" ? "es" : locale === "fr" ? "fr" : locale === "en" ? "en" : "it"),
     );
   }, [locale, services]);
 
@@ -251,7 +290,7 @@ export function BookingPageClient({
     Boolean(selectedExperience && nextStepAfterExperience(selectedExperience.services) === "duration");
   const selectedDurationLabel = selectedService
     ? selectedService.serviceType === "CABIN_CHARTER"
-      ? `${selectedCharterDays} ${locale === "en" ? "days" : "giornate"}`
+      ? `${selectedCharterDays} ${locale === "es" ? "días" : locale === "fr" ? "jours" : locale === "en" ? "days" : "giornate"}`
       : `${durationOptionLabel(selectedService, locale)} · ${durationDetail(selectedService, locale)}`
     : "";
   const fixedDurationDays =
@@ -452,7 +491,7 @@ export function BookingPageClient({
                   >
                     <span className="block text-lg font-bold text-slate-950">{days}</span>
                     <span className="text-sm text-slate-600">
-                      {locale === "en" ? "days" : "giornate"}
+                      {locale === "es" ? "días" : locale === "fr" ? "jours" : locale === "en" ? "days" : "giornate"}
                     </span>
                   </button>
                 ))}
@@ -577,7 +616,14 @@ function StepProgress({
   locale: string;
 }) {
   const steps =
-    locale === "en"
+    locale === "es"
+      ? ([
+          { key: "boat", label: "Barco", shortLabel: "Barco" },
+          { key: "experience", label: "Experiencia", shortLabel: "Experiencia" },
+          { key: "duration", label: "Duración", shortLabel: "Duración" },
+          { key: "booking", label: "Fecha y checkout", shortLabel: "Checkout" },
+        ] as const)
+      : locale === "en"
       ? ([
           { key: "boat", label: "Boat", shortLabel: "Boat" },
           { key: "experience", label: "Experience", shortLabel: "Experience" },
@@ -710,6 +756,66 @@ function InfoTile({
 }
 
 function getBookingPageCopy(locale: string) {
+  if (locale === "fr") {
+    return {
+      eyebrow: "Réservations",
+      title: "Réserver des excursions en bateau aux îles Égades en ligne",
+      subtitle:
+        "Choisissez le bateau, l'expérience, la durée et une date disponible avec un prix à jour. Le checkout crée une réservation directe dans le calendrier central d'Egadisailing.",
+      emptyTitle: "Aucune expérience active",
+      emptyText: "Aucun service n'est actuellement disponible à la réservation en ligne.",
+      chooseBoatTitle: "Choisissez le bateau",
+      chooseBoatSubtitle: "Chaque bateau affiche uniquement les expériences réellement connectées dans la base de données.",
+      bookableOptions: "options réservables",
+      chooseExperienceTitle: "Choisissez l'expérience",
+      availableFor: "Expériences disponibles pour",
+      selectedBoat: "le bateau sélectionné",
+      durationToChoose: "Durée à choisir",
+      chooseDurationTitle: "Choisissez la durée",
+      chooseDurationSubtitle:
+        "La durée détermine le service réel utilisé pour les prix, les disponibilités et le checkout.",
+      continue: "Continuer",
+      back: "Retour",
+      selectedPath: "Parcours sélectionné",
+      changeSelection: "Modifier la sélection",
+      duration: "Durée",
+      capacity: "Capacité",
+      upTo: "Jusqu'à",
+      people: "personnes",
+      bookingWizard: "Assistant de réservation",
+    };
+  }
+
+  if (locale === "es") {
+    return {
+      eyebrow: "Reservas",
+      title: "Reserva excursiones en barco por las Islas Egadi online",
+      subtitle:
+        "Elige barco, experiencia, duración y fecha disponible con precio actualizado. El checkout crea una reserva directa en el calendario central de Egadisailing.",
+      emptyTitle: "No hay experiencias activas",
+      emptyText: "En este momento no hay servicios disponibles para reservar online.",
+      chooseBoatTitle: "Elige el barco",
+      chooseBoatSubtitle: "Cada barco muestra solo las experiencias realmente conectadas en la base de datos.",
+      bookableOptions: "opciones reservables",
+      chooseExperienceTitle: "Elige la experiencia",
+      availableFor: "Experiencias disponibles para",
+      selectedBoat: "el barco seleccionado",
+      durationToChoose: "Duración por elegir",
+      chooseDurationTitle: "Elige la duración",
+      chooseDurationSubtitle:
+        "La duración determina el servicio real utilizado para precios, disponibilidad y checkout.",
+      continue: "Continuar",
+      back: "Atrás",
+      selectedPath: "Ruta seleccionada",
+      changeSelection: "Cambiar selección",
+      duration: "Duración",
+      capacity: "Capacidad",
+      upTo: "Hasta",
+      people: "personas",
+	      bookingWizard: "Asistente de reserva",
+    };
+  }
+
   if (locale === "en") {
     return {
       eyebrow: "Bookings",

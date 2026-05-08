@@ -20,6 +20,8 @@ import {
   PASSENGER_FARE_SERVICE_TYPE,
   type PassengerFareCategory,
 } from "@/lib/pricing/passenger-fare-rules-shared";
+import { localizedPath } from "@/lib/i18n/paths";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 const upsertPricingPeriodSchema = z.object({
   id: z.string().optional(),
@@ -173,8 +175,8 @@ const PUBLIC_PRICING_PATHS = [
   "/",
   ...routing.locales.flatMap((locale) => [
     `/${locale}`,
-    `/${locale}/prenota`,
-    `/${locale}/experiences`,
+    localizedStaticPath(locale, "/prenota"),
+    localizedStaticPath(locale, "/experiences"),
   ]),
 ];
 
@@ -182,7 +184,7 @@ function pricingRevalidatePaths(serviceIds = getListedExperienceIds()): string[]
   const uniqueServiceIds = Array.from(new Set(serviceIds));
   const detailPaths = uniqueServiceIds.flatMap((serviceId) =>
     routing.locales.map(
-      (locale) => `/${locale}/experiences/${getExperiencePublicSlug(serviceId)}`,
+      (locale) => localizedPath(locale, `/experiences/${getExperiencePublicSlug(serviceId, locale)}`),
     ),
   );
 

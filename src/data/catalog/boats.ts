@@ -101,54 +101,80 @@ const BOATS_PAGE_COPY = {
   seoTitle: {
     it: "Barche per tour alle Egadi da Trapani",
     en: "Boats for Egadi Tours from Trapani",
+    es: "Barcos para excursiones a las Islas Egadi desde Trapani",
+    fr: "Bateaux pour excursions aux îles Égades depuis Trapani",
   },
   seoDescription: {
     it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Trimarano con chef e charter, Cigala & Bertinetti 34 Offshore Open per 4 ore private o 8 ore condivise/private.",
     en: "Discover Egadisailing boats for Egadi tours from Trapani: Trimarano with chef and charter, Cigala & Bertinetti 34 Offshore Open for private 4-hour or shared/private 8-hour tours.",
+    es: "Descubre los barcos de Egadisailing para excursiones a las Islas Egadi desde Trapani: Neel 47 con chef y charter, Cigala & Bertinetti para tours privados o compartidos.",
+    fr: "Découvrez les bateaux Egadisailing pour excursions aux îles Égades depuis Trapani : Neel 47 avec chef et charter, Cigala & Bertinetti pour tours privés ou partagés.",
   },
   eyebrow: {
     it: "Flotta Egadisailing",
     en: "Egadisailing fleet",
+    es: "Flota Egadisailing",
+    fr: "Flotte Egadisailing",
   },
   title: {
     it: "Le nostre barche per scoprire le Egadi da Trapani",
     en: "Our boats for discovering the Egadi Islands from Trapani",
+    es: "Nuestros barcos para descubrir las Islas Egadi desde Trapani",
+    fr: "Nos bateaux pour découvrir les îles Égades depuis Trapani",
   },
   subtitle: {
     it: "Dal Trimarano con chef a bordo alla Cigala & Bertinetti 34 Offshore Open per 4 ore in esclusiva o 8 ore condivise/private: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
     en: "From the Trimarano with chef on board to the Cigala & Bertinetti 34 Offshore Open for private 4-hour or shared/private 8-hour tours: choose the right pace for Favignana, Levanzo and Marettimo.",
+    es: "Del Neel 47 con chef a bordo a la Cigala & Bertinetti 34 Offshore Open para tours privados de 4 horas o salidas de 8 horas compartidas/privadas.",
+    fr: "Du Neel 47 avec chef à bord au Cigala & Bertinetti 34 Offshore Open pour tours privés de 4 heures ou sorties de 8 heures partagées/privées.",
   },
   comparisonTitle: {
     it: "Due barche, due modi di vivere il mare",
     en: "Two boats, two ways to experience the sea",
+    es: "Dos barcos, dos formas de vivir el mar",
+    fr: "Deux bateaux, deux façons de vivre la mer",
   },
   comparisonText: {
     it: "Il Trimarano è pensato per comfort, chef e charter. La Cigala & Bertinetti 34 Offshore Open è la scelta agile per 4 ore private o giornate da 8 ore condivise/private.",
     en: "The Trimarano is designed for comfort, chef experiences and charter. The Cigala & Bertinetti 34 Offshore Open is the agile choice for private 4-hour or shared/private 8-hour days.",
+    es: "El Neel 47 está pensado para confort, chef y charter. La Cigala & Bertinetti 34 Offshore Open es la opción ágil para 4 horas privadas o jornadas de 8 horas compartidas/privadas.",
+    fr: "Le Neel 47 est pensé pour le confort, le chef à bord et le charter. Le Cigala & Bertinetti 34 Offshore Open est le choix agile pour 4 heures privées ou journées de 8 heures partagées/privées.",
   },
   chooserTitle: {
     it: "Quale barca scegliere?",
     en: "Which boat should you choose?",
+    es: "¿Qué barco elegir?",
+    fr: "Quel bateau choisir ?",
   },
   chooserText: {
     it: "Se cerchi spazio, tavola e privacy scegli il Trimarano. Se vuoi una rotta snella tra le baie, scegli la Cigala & Bertinetti 34 Offshore Open per tour da 4 o 8 ore.",
     en: "If you want space, food and privacy, choose the Trimarano. If you want an agile route between bays, choose the Cigala & Bertinetti 34 Offshore Open for 4- or 8-hour tours.",
+    es: "Si buscas espacio, comida y privacidad, elige el Neel 47. Si quieres una ruta ágil entre calas, elige la Cigala & Bertinetti para tours de 4 u 8 horas.",
+    fr: "Si vous cherchez espace, déjeuner et intimité, choisissez le Neel 47. Si vous voulez une route agile entre les criques, choisissez le Cigala & Bertinetti pour 4 ou 8 heures.",
   },
   detailCtaLabel: {
     it: "Scopri la barca",
     en: "Discover the boat",
+    es: "Ver el barco",
+    fr: "Voir le bateau",
   },
   experiencesCtaLabel: {
     it: "Vedi esperienze",
     en: "View experiences",
+    es: "Ver experiencias",
+    fr: "Voir les expériences",
   },
   availableExperiencesLabel: {
     it: "Esperienze disponibili",
     en: "Available experiences",
+    es: "Experiencias disponibles",
+    fr: "Expériences disponibles",
   },
   fallbackImageNote: {
     it: "Foto completa in arrivo",
     en: "Full photo coming soon",
+    es: "Foto completa próximamente",
+    fr: "Photo complète à venir",
   },
 } as const satisfies Record<string, LocalizedString>;
 
@@ -818,10 +844,228 @@ export function getBoatCatalogEntry(boatId: string): BoatCatalogEntry | null {
   return boatId in BOAT_CATALOG ? BOAT_CATALOG[boatId as keyof typeof BOAT_CATALOG] : null;
 }
 
+const SPANISH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>>> = {
+  trimarano: {
+    title: "Neel 47",
+    shortTitle: "Neel 47",
+    eyebrow: "Confort, chef y charter",
+    description:
+      "El Neel 47 es el trimarán para las experiencias más completas en las Islas Egadi: espacios amplios, camarotes, cocina y estabilidad para días privados, chef a bordo y charters de varios días.",
+    detail: {
+      eyebrow: "Trimarán para tours por las Egadi",
+      title: "Neel 47: confort, chef y charter en las Islas Egadi",
+      paragraphs: [
+        "El Neel 47 es la opción de Egadisailing para quienes buscan una experiencia en barco más cómoda, cuidada y privada que un tour rápido clásico. Es ideal para una excursión con chef a bordo, una jornada gourmet entre Favignana y Levanzo o un charter de varios días.",
+        "A bordo hay espacio para comer, relajarse, tomar el sol, cambiarse y vivir el día con un ritmo lento. Su estructura de trimarán ofrece estabilidad y amplitud incluso para huéspedes que no están acostumbrados a navegar.",
+        "No hace falta conocer las calas ni tener experiencia en vela: la ruta, los horarios y las paradas se ajustan con la tripulación según meteorología, mar y objetivo de la jornada.",
+      ],
+    },
+    seoTitle: "Neel 47 con chef a bordo en las Islas Egadi",
+    seoDescription:
+      "Trimarán Neel 47 desde Trapani para excursiones por las Islas Egadi con chef a bordo, experiencia gourmet, charter, camarotes y confort privado.",
+    imageAlt: "Trimarán Neel 47 en las Islas Egadi",
+    idealFor: [
+      "Experiencia gourmet con chef a bordo",
+      "Charter privado de varios días",
+      "Grupos que buscan espacio, privacidad y ritmo lento",
+      "Comida a bordo y paradas en calas protegidas",
+    ],
+    routes: [
+      "Favignana y Levanzo para la experiencia gourmet",
+      "Favignana, Levanzo y Marettimo para charters de varios días",
+      "Rutas adaptadas a mar, viento y confort a bordo",
+    ],
+    faqs: [
+      {
+        question: "¿Por qué elegir el Neel 47?",
+        answer:
+          "Porque ofrece más espacio, estabilidad y confort que un barco abierto. Es la mejor elección para chef a bordo, charter y jornadas privadas premium.",
+      },
+      {
+        question: "¿El Neel 47 es adecuado para familias?",
+        answer:
+          "Sí. Sus zonas amplias y protegidas ayudan a vivir el día con más calma, siempre con ruta y horarios adaptados por la tripulación.",
+      },
+      {
+        question: "¿Se puede dormir a bordo?",
+        answer:
+          "Sí, en los programas de charter de varios días, siempre según condiciones meteorológicas y planificación de la ruta.",
+      },
+    ],
+    specs: [
+      { icon: "cabins", value: "4", label: "Camarotes" },
+      { icon: "beds", value: "8", label: "Plazas noche" },
+      { icon: "kitchen", value: "1", label: "Cocina" },
+      { icon: "bath", value: "3", label: "Baños" },
+    ],
+  },
+  boat: {
+    title: "Cigala & Bertinetti 34 Offshore Open",
+    shortTitle: "Cigala & Bertinetti",
+    eyebrow: "Ágil, rápida y abierta",
+    description:
+      "La Cigala & Bertinetti 34 Offshore Open es el barco ágil para excursiones privadas de 4 horas y salidas de 8 horas compartidas o privadas entre Favignana y Levanzo.",
+    detail: {
+	      eyebrow: "Barco abierto para las Islas Egadi",
+      title: "Cigala & Bertinetti: el barco ágil para calas, baños y rutas flexibles",
+      paragraphs: [
+        "La Cigala & Bertinetti es ideal para quienes quieren moverse con rapidez entre calas, hacer paradas de baño y vivir una experiencia más directa con el mar.",
+        "Funciona muy bien para tours privados de 4 horas por la mañana o por la tarde, y para jornadas de 8 horas cuando quieres más tiempo para Favignana, Levanzo y las zonas protegidas del día.",
+        "Es un barco abierto y deportivo: perfecto para grupos que buscan agua clara, snorkel y una ruta flexible con patrón.",
+      ],
+    },
+    seoTitle: "Cigala & Bertinetti para excursiones en barco por las Islas Egadi",
+    seoDescription:
+      "Cigala & Bertinetti 34 Offshore Open desde Trapani para tours privados de 4 horas y excursiones de 8 horas compartidas o privadas por Favignana y Levanzo.",
+    imageAlt: "Cigala & Bertinetti navegando por las Islas Egadi",
+    idealFor: [
+      "Excursiones privadas de 4 horas por la mañana o por la tarde",
+      "Tour compartido de 8 horas con plazas individuales",
+      "Grupos que quieren baño, snorkel y ruta flexible",
+      "Quienes prefieren un barco abierto y dinámico",
+    ],
+    routes: [
+      "Favignana y Levanzo en jornada completa",
+      "Calas protegidas para medio día privado",
+      "Ruta adaptada a viento, mar y afluencia",
+    ],
+    faqs: [
+      {
+        question: "¿La excursión de 4 horas es compartida?",
+        answer:
+          "No. La fórmula de 4 horas se ofrece como experiencia privada, por la mañana o por la tarde.",
+      },
+      {
+        question: "¿La Cigala & Bertinetti sirve para un tour compartido?",
+        answer:
+          "Sí, el tour compartido disponible es el de 8 horas, con plazas individuales y salida desde Trapani.",
+      },
+      {
+        question: "¿Qué debo llevar?",
+        answer:
+          "Bañador, toalla, protector solar, sombrero, gafas de sol y una bolsa blanda. En un barco abierto conviene viajar ligero.",
+      },
+    ],
+    specs: [
+      { icon: "users", value: "12", label: "Plazas" },
+      { icon: "engine", value: "800", label: "HP" },
+    ],
+  },
+};
+
+const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>>> = {
+  trimarano: {
+    title: "Neel 47",
+    shortTitle: "Neel 47",
+    eyebrow: "Confort, chef et charter",
+    description:
+      "Le Neel 47 est le trimaran des expériences les plus complètes aux îles Égades : grands espaces, cabines, cuisine et stabilité pour journées privées, chef à bord et charters de plusieurs jours.",
+    detail: {
+      eyebrow: "Trimaran pour excursions aux Égades",
+      title: "Neel 47 : confort, chef et charter aux îles Égades",
+      paragraphs: [
+        "Le Neel 47 est l'option Egadisailing pour ceux qui cherchent une expérience en bateau plus confortable, soignée et privée qu'un tour rapide classique. Il est idéal pour une excursion avec chef à bord, une journée gourmet entre Favignana et Levanzo ou un charter de plusieurs jours.",
+        "À bord, il y a de l'espace pour déjeuner, se détendre, prendre le soleil, se changer et vivre la journée à un rythme lent. Sa structure de trimaran offre stabilité et amplitude même aux hôtes peu habitués à naviguer.",
+        "Il n'est pas nécessaire de connaître les criques ni d'avoir de l'expérience en voile : route, horaires et arrêts sont ajustés avec l'équipage selon la météo, la mer et l'objectif de la journée.",
+      ],
+    },
+    seoTitle: "Neel 47 avec chef à bord aux îles Égades",
+    seoDescription:
+      "Trimaran Neel 47 depuis Trapani pour excursions aux îles Égades avec chef à bord, expérience gourmet, charter, cabines et confort privé.",
+    imageAlt: "Trimaran Neel 47 aux îles Égades",
+    idealFor: [
+      "Expérience gourmet avec chef à bord",
+      "Charter privé de plusieurs jours",
+      "Groupes qui cherchent espace, intimité et rythme lent",
+      "Déjeuner à bord et arrêts dans des criques protégées",
+    ],
+    routes: [
+      "Favignana et Levanzo pour l'expérience gourmet",
+      "Favignana, Levanzo et Marettimo pour les charters de plusieurs jours",
+      "Routes adaptées à la mer, au vent et au confort à bord",
+    ],
+    faqs: [
+      {
+        question: "Pourquoi choisir le Neel 47 ?",
+        answer:
+          "Parce qu'il offre plus d'espace, de stabilité et de confort qu'un bateau ouvert. C'est le meilleur choix pour chef à bord, charter et journées privées premium.",
+      },
+      {
+        question: "Le Neel 47 convient-il aux familles ?",
+        answer:
+          "Oui. Ses zones larges et protégées aident à vivre la journée plus calmement, toujours avec route et horaires adaptés par l'équipage.",
+      },
+      {
+        question: "Peut-on dormir à bord ?",
+        answer:
+          "Oui, dans les programmes de charter de plusieurs jours, selon les conditions météo et la planification de route.",
+      },
+    ],
+    specs: [
+      { icon: "cabins", value: "4", label: "Cabines" },
+      { icon: "beds", value: "8", label: "Couchages" },
+      { icon: "kitchen", value: "1", label: "Cuisine" },
+      { icon: "bath", value: "3", label: "Salles d'eau" },
+    ],
+  },
+  boat: {
+    title: "Cigala & Bertinetti 34 Offshore Open",
+    shortTitle: "Cigala & Bertinetti",
+    eyebrow: "Agile, rapide et ouvert",
+    description:
+      "Le Cigala & Bertinetti 34 Offshore Open est le bateau agile pour excursions privées de 4 heures et sorties de 8 heures partagées ou privées entre Favignana et Levanzo.",
+    detail: {
+      eyebrow: "Bateau ouvert pour les îles Égades",
+      title: "Cigala & Bertinetti : le bateau agile pour criques, baignades et routes flexibles",
+      paragraphs: [
+        "Le Cigala & Bertinetti est idéal pour ceux qui veulent se déplacer rapidement entre les criques, faire des arrêts baignade et vivre une expérience plus directe avec la mer.",
+        "Il fonctionne très bien pour les tours privés de 4 heures le matin ou l'après-midi, et pour les journées de 8 heures lorsque vous voulez plus de temps pour Favignana, Levanzo et les zones protégées du jour.",
+        "C'est un bateau ouvert et sportif : parfait pour les groupes qui cherchent eau claire, snorkeling et route flexible avec skipper.",
+      ],
+    },
+    seoTitle: "Cigala & Bertinetti pour excursions en bateau aux îles Égades",
+    seoDescription:
+      "Cigala & Bertinetti 34 Offshore Open depuis Trapani pour tours privés de 4 heures et excursions de 8 heures partagées ou privées à Favignana et Levanzo.",
+    imageAlt: "Cigala & Bertinetti naviguant aux îles Égades",
+    idealFor: [
+      "Excursions privées de 4 heures le matin ou l'après-midi",
+      "Tour partagé de 8 heures avec places individuelles",
+      "Groupes qui veulent baignade, snorkeling et route flexible",
+      "Ceux qui préfèrent un bateau ouvert et dynamique",
+    ],
+    routes: [
+      "Favignana et Levanzo en journée complète",
+      "Criques protégées pour demi-journée privée",
+      "Route adaptée au vent, à la mer et à l'affluence",
+    ],
+    faqs: [
+      {
+        question: "L'excursion de 4 heures est-elle partagée ?",
+        answer:
+          "Non. La formule de 4 heures est proposée comme expérience privée, le matin ou l'après-midi.",
+      },
+      {
+        question: "Le Cigala & Bertinetti convient-il à un tour partagé ?",
+        answer:
+          "Oui, le tour partagé disponible est celui de 8 heures, avec places individuelles et départ depuis Trapani.",
+      },
+      {
+        question: "Que faut-il apporter ?",
+        answer:
+          "Maillot, serviette, crème solaire, chapeau, lunettes de soleil et sac souple. Sur un bateau ouvert, mieux vaut voyager léger.",
+      },
+    ],
+    specs: [
+      { icon: "users", value: "12", label: "Places" },
+      { icon: "engine", value: "800", label: "HP" },
+    ],
+  },
+};
+
 export function getBoatContent(boatId: string, locale?: string | null): ResolvedBoatContent | null {
   const entry = getBoatCatalogEntry(boatId);
   if (!entry) return null;
-  return {
+  const content: ResolvedBoatContent = {
     id: entry.id,
     slug: entry.slug,
     externalUrl: entry.externalUrl,
@@ -858,6 +1102,13 @@ export function getBoatContent(boatId: string, locale?: string | null): Resolved
       label: localize(spec.label, locale),
     })),
   };
+  const override =
+    locale === "es"
+      ? SPANISH_BOAT_OVERRIDES[content.id]
+      : locale === "fr"
+        ? FRENCH_BOAT_OVERRIDES[content.id]
+        : undefined;
+  return override ? { ...content, ...override } : content;
 }
 
 export function getPublicBoatIds(): string[] {

@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { buttonVariants } from "@/components/ui/button";
 import { liquidGlassButton, liquidGlassButtonLight } from "@/lib/ui/liquid-glass";
 import { BRAND_LOGO_SRC } from "@/lib/public-assets";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 import {
   Sheet,
   SheetTrigger,
@@ -31,7 +32,7 @@ export function Navbar() {
   const tCommon = useTranslations("common");
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const recoveryHref = `/${locale}/recupera-prenotazione`;
+  const recoveryHref = localizedStaticPath(locale, "/recupera-prenotazione");
 
   useEffect(() => {
     function handleScroll() {
@@ -56,7 +57,7 @@ export function Navbar() {
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         {/* Logo */}
         <Link
-          href={`/${locale}`}
+          href={localizedStaticPath(locale, "/")}
           className={cn(
             "group flex items-center gap-2 font-heading text-xl font-bold tracking-tight transition-colors",
             !isTransparent ? "text-[var(--color-ocean)]" : "text-white"
@@ -81,7 +82,7 @@ export function Navbar() {
           {navLinks.map((link) => (
             <Link
               key={link.key}
-              href={`/${locale}${link.href}`}
+              href={localizedStaticPath(locale, link.href)}
               className={cn(
                 "text-sm font-medium transition-colors hover:opacity-80",
                 !isTransparent ? "text-gray-700" : "text-white"
@@ -109,7 +110,7 @@ export function Navbar() {
             {tCommon("recoverBooking")}
           </Link>
           <Link
-            href={`/${locale}/prenota`}
+            href={localizedStaticPath(locale, "/prenota")}
             className={cn(
               buttonVariants({ size: "default" }),
               "bg-[var(--color-gold)] text-white hover:bg-[var(--color-gold)]/90 border-none"
@@ -144,7 +145,7 @@ export function Navbar() {
                 {navLinks.map((link) => (
                   <Link
                     key={link.key}
-                    href={`/${locale}${link.href}`}
+                    href={localizedStaticPath(locale, link.href)}
                     onClick={() => setMobileMenuOpen(false)}
                     className="block rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
                   >
@@ -155,7 +156,7 @@ export function Navbar() {
                   <LanguageSwitcher className="text-gray-700" />
                 </div>
                 <Link
-                  href={`/${locale}/prenota`}
+                  href={localizedStaticPath(locale, "/prenota")}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     buttonVariants({ size: "lg" }),

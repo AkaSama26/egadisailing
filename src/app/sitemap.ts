@@ -7,6 +7,7 @@ import { favignanaGuideSlugPairs } from "@/data/favignana-guides";
 import { levanzoGuideSlugPairs } from "@/data/levanzo-guides";
 import { marettimoGuideSlugPairs } from "@/data/marettimo-guides";
 import { env } from "@/lib/env";
+import { localizedAbsoluteUrl, localizedPathWithoutLocale } from "@/lib/i18n/paths";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ type SitemapEntryOptions = Pick<SitemapEntry, "changeFrequency" | "priority" | "
 type LocalizedPaths = Record<(typeof routing.locales)[number], string>;
 
 function localizedUrl(baseUrl: string, locale: string, path: string): string {
-  return `${baseUrl}/${locale}${path}`;
+  return localizedAbsoluteUrl(baseUrl, locale, path);
 }
 
 function localizedAlternates(baseUrl: string, paths: LocalizedPaths): SitemapEntry["alternates"] {
@@ -32,7 +33,9 @@ function localizedAlternates(baseUrl: string, paths: LocalizedPaths): SitemapEnt
 }
 
 function sameLocalizedPath(path: string): LocalizedPaths {
-  return Object.fromEntries(routing.locales.map((locale) => [locale, path])) as LocalizedPaths;
+  return Object.fromEntries(
+    routing.locales.map((locale) => [locale, localizedPathWithoutLocale(locale, path)]),
+  ) as LocalizedPaths;
 }
 
 function addLocalizedEntries(
@@ -122,6 +125,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       {
         it: `/islands/favignana/${slugs.it}`,
         en: `/islands/favignana/${slugs.en}`,
+        es: `/islas/favignana/${slugs.es}`,
+        fr: `/iles/favignana/${slugs.fr}`,
       },
       {
         lastModified: now,
@@ -138,6 +143,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       {
         it: `/islands/levanzo/${slugs.it}`,
         en: `/islands/levanzo/${slugs.en}`,
+        es: `/islas/levanzo/${slugs.es}`,
+        fr: `/iles/levanzo/${slugs.fr}`,
       },
       {
         lastModified: now,
@@ -154,6 +161,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       {
         it: `/islands/marettimo/${slugs.it}`,
         en: `/islands/marettimo/${slugs.en}`,
+        es: `/islas/marettimo/${slugs.es}`,
+        fr: `/iles/marettimo/${slugs.fr}`,
       },
       {
         lastModified: now,
@@ -168,7 +177,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     addLocalizedEntries(
       entries,
       baseUrl,
-      sameLocalizedPath(`/experiences/${slug}`),
+      {
+        it: localizedPathWithoutLocale("it", `/experiences/${slug}`),
+        en: localizedPathWithoutLocale("en", `/experiences/${slug}`),
+        es: localizedPathWithoutLocale("es", `/experiences/${slug}`),
+        fr: localizedPathWithoutLocale("fr", `/experiences/${slug}`),
+      },
       {
         lastModified: service.updatedAt,
         changeFrequency: "weekly",

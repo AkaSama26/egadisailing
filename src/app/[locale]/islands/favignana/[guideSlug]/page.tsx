@@ -24,20 +24,25 @@ import {
   type FavignanaGuideSection,
 } from "@/data/favignana-guides";
 import { favignanaGuidesEn } from "@/data/favignana-guides-en";
+import { favignanaGuidesEs } from "@/data/favignana-guides-es";
+import { favignanaGuidesFr } from "@/data/favignana-guides-fr";
 import { env } from "@/lib/env";
+import { localizedPath } from "@/lib/i18n/paths";
 
 export const dynamicParams = false;
 
-const guideLocales = ["it", "en"] as const;
+const guideLocales = ["it", "en", "es", "fr"] as const;
 type GuideLocale = (typeof guideLocales)[number];
 
 const guidesByLocale = {
   it: favignanaGuides,
   en: favignanaGuidesEn,
+  es: favignanaGuidesEs,
+  fr: favignanaGuidesFr,
 } satisfies Record<GuideLocale, FavignanaGuide[]>;
 
 function isGuideLocale(locale: string): locale is GuideLocale {
-  return locale === "it" || locale === "en";
+  return locale === "it" || locale === "en" || locale === "es" || locale === "fr";
 }
 
 function getLocalizedGuide(locale: GuideLocale, slug: string): FavignanaGuide | undefined {
@@ -92,6 +97,54 @@ const guideUi = {
     sourcesEyebrow: "Official sources and updates",
     sourcesText:
       "Timetables, connections, vehicle rules and services may change: for practical details, always refer to official sources.",
+  },
+  es: {
+    backLabel: "Favignana",
+    heroLabel: "Guía de Favignana",
+    asideEyebrow: "En esta guía",
+    asideAriaLabel: "Índice de la guía",
+    quickAnswer: "Respuesta rápida",
+    quickAnswerTitle: "En breve",
+    itemEyebrow: "Para tener en cuenta",
+    chapterLabel: (index: number) => `Capítulo ${index + 1}`,
+    compareEyebrow: "Compara experiencias",
+    compareTitle: "Elige la mejor forma de vivir Favignana desde el mar",
+    allExperiences: "Todas las experiencias",
+    routeNotePrefix: "Contexto de la guía",
+    routeNote:
+      "La ruta se confirma siempre según meteorología marina, seguridad e indicaciones del patrón.",
+    faqEyebrow: "FAQ",
+    faqTitle: (title: string) => `Preguntas frecuentes sobre ${title.toLowerCase()}`,
+    relatedEyebrow: "Sigue explorando",
+    relatedTitle: "Más páginas útiles sobre Favignana",
+    relatedLabel: "Leer la guía",
+    sourcesEyebrow: "Fuentes oficiales y actualizaciones",
+    sourcesText:
+      "Horarios, conexiones, normas de vehículos y servicios pueden cambiar: para detalles operativos, consulta siempre las fuentes oficiales.",
+  },
+  fr: {
+    backLabel: "Favignana",
+    heroLabel: "Guide de Favignana",
+    asideEyebrow: "Dans ce guide",
+    asideAriaLabel: "Sommaire du guide",
+    quickAnswer: "Réponse rapide",
+    quickAnswerTitle: "En bref",
+    itemEyebrow: "À retenir",
+    chapterLabel: (index: number) => `Chapitre ${index + 1}`,
+    compareEyebrow: "Comparer les expériences",
+    compareTitle: "Choisissez la bonne façon de vivre Favignana depuis la mer",
+    allExperiences: "Toutes les expériences",
+    routeNotePrefix: "Contexte du guide",
+    routeNote:
+      "L'itinéraire est toujours confirmé selon la météo marine, la sécurité et les indications du skipper.",
+    faqEyebrow: "FAQ",
+    faqTitle: (title: string) => `Questions fréquentes sur ${title.toLowerCase()}`,
+    relatedEyebrow: "Continuer l'exploration",
+    relatedTitle: "Autres pages utiles sur Favignana",
+    relatedLabel: "Lire le guide",
+    sourcesEyebrow: "Sources officielles et mises à jour",
+    sourcesText:
+      "Horaires, liaisons, règles de circulation et services peuvent changer : pour les détails pratiques, consultez toujours les sources officielles.",
   },
 } satisfies Record<
   GuideLocale,
@@ -194,6 +247,80 @@ const compareExperiencesByLocale = {
       meta: "Multi-day",
     },
   ],
+  es: [
+    {
+      title: "Excursión privada Egadi 4 horas",
+      description: "Medio día ágil, barco reservado y ruta acordada con el patrón.",
+      href: "/experiences/boat-exclusive-afternoon",
+      image: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
+      meta: "4 horas",
+    },
+    {
+      title: "Excursión compartida Egadi 8 horas",
+      description: "Día completo con plazas individuales, baños y snorkel si el mar lo permite.",
+      href: "/experiences/boat-shared-full-day",
+      image: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
+      meta: "8 horas",
+    },
+    {
+      title: "Excursión privada Egadi 8 horas",
+      description: "Barco en exclusiva para grupos que quieren privacidad y ritmo a medida.",
+      href: "/experiences/boat-exclusive-full-day",
+      image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+      meta: "Privado",
+    },
+    {
+      title: "Chef a bordo en trimarán",
+      description: "Neel 47 con chef, patrón, azafata y comida con productos locales.",
+      href: "/experiences/exclusive-experience",
+      image: "/images/boats/neel-47/neel-47-tavolo-a-bordo.webp",
+      meta: "Premium",
+    },
+    {
+      title: "Charter Islas Egadi",
+      description: "De 3 a 7 días en trimarán entre Favignana, Levanzo y Marettimo.",
+      href: "/experiences/charter",
+      image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+      meta: "Varios días",
+    },
+  ],
+  fr: [
+    {
+      title: "Excursion privée Égades 4 heures",
+      description: "Une demi-journée agile avec bateau réservé et itinéraire choisi avec le skipper.",
+      href: "/experiences/boat-exclusive-afternoon",
+      image: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
+      meta: "4 heures",
+    },
+    {
+      title: "Excursion partagée Égades 8 heures",
+      description: "Une journée complète avec places individuelles, baignades et snorkeling si la mer le permet.",
+      href: "/experiences/boat-shared-full-day",
+      image: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
+      meta: "8 heures",
+    },
+    {
+      title: "Excursion privée Égades 8 heures",
+      description: "Un bateau en exclusivité pour les groupes qui veulent intimité, confort et rythme sur mesure.",
+      href: "/experiences/boat-exclusive-full-day",
+      image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+      meta: "Privé",
+    },
+    {
+      title: "Chef à Bord en trimaran",
+      description: "Neel 47 avec skipper, hôtesse, chef privé et déjeuner à base de produits locaux.",
+      href: "/experiences/exclusive-experience",
+      image: "/images/boats/neel-47/neel-47-tavolo-a-bordo.webp",
+      meta: "Premium",
+    },
+    {
+      title: "Charter aux îles Égades",
+      description: "De 3 à 7 jours en trimaran entre Favignana, Levanzo et Marettimo.",
+      href: "/experiences/charter",
+      image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+      meta: "Plusieurs jours",
+    },
+  ],
 } satisfies Record<
   GuideLocale,
   Array<{
@@ -262,6 +389,62 @@ const ctaCopyByLocale = {
       icon: Sparkles,
     },
   },
+  es: {
+    cigala: {
+      eyebrow: "Excursión en barco desde Trapani",
+      title: "¿Quieres ver estas calas sin organizar bici, scooter ni accesos rocosos?",
+      description:
+        "Con Egadisailing, la ruta se elige según viento, mar y comodidad del grupo. Es una forma sencilla de vivir Favignana desde el mar, con baños y snorkel cuando las condiciones lo permiten.",
+      href: "/experiences/boat-shared-full-day",
+      label: "Ver la excursión de 8 horas",
+      secondaryHref: "/experiences/boat-exclusive-full-day",
+      secondaryLabel: "Ver el tour privado",
+      image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
+      imageAlt: "Cigala y Bertinetti 34 Offshore Open en las Islas Egadi",
+      icon: Waves,
+    },
+    neel: {
+      eyebrow: "Trimarán Neel 47",
+      title: "Para un día más cómodo, elige el trimarán con chef a bordo",
+      description:
+        "Espacios amplios, patrón, azafata, cocina privada y comida con productos locales: una opción premium para vivir Favignana y Levanzo con un ritmo más lento y cuidado.",
+      href: "/experiences/exclusive-experience",
+      label: "Ver la experiencia gourmet",
+      secondaryHref: "/experiences/charter",
+      secondaryLabel: "Ver el charter",
+      image: "/images/boats/neel-47/neel-47-favignana.webp",
+      imageAlt: "Trimarán Neel 47 navegando cerca de Favignana",
+      icon: Sparkles,
+    },
+  },
+  fr: {
+    cigala: {
+      eyebrow: "Excursion en bateau depuis Trapani",
+      title: "Envie de voir ces criques sans organiser vélos, scooters et accès rocheux ?",
+      description:
+        "Avec Egadisailing, l'itinéraire est choisi selon le vent, la mer et le confort du groupe. C'est une façon simple de vivre Favignana depuis la mer, avec baignades et snorkeling lorsque les conditions le permettent.",
+      href: "/experiences/boat-shared-full-day",
+      label: "Voir l'excursion de 8 heures",
+      secondaryHref: "/experiences/boat-exclusive-full-day",
+      secondaryLabel: "Voir le tour privé",
+      image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
+      imageAlt: "Cigala et Bertinetti 34 Offshore Open aux îles Égades",
+      icon: Waves,
+    },
+    neel: {
+      eyebrow: "Trimaran Neel 47",
+      title: "Pour une journée plus confortable, choisissez le trimaran avec chef à bord",
+      description:
+        "Grands espaces, skipper, hôtesse, cuisine privée et déjeuner à base de produits locaux : une solution premium pour vivre Favignana et Levanzo à un rythme plus lent et soigné.",
+      href: "/experiences/exclusive-experience",
+      label: "Voir l'expérience gourmet",
+      secondaryHref: "/experiences/charter",
+      secondaryLabel: "Voir le charter",
+      image: "/images/boats/neel-47/neel-47-favignana.webp",
+      imageAlt: "Trimaran Neel 47 en navigation près de Favignana",
+      icon: Sparkles,
+    },
+  },
 } satisfies Record<
   GuideLocale,
   Record<
@@ -291,21 +474,28 @@ function absoluteUrl(path: string): string {
 }
 
 function getGuideUrl(locale: GuideLocale, slug: string): string {
-  return `/${locale}/islands/favignana/${slug}`;
+  return localizedPath(locale, `/islands/favignana/${slug}`);
 }
 
 function buildGuideJsonLd(guide: FavignanaGuide, locale: GuideLocale) {
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}${getGuideUrl(locale, guide.slug)}`;
-  const inLanguage = locale === "en" ? "en-US" : "it-IT";
-  const islandsName = locale === "en" ? "Egadi Islands" : "Le Isole Egadi";
+  const inLanguage = locale === "en" ? "en-US" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : "it-IT";
+  const islandsName =
+    locale === "en"
+      ? "Egadi Islands"
+      : locale === "es"
+        ? "Islas Egadi"
+        : locale === "fr"
+          ? "Îles Égades"
+          : "Le Isole Egadi";
   const graph: unknown[] = [
     {
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Egadisailing", item: `${base}/${locale}` },
-        { "@type": "ListItem", position: 2, name: islandsName, item: `${base}/${locale}/islands` },
-        { "@type": "ListItem", position: 3, name: "Favignana", item: `${base}/${locale}/islands/favignana` },
+        { "@type": "ListItem", position: 2, name: islandsName, item: `${base}${localizedPath(locale, "/islands")}` },
+        { "@type": "ListItem", position: 3, name: "Favignana", item: `${base}${localizedPath(locale, "/islands/favignana")}` },
         { "@type": "ListItem", position: 4, name: guide.shortTitle, item: pageUrl },
       ],
     },
@@ -399,7 +589,14 @@ export async function generateMetadata({
 
   if (!guide) {
     return {
-      title: locale === "en" ? "Page not found" : "Pagina non trovata",
+      title:
+        locale === "es"
+          ? "Página no encontrada"
+          : locale === "fr"
+            ? "Page introuvable"
+            : locale === "en"
+              ? "Page not found"
+              : "Pagina non trovata",
       robots: { index: false, follow: false },
     };
   }
@@ -408,7 +605,12 @@ export async function generateMetadata({
   const canonical = `${base}${getGuideUrl(locale, guide.slug)}`;
   const italianSlug = getFavignanaGuideSlugForLocale(guide.slug, "it") ?? guide.slug;
   const englishSlug = getFavignanaGuideSlugForLocale(guide.slug, "en") ?? guide.slug;
+  const spanishSlug = getFavignanaGuideSlugForLocale(guide.slug, "es") ?? guide.slug;
   const image = absoluteUrl(guide.heroImage);
+  const ogLocale = locale === "en" ? "en_US" : locale === "es" ? "es_ES" : locale === "fr" ? "fr_FR" : "it_IT";
+  const alternateOgLocales = ["it", "en", "es"]
+    .filter((item) => item !== locale)
+    .map((item) => (item === "en" ? "en_US" : item === "es" ? "es_ES" : "it_IT"));
 
   return {
     title: guide.metaTitle,
@@ -419,6 +621,7 @@ export async function generateMetadata({
       languages: {
         it: `${base}${getGuideUrl("it", italianSlug)}`,
         en: `${base}${getGuideUrl("en", englishSlug)}`,
+        es: `${base}${getGuideUrl("es", spanishSlug)}`,
         "x-default": `${base}${getGuideUrl("it", italianSlug)}`,
       },
     },
@@ -427,8 +630,8 @@ export async function generateMetadata({
       description: guide.metaDescription,
       url: canonical,
       siteName: "Egadisailing",
-      locale: locale === "en" ? "en_US" : "it_IT",
-      alternateLocale: locale === "en" ? ["it_IT"] : ["en_US"],
+      locale: ogLocale,
+      alternateLocale: alternateOgLocales,
       type: "article",
       images: [{ url: image, width: 1200, height: 630, alt: guide.heroAlt }],
     },
@@ -538,7 +741,7 @@ function Hero({
       <div className="mx-auto flex min-h-[calc(82svh-10rem)] max-w-7xl flex-col justify-center">
         <div className="mb-8 flex flex-wrap items-center gap-3 text-sm font-semibold">
           <Link
-            href={`/${locale}/islands/favignana`}
+            href={localizedPath(locale, "/islands/favignana")}
             className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white/78 backdrop-blur transition hover:border-white/40 hover:bg-white/16 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -858,7 +1061,7 @@ function GuideCta({
             </h3>
           </div>
           <Link
-            href={`/${locale}/experiences`}
+            href={localizedPath(locale, "/experiences")}
             className="inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-[var(--color-gold)] px-5 text-sm font-bold text-[#071934] transition hover:bg-[#f0c35a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             {ui.allExperiences}
@@ -870,7 +1073,7 @@ function GuideCta({
           {compareExperiences.map((experience) => (
             <Link
               key={experience.title}
-              href={`/${locale}${experience.href}`}
+              href={localizedPath(locale, experience.href)}
               className="group overflow-hidden rounded-lg border border-white/12 bg-white/[0.07] transition hover:border-[var(--color-gold)] hover:bg-white/[0.11]"
             >
               <div className="relative aspect-[4/3] bg-[#0d2a44]">
@@ -928,14 +1131,14 @@ function GuideCta({
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
-              href={`/${locale}${cta.href}`}
+              href={localizedPath(locale, cta.href)}
               className="inline-flex h-11 items-center justify-center rounded-md bg-[#092337] px-5 text-sm font-bold text-white transition hover:bg-[#123b5a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58a27]"
             >
               {cta.label}
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Link>
             <Link
-              href={`/${locale}${cta.secondaryHref}`}
+              href={localizedPath(locale, cta.secondaryHref)}
               className="inline-flex h-11 items-center justify-center rounded-md border border-[#d9c79d] bg-[#fbf7ee] px-5 text-sm font-bold text-[#092337] transition hover:border-[#b58a27] hover:bg-[#f2e5c9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58a27]"
             >
               {cta.secondaryLabel}

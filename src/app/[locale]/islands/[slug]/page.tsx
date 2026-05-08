@@ -23,12 +23,19 @@ import {
 } from "lucide-react";
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { localizedPath } from "@/lib/i18n/paths";
 import { favignanaGuideLinks } from "@/data/favignana-guides";
 import { favignanaGuideLinksEn } from "@/data/favignana-guides-en";
+import { favignanaGuideLinksEs } from "@/data/favignana-guides-es";
+import { favignanaGuideLinksFr } from "@/data/favignana-guides-fr";
 import { levanzoGuideLinks } from "@/data/levanzo-guides";
 import { levanzoGuideLinksEn } from "@/data/levanzo-guides-en";
+import { levanzoGuideLinksEs } from "@/data/levanzo-guides-es";
+import { levanzoGuideLinksFr } from "@/data/levanzo-guides-fr";
 import { marettimoGuideLinks } from "@/data/marettimo-guides";
 import { marettimoGuideLinksEn } from "@/data/marettimo-guides-en";
+import { marettimoGuideLinksEs } from "@/data/marettimo-guides-es";
+import { marettimoGuideLinksFr } from "@/data/marettimo-guides-fr";
 import { FavignanaPoiExplorer } from "./favignana-poi-explorer";
 
 const validSlugs = ["favignana", "levanzo", "marettimo"] as const;
@@ -50,30 +57,42 @@ const islandSeo: Record<
     title: {
       it: "Cosa vedere a Favignana: cale, mappa, spiagge e tour da Trapani",
       en: "Favignana by Boat: Cala Rossa, Cala Azzurra and Tours from Trapani",
+      es: "Favignana en barco: Cala Rossa, Cala Azzurra y tours desde Trapani",
+      fr: "Favignana en bateau : Cala Rossa, Cala Azzurra et excursions depuis Trapani",
     },
     description: {
       it: "Cosa vedere a Favignana: spiagge più belle, Cala Rossa, Cala Azzurra, Bue Marino, mappa, storia Florio, come arrivare e tour da Trapani.",
       en: "Guide to Favignana by boat: Cala Rossa, Cala Azzurra, Lido Burrone and the best stops for an Egadi tour from Trapani.",
+      es: "Guía de Favignana en barco: Cala Rossa, Cala Azzurra, Bue Marino, playas, snorkel y excursiones por las Islas Egadi desde Trapani.",
+      fr: "Guide de Favignana en bateau : Cala Rossa, Cala Azzurra, Bue Marino, plages, snorkeling et excursions aux îles Égades depuis Trapani.",
     },
   },
   levanzo: {
     title: {
       it: "Levanzo in barca: Cala Fredda, Cala Minnola e tour alle Egadi",
       en: "Levanzo by Boat: Cala Fredda, Cala Minnola and Egadi Tours",
+      es: "Levanzo en barco: Cala Fredda, Cala Minnola y excursiones Egadi",
+      fr: "Levanzo en bateau : Cala Fredda, Cala Minnola et excursions aux Égades",
     },
     description: {
       it: "Guida a Levanzo in barca: Cala Fredda, Cala Minnola, Grotta del Genovese e le soste migliori per snorkeling alle Egadi.",
       en: "Guide to Levanzo by boat: Cala Fredda, Cala Minnola, Grotta del Genovese and the best snorkelling stops in the Egadi Islands.",
+      es: "Guía de Levanzo en barco: Cala Fredda, Cala Minnola, Grotta del Genovese y mejores paradas para snorkel en las Islas Egadi.",
+      fr: "Guide de Levanzo en bateau : Cala Fredda, Cala Minnola, Grotte du Genovese et meilleures haltes de snorkeling aux îles Égades.",
     },
   },
   marettimo: {
     title: {
       it: "Marettimo in barca: grotte marine, Cala Bianca e tour Egadi",
       en: "Marettimo by Boat: Sea Caves, Cala Bianca and Egadi Tours",
+      es: "Marettimo en barco: cuevas marinas, Cala Bianca y charter Egadi",
+      fr: "Marettimo en bateau : grottes marines, Cala Bianca et charter Égades",
     },
     description: {
       it: "Guida a Marettimo in barca: grotte marine, Cala Bianca, Punta Troia e rotte per scoprire l'isola più selvaggia delle Egadi.",
       en: "Guide to Marettimo by boat: sea caves, Cala Bianca, Punta Troia and routes to discover the wildest Egadi island.",
+      es: "Guía de Marettimo en barco: cuevas marinas, Cala Bianca, Punta Troia y rutas para descubrir la isla más salvaje de las Egadi.",
+      fr: "Guide de Marettimo en bateau : grottes marines, Cala Bianca, Punta Troia et itinéraires pour découvrir l'île la plus sauvage des Égades.",
     },
   },
 };
@@ -444,7 +463,7 @@ export default async function IslandDetailPage({
 
   const t = await getTranslations("islands");
   const base = env.APP_URL.replace(/\/$/, "");
-  const pageUrl = `${base}/${locale}/islands/${slug}`;
+  const pageUrl = `${base}${localizedPath(locale, `/islands/${slug}`)}`;
   const json = {
     "@context": "https://schema.org",
     "@graph": [
@@ -452,7 +471,7 @@ export default async function IslandDetailPage({
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Egadisailing", item: `${base}/${locale}` },
-          { "@type": "ListItem", position: 2, name: t("title"), item: `${base}/${locale}/islands` },
+          { "@type": "ListItem", position: 2, name: t("title"), item: `${base}${localizedPath(locale, "/islands")}` },
           { "@type": "ListItem", position: 3, name: t(`${slug}.name`), item: pageUrl },
         ],
       },
@@ -463,7 +482,7 @@ export default async function IslandDetailPage({
         url: pageUrl,
         containedInPlace: {
           "@type": "Place",
-          name: "Isole Egadi",
+          name: locale === "en" ? "Egadi Islands" : locale === "es" ? "Islas Egadi" : locale === "fr" ? "Îles Égades" : "Isole Egadi",
         },
       },
     ],
@@ -483,7 +502,7 @@ export default async function IslandDetailPage({
         <div className="max-w-4xl mx-auto">
           <ScrollSection animation="fade-up">
             <Link
-              href={`/${locale}/islands`}
+              href={localizedPath(locale, "/islands")}
               className="inline-flex items-center gap-2 text-white/70 hover:text-white mb-6 transition-colors text-sm"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -512,7 +531,7 @@ export default async function IslandDetailPage({
         {/* Highlights */}
         <ScrollSection animation="fade-up">
           <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)] mb-8">
-            Highlights
+            {locale === "es" ? "Puntos destacados" : locale === "fr" ? "Points forts" : locale === "en" ? "Highlights" : "In evidenza"}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {highlights.map((highlight, i) => (
@@ -552,7 +571,7 @@ export default async function IslandDetailPage({
             <h2 className="font-heading text-2xl md:text-3xl font-bold text-white mb-4">
               {t("discoverExperiences")}
             </h2>
-            <Link href={`/${locale}/experiences`}>
+            <Link href={localizedPath(locale, "/experiences")}>
               <Button
                 size="lg"
                 className="bg-white text-[var(--color-ocean)] hover:bg-white/90 font-semibold text-lg px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
@@ -569,7 +588,9 @@ export default async function IslandDetailPage({
 
 function LevanzoGuideHub({ locale }: { locale: string }) {
   const isEn = locale === "en";
-  const guides = isEn ? levanzoGuideLinksEn : levanzoGuideLinks;
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const guides = isFr ? levanzoGuideLinksFr : isEs ? levanzoGuideLinksEs : isEn ? levanzoGuideLinksEn : levanzoGuideLinks;
 
   return (
     <ScrollSection animation="fade-up">
@@ -577,15 +598,23 @@ function LevanzoGuideHub({ locale }: { locale: string }) {
         <div className="mb-8">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b58a27]">
             <BookOpen className="h-4 w-4" aria-hidden="true" />
-            {isEn ? "Levanzo guides" : "Guide su Levanzo"}
+            {isEs ? "Guías de Levanzo" : isFr ? "Guides de Levanzo" : isEn ? "Levanzo guides" : "Guide su Levanzo"}
           </p>
           <h2 className="mt-3 font-heading text-3xl font-bold leading-tight text-[#092337]">
-            {isEn
+            {isEs
+              ? "Guías prácticas para calas, Grotta del Genovese y excursiones en barco"
+              : isFr
+              ? "Guides pratiques pour les criques, la Grotte du Genovese et les excursions en bateau"
+              : isEn
               ? "Practical guides for coves, Grotta del Genovese and boat tours"
               : "Approfondimenti per organizzare calette, grotta e tour in barca"}
           </h2>
           <p className="mt-4 text-base leading-7 text-[#425f6f]">
-            {isEn
+            {isEs
+              ? "Levanzo es pequeña, pero necesita el plan adecuado: estas guías ayudan a entender qué ver, dónde bañarse, cómo llegar desde Trapani y cuándo conviene vivir la isla directamente desde el mar."
+              : isFr
+              ? "Levanzo est petite, mais elle demande le bon plan : ces guides expliquent quoi voir, où se baigner, comment venir depuis Trapani et quand vivre l'île directement depuis la mer."
+              : isEn
               ? "Levanzo is small, but it needs the right plan: these guides help you understand what to see, where to swim, how to get there from Trapani and when it is better to experience the island directly from the sea."
               : "Levanzo è piccola, ma va scelta bene: qui trovi guide pratiche per capire cosa vedere, dove fare il bagno, come arrivare da Trapani e quando conviene viverla direttamente dal mare."}
           </p>
@@ -595,7 +624,7 @@ function LevanzoGuideHub({ locale }: { locale: string }) {
           {guides.map((guide) => (
             <Link
               key={guide.slug}
-              href={`/${isEn ? "en" : "it"}/islands/levanzo/${guide.slug}`}
+              href={localizedPath(locale, `/islands/levanzo/${guide.slug}`)}
               className="group flex min-h-full flex-col rounded-lg border border-[#d9c79d] bg-[#fbf7ee] p-5 transition hover:-translate-y-1 hover:border-[#b58a27] hover:bg-white hover:shadow-[0_14px_42px_rgba(10,38,55,0.1)]"
             >
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b58a27]">
@@ -608,7 +637,7 @@ function LevanzoGuideHub({ locale }: { locale: string }) {
                 {guide.description}
               </p>
               <span className="mt-5 inline-flex items-center text-sm font-bold text-[#092337]">
-                {isEn ? "Read the guide" : "Leggi la guida"}
+                {isEs ? "Leer la guía" : isFr ? "Lire le guide" : isEn ? "Read the guide" : "Leggi la guida"}
                 <ArrowRight
                   className="ml-2 h-4 w-4 transition group-hover:translate-x-1"
                   aria-hidden="true"
@@ -624,7 +653,9 @@ function LevanzoGuideHub({ locale }: { locale: string }) {
 
 function MarettimoGuideHub({ locale }: { locale: string }) {
   const isEn = locale === "en";
-  const guides = isEn ? marettimoGuideLinksEn : marettimoGuideLinks;
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const guides = isFr ? marettimoGuideLinksFr : isEs ? marettimoGuideLinksEs : isEn ? marettimoGuideLinksEn : marettimoGuideLinks;
 
   return (
     <ScrollSection animation="fade-up">
@@ -632,15 +663,23 @@ function MarettimoGuideHub({ locale }: { locale: string }) {
         <div className="mb-8">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b58a27]">
             <BookOpen className="h-4 w-4" aria-hidden="true" />
-            {isEn ? "Marettimo guides" : "Guide su Marettimo"}
+            {isEs ? "Guías de Marettimo" : isFr ? "Guides de Marettimo" : isEn ? "Marettimo guides" : "Guide su Marettimo"}
           </p>
           <h2 className="mt-3 font-heading text-3xl font-bold leading-tight text-[#092337]">
-            {isEn
+            {isEs
+              ? "Guías prácticas para cuevas marinas, senderos, Cala Bianca y charter"
+              : isFr
+              ? "Guides pratiques pour les grottes marines, sentiers, Cala Bianca et charter"
+              : isEn
               ? "Practical guides for sea caves, trails, Cala Bianca and charter routes"
               : "Approfondimenti per grotte, sentieri, Cala Bianca e charter"}
           </h2>
           <p className="mt-4 text-base leading-7 text-[#425f6f]">
-            {isEn
+            {isEs
+              ? "Marettimo es la isla más salvaje y más dependiente de la meteorología de las Egadi: estas guías ayudan a entender qué ver, qué calas valorar, cómo llegar desde Trapani y cuándo tiene sentido incluirla en un charter."
+              : isFr
+              ? "Marettimo est l'île la plus sauvage et la plus dépendante de la météo aux Égades : ces guides aident à comprendre quoi voir, quelles criques privilégier, comment venir depuis Trapani et quand l'intégrer dans un charter."
+              : isEn
               ? "Marettimo is the wildest and most weather-dependent of the Egadi Islands: these guides help you understand what to see, which coves to consider, how to get there from Trapani and when it makes sense to include it in a charter."
               : "Marettimo è l'isola più selvaggia e meteo-dipendente delle Egadi: qui trovi guide pratiche per capire cosa vedere, quali cale valutare, come arrivare da Trapani e quando conviene inserirla in un charter."}
           </p>
@@ -650,7 +689,7 @@ function MarettimoGuideHub({ locale }: { locale: string }) {
           {guides.map((guide) => (
             <Link
               key={guide.slug}
-              href={`/${isEn ? "en" : "it"}/islands/marettimo/${guide.slug}`}
+              href={localizedPath(locale, `/islands/marettimo/${guide.slug}`)}
               className="group flex min-h-full flex-col rounded-lg border border-[#d9c79d] bg-[#fbf7ee] p-5 transition hover:-translate-y-1 hover:border-[#b58a27] hover:bg-white hover:shadow-[0_14px_42px_rgba(10,38,55,0.1)]"
             >
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b58a27]">
@@ -663,7 +702,7 @@ function MarettimoGuideHub({ locale }: { locale: string }) {
                 {guide.description}
               </p>
               <span className="mt-5 inline-flex items-center text-sm font-bold text-[#092337]">
-                {isEn ? "Read the guide" : "Leggi la guida"}
+                {isEs ? "Leer la guía" : isFr ? "Lire le guide" : isEn ? "Read the guide" : "Leggi la guida"}
                 <ArrowRight
                   className="ml-2 h-4 w-4 transition group-hover:translate-x-1"
                   aria-hidden="true"
@@ -679,7 +718,9 @@ function MarettimoGuideHub({ locale }: { locale: string }) {
 
 function FavignanaGuideHub({ locale }: { locale: string }) {
   const isEn = locale === "en";
-  const guides = isEn ? favignanaGuideLinksEn : favignanaGuideLinks;
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const guides = isFr ? favignanaGuideLinksFr : isEs ? favignanaGuideLinksEs : isEn ? favignanaGuideLinksEn : favignanaGuideLinks;
 
   return (
     <ScrollSection animation="fade-up">
@@ -687,15 +728,23 @@ function FavignanaGuideHub({ locale }: { locale: string }) {
         <div className="mb-8">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b58a27]">
             <BookOpen className="h-4 w-4" aria-hidden="true" />
-            {isEn ? "Favignana guides" : "Guide su Favignana"}
+            {isEs ? "Guías de Favignana" : isFr ? "Guides de Favignana" : isEn ? "Favignana guides" : "Guide su Favignana"}
           </p>
           <h2 className="mt-3 font-heading text-3xl font-bold leading-tight text-[#092337]">
-            {isEn
+            {isEs
+              ? "Guías prácticas para playas, calas y excursiones en barco"
+              : isFr
+              ? "Guides pratiques pour les plages, les criques et les excursions en bateau"
+              : isEn
               ? "Practical guides for beaches, coves and boat tours"
               : "Approfondimenti per organizzare mare, cale e tour in barca"}
           </h2>
           <p className="mt-4 text-base leading-7 text-[#425f6f]">
-            {isEn
+            {isEs
+              ? "Aquí tienes guías prácticas para decidir qué ver, dónde bañarte, cómo llegar desde Trapani y qué excursión en barco elegir entre Favignana y Levanzo."
+              : isFr
+              ? "Voici des guides pratiques pour choisir quoi voir, où se baigner, comment venir depuis Trapani et quelle excursion en bateau choisir entre Favignana et Levanzo."
+              : isEn
               ? "Explore dedicated Favignana guides for the best beaches, Cala Rossa, Bue Marino, snorkeling, one-day itineraries from Trapani and boat tours between Favignana and Levanzo."
               : "Qui trovi guide pratiche per scegliere cosa vedere, dove fare il bagno, come arrivare da Trapani e quale tour in barca valutare tra Favignana e Levanzo."}
           </p>
@@ -705,7 +754,7 @@ function FavignanaGuideHub({ locale }: { locale: string }) {
           {guides.map((guide) => (
             <Link
               key={guide.slug}
-              href={`/${isEn ? "en" : "it"}/islands/favignana/${guide.slug}`}
+              href={localizedPath(locale, `/islands/favignana/${guide.slug}`)}
               className="group flex min-h-full flex-col rounded-lg border border-[#d9c79d] bg-[#fbf7ee] p-5 transition hover:-translate-y-1 hover:border-[#b58a27] hover:bg-white hover:shadow-[0_14px_42px_rgba(10,38,55,0.1)]"
             >
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b58a27]">
@@ -718,7 +767,7 @@ function FavignanaGuideHub({ locale }: { locale: string }) {
                 {guide.description}
               </p>
               <span className="mt-5 inline-flex items-center text-sm font-bold text-[#092337]">
-                {isEn ? "Read the guide" : "Leggi la guida"}
+                {isEs ? "Leer la guía" : isFr ? "Lire le guide" : isEn ? "Read the guide" : "Leggi la guida"}
                 <ArrowRight
                   className="ml-2 h-4 w-4 transition group-hover:translate-x-1"
                   aria-hidden="true"
@@ -734,7 +783,7 @@ function FavignanaGuideHub({ locale }: { locale: string }) {
 
 function FavignanaDetailPage({ locale }: { locale: string }) {
   const base = env.APP_URL.replace(/\/$/, "");
-  const pageUrl = `${base}/${locale}/islands/favignana`;
+  const pageUrl = `${base}${localizedPath(locale, "/islands/favignana")}`;
   const json = buildFavignanaJsonLd(base, locale, pageUrl);
 
   return (
@@ -761,7 +810,7 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
 
         <div className="mx-auto flex min-h-[calc(92svh-10rem)] max-w-7xl flex-col justify-center">
           <Link
-            href={`/${locale}/islands`}
+            href={localizedPath(locale, "/islands")}
             className="mb-8 inline-flex w-fit items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm font-semibold text-white/78 backdrop-blur transition hover:border-white/40 hover:bg-white/16 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -784,7 +833,7 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href={`/${locale}/experiences`} className="w-full sm:w-auto">
+              <Link href={localizedPath(locale, "/experiences")} className="w-full sm:w-auto">
                 <Button className="h-11 w-full rounded-md bg-[var(--color-gold)] px-5 text-sm font-bold text-[#071934] shadow-[0_16px_36px_rgba(0,0,0,0.22)] hover:bg-[#f0c35a] sm:w-auto">
                   Vedi tour per Favignana
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -893,25 +942,41 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
               <div>
                 <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.26em] text-[#b58a27]">
                   <BookOpen className="h-4 w-4" aria-hidden="true" />
-                  Guide su Favignana
+                  {locale === "es" ? "Guías de Favignana" : locale === "fr" ? "Guides de Favignana" : locale === "en" ? "Favignana guides" : "Guide su Favignana"}
                 </p>
                 <h2 className="mt-3 font-heading text-3xl font-bold leading-tight text-[#092337] sm:text-4xl">
-                  Approfondimenti per organizzare mare, cale e tour senza dubbi
+                  {locale === "es"
+                    ? "Ideas prácticas para organizar mar, calas y tours sin dudas"
+                    : locale === "fr"
+                      ? "Conseils pratiques pour organiser mer, criques et tours sans hésitation"
+                      : locale === "en"
+                        ? "Practical insights to plan sea, coves and tours without doubts"
+                        : "Approfondimenti per organizzare mare, cale e tour senza dubbi"}
                 </h2>
               </div>
               <p className="text-base leading-7 text-[#425f6f] sm:text-lg">
-                Questa è la guida generale dell&apos;isola. Qui sotto trovi
-                approfondimenti pratici per scegliere cosa vedere, dove fare il
-                bagno, come arrivare, quali cale valutare e quale tour in barca
-                prenotare da Trapani.
+                {locale === "es"
+                  ? "Esta es la guía general de la isla. Aquí abajo encuentras contenidos prácticos para elegir qué ver, dónde bañarte, cómo llegar, qué calas valorar y qué excursión en barco reservar desde Trapani."
+                  : locale === "fr"
+                    ? "Voici le guide général de l'île. Vous trouverez ci-dessous des contenus pratiques pour choisir quoi voir, où se baigner, comment arriver, quelles criques considérer et quelle excursion en bateau réserver depuis Trapani."
+                    : locale === "en"
+                      ? "This is the general island guide. Below you will find practical guides to choose what to see, where to swim, how to arrive, which coves to consider and which boat tour to book from Trapani."
+                      : "Questa è la guida generale dell'isola. Qui sotto trovi approfondimenti pratici per scegliere cosa vedere, dove fare il bagno, come arrivare, quali cale valutare e quale tour in barca prenotare da Trapani."}
               </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {(locale === "en" ? favignanaGuideLinksEn : favignanaGuideLinks).map((guide) => (
+              {(locale === "fr"
+                ? favignanaGuideLinksFr
+                : locale === "es"
+                  ? favignanaGuideLinksEs
+                  : locale === "en"
+                    ? favignanaGuideLinksEn
+                    : favignanaGuideLinks
+              ).map((guide) => (
                 <Link
                   key={guide.slug}
-                  href={`/${locale}/islands/favignana/${guide.slug}`}
+                  href={localizedPath(locale, `/islands/favignana/${guide.slug}`)}
                   className="group flex min-h-full flex-col rounded-lg border border-[#d9c79d] bg-white p-5 shadow-[0_14px_42px_rgba(10,38,55,0.07)] transition hover:-translate-y-1 hover:border-[#b58a27] hover:shadow-[0_18px_54px_rgba(10,38,55,0.12)]"
                 >
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b58a27]">
@@ -924,7 +989,7 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
                     {guide.description}
                   </p>
                   <span className="mt-5 inline-flex items-center text-sm font-bold text-[#092337]">
-                    Leggi la guida
+                    {locale === "es" ? "Leer la guía" : locale === "fr" ? "Lire le guide" : locale === "en" ? "Read the guide" : "Leggi la guida"}
                     <ArrowRight
                       className="ml-2 h-4 w-4 transition group-hover:translate-x-1"
                       aria-hidden="true"
@@ -1176,7 +1241,7 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
                     al lato dell&apos;isola che quel giorno offre il mare migliore.
                   </p>
                 </div>
-                <Link href={`/${locale}/experiences`} className="mt-7 inline-flex">
+                <Link href={localizedPath(locale, "/experiences")} className="mt-7 inline-flex">
                   <Button className="h-11 rounded-md bg-white px-5 text-sm font-bold text-[#092337] hover:bg-[#f4e7c6]">
                     Scopri le esperienze
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -1232,7 +1297,7 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
                   e più possibilità di vedere l&apos;isola nel suo lato migliore.
                 </p>
               </div>
-              <Link href={`/${locale}/experiences`}>
+              <Link href={localizedPath(locale, "/experiences")}>
                 <Button className="h-12 rounded-md bg-[var(--color-gold)] px-6 text-base font-bold text-[#071934] hover:bg-[#f0c35a]">
                   Vedi i tour
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { env } from "@/lib/env";
 import { routing } from "@/i18n/routing";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
 
 const SITE_NAME = "Egadisailing";
 const OG_LOCALES: Record<string, string> = {
   it: "it_IT",
   en: "en_US",
+  es: "es_ES",
+  fr: "fr_FR",
 };
 
 export interface PageSeoOptions {
@@ -15,7 +18,7 @@ export interface PageSeoOptions {
   description: string;
   /** Path relativo senza locale (es. "/boats", "/experiences/social-boating"). */
   path: string;
-  /** Locale corrente (es. "it", "en"). */
+  /** Locale corrente (es. "it", "en", "es", "fr"). */
   locale: string;
   /** Immagine OpenGraph (1200x630 preferito). Path relativo a `env.APP_URL`. */
   image?: string;
@@ -33,16 +36,16 @@ export interface PageSeoOptions {
 export function buildPageMetadata(opts: PageSeoOptions): Metadata {
   const base = env.APP_URL.replace(/\/$/, "");
   const path = opts.path.startsWith("/") ? opts.path : `/${opts.path}`;
-  const canonicalUrl = `${base}/${opts.locale}${path === "/" ? "" : path}`;
+  const canonicalUrl = localizedAbsoluteUrl(base, opts.locale, path);
   const image = opts.image ?? "/og-default.jpg";
   const imageUrl = image.startsWith("http") ? image : `${base}${image}`;
 
   const languages: Record<string, string> = {};
   for (const loc of routing.locales) {
-    languages[loc] = `${base}/${loc}${path === "/" ? "" : path}`;
+    languages[loc] = localizedAbsoluteUrl(base, loc, path);
   }
   // `x-default`: pagina di fallback. Serviamo l'it canonica.
-  languages["x-default"] = `${base}/${routing.defaultLocale}${path === "/" ? "" : path}`;
+  languages["x-default"] = localizedAbsoluteUrl(base, routing.defaultLocale, path);
 
   return {
     title: opts.title,

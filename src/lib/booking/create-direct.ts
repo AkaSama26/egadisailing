@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { quotePrice } from "@/lib/pricing/service";
-import { toCents, fromCents } from "@/lib/pricing/cents";
+import { toCents, fromCents, formatEur } from "@/lib/pricing/cents";
 import { toUtcDay, parseDateLikelyLocalDay } from "@/lib/dates";
 import { acquireAvailabilityRangeLock } from "@/lib/db/advisory-lock";
 import {
@@ -34,6 +34,8 @@ import {
 } from "@/lib/booking/passengers";
 import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
 import { inactivePassengerCategories } from "@/lib/pricing/passenger-fare-rules-shared";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
 
 export interface ConsentInput {
   privacyAccepted: boolean;
@@ -568,8 +570,8 @@ export async function createPendingDirectBooking(
             newBookingId: true,
             newBooking: {
               include: {
-                customer: { select: { id: true, email: true, firstName: true, lastName: true } },
-                service: { select: { name: true } },
+                customer: { select: { id: true, email: true, firstName: true, lastName: true, language: true } },
+                service: { select: { id: true, name: true } },
               },
             },
           },
@@ -584,6 +586,7 @@ export async function createPendingDirectBooking(
           });
 
           if (superseded.newBooking.customer?.email) {
+            const locale = resolveEmailLocale(superseded.newBooking.customer.language);
             const alternativeDates = await getAlternativeDatesIso(
               superseded.newBooking.boatId,
               superseded.newBooking.startDate,
@@ -604,11 +607,16 @@ export async function createPendingDirectBooking(
                   `${superseded.newBooking.customer.firstName ?? ""} ${superseded.newBooking.customer.lastName ?? ""}`.trim() ||
                   "cliente",
                 confirmationCode: superseded.newBooking.confirmationCode,
-                serviceName: superseded.newBooking.service.name,
-                startDate: superseded.newBooking.startDate.toISOString().slice(0, 10),
-                refundAmount: superseded.newBooking.totalPrice.toFixed(2),
+                serviceName: emailServiceName(
+                  superseded.newBooking.service.id,
+                  superseded.newBooking.service.name,
+                  locale,
+                ),
+                startDate: formatEmailDay(superseded.newBooking.startDate, locale),
+                refundAmount: formatEur(superseded.newBooking.totalPrice, locale),
                 alternativeDates,
-                bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+                bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
+                locale,
               } as unknown as Record<string, unknown>,
             });
           }
@@ -627,16 +635,18 @@ export async function createPendingDirectBooking(
   if (result.overrideRequestResult) {
     try {
       // Cliente: pending confirmation email (customer-phrased)
+      const locale = resolveEmailLocale(input.customer.language);
       const customerPayload = {
         customerName:
           `${input.customer.firstName ?? ""} ${input.customer.lastName ?? ""}`.trim() ||
           "cliente",
         confirmationCode,
-        serviceName: service.name,
-        startDate: startDay.toISOString().slice(0, 10),
+        serviceName: emailServiceName(service.id, service.name, locale),
+        startDate: formatEmailDay(startDay, locale),
         numPeople: occupiedSeats,
-        amountPaid: quote.totalPrice.toFixed(2),
-        bookingPortalUrl: `${env.APP_URL}/b/sessione`,
+        amountPaid: formatEur(quote.totalPrice, locale),
+        bookingPortalUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/b/sessione"),
+        locale,
       };
       await dispatchNotification({
         type: "OVERRIDE_REQUESTED",

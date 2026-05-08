@@ -31,7 +31,7 @@ const payloadSchema = z.object({
   acceptedServices: serviceRecordSchema,
   rejectedServices: serviceRecordSchema,
   cookieRevision: z.number().int().min(0).max(9999),
-  locale: z.enum(["it", "en"]).default("it"),
+  locale: z.enum(["it", "en", "es"]).default("it"),
   sourcePath: z.string().min(1).max(2048).optional(),
 });
 

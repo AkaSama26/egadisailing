@@ -13,10 +13,11 @@ import { formatEurWithVat, formatEurCentsWithVat } from "@/lib/pricing/vat";
 import { parseBookingMetadata } from "../metadata";
 import { ValidationError } from "@/lib/errors";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
-import { formatItDay } from "@/lib/dates";
 import { bookingWithDetailsInclude } from "@/lib/booking/queries";
 import { handleAutoRefundOnConfirmedToCancelled } from "./auto-refund";
 import { buildTicketUrl } from "@/lib/booking/ticket";
+import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
+import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
 
 export async function onPaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<void> {
   // Tolerant parsing: PI creato fuori dal flusso (Stripe dashboard, testing)
@@ -167,20 +168,22 @@ async function sendConfirmationEmail(bookingId: string, paidCents: number): Prom
     include: bookingWithDetailsInclude,
   });
   if (!booking) return;
+  const locale = resolveEmailLocale(booking.customer.language);
 
   const { subject, html, text } = bookingConfirmationTemplate({
     customerName: `${booking.customer.firstName} ${booking.customer.lastName}`,
     confirmationCode: booking.confirmationCode,
-    serviceName: booking.service.name,
-    startDate: formatItDay(booking.startDate),
+    serviceName: emailServiceName(booking.service.id, booking.service.name, locale),
+    startDate: formatEmailDay(booking.startDate, locale),
     numPeople: booking.numPeople,
-    totalPrice: formatEurWithVat(booking.totalPrice, env.APP_LOCALES_DEFAULT),
-    paidAmount: formatEurCentsWithVat(paidCents, env.APP_LOCALES_DEFAULT),
+    totalPrice: formatEurWithVat(booking.totalPrice, locale),
+    paidAmount: formatEurCentsWithVat(paidCents, locale),
     balanceAmount: booking.directBooking?.balanceAmount
-      ? formatEurWithVat(booking.directBooking.balanceAmount, env.APP_LOCALES_DEFAULT)
+      ? formatEurWithVat(booking.directBooking.balanceAmount, locale)
       : undefined,
-    recoveryUrl: `${env.APP_URL}/${env.APP_LOCALES_DEFAULT}/recupera-prenotazione`,
-    ticketUrl: buildTicketUrl(booking.confirmationCode),
+    recoveryUrl: localizedAbsoluteUrl(env.APP_URL, locale, "/recupera-prenotazione"),
+    ticketUrl: buildTicketUrl(booking.confirmationCode, locale),
+    locale,
   });
 
   await enqueueTransactionalEmail({

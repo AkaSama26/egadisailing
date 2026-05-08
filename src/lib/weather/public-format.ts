@@ -41,7 +41,19 @@ const RISK_LABELS = {
     HIGH: "Weather watch",
     EXTREME: "Critical conditions",
   },
-} satisfies Record<"it" | "en", Record<WeatherRisk, string>>;
+  es: {
+    LOW: "Condiciones favorables",
+    MEDIUM: "A vigilar",
+    HIGH: "Atención meteorológica",
+    EXTREME: "Condiciones críticas",
+  },
+  fr: {
+    LOW: "Conditions favorables",
+    MEDIUM: "À surveiller",
+    HIGH: "Vigilance météo",
+    EXTREME: "Conditions critiques",
+  },
+} satisfies Record<"it" | "en" | "es" | "fr", Record<WeatherRisk, string>>;
 
 const HEADLINES = {
   it: {
@@ -56,14 +68,30 @@ const HEADLINES = {
     HIGH: "The forecast needs careful skipper review.",
     EXTREME: "The forecast shows potentially unsuitable conditions.",
   },
-} satisfies Record<"it" | "en", Record<WeatherRisk, string>>;
+  es: {
+    LOW: "La previsión parece favorable para la salida.",
+    MEDIUM: "La previsión es buena, con algunos valores que conviene vigilar.",
+    HIGH: "La previsión requiere una revisión cuidadosa del skipper.",
+    EXTREME: "La previsión indica condiciones potencialmente no adecuadas.",
+  },
+  fr: {
+    LOW: "La prévision semble favorable pour la sortie.",
+    MEDIUM: "La prévision est bonne, avec quelques valeurs à surveiller.",
+    HIGH: "La prévision nécessite une vérification attentive du skipper.",
+    EXTREME: "La prévision indique des conditions potentiellement inadaptées.",
+  },
+} satisfies Record<"it" | "en" | "es" | "fr", Record<WeatherRisk, string>>;
 
 const NOTES = {
   it: "Previsione indicativa aggiornata automaticamente. Rotta e partenza vengono sempre confermate dallo skipper in base alle condizioni reali.",
   en: "Automatic forecast for guidance only. Route and departure are always confirmed by the skipper based on real sea conditions.",
+  es: "Previsión automática solo orientativa. La ruta y la salida siempre las confirma el skipper según las condiciones reales del mar.",
+  fr: "Prévision automatique donnée à titre indicatif. La route et le départ sont toujours confirmés par le skipper selon les conditions réelles en mer.",
 };
 
-function lang(locale: string): "it" | "en" {
+function lang(locale: string): "it" | "en" | "es" | "fr" {
+  if (locale.toLowerCase().startsWith("es")) return "es";
+  if (locale.toLowerCase().startsWith("fr")) return "fr";
   return locale.toLowerCase().startsWith("en") ? "en" : "it";
 }
 
@@ -92,7 +120,11 @@ function safeRound(value: number): number | null {
 }
 
 function knotLabel(locale: string): string {
-  return lang(locale) === "it" ? "nodi" : "kn";
+  const l = lang(locale);
+  if (l === "it") return "nodi";
+  if (l === "es") return "nudos";
+  if (l === "fr") return "nœuds";
+  return "kn";
 }
 
 function formatWind(kmh: number, locale: string, unitSystem: WeatherUnitSystem): string {
@@ -153,6 +185,16 @@ function localizeReason(
   if (wind) {
     const kmh = Number(wind[1]);
     if (l === "it") return `vento ${formatWind(kmh, locale, unitSystem)} ${wind[2]}`;
+    if (l === "es") {
+      const tone =
+        wind[2] === "estremo" ? "extremo" : wind[2] === "forte" ? "fuerte" : "moderado";
+      return `viento ${tone} ${formatWind(kmh, locale, unitSystem)}`;
+    }
+    if (l === "fr") {
+      const tone =
+        wind[2] === "estremo" ? "extrême" : wind[2] === "forte" ? "fort" : "modéré";
+      return `vent ${tone} ${formatWind(kmh, locale, unitSystem)}`;
+    }
     const tone =
       wind[2] === "estremo" ? "extreme" : wind[2] === "forte" ? "strong" : "moderate";
     return `${tone} wind ${formatWind(kmh, locale, unitSystem)}`;
@@ -162,6 +204,14 @@ function localizeReason(
   if (waves) {
     const meters = Number(waves[1]);
     if (l === "it") return `onde ${formatWaves(meters, locale, unitSystem)} ${waves[2]}`;
+    if (l === "es") {
+      const tone = waves[2] === "alte" ? "alto" : "moderado";
+      return `oleaje ${tone} ${formatWaves(meters, locale, unitSystem)}`;
+    }
+    if (l === "fr") {
+      const tone = waves[2] === "alte" ? "forte" : "modérée";
+      return `houle ${tone} ${formatWaves(meters, locale, unitSystem)}`;
+    }
     const tone = waves[2] === "alte" ? "high" : "moderate";
     return `${tone} waves ${formatWaves(meters, locale, unitSystem)}`;
   }
@@ -169,6 +219,14 @@ function localizeReason(
   const rain = reason.match(/^pioggia (\d+)% (probabile|possibile)$/);
   if (rain) {
     if (l === "it") return reason;
+    if (l === "es") {
+      const tone = rain[2] === "probabile" ? "probable" : "posible";
+      return `lluvia ${tone} ${rain[1]}%`;
+    }
+    if (l === "fr") {
+      const tone = rain[2] === "probabile" ? "probable" : "possible";
+      return `pluie ${tone} ${rain[1]}%`;
+    }
     const tone = rain[2] === "probabile" ? "likely" : "possible";
     return `${tone} rain ${rain[1]}%`;
   }
@@ -178,8 +236,12 @@ function localizeReason(
     const celsius = Number(temperature[1]);
     if (unitSystem === "imperial") {
       const value = `${Math.round(celsiusToFahrenheit(celsius))}°F (${temperature[1]}°C)`;
+      if (l === "es") return `temperatura mínima ${value}`;
+      if (l === "fr") return `température minimale ${value}`;
       return l === "it" ? `temperatura min ${value}` : `minimum temperature ${value}`;
     }
+    if (l === "es") return `temperatura mínima ${temperature[1]}°C`;
+    if (l === "fr") return `température minimale ${temperature[1]}°C`;
     return l === "it"
       ? `temperatura min ${temperature[1]}°C`
       : `minimum temperature ${temperature[1]}°C`;
@@ -191,6 +253,18 @@ function localizeReason(
     const axes = partial[1]
       .split(", ")
       .map((axis) => {
+        if (l === "es") {
+          if (axis === "vento") return "viento";
+          if (axis === "onde") return "oleaje";
+          if (axis === "pioggia") return "lluvia";
+          if (axis === "temperatura") return "temperatura";
+        }
+        if (l === "fr") {
+          if (axis === "vento") return "vent";
+          if (axis === "onde") return "houle";
+          if (axis === "pioggia") return "pluie";
+          if (axis === "temperatura") return "température";
+        }
         if (axis === "vento") return "wind";
         if (axis === "onde") return "waves";
         if (axis === "pioggia") return "rain";
@@ -198,6 +272,8 @@ function localizeReason(
         return axis;
       })
       .join(", ");
+    if (l === "es") return `datos parciales: ${axes}`;
+    if (l === "fr") return `données partielles : ${axes}`;
     return `partial data: ${axes}`;
   }
 

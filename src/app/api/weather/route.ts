@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const querySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  locale: z.enum(["it", "en"]).optional(),
+  locale: z.enum(["it", "en", "es"]).optional(),
 });
 
 export const GET = withErrorHandler(async (req: Request) => {

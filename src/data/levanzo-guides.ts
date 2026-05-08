@@ -1,39 +1,61 @@
 export type LevanzoGuideSlug =
   | "cosa-vedere"
   | "what-to-see"
+  | "que-ver-en-levanzo"
   | "spiagge-cale"
   | "beaches-coves"
+  | "playas-calas-levanzo"
   | "grotta-del-genovese"
+  | "gruta-del-genovese"
   | "levanzo-in-un-giorno"
   | "levanzo-in-one-day"
+  | "levanzo-en-un-dia"
   | "come-arrivare-da-trapani"
   | "how-to-get-from-trapani"
+  | "como-llegar-desde-trapani"
   | "snorkeling-cala-minnola-calcara"
+  | "snorkel-cala-minnola-calcara"
   | "tour-in-barca-da-trapani"
-  | "boat-tour-from-trapani";
+  | "boat-tour-from-trapani"
+  | "excursion-barco-desde-trapani"
+  | "que-voir-a-levanzo"
+  | "plages-criques-levanzo"
+  | "grotte-du-genovese"
+  | "levanzo-en-une-journee"
+  | "comment-venir-depuis-trapani"
+  | "excursion-bateau-depuis-trapani";
 
 export const levanzoGuideSlugPairs = [
-  { it: "cosa-vedere", en: "what-to-see" },
-  { it: "spiagge-cale", en: "beaches-coves" },
-  { it: "grotta-del-genovese", en: "grotta-del-genovese" },
-  { it: "levanzo-in-un-giorno", en: "levanzo-in-one-day" },
-  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani" },
-  { it: "snorkeling-cala-minnola-calcara", en: "snorkeling-cala-minnola-calcara" },
-  { it: "tour-in-barca-da-trapani", en: "boat-tour-from-trapani" },
-] as const satisfies Array<{ it: LevanzoGuideSlug; en: LevanzoGuideSlug }>;
+  { it: "cosa-vedere", en: "what-to-see", es: "que-ver-en-levanzo", fr: "que-voir-a-levanzo" },
+  { it: "spiagge-cale", en: "beaches-coves", es: "playas-calas-levanzo", fr: "plages-criques-levanzo" },
+  { it: "grotta-del-genovese", en: "grotta-del-genovese", es: "gruta-del-genovese", fr: "grotte-du-genovese" },
+  { it: "levanzo-in-un-giorno", en: "levanzo-in-one-day", es: "levanzo-en-un-dia", fr: "levanzo-en-une-journee" },
+  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani", es: "como-llegar-desde-trapani", fr: "comment-venir-depuis-trapani" },
+  {
+    it: "snorkeling-cala-minnola-calcara",
+    en: "snorkeling-cala-minnola-calcara",
+    es: "snorkel-cala-minnola-calcara",
+    fr: "snorkeling-cala-minnola-calcara",
+  },
+  { it: "tour-in-barca-da-trapani", en: "boat-tour-from-trapani", es: "excursion-barco-desde-trapani", fr: "excursion-bateau-depuis-trapani" },
+] as const satisfies Array<{ it: LevanzoGuideSlug; en: LevanzoGuideSlug; es: LevanzoGuideSlug; fr: LevanzoGuideSlug }>;
 
-export type LevanzoGuideLocale = "it" | "en";
+export type LevanzoGuideLocale = "it" | "en" | "es" | "fr";
 
 export function getLevanzoGuideSlugForLocale(
   slug: string,
   locale: LevanzoGuideLocale,
 ): LevanzoGuideSlug | undefined {
-  const pair = levanzoGuideSlugPairs.find((item) => item.it === slug || item.en === slug);
+  const pair = levanzoGuideSlugPairs.find(
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+  );
   return pair?.[locale];
 }
 
 export function isLevanzoGuideSlug(slug: string): slug is LevanzoGuideSlug {
-  return levanzoGuideSlugPairs.some((item) => item.it === slug || item.en === slug);
+  return levanzoGuideSlugPairs.some(
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+  );
 }
 
 export type LevanzoGuideCta = "cigala" | "neel" | "compare";

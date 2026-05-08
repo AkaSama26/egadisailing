@@ -45,17 +45,39 @@ export function getServiceDurationLabel(
   locale?: string | null,
 ): string {
   const isEnglish = locale === "en";
+  const isSpanish = locale === "es";
+  const isFrench = locale === "fr";
   const hours = service.durationHours;
-  const hourUnit = isEnglish ? (hours === 1 ? "hour" : "hours") : "ore";
-  if (service.type === "CABIN_CHARTER") return isEnglish ? "3-7 days" : "3-7 giornate";
+  const hourUnit = isEnglish
+    ? hours === 1
+      ? "hour"
+      : "hours"
+    : isSpanish
+      ? hours === 1
+        ? "hora"
+        : "horas"
+      : isFrench
+        ? hours === 1
+          ? "heure"
+          : "heures"
+        : "ore";
+  if (service.type === "CABIN_CHARTER") {
+    if (isSpanish) return "3-7 días";
+    if (isFrench) return "3-7 jours";
+    return isEnglish ? "3-7 days" : "3-7 giornate";
+  }
   if (service.durationType === "MULTI_DAY") {
     const days = Math.max(1, Math.ceil(hours / 24));
+    if (isSpanish) return `${days} ${days === 1 ? "día" : "días"}`;
+    if (isFrench) return `${days} ${days === 1 ? "jour" : "jours"}`;
     return isEnglish ? `${days} ${days === 1 ? "day" : "days"}` : `${days} giorni`;
   }
   if (service.durationType === "FULL_DAY") return `${hours} ${hourUnit}`;
   if (service.durationType === "HALF_DAY_MORNING") return `${hours} ${hourUnit}`;
   if (service.durationType === "HALF_DAY_AFTERNOON") return `${hours} ${hourUnit}`;
-  if (service.durationType === "WEEK") return isEnglish ? "7 days" : "7 giorni";
+  if (service.durationType === "WEEK") return isSpanish ? "7 días" : isFrench ? "7 jours" : isEnglish ? "7 days" : "7 giorni";
+  if (isSpanish) return `${hours} ${hourUnit}`;
+  if (isFrench) return `${hours} ${hourUnit}`;
   return isEnglish ? `${hours} ${hourUnit}` : `${hours}h`;
 }
 
@@ -65,12 +87,26 @@ export function getPriceUnitLabel(
   locale?: string | null,
 ): string {
   const isEnglish = locale === "en";
-  if (serviceType === "CABIN_CHARTER") return isEnglish ? "per package" : "per pacchetto";
+  const isSpanish = locale === "es";
+  const isFrench = locale === "fr";
+  if (serviceType === "CABIN_CHARTER") {
+    if (isSpanish) return "por paquete";
+    if (isFrench) return "par forfait";
+    return isEnglish ? "per package" : "per pacchetto";
+  }
   return pricingUnit === "PER_PACKAGE"
-    ? isEnglish
+    ? isSpanish
+      ? "por paquete"
+      : isFrench
+      ? "par forfait"
+      : isEnglish
       ? "per package"
       : "per pacchetto"
-    : isEnglish
+    : isSpanish
+      ? "por persona"
+      : isFrench
+        ? "par personne"
+      : isEnglish
       ? "per person"
       : "a persona";
 }

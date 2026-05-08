@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { env } from "@/lib/env";
 import { routing } from "@/i18n/routing";
+import { localizedPath } from "@/lib/i18n/paths";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 /**
  * robots.txt dinamico.
@@ -16,12 +18,12 @@ import { routing } from "@/i18n/routing";
 const localizedPrivateDisallow = routing.locales.flatMap((locale) => [
   `/${locale}/b`,
   `/${locale}/b/`,
-  `/${locale}/ticket`,
-  `/${locale}/ticket/`,
-  `/${locale}/prenota/`,
-  `/${locale}/prenota/success`,
-  `/${locale}/recupera-prenotazione`,
-  `/${locale}/recupera-prenotazione/`,
+  localizedPath(locale, "/ticket/:code").replace(":code", ""),
+  localizedPath(locale, "/ticket/:code").replace(":code", ""),
+  `${localizedStaticPath(locale, "/prenota")}/`,
+  localizedPath(locale, "/prenota/success/:code").replace(":code", ""),
+  localizedStaticPath(locale, "/recupera-prenotazione"),
+  `${localizedStaticPath(locale, "/recupera-prenotazione")}/`,
 ]);
 
 const protectedDisallow = [

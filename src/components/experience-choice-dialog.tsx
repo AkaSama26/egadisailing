@@ -82,6 +82,8 @@ export function ExperienceChoiceDialog({
   delayMs = DEFAULT_DELAY_MS,
 }: ExperienceChoiceDialogProps) {
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<WizardStep>("party");
   const [history, setHistory] = useState<WizardStep[]>([]);
@@ -90,7 +92,25 @@ export function ExperienceChoiceDialog({
 
   const copy = useMemo(
     () =>
-      isEn
+      isEs
+        ? {
+            close: "Cerrar",
+            back: "Atrás",
+            change: "Cambiar respuestas",
+            book: "Reservar esta experiencia",
+            details: "Ver detalles",
+            previousImage: "Imagen anterior",
+            nextImage: "Imagen siguiente",
+            imageDotLabel: (index: number, total: number) =>
+              `Mostrar imagen ${index} de ${total}`,
+            resultEyebrow: "Tu ruta",
+            resultTitle: "Esta es la mejor opción",
+            introEyebrow: "Concierge Egadi Sailing",
+            introTitle: "¿Qué día de mar tienes en mente?",
+	            introDescription:
+	              "Unas pocas respuestas para encontrar la ruta adecuada entre el Neel 47 y nuestro barco abierto más ágil.",
+          }
+        : isEn
         ? {
             close: "Close",
             back: "Back",
@@ -107,6 +127,24 @@ export function ExperienceChoiceDialog({
             introTitle: "Which sea day are you imagining?",
             introDescription:
               "A few quick choices to find the right route, between the Trimarano and our agile open boat.",
+          }
+        : isFr
+        ? {
+            close: "Fermer",
+            back: "Retour",
+            change: "Modifier les réponses",
+            book: "Réserver cette expérience",
+            details: "Voir les détails",
+            previousImage: "Image précédente",
+            nextImage: "Image suivante",
+            imageDotLabel: (index: number, total: number) =>
+              `Afficher l'image ${index} sur ${total}`,
+            resultEyebrow: "Votre route",
+            resultTitle: "C'est l'option la plus adaptée",
+            introEyebrow: "Concierge Egadi Sailing",
+            introTitle: "Quelle journée en mer imaginez-vous ?",
+            introDescription:
+              "Quelques choix rapides pour trouver la bonne route, entre le Neel 47 et notre bateau ouvert plus agile.",
           }
         : {
             close: "Chiudi",
@@ -125,7 +163,7 @@ export function ExperienceChoiceDialog({
             introDescription:
               "Poche scelte veloci per trovare la rotta giusta tra il Trimarano e la nostra barca open più agile.",
           },
-    [isEn],
+    [isEn, isEs, isFr],
   );
 
   useEffect(() => {
@@ -174,6 +212,7 @@ export function ExperienceChoiceDialog({
 
   const question = getQuestion({
     step,
+    locale,
     isEn,
     moveTo,
     recommend,
@@ -474,20 +513,338 @@ function RecommendationImages({
 }
 function getQuestion({
   step,
+  locale,
   isEn,
   moveTo,
   recommend,
 }: {
   step: WizardStep;
+  locale: string;
   isEn: boolean;
   moveTo: (step: WizardStep) => void;
   recommend: (key: ExperienceChoiceRecommendationKey) => void;
 }): WizardQuestion {
+  if (locale === "es") {
+    return getSpanishQuestion({ step, moveTo, recommend });
+  }
+  if (locale === "fr") {
+    return getFrenchQuestion({ step, moveTo, recommend });
+  }
   if (isEn) {
     return getEnglishQuestion({ step, moveTo, recommend });
   }
 
   return getItalianQuestion({ step, moveTo, recommend });
+}
+
+function getFrenchQuestion({
+  step,
+  moveTo,
+  recommend,
+}: {
+  step: WizardStep;
+  moveTo: (step: WizardStep) => void;
+  recommend: (key: ExperienceChoiceRecommendationKey) => void;
+}): WizardQuestion {
+  switch (step) {
+    case "soloPace":
+      return {
+        eyebrow: "Rythme",
+        title: "Vous voulez vous détendre toute la journée ou faire un tour rapide de l'île ?",
+        description:
+          "Si vous voyagez seul, vous pouvez réserver une place sur le tour partagé de 8 heures ou réserver le tour de 4 heures en privé.",
+        choices: [
+          {
+            emoji: "🌊",
+            label: "Journée entière",
+            description: "Rythme lent, plus d'arrêts baignade et snorkeling.",
+            onSelect: () => recommend("shared8"),
+          },
+          {
+            emoji: "⚡",
+            label: "Tour rapide privé",
+            description: "Une demi-journée privée compacte et flexible.",
+            onSelect: () => recommend("private4"),
+          },
+        ],
+      };
+    case "companyPrivacy":
+      return {
+        eyebrow: "Style de bateau",
+        title: "Vous préférez une barque rien que pour vous ou partager les places vous convient ?",
+        description: "Cela change le rythme : plus social et accessible, ou privé et flexible.",
+        choices: [
+          {
+            emoji: "🤝",
+            label: "Partager nous convient",
+            description: "Places sur le tour partagé de 8 heures.",
+            onSelect: () => recommend("shared8"),
+          },
+          {
+            emoji: "🔒",
+            label: "Toute à nous",
+            description: "Un bateau réservé à votre groupe.",
+            onSelect: () => moveTo("privateLunch"),
+          },
+        ],
+      };
+    case "privateLunch":
+      return {
+        eyebrow: "Déjeuner",
+        title: "Vous voulez déjeuner à bord ou sur l'île ?",
+        description: "Le déjeuner à bord oriente vers le Neel 47, avec chef, hôtesse et espaces premium.",
+        choices: [
+          {
+            emoji: "🍽️",
+            label: "À bord",
+            description: "Chef, table au mouillage et journée premium.",
+            onSelect: () => recommend("gourmet"),
+          },
+          {
+            emoji: "🏝️",
+            label: "Sur l'île ou librement",
+            description: "Plus de liberté autour du déjeuner, avec focus sur mer et itinéraire.",
+            onSelect: () => moveTo("privateMood"),
+          },
+        ],
+      };
+    case "privateMood":
+      return {
+        eyebrow: "Style",
+        title: "Quel type de journée privée imaginez-vous ?",
+        description: "On choisit ici entre le confort premium du Neel 47 et le bateau ouvert plus agile.",
+        choices: [
+          {
+            emoji: "✨",
+            label: "Confort maximal, espace et rythme lent",
+            description: "Neel 47, intimité, espaces détente et route plus soignée.",
+            onSelect: () => moveTo("premiumDuration"),
+          },
+          {
+            emoji: "🚤",
+            label: "Bateau agile, baignades et criques",
+            description: "Cigala & Bertinetti, route fluide et arrêts baignade flexibles.",
+            onSelect: () => moveTo("agilePace"),
+          },
+        ],
+      };
+    case "premiumDuration":
+      return {
+        eyebrow: "Temps à bord",
+        title: "Une journée premium ou plusieurs jours aux îles Égades ?",
+        description: "Le Neel 47 est pensé pour une journée soignée comme pour vivre plusieurs jours entre les îles.",
+        choices: [
+          {
+            emoji: "🌅",
+            label: "Une journée premium",
+            description: "Trimaran, confort et rythme construit autour de vous.",
+            onSelect: () => recommend("gourmet"),
+          },
+          {
+            emoji: "🛏️",
+            label: "Plusieurs jours",
+            description: "Cabines, mouillages et route entre Favignana, Levanzo et Marettimo.",
+            onSelect: () => recommend("charter"),
+          },
+        ],
+      };
+    case "agilePace":
+      return {
+        eyebrow: "Durée",
+        title: "Journée entière ou tour rapide ?",
+        description: "Le bateau privé agile est réservé pour vous, avec route choisie avec le skipper.",
+        choices: [
+          {
+            emoji: "🌊",
+            label: "Journée entière",
+            description: "8 heures pour plus de criques et plus de temps dans l'eau.",
+            onSelect: () => recommend("private8"),
+          },
+          {
+            emoji: "⚡",
+            label: "Tour rapide",
+            description: "4 heures privées, compactes et faciles à placer dans la journée.",
+            onSelect: () => recommend("private4"),
+          },
+        ],
+      };
+    case "party":
+    default:
+      return {
+        eyebrow: "Premier choix",
+        title: "Vous partez seul ou accompagné ?",
+        description: "On part de là, puis on vous oriente vers le format le plus naturel.",
+        choices: [
+          {
+            emoji: "🧍",
+            label: "Je pars seul",
+            description: "Vous pouvez réserver une place individuelle sur les tours partagés.",
+            onSelect: () => moveTo("soloPace"),
+          },
+          {
+            emoji: "👥",
+            label: "Je suis accompagné",
+            description: "Voyons si des places partagées ou un bateau réservé conviennent mieux.",
+            onSelect: () => moveTo("companyPrivacy"),
+          },
+        ],
+      };
+  }
+}
+
+function getSpanishQuestion({
+  step,
+  moveTo,
+  recommend,
+}: {
+  step: WizardStep;
+  moveTo: (step: WizardStep) => void;
+  recommend: (key: ExperienceChoiceRecommendationKey) => void;
+}): WizardQuestion {
+  switch (step) {
+    case "soloPace":
+      return {
+        eyebrow: "Ritmo del día",
+        title: "¿Quieres relajarte todo el día o hacer una vuelta rápida por la isla?",
+        description:
+          "Si viajas solo, puedes reservar una plaza en el tour compartido de 8 horas o reservar el tour de 4 horas en privado.",
+        choices: [
+          {
+            emoji: "🌊",
+            label: "Día completo",
+            description: "Ritmo lento, más paradas de baño y snorkel.",
+            onSelect: () => recommend("shared8"),
+          },
+          {
+            emoji: "⚡",
+            label: "Vuelta rápida privada",
+            description: "Medio día privado, compacto y flexible.",
+            onSelect: () => recommend("private4"),
+          },
+        ],
+      };
+    case "companyPrivacy":
+      return {
+        eyebrow: "Tipo de barco",
+        title: "¿Preferís un barco solo para vosotros o os va bien compartir?",
+        description: "La elección cambia el ritmo: más social y accesible, o más privado y flexible.",
+        choices: [
+          {
+            emoji: "🤝",
+            label: "Compartir está bien",
+            description: "Plazas a bordo en el tour compartido de 8 horas.",
+            onSelect: () => recommend("shared8"),
+          },
+          {
+            emoji: "🔒",
+            label: "Solo para nosotros",
+            description: "Barco reservado para vuestro grupo.",
+            onSelect: () => moveTo("privateLunch"),
+          },
+        ],
+      };
+    case "privateLunch":
+      return {
+        eyebrow: "Comida",
+        title: "¿Quieres comer a bordo o en la isla?",
+        description: "Comer a bordo apunta al Neel 47 con chef, azafata y espacios premium.",
+        choices: [
+          {
+            emoji: "🍽️",
+            label: "A bordo",
+            description: "Chef, mesa al fondeo y jornada premium.",
+            onSelect: () => recommend("gourmet"),
+          },
+          {
+            emoji: "🏝️",
+            label: "En la isla / flexible",
+            description: "Más libertad con la comida y foco en mar y ruta.",
+            onSelect: () => moveTo("privateMood"),
+          },
+        ],
+      };
+    case "privateMood":
+      return {
+        eyebrow: "Estilo",
+        title: "¿Qué tipo de día imagináis?",
+        description: "Aquí elegimos entre el confort de lujo del Neel 47 y el barco abierto más ágil.",
+        choices: [
+          {
+            emoji: "✨",
+            label: "Máximo confort, espacio y ritmo lento",
+            description: "Neel 47, privacidad, zonas de descanso y ruta más cuidada.",
+            onSelect: () => moveTo("premiumDuration"),
+          },
+          {
+            emoji: "🚤",
+            label: "Barco ágil, baños y calas",
+            description: "Cigala & Bertinetti, ruta ligera y paradas de baño flexibles.",
+            onSelect: () => moveTo("agilePace"),
+          },
+        ],
+      };
+    case "premiumDuration":
+      return {
+        eyebrow: "Tiempo a bordo",
+        title: "¿Un día premium o varios días en las Egadi?",
+        description: "El Neel 47 sirve tanto para una jornada cuidada como para vivir las islas con pernocta.",
+        choices: [
+          {
+            emoji: "🌅",
+            label: "Un día premium",
+            description: "Trimarán, espacios cómodos y ritmo construido alrededor de vosotros.",
+            onSelect: () => recommend("gourmet"),
+          },
+          {
+            emoji: "🛏️",
+            label: "Varios días",
+            description: "Camarotes, fondeo y ruta entre Favignana, Levanzo y Marettimo.",
+            onSelect: () => recommend("charter"),
+          },
+        ],
+      };
+    case "agilePace":
+      return {
+        eyebrow: "Duración",
+        title: "¿Día completo o vuelta rápida?",
+        description: "El barco privado ágil queda solo para vosotros, con ruta elegida junto al patrón.",
+        choices: [
+          {
+            emoji: "🌊",
+            label: "Día completo",
+            description: "8 horas para disfrutar más bahías y más tiempo en el agua.",
+            onSelect: () => recommend("private8"),
+          },
+          {
+            emoji: "⚡",
+            label: "Vuelta rápida",
+            description: "4 horas privadas, compactas y fáciles de encajar.",
+            onSelect: () => recommend("private4"),
+          },
+        ],
+      };
+    case "party":
+    default:
+      return {
+        eyebrow: "Primera elección",
+        title: "¿Viajas solo o acompañado?",
+        description: "Empezamos por aquí y luego te llevamos a la fórmula más natural.",
+        choices: [
+          {
+            emoji: "🧍",
+            label: "Viajo solo",
+            description: "También puedes reservar una sola plaza en los tours compartidos.",
+            onSelect: () => moveTo("soloPace"),
+          },
+          {
+            emoji: "👥",
+            label: "Viajo acompañado",
+            description: "Vemos si encaja mejor compartir o reservar el barco.",
+            onSelect: () => moveTo("companyPrivacy"),
+          },
+        ],
+      };
+  }
 }
 
 function getItalianQuestion({

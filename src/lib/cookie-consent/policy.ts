@@ -5,21 +5,36 @@ export const COOKIE_CONSENT_EFFECTIVE_DATE = "6 maggio 2026" as const;
 
 export const COOKIE_CONSENT_CATEGORIES = {
   necessary: {
-    label: { it: "Cookie tecnici", en: "Strictly necessary cookies" },
+    label: {
+      it: "Cookie tecnici",
+      en: "Strictly necessary cookies",
+      es: "Cookies técnicas",
+      fr: "Cookies strictement nécessaires",
+    },
     required: true,
   },
   analytics: {
-    label: { it: "Cookie analitici", en: "Analytics cookies" },
+    label: {
+      it: "Cookie analitici",
+      en: "Analytics cookies",
+      es: "Cookies analíticos",
+      fr: "Cookies analytiques",
+    },
     required: false,
   },
   marketing: {
-    label: { it: "Cookie marketing", en: "Marketing cookies" },
+    label: {
+      it: "Cookie marketing",
+      en: "Marketing cookies",
+      es: "Cookies de marketing",
+      fr: "Cookies marketing",
+    },
     required: false,
   },
 } as const;
 
 export type CookieConsentCategory = keyof typeof COOKIE_CONSENT_CATEGORIES;
-export type CookieConsentLocale = "it" | "en";
+export type CookieConsentLocale = "it" | "en" | "es" | "fr";
 
 export const COOKIE_CONSENT_CATEGORY_KEYS = Object.keys(
   COOKIE_CONSENT_CATEGORIES,
@@ -37,7 +52,8 @@ export interface CookieConsentPublicServices {
 }
 
 export function normalizeCookieConsentLocale(locale: string): CookieConsentLocale {
-  return locale === "en" ? "en" : "it";
+  if (locale === "en" || locale === "es" || locale === "fr") return locale;
+  return "it";
 }
 
 export function hasOptionalCookieConsentServices(services: CookieConsentPublicServices): boolean {
@@ -147,6 +163,102 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
           domain: "Provider",
           description: "Purpose",
           expiration: "Duration",
+        },
+      },
+      services: {
+        ga4: "Google Analytics 4",
+        googleAds: "Google Ads",
+        metaPixel: "Meta Pixel",
+        bingUet: "Microsoft Advertising / Bing",
+      },
+    },
+  },
+  es: {
+    consentModal: {
+      title: "Preferencias de privacidad",
+      description:
+        "Usamos cookies técnicas necesarias. Con tu consentimiento, también podemos usar herramientas analíticas o de marketing para mejorar el sitio y medir campañas. Puedes cambiar tu elección en cualquier momento.",
+      acceptAllBtn: "Aceptar todo",
+      acceptNecessaryBtn: "Solo necesarias",
+      showPreferencesBtn: "Personalizar",
+      closeIconLabel: "Solo necesarias",
+      footer:
+        '<a href="/es/politica-de-cookies">Política de cookies</a><a href="/es/privacidad">Política de privacidad</a>',
+    },
+    preferencesModal: {
+      title: "Gestionar preferencias de cookies",
+      acceptAllBtn: "Aceptar todo",
+      acceptNecessaryBtn: "Solo necesarias",
+      savePreferencesBtn: "Guardar preferencias",
+      closeIconLabel: "Cerrar",
+      serviceCounterLabel: "servicio|servicios",
+      sections: {
+        intro:
+          "Puedes elegir por finalidad. Las cookies necesarias permanecen activas para seguridad, sesiones, idioma, pagos y protección antibot.",
+        necessary:
+          "Esenciales para navegación, sesiones de administrador/cliente, preferencias de idioma, seguridad, Stripe y Cloudflare Turnstile. No se pueden desactivar.",
+        analytics:
+          "Nos ayudan a entender cómo se usa el sitio y qué páginas funcionan mejor. Solo se activan después del consentimiento.",
+        marketing:
+          "Sirven para medir campañas publicitarias y conversiones. Solo se activan después del consentimiento.",
+        more:
+          'Para más detalles sobre cookies, proveedores, duración y derechos, consulta la <a href="/es/politica-de-cookies">Política de cookies</a>.',
+      },
+      cookieTable: {
+        caption: "Lista de cookies",
+        headers: {
+          name: "Nombre",
+          domain: "Proveedor",
+          description: "Finalidad",
+          expiration: "Duración",
+        },
+      },
+      services: {
+        ga4: "Google Analytics 4",
+        googleAds: "Google Ads",
+        metaPixel: "Meta Pixel",
+        bingUet: "Microsoft Advertising / Bing",
+      },
+    },
+  },
+  fr: {
+    consentModal: {
+      title: "Préférences de confidentialité",
+      description:
+        "Nous utilisons des cookies techniques nécessaires. Avec votre consentement, nous pouvons aussi utiliser des outils analytiques ou marketing pour améliorer le site et mesurer les campagnes. Vous pouvez modifier votre choix à tout moment.",
+      acceptAllBtn: "Tout accepter",
+      acceptNecessaryBtn: "Nécessaires uniquement",
+      showPreferencesBtn: "Personnaliser",
+      closeIconLabel: "Nécessaires uniquement",
+      footer:
+        '<a href="/fr/politique-de-cookies">Politique de cookies</a><a href="/fr/confidentialite">Politique de confidentialité</a>',
+    },
+    preferencesModal: {
+      title: "Gérer les préférences de cookies",
+      acceptAllBtn: "Tout accepter",
+      acceptNecessaryBtn: "Nécessaires uniquement",
+      savePreferencesBtn: "Enregistrer les préférences",
+      closeIconLabel: "Fermer",
+      serviceCounterLabel: "service|services",
+      sections: {
+        intro:
+          "Vous pouvez choisir par finalité. Les cookies nécessaires restent actifs pour la sécurité, les sessions, la langue, les paiements et la protection anti-bot.",
+        necessary:
+          "Essentiels pour la navigation, les sessions administrateur/client, les préférences de langue, la sécurité, Stripe et Cloudflare Turnstile. Ils ne peuvent pas être désactivés.",
+        analytics:
+          "Ils nous aident à comprendre l'utilisation du site et les pages qui fonctionnent le mieux. Ils sont activés uniquement après consentement.",
+        marketing:
+          "Ils servent à mesurer les campagnes publicitaires et les conversions. Ils sont activés uniquement après consentement.",
+        more:
+          'Pour les détails sur les cookies, les fournisseurs, la durée et vos droits, consultez la <a href="/fr/politique-de-cookies">Politique de cookies</a>.',
+      },
+      cookieTable: {
+        caption: "Liste des cookies",
+        headers: {
+          name: "Nom",
+          domain: "Fournisseur",
+          description: "Finalité",
+          expiration: "Durée",
         },
       },
       services: {

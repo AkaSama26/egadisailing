@@ -1,0 +1,260 @@
+{
+  "common": {
+    "bookNow": "Reservar ahora",
+    "recoverBooking": "Buscar reserva",
+    "learnMore": "Saber más",
+    "contactUs": "Contactar",
+    "home": "Inicio",
+    "about": "Sobre nosotros",
+    "contacts": "Contacto",
+    "faq": "FAQ",
+    "priceFrom": "Desde",
+    "perPerson": "por persona",
+    "fullDay": "Día completo",
+    "halfDay": "Medio día",
+    "week": "Semana"
+  },
+  "hero": {
+    "title": "Deja la costa atrás",
+    "subtitle": "Descubre las Islas Egadi: trimarán con chef, excursiones privadas y charter desde Trapani.",
+    "cta": "Ver experiencias",
+    "vehicleLabel": "Barco",
+    "vehiclePlaceholder": "Elige un barco",
+    "experienceLabel": "Experiencia",
+    "experiencePlaceholder": "Elige una experiencia",
+    "boatExperienceExclusive": "Experiencia exclusiva",
+    "boatExperienceShared": "Experiencia compartida",
+    "durationLabel": "Duración",
+    "durationPlaceholder": "Elige la duración",
+    "durationFullDay": "8 horas",
+    "durationMorning": "4 horas · mañana",
+    "durationAfternoon": "4 horas · tarde",
+    "charterStartLabel": "Desde",
+    "charterEndLabel": "Hasta",
+    "charterTooShort": "Un charter requiere al menos 3 días.",
+    "charterTooLong": "Para charters de más de 7 días, contacta con la tripulación para un presupuesto a medida.",
+    "dateLabel": "Fecha",
+    "datePlaceholder": "Selecciona fechas"
+  },
+  "services": {
+    "socialBoating": {
+      "title": "Social Boating",
+      "short": "Navegación, baño y comida de pescado fresco. La forma más sociable de descubrir las Islas Egadi."
+    },
+    "exclusive": {
+      "title": "Experiencia exclusiva",
+      "short": "Chef privado, ruta a medida y comodidad sin renunciar a nada."
+    },
+    "cabinCharter": {
+      "title": "Charter",
+      "short": "Una semana entre las Islas Egadi, con el mar como casa."
+    },
+    "boatShared": {
+      "title": "Excursión compartida en barco",
+      "short": "Una excursión en barco por las Islas Egadi, ideal para grupos pequeños."
+    },
+    "boatExclusive": {
+      "title": "Excursión privada en barco",
+      "short": "Un barco reservado por completo para ti y tu grupo."
+    }
+  },
+  "nav": {
+    "experiences": "Experiencias",
+    "boats": "Nuestros barcos",
+    "islands": "Las islas",
+    "about": "Sobre nosotros",
+    "contacts": "Contacto"
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados",
+    "privacy": "Política de privacidad",
+    "terms": "Términos y condiciones",
+    "cookiePreferences": "Preferencias de cookies",
+    "tagline": "Experiencias únicas en barco por las Islas Egadi",
+    "quickLinks": "Enlaces rápidos",
+    "address": "EGADI SAILING SRLS, Via Calipso 42, 91100 Trapani"
+  },
+  "about": {
+    "title": "Sobre nosotros",
+    "subtitle": "Pasión por el mar desde 2010",
+    "heroText": "Egadisailing nace de la pasión por el mar y del amor por las Islas Egadi. Desde 2010 ofrecemos experiencias en barco para quienes quieren descubrir uno de los tramos de mar más bonitos del Mediterráneo.",
+    "storyText": "Todo empezó con un barco y un sueño: hacer vivir a cada huésped la magia de las Islas Egadi tal y como la vivimos nosotros cada día. Hoy, con una flota cuidada y una tripulación apasionada, seguimos convirtiendo cada salida en un recuerdo inolvidable.",
+    "valuesTitle": "Nuestros valores",
+    "value1Title": "Pasión por el mar",
+    "value1Desc": "El mar es nuestra casa. Cada día a bordo es una oportunidad para compartir la belleza de las Islas Egadi con nuestros huéspedes.",
+    "value2Title": "Hospitalidad siciliana",
+    "value2Desc": "Una bienvenida cálida, comidas preparadas con cuidado y atención al detalle: tradición siciliana a bordo de nuestros barcos.",
+    "value3Title": "Respeto por el entorno",
+    "value3Desc": "Navegamos de forma responsable, protegiendo el ecosistema marino de las Islas Egadi para las próximas generaciones.",
+    "crewTitle": "Nuestra tripulación",
+    "crewText": "Nuestro equipo está formado por profesionales del mar: patrones expertos, chefs con talento y azafatas atentas. Todos comparten la misma pasión por las Islas Egadi y por la hospitalidad."
+  },
+  "contacts": {
+    "title": "Contacto",
+    "subtitle": "Estamos aquí para ayudarte",
+    "address": "Via dei Gladioli 15, 91100 Trapani, Italia",
+    "email": "info@egadisailing.com",
+    "phone": "+39 345 971 0696 · +39 340 145 4585",
+    "formName": "Nombre",
+    "formEmail": "Email",
+    "formMessage": "Mensaje",
+    "formSend": "Enviar mensaje",
+    "whatsapp": "Escríbenos por WhatsApp",
+    "findUs": "Dónde encontrarnos",
+    "writeUs": "Escríbenos"
+  },
+  "islands": {
+    "title": "Las Islas Egadi",
+    "subtitle": "Tres joyas en el corazón del Mediterráneo",
+    "sectionLabel": "Descubre la ruta",
+    "discoverExperiences": "Descubre experiencias que visitan esta isla",
+    "favignana": {
+      "name": "Favignana",
+      "description": "La mayor de las Islas Egadi, famosa por Cala Rossa y sus aguas turquesas. Conocida como la 'mariposa sobre el mar' por su forma, Favignana ofrece playas espectaculares, un centro con encanto y la antigua tonnara Florio, testimonio de su tradición atunera.",
+      "highlights": "Cala Rossa, Cala Azzurra, Lido Burrone, antigua tonnara Florio"
+    },
+    "levanzo": {
+      "name": "Levanzo",
+      "description": "La más pequeña y salvaje, hogar de la Grotta del Genovese. Con pocos habitantes, Levanzo es una joya tranquila donde el tiempo parece ir más despacio. Sus aguas transparentes y su vida marina la hacen perfecta para el snorkel.",
+      "highlights": "Grotta del Genovese, Cala Minnola, Cala Fredda, Faraglione"
+    },
+    "marettimo": {
+      "name": "Marettimo",
+      "description": "La más remota y virgen, un paraíso para el snorkel. Marettimo es la isla más salvaje del archipiélago, con rutas de senderismo entre naturaleza mediterránea y cuevas marinas accesibles desde el agua.",
+      "highlights": "Grotta del Cammello, Punta Troia, Cala Bianca, Scalo Maestro"
+    }
+  },
+  "experience": {
+    "includes": "Qué incluye",
+    "bring": "Qué llevar",
+    "itinerary": "Itinerario",
+    "pricing": "Precios y temporada",
+    "reviews": "Reseñas",
+    "bookNow": "Reservar ahora",
+    "from": "Desde",
+    "perPerson": "por persona",
+    "duration": "Duración",
+    "capacity": "Capacidad máxima",
+    "crew": "Tripulación a bordo",
+    "boat": "Barco",
+    "allExperiences": "Todas las experiencias",
+    "include1": "Patrón profesional",
+    "include2": "Comida con pescado fresco preparada por el chef",
+    "include3": "Equipo de snorkel",
+    "include4": "Toallas a bordo",
+    "include5": "Agua y refrescos",
+    "bring1": "Protector solar",
+    "bring2": "Bañador",
+    "bring3": "Toalla personal",
+    "bring4": "Sombrero",
+    "bring5": "Calzado cómodo",
+    "itin1Time": "09:00",
+    "itin1Text": "Salida desde el puerto de Trapani",
+    "itin2Time": "10:00",
+    "itin2Text": "Llegada a Favignana — Cala Rossa, baño y snorkel",
+    "itin3Time": "12:30",
+    "itin3Text": "Comida a bordo preparada por el chef",
+    "itin4Time": "14:00",
+    "itin4Text": "Navegación hacia Levanzo",
+    "itin5Time": "15:30",
+    "itin5Text": "Grotta del Genovese, baño en aguas cristalinas",
+    "itin6Time": "17:00",
+    "itin6Text": "Regreso al puerto de Trapani",
+    "periodLabel": "Periodo",
+    "periodPrice": "Precio por persona",
+    "periodDates": "Fechas"
+  },
+  "experiences": {
+    "title": "Excursiones en barco a las Islas Egadi desde Trapani",
+    "subtitle": "Elige tu excursión por las Islas Egadi: chef a bordo, charter en trimarán, tours privados de 4 horas y excursiones compartidas o privadas de 8 horas. Precios y disponibilidad online."
+  },
+  "boats": {
+    "title": "Barcos para excursiones a las Islas Egadi desde Trapani",
+    "subtitle": "Elige entre el trimarán Neel 47 y la Cigala & Bertinetti 34 Offshore Open.",
+    "length": "Eslora",
+    "year": "Año",
+    "cabins": "Camarotes",
+    "meters": "m",
+    "availableServices": "Experiencias disponibles",
+    "specs": "Características"
+  },
+  "faq": {
+    "title": "FAQ sobre excursiones en barco por las Islas Egadi",
+    "subtitle": "Todo lo que necesitas saber antes de reservar una excursión en barco por las Islas Egadi.",
+    "q1": "¿Qué debo llevar?",
+    "a1": "Preferiblemente protector solar biodegradable, bañador, toalla personal, sombrero y calzado cómodo. También recomendamos llevar una prenda ligera para el regreso.",
+    "q2": "¿Puedo cancelar mi reserva?",
+    "a2": "Sí. Hasta 30 días antes de la salida se devuelve el importe completo; de 29 a 15 días antes se devuelve el 50%; dentro de los 15 días previos o en caso de no presentarse, la cancelación no es reembolsable. Los cambios de fecha se valoran según disponibilidad.",
+    "q3": "¿Qué pasa si hace mal tiempo?",
+    "a3": "Controlamos constantemente las condiciones meteorológicas. Si el tiempo no permite salir con seguridad, contactaremos contigo para reprogramar la experiencia o emitir un reembolso completo.",
+    "q4": "¿Pueden participar niños?",
+    "a4": "Sí, los niños son bienvenidos a bordo. Para niños muy pequeños, menores de 3 años, contacta con nosotros antes de reservar. Hay chalecos infantiles disponibles.",
+    "q5": "¿La comida está incluida?",
+    "a5": "En Social Boating y en la Experiencia Exclusiva, la comida preparada por el chef está incluida. En los tours en barco, el servicio de comida puede añadirse bajo petición.",
+    "q6": "¿Dónde embarcamos?",
+    "a6": "El embarque se realiza en el puerto de Trapani. Enviaremos las indicaciones exactas y el punto de encuentro por email tras confirmar la reserva."
+  },
+  "itinerary": {
+    "tabs": {
+      "socialBoating": "Social Boating",
+      "exclusive": "Gourmet",
+      "cabinCharter": "Charter",
+      "boatShared": "4 horas",
+      "boatExclusive": "8 horas"
+    },
+    "socialBoating": {
+      "stop1": { "name": "Salida", "description": "Embarque en el puerto de Trapani, bebida de bienvenida y briefing del capitán." },
+      "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "Un baño en una de las aguas turquesas más famosas del Mediterráneo, con snorkel sobre fondos de Posidonia." },
+      "stop3": { "name": "Comida a bordo", "description": "El chef prepara pescado fresco con vistas al mar abierto." },
+      "stop4": { "name": "Bue Marino", "island": "Favignana", "description": "Costa espectacular, cuevas marinas y aguas cristalinas entre acantilados." },
+      "stop5": { "name": "Regreso", "description": "Navegación de vuelta a Trapani con luz de atardecer." }
+    },
+    "exclusive": {
+      "stop1": { "name": "Bienvenida a bordo", "description": "Punto de encuentro: Via dei Gladioli 15, 91100 Trapani, Italia." },
+      "stop2": { "name": "Cala Azzurra", "island": "Favignana", "description": "Baño en aguas transparentes frente a Cala Azzurra, Favignana." },
+      "stop3": { "name": "Cala Rossa", "island": "Favignana", "description": "Comida gourmet al fondeo frente a Cala Rossa, Favignana." },
+      "stop4": { "name": "Cocina en vivo a bordo", "description": "El chef local prepara la comida a bordo en Cala Rossa, Favignana." },
+      "stop5": { "name": "Comida con vistas al mar", "description": "Comida gourmet con vistas a Cala Rossa, Favignana." },
+      "stop6": { "name": "Relax en Cala Rossa", "island": "Favignana", "description": "Tiempo para relajarse y bañarse en las aguas de Cala Rossa." },
+      "stop7": { "name": "Cala Dogana", "island": "Levanzo", "description": "Parada en la playa de Cala Dogana, Levanzo." },
+      "stop8": { "name": "Cala Fredda", "island": "Levanzo", "description": "Naturaleza, silencio y agua turquesa en Cala Fredda, Levanzo." },
+      "stop9": { "name": "Aperitivo al atardecer", "description": "Durante la navegación de regreso entre las Islas Egadi." },
+      "stop10": { "name": "Regreso a puerto", "description": "Fin de la experiencia y regreso a Trapani." }
+    },
+    "cabinCharter": {
+      "stop1": { "name": "Itinerario a medida", "description": "El itinerario del charter se planifica con los huéspedes entre Favignana, Levanzo y Marettimo, según preferencias, ritmo de viaje, mar, meteorología y ganas de calas, pueblos, baños o descanso a bordo." }
+    },
+    "boatShared": {
+      "stop1": { "name": "Salida", "description": "Encuentro en el puerto de Trapani y salida hacia las islas." },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Vuelta por la isla con paradas en las calas más bonitas." },
+      "stop3": { "name": "Levanzo", "island": "Levanzo", "description": "Baño y snorkel en aguas cristalinas." },
+      "stop4": { "name": "Regreso", "description": "Regreso a Trapani a primera hora de la tarde." }
+    },
+    "boatExclusive": {
+      "stop1": { "name": "Salida", "description": "Salida privada; eliges el horario." },
+      "stop2": { "name": "Favignana", "island": "Favignana", "description": "Las calas más exclusivas con paradas más largas." },
+      "stop3": { "name": "Comida a bordo", "description": "Comida con productos típicos sicilianos." },
+      "stop4": { "name": "Levanzo", "island": "Levanzo", "description": "Calas tranquilas y snorkel en aguas vírgenes." },
+      "stop5": { "name": "Regreso", "description": "Vuelta relajada con luz de atardecer." }
+    }
+  },
+  "landing": {
+    "experiencesTitle": "¿Listo para zarpar?",
+    "experiencesSubtitle": "",
+    "islandsTitle": "Las Islas Egadi",
+    "islandsSubtitle": "Tres joyas en el corazón del Mediterráneo",
+    "whyTitle": "Por qué Egadisailing",
+    "whyChef": "Chef a bordo",
+    "whyChefDesc": "Comida de pescado fresco preparada por nuestro chef, con ingredientes locales y recetas sicilianas.",
+    "whyLuxury": "Lujo accesible",
+    "whyLuxuryDesc": "Experiencias premium a precios razonables, para vivir el mar como mereces.",
+    "whyCrew": "Tripulación experta",
+    "whyCrewDesc": "Patrón profesional, chef y azafata para una experiencia segura y cuidada.",
+    "whyIslands": "Islas vírgenes",
+    "whyIslandsDesc": "Las aguas más claras del Mediterráneo, cuevas marinas y calas escondidas.",
+    "testimonialsTitle": "Qué dicen nuestros huéspedes",
+    "ctaTitle": "Reserva tu experiencia",
+    "ctaSubtitle": "Elige tu aventura en las Islas Egadi",
+    "ctaButton": "Ver experiencias"
+  }
+}

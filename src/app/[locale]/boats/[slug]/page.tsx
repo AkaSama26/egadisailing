@@ -22,6 +22,8 @@ import { routing } from "@/i18n/routing";
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
+import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 import {
   getBoatContent,
   getBoatsPageContent,
@@ -43,23 +45,37 @@ const SPEC_ICONS: Record<BoatSpecIcon, LucideIcon> = {
 
 function copy(locale: string) {
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
   return {
-    allBoats: isEn ? "All boats" : "Tutte le barche",
-    specs: isEn ? "On board" : "A bordo",
-    usageEyebrow: isEn ? "Best use" : "Utilizzo",
-    usageTitle: isEn ? "When to choose this boat" : "Quando scegliere questa barca",
-    routesEyebrow: isEn ? "Routes" : "Rotte",
-    routesTitle: isEn ? "How it moves through the Egadi" : "Come si muove tra le Egadi",
-    gallery: isEn ? "Boat gallery" : "Gallery della barca",
+    allBoats: isEs ? "Todos los barcos" : isFr ? "Tous les bateaux" : isEn ? "All boats" : "Tutte le barche",
+    specs: isEs ? "A bordo" : isFr ? "À bord" : isEn ? "On board" : "A bordo",
+    usageEyebrow: isEs ? "Uso ideal" : isFr ? "Usage idéal" : isEn ? "Best use" : "Utilizzo",
+    usageTitle: isEs ? "Cuándo elegir este barco" : isFr ? "Quand choisir ce bateau" : isEn ? "When to choose this boat" : "Quando scegliere questa barca",
+    routesEyebrow: isEs ? "Rutas" : isFr ? "Routes" : isEn ? "Routes" : "Rotte",
+    routesTitle: isEs ? "Cómo se mueve por las Egadi" : isFr ? "Comment il navigue aux Égades" : isEn ? "How it moves through the Egadi" : "Come si muove tra le Egadi",
+    gallery: isEs ? "Galería del barco" : isFr ? "Galerie du bateau" : isEn ? "Boat gallery" : "Gallery della barca",
     faqEyebrow: isEn ? "FAQ" : "FAQ",
-    faqTitle: isEn ? "Questions about this boat" : "Domande su questa barca",
-    routeIntro: isEn
+    faqTitle: isEs ? "Preguntas sobre este barco" : isFr ? "Questions sur ce bateau" : isEn ? "Questions about this boat" : "Domande su questa barca",
+    routeIntro: isEs
+      ? "La ruta no es una lista rígida: se adapta a la duración de la experiencia, al estado del mar y a las calas más cómodas del día."
+      : isFr
+      ? "La route n'est jamais une liste rigide : elle s'adapte à la durée de l'expérience, à l'état de la mer et aux criques les plus confortables du jour."
+      : isEn
       ? "The route is never treated as a rigid checklist: it is shaped around the experience length, sea conditions and the most comfortable coves of the day."
       : "La rotta non viene trattata come una lista rigida: viene costruita in base alla durata dell'esperienza, al mare e alle cale più comode della giornata.",
-    useIntro: isEn
+    useIntro: isEs
+      ? "Una forma rápida de entender si este es el barco adecuado antes de elegir la experiencia."
+      : isFr
+      ? "Une façon rapide de comprendre si ce bateau est le bon choix avant de sélectionner l'expérience."
+      : isEn
       ? "A quick way to understand whether this boat is the right fit before choosing the experience."
       : "Un modo rapido per capire se questa è la barca giusta prima di scegliere l'esperienza.",
-    faqIntro: isEn
+    faqIntro: isEs
+      ? "Respuestas claras para quienes eligen el barco sin necesitar conocimientos técnicos de náutica."
+      : isFr
+      ? "Des réponses claires pour choisir le bateau sans connaissances nautiques techniques."
+      : isEn
       ? "Clear answers for guests who are choosing the boat without needing technical nautical knowledge."
       : "Risposte chiare per chi sta scegliendo la barca senza dover conoscere dettagli nautici tecnici.",
   };
@@ -131,19 +147,19 @@ export default async function BoatDetailPage({
   const { locale, slug } = await params;
   const boat = getBoatContent(resolveBoatIdFromSlug(slug), locale);
   if (!boat) notFound();
-  if (slug !== boat.slug) redirect(`/${locale}/boats/${boat.slug}`);
+  if (slug !== boat.slug) redirect(localizedPath(locale, `/boats/${boat.slug}`));
 
   const t = copy(locale);
   const base = env.APP_URL.replace(/\/$/, "");
-  const pageUrl = `${base}/${locale}/boats/${boat.slug}`;
+  const pageUrl = localizedAbsoluteUrl(base, locale, `/boats/${boat.slug}`);
   const json = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Egadisailing", item: `${base}/${locale}` },
-          { "@type": "ListItem", position: 2, name: getBoatsPageContent(locale).seoTitle, item: `${base}/${locale}/boats` },
+          { "@type": "ListItem", position: 1, name: "Egadisailing", item: localizedAbsoluteUrl(base, locale, "/") },
+          { "@type": "ListItem", position: 2, name: getBoatsPageContent(locale).seoTitle, item: localizedAbsoluteUrl(base, locale, "/boats") },
           { "@type": "ListItem", position: 3, name: boat.title, item: pageUrl },
         ],
       },
@@ -222,7 +238,7 @@ export default async function BoatDetailPage({
         <div className="relative z-10 mx-auto max-w-7xl">
           <ScrollSection animation="fade-up">
             <Link
-              href={`/${locale}/boats`}
+              href={localizedStaticPath(locale, "/boats")}
               className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-white/75 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
