@@ -133,6 +133,7 @@ function GermanCookiePolicyPage() {
               <tr><Td><code>authjs.session-token</code></Td><Td>Auth.js / Egadisailing</Td><Td>Sichere Sitzung des Adminbereichs</Td><Td>Bis zu 8 Stunden</Td></tr>
               <tr><Td><code>__stripe_mid</code>, <code>__stripe_sid</code>, <code>m</code></Td><Td>Stripe</Td><Td>Zahlungen, Betrugsprävention und Checkout-Sicherheit</Td><Td>Variabel nach Stripe-Richtlinie</Td></tr>
               <tr><Td>Variable Cloudflare-Namen</Td><Td>Cloudflare Turnstile</Td><Td>Anti-Bot-Prüfung in Formularen und Checkout</Td><Td>Variabel nach Cloudflare-Richtlinie</Td></tr>
+              <tr><Td>Keine Browser-Cookies</Td><Td>Cloudflare Analytics Edge</Td><Td>Aggregierte serverseitige Statistiken zu Traffic, Performance, Statuscodes und Cache für das Admin-Dashboard</Td><Td>Keine Speicherung im Browser</Td></tr>
               <tr><Td>Variable Google-Maps-Namen</Td><Td>Google</Td><Td>Laden der eingebetteten Karte auf der Kontaktseite</Td><Td>Variabel nach Google-Richtlinie</Td></tr>
             </LegalTable>
           </section>
@@ -233,6 +234,7 @@ function FrenchCookiePolicyPage() {
               <tr><Td><code>authjs.session-token</code></Td><Td>Auth.js / Egadisailing</Td><Td>Session sécurisée de l'espace administrateur</Td><Td>Jusqu'à 8 heures</Td></tr>
               <tr><Td><code>__stripe_mid</code>, <code>__stripe_sid</code>, <code>m</code></Td><Td>Stripe</Td><Td>Paiements, prévention fraude et sécurité checkout</Td><Td>Variable selon politique Stripe</Td></tr>
               <tr><Td>Noms variables Cloudflare</Td><Td>Cloudflare Turnstile</Td><Td>Vérification anti-bot dans formulaires et checkout</Td><Td>Variable selon politique Cloudflare</Td></tr>
+              <tr><Td>Aucun cookie navigateur</Td><Td>Cloudflare Analytics Edge</Td><Td>Statistiques agrégées côté serveur sur trafic, performance, codes HTTP et cache pour le tableau de bord admin</Td><Td>Aucun stockage dans le navigateur</Td></tr>
               <tr><Td>Noms variables Google Maps</Td><Td>Google</Td><Td>Chargement de la carte intégrée dans la page contact</Td><Td>Variable selon politique Google</Td></tr>
             </LegalTable>
           </section>
@@ -332,6 +334,7 @@ function SpanishCookiePolicyPage() {
               <tr><Td><code>authjs.session-token</code></Td><Td>Auth.js / Egadisailing</Td><Td>Sesión segura del área administrativa</Td><Td>Hasta 8 horas</Td></tr>
               <tr><Td><code>__stripe_mid</code>, <code>__stripe_sid</code>, <code>m</code></Td><Td>Stripe</Td><Td>Pagos, prevención de fraude y seguridad del checkout</Td><Td>Variable según política Stripe</Td></tr>
               <tr><Td>Nombres variables Cloudflare</Td><Td>Cloudflare Turnstile</Td><Td>Verificación anti-bot en formularios y checkout</Td><Td>Variable según política Cloudflare</Td></tr>
+              <tr><Td>Sin cookies del navegador</Td><Td>Cloudflare Analytics Edge</Td><Td>Estadísticas agregadas del lado servidor sobre tráfico, rendimiento, códigos HTTP y caché para el panel admin</Td><Td>Sin almacenamiento en el navegador</Td></tr>
               <tr><Td>Nombres variables Google Maps</Td><Td>Google</Td><Td>Carga del mapa incorporado en la página de contacto</Td><Td>Variable según política Google</Td></tr>
             </LegalTable>
           </section>
@@ -520,6 +523,15 @@ export default async function CookiePolicyPage({
                 <Td>Variabile, secondo policy Cloudflare</Td>
               </tr>
               <tr>
+                <Td>Nessun cookie browser</Td>
+                <Td>Cloudflare Analytics Edge</Td>
+                <Td>
+                  Statistiche aggregate lato server su traffico, performance, codici HTTP e
+                  cache per il pannello admin
+                </Td>
+                <Td>Nessuna memorizzazione nel browser</Td>
+              </tr>
+              <tr>
                 <Td>Nomi variabili Google Maps</Td>
                 <Td>Google</Td>
                 <Td>Caricamento della mappa incorporata nella pagina contatti</Td>
@@ -666,7 +678,10 @@ export default async function CookiePolicyPage({
               </tr>
               <tr>
                 <Td>Cloudflare DNS / sicurezza</Td>
-                <Td>DNS, sicurezza, eventuale proxy/CDN e servizi anti-abuso</Td>
+                <Td>
+                  DNS, sicurezza, eventuale proxy/CDN, servizi anti-abuso e statistiche
+                  aggregate edge per il widget traffico admin, senza nuovi cookie browser
+                </Td>
                 <Td>
                   <a
                     className="font-semibold text-[#0b6694]"

@@ -66,6 +66,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_BING_SITE_VERIFICATION: optionalString(),
   NEXT_PUBLIC_META_DOMAIN_VERIFICATION: optionalString(),
   COOKIE_CONSENT_HASH_SECRET: optionalSecret(32),
+  CLOUDFLARE_API_TOKEN: optionalSecret(16),
+  CLOUDFLARE_ZONE_ID: optionalString(),
+  CLOUDFLARE_ANALYTICS_HOSTNAME: optionalString(),
 
   // Server Actions allowed origins (comma-separated). Obbligatorio in prod
   // dietro reverse proxy (Round 10 Sec-C1). Es.:

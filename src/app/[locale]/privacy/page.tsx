@@ -151,10 +151,11 @@ function GermanPrivacyPolicyPage() {
             <h2 className={headingClass}>5. Dienstleister und externe Dienste</h2>
             <p className={paragraphClass}>
               Daten können an für den Service notwendige Anbieter übermittelt werden: Stripe für
-              Zahlungen, Anbieter transaktionaler E-Mails, Cloudflare Turnstile, Hosting/Datenbank,
-              Google Maps, Sicherheitswerkzeuge und verbundene Buchungsplattformen. Einige Anbieter
-              können außerhalb des EWR tätig sein; es gelten geeignete Garantien wie DPF, SCC oder
-              andere gesetzlich vorgesehene Mechanismen.
+              Zahlungen, Anbieter transaktionaler E-Mails, Cloudflare für DNS/CDN, Sicherheit,
+              Performance und aggregierte Edge-Statistiken im Adminbereich, Cloudflare Turnstile,
+              Hosting/Datenbank, Google Maps, Sicherheitswerkzeuge und verbundene
+              Buchungsplattformen. Einige Anbieter können außerhalb des EWR tätig sein; es gelten
+              geeignete Garantien wie DPF, SCC oder andere gesetzlich vorgesehene Mechanismen.
             </p>
           </section>
 
@@ -255,10 +256,12 @@ function FrenchPrivacyPolicyPage() {
             <h2 className={headingClass}>5. Fournisseurs et services externes</h2>
             <p className={paragraphClass}>
               Les données peuvent être communiquées aux fournisseurs nécessaires au service :
-              Stripe pour paiements, fournisseurs d'email transactionnel, Cloudflare Turnstile,
-              hébergement/base de données, Google Maps, outils de sécurité et plateformes de
-              réservation connectées. Certains fournisseurs peuvent opérer hors EEE avec garanties
-              applicables comme DPF, SCC ou mécanismes prévus par la réglementation.
+              Stripe pour paiements, fournisseurs d'email transactionnel, Cloudflare pour DNS/CDN,
+              sécurité, performance et statistiques edge agrégées dans l'administration,
+              Cloudflare Turnstile, hébergement/base de données, Google Maps, outils de sécurité
+              et plateformes de réservation connectées. Certains fournisseurs peuvent opérer hors
+              EEE avec garanties applicables comme DPF, SCC ou mécanismes prévus par la
+              réglementation.
             </p>
           </section>
 
@@ -361,11 +364,12 @@ function SpanishPrivacyPolicyPage() {
             <h2 className={headingClass}>5. Proveedores y servicios externos</h2>
             <p className={paragraphClass}>
               Los datos pueden comunicarse a proveedores necesarios para prestar el servicio:
-              Stripe para pagos, Brevo u otros proveedores de email transaccional, Cloudflare
-              Turnstile para protección anti-bot, hosting/database, Google Maps, herramientas de
-              seguridad y plataformas de reservas conectadas. Algunos proveedores pueden operar
-              fuera del Espacio Económico Europeo con garantías aplicables, como DPF, SCC u otros
-              mecanismos previstos por la normativa.
+              Stripe para pagos, Brevo u otros proveedores de email transaccional, Cloudflare para
+              DNS/CDN, seguridad, rendimiento y estadísticas edge agregadas en el panel admin,
+              Cloudflare Turnstile para protección anti-bot, hosting/database, Google Maps,
+              herramientas de seguridad y plataformas de reservas conectadas. Algunos proveedores
+              pueden operar fuera del Espacio Económico Europeo con garantías aplicables, como DPF,
+              SCC u otros mecanismos previstos por la normativa.
             </p>
           </section>
 
@@ -549,6 +553,13 @@ export default async function PrivacyPolicyPage({
                 <Td>Legittimo interesse - art. 6.1.f GDPR</Td>
               </tr>
               <tr>
+                <Td>
+                  Statistiche tecniche aggregate su traffico, performance, cache e codici di
+                  risposta tramite Cloudflare Analytics edge
+                </Td>
+                <Td>Legittimo interesse - art. 6.1.f GDPR</Td>
+              </tr>
+              <tr>
                 <Td>Cookie analitici e marketing, se configurati e accettati</Td>
                 <Td>Consenso - art. 6.1.a GDPR e normativa ePrivacy</Td>
               </tr>
@@ -578,7 +589,8 @@ export default async function PrivacyPolicyPage({
               </li>
               <li>
                 <strong>Cloudflare</strong> per DNS, sicurezza, protezione anti-abuso,
-                proxy/CDN ove attivo e servizi esterni caricati dal sito.
+                proxy/CDN ove attivo, performance e statistiche tecniche aggregate edge
+                mostrate solo nel pannello admin.
               </li>
               <li>
                 <strong>IONOS</strong> per dominio e servizi collegati al dominio.

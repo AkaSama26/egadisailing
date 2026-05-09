@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import type Decimal from "decimal.js";
 import Link from "next/link";
 import {
+  Activity,
   AlertTriangle,
+  BarChart3,
   Calendar,
   CheckCircle2,
   Clock,
@@ -35,6 +37,13 @@ import {
   type ControlRoomPayment,
 } from "@/lib/queries/admin-control-room-dashboard";
 import {
+  formatCloudflareBytes,
+  getCloudflareTrafficSummary,
+  type CloudflareTrafficConfigured,
+  type CloudflareTrafficRankItem,
+  type CloudflareTrafficSummary,
+} from "@/lib/cloudflare/analytics";
+import {
   BOOKING_SOURCE_LABEL,
   BOOKING_STATUS_LABEL,
   MANUAL_ALERT_ACTION_LABEL,
@@ -50,8 +59,17 @@ const RISK_LABEL: Record<string, string> = {
   EXTREME: "Critico",
 };
 
+const integerFormatter = new Intl.NumberFormat("it-IT");
+
+function formatNumber(value: number) {
+  return integerFormatter.format(value);
+}
+
 export default async function DashboardHome() {
-  const dashboard = await getAdminControlRoomDashboard();
+  const [dashboard, cloudflareTraffic] = await Promise.all([
+    getAdminControlRoomDashboard(),
+    getCloudflareTrafficSummary(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -130,6 +148,8 @@ export default async function DashboardHome() {
           href="#azioni"
         />
       </div>
+
+      <CloudflareTrafficCard traffic={cloudflareTraffic} />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.95fr]">
         <AdminCard className="space-y-4">
@@ -399,6 +419,102 @@ export default async function DashboardHome() {
           </div>
         </AdminCard>
       </div>
+    </div>
+  );
+}
+
+function CloudflareTrafficCard({ traffic }: { traffic: CloudflareTrafficSummary }) {
+  const tone = traffic.status === "error" ? "warn" : "default";
+
+  if (traffic.status !== "configured") {
+    return (
+      <AdminCard className="space-y-3" tone={tone}>
+        <SectionTitle icon={Activity} title="Traffico sito" />
+        <div className="rounded-lg border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
+          <p className="font-medium text-slate-900">
+            {traffic.status === "unavailable"
+              ? "Cloudflare Analytics non configurato"
+              : "Cloudflare Analytics temporaneamente non disponibile"}
+          </p>
+          <p className="mt-1">{traffic.message}</p>
+          <p className="mt-3 text-xs text-slate-500">
+            Il widget usa solo dati edge aggregati server-side. Nessun beacon o cookie viene
+            caricato sul sito pubblico.
+          </p>
+        </div>
+      </AdminCard>
+    );
+  }
+
+  return (
+    <AdminCard className="space-y-4">
+      <SectionTitle icon={Activity} title="Traffico sito" />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <CloudflareMetric label="Richieste 24h" value={formatNumber(traffic.last24h.requests)} />
+        <CloudflareMetric label="Visite 24h" value={formatNumber(traffic.last24h.visits)} />
+        <CloudflareMetric label="Dati trasferiti" value={formatCloudflareBytes(traffic.last24h.bytes)} />
+        <CloudflareMetric label="Errori 4xx" value={formatNumber(traffic.last24h.errors4xx)} />
+        <CloudflareMetric label="Errori 5xx" value={formatNumber(traffic.last24h.errors5xx)} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <CloudflareRankList title="Top URL ultimi 7 giorni" rows={traffic.topPaths} />
+        <CloudflareRankList title="Top paesi ultimi 7 giorni" rows={traffic.topCountries} />
+      </div>
+
+      <p className="border-t border-slate-100 pt-3 text-xs text-slate-500">
+        Dati Cloudflare per <span className="font-medium text-slate-700">{traffic.hostname}</span> ·
+        aggiornato <TimeIso datetime={traffic.generatedAt} /> · cache{" "}
+        {Math.round(traffic.cacheTtlSeconds / 60)} min
+      </p>
+    </AdminCard>
+  );
+}
+
+function CloudflareMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="text-xs text-slate-500">{label}</div>
+      <div className="mt-1 text-xl font-bold tabular-nums text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function CloudflareRankList({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: CloudflareTrafficConfigured["topPaths"];
+}) {
+  return (
+    <div className="rounded-lg border border-slate-200 p-3">
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+        <BarChart3 className="size-4 text-slate-500" aria-hidden="true" />
+        {title}
+      </h3>
+      {rows.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-500">Nessun dato disponibile.</p>
+      ) : (
+        <div className="mt-3 space-y-2">
+          {rows.map((row) => (
+            <CloudflareRankLine key={row.label} row={row} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CloudflareRankLine({ row }: { row: CloudflareTrafficRankItem }) {
+  return (
+    <div className="grid grid-cols-[1fr_auto] gap-3 text-sm">
+      <span className="truncate text-slate-700" title={row.label}>
+        {row.label}
+      </span>
+      <span className="font-mono font-semibold tabular-nums text-slate-900">
+        {formatNumber(row.requests)}
+      </span>
     </div>
   );
 }
