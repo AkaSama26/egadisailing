@@ -11,11 +11,14 @@ export async function generateMetadata({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return buildPageMetadata({
     title: isEs
       ? "Islas Egadi en barco: Favignana, Levanzo y Marettimo"
       : isFr
       ? "Îles Égades en bateau : Favignana, Levanzo et Marettimo"
+      : isDe
+      ? "Ägadische Inseln mit dem Boot: Favignana, Levanzo und Marettimo"
       : isEn
       ? "Egadi Islands by Boat: Favignana, Levanzo and Marettimo"
       : "Isole Egadi in Barca: Favignana, Levanzo e Marettimo",
@@ -23,6 +26,8 @@ export async function generateMetadata({
       ? "Guía de las Islas Egadi en barco: qué ver en Favignana, Levanzo y Marettimo, mejores calas y rutas desde Trapani."
       : isFr
       ? "Guide des îles Égades en bateau : que voir à Favignana, Levanzo et Marettimo, plus belles criques et routes depuis Trapani."
+      : isDe
+      ? "Guide zu den Ägadischen Inseln mit dem Boot: was Sie in Favignana, Levanzo und Marettimo sehen, die schönsten Buchten und Routen ab Trapani."
       : isEn
       ? "Guide to the Egadi Islands by boat: what to see in Favignana, Levanzo and Marettimo, the best coves and routes from Trapani."
       : "Guida alle Isole Egadi in barca: cosa vedere a Favignana, Levanzo e Marettimo, le cale più belle e le rotte migliori per un tour da Trapani.",

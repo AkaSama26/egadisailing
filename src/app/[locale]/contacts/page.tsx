@@ -34,11 +34,14 @@ export async function generateMetadata({
   const { locale } = await params;
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return buildPageMetadata({
     title: isEs
       ? "Reservas y contactos para excursiones en barco a las Islas Egadi"
       : isFr
         ? "Réservations et contacts pour excursions en bateau aux îles Égades"
+      : isDe
+        ? "Buchungen und Kontakt für Bootstouren zu den Ägadischen Inseln"
       : locale === "en"
         ? "Egadi Boat Tour Bookings and Contacts"
         : "Prenotazioni e contatti per tour alle Egadi",
@@ -47,6 +50,8 @@ export async function generateMetadata({
         ? "Reserva o solicita información para tu excursión en barco a las Islas Egadi. Contacta con Egadisailing por WhatsApp, teléfono o email."
         : isFr
         ? "Réservez ou demandez des informations pour votre excursion en bateau aux îles Égades. Contactez Egadisailing par WhatsApp, téléphone ou email."
+        : isDe
+        ? "Buchen Sie oder fragen Sie Informationen für Ihre Bootstour zu den Ägadischen Inseln an. Kontaktieren Sie Egadisailing per WhatsApp, Telefon oder E-Mail."
         : locale === "en"
         ? "Book or request information for your boat trip in the Egadi Islands. Contact Egadisailing by WhatsApp, phone or email."
         : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi. Contatta Egadisailing via WhatsApp, telefono o email.",
@@ -64,27 +69,32 @@ export default async function ContactsPage({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const whatsappContacts = getOrderedWhatsAppContacts(locale);
   const copy = {
     title: isEs
       ? "Reserva o solicita información para tu excursión en barco a las Islas Egadi"
       : isFr
-      ? "Réservez ou demandez des informations pour votre excursion en bateau aux îles Égades"
+        ? "Réservez ou demandez des informations pour votre excursion en bateau aux îles Égades"
+        : isDe
+          ? "Buchen Sie oder fragen Sie Informationen für Ihre Bootstour zu den Ägadischen Inseln an"
       : isEn
-      ? "Book or request information for your boat trip in the Egadi Islands"
-      : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi",
+        ? "Book or request information for your boat trip in the Egadi Islands"
+        : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi",
     subtitle: isEs
       ? "¿Tienes preguntas, quieres reservar o necesitas ayuda para elegir la experiencia adecuada? Estamos aquí."
       : isFr
-      ? "Des questions, une réservation ou besoin d'aide pour choisir la bonne expérience ? Nous sommes là."
+        ? "Des questions, une réservation ou besoin d'aide pour choisir la bonne expérience ? Nous sommes là."
+        : isDe
+          ? "Haben Sie Fragen, möchten Sie buchen oder brauchen Sie Hilfe bei der Wahl des passenden Erlebnisses? Wir sind da."
       : isEn
-      ? "Questions, bookings, or a little help choosing the right experience? We are here."
-      : "Hai domande, vuoi prenotare o semplicemente saperne di più? Siamo qui.",
-    locationLabel: isEs ? "Dónde estamos" : isFr ? "Où nous sommes" : isEn ? "Where we are" : "Dove siamo",
+        ? "Questions, bookings, or a little help choosing the right experience? We are here."
+        : "Hai domande, vuoi prenotare o semplicemente saperne di più? Siamo qui.",
+    locationLabel: isEs ? "Dónde estamos" : isFr ? "Où nous sommes" : isDe ? "Wo wir sind" : isEn ? "Where we are" : "Dove siamo",
     address: getContactLocationLabel(locale),
-    phoneLabel: isEs ? "Teléfono y WhatsApp" : isFr ? "Téléphone et WhatsApp" : isEn ? "Phone and WhatsApp" : "Telefono e WhatsApp",
-    writeTitle: isEs ? "Escríbenos" : isFr ? "Écrivez-nous" : isEn ? "Write to us" : "Scrivici",
-    writeSubtitle: isEs ? "Respondemos en 24 horas" : isFr ? "Nous répondons sous 24 heures" : isEn ? "We reply within 24 hours" : "Ti rispondiamo entro 24 ore",
+    phoneLabel: isEs ? "Teléfono y WhatsApp" : isFr ? "Téléphone et WhatsApp" : isDe ? "Telefon und WhatsApp" : isEn ? "Phone and WhatsApp" : "Telefono e WhatsApp",
+    writeTitle: isEs ? "Escríbenos" : isFr ? "Écrivez-nous" : isDe ? "Schreiben Sie uns" : isEn ? "Write to us" : "Scrivici",
+    writeSubtitle: isEs ? "Respondemos en 24 horas" : isFr ? "Nous répondons sous 24 heures" : isDe ? "Wir antworten innerhalb von 24 Stunden" : isEn ? "We reply within 24 hours" : "Ti rispondiamo entro 24 ore",
   };
   return (
     <div

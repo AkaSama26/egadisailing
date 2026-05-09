@@ -26,12 +26,13 @@ import {
 import { favignanaGuidesEn } from "@/data/favignana-guides-en";
 import { favignanaGuidesEs } from "@/data/favignana-guides-es";
 import { favignanaGuidesFr } from "@/data/favignana-guides-fr";
+import { favignanaGuidesDe } from "@/data/favignana-guides-de";
 import { env } from "@/lib/env";
 import { localizedPath } from "@/lib/i18n/paths";
 
 export const dynamicParams = false;
 
-const guideLocales = ["it", "en", "es", "fr"] as const;
+const guideLocales = ["it", "en", "es", "fr", "de"] as const;
 type GuideLocale = (typeof guideLocales)[number];
 
 const guidesByLocale = {
@@ -39,10 +40,11 @@ const guidesByLocale = {
   en: favignanaGuidesEn,
   es: favignanaGuidesEs,
   fr: favignanaGuidesFr,
+  de: favignanaGuidesDe,
 } satisfies Record<GuideLocale, FavignanaGuide[]>;
 
 function isGuideLocale(locale: string): locale is GuideLocale {
-  return locale === "it" || locale === "en" || locale === "es" || locale === "fr";
+  return locale === "it" || locale === "en" || locale === "es" || locale === "fr" || locale === "de";
 }
 
 function getLocalizedGuide(locale: GuideLocale, slug: string): FavignanaGuide | undefined {
@@ -145,6 +147,30 @@ const guideUi = {
     sourcesEyebrow: "Sources officielles et mises à jour",
     sourcesText:
       "Horaires, liaisons, règles de circulation et services peuvent changer : pour les détails pratiques, consultez toujours les sources officielles.",
+  },
+  de: {
+    backLabel: "Favignana",
+    heroLabel: "Favignana-Guide",
+    asideEyebrow: "In diesem Guide",
+    asideAriaLabel: "Inhaltsverzeichnis des Guides",
+    quickAnswer: "Kurzantwort",
+    quickAnswerTitle: "Kurz gesagt",
+    itemEyebrow: "Gut zu wissen",
+    chapterLabel: (index: number) => `Kapitel ${index + 1}`,
+    compareEyebrow: "Erlebnisse vergleichen",
+    compareTitle: "Wählen Sie die passende Art, Favignana vom Meer aus zu erleben",
+    allExperiences: "Alle Erlebnisse",
+    routeNotePrefix: "Guide-Kontext",
+    routeNote:
+      "Die Route wird immer nach Seewetter, Sicherheit und den Hinweisen des Skippers bestätigt.",
+    faqEyebrow: "FAQ",
+    faqTitle: (title: string) => `Häufige Fragen zu ${title.toLowerCase()}`,
+    relatedEyebrow: "Weiter entdecken",
+    relatedTitle: "Weitere nützliche Seiten zu Favignana",
+    relatedLabel: "Guide lesen",
+    sourcesEyebrow: "Offizielle Quellen und Updates",
+    sourcesText:
+      "Fahrpläne, Verbindungen, Fahrzeugregeln und Services können sich ändern: Für praktische Details prüfen Sie immer die offiziellen Quellen.",
   },
 } satisfies Record<
   GuideLocale,
@@ -321,6 +347,43 @@ const compareExperiencesByLocale = {
       meta: "Plusieurs jours",
     },
   ],
+  de: [
+    {
+      title: "Private Bootstour Ägadische Inseln 4 Stunden",
+      description: "Ein kompakter halber Tag mit reserviertem Boot und Route nach Absprache mit dem Skipper.",
+      href: "/experiences/boat-exclusive-afternoon",
+      image: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
+      meta: "4 Stunden",
+    },
+    {
+      title: "Geteilte Bootstour Ägadische Inseln 8 Stunden",
+      description: "Ein ganzer Tag mit Einzeltickets, Schnorcheln und Badestopps.",
+      href: "/experiences/boat-shared-full-day",
+      image: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
+      meta: "8 Stunden",
+    },
+    {
+      title: "Private Bootstour Ägadische Inseln 8 Stunden",
+      description: "Ein Boot exklusiv für Gruppen, die Privatsphäre und einen maßgeschneiderten Rhythmus möchten.",
+      href: "/experiences/boat-exclusive-full-day",
+      image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+      meta: "Privat",
+    },
+    {
+      title: "Chef an Bord auf dem Trimaran",
+      description: "Neel 47 mit Chef, Skipper, Hostess und Mittagessen mit lokalen Produkten.",
+      href: "/experiences/exclusive-experience",
+      image: "/images/boats/neel-47/neel-47-tavolo-a-bordo.webp",
+      meta: "Premium",
+    },
+    {
+      title: "Charter Ägadische Inseln",
+      description: "Drei bis sieben Tage auf dem Trimaran zwischen Favignana, Levanzo und Marettimo.",
+      href: "/experiences/charter",
+      image: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+      meta: "Mehrere Tage",
+    },
+  ],
 } satisfies Record<
   GuideLocale,
   Array<{
@@ -445,6 +508,34 @@ const ctaCopyByLocale = {
       icon: Sparkles,
     },
   },
+  de: {
+    cigala: {
+      eyebrow: "Bootstour ab Trapani",
+      title: "Möchten Sie diese Buchten sehen, ohne Fahrräder, Scooter und felsige Zugänge zu organisieren?",
+      description:
+        "Mit Egadisailing wird die Route nach Wind, Meer und Komfort der Gruppe gewählt. So erleben Sie Favignana einfach vom Meer aus, mit Baden und Schnorcheln, wenn die Bedingungen passen.",
+      href: "/experiences/boat-shared-full-day",
+      label: "8-Stunden-Tour ansehen",
+      secondaryHref: "/experiences/boat-exclusive-full-day",
+      secondaryLabel: "Private Tour ansehen",
+      image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
+      imageAlt: "Cigala & Bertinetti 34 Offshore Open auf den Ägadischen Inseln",
+      icon: Waves,
+    },
+    neel: {
+      eyebrow: "Neel 47 Trimaran",
+      title: "Für einen komfortableren Tag wählen Sie den Trimaran mit Chef an Bord",
+      description:
+        "Großzügige Flächen, Skipper, Hostess, private Bordküche und Mittagessen mit lokalen Produkten: eine Premium-Lösung, um Favignana und Levanzo in ruhigerem Rhythmus zu erleben.",
+      href: "/experiences/exclusive-experience",
+      label: "Gourmet-Erlebnis ansehen",
+      secondaryHref: "/experiences/charter",
+      secondaryLabel: "Charter ansehen",
+      image: "/images/boats/neel-47/neel-47-favignana.webp",
+      imageAlt: "Neel 47 Trimaran bei Favignana",
+      icon: Sparkles,
+    },
+  },
 } satisfies Record<
   GuideLocale,
   Record<
@@ -480,7 +571,7 @@ function getGuideUrl(locale: GuideLocale, slug: string): string {
 function buildGuideJsonLd(guide: FavignanaGuide, locale: GuideLocale) {
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}${getGuideUrl(locale, guide.slug)}`;
-  const inLanguage = locale === "en" ? "en-US" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : "it-IT";
+  const inLanguage = locale === "en" ? "en-US" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "de" ? "de-DE" : "it-IT";
   const islandsName =
     locale === "en"
       ? "Egadi Islands"
@@ -488,6 +579,8 @@ function buildGuideJsonLd(guide: FavignanaGuide, locale: GuideLocale) {
         ? "Islas Egadi"
         : locale === "fr"
           ? "Îles Égades"
+          : locale === "de"
+            ? "Ägadische Inseln"
           : "Le Isole Egadi";
   const graph: unknown[] = [
     {
@@ -594,6 +687,8 @@ export async function generateMetadata({
           ? "Página no encontrada"
           : locale === "fr"
             ? "Page introuvable"
+            : locale === "de"
+              ? "Seite nicht gefunden"
             : locale === "en"
               ? "Page not found"
               : "Pagina non trovata",
@@ -606,11 +701,15 @@ export async function generateMetadata({
   const italianSlug = getFavignanaGuideSlugForLocale(guide.slug, "it") ?? guide.slug;
   const englishSlug = getFavignanaGuideSlugForLocale(guide.slug, "en") ?? guide.slug;
   const spanishSlug = getFavignanaGuideSlugForLocale(guide.slug, "es") ?? guide.slug;
+  const frenchSlug = getFavignanaGuideSlugForLocale(guide.slug, "fr") ?? guide.slug;
+  const germanSlug = getFavignanaGuideSlugForLocale(guide.slug, "de") ?? guide.slug;
   const image = absoluteUrl(guide.heroImage);
-  const ogLocale = locale === "en" ? "en_US" : locale === "es" ? "es_ES" : locale === "fr" ? "fr_FR" : "it_IT";
-  const alternateOgLocales = ["it", "en", "es"]
+  const ogLocale = locale === "en" ? "en_US" : locale === "es" ? "es_ES" : locale === "fr" ? "fr_FR" : locale === "de" ? "de_DE" : "it_IT";
+  const alternateOgLocales = ["it", "en", "es", "fr", "de"]
     .filter((item) => item !== locale)
-    .map((item) => (item === "en" ? "en_US" : item === "es" ? "es_ES" : "it_IT"));
+    .map((item) =>
+      item === "en" ? "en_US" : item === "es" ? "es_ES" : item === "fr" ? "fr_FR" : item === "de" ? "de_DE" : "it_IT",
+    );
 
   return {
     title: guide.metaTitle,
@@ -622,6 +721,8 @@ export async function generateMetadata({
         it: `${base}${getGuideUrl("it", italianSlug)}`,
         en: `${base}${getGuideUrl("en", englishSlug)}`,
         es: `${base}${getGuideUrl("es", spanishSlug)}`,
+        fr: `${base}${getGuideUrl("fr", frenchSlug)}`,
+        de: `${base}${getGuideUrl("de", germanSlug)}`,
         "x-default": `${base}${getGuideUrl("it", italianSlug)}`,
       },
     },

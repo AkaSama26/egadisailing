@@ -17,6 +17,8 @@ export async function generateMetadata({
         ? "Buscar reserva"
         : locale === "fr"
           ? "Retrouver votre réservation"
+        : locale === "de"
+          ? "Buchung finden"
         : locale === "en"
           ? "Find your booking"
           : "Recupera prenotazione",
@@ -33,13 +35,16 @@ export default async function RecuperaPrenotazionePage({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const copy = {
-    eyebrow: isEs ? "Acceso a reservas" : isFr ? "Accès réservation" : isEn ? "Booking access" : "Area prenotazioni",
-    title: isEs ? "Busca tu reserva" : isFr ? "Retrouvez votre réservation" : isEn ? "Find your booking" : "Recupera la tua prenotazione",
+    eyebrow: isEs ? "Acceso a reservas" : isFr ? "Accès réservation" : isDe ? "Buchungszugang" : isEn ? "Booking access" : "Area prenotazioni",
+    title: isEs ? "Busca tu reserva" : isFr ? "Retrouvez votre réservation" : isDe ? "Finden Sie Ihre Buchung" : isEn ? "Find your booking" : "Recupera la tua prenotazione",
     text: isEs
       ? "Introduce el email usado en el checkout. Te enviaremos un código de 6 cifras válido durante 15 minutos."
       : isFr
       ? "Saisissez l'email utilisé au checkout. Nous vous enverrons un code à 6 chiffres valable 15 minutes."
+      : isDe
+      ? "Geben Sie die E-Mail-Adresse ein, die Sie beim Checkout verwendet haben. Wir senden Ihnen einen 6-stelligen Code, der 15 Minuten gültig ist."
       : isEn
       ? "Enter the email used at checkout. We will send a 6-digit code valid for 15 minutes."
       : "Inserisci l'email usata in checkout. Ti inviamo un codice a 6 cifre valido per 15 minuti.",
@@ -55,6 +60,12 @@ export default async function RecuperaPrenotazionePage({
           "Ouvrez votre espace réservation",
           "Téléchargez le billet QR ou demandez des changements",
         ]
+      : isDe
+      ? [
+          "Erhalten Sie den sicheren Code per E-Mail",
+          "Öffnen Sie Ihren Buchungsbereich",
+          "Laden Sie das QR-Ticket herunter oder beantragen Sie Änderungen",
+        ]
       : isEn
       ? [
           "Receive the secure code by email",
@@ -66,11 +77,13 @@ export default async function RecuperaPrenotazionePage({
           "Apri la tua area prenotazioni",
           "Scarica il biglietto QR o richiedi modifiche",
         ],
-    supportTitle: isEs ? "Qué puedes gestionar" : isFr ? "Ce que vous pouvez gérer" : isEn ? "What you can manage" : "Cosa puoi gestire",
+    supportTitle: isEs ? "Qué puedes gestionar" : isFr ? "Ce que vous pouvez gérer" : isDe ? "Was Sie verwalten können" : isEn ? "What you can manage" : "Cosa puoi gestire",
     supportText: isEs
       ? "Cambios de fecha, solicitudes de cancelación y detalles de la reserva están disponibles después del acceso para reservas directas."
       : isFr
       ? "Changements de date, demandes d'annulation et détails de la réservation sont disponibles après accès pour les réservations directes."
+      : isDe
+      ? "Datumsänderungen, Stornierungsanfragen und Buchungsdetails stehen nach dem Login für Direktbuchungen zur Verfügung."
       : isEn
       ? "Date changes, cancellation requests and booking details are available after login for direct bookings."
       : "Cambio data, richiesta cancellazione e dettagli della prenotazione sono disponibili dopo l'accesso per le prenotazioni dirette.",
@@ -113,7 +126,7 @@ export default async function RecuperaPrenotazionePage({
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <h2 className="mt-1 text-2xl font-bold text-slate-950">
-                {isEs ? "Acceso seguro" : isFr ? "Accès sécurisé" : isEn ? "Secure access" : "Accesso sicuro"}
+                {isEs ? "Acceso seguro" : isFr ? "Accès sécurisé" : isDe ? "Sicherer Zugang" : isEn ? "Secure access" : "Accesso sicuro"}
               </h2>
             </div>
             <CalendarClock className="size-7 text-sky-700" aria-hidden="true" />

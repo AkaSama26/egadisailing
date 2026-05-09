@@ -28,6 +28,7 @@ export function RecuperaPrenotazioneClient({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   // R15-UX-12: cooldown 60s dopo invio OTP per evitare spam click → 429
   // grezzo. Il timer parte al cambio di `reqState` a "sent".
   const [cooldown, setCooldown] = useState(0);
@@ -66,31 +67,35 @@ export function RecuperaPrenotazioneClient({
   const verifyEmail = email;
   const canResend = !reqPending && cooldown === 0;
   const copy = {
-    emailLabel: isEs ? "Email de la reserva" : isFr ? "Email de la réservation" : isEn ? "Booking email" : "Email della prenotazione",
-    emailPlaceholder: isEs ? "tu@email.com" : isEn ? "you@email.com" : "tu@email.com",
-    sendCode: isEs ? "Enviar código" : isFr ? "Envoyer le code" : isEn ? "Send code" : "Invia codice",
-    resendCode: isEs ? "Enviar de nuevo" : isFr ? "Renvoyer" : isEn ? "Send again" : "Reinvia codice",
-    sending: isEs ? "Enviando..." : isFr ? "Envoi..." : isEn ? "Sending..." : "Invio...",
+    emailLabel: isEs ? "Email de la reserva" : isFr ? "Email de la réservation" : isDe ? "E-Mail der Buchung" : isEn ? "Booking email" : "Email della prenotazione",
+    emailPlaceholder: isEn ? "you@email.com" : isDe ? "ihre@email.de" : "tu@email.com",
+    sendCode: isEs ? "Enviar código" : isFr ? "Envoyer le code" : isDe ? "Code senden" : isEn ? "Send code" : "Invia codice",
+    resendCode: isEs ? "Enviar de nuevo" : isFr ? "Renvoyer" : isDe ? "Erneut senden" : isEn ? "Send again" : "Reinvia codice",
+    sending: isEs ? "Enviando..." : isFr ? "Envoi..." : isDe ? "Senden..." : isEn ? "Sending..." : "Invio...",
     resendIn: (seconds: number) =>
-      isEs ? `Enviar de nuevo en ${seconds}s` : isFr ? `Renvoyer dans ${seconds}s` : isEn ? `Send again in ${seconds}s` : `Reinvia tra ${seconds}s`,
+      isEs ? `Enviar de nuevo en ${seconds}s` : isFr ? `Renvoyer dans ${seconds}s` : isDe ? `Erneut senden in ${seconds}s` : isEn ? `Send again in ${seconds}s` : `Reinvia tra ${seconds}s`,
     sent: isEs
       ? "Si existe una reserva asociada a este email, recibirás un código. Revisa también spam y promociones."
       : isFr
       ? "Si une réservation est associée à cet email, vous recevrez un code. Vérifiez aussi les spams et promotions."
+      : isDe
+      ? "Wenn eine Buchung mit dieser E-Mail verknüpft ist, erhalten Sie einen Code. Prüfen Sie bitte auch Spam und Werbung."
       : isEn
       ? "If a booking exists for this email, you will receive a code. Check spam and promotions too."
       : "Se esiste una prenotazione associata a questa email, riceverai un codice. Controlla anche spam o promozioni.",
-    codeTitle: isEs ? "Introduce el código" : isFr ? "Saisissez le code" : isEn ? "Enter the code" : "Inserisci il codice",
+    codeTitle: isEs ? "Introduce el código" : isFr ? "Saisissez le code" : isDe ? "Code eingeben" : isEn ? "Enter the code" : "Inserisci il codice",
     codeText: isEs
       ? "Después de la verificación entrarás en tu área de reserva."
       : isFr
       ? "Après la vérification, vous accéderez à votre espace réservation."
+      : isDe
+      ? "Nach der Verifizierung öffnen Sie Ihren Buchungsbereich."
       : isEn
       ? "After verification you will enter your booking area."
       : "Una volta verificato il codice accederai alla tua area prenotazioni.",
-    codeLabel: isEs ? "Código de 6 cifras" : isFr ? "Code à 6 chiffres" : isEn ? "6-digit code" : "Codice a 6 cifre",
-    verifying: isEs ? "Comprobando..." : isFr ? "Vérification..." : isEn ? "Checking..." : "Verifica...",
-    access: isEs ? "Abrir área de reserva" : isFr ? "Ouvrir l'espace réservation" : isEn ? "Open booking area" : "Accedi",
+    codeLabel: isEs ? "Código de 6 cifras" : isFr ? "Code à 6 chiffres" : isDe ? "6-stelliger Code" : isEn ? "6-digit code" : "Codice a 6 cifre",
+    verifying: isEs ? "Comprobando..." : isFr ? "Vérification..." : isDe ? "Prüfen..." : isEn ? "Checking..." : "Verifica...",
+    access: isEs ? "Abrir área de reserva" : isFr ? "Ouvrir l'espace réservation" : isDe ? "Buchungsbereich öffnen" : isEn ? "Open booking area" : "Accedi",
   };
 
   return (

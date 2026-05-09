@@ -17,18 +17,19 @@ export function ContactForm({ turnstileSiteKey, locale }: ContactFormProps) {
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const copy = {
-    sentTitle: isEs ? "Mensaje recibido" : isFr ? "Message reçu" : isEn ? "Message received" : "Messaggio ricevuto",
-    name: isEs ? "Nombre *" : isFr ? "Nom *" : isEn ? "Name *" : "Nome *",
-    namePlaceholder: isEs ? "Tu nombre" : isFr ? "Votre nom" : isEn ? "Your name" : "Il tuo nome",
-    emailPlaceholder: isEs ? "Tu email" : isFr ? "Votre email" : isEn ? "Your email" : "La tua email",
-    phone: isEs ? "Teléfono (opcional)" : isFr ? "Téléphone (optionnel)" : isEn ? "Phone (optional)" : "Telefono (opzionale)",
-    subject: isEs ? "Asunto *" : isFr ? "Objet *" : isEn ? "Subject *" : "Oggetto *",
-    subjectPlaceholder: isEs ? "Reserva / Información / Grupos / ..." : isFr ? "Réservation / Informations / Groupes / ..." : isEn ? "Booking / Information / Groups / ..." : "Prenotazione / Informazioni / Gruppi / ...",
-    message: isEs ? "Mensaje *" : isFr ? "Message *" : isEn ? "Message *" : "Messaggio *",
-    messagePlaceholder: isEs ? "Cuéntanos qué estás buscando..." : isFr ? "Dites-nous ce que vous cherchez..." : isEn ? "Tell us what you are looking for..." : "Raccontaci cosa cerchi...",
-    sending: isEs ? "Enviando..." : isFr ? "Envoi..." : isEn ? "Sending..." : "Invio...",
-    send: isEs ? "Enviar mensaje" : isFr ? "Envoyer le message" : isEn ? "Send message" : "Invia messaggio",
+    sentTitle: isEs ? "Mensaje recibido" : isFr ? "Message reçu" : isDe ? "Nachricht erhalten" : isEn ? "Message received" : "Messaggio ricevuto",
+    name: isEs ? "Nombre *" : isFr ? "Nom *" : isDe ? "Name *" : isEn ? "Name *" : "Nome *",
+    namePlaceholder: isEs ? "Tu nombre" : isFr ? "Votre nom" : isDe ? "Ihr Name" : isEn ? "Your name" : "Il tuo nome",
+    emailPlaceholder: isEs ? "Tu email" : isFr ? "Votre email" : isDe ? "Ihre E-Mail" : isEn ? "Your email" : "La tua email",
+    phone: isEs ? "Teléfono (opcional)" : isFr ? "Téléphone (optionnel)" : isDe ? "Telefon (optional)" : isEn ? "Phone (optional)" : "Telefono (opzionale)",
+    subject: isEs ? "Asunto *" : isFr ? "Objet *" : isDe ? "Betreff *" : isEn ? "Subject *" : "Oggetto *",
+    subjectPlaceholder: isEs ? "Reserva / Información / Grupos / ..." : isFr ? "Réservation / Informations / Groupes / ..." : isDe ? "Buchung / Informationen / Gruppen / ..." : isEn ? "Booking / Information / Groups / ..." : "Prenotazione / Informazioni / Gruppi / ...",
+    message: isEs ? "Mensaje *" : isFr ? "Message *" : isDe ? "Nachricht *" : isEn ? "Message *" : "Messaggio *",
+    messagePlaceholder: isEs ? "Cuéntanos qué estás buscando..." : isFr ? "Dites-nous ce que vous cherchez..." : isDe ? "Sagen Sie uns, wonach Sie suchen..." : isEn ? "Tell us what you are looking for..." : "Raccontaci cosa cerchi...",
+    sending: isEs ? "Enviando..." : isFr ? "Envoi..." : isDe ? "Wird gesendet..." : isEn ? "Sending..." : "Invio...",
+    send: isEs ? "Enviar mensaje" : isFr ? "Envoyer le message" : isDe ? "Nachricht senden" : isEn ? "Send message" : "Invia messaggio",
   };
 
   if (state.status === "sent") {
@@ -46,7 +47,7 @@ export function ContactForm({ turnstileSiteKey, locale }: ContactFormProps) {
 
   return (
     <form action={formAction} className="space-y-6">
-      <input type="hidden" name="locale" value={isEs ? "es" : isFr ? "fr" : isEn ? "en" : "it"} />
+      <input type="hidden" name="locale" value={isEs ? "es" : isFr ? "fr" : isDe ? "de" : isEn ? "en" : "it"} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="name" className="text-white/50 text-sm">

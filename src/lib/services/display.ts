@@ -17,7 +17,7 @@ export interface ExperienceVisual {
 
 const FALLBACK_MEDIA = [
   { caption: "Egadisailing", color: "#BAE6FD" },
-  { caption: "Isole Egadi", color: "#FDE68A" },
+  { caption: "Ägadische Inseln", color: "#FDE68A" },
   { caption: "Trapani", color: "#A7F3D0" },
 ];
 
@@ -47,6 +47,7 @@ export function getServiceDurationLabel(
   const isEnglish = locale === "en";
   const isSpanish = locale === "es";
   const isFrench = locale === "fr";
+  const isGerman = locale === "de";
   const hours = service.durationHours;
   const hourUnit = isEnglish
     ? hours === 1
@@ -60,24 +61,31 @@ export function getServiceDurationLabel(
         ? hours === 1
           ? "heure"
           : "heures"
+        : isGerman
+          ? hours === 1
+            ? "Stunde"
+            : "Stunden"
         : "ore";
   if (service.type === "CABIN_CHARTER") {
     if (isSpanish) return "3-7 días";
     if (isFrench) return "3-7 jours";
+    if (isGerman) return "3-7 Tage";
     return isEnglish ? "3-7 days" : "3-7 giornate";
   }
   if (service.durationType === "MULTI_DAY") {
     const days = Math.max(1, Math.ceil(hours / 24));
     if (isSpanish) return `${days} ${days === 1 ? "día" : "días"}`;
     if (isFrench) return `${days} ${days === 1 ? "jour" : "jours"}`;
+    if (isGerman) return `${days} ${days === 1 ? "Tag" : "Tage"}`;
     return isEnglish ? `${days} ${days === 1 ? "day" : "days"}` : `${days} giorni`;
   }
   if (service.durationType === "FULL_DAY") return `${hours} ${hourUnit}`;
   if (service.durationType === "HALF_DAY_MORNING") return `${hours} ${hourUnit}`;
   if (service.durationType === "HALF_DAY_AFTERNOON") return `${hours} ${hourUnit}`;
-  if (service.durationType === "WEEK") return isSpanish ? "7 días" : isFrench ? "7 jours" : isEnglish ? "7 days" : "7 giorni";
+  if (service.durationType === "WEEK") return isSpanish ? "7 días" : isFrench ? "7 jours" : isGerman ? "7 Tage" : isEnglish ? "7 days" : "7 giorni";
   if (isSpanish) return `${hours} ${hourUnit}`;
   if (isFrench) return `${hours} ${hourUnit}`;
+  if (isGerman) return `${hours} ${hourUnit}`;
   return isEnglish ? `${hours} ${hourUnit}` : `${hours}h`;
 }
 
@@ -89,9 +97,11 @@ export function getPriceUnitLabel(
   const isEnglish = locale === "en";
   const isSpanish = locale === "es";
   const isFrench = locale === "fr";
+  const isGerman = locale === "de";
   if (serviceType === "CABIN_CHARTER") {
     if (isSpanish) return "por paquete";
     if (isFrench) return "par forfait";
+    if (isGerman) return "pro Paket";
     return isEnglish ? "per package" : "per pacchetto";
   }
   return pricingUnit === "PER_PACKAGE"
@@ -99,6 +109,8 @@ export function getPriceUnitLabel(
       ? "por paquete"
       : isFrench
       ? "par forfait"
+      : isGerman
+      ? "pro Paket"
       : isEnglish
       ? "per package"
       : "per pacchetto"
@@ -106,6 +118,8 @@ export function getPriceUnitLabel(
       ? "por persona"
       : isFrench
         ? "par personne"
+      : isGerman
+        ? "pro Person"
       : isEnglish
       ? "per person"
       : "a persona";

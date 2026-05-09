@@ -174,10 +174,12 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
           ? "Enregistre les préférences de cookies choisies par l'utilisateur."
           : locale === "es"
             ? "Guarda las preferencias de cookies elegidas por el usuario."
+            : locale === "de"
+              ? "Speichert die vom Benutzer gewählten Cookie-Einstellungen."
             : locale === "en"
               ? "Stores the user's cookie preferences."
               : "Memorizza le preferenze cookie espresse dall'utente.",
-      expiration: locale === "fr" ? "6 mois" : locale === "es" ? "6 meses" : locale === "en" ? "6 months" : "6 mesi",
+      expiration: locale === "fr" ? "6 mois" : locale === "es" ? "6 meses" : locale === "de" ? "6 Monate" : locale === "en" ? "6 months" : "6 mesi",
     },
     {
       name: "NEXT_LOCALE",
@@ -187,10 +189,12 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
           ? "Enregistre la langue sélectionnée."
           : locale === "es"
             ? "Guarda el idioma seleccionado."
+            : locale === "de"
+              ? "Speichert die ausgewählte Sprache."
             : locale === "en"
               ? "Stores the selected language."
               : "Memorizza la lingua selezionata.",
-      expiration: locale === "fr" ? "1 an" : locale === "es" ? "1 año" : locale === "en" ? "1 year" : "1 anno",
+      expiration: locale === "fr" ? "1 an" : locale === "es" ? "1 año" : locale === "de" ? "1 Jahr" : locale === "en" ? "1 year" : "1 anno",
     },
   ];
 
@@ -203,11 +207,13 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
           ? "Mesure agrégée des visites et des performances du site."
           : locale === "es"
             ? "Medición agregada de visitas y rendimiento del sitio."
+            : locale === "de"
+              ? "Aggregierte Messung von Besuchen und Website-Leistung."
             : locale === "en"
               ? "Aggregated measurement of visits and website performance."
               : "Misurazione aggregata delle visite e delle performance del sito.",
       expiration:
-        locale === "fr" ? "jusqu'à 2 ans" : locale === "es" ? "hasta 2 años" : locale === "en" ? "up to 2 years" : "fino a 2 anni",
+        locale === "fr" ? "jusqu'à 2 ans" : locale === "es" ? "hasta 2 años" : locale === "de" ? "bis zu 2 Jahre" : locale === "en" ? "up to 2 years" : "fino a 2 anni",
     });
   }
 
@@ -220,11 +226,13 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
           ? "Mesure des conversions publicitaires."
           : locale === "es"
             ? "Medición de conversiones publicitarias."
+            : locale === "de"
+              ? "Messung von Werbe-Conversions."
             : locale === "en"
               ? "Advertising conversion measurement."
               : "Misurazione delle conversioni pubblicitarie.",
       expiration:
-        locale === "fr" ? "jusqu'à 90 jours" : locale === "es" ? "hasta 90 días" : locale === "en" ? "up to 90 days" : "fino a 90 giorni",
+        locale === "fr" ? "jusqu'à 90 jours" : locale === "es" ? "hasta 90 días" : locale === "de" ? "bis zu 90 Tage" : locale === "en" ? "up to 90 days" : "fino a 90 giorni",
     });
   }
 
@@ -237,11 +245,13 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
           ? "Mesure des conversions et des campagnes Meta."
           : locale === "es"
             ? "Medición de conversiones y campañas Meta."
+            : locale === "de"
+              ? "Messung von Meta-Kampagnen und Conversions."
             : locale === "en"
               ? "Meta campaign and conversion measurement."
               : "Misurazione delle conversioni e campagne Meta.",
       expiration:
-        locale === "fr" ? "jusqu'à 3 mois" : locale === "es" ? "hasta 3 meses" : locale === "en" ? "up to 3 months" : "fino a 3 mesi",
+        locale === "fr" ? "jusqu'à 3 mois" : locale === "es" ? "hasta 3 meses" : locale === "de" ? "bis zu 3 Monate" : locale === "en" ? "up to 3 months" : "fino a 3 mesi",
     });
   }
 
@@ -254,11 +264,13 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
           ? "Mesure des conversions et des campagnes Microsoft Advertising."
           : locale === "es"
             ? "Medición de conversiones y campañas Microsoft Advertising."
+            : locale === "de"
+              ? "Messung von Microsoft Advertising Kampagnen und Conversions."
             : locale === "en"
               ? "Microsoft Advertising campaign and conversion measurement."
               : "Misurazione conversioni e campagne Microsoft Advertising.",
       expiration:
-        locale === "fr" ? "jusqu'à 13 mois" : locale === "es" ? "hasta 13 meses" : locale === "en" ? "up to 13 months" : "fino a 13 mesi",
+        locale === "fr" ? "jusqu'à 13 mois" : locale === "es" ? "hasta 13 meses" : locale === "de" ? "bis zu 13 Monate" : locale === "en" ? "up to 13 months" : "fino a 13 mesi",
     });
   }
 
@@ -287,6 +299,8 @@ function buildConfig(
           ? "Cookies strictement nécessaires"
           : locale === "es"
             ? "Cookies técnicas"
+            : locale === "de"
+              ? "Unbedingt erforderliche Cookies"
             : locale === "en"
               ? "Strictly necessary cookies"
               : "Cookie tecnici",
@@ -386,6 +400,8 @@ function buildConfig(
           ? "Marketing et conversions"
           : locale === "es"
             ? "Marketing y conversiones"
+            : locale === "de"
+              ? "Marketing und Conversions"
             : locale === "en"
               ? "Marketing and conversions"
               : "Marketing e conversioni",
@@ -395,7 +411,7 @@ function buildConfig(
   }
 
   sections.push({
-    title: locale === "fr" ? "Plus d'informations" : locale === "es" ? "Más información" : locale === "en" ? "More information" : "Maggiori informazioni",
+    title: locale === "fr" ? "Plus d'informations" : locale === "es" ? "Más información" : locale === "de" ? "Weitere Informationen" : locale === "en" ? "More information" : "Maggiori informazioni",
     description: t.preferencesModal.sections.more,
   });
 

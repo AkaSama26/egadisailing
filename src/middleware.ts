@@ -14,10 +14,11 @@ import {
 } from "./lib/legacy-service-worker";
 
 const intlMiddleware = createIntlMiddleware(routing);
+const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 
 type PublicLocale = (typeof routing.locales)[number];
 type GuideIsland = "favignana" | "levanzo" | "marettimo";
-type GuidePair = { it: string; en: string; es: string; fr: string };
+type GuidePair = { it: string; en: string; es: string; fr: string; de: string };
 
 const GUIDE_SLUG_PAIRS = {
   favignana: favignanaGuideSlugPairs,
@@ -28,14 +29,14 @@ const GUIDE_SLUG_PAIRS = {
 function findGuideSlugPair(island: GuideIsland, slug: string) {
   return (
     GUIDE_SLUG_PAIRS[island].find(
-      (guide) => guide.it === slug || guide.en === slug || guide.es === slug || guide.fr === slug,
+      (guide) => guide.it === slug || guide.en === slug || guide.es === slug || guide.fr === slug || guide.de === slug,
     ) ?? null
   );
 }
 
 function parseIslandGuidePath(pathname: string) {
   const match = pathname.match(
-    /^\/(it|en|es|fr)\/(?:islands|islas|iles)\/(favignana|levanzo|marettimo)\/([^/]+)\/?$/,
+    /^\/(it|en|es|fr|de)\/(?:islands|islas|iles|inseln)\/(favignana|levanzo|marettimo)\/([^/]+)\/?$/,
   );
   if (!match) return null;
   const locale = match[1] as PublicLocale;
@@ -48,12 +49,14 @@ function parseIslandGuidePath(pathname: string) {
         ? pathname.startsWith("/es/islas/")
         : locale === "fr"
           ? pathname.startsWith("/fr/iles/")
+          : locale === "de"
+            ? pathname.startsWith("/de/inseln/")
           : pathname.includes("/islands/"),
   };
 }
 
 function externalGuidePath(locale: PublicLocale, island: GuideIsland, slug: string) {
-  const base = locale === "es" ? "islas" : locale === "fr" ? "iles" : "islands";
+  const base = locale === "es" ? "islas" : locale === "fr" ? "iles" : locale === "de" ? "inseln" : "islands";
   return `/${locale}/${base}/${island}/${slug}`;
 }
 
@@ -68,9 +71,10 @@ function withIslandGuideAlternates(req: NextRequest, response: NextResponse) {
   const englishUrl = `${req.nextUrl.origin}${externalGuidePath("en", parsed.island, guidePair.en)}`;
   const spanishUrl = `${req.nextUrl.origin}${externalGuidePath("es", parsed.island, guidePair.es)}`;
   const frenchUrl = `${req.nextUrl.origin}${externalGuidePath("fr", parsed.island, guidePair.fr)}`;
+  const germanUrl = `${req.nextUrl.origin}${externalGuidePath("de", parsed.island, guidePair.de)}`;
   response.headers.set(
     "link",
-    `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${spanishUrl}>; rel="alternate"; hreflang="es", <${frenchUrl}>; rel="alternate"; hreflang="fr", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
+    `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${spanishUrl}>; rel="alternate"; hreflang="es", <${frenchUrl}>; rel="alternate"; hreflang="fr", <${germanUrl}>; rel="alternate"; hreflang="de", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
   );
 
   return response;
@@ -117,6 +121,26 @@ function withLegacyCacheReset(req: NextRequest, response: NextResponse) {
   }
 
   return response;
+}
+
+function isGermanLocalizedRoute(pathname: string) {
+  return /^\/de\/(?:ueber-uns|boote(?:\/.*)?|erlebnisse(?:\/.*)?|inseln(?:\/.*)?|kontakt|buchen(?:\/.*)?|haeufige-fragen|datenschutz|agb|cookie-richtlinie|buchung-finden|b\/buchung)\/?$/.test(
+    pathname,
+  );
+}
+
+function nextWithLocale(req: NextRequest, locale: PublicLocale) {
+  const headers = new Headers(req.headers);
+  headers.set(NEXT_INTL_LOCALE_HEADER, locale);
+  const response = NextResponse.next({
+    request: { headers },
+  });
+  response.cookies.set("NEXT_LOCALE", locale, {
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+  return withLegacyCacheReset(req, withIslandGuideAlternates(req, response));
 }
 
 /**
@@ -175,6 +199,13 @@ export default async function middleware(req: NextRequest) {
 
   if (islandGuideRedirect) {
     return islandGuideRedirect;
+  }
+
+  // Next 16 + next-intl pathnames can re-enter middleware after rewriting a
+  // localized pathname to the internal route, causing a self-redirect on the
+  // public German URL. German canonical aliases render these paths directly.
+  if (isGermanLocalizedRoute(pathname)) {
+    return nextWithLocale(req, "de");
   }
 
   return withLegacyCacheReset(req, withIslandGuideAlternates(req, intlMiddleware(req)));

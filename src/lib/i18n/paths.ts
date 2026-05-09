@@ -9,32 +9,34 @@ import { marettimoGuideSlugPairs } from "@/data/marettimo-guides";
 
 type PathLocale = Locale;
 type GuideIsland = "favignana" | "levanzo" | "marettimo";
-type GuideSlugPair = { it: string; en: string; es: string; fr: string };
+type GuideSlugPair = { it: string; en: string; es: string; fr: string; de: string };
 
 const STATIC_PATHS = {
-  "/": { it: "/", en: "/", es: "/", fr: "/" },
-  "/about": { it: "/about", en: "/about", es: "/sobre-nosotros", fr: "/a-propos" },
-  "/boats": { it: "/boats", en: "/boats", es: "/barcos", fr: "/bateaux" },
-  "/b/sessione": { it: "/b/sessione", en: "/b/sessione", es: "/b/sesion", fr: "/b/session" },
-  "/contacts": { it: "/contacts", en: "/contacts", es: "/contacto", fr: "/contact" },
+  "/": { it: "/", en: "/", es: "/", fr: "/", de: "/" },
+  "/about": { it: "/about", en: "/about", es: "/sobre-nosotros", fr: "/a-propos", de: "/ueber-uns" },
+  "/boats": { it: "/boats", en: "/boats", es: "/barcos", fr: "/bateaux", de: "/boote" },
+  "/b/sessione": { it: "/b/sessione", en: "/b/sessione", es: "/b/sesion", fr: "/b/session", de: "/b/buchung" },
+  "/contacts": { it: "/contacts", en: "/contacts", es: "/contacto", fr: "/contact", de: "/kontakt" },
   "/cookie-policy": {
     it: "/cookie-policy",
     en: "/cookie-policy",
     es: "/politica-de-cookies",
     fr: "/politique-de-cookies",
+    de: "/cookie-richtlinie",
   },
-  "/experiences": { it: "/experiences", en: "/experiences", es: "/experiencias", fr: "/experiences" },
-  "/faq": { it: "/faq", en: "/faq", es: "/preguntas-frecuentes", fr: "/questions-frequentes" },
-  "/islands": { it: "/islands", en: "/islands", es: "/islas", fr: "/iles" },
-  "/prenota": { it: "/prenota", en: "/prenota", es: "/reservar", fr: "/reserver" },
-  "/privacy": { it: "/privacy", en: "/privacy", es: "/privacidad", fr: "/confidentialite" },
+  "/experiences": { it: "/experiences", en: "/experiences", es: "/experiencias", fr: "/experiences", de: "/erlebnisse" },
+  "/faq": { it: "/faq", en: "/faq", es: "/preguntas-frecuentes", fr: "/questions-frequentes", de: "/haeufige-fragen" },
+  "/islands": { it: "/islands", en: "/islands", es: "/islas", fr: "/iles", de: "/inseln" },
+  "/prenota": { it: "/prenota", en: "/prenota", es: "/reservar", fr: "/reserver", de: "/buchen" },
+  "/privacy": { it: "/privacy", en: "/privacy", es: "/privacidad", fr: "/confidentialite", de: "/datenschutz" },
   "/recupera-prenotazione": {
     it: "/recupera-prenotazione",
     en: "/recupera-prenotazione",
     es: "/recuperar-reserva",
     fr: "/retrouver-reservation",
+    de: "/buchung-finden",
   },
-  "/terms": { it: "/terms", en: "/terms", es: "/terminos-y-condiciones", fr: "/conditions-generales" },
+  "/terms": { it: "/terms", en: "/terms", es: "/terminos-y-condiciones", fr: "/conditions-generales", de: "/agb" },
 } as const satisfies Record<string, Record<PathLocale, string>>;
 
 const GUIDE_PAIRS = {
@@ -61,7 +63,7 @@ function normalizedLocale(locale: string): PathLocale {
 
 function findGuidePair(island: GuideIsland, slug: string): GuideSlugPair | undefined {
   return GUIDE_PAIRS[island].find(
-    (pair) => pair.it === slug || pair.en === slug || pair.es === slug || pair.fr === slug,
+    (pair) => pair.it === slug || pair.en === slug || pair.es === slug || pair.fr === slug || pair.de === slug,
   );
 }
 
@@ -107,7 +109,13 @@ export function localizedPath(locale: string, href: string): string {
 
   if (first === "prenota" && second === "success" && third) {
     const successBase =
-      loc === "es" ? "/reservar/confirmacion" : loc === "fr" ? "/reserver/confirmation" : "/prenota/success";
+      loc === "es"
+        ? "/reservar/confirmacion"
+        : loc === "fr"
+          ? "/reserver/confirmation"
+          : loc === "de"
+            ? "/buchen/bestaetigung"
+            : "/prenota/success";
     return `/${loc}${successBase}/${third}${query}${hash}`;
   }
 

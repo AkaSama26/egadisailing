@@ -25,6 +25,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? `Confirmación de reserva ${data.confirmationCode} · Egadisailing`
           : locale === "fr"
             ? `Confirmation de réservation ${data.confirmationCode} · Egadisailing`
+            : locale === "de"
+              ? `Buchungsbestätigung ${data.confirmationCode} · Egadisailing`
             : `Conferma prenotazione ${data.confirmationCode} · Egadisailing`,
     heading:
       locale === "en"
@@ -33,6 +35,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? `¡Reserva confirmada!`
           : locale === "fr"
             ? `Réservation confirmée !`
+            : locale === "de"
+              ? `Buchung bestätigt!`
             : `prenotazione confermata!`,
     code:
       locale === "en"
@@ -41,6 +45,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "Código de reserva"
           : locale === "fr"
             ? "Code de réservation"
+            : locale === "de"
+              ? "Buchungscode"
             : "Codice prenotazione",
     experience:
       locale === "en"
@@ -49,8 +55,10 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "Experiencia"
           : locale === "fr"
             ? "Expérience"
+            : locale === "de"
+              ? "Erlebnis"
             : "Esperienza",
-    date: locale === "en" ? "Date" : locale === "es" ? "Fecha" : locale === "fr" ? "Date" : "Data",
+    date: locale === "en" ? "Date" : locale === "es" ? "Fecha" : locale === "fr" ? "Date" : locale === "de" ? "Datum" : "Data",
     people:
       locale === "en"
         ? "Guests"
@@ -58,8 +66,10 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "Personas"
           : locale === "fr"
             ? "Personnes"
+            : locale === "de"
+              ? "Gäste"
             : "Persone",
-    total: locale === "en" ? "Total" : locale === "es" ? "Total" : locale === "fr" ? "Total" : "Totale",
+    total: locale === "en" ? "Total" : locale === "es" ? "Total" : locale === "fr" ? "Total" : locale === "de" ? "Gesamt" : "Totale",
     paid:
       locale === "en"
         ? "Already paid"
@@ -67,6 +77,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "Ya pagado"
           : locale === "fr"
             ? "Déjà payé"
+            : locale === "de"
+              ? "Bereits bezahlt"
             : "Gia' pagato",
     balance:
       locale === "en"
@@ -75,6 +87,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "Saldo pendiente a pagar en el lugar"
           : locale === "fr"
             ? "Solde à régler sur place"
+            : locale === "de"
+              ? "Restbetrag vor Ort zu zahlen"
             : "Saldo da pagare in loco",
     balanceNote:
       locale === "en"
@@ -83,8 +97,10 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "El saldo restante se paga en el lugar antes de la salida."
           : locale === "fr"
             ? "Le solde restant est réglé sur place avant le départ."
+            : locale === "de"
+              ? "Der verbleibende Restbetrag wird vor Ort vor der Abfahrt bezahlt."
             : "Il saldo restante si paga in loco prima della partenza.",
-    ticket: locale === "en" ? "QR ticket" : locale === "es" ? "Billete QR" : locale === "fr" ? "Billet QR" : "Biglietto QR",
+    ticket: locale === "en" ? "QR ticket" : locale === "es" ? "Billete QR" : locale === "fr" ? "Billet QR" : locale === "de" ? "QR-Ticket" : "Biglietto QR",
     manage:
       locale === "en"
         ? "To manage your booking, go to"
@@ -92,6 +108,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "Para gestionar tu reserva, entra en"
           : locale === "fr"
             ? "Pour gérer votre réservation, rendez-vous sur"
+            : locale === "de"
+              ? "Um Ihre Buchung zu verwalten, öffnen Sie"
             : "Per gestire la prenotazione, vai su",
     emailInstruction:
       locale === "en"
@@ -100,6 +118,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "e introduce tu email."
           : locale === "fr"
             ? "et saisissez votre adresse email."
+            : locale === "de"
+              ? "und geben Sie Ihre E-Mail-Adresse ein."
             : "e inserisci la tua email.",
     ticketCta:
       locale === "en"
@@ -108,6 +128,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "Abrir billete QR"
           : locale === "fr"
             ? "Ouvrir le billet QR"
+            : locale === "de"
+              ? "QR-Ticket öffnen"
             : "Apri biglietto QR",
     manageCta:
       locale === "en"
@@ -116,6 +138,8 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
           ? "Gestionar reserva"
           : locale === "fr"
             ? "Gérer la réservation"
+            : locale === "de"
+              ? "Buchung verwalten"
             : "Gestisci la prenotazione",
   };
   const subject = copy.subject;

@@ -27,39 +27,47 @@ export type MarettimoGuideSlug =
   | "marettimo-en-une-journee"
   | "comment-venir-depuis-trapani"
   | "randonnee-sentiers"
-  | "excursion-bateau-charter-egades";
+  | "excursion-bateau-charter-egades"
+  | "was-man-in-marettimo-sehen-sollte"
+  | "meereshoehlen"
+  | "straende-buchten-marettimo"
+  | "marettimo-an-einem-tag"
+  | "anreise-ab-trapani"
+  | "wandern-routen"
+  | "bootstour-charter-aegadische-inseln";
 
 export const marettimoGuideSlugPairs = [
-  { it: "cosa-vedere", en: "what-to-see", es: "que-ver-en-marettimo", fr: "que-voir-a-marettimo" },
-  { it: "grotte-marine", en: "sea-caves", es: "cuevas-marinas", fr: "grottes-marines" },
-  { it: "spiagge-cale", en: "beaches-coves", es: "playas-calas-marettimo", fr: "plages-criques-marettimo" },
-  { it: "cala-bianca", en: "cala-bianca", es: "cala-bianca", fr: "cala-bianca" },
-  { it: "marettimo-in-un-giorno", en: "marettimo-in-one-day", es: "marettimo-en-un-dia", fr: "marettimo-en-une-journee" },
-  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani", es: "como-llegar-desde-trapani", fr: "comment-venir-depuis-trapani" },
-  { it: "trekking-sentieri", en: "hiking-trails", es: "senderismo-rutas", fr: "randonnee-sentiers" },
+  { it: "cosa-vedere", en: "what-to-see", es: "que-ver-en-marettimo", fr: "que-voir-a-marettimo", de: "was-man-in-marettimo-sehen-sollte" },
+  { it: "grotte-marine", en: "sea-caves", es: "cuevas-marinas", fr: "grottes-marines", de: "meereshoehlen" },
+  { it: "spiagge-cale", en: "beaches-coves", es: "playas-calas-marettimo", fr: "plages-criques-marettimo", de: "straende-buchten-marettimo" },
+  { it: "cala-bianca", en: "cala-bianca", es: "cala-bianca", fr: "cala-bianca", de: "cala-bianca" },
+  { it: "marettimo-in-un-giorno", en: "marettimo-in-one-day", es: "marettimo-en-un-dia", fr: "marettimo-en-une-journee", de: "marettimo-an-einem-tag" },
+  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani", es: "como-llegar-desde-trapani", fr: "comment-venir-depuis-trapani", de: "anreise-ab-trapani" },
+  { it: "trekking-sentieri", en: "hiking-trails", es: "senderismo-rutas", fr: "randonnee-sentiers", de: "wandern-routen" },
   {
     it: "tour-in-barca-charter-egadi",
     en: "boat-tour-egadi-charter",
     es: "excursion-barco-charter-egadi",
     fr: "excursion-bateau-charter-egades",
+    de: "bootstour-charter-aegadische-inseln",
   },
-] as const satisfies Array<{ it: MarettimoGuideSlug; en: MarettimoGuideSlug; es: MarettimoGuideSlug; fr: MarettimoGuideSlug }>;
+] as const satisfies Array<{ it: MarettimoGuideSlug; en: MarettimoGuideSlug; es: MarettimoGuideSlug; fr: MarettimoGuideSlug; de: MarettimoGuideSlug }>;
 
-export type MarettimoGuideLocale = "it" | "en" | "es" | "fr";
+export type MarettimoGuideLocale = "it" | "en" | "es" | "fr" | "de";
 
 export function getMarettimoGuideSlugForLocale(
   slug: string,
   locale: MarettimoGuideLocale,
 ): MarettimoGuideSlug | undefined {
   const pair = marettimoGuideSlugPairs.find(
-    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug || item.de === slug,
   );
   return pair?.[locale];
 }
 
 export function isMarettimoGuideSlug(slug: string): slug is MarettimoGuideSlug {
   return marettimoGuideSlugPairs.some(
-    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug || item.de === slug,
   );
 }
 

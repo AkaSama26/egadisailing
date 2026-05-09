@@ -24,6 +24,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? `Solicitud de reserva recibida — ${data.confirmationCode}`
           : locale === "fr"
             ? `Demande de réservation reçue — ${data.confirmationCode}`
+            : locale === "de"
+              ? `Buchungsanfrage erhalten — ${data.confirmationCode}`
             : `Richiesta prenotazione ricevuta — ${data.confirmationCode}`,
     intro:
       locale === "en"
@@ -32,6 +34,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "Hemos recibido tu reserva para:"
           : locale === "fr"
             ? "Nous avons reçu votre réservation pour :"
+            : locale === "de"
+              ? "Wir haben Ihre Buchung erhalten für:"
             : "Abbiamo ricevuto la tua prenotazione per:",
     service:
       locale === "en"
@@ -40,8 +44,10 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "Servicio"
           : locale === "fr"
             ? "Service"
+            : locale === "de"
+              ? "Leistung"
             : "Servizio",
-    date: locale === "en" ? "Date" : locale === "es" ? "Fecha" : locale === "fr" ? "Date" : "Data",
+    date: locale === "en" ? "Date" : locale === "es" ? "Fecha" : locale === "fr" ? "Date" : locale === "de" ? "Datum" : "Data",
     people:
       locale === "en"
         ? "Guests"
@@ -49,6 +55,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "Personas"
           : locale === "fr"
             ? "Personnes"
+            : locale === "de"
+              ? "Personen"
             : "Persone",
     paid:
       locale === "en"
@@ -57,6 +65,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "Total pagado"
           : locale === "fr"
             ? "Total payé"
+            : locale === "de"
+              ? "Bezahlt"
             : "Totale pagato",
     code:
       locale === "en"
@@ -65,6 +75,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "Código"
           : locale === "fr"
             ? "Code"
+            : locale === "de"
+              ? "Code"
             : "Codice",
     status:
       locale === "en"
@@ -73,6 +85,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "Estado: pendiente de confirmación"
           : locale === "fr"
             ? "Statut : en attente de confirmation"
+            : locale === "de"
+              ? "Status: wartet auf Bestätigung"
             : "Stato: In attesa di conferma",
     timing:
       locale === "en"
@@ -81,6 +95,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "El equipo confirmará tu reserva en un plazo de 72 horas. Si no podemos confirmarla, te reembolsaremos automáticamente sin ningún coste."
           : locale === "fr"
             ? "L'équipe confirmera votre réservation sous 72 heures. Si nous ne pouvons pas la confirmer, vous serez remboursé automatiquement sans frais."
+            : locale === "de"
+              ? "Das Team bestätigt Ihre Buchung innerhalb von 72 Stunden. Wenn wir sie nicht bestätigen können, erstatten wir Ihnen den Betrag automatisch und ohne Kosten."
             : "Lo staff conferma la tua prenotazione entro 72 ore. In caso di non conferma ti rimborseremo automaticamente senza alcun costo.",
     portal:
       locale === "en"
@@ -89,6 +105,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "Puedes consultar el estado en cualquier momento en tu área de reservas:"
           : locale === "fr"
             ? "Vous pouvez consulter le statut à tout moment dans votre espace réservation :"
+            : locale === "de"
+              ? "Sie können den Status jederzeit in Ihrem Buchungsbereich prüfen:"
             : "Puoi visualizzare lo stato in qualsiasi momento su:",
     portalLabel:
       locale === "en"
@@ -97,6 +115,8 @@ export function bookingPendingOverrideConfirmationTemplate(
           ? "Área de reservas"
           : locale === "fr"
             ? "Espace réservation"
+            : locale === "de"
+              ? "Buchungsbereich"
             : "Area prenotazioni",
   };
   const subject = copy.subject;

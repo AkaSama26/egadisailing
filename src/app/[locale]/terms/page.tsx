@@ -38,9 +38,11 @@ const companyIt = `${PUBLIC_COMPANY_LEGAL.name}, sede legale ${PUBLIC_COMPANY_LE
 const companyEn = `${PUBLIC_COMPANY_LEGAL.name}, registered office ${PUBLIC_COMPANY_LEGAL.legalAddress}, VAT no. ${PUBLIC_COMPANY_LEGAL.vatNumber}, certified email ${PUBLIC_COMPANY_LEGAL.pec}, recipient code ${PUBLIC_COMPANY_LEGAL.recipientCode}`;
 const companyEs = `${PUBLIC_COMPANY_LEGAL.name}, domicilio social ${PUBLIC_COMPANY_LEGAL.legalAddress}, NIF/IVA ${PUBLIC_COMPANY_LEGAL.vatNumber}, PEC ${PUBLIC_COMPANY_LEGAL.pec}, código destinatario ${PUBLIC_COMPANY_LEGAL.recipientCode}`;
 const companyFr = `${PUBLIC_COMPANY_LEGAL.name}, siège social ${PUBLIC_COMPANY_LEGAL.legalAddress}, TVA ${PUBLIC_COMPANY_LEGAL.vatNumber}, PEC ${PUBLIC_COMPANY_LEGAL.pec}, code destinataire ${PUBLIC_COMPANY_LEGAL.recipientCode}`;
+const companyDe = `${PUBLIC_COMPANY_LEGAL.name}, Sitz ${PUBLIC_COMPANY_LEGAL.legalAddress}, USt-IdNr. ${PUBLIC_COMPANY_LEGAL.vatNumber}, PEC ${PUBLIC_COMPANY_LEGAL.pec}, Empfängercode ${PUBLIC_COMPANY_LEGAL.recipientCode}`;
 const EFFECTIVE_DATE_EN = "6 May 2026";
 const EFFECTIVE_DATE_ES = "6 de mayo de 2026";
 const EFFECTIVE_DATE_FR = "6 mai 2026";
+const EFFECTIVE_DATE_DE = "6. Mai 2026";
 
 const TERMS_IT: TermsContent = {
   title: "Termini e Condizioni",
@@ -608,9 +610,116 @@ const TERMS_FR: TermsContent = {
   ],
 };
 
+const TERMS_DE: TermsContent = {
+  title: "Allgemeine Geschäftsbedingungen",
+  description:
+    "Egadisailing Buchungsbedingungen für Bootserlebnisse, Stornierungen, Erstattungen, Sicherheit, Wetter und Charter.",
+  versionLabel: `Version ${CURRENT_POLICY_VERSION} · Gültig ab ${EFFECTIVE_DATE_DE}`,
+  intro:
+    "Diese Bedingungen regeln Direktbuchungen über egadisailing.com. Vor der Zahlung bestätigt der Kunde, diese Bedingungen zusammen mit der Datenschutzerklärung gelesen und akzeptiert zu haben.",
+  summaryTitle: "Kurzüberblick",
+  summaryDisclaimer:
+    "Diese Zusammenfassung erleichtert die Lektüre, ersetzt aber nicht die vollständigen Bedingungen unten.",
+  summaryItems: [
+    "Stornierung durch den Kunden: 100 % Erstattung bis 30 Tage vor Abfahrt, 50 % von 29 bis 15 Tage vor Abfahrt, keine Erstattung unter 15 Tagen oder bei Nichterscheinen.",
+    "Datumsänderungen sind nicht automatisch: Jede Anfrage wird vom Team nach Verfügbarkeit, Betrieb und Sicherheit geprüft.",
+    "Wenn Egadisailing wegen unsicherer Wetter- oder Seebedingungen oder nicht erreichter Mindestteilnehmerzahl storniert, wählt der Kunde zwischen kostenlosem Datumswechsel und vollständiger Erstattung.",
+    "Route, Betriebszeiten, Stopps und eingesetztes Boot können sich aus Sicherheits-, Wetter-, See-, Behörden- oder technischen Gründen ändern.",
+    "Ein noch nicht bezahlter Restbetrag wird nach einer Kundenstornierung nicht eingefordert; die Erstattung oder Einbehaltung betrifft nur den bereits gezahlten Betrag gemäß Stornierungsbedingungen.",
+  ],
+  indexTitle: "Inhalt",
+  legalLinksTitle: "Datenschutz, Cookies und personenbezogene Daten",
+  legalLinksIntro:
+    "Die Verarbeitung personenbezogener Daten und die Verwendung von Cookies werden in den entsprechenden Dokumenten geregelt:",
+  privacyLabel: "Datenschutzerklärung",
+  cookieLabel: "Cookie-Richtlinie",
+  sections: [
+    {
+      title: "1. Identität des Anbieters und Kontakte",
+      paragraphs: [
+        `Verkäufer und direkter Leistungserbringer ist ${companyDe}.`,
+        `Für Vertrags- und Buchungshilfe: ${PUBLIC_CONTACT_EMAIL}. Für Datenschutzanfragen: ${PRIVACY_CONTACT_EMAIL}. Telefon/WhatsApp: ${PUBLIC_CONTACT_PHONE_TEXT}. Üblicher Treffpunkt, sofern nicht anders mitgeteilt: ${PUBLIC_CONTACT_LOCATION.labelEn}.`,
+      ],
+    },
+    {
+      title: "2. Geltungsbereich",
+      bullets: [
+        "Diese Bedingungen gelten für Direktbuchungen auf egadisailing.com oder über direkte Zahlungsabläufe von Egadisailing.",
+        "Für Buchungen über externe Portale, Marktplätze, Agenturen oder OTA gelten Zahlung, Stornierung und Erstattung vorrangig nach den Bedingungen des jeweiligen Kaufportals.",
+        "Betriebliche Sicherheitsregeln, Verhalten an Bord, Dokumente, Pünktlichkeit, Wetter und Anweisungen des Skippers gelten für alle Gäste an Bord.",
+      ],
+    },
+    {
+      title: "3. Art der Leistungen und spezifisches Datum",
+      paragraphs: [
+        "Egadisailing bietet nautische Erlebnisse, Touren, private oder geteilte Tage, Gourmet-Erlebnisse und Charter mit einem bestimmten Datum oder Zeitraum an.",
+        "Bilder, Routenbeschreibungen, Buchten, Uhrzeiten und Programme beschreiben das erwartete Erlebnis, garantieren aber keine starre Route oder identische Stopps bei jeder Ausfahrt.",
+      ],
+    },
+    {
+      title: "4. Widerrufsrecht und vertragliche Stornierungsbedingungen",
+      paragraphs: [
+        "Nach dem italienischen Verbraucherschutzrecht kann das ordentliche 14-tägige Widerrufsrecht für Freizeitaktivitäten mit spezifischem Datum oder Zeitraum ausgeschlossen sein. Für Egadisailing-Buchungen gelten daher die vertraglichen Stornierungsbedingungen dieser AGB.",
+        "Vor Abschluss der Bestellung erhält der Kunde die wesentlichen Informationen zu Leistung, Preis, Anbieter, Kontakten, Zahlung und den wichtigsten Stornierungsbedingungen.",
+      ],
+    },
+    {
+      title: "5. Buchung, Preis, Anzahlung und Restbetrag",
+      bullets: [
+        "Die Buchung ist abgeschlossen, wenn die erforderliche Online-Zahlung erfolgreich ist und das System die Bestätigung sendet oder bereitstellt.",
+        "Preise werden in Euro angezeigt und enthalten die Mehrwertsteuer, sofern anwendbar und nicht anders angegeben.",
+        "Bei Leistungen mit Anzahlung sichert der Online-Betrag die Buchung; der Restbetrag wird vor der Abfahrt vor Ort bezahlt, sofern nicht schriftlich anders vereinbart.",
+        "Bei einem offensichtlich erkennbaren Preisfehler oder technischen Fehler kontaktiert Egadisailing den Kunden, um die Bestellung zu korrigieren, eine Alternative anzubieten oder den gezahlten Betrag vollständig zu erstatten.",
+      ],
+    },
+    {
+      title: "6. Freiwillige Stornierung durch den Kunden",
+      bullets: [
+        "Bis 30 Tage vor Abfahrt: vollständige Erstattung des online gezahlten Betrags.",
+        "Von 29 bis 15 Tage vor Abfahrt: 50 % Erstattung des online gezahlten Betrags.",
+        "Unter 15 Tage vor Abfahrt: keine Erstattung.",
+        "Bei Nichterscheinen oder verpasstem Boarding aus Gründen, die dem Kunden zuzurechnen sind: keine Erstattung.",
+      ],
+    },
+    {
+      title: "7. Datumsänderung durch den Kunden",
+      paragraphs: [
+        "Eine Datumsänderung ist kein automatisches Recht. Jede Anfrage wird nach Verfügbarkeit, Leistungsart, Wetter, Betrieb, Saison und Kompatibilität mit anderen Buchungen geprüft.",
+        "Wenn eine Datumsänderung genehmigt wird, bleibt die Stornierungsfrist am ursprünglichen Buchungsdatum verankert, sofern Egadisailing nicht schriftlich etwas anderes vereinbart.",
+      ],
+    },
+    {
+      title: "8. Wetter, Meer, Sicherheit und Stornierungen durch Egadisailing",
+      paragraphs: [
+        "Sicherheit hat immer Vorrang vor Route, Kundenwünschen, kommerziellem Programm und Richtzeiten.",
+        "Wenn Egadisailing das Erlebnis wegen unsicherer Wetter- oder Seebedingungen, behördlicher Anordnungen, technischer Ausfälle, operativer Unmöglichkeit oder nicht erreichter Mindestteilnehmerzahl bei geteilten Touren storniert, kann der Kunde zwischen kostenlosem Datumswechsel und vollständiger Erstattung wählen.",
+        "Änderungen von Route, Buchten, Stopps, Stoppdauer, Betriebszeit oder gleichwertigem Boot geben nicht automatisch Anspruch auf Erstattung, wenn das Erlebnis sicher erbracht werden kann.",
+      ],
+    },
+    {
+      title: "9. Verhalten an Bord, Verantwortung und Charter",
+      bullets: [
+        "Der Skipper entscheidet über Route, Geschwindigkeit, Stopps, Betriebszeiten, Ankerplatz, vorzeitige Rückkehr oder Programmänderungen aus Gründen der Sicherheit, des Komforts und der Vorschriften.",
+        "Der Kunde muss den Anweisungen von Skipper und Crew folgen, Ausrüstung korrekt verwenden und gefährliches oder störendes Verhalten vermeiden.",
+        "Für Mehrtages-Charter gelten diese Bedingungen plus die spezifischen Bedingungen auf der Leistungsseite, im Angebot oder in einer Charteranlage.",
+        "Allergien, Unverträglichkeiten, Schwangerschaft, relevante medizinische Bedingungen, Mobilitätsprobleme, Minderjährige oder besondere Bedürfnisse müssen vor der Abfahrt mitgeteilt werden.",
+      ],
+    },
+    {
+      title: "10. Anwendbares Recht, Gerichtsstand und Sprache",
+      paragraphs: [
+        "Diese Bedingungen unterliegen italienischem Recht. Verbraucher behalten zwingende Schutzrechte nach anwendbarem Recht; in anderen Fällen ist Trapani zuständiger Gerichtsstand.",
+        "Die Bedingungen werden auf Italienisch, Englisch, Spanisch, Französisch und Deutsch bereitgestellt, um internationalen Kunden das Verständnis zu erleichtern. Bei Auslegungsunterschieden hat der italienische Text Vorrang.",
+        "Die europäische ODR-Plattform für Online-Streitigkeiten wurde am 20. Juli 2025 eingestellt; daher wird kein ODR-Link angegeben.",
+      ],
+    },
+  ],
+};
+
 function getContent(locale: string): TermsContent {
   if (locale === "es") return TERMS_ES;
   if (locale === "fr") return TERMS_FR;
+  if (locale === "de") return TERMS_DE;
   return locale === "en" ? TERMS_EN : TERMS_IT;
 }
 
@@ -639,6 +748,7 @@ export default async function TermsPage({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
 
   return (
     <OceanLayout padding="sm" className="egadi-water-reflection overflow-hidden">
@@ -725,7 +835,7 @@ export default async function TermsPage({
               href={getEmailHref()}
               className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900"
             >
-              {isEs ? "Contáctanos" : isFr ? "Nous contacter" : isEn ? "Contact us" : "Contattaci"}
+              {isEs ? "Contáctanos" : isFr ? "Nous contacter" : isDe ? "Kontakt" : isEn ? "Contact us" : "Contattaci"}
             </a>
           </div>
         </section>

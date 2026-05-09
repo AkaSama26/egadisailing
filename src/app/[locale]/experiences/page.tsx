@@ -82,9 +82,12 @@ export default async function ExperiencesPage({
         ? "Paquetes de excursiones en barco por las Islas Egadi"
         : locale === "fr"
           ? "Forfaits d'excursions en bateau aux îles Égades"
+        : locale === "de"
+          ? "Bootstour-Pakete zu den Ägadischen Inseln"
         : locale === "en"
           ? "Egadi boat tour packages"
           : "Pacchetti tour in barca alle Egadi",
+    inLanguage: locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : locale === "en" ? "en-US" : "it-IT",
     itemListElement: packages.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,

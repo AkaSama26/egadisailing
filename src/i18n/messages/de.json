@@ -1,0 +1,480 @@
+{
+  "common": {
+    "bookNow": "Jetzt buchen",
+    "recoverBooking": "Buchung finden",
+    "learnMore": "Mehr erfahren",
+    "contactUs": "Kontakt aufnehmen",
+    "home": "Startseite",
+    "about": "Über uns",
+    "contacts": "Kontakt",
+    "faq": "FAQ",
+    "viewDetails": "Details ansehen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "loading": "Wird geladen...",
+    "error": "Ein Fehler ist aufgetreten",
+    "success": "Vorgang erfolgreich",
+    "priceFrom": "Ab",
+    "perPerson": "pro Person",
+    "fullDay": "Ganztägig",
+    "halfDay": "Halbtägig",
+    "week": "Woche",
+    "perBoat": "pro Boot",
+    "duration": "Dauer",
+    "capacity": "Kapazität",
+    "included": "Inklusive",
+    "notIncluded": "Nicht inklusive"
+  },
+  "hero": {
+    "title": "Lassen Sie das Ufer hinter sich",
+    "subtitle": "Entdecken Sie die Ägadischen Inseln: Trimaran mit Chefkoch, exklusive Touren und Charter ab Trapani.",
+    "cta": "Erlebnisse ansehen",
+    "vehicleLabel": "Boot",
+    "vehiclePlaceholder": "Boot auswählen",
+    "experienceLabel": "Erlebnis",
+    "experiencePlaceholder": "Erlebnis auswählen",
+    "boatExperienceExclusive": "Exklusives Erlebnis",
+    "boatExperienceShared": "Geteiltes Erlebnis",
+    "durationLabel": "Dauer",
+    "durationPlaceholder": "Dauer auswählen",
+    "durationFullDay": "8 Stunden",
+    "durationMorning": "4 Stunden · Vormittag",
+    "durationAfternoon": "4 Stunden · Nachmittag",
+    "charterStartLabel": "Von",
+    "charterEndLabel": "Bis",
+    "charterTooShort": "Ein Charter erfordert mindestens 3 Tage.",
+    "charterTooLong": "Für Charter über 7 Tage kontaktieren Sie die Crew für ein individuelles Angebot.",
+    "dateLabel": "Datum",
+    "datePlaceholder": "Daten auswählen"
+  },
+  "booking": {
+    "experienceLabel": "Erlebnis",
+    "experiencePlaceholder": "Erlebnis auswählen",
+    "boatExperienceExclusive": "Exklusives Erlebnis",
+    "boatExperienceShared": "Geteiltes Erlebnis",
+    "startDate": "Datum",
+    "numPeople": "Anzahl Personen",
+    "customerName": "Vollständiger Name",
+    "customerEmail": "E-Mail",
+    "customerPhone": "Telefon",
+    "submit": "Weiter zur Zahlung",
+    "charterStartLabel": "Ab",
+    "charterDaysLabel": "Anzahl Tage",
+    "charterTooShort": "Ein Charter erfordert mindestens 3 Tage.",
+    "charterTooLong": "Für Charter über 7 Tage kontaktieren Sie die Crew für ein individuelles Angebot.",
+    "dateUnavailable": "Datum nicht verfügbar",
+    "selectDate": "Datum auswählen"
+  },
+  "services": {
+    "socialBoating": {
+      "title": "Social Boating",
+      "short": "Segeln, Baden und Mittagessen mit frischem Fisch. Die gesellige Art, die Ägadischen Inseln zu entdecken."
+    },
+    "exclusive": {
+      "title": "Exklusives Erlebnis",
+      "short": "Privater Chefkoch, Route nach Maß und kompromissloser Komfort."
+    },
+    "exclusiveExperience": {
+      "title": "Exklusives Erlebnis",
+      "short": "Privater Chefkoch, Route nach Maß und kompromissloser Komfort."
+    },
+    "cabinCharter": {
+      "title": "Charter",
+      "short": "Mehrere Tage zwischen den Ägadischen Inseln, mit dem Meer als Zuhause."
+    },
+    "charter": {
+      "title": "Charter",
+      "short": "Mehrere Tage zwischen den Ägadischen Inseln, mit dem Meer als Zuhause."
+    },
+    "boatShared": {
+      "title": "Geteilte Bootstour",
+      "short": "Eine Bootstour zu den Ägadischen Inseln, ideal wenn Sie einzelne Plätze buchen möchten."
+    },
+    "boatExclusive": {
+      "title": "Private Bootstour",
+      "short": "Ein Boot vollständig reserviert für Sie und Ihre Gruppe."
+    }
+  },
+  "nav": {
+    "experiences": "Erlebnisse",
+    "boats": "Unsere Boote",
+    "islands": "Ägadische Inseln",
+    "about": "Über uns",
+    "contacts": "Kontakt",
+    "contact": "Kontakt",
+    "book": "Buchen",
+    "faq": "FAQ"
+  },
+  "footer": {
+    "rights": "Alle Rechte vorbehalten",
+    "privacy": "Datenschutz",
+    "terms": "AGB",
+    "cookiePreferences": "Cookie-Einstellungen",
+    "tagline": "Einzigartige Bootserlebnisse auf den Ägadischen Inseln",
+    "quickLinks": "Schnellzugriff",
+    "address": "EGADI SAILING SRLS, Via Calipso 42, 91100 Trapani"
+  },
+  "about": {
+    "title": "Über uns",
+    "subtitle": "Leidenschaft für das Meer seit 2010",
+    "heroText": "Egadisailing entstand aus der Leidenschaft für das Meer und der Liebe zu den Ägadischen Inseln. Seit 2010 bieten wir Bootserlebnisse für Gäste, die einen der schönsten Meeresabschnitte des Mittelmeers entdecken möchten.",
+    "storyText": "Alles begann mit einem Boot und einer einfachen Idee: jedem Gast die Magie der Ägadischen Inseln so zu zeigen, wie wir sie jeden Tag erleben. Heute verwandeln eine gepflegte Flotte und eine leidenschaftliche Crew jede Ausfahrt in eine besondere Erinnerung.",
+    "valuesTitle": "Unsere Werte",
+    "value1Title": "Leidenschaft für das Meer",
+    "value1Desc": "Das Meer ist unser Zuhause. Jeder Tag an Bord ist eine Gelegenheit, die Schönheit der Ägadischen Inseln mit unseren Gästen zu teilen.",
+    "value2Title": "Sizilianische Gastfreundschaft",
+    "value2Desc": "Herzlicher Empfang, sorgfältig zubereitete Speisen und Liebe zum Detail: sizilianische Tradition an Bord.",
+    "value3Title": "Respekt vor der Meeresumwelt",
+    "value3Desc": "Wir fahren verantwortungsvoll, um das marine Ökosystem der Ägadischen Inseln für kommende Generationen zu schützen.",
+    "crewTitle": "Unsere Crew",
+    "crewText": "Unser Team besteht aus Meeresprofis: erfahrenen Skippern, talentierten Köchen und aufmerksamen Hostessen. Alle teilen dieselbe Liebe zu den Ägadischen Inseln und zur Gastfreundschaft."
+  },
+  "contact": {
+    "title": "Kontakt",
+    "subtitle": "Wir sind für Sie da",
+    "address": "Via dei Gladioli 15, 91100 Trapani, Italien",
+    "phone": "Telefon",
+    "email": "E-Mail",
+    "formName": "Name",
+    "formEmail": "E-Mail",
+    "formMessage": "Nachricht",
+    "formSend": "Nachricht senden",
+    "whatsapp": "Schreiben Sie uns auf WhatsApp",
+    "findUs": "Wo Sie uns finden",
+    "writeUs": "Schreiben Sie uns"
+  },
+  "contacts": {
+    "title": "Kontakt",
+    "subtitle": "Wir sind für Sie da",
+    "address": "Via dei Gladioli 15, 91100 Trapani, Italien",
+    "email": "info@egadisailing.com",
+    "phone": "+39 345 971 0696 · +39 340 145 4585",
+    "formName": "Name",
+    "formEmail": "E-Mail",
+    "formMessage": "Nachricht",
+    "formSend": "Nachricht senden",
+    "whatsapp": "Schreiben Sie uns auf WhatsApp",
+    "findUs": "Wo Sie uns finden",
+    "writeUs": "Schreiben Sie uns"
+  },
+  "islands": {
+    "title": "Die Ägadischen Inseln",
+    "subtitle": "Drei Juwelen im Herzen des Mittelmeers",
+    "sectionLabel": "Route entdecken",
+    "discoverExperiences": "Erlebnisse entdecken, die diese Insel besuchen",
+    "favignana": {
+      "name": "Favignana",
+      "description": "Die größte der Ägadischen Inseln, berühmt für Cala Rossa und türkisfarbenes Wasser. Favignana bietet eindrucksvolle Buchten, ein lebendiges Zentrum und die ehemalige Tonnara Florio, die von der Geschichte des Thunfischfangs erzählt.",
+      "highlights": "Cala Rossa, Cala Azzurra, Bue Marino, Ex Stabilimento Florio"
+    },
+    "levanzo": {
+      "name": "Levanzo",
+      "description": "Die kleinste und ruhigste Insel, bekannt für die Grotta del Genovese. Levanzo ist ein stilles Juwel mit transparentem Wasser, klaren Küstenlinien und idealen Bedingungen zum Schnorcheln.",
+      "highlights": "Grotta del Genovese, Cala Minnola, Cala Fredda, Faraglione"
+    },
+    "marettimo": {
+      "name": "Marettimo",
+      "description": "Die entlegenste und wildeste Insel, ideal für Meereshöhlen, Wanderwege und geschützte Buchten. Marettimo zeigt die bergigere und abenteuerlichere Seite des Archipels.",
+      "highlights": "Grotta del Cammello, Punta Troia, Cala Bianca, Scalo Maestro"
+    }
+  },
+  "experience": {
+    "includes": "Was inklusive ist",
+    "bring": "Was Sie mitbringen sollten",
+    "notIncludes": "Nicht inklusive",
+    "itinerary": "Route",
+    "pricing": "Preise und Saison",
+    "reviews": "Bewertungen",
+    "bookNow": "Jetzt buchen",
+    "from": "Ab",
+    "perPerson": "pro Person",
+    "duration": "Dauer",
+    "people": "Personen",
+    "capacity": "Maximale Kapazität",
+    "crew": "Crew an Bord",
+    "boat": "Boot",
+    "meetingPoint": "Treffpunkt",
+    "whatToBring": "Mitbringen",
+    "allExperiences": "Alle Erlebnisse",
+    "include1": "Professioneller Skipper",
+    "include2": "Mittagessen mit frischem Fisch, vom Chefkoch zubereitet",
+    "include3": "Schnorchelausrüstung",
+    "include4": "Treibstoff",
+    "include5": "Wasser und Softdrinks",
+    "include6": "Versicherung",
+    "bring1": "Badebekleidung",
+    "bring2": "Handtuch",
+    "bring3": "Sonnencreme",
+    "bring4": "Sonnenbrille",
+    "bring5": "Hut",
+    "itin1Time": "09:00",
+    "itin1Text": "Abfahrt vom Hafen von Trapani",
+    "itin2Time": "10:00",
+    "itin2Text": "Ankunft in Favignana — Cala Rossa, Baden und Schnorcheln",
+    "itin3Time": "12:30",
+    "itin3Text": "Mittagessen an Bord, vom Chefkoch zubereitet",
+    "itin4Time": "14:00",
+    "itin4Text": "Weiterfahrt nach Levanzo",
+    "itin5Time": "15:30",
+    "itin5Text": "Grotta del Genovese, Baden in kristallklarem Wasser",
+    "itin6Time": "17:00",
+    "itin6Text": "Rückkehr zum Hafen von Trapani",
+    "periodLabel": "Zeitraum",
+    "periodPrice": "Preis pro Person",
+    "seasonalPrices": "Saisonpreise",
+    "periodDates": "Daten"
+  },
+  "experiences": {
+    "title": "Bootstouren zu den Ägadischen Inseln ab Trapani",
+    "subtitle": "Wählen Sie Ihre Bootstour: Chef an Bord, Trimaran-Charter, private 4-Stunden-Touren sowie geteilte oder private 8-Stunden-Bootstouren. Preise und Verfügbarkeiten online."
+  },
+  "boats": {
+    "title": "Boote für Touren zu den Ägadischen Inseln ab Trapani",
+    "subtitle": "Wählen Sie zwischen dem Neel 47 Trimaran und der Cigala & Bertinetti 34 Offshore Open.",
+    "length": "Länge",
+    "year": "Baujahr",
+    "guests": "Gäste",
+    "cabins": "Kabinen",
+    "meters": "m",
+    "crew": "Crew",
+    "availableServices": "Verfügbare Erlebnisse",
+    "specs": "Technische Daten"
+  },
+  "faq": {
+    "title": "FAQ zu Bootstouren auf den Ägadischen Inseln",
+    "subtitle": "Alles, was Sie vor der Buchung einer Bootstour zu den Ägadischen Inseln wissen sollten.",
+    "q1": "Was sollte ich mitbringen?",
+    "a1": "Am besten biologisch abbaubare Sonnencreme, Badebekleidung, ein eigenes Handtuch, Sonnenhut und bequeme Schuhe. Für die Rückfahrt empfehlen wir außerdem ein leichtes Oberteil.",
+    "q2": "Kann ich meine Buchung stornieren?",
+    "a2": "Ja. Bis 30 Tage vor Abfahrt erhalten Sie eine vollständige Rückerstattung; 29 bis 15 Tage vor Abfahrt werden 50 % erstattet; innerhalb von 15 Tagen vor der Tour oder bei Nichterscheinen ist die Stornierung nicht erstattungsfähig. Datumsänderungen werden je nach Verfügbarkeit geprüft.",
+    "q3": "Was passiert bei schlechtem Wetter?",
+    "a3": "Wir beobachten die Wetter- und Seebedingungen laufend. Wenn eine sichere Ausfahrt nicht möglich ist, kontaktieren wir Sie, um das Erlebnis zu verschieben oder eine vollständige Rückerstattung zu veranlassen.",
+    "q4": "Können Kinder teilnehmen?",
+    "a4": "Ja, Kinder sind an Bord willkommen. Für sehr kleine Kinder unter 3 Jahren kontaktieren Sie uns bitte vor der Buchung. Kinder-Schwimmwesten sind verfügbar.",
+    "q5": "Ist Mittagessen inklusive?",
+    "a5": "Beim Premium-Erlebnis mit Chefkoch ist das Mittagessen inklusive. Bei den anderen Touren sind die genauen Leistungen in der jeweiligen Erlebnisbeschreibung angegeben.",
+    "q6": "Wo gehen wir an Bord?",
+    "a6": "Die Einschiffung erfolgt in Trapani. Den genauen Treffpunkt und praktische Hinweise senden wir nach der Buchungsbestätigung per E-Mail."
+  },
+  "itinerary": {
+    "tabs": {
+      "socialBoating": "Social Boating",
+      "exclusive": "Gourmet",
+      "cabinCharter": "Charter",
+      "boatShared": "4 Stunden",
+      "boatExclusive": "8 Stunden"
+    },
+    "socialBoating": {
+      "stop1": {
+        "name": "Abfahrt",
+        "description": "Einschiffung im Hafen von Trapani, Begrüßungsgetränk und Briefing durch den Skipper."
+      },
+      "stop2": {
+        "name": "Cala Rossa",
+        "island": "Favignana",
+        "description": "Baden in einem der berühmtesten türkisfarbenen Gewässer des Mittelmeers, mit Schnorcheln über Posidonia-Seegraswiesen."
+      },
+      "stop3": {
+        "name": "Mittagessen an Bord",
+        "description": "Der Chefkoch bereitet frischen Fisch mit Blick aufs offene Meer zu."
+      },
+      "stop4": {
+        "name": "Bue Marino",
+        "island": "Favignana",
+        "description": "Spektakuläre Küste, Meereshöhlen und kristallklares Wasser zwischen hellen Felsen."
+      },
+      "stop5": {
+        "name": "Rückfahrt",
+        "description": "Rückfahrt nach Trapani im Licht des späten Nachmittags."
+      }
+    },
+    "exclusiveExperience": {
+      "stop1": {
+        "name": "Willkommen an Bord",
+        "description": "Treffpunkt: Via dei Gladioli 15, 91100 Trapani, Italien."
+      },
+      "stop2": {
+        "name": "Cala Azzurra",
+        "island": "Favignana",
+        "description": "Baden im klaren Wasser der Cala Azzurra auf Favignana."
+      },
+      "stop3": {
+        "name": "Cala Rossa",
+        "island": "Favignana",
+        "description": "Gourmet-Mittagessen vor Anker bei Cala Rossa, Favignana."
+      },
+      "stop4": {
+        "name": "Live Cooking an Bord",
+        "description": "Der lokale Chefkoch bereitet das Mittagessen an Bord bei Cala Rossa zu."
+      },
+      "stop5": {
+        "name": "Mittagessen mit Meerblick",
+        "description": "Gourmet-Mittagessen mit Blick auf Cala Rossa, Favignana."
+      },
+      "stop6": {
+        "name": "Entspannung bei Cala Rossa",
+        "island": "Favignana",
+        "description": "Zeit zum Entspannen und Baden im Wasser der Cala Rossa."
+      },
+      "stop7": {
+        "name": "Cala Dogana",
+        "island": "Levanzo",
+        "description": "Stopp in der Nähe von Cala Dogana, Levanzo."
+      },
+      "stop8": {
+        "name": "Cala Fredda",
+        "island": "Levanzo",
+        "description": "Natur, Stille und türkisfarbenes Wasser bei Cala Fredda, Levanzo."
+      },
+      "stop9": {
+        "name": "Aperitif bei Sonnenuntergang",
+        "description": "Während der Rückfahrt zwischen den Ägadischen Inseln."
+      },
+      "stop10": {
+        "name": "Rückkehr zum Hafen",
+        "description": "Ende des Erlebnisses und Rückkehr nach Trapani."
+      }
+    },
+    "exclusive": {
+      "stop1": {
+        "name": "Willkommen an Bord",
+        "description": "Treffpunkt: Via dei Gladioli 15, 91100 Trapani, Italien."
+      },
+      "stop2": {
+        "name": "Cala Azzurra",
+        "island": "Favignana",
+        "description": "Baden im klaren Wasser der Cala Azzurra auf Favignana."
+      },
+      "stop3": {
+        "name": "Cala Rossa",
+        "island": "Favignana",
+        "description": "Gourmet-Mittagessen vor Anker bei Cala Rossa, Favignana."
+      },
+      "stop4": {
+        "name": "Live Cooking an Bord",
+        "description": "Der lokale Chefkoch bereitet das Mittagessen an Bord bei Cala Rossa zu."
+      },
+      "stop5": {
+        "name": "Mittagessen mit Meerblick",
+        "description": "Gourmet-Mittagessen mit Blick auf Cala Rossa, Favignana."
+      },
+      "stop6": {
+        "name": "Entspannung bei Cala Rossa",
+        "island": "Favignana",
+        "description": "Zeit zum Entspannen und Baden im Wasser der Cala Rossa."
+      },
+      "stop7": {
+        "name": "Cala Dogana",
+        "island": "Levanzo",
+        "description": "Stopp in der Nähe von Cala Dogana, Levanzo."
+      },
+      "stop8": {
+        "name": "Cala Fredda",
+        "island": "Levanzo",
+        "description": "Natur, Stille und türkisfarbenes Wasser bei Cala Fredda, Levanzo."
+      },
+      "stop9": {
+        "name": "Aperitif bei Sonnenuntergang",
+        "description": "Während der Rückfahrt zwischen den Ägadischen Inseln."
+      },
+      "stop10": {
+        "name": "Rückkehr zum Hafen",
+        "description": "Ende des Erlebnisses und Rückkehr nach Trapani."
+      }
+    },
+    "charter": {
+      "stop1": {
+        "name": "Route nach Maß",
+        "description": "Die Charterroute wird mit den Gästen zwischen Favignana, Levanzo und Marettimo geplant, je nach Wunsch, Reiserhythmus, Meer, Wetter und Interesse an Buchten, Dörfern, Baden oder entspannter Zeit an Bord."
+      }
+    },
+    "cabinCharter": {
+      "stop1": {
+        "name": "Route nach Maß",
+        "description": "Die Charterroute wird mit den Gästen zwischen Favignana, Levanzo und Marettimo geplant, je nach Wunsch, Reiserhythmus, Meer, Wetter und Interesse an Buchten, Dörfern, Baden oder entspannter Zeit an Bord."
+      }
+    },
+    "boatShared": {
+      "stop1": {
+        "name": "Abfahrt",
+        "description": "Treffen im Hafen von Trapani und Abfahrt zu den Inseln."
+      },
+      "stop2": {
+        "name": "Favignana",
+        "island": "Favignana",
+        "description": "Inselroute mit Stopps in den schönsten Buchten."
+      },
+      "stop3": {
+        "name": "Levanzo",
+        "island": "Levanzo",
+        "description": "Baden und Schnorcheln in kristallklarem Wasser."
+      },
+      "stop4": {
+        "name": "Rückfahrt",
+        "description": "Rückkehr nach Trapani am späten Nachmittag."
+      }
+    },
+    "boatExclusive": {
+      "stop1": {
+        "name": "Abfahrt",
+        "description": "Private Abfahrt zur vereinbarten Uhrzeit."
+      },
+      "stop2": {
+        "name": "Favignana",
+        "island": "Favignana",
+        "description": "Die exklusivsten Buchten mit längeren Stopps."
+      },
+      "stop3": {
+        "name": "Mittagessen an Bord",
+        "description": "Mittagessen mit typisch sizilianischen Produkten."
+      },
+      "stop4": {
+        "name": "Levanzo",
+        "island": "Levanzo",
+        "description": "Ruhige Buchten und Schnorcheln in unberührtem Wasser."
+      },
+      "stop5": {
+        "name": "Rückfahrt",
+        "description": "Entspannte Rückfahrt im Abendlicht."
+      }
+    }
+  },
+  "landing": {
+    "experiencesTitle": "Bereit zum Ablegen?",
+    "experiencesSubtitle": "",
+    "islandsTitle": "Die Ägadischen Inseln",
+    "islandsSubtitle": "Drei Juwelen im Herzen des Mittelmeers",
+    "whyTitle": "Warum Egadisailing",
+    "whyChef": "Chef an Bord",
+    "whyChefDesc": "Mittagessen mit frischem Fisch, von unserem Chefkoch mit lokalen Zutaten und sizilianischen Rezepten zubereitet.",
+    "whyLuxury": "Zugänglicher Luxus",
+    "whyLuxuryDesc": "Premium-Erlebnisse zu fairen Preisen, damit Sie das Meer so erleben, wie Sie es verdienen.",
+    "whyCrew": "Erfahrene Crew",
+    "whyCrewDesc": "Professioneller Skipper, Chefkoch und Hostess für ein sicheres und sorgfältig gestaltetes Erlebnis.",
+    "whyIslands": "Unberührte Inseln",
+    "whyIslandsDesc": "Klares Mittelmeerwasser, Meereshöhlen und versteckte Buchten.",
+    "testimonialsTitle": "Was unsere Gäste sagen",
+    "ctaTitle": "Buchen Sie Ihr Erlebnis",
+    "ctaSubtitle": "Wählen Sie Ihr Abenteuer auf den Ägadischen Inseln",
+    "ctaButton": "Erlebnisse ansehen"
+  },
+  "home": {
+    "experiencesTitle": "Bereit zum Ablegen?",
+    "experiencesSubtitle": "",
+    "islandsTitle": "Die Ägadischen Inseln",
+    "islandsSubtitle": "Drei Juwelen im Herzen des Mittelmeers",
+    "whyTitle": "Warum Egadisailing",
+    "whyChef": "Chef an Bord",
+    "whyChefDesc": "Mittagessen mit frischem Fisch, von unserem Chefkoch mit lokalen Zutaten und sizilianischen Rezepten zubereitet.",
+    "whyLuxury": "Zugänglicher Luxus",
+    "whyLuxuryDesc": "Premium-Erlebnisse zu fairen Preisen, damit Sie das Meer so erleben, wie Sie es verdienen.",
+    "whyCrew": "Erfahrene Crew",
+    "whyCrewDesc": "Professioneller Skipper, Chefkoch und Hostess für ein sicheres und sorgfältig gestaltetes Erlebnis.",
+    "whyIslands": "Unberührte Inseln",
+    "whyIslandsDesc": "Klares Mittelmeerwasser, Meereshöhlen und versteckte Buchten.",
+    "testimonialsTitle": "Was unsere Gäste sagen",
+    "ctaTitle": "Buchen Sie Ihr Erlebnis",
+    "ctaSubtitle": "Wählen Sie Ihr Abenteuer auf den Ägadischen Inseln",
+    "ctaButton": "Erlebnisse ansehen"
+  }
+}

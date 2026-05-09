@@ -1,6 +1,6 @@
 const assetCdnUrl = process.env.NEXT_PUBLIC_ASSET_CDN_URL?.replace(/\/+$/, "");
 const heroAssetVersion = "20260430";
-const brandAssetVersion = "20260504";
+const brandAssetVersion = "20260509";
 
 export function publicAsset(path: string): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -10,3 +10,6 @@ export function publicAsset(path: string): string {
 export const HERO_VIDEO_POSTER_SRC = publicAsset(`/videos/hero-poster.webp?v=${heroAssetVersion}`);
 export const HERO_VIDEO_SRC = publicAsset(`/videos/hero.mp4?v=${heroAssetVersion}`);
 export const BRAND_LOGO_SRC = publicAsset(`/images/brand/egadi-sailing-logo.svg?v=${brandAssetVersion}`);
+export const BRAND_LOGO_EMAIL_WHITE_SRC = publicAsset(
+  `/images/brand/egadi-sailing-logo-white.svg?v=${brandAssetVersion}`,
+);

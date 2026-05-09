@@ -27,7 +27,14 @@ export type FavignanaGuideSlug =
   | "bue-marino-carrieres-tuf"
   | "snorkeling-a-favignana"
   | "comment-venir-depuis-trapani-et-se-deplacer"
-  | "excursion-bateau-favignana-levanzo";
+  | "excursion-bateau-favignana-levanzo"
+  | "was-man-in-favignana-sehen-sollte"
+  | "schoenste-straende-buchten-favignana"
+  | "favignana-an-einem-tag"
+  | "bue-marino-tuffsteinbrueche"
+  | "schnorcheln-in-favignana"
+  | "anreise-ab-trapani-und-fortbewegung"
+  | "bootstour-favignana-levanzo";
 
 export const favignanaGuideSlugPairs = [
   {
@@ -35,59 +42,67 @@ export const favignanaGuideSlugPairs = [
     en: "top-10-things-to-see",
     es: "que-ver-en-favignana",
     fr: "que-voir-a-favignana",
+    de: "was-man-in-favignana-sehen-sollte",
   },
   {
     it: "dove-fare-il-bagno-spiagge-cale",
     en: "best-beaches-coves",
     es: "mejores-playas-calas-favignana",
     fr: "plus-belles-plages-criques-favignana",
+    de: "schoenste-straende-buchten-favignana",
   },
   {
     it: "favignana-in-un-giorno",
     en: "favignana-in-one-day",
     es: "favignana-en-un-dia",
     fr: "favignana-en-une-journee",
+    de: "favignana-an-einem-tag",
   },
-  { it: "cala-rossa", en: "cala-rossa", es: "cala-rossa", fr: "cala-rossa" },
+  { it: "cala-rossa", en: "cala-rossa", es: "cala-rossa", fr: "cala-rossa", de: "cala-rossa" },
   {
     it: "bue-marino-cave-tufo",
     en: "bue-marino-tuff-quarries",
     es: "bue-marino-canteras-toba",
     fr: "bue-marino-carrieres-tuf",
+    de: "bue-marino-tuffsteinbrueche",
   },
   {
     it: "snorkeling-favignana",
     en: "snorkeling-in-favignana",
     es: "snorkel-en-favignana",
     fr: "snorkeling-a-favignana",
+    de: "schnorcheln-in-favignana",
   },
   {
     it: "come-arrivare-da-trapani-e-muoversi",
     en: "how-to-get-from-trapani-and-get-around",
     es: "como-llegar-desde-trapani-y-moverse",
     fr: "comment-venir-depuis-trapani-et-se-deplacer",
+    de: "anreise-ab-trapani-und-fortbewegung",
   },
   {
     it: "tour-in-barca-favignana-levanzo",
     en: "favignana-levanzo-boat-tour",
     es: "excursion-barco-favignana-levanzo",
     fr: "excursion-bateau-favignana-levanzo",
+    de: "bootstour-favignana-levanzo",
   },
 ] as const satisfies Array<{
   it: FavignanaGuideSlug;
   en: FavignanaGuideSlug;
   es: FavignanaGuideSlug;
   fr: FavignanaGuideSlug;
+  de: FavignanaGuideSlug;
 }>;
 
-export type FavignanaGuideLocale = "it" | "en" | "es" | "fr";
+export type FavignanaGuideLocale = "it" | "en" | "es" | "fr" | "de";
 
 export function getFavignanaGuideSlugForLocale(
   slug: string,
   locale: FavignanaGuideLocale,
 ): FavignanaGuideSlug | undefined {
   const pair = favignanaGuideSlugPairs.find(
-    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug || item.de === slug,
   );
   return pair?.[locale];
 }

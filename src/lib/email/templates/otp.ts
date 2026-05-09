@@ -8,6 +8,7 @@ export function otpEmailTemplate(
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   if (isEs) {
     const subject = "Código para recuperar tu reserva · Egadisailing";
     const html = emailLayout({
@@ -87,6 +88,34 @@ Do not share it with anyone.`;
 Valable 15 minutes.
 Après connexion, vous pourrez ouvrir le billet QR, demander un changement de date et demander annulation ou remboursement selon la policy.
 Ne le partagez avec personne.`;
+    return { subject, html, text };
+  }
+  if (isDe) {
+    const subject = "Code zum Finden Ihrer Buchung · Egadisailing";
+    const html = emailLayout({
+      locale: "de",
+      heading: "Buchung finden",
+      bodyHtml: `
+        <p>Verwenden Sie diesen Code, um auf Ihren Buchungsbereich zuzugreifen:</p>
+        <div style="font-size: 42px; letter-spacing: 12px; font-weight: bold; text-align: center; background: #f9fafb; padding: 20px; border-radius: 8px; color: #0c3d5e; margin: 24px 0; font-family: monospace;">
+          ${safeCode}
+        </div>
+        <p>
+          Nach dem Login können Sie das QR-Ticket öffnen, eine Datumsänderung anfragen
+          und je nach Richtlinie eine Stornierung oder Erstattung beantragen.
+        </p>
+        <p style="color: #6b7280; font-size: 14px;">
+          Der Code ist 15 Minuten gültig. Teilen Sie ihn mit niemandem.
+        </p>
+        <p style="color: #6b7280; font-size: 12px; margin-top: 32px;">
+          Wenn Sie diesen Code nicht angefordert haben, ignorieren Sie diese E-Mail.
+        </p>
+      `,
+    });
+    const text = `Egadisailing Code zum Finden Ihrer Buchung: ${code}
+15 Minuten gültig.
+Nach dem Login können Sie das QR-Ticket öffnen, eine Datumsänderung anfragen und je nach Richtlinie eine Stornierung oder Erstattung beantragen.
+Teilen Sie ihn mit niemandem.`;
     return { subject, html, text };
   }
 

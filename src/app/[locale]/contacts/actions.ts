@@ -21,7 +21,7 @@ import { emailSchema, freeTextSchema } from "@/lib/validation/common-zod";
 import { RL_WINDOW } from "@/lib/timing";
 
 const schema = z.object({
-  locale: z.enum(["it", "en", "es", "fr"]).default("it"),
+  locale: z.enum(["it", "en", "es", "fr", "de"]).default("it"),
   name: z.string().min(2).max(120).regex(/^[^<>]*$/, "Caratteri non ammessi"),
   email: emailSchema,
   phone: z.string().max(32).optional(),
@@ -57,6 +57,8 @@ export async function sendContactMessage(
           ? "es"
           : formData.get("locale") === "fr"
             ? "fr"
+            : formData.get("locale") === "de"
+              ? "de"
           : formData.get("locale") === "en"
             ? "en"
             : "it",
@@ -176,6 +178,8 @@ export async function sendContactMessage(
           ? "Mensaje enviado. Te responderemos en 24 horas."
           : parsed.locale === "fr"
           ? "Message envoyé. Nous répondrons sous 24 heures."
+          : parsed.locale === "de"
+          ? "Nachricht gesendet. Wir antworten Ihnen innerhalb von 24 Stunden."
           : parsed.locale === "en"
           ? "Message sent. We will reply within 24 hours."
           : "Messaggio inviato. Ti risponderemo entro 24 ore.",
@@ -195,6 +199,8 @@ export async function sendContactMessage(
               ? "Revisa los campos del formulario."
               : formData.get("locale") === "fr"
                 ? "Vérifiez les champs du formulaire."
+                : formData.get("locale") === "de"
+                  ? "Bitte prüfen Sie die Formularfelder."
               : "Controlla i campi del modulo."
           : err instanceof Error
             ? err.message
@@ -202,6 +208,8 @@ export async function sendContactMessage(
               ? "Error desconocido, inténtalo de nuevo más tarde."
               : formData.get("locale") === "fr"
                 ? "Erreur inconnue, veuillez réessayer plus tard."
+              : formData.get("locale") === "de"
+                ? "Unbekannter Fehler. Bitte versuchen Sie es später erneut."
               : formData.get("locale") === "en"
               ? "Unknown error. Please try again later."
               : "Errore sconosciuto, riprova più tardi.",

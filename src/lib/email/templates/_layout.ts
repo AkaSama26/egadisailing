@@ -1,7 +1,7 @@
 import { escapeHtml, safeUrl } from "@/lib/html-escape";
 import { env } from "@/lib/env";
 import { PUBLIC_COMPANY_LEGAL } from "@/lib/public-contact";
-import { BRAND_LOGO_SRC } from "@/lib/public-assets";
+import { BRAND_LOGO_EMAIL_WHITE_SRC } from "@/lib/public-assets";
 import { localizedStaticPath } from "@/lib/i18n/static-paths";
 import { resolveEmailLocale } from "./locale";
 
@@ -37,7 +37,7 @@ export function emailLayout(opts: {
       : "";
   const privacyUrl = `${env.APP_URL}${localizedStaticPath(locale, "/privacy")}`;
   const termsUrl = `${env.APP_URL}${localizedStaticPath(locale, "/terms")}`;
-  const logoUrl = safeUrl(absoluteAssetUrl(BRAND_LOGO_SRC));
+  const logoUrl = safeUrl(absoluteAssetUrl(BRAND_LOGO_EMAIL_WHITE_SRC));
   const footerCopy =
     locale === "en"
       ? "Transactional email about the services you requested.<br />For support, reply to this email or contact us through the official channels."
@@ -45,6 +45,8 @@ export function emailLayout(opts: {
         ? "Email transaccional relacionado con los servicios solicitados.<br />Para recibir ayuda, responde a este email o escríbenos a través de los contactos oficiales."
         : locale === "fr"
           ? "Email transactionnel lié aux services demandés.<br />Pour toute assistance, répondez à cet email ou contactez-nous via les canaux officiels."
+          : locale === "de"
+            ? "Transaktions-E-Mail zu den von Ihnen angefragten Services.<br />Für Unterstützung antworten Sie auf diese E-Mail oder kontaktieren Sie uns über die offiziellen Kanäle."
           : "Email transazionale relativa ai servizi richiesti.<br />Per assistenza rispondi a questa email o scrivici dai contatti ufficiali.";
   const termsLabel =
     locale === "en"
@@ -53,8 +55,10 @@ export function emailLayout(opts: {
         ? "Condiciones"
         : locale === "fr"
           ? "Conditions"
+          : locale === "de"
+            ? "AGB"
           : "Termini";
-  const vatLabel = locale === "it" ? "P.IVA" : "VAT";
+  const vatLabel = locale === "it" ? "P.IVA" : locale === "de" ? "USt-IdNr." : "VAT";
 
   return `<!DOCTYPE html>
 <html>
@@ -82,7 +86,7 @@ export function emailLayout(opts: {
           <table role="presentation" class="email-shell" width="600" cellspacing="0" cellpadding="0" style="width: 600px; max-width: 600px; border-collapse: separate; border-spacing: 0;">
             <tr>
               <td align="center" style="background: #071934; padding: 26px 28px 22px; border-radius: 18px 18px 0 0;">
-                <img src="${logoUrl}" width="74" alt="Egadisailing" style="display: block; width: 74px; max-width: 74px; height: auto; margin: 0 auto 12px; filter: brightness(0) invert(1);" />
+                <img src="${logoUrl}" width="74" alt="Egadisailing" style="display: block; width: 74px; max-width: 74px; height: auto; margin: 0 auto 12px;" />
                 <div style="font-size: 18px; line-height: 1.2; font-weight: 800; color: #ffffff; letter-spacing: 0;">
                   Egadisailing
                 </div>

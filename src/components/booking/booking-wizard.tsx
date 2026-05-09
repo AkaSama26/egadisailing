@@ -63,9 +63,18 @@ const CHECKOUT_STEPS_FR: typeof CHECKOUT_STEPS = [
   { key: "payment", label: "Paiement", icon: CreditCard },
 ];
 
+const CHECKOUT_STEPS_DE: typeof CHECKOUT_STEPS = [
+  { key: "date", label: "Datum", icon: CalendarDays },
+  { key: "people", label: "Gäste", icon: Users },
+  { key: "customer", label: "Daten", icon: UserRound },
+  { key: "review", label: "Übersicht", icon: ReceiptText },
+  { key: "payment", label: "Zahlung", icon: CreditCard },
+];
+
 function clientIntlLocale(locale?: string | null): string {
   if (locale === "es") return "es-ES";
   if (locale === "fr") return "fr-FR";
+  if (locale === "de") return "de-DE";
   if (locale === "en") return "en-GB";
   return "it-IT";
 }
@@ -268,7 +277,7 @@ const PHONE_COUNTRIES: PhoneCountry[] = getCountries()
   });
 
 function defaultPhoneCountryCode(locale: string): CountryCode {
-  return locale === "es" ? "ES" : locale === "fr" ? "FR" : locale === "en" ? "GB" : "IT";
+  return locale === "es" ? "ES" : locale === "fr" ? "FR" : locale === "de" ? "DE" : locale === "en" ? "GB" : "IT";
 }
 
 function countryByCode(code: string): PhoneCountry {
@@ -358,7 +367,15 @@ function formatClientEur(amount: number, locale?: string | null): string {
 }
 
 function clientVatIncludedLabel(locale: string): string {
-  return locale === "es" ? "IVA incluido" : locale === "fr" ? "TVA incluse" : locale === "en" ? "VAT included" : "IVA inclusa";
+  return locale === "es"
+    ? "IVA incluido"
+    : locale === "fr"
+      ? "TVA incluse"
+      : locale === "de"
+        ? "inkl. MwSt."
+        : locale === "en"
+          ? "VAT included"
+          : "IVA inclusa";
 }
 
 function appendClientVatIncluded(label: string, locale: string): string {
@@ -964,13 +981,32 @@ export function BookingWizard(props: Props) {
 }
 
 function StepIndicator({ step, locale }: { step: Step; locale: string }) {
-  const steps = locale === "es" ? CHECKOUT_STEPS_ES : locale === "fr" ? CHECKOUT_STEPS_FR : locale === "en" ? CHECKOUT_STEPS_EN : CHECKOUT_STEPS;
+  const steps =
+    locale === "es"
+      ? CHECKOUT_STEPS_ES
+      : locale === "fr"
+        ? CHECKOUT_STEPS_FR
+        : locale === "de"
+          ? CHECKOUT_STEPS_DE
+          : locale === "en"
+            ? CHECKOUT_STEPS_EN
+            : CHECKOUT_STEPS;
   const activeIndex = step === "success" ? steps.length : steps.findIndex((item) => item.key === step);
 
   return (
     <ol
       className="flex w-full items-center gap-1 text-xs font-semibold text-slate-500 sm:grid sm:w-auto sm:min-w-[360px] sm:grid-cols-5"
-      aria-label={locale === "es" ? "Estado del checkout" : locale === "fr" ? "État du checkout" : locale === "en" ? "Checkout status" : "Stato checkout"}
+      aria-label={
+        locale === "es"
+          ? "Estado del checkout"
+          : locale === "fr"
+            ? "État du checkout"
+            : locale === "de"
+              ? "Checkout-Status"
+              : locale === "en"
+                ? "Checkout status"
+                : "Stato checkout"
+      }
     >
       {steps.map((item, index) => {
         const Icon = item.icon;
@@ -1060,6 +1096,36 @@ function getWizardCopy(locale: string) {
       successText:
         "Estamos finalizando la reserva en el sistema central. Revisa tu email para ver los detalles.",
       openSummary: "Abrir resumen",
+    };
+  }
+
+  if (locale === "de") {
+    return {
+      directCheckout: "Direkter Checkout",
+      headerSubtitle: "Datum, Gäste, Kundendaten und Online-Zahlung.",
+      acceptPolicies: "Akzeptieren Sie die Datenschutzerklärung und die AGB, um fortzufahren",
+      completeCaptcha: "Schließen Sie die CAPTCHA-Prüfung ab, bevor Sie fortfahren",
+      tooManyRequestsRetry: "Zu viele Anfragen. Versuchen Sie es erneut in",
+      tooManyRequests: "Zu viele Anfragen. Versuchen Sie es in einigen Minuten erneut.",
+      datesNoLongerAvailable: "Diese Daten sind nicht mehr verfügbar. Wählen Sie bitte andere Daten.",
+      technicalIssue: "Vorübergehendes technisches Problem. Versuchen Sie es in einigen Minuten erneut oder schreiben Sie uns an",
+      bookingCreationError: "Fehler beim Erstellen der Buchung",
+      stripeCheckoutUnavailable: "Der Stripe-Checkout ist momentan nicht verfügbar. Versuchen Sie es in Kürze erneut.",
+      overrideTooClose:
+        "Dieses Datum ist nicht mehr verfügbar, weil es weniger als 15 Tage vor dem Erlebnis liegt.",
+      overrideBooked: "Dieses Datum ist bereits gebucht. Wählen Sie bitte ein anderes Datum.",
+      overrideBlockedByAdmin: "Dieses Datum wurde vom Team wegen Wartung blockiert.",
+      overrideExternalBooking:
+        "Dieses Datum ist bereits durch eine bestätigte Buchung auf einem externen Portal belegt. Wählen Sie bitte ein anderes Datum.",
+      overrideUnavailable: "Dieses Datum ist für dieses Paket nicht verfügbar.",
+      availabilityCheckPrefix: "Fehler bei der Verfügbarkeitsprüfung",
+      availabilityCheckError: "Fehler bei der Verfügbarkeitsprüfung. Versuchen Sie es erneut.",
+      checkingAvailability: "Verfügbarkeit wird geprüft...",
+      paymentCompleted: "Zahlung abgeschlossen",
+      code: "Code",
+      successText:
+        "Wir schließen die Buchung im zentralen System ab. Prüfen Sie Ihre E-Mail für die Details.",
+      openSummary: "Zusammenfassung öffnen",
     };
   }
 
@@ -1173,6 +1239,31 @@ function getDateStepCopy(locale: string) {
     };
   }
 
+  if (locale === "de") {
+    return {
+      title: "Wählen Sie ein verfügbares Datum",
+      calendarLegend: "Kalender für Verfügbarkeit und Preise",
+      calendarUnavailable: "Kalender nicht verfügbar",
+      calendarLoadError: "Wir können Verfügbarkeit und Preise im Moment nicht laden. Versuchen Sie es in Kürze erneut.",
+      previousMonth: "Vorheriger Monat",
+      nextMonth: "Nächster Monat",
+      weekdays: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+      includedInSelectedRange: ", im ausgewählten Zeitraum enthalten",
+      available: "Verfügbar",
+      onRequest: "Auf Anfrage",
+      unavailable: "Nicht verfügbar",
+      selectedDate: "Ausgewähltes Datum",
+      selected: "Ausgewählt",
+      selectedDuration: "Ausgewählte Dauer",
+      days: "Tage",
+      until: "bis",
+      to: "Bis",
+      charterTooShort: "Der Charter erfordert mindestens 3 Tage.",
+      charterTooLong: "Für Charter über 7 Tage kontaktieren Sie bitte das Team für ein individuelles Angebot.",
+      next: "Weiter",
+    };
+  }
+
   if (locale === "en") {
     return {
       title: "Choose an available date",
@@ -1255,6 +1346,23 @@ function getPeopleStepCopy(locale: string) {
       checking: "Comprobando...",
       decrease: "Disminuir",
       increase: "Aumentar",
+    };
+  }
+
+  if (locale === "de") {
+    return {
+      title: "Wer kommt an Bord?",
+      seatsUsed: "Belegte Plätze",
+      paidUnits: "Zahlende Einheiten",
+      estimatedTotal: "Geschätzter Gesamtbetrag",
+      loading: "Lädt",
+      totalGuests: "Gäste insgesamt",
+      capacityExceeded: "Sie haben mehr Plätze ausgewählt als verfügbar sind.",
+      back: "Zurück",
+      next: "Weiter",
+      checking: "Prüfung...",
+      decrease: "Verringern",
+      increase: "Erhöhen",
     };
   }
 
@@ -1370,6 +1478,45 @@ function getReviewStepCopy(locale: string) {
     };
   }
 
+  if (locale === "de") {
+    return {
+      days: "Tage",
+      hours: "Stunden",
+      oneGuest: "1 Gast",
+      guests: "Gäste",
+      fullPayment: "Vollzahlung",
+      seatsUsed: "Belegte Plätze",
+      paidUnits: "Zahlende Einheiten",
+      eyebrow: "Vor der Zahlung prüfen",
+      title: "Buchungsübersicht",
+      subtitle: "Die Stripe-Zahlung öffnet sich erst nach dieser Bestätigung.",
+      paymentQuestion: "Wie möchten Sie bezahlen?",
+      recommended: "Empfohlen",
+      depositDescription: "Sichern Sie das Datum jetzt, indem Sie nur die Anzahlung leisten.",
+      calculating: "Berechnung läuft",
+      fullPaymentDescription: "Bezahlen Sie die gesamte Buchung jetzt per Karte.",
+      depositNote:
+        "Der online gezahlte Betrag folgt der Stornierungsrichtlinie. Der Restbetrag wird vor Ort vor der Abfahrt bezahlt.",
+      summary: "Zusammenfassung",
+      date: "Datum",
+      duration: "Dauer",
+      guestsLabel: "Gäste",
+      customer: "Kunde",
+      phone: "Telefon",
+      payment: "Zahlung",
+      total: "Gesamt",
+      now: "Jetzt",
+      balanceOnSite: "Restbetrag vor Ort",
+      priceUnavailable:
+        "Preis noch nicht verfügbar. Gehen Sie zurück zum Datum und wählen Sie einen Tag mit konfigurierten Preisen.",
+      serverRecalculationNote:
+        "Der endgültige Gesamtbetrag wird bei der Bestätigung serverseitig anhand von Verfügbarkeit, Preisen und konfigurierten Rabatten neu berechnet. Ein eventueller Restbetrag wird vor Ort vor der Abfahrt bezahlt.",
+      editDetails: "Daten bearbeiten",
+      creatingPayment: "Zahlung wird erstellt...",
+      confirmAndPay: "Bestätigen und zu Stripe gehen",
+    };
+  }
+
   if (locale === "en") {
     return {
       days: "days",
@@ -1480,6 +1627,22 @@ function getCustomerStepCopy(locale: string) {
     };
   }
 
+  if (locale === "de") {
+    return {
+      title: "Ihre Daten",
+      firstName: "Vorname",
+      lastName: "Nachname",
+      phone: "Telefon",
+      privacyPrefix: "Ich akzeptiere die",
+      termsPrefix: "Ich akzeptiere die",
+      terms: "AGB",
+      termsSuffix: "der Buchung, einschließlich der Stornierungsrichtlinie.",
+      back: "Zurück",
+      wait: "Bitte warten...",
+      continueToPayment: "Weiter zur Zahlung",
+    };
+  }
+
   if (locale === "en") {
     return {
       title: "Your details",
@@ -1524,6 +1687,12 @@ function passengerRuleLabel(rule: PassengerFareRuleConfig, locale: string): stri
     if (rule.category === "FREE_CHILD") return "Niños pequeños";
     return "Bebés";
   }
+  if (locale === "de") {
+    if (rule.category === "ADULT") return "Erwachsene";
+    if (rule.category === "CHILD") return "Kinder";
+    if (rule.category === "FREE_CHILD") return "Kleinkinder";
+    return "Babys";
+  }
   if (locale !== "en") return rule.label;
   if (rule.category === "ADULT") return "Adults";
   if (rule.category === "CHILD") return "Children";
@@ -1543,6 +1712,12 @@ function passengerRuleHint(rule: PassengerFareRuleConfig, locale: string): strin
     if (rule.category === "CHILD") return "Edad 5-9";
     if (rule.category === "FREE_CHILD") return "Edad 3-4";
     return "Edad 0-2";
+  }
+  if (locale === "de") {
+    if (rule.category === "ADULT") return "Alter 10+";
+    if (rule.category === "CHILD") return "Alter 5-9";
+    if (rule.category === "FREE_CHILD") return "Alter 3-4";
+    return "Alter 0-2";
   }
   if (locale !== "en") return rule.ageLabel;
   if (rule.category === "ADULT") return "Age 10+";
@@ -1577,6 +1752,7 @@ function calendarDayAriaLabel(
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const formatted = new Intl.DateTimeFormat(clientIntlLocale(locale), {
     weekday: "long",
     day: "numeric",
@@ -1585,10 +1761,31 @@ function calendarDayAriaLabel(
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00.000Z`));
   if (!day) {
-    return `${formatted}, ${isEs ? "cargando disponibilidad" : isFr ? "chargement des disponibilités" : isEn ? "loading availability" : "caricamento disponibilità"}`;
+    return `${formatted}, ${
+      isEs
+        ? "cargando disponibilidad"
+        : isFr
+          ? "chargement des disponibilités"
+          : isDe
+            ? "Verfügbarkeit wird geladen"
+            : isEn
+              ? "loading availability"
+              : "caricamento disponibilità"
+    }`;
   }
   const price = day.priceLabel ? `, ${day.priceLabel}` : "";
-  return `${formatted}, ${day.reasonLabel ?? (isEs ? "no disponible" : isFr ? "indisponible" : isEn ? "unavailable" : "non disponibile")}${price}`;
+  return `${formatted}, ${
+    day.reasonLabel ??
+    (isEs
+      ? "no disponible"
+      : isFr
+        ? "indisponible"
+        : isDe
+          ? "nicht verfügbar"
+          : isEn
+            ? "unavailable"
+            : "non disponibile")
+  }${price}`;
 }
 
 function calendarDayClass({
@@ -2690,7 +2887,17 @@ function PhoneCountrySelect({
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={locale === "es" ? "Prefijo telefónico" : locale === "fr" ? "Indicatif téléphonique" : locale === "en" ? "Phone country code" : "Prefisso telefonico"}
+        aria-label={
+          locale === "es"
+            ? "Prefijo telefónico"
+            : locale === "fr"
+              ? "Indicatif téléphonique"
+              : locale === "de"
+                ? "Telefonvorwahl"
+                : locale === "en"
+                  ? "Phone country code"
+                  : "Prefisso telefonico"
+        }
         onClick={() => {
           if (!open) updateDropdownPosition();
           setOpen((current) => !current);
@@ -2718,8 +2925,18 @@ function PhoneCountrySelect({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={locale === "es" ? "Buscar" : locale === "fr" ? "Rechercher" : locale === "en" ? "Search" : "Cerca"}
-              aria-label={locale === "es" ? "Buscar prefijo" : locale === "fr" ? "Rechercher un indicatif" : locale === "en" ? "Search country code" : "Cerca prefisso"}
+              placeholder={locale === "es" ? "Buscar" : locale === "fr" ? "Rechercher" : locale === "de" ? "Suchen" : locale === "en" ? "Search" : "Cerca"}
+              aria-label={
+                locale === "es"
+                  ? "Buscar prefijo"
+                  : locale === "fr"
+                    ? "Rechercher un indicatif"
+                    : locale === "de"
+                      ? "Vorwahl suchen"
+                      : locale === "en"
+                        ? "Search country code"
+                        : "Cerca prefisso"
+              }
               className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm outline-none focus:border-sky-500"
             />
           </div>
@@ -2756,7 +2973,15 @@ function PhoneCountrySelect({
             })}
             {filteredCountries.length === 0 && (
               <p className="px-3 py-3 text-center text-sm text-slate-500">
-                {locale === "es" ? "No se ha encontrado ningún prefijo" : locale === "fr" ? "Aucun indicatif trouvé" : locale === "en" ? "No code found" : "Nessun prefisso trovato"}
+                {locale === "es"
+                  ? "No se ha encontrado ningún prefijo"
+                  : locale === "fr"
+                    ? "Aucun indicatif trouvé"
+                    : locale === "de"
+                      ? "Keine Vorwahl gefunden"
+                      : locale === "en"
+                        ? "No code found"
+                        : "Nessun prefisso trovato"}
               </p>
             )}
           </div>
@@ -2811,7 +3036,7 @@ function PhoneNumberField({
           aria-required="true"
           autoComplete="tel-national"
           inputMode="tel"
-          placeholder={locale === "es" ? "612 345 678" : locale === "fr" ? "6 12 34 56 78" : locale === "en" ? "7123 456789" : "333 123 4567"}
+          placeholder={locale === "es" ? "612 345 678" : locale === "fr" ? "6 12 34 56 78" : locale === "de" ? "1512 3456789" : locale === "en" ? "7123 456789" : "333 123 4567"}
           className="min-w-0 px-4 py-3 outline-none"
           value={nationalNumber}
           onChange={(event) => handleNumberChange(event.target.value)}
@@ -2879,7 +3104,7 @@ function CustomerStep({
         <input
           id="wizard-email"
           type="email"
-          placeholder={locale === "es" ? "tu@ejemplo.com" : locale === "fr" ? "vous@exemple.fr" : locale === "en" ? "you@example.com" : "mario@esempio.it"}
+          placeholder={locale === "es" ? "tu@ejemplo.com" : locale === "fr" ? "vous@exemple.fr" : locale === "de" ? "sie@beispiel.de" : locale === "en" ? "you@example.com" : "mario@esempio.it"}
           required
           aria-required="true"
           autoComplete="email"
@@ -2951,12 +3176,26 @@ function CustomerStep({
           <span className="min-w-0 leading-6">
             {copy.privacyPrefix}{" "}
             <a
-              href={locale === "es" ? "/es/privacidad" : locale === "fr" ? "/fr/confidentialite" : `/${locale}/privacy`}
+              href={
+                locale === "es"
+                  ? "/es/privacidad"
+                  : locale === "fr"
+                    ? "/fr/confidentialite"
+                    : locale === "de"
+                      ? "/de/datenschutz"
+                      : `/${locale}/privacy`
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline"
             >
-              Privacy Policy
+              {locale === "de"
+                ? "Datenschutzerklärung"
+                : locale === "fr"
+                  ? "Politique de confidentialité"
+                  : locale === "es"
+                    ? "Política de privacidad"
+                    : "Privacy Policy"}
             </a>
             . *
           </span>
@@ -2972,7 +3211,15 @@ function CustomerStep({
           <span className="min-w-0 leading-6">
             {copy.termsPrefix}{" "}
             <a
-              href={locale === "es" ? "/es/terminos-y-condiciones" : locale === "fr" ? "/fr/conditions-generales" : `/${locale}/terms`}
+              href={
+                locale === "es"
+                  ? "/es/terminos-y-condiciones"
+                  : locale === "fr"
+                    ? "/fr/conditions-generales"
+                    : locale === "de"
+                      ? "/de/agb"
+                      : `/${locale}/terms`
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline"

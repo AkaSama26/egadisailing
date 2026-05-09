@@ -52,6 +52,8 @@ export function StripePaymentForm(props: Props) {
           ? ("es" as const)
           : props.locale === "fr"
             ? ("fr" as const)
+            : props.locale === "de"
+              ? ("de" as const)
             : props.locale === "en"
               ? ("en" as const)
               : ("it" as const),
@@ -243,16 +245,27 @@ function PaymentSetupError({ locale }: { locale: string }) {
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
       <h2 className="text-lg font-bold">
-        {isEs ? "Pago no configurado" : isFr ? "Paiement non configuré" : isEn ? "Payment not configured" : "Pagamento non configurato"}
+        {isEs
+          ? "Pago no configurado"
+          : isFr
+            ? "Paiement non configuré"
+            : isDe
+              ? "Zahlung nicht konfiguriert"
+              : isEn
+                ? "Payment not configured"
+                : "Pagamento non configurato"}
       </h2>
       <p className="mt-1">
         {isEs
           ? "Falta la clave pública de Stripe. Configura "
           : isFr
             ? "La clé publique Stripe manque. Configurez "
+            : isDe
+              ? "Der öffentliche Stripe-Schlüssel fehlt. Setzen Sie "
             : isEn
               ? "Stripe public key is missing. Set "
               : "Manca la chiave pubblica Stripe. Imposta "}
@@ -261,6 +274,8 @@ function PaymentSetupError({ locale }: { locale: string }) {
           ? "y reinicia el dev server."
           : isFr
             ? "et redémarrez le serveur de développement."
+            : isDe
+              ? "und starten Sie den Dev-Server neu."
             : isEn
               ? "and restart the dev server."
               : "e riavvia il dev server."}
@@ -270,14 +285,22 @@ function PaymentSetupError({ locale }: { locale: string }) {
 }
 
 function formatEurCents(cents: number, locale: string) {
-  return new Intl.NumberFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.NumberFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "de" ? "de-DE" : locale === "en" ? "en-GB" : "it-IT", {
     style: "currency",
     currency: "EUR",
   }).format(cents / 100);
 }
 
 function vatIncludedLabel(locale: string): string {
-  return locale === "es" ? "IVA incluido" : locale === "fr" ? "TVA incluse" : locale === "en" ? "VAT included" : "IVA inclusa";
+  return locale === "es"
+    ? "IVA incluido"
+    : locale === "fr"
+      ? "TVA incluse"
+      : locale === "de"
+        ? "inkl. MwSt."
+        : locale === "en"
+          ? "VAT included"
+          : "IVA inclusa";
 }
 
 function formatEurCentsWithVat(cents: number, locale: string) {
@@ -359,6 +382,26 @@ function getStripePaymentCopy(locale: string) {
       payNow: "Pagar ahora",
       balanceOnSite: "Saldo en destino",
       balanceNote: "El saldo restante se paga en destino antes de la salida.",
+    };
+  }
+
+  if (locale === "de") {
+    return {
+      paymentError: "Zahlungsfehler",
+      paymentIncomplete: "Die Zahlung wurde nicht abgeschlossen. Prüfen Sie die Daten und versuchen Sie es erneut.",
+      eyebrow: "Sichere Zahlung",
+      title: "Checkout abschließen",
+      subtitle: "Geben Sie Ihre Kartendaten ein oder wählen Sie eine von Stripe unterstützte Zahlungsmethode.",
+      loadingForm: "Zahlungsformular wird geladen...",
+      stripeCardData: "Kartendaten werden von Stripe verwaltet",
+      emailConfirmation: "E-Mail-Bestätigung nach der Zahlung",
+      useAnotherMethod: "Andere Zahlungsmethode verwenden",
+      processing: "Wird verarbeitet...",
+      pay: "Bezahlen",
+      bookingTotal: "Buchungssumme",
+      payNow: "Jetzt bezahlen",
+      balanceOnSite: "Restbetrag vor Ort",
+      balanceNote: "Der Restbetrag wird vor der Abfahrt vor Ort bezahlt.",
     };
   }
 

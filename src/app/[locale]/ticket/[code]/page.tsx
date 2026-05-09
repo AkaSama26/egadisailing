@@ -24,6 +24,8 @@ export async function generateMetadata({
         ? "Billete de reserva"
         : locale === "fr"
           ? "Billet de réservation"
+        : locale === "de"
+          ? "Buchungsticket"
         : locale === "en"
           ? "Booking ticket"
           : "Biglietto prenotazione",
@@ -173,6 +175,7 @@ function getTicketStatusLabel(status: string, locale?: string | null): string {
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const labels: Record<string, string> = isEs
     ? {
         PENDING: "Pendiente",
@@ -186,6 +189,13 @@ function getTicketStatusLabel(status: string, locale?: string | null): string {
         CONFIRMED: "Confirmé",
         CANCELLED: "Annulé",
         REFUNDED: "Remboursé",
+      }
+    : isDe
+    ? {
+        PENDING: "Ausstehend",
+        CONFIRMED: "Bestätigt",
+        CANCELLED: "Storniert",
+        REFUNDED: "Erstattet",
       }
     : isEn
     ? {
@@ -216,20 +226,21 @@ function getTicketGuestBreakdown(
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return [
-    booking.adultCount ? `${booking.adultCount} ${isEs ? "adultos" : isFr ? "adultes" : isEn ? "adults" : "adulti"}` : null,
-    booking.childCount ? `${booking.childCount} ${isEs ? "niños 5-9" : isFr ? "enfants 5-9" : isEn ? "children 5-9" : "bambini 5-9"}` : null,
+    booking.adultCount ? `${booking.adultCount} ${isEs ? "adultos" : isFr ? "adultes" : isDe ? "Erwachsene" : isEn ? "adults" : "adulti"}` : null,
+    booking.childCount ? `${booking.childCount} ${isEs ? "niños 5-9" : isFr ? "enfants 5-9" : isDe ? "Kinder 5-9" : isEn ? "children 5-9" : "bambini 5-9"}` : null,
     booking.freeChildSeatCount
-      ? `${booking.freeChildSeatCount} ${isEs ? "niños 3-4" : isFr ? "enfants 3-4" : isEn ? "children 3-4" : "bimbi 3-4"}`
+      ? `${booking.freeChildSeatCount} ${isEs ? "niños 3-4" : isFr ? "enfants 3-4" : isDe ? "Kinder 3-4" : isEn ? "children 3-4" : "bimbi 3-4"}`
       : null,
-    booking.infantCount ? `${booking.infantCount} ${isEs ? "bebés 0-2" : isFr ? "bébés 0-2" : isEn ? "infants 0-2" : "neonati 0-2"}` : null,
+    booking.infantCount ? `${booking.infantCount} ${isEs ? "bebés 0-2" : isFr ? "bébés 0-2" : isDe ? "Kleinkinder 0-2" : isEn ? "infants 0-2" : "neonati 0-2"}` : null,
   ]
     .filter(Boolean)
     .join(", ");
 }
 
 function formatPublicDay(date: Date, locale?: string | null): string {
-  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "de" ? "de-DE" : locale === "en" ? "en-GB" : "it-IT", {
     timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
@@ -238,7 +249,7 @@ function formatPublicDay(date: Date, locale?: string | null): string {
 }
 
 function formatPublicDateTime(date: Date, locale?: string | null): string {
-  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "de" ? "de-DE" : locale === "en" ? "en-GB" : "it-IT", {
     timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
@@ -249,6 +260,37 @@ function formatPublicDateTime(date: Date, locale?: string | null): string {
 }
 
 function getTicketCopy(locale?: string | null) {
+  if (locale === "de") {
+    return {
+      bookingArea: "Buchungsbereich",
+      downloadQr: "QR herunterladen",
+      print: "Drucken",
+      ticket: "Ticket",
+      bookingCode: "Buchungscode",
+      presentQr: "Zeigen Sie diesen QR-Code beim Check-in.",
+      notConfirmed: "Dieses Ticket ist noch nicht bestätigt.",
+      checkedInAt: "Check-in registriert am",
+      experience: "Erlebnis",
+      boat: "Boot",
+      experienceDate: "Datum des Erlebnisses",
+      time: "Uhrzeit",
+      guests: "Gäste",
+      seatsUsed: "Belegte Plätze",
+      booking: "Buchung",
+      holder: "Buchungsinhaber",
+      name: "Name",
+      phone: "Telefon",
+      notProvided: "Nicht angegeben",
+      code: "Code",
+      channel: "Kanal",
+      bookingDate: "Buchungsdatum",
+      total: "Gesamt",
+      paid: "Bezahlt",
+      balanceOnSite: "Restbetrag vor Ort",
+      balanceNote: "vor der Abfahrt vor Ort zu bezahlen",
+    };
+  }
+
   if (locale === "fr") {
     return {
       bookingArea: "Espace réservation",

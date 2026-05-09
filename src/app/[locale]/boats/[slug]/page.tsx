@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   ArrowLeft,
   Bath,
@@ -47,20 +47,23 @@ function copy(locale: string) {
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return {
-    allBoats: isEs ? "Todos los barcos" : isFr ? "Tous les bateaux" : isEn ? "All boats" : "Tutte le barche",
-    specs: isEs ? "A bordo" : isFr ? "À bord" : isEn ? "On board" : "A bordo",
-    usageEyebrow: isEs ? "Uso ideal" : isFr ? "Usage idéal" : isEn ? "Best use" : "Utilizzo",
-    usageTitle: isEs ? "Cuándo elegir este barco" : isFr ? "Quand choisir ce bateau" : isEn ? "When to choose this boat" : "Quando scegliere questa barca",
-    routesEyebrow: isEs ? "Rutas" : isFr ? "Routes" : isEn ? "Routes" : "Rotte",
-    routesTitle: isEs ? "Cómo se mueve por las Egadi" : isFr ? "Comment il navigue aux Égades" : isEn ? "How it moves through the Egadi" : "Come si muove tra le Egadi",
-    gallery: isEs ? "Galería del barco" : isFr ? "Galerie du bateau" : isEn ? "Boat gallery" : "Gallery della barca",
+    allBoats: isEs ? "Todos los barcos" : isFr ? "Tous les bateaux" : isDe ? "Alle Boote" : isEn ? "All boats" : "Tutte le barche",
+    specs: isEs ? "A bordo" : isFr ? "À bord" : isDe ? "An Bord" : isEn ? "On board" : "A bordo",
+    usageEyebrow: isEs ? "Uso ideal" : isFr ? "Usage idéal" : isDe ? "Ideale Nutzung" : isEn ? "Best use" : "Utilizzo",
+    usageTitle: isEs ? "Cuándo elegir este barco" : isFr ? "Quand choisir ce bateau" : isDe ? "Wann Sie dieses Boot wählen sollten" : isEn ? "When to choose this boat" : "Quando scegliere questa barca",
+    routesEyebrow: isEs ? "Rutas" : isFr ? "Routes" : isDe ? "Routen" : isEn ? "Routes" : "Rotte",
+    routesTitle: isEs ? "Cómo se mueve por las Egadi" : isFr ? "Comment il navigue aux Égades" : isDe ? "Wie es zwischen den Ägadischen Inseln navigiert" : isEn ? "How it moves through the Egadi" : "Come si muove tra le Egadi",
+    gallery: isEs ? "Galería del barco" : isFr ? "Galerie du bateau" : isDe ? "Bootsgalerie" : isEn ? "Boat gallery" : "Gallery della barca",
     faqEyebrow: isEn ? "FAQ" : "FAQ",
-    faqTitle: isEs ? "Preguntas sobre este barco" : isFr ? "Questions sur ce bateau" : isEn ? "Questions about this boat" : "Domande su questa barca",
+    faqTitle: isEs ? "Preguntas sobre este barco" : isFr ? "Questions sur ce bateau" : isDe ? "Fragen zu diesem Boot" : isEn ? "Questions about this boat" : "Domande su questa barca",
     routeIntro: isEs
       ? "La ruta no es una lista rígida: se adapta a la duración de la experiencia, al estado del mar y a las calas más cómodas del día."
       : isFr
       ? "La route n'est jamais une liste rigide : elle s'adapte à la durée de l'expérience, à l'état de la mer et aux criques les plus confortables du jour."
+      : isDe
+      ? "Die Route ist keine starre Liste: Sie richtet sich nach der Dauer des Erlebnisses, den Seebedingungen und den angenehmsten Buchten des Tages."
       : isEn
       ? "The route is never treated as a rigid checklist: it is shaped around the experience length, sea conditions and the most comfortable coves of the day."
       : "La rotta non viene trattata come una lista rigida: viene costruita in base alla durata dell'esperienza, al mare e alle cale più comode della giornata.",
@@ -68,6 +71,8 @@ function copy(locale: string) {
       ? "Una forma rápida de entender si este es el barco adecuado antes de elegir la experiencia."
       : isFr
       ? "Une façon rapide de comprendre si ce bateau est le bon choix avant de sélectionner l'expérience."
+      : isDe
+      ? "Eine schnelle Orientierung, ob dieses Boot zu Ihnen passt, bevor Sie das Erlebnis auswählen."
       : isEn
       ? "A quick way to understand whether this boat is the right fit before choosing the experience."
       : "Un modo rapido per capire se questa è la barca giusta prima di scegliere l'esperienza.",
@@ -75,6 +80,8 @@ function copy(locale: string) {
       ? "Respuestas claras para quienes eligen el barco sin necesitar conocimientos técnicos de náutica."
       : isFr
       ? "Des réponses claires pour choisir le bateau sans connaissances nautiques techniques."
+      : isDe
+      ? "Klare Antworten für Gäste, die ein Boot wählen möchten, ohne nautische Fachdetails kennen zu müssen."
       : isEn
       ? "Clear answers for guests who are choosing the boat without needing technical nautical knowledge."
       : "Risposte chiare per chi sta scegliendo la barca senza dover conoscere dettagli nautici tecnici.",
@@ -147,7 +154,7 @@ export default async function BoatDetailPage({
   const { locale, slug } = await params;
   const boat = getBoatContent(resolveBoatIdFromSlug(slug), locale);
   if (!boat) notFound();
-  if (slug !== boat.slug) redirect(localizedPath(locale, `/boats/${boat.slug}`));
+  if (slug !== boat.slug) permanentRedirect(localizedPath(locale, `/boats/${boat.slug}`));
 
   const t = copy(locale);
   const base = env.APP_URL.replace(/\/$/, "");
@@ -166,6 +173,7 @@ export default async function BoatDetailPage({
       {
         "@type": ["Product", "Vehicle"],
         "@id": `${pageUrl}#boat`,
+        inLanguage: locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : locale === "en" ? "en-US" : "it-IT",
         name: boat.seoTitle,
         description: `${boat.seoDescription} ${boat.detail.paragraphs.join(" ")}`,
         image: boat.gallery.map((item) => absoluteUrl(item.src)),

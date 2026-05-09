@@ -18,12 +18,14 @@ interface TestimonialsColumnProps {
   className?: string;
   testimonials: TestimonialColumnItem[];
   duration?: number;
+  locale?: string;
 }
 
 export function TestimonialsColumn({
   className,
   testimonials,
   duration = 10,
+  locale = "it",
 }: TestimonialsColumnProps) {
   const initialsFor = (name: string) =>
     name
@@ -35,6 +37,26 @@ export function TestimonialsColumn({
 
   const starsFor = (rating: number) =>
     Array.from({ length: Math.max(0, Math.min(5, Math.round(rating))) });
+  const profileAlt = (name: string) =>
+    locale === "de"
+      ? `Profilfoto von ${name}`
+      : locale === "fr"
+        ? `Photo de profil de ${name}`
+        : locale === "es"
+          ? `Foto de perfil de ${name}`
+          : locale === "en"
+            ? `Profile photo of ${name}`
+            : `Foto profilo di ${name}`;
+  const ratingLabel = (rating: number) =>
+    locale === "de"
+      ? `Bewertung ${rating} von 5`
+      : locale === "fr"
+        ? `Note ${rating} sur 5`
+        : locale === "es"
+          ? `Valoración ${rating} de 5`
+          : locale === "en"
+            ? `Rating ${rating} out of 5`
+            : `Valutazione ${rating} su 5`;
 
   return (
     <div className={cn("overflow-hidden", className)}>
@@ -63,7 +85,7 @@ export function TestimonialsColumn({
                       width={40}
                       height={40}
                       src={image}
-                      alt={`Foto profilo di ${name}`}
+                      alt={profileAlt(name)}
                       className="h-10 w-10 rounded-full object-cover"
                       loading="lazy"
                       referrerPolicy="no-referrer"
@@ -81,7 +103,7 @@ export function TestimonialsColumn({
                       {typeof rating === "number" ? (
                         <span
                           className="flex items-center gap-0.5"
-                          aria-label={`Valutazione ${rating} su 5`}
+                          aria-label={ratingLabel(rating)}
                         >
                           {starsFor(rating).map((_, starIndex) => (
                             <Star

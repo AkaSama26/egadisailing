@@ -49,6 +49,7 @@ const weekDays = {
   en: ["M", "T", "W", "T", "F", "S", "S"],
   es: ["L", "M", "X", "J", "V", "S", "D"],
   fr: ["L", "M", "M", "J", "V", "S", "D"],
+  de: ["M", "D", "M", "D", "F", "S", "S"],
 };
 
 function subscribeHydration() {
@@ -101,11 +102,22 @@ function calendarRange(key: string) {
 
 function monthLabel(key: string, locale: string): string {
   const date = new Date(`${key}-01T00:00:00.000Z`);
-  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-US" : "it-IT", {
+  return new Intl.DateTimeFormat(
+    locale === "es"
+      ? "es-ES"
+      : locale === "fr"
+        ? "fr-FR"
+        : locale === "de"
+          ? "de-DE"
+          : locale === "en"
+            ? "en-US"
+            : "it-IT",
+    {
     month: "long",
     year: "numeric",
     timeZone: "UTC",
-  }).format(date);
+    },
+  ).format(date);
 }
 
 function iconForInfo(icon: BookingInfoItem["icon"]) {
@@ -292,10 +304,12 @@ export function ExperienceBookingCard({
             locale === "es"
               ? "Calendario temporalmente no disponible."
               : locale === "fr"
-              ? "Calendrier temporairement indisponible."
-              : locale === "en"
-              ? "Calendar temporarily unavailable."
-              : "Calendario temporaneamente non disponibile.",
+                ? "Calendrier temporairement indisponible."
+                : locale === "de"
+                  ? "Kalender vorübergehend nicht verfügbar."
+                  : locale === "en"
+                    ? "Calendar temporarily unavailable."
+                    : "Calendario temporaneamente non disponibile.",
           );
         }
       })
@@ -332,7 +346,17 @@ export function ExperienceBookingCard({
             onClick={() => setVisibleMonth((month) => shiftMonth(month, -1))}
             disabled={!hydrated || visibleMonth <= currentMonth}
             className="inline-flex size-7 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 disabled:opacity-35 sm:size-8"
-            aria-label={locale === "es" ? "Mes anterior" : locale === "fr" ? "Mois précédent" : locale === "en" ? "Previous month" : "Mese precedente"}
+            aria-label={
+              locale === "es"
+                ? "Mes anterior"
+                : locale === "fr"
+                  ? "Mois précédent"
+                  : locale === "de"
+                    ? "Vorheriger Monat"
+                    : locale === "en"
+                      ? "Previous month"
+                      : "Mese precedente"
+            }
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
@@ -342,24 +366,45 @@ export function ExperienceBookingCard({
               : locale === "es"
                 ? "Calendario"
                 : locale === "fr"
-                ? "Calendrier"
-                : locale === "en"
-                ? "Calendar"
-                : "Calendario"}
+                  ? "Calendrier"
+                  : locale === "de"
+                    ? "Kalender"
+                    : locale === "en"
+                      ? "Calendar"
+                      : "Calendario"}
           </p>
           <button
             type="button"
             onClick={() => setVisibleMonth((month) => shiftMonth(month, 1))}
             disabled={!hydrated}
             className="inline-flex size-7 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 sm:size-8"
-            aria-label={locale === "es" ? "Mes siguiente" : locale === "fr" ? "Mois suivant" : locale === "en" ? "Next month" : "Mese successivo"}
+            aria-label={
+              locale === "es"
+                ? "Mes siguiente"
+                : locale === "fr"
+                  ? "Mois suivant"
+                  : locale === "de"
+                    ? "Nächster Monat"
+                    : locale === "en"
+                      ? "Next month"
+                      : "Mese successivo"
+            }
           >
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </div>
 
         <div className="grid grid-cols-7 gap-0.5 text-center text-[9px] font-bold uppercase text-slate-500 sm:gap-1 sm:text-[10px]">
-          {(locale === "es" ? weekDays.es : locale === "fr" ? weekDays.fr : locale === "en" ? weekDays.en : weekDays.it).map((day, index) => (
+          {(locale === "es"
+            ? weekDays.es
+            : locale === "fr"
+              ? weekDays.fr
+              : locale === "de"
+                ? weekDays.de
+                : locale === "en"
+                  ? weekDays.en
+                  : weekDays.it
+          ).map((day, index) => (
             <div key={`${day}-${index}`} className="py-1">
               {day}
             </div>
@@ -400,20 +445,52 @@ export function ExperienceBookingCard({
         <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            {locale === "es" ? "Libre" : locale === "fr" ? "Libre" : locale === "en" ? "Free" : "Libera"}
+            {locale === "es"
+              ? "Libre"
+              : locale === "fr"
+                ? "Libre"
+                : locale === "de"
+                  ? "Frei"
+                  : locale === "en"
+                    ? "Free"
+                    : "Libera"}
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-full bg-amber-500" aria-hidden="true" />
-            {locale === "es" ? "Bajo petición" : locale === "fr" ? "Sur demande" : locale === "en" ? "On request" : "Su richiesta"}
+            {locale === "es"
+              ? "Bajo petición"
+              : locale === "fr"
+                ? "Sur demande"
+                : locale === "de"
+                  ? "Auf Anfrage"
+                  : locale === "en"
+                    ? "On request"
+                    : "Su richiesta"}
           </span>
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-full bg-slate-300" aria-hidden="true" />
-            {locale === "es" ? "No disponible" : locale === "fr" ? "Indisponible" : locale === "en" ? "Unavailable" : "Non disponibile"}
+            {locale === "es"
+              ? "No disponible"
+              : locale === "fr"
+                ? "Indisponible"
+                : locale === "de"
+                  ? "Nicht verfügbar"
+                  : locale === "en"
+                    ? "Unavailable"
+                    : "Non disponibile"}
           </span>
         </div>
         {selectedDate && (
           <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
-            {locale === "es" ? "Fecha seleccionada" : locale === "fr" ? "Date sélectionnée" : locale === "en" ? "Selected date" : "Data selezionata"}: {selectedDate}
+            {locale === "es"
+              ? "Fecha seleccionada"
+              : locale === "fr"
+                ? "Date sélectionnée"
+                : locale === "de"
+                  ? "Ausgewähltes Datum"
+                  : locale === "en"
+                    ? "Selected date"
+                    : "Data selezionata"}: {selectedDate}
           </p>
         )}
         {error && <p className="mt-3 text-xs font-semibold text-red-700">{error}</p>}

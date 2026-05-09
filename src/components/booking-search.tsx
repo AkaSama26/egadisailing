@@ -593,10 +593,10 @@ export function BookingSearch({ services }: BookingSearchProps) {
           type="submit"
           disabled={submitDisabled}
           className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#0ea5e9] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#0284c7] disabled:cursor-not-allowed disabled:opacity-50 md:h-full md:w-16 md:px-0"
-          aria-label={locale === "es" ? "Buscar" : locale === "fr" ? "Rechercher" : locale === "en" ? "Search" : "Cerca"}
+          aria-label={locale === "es" ? "Buscar" : locale === "fr" ? "Rechercher" : locale === "de" ? "Suchen" : locale === "en" ? "Search" : "Cerca"}
         >
           <Search className="w-5 h-5" />
-          <span className="md:sr-only">{locale === "es" ? "Buscar" : locale === "fr" ? "Rechercher" : locale === "en" ? "Search" : "Cerca"}</span>
+          <span className="md:sr-only">{locale === "es" ? "Buscar" : locale === "fr" ? "Rechercher" : locale === "de" ? "Suchen" : locale === "en" ? "Search" : "Cerca"}</span>
         </motion.button>
       </div>
       {charterIsTooShort && (

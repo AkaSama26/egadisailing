@@ -41,31 +41,34 @@ const localeFlagCodes: Record<string, FlagCode> = {
   en: "GB",
   es: "ES",
   fr: "FR",
+  de: "DE",
 };
 
 const localizedSegments: Record<string, Record<string, string>> = {
-  about: { it: "about", en: "about", es: "sobre-nosotros", fr: "a-propos" },
-  boats: { it: "boats", en: "boats", es: "barcos", fr: "bateaux" },
-  contacts: { it: "contacts", en: "contacts", es: "contacto", fr: "contact" },
+  about: { it: "about", en: "about", es: "sobre-nosotros", fr: "a-propos", de: "ueber-uns" },
+  boats: { it: "boats", en: "boats", es: "barcos", fr: "bateaux", de: "boote" },
+  contacts: { it: "contacts", en: "contacts", es: "contacto", fr: "contact", de: "kontakt" },
   "cookie-policy": {
     it: "cookie-policy",
     en: "cookie-policy",
     es: "politica-de-cookies",
     fr: "politique-de-cookies",
+    de: "cookie-richtlinie",
   },
-  experiences: { it: "experiences", en: "experiences", es: "experiencias", fr: "experiences" },
-  faq: { it: "faq", en: "faq", es: "preguntas-frecuentes", fr: "questions-frequentes" },
-  islands: { it: "islands", en: "islands", es: "islas", fr: "iles" },
-  prenota: { it: "prenota", en: "prenota", es: "reservar", fr: "reserver" },
-  privacy: { it: "privacy", en: "privacy", es: "privacidad", fr: "confidentialite" },
+  experiences: { it: "experiences", en: "experiences", es: "experiencias", fr: "experiences", de: "erlebnisse" },
+  faq: { it: "faq", en: "faq", es: "preguntas-frecuentes", fr: "questions-frequentes", de: "haeufige-fragen" },
+  islands: { it: "islands", en: "islands", es: "islas", fr: "iles", de: "inseln" },
+  prenota: { it: "prenota", en: "prenota", es: "reservar", fr: "reserver", de: "buchen" },
+  privacy: { it: "privacy", en: "privacy", es: "privacidad", fr: "confidentialite", de: "datenschutz" },
   "recupera-prenotazione": {
     it: "recupera-prenotazione",
     en: "recupera-prenotazione",
     es: "recuperar-reserva",
     fr: "retrouver-reservation",
+    de: "buchung-finden",
   },
-  terms: { it: "terms", en: "terms", es: "terminos-y-condiciones", fr: "conditions-generales" },
-  ticket: { it: "ticket", en: "ticket", es: "billete", fr: "billet" },
+  terms: { it: "terms", en: "terms", es: "terminos-y-condiciones", fr: "conditions-generales", de: "agb" },
+  ticket: { it: "ticket", en: "ticket", es: "billete", fr: "billet", de: "ticket" },
 };
 
 const segmentAliases = new Map(
@@ -80,31 +83,36 @@ const experienceSlugsByService: Record<string, Record<string, string>> = {
     en: "exclusive-experience",
     es: "chef-a-bordo-neel-47",
     fr: "chef-a-bord-neel-47",
+    de: "chef-an-bord-neel-47",
   },
-  "cabin-charter": { it: "charter", en: "charter", es: "charter-islas-egadi", fr: "charter-iles-egades" },
+  "cabin-charter": { it: "charter", en: "charter", es: "charter-islas-egadi", fr: "charter-iles-egades", de: "charter-aegadische-inseln" },
   "boat-shared-full-day": {
     it: "boat-shared-full-day",
     en: "boat-shared-full-day",
     es: "excursion-compartida-islas-egadi-8-horas",
     fr: "excursion-partagee-iles-egades-8-heures",
+    de: "geteilte-bootstour-aegadische-inseln-8-stunden",
   },
   "boat-exclusive-full-day": {
     it: "boat-exclusive-full-day",
     en: "boat-exclusive-full-day",
     es: "excursion-privada-islas-egadi-8-horas",
     fr: "excursion-privee-iles-egades-8-heures",
+    de: "private-bootstour-aegadische-inseln-8-stunden",
   },
   "boat-exclusive-morning": {
     it: "boat-exclusive-morning",
     en: "boat-exclusive-morning",
     es: "excursion-privada-islas-egadi-4-horas-manana",
     fr: "excursion-privee-iles-egades-4-heures-matin",
+    de: "private-bootstour-aegadische-inseln-4-stunden-vormittag",
   },
   "boat-exclusive-afternoon": {
     it: "boat-exclusive-afternoon",
     en: "boat-exclusive-afternoon",
     es: "excursion-privada-islas-egadi-4-horas-tarde",
     fr: "excursion-privee-iles-egades-4-heures-apres-midi",
+    de: "private-bootstour-aegadische-inseln-4-stunden-nachmittag",
   },
 };
 
@@ -137,14 +145,15 @@ function switchPathLocale(pathname: string, newLocale: string) {
   if (
     segments[0] === localizedSegments.prenota[newLocale] &&
     segments[1] === "success" &&
-    (newLocale === "es" || newLocale === "fr")
+    (newLocale === "es" || newLocale === "fr" || newLocale === "de")
   ) {
-    segments[1] = newLocale === "es" ? "confirmacion" : "confirmation";
+    segments[1] = newLocale === "es" ? "confirmacion" : newLocale === "de" ? "bestaetigung" : "confirmation";
   } else if (
     segments[0] === localizedSegments.prenota[newLocale] &&
-    (segments[1] === "confirmacion" || segments[1] === "confirmation") &&
+    (segments[1] === "confirmacion" || segments[1] === "confirmation" || segments[1] === "bestaetigung") &&
     newLocale !== "es" &&
-    newLocale !== "fr"
+    newLocale !== "fr" &&
+    newLocale !== "de"
   ) {
     segments[1] = "success";
   }

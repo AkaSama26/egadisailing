@@ -24,6 +24,8 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
         ? `Reserva cancelada · ${data.confirmationCode}`
         : locale === "fr"
           ? `Réservation annulée · ${data.confirmationCode}`
+          : locale === "de"
+            ? `Buchung storniert · ${data.confirmationCode}`
           : `Prenotazione cancellata · ${data.confirmationCode}`;
   const refundBlock = data.refundAmount
     ? `<p><strong>${
@@ -33,6 +35,8 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
             ? "Reembolso previsto"
             : locale === "fr"
               ? "Remboursement prévu"
+              : locale === "de"
+                ? "Voraussichtliche Erstattung"
               : "Rimborso previsto"
       }:</strong> ${escapeHtml(data.refundAmount)}</p>`
     : `<p>${
@@ -42,6 +46,8 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
             ? "Si corresponde un reembolso, te contactaremos con los detalles operativos."
             : locale === "fr"
               ? "Si un remboursement est prévu, nous vous contacterons avec les détails pratiques."
+              : locale === "de"
+                ? "Falls eine Erstattung vorgesehen ist, kontaktieren wir Sie mit den praktischen Details."
               : "Se e' previsto un rimborso, ti contatteremo con i dettagli operativi."
       }</p>`;
   const retainedBlock = data.retainedAmount
@@ -52,6 +58,8 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
             ? "Importe retenido según la política"
             : locale === "fr"
               ? "Montant retenu selon la politique"
+              : locale === "de"
+                ? "Gemäß Richtlinie einbehaltener Betrag"
               : "Importo trattenuto secondo policy"
       }:</strong> ${escapeHtml(data.retainedAmount)}</p>`
     : "";
@@ -63,6 +71,8 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
             ? "Política aplicada"
             : locale === "fr"
               ? "Politique appliquée"
+              : locale === "de"
+                ? "Angewendete Richtlinie"
               : "Policy applicata"
       }: ${escapeHtml(data.policyLabel)}</p>`
     : "";
@@ -75,6 +85,8 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
           ? "Reserva cancelada"
           : locale === "fr"
             ? "Réservation annulée"
+            : locale === "de"
+              ? "Buchung storniert"
             : "Prenotazione cancellata",
     bodyHtml: `
       <p>${escapeHtml(emailGreeting(locale, data.customerName))}</p>
@@ -85,6 +97,8 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
             ? `la reserva <strong>${escapeHtml(data.confirmationCode)}</strong> para <strong>${escapeHtml(data.serviceName)}</strong> del <strong>${escapeHtml(data.startDate)}</strong> ha sido cancelada.`
             : locale === "fr"
               ? `la réservation <strong>${escapeHtml(data.confirmationCode)}</strong> pour <strong>${escapeHtml(data.serviceName)}</strong> du <strong>${escapeHtml(data.startDate)}</strong> a été annulée.`
+              : locale === "de"
+                ? `die Buchung <strong>${escapeHtml(data.confirmationCode)}</strong> für <strong>${escapeHtml(data.serviceName)}</strong> am <strong>${escapeHtml(data.startDate)}</strong> wurde storniert.`
               : `la prenotazione <strong>${escapeHtml(data.confirmationCode)}</strong> per <strong>${escapeHtml(data.serviceName)}</strong> del <strong>${escapeHtml(data.startDate)}</strong> e' stata cancellata.`
       }</p>
       ${refundBlock}
@@ -97,6 +111,8 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
             ? `Para cualquier duda, responde a este email o escribe a ${escapeHtml(data.contactEmail)}.`
             : locale === "fr"
               ? `Pour toute question, répondez à cet email ou écrivez à ${escapeHtml(data.contactEmail)}.`
+              : locale === "de"
+                ? `Bei Fragen antworten Sie auf diese E-Mail oder schreiben Sie an ${escapeHtml(data.contactEmail)}.`
               : `Per qualsiasi dubbio puoi rispondere a questa email o scrivere a ${escapeHtml(data.contactEmail)}.`
       }</p>
     `,
@@ -107,12 +123,14 @@ export function customerCancellationTemplate(data: CustomerCancellationData) {
           ? "Abrir área de reservas"
           : locale === "fr"
             ? "Ouvrir l'espace réservation"
+            : locale === "de"
+              ? "Buchungsbereich öffnen"
             : "Apri area prenotazioni",
     ctaUrl: data.bookingPortalUrl,
   });
   const text = `${emailGreeting(locale, data.customerName)}
 ${subject}: ${data.serviceName} ${data.startDate}.
-${data.refundAmount ? `${locale === "it" ? "Rimborso previsto" : locale === "es" ? "Reembolso previsto" : locale === "fr" ? "Remboursement prévu" : "Expected refund"}: ${data.refundAmount}\n` : ""}${data.retainedAmount ? `${locale === "it" ? "Importo trattenuto" : locale === "es" ? "Importe retenido" : locale === "fr" ? "Montant retenu" : "Amount retained"}: ${data.retainedAmount}\n` : ""}${data.policyLabel ? `Policy: ${data.policyLabel}\n` : ""}${locale === "it" ? "Area prenotazioni" : locale === "es" ? "Área de reservas" : locale === "fr" ? "Espace réservation" : "Booking area"}: ${data.bookingPortalUrl}`;
+${data.refundAmount ? `${locale === "it" ? "Rimborso previsto" : locale === "es" ? "Reembolso previsto" : locale === "fr" ? "Remboursement prévu" : locale === "de" ? "Voraussichtliche Erstattung" : "Expected refund"}: ${data.refundAmount}\n` : ""}${data.retainedAmount ? `${locale === "it" ? "Importo trattenuto" : locale === "es" ? "Importe retenido" : locale === "fr" ? "Montant retenu" : locale === "de" ? "Einbehaltener Betrag" : "Amount retained"}: ${data.retainedAmount}\n` : ""}${data.policyLabel ? `Policy: ${data.policyLabel}\n` : ""}${locale === "it" ? "Area prenotazioni" : locale === "es" ? "Área de reservas" : locale === "fr" ? "Espace réservation" : locale === "de" ? "Buchungsbereich" : "Booking area"}: ${data.bookingPortalUrl}`;
   return { subject, html, text };
 }
 
@@ -134,6 +152,8 @@ export function refundReceiptTemplate(data: RefundReceiptData) {
         ? data.refundType === "full" ? "completo" : "parcial"
         : locale === "fr"
           ? data.refundType === "full" ? "complet" : "partiel"
+          : locale === "de"
+            ? data.refundType === "full" ? "vollständig" : "teilweise"
           : data.refundType === "full" ? "completo" : "parziale";
   const subject =
     locale === "en"
@@ -142,6 +162,8 @@ export function refundReceiptTemplate(data: RefundReceiptData) {
         ? `Reembolso ${refundKind} · ${data.confirmationCode}`
         : locale === "fr"
           ? `Remboursement ${refundKind} · ${data.confirmationCode}`
+          : locale === "de"
+            ? `Erstattung ${refundKind} · ${data.confirmationCode}`
           : `Rimborso ${refundKind} · ${data.confirmationCode}`;
   const html = emailLayout({
     locale,
@@ -152,6 +174,8 @@ export function refundReceiptTemplate(data: RefundReceiptData) {
           ? "Reembolso procesado"
           : locale === "fr"
             ? "Remboursement traité"
+            : locale === "de"
+              ? "Erstattung bearbeitet"
             : "Rimborso elaborato",
     bodyHtml: `
       <p>${escapeHtml(emailGreeting(locale, data.customerName))}</p>
@@ -162,6 +186,8 @@ export function refundReceiptTemplate(data: RefundReceiptData) {
             ? `hemos procesado un reembolso ${refundKind} para la reserva <strong>${escapeHtml(data.confirmationCode)}</strong>.`
             : locale === "fr"
               ? `nous avons traité un remboursement ${refundKind} pour la réservation <strong>${escapeHtml(data.confirmationCode)}</strong>.`
+              : locale === "de"
+                ? `wir haben eine ${refundKind} Erstattung für die Buchung <strong>${escapeHtml(data.confirmationCode)}</strong> bearbeitet.`
               : `abbiamo elaborato un rimborso ${refundKind} per la prenotazione <strong>${escapeHtml(data.confirmationCode)}</strong>.`
       }</p>
       <p><strong>${
@@ -171,6 +197,8 @@ export function refundReceiptTemplate(data: RefundReceiptData) {
             ? "Importe reembolsado"
             : locale === "fr"
               ? "Montant remboursé"
+              : locale === "de"
+                ? "Erstatteter Betrag"
               : "Importo rimborsato"
       }:</strong> ${escapeHtml(data.refundAmount)}</p>
       <p style="color:#6b7280;font-size:14px;">${
@@ -180,6 +208,8 @@ export function refundReceiptTemplate(data: RefundReceiptData) {
             ? "El plazo de abono depende del banco de tu tarjeta, normalmente 5-10 días laborables."
             : locale === "fr"
               ? "Le délai de crédit dépend de la banque de votre carte, généralement 5 à 10 jours ouvrables."
+              : locale === "de"
+                ? "Die Gutschrift hängt von Ihrer Kartenbank ab, normalerweise 5-10 Werktage."
               : "I tempi di accredito dipendono dalla banca della carta, di solito 5-10 giorni lavorativi."
       }</p>
     `,
@@ -190,10 +220,12 @@ export function refundReceiptTemplate(data: RefundReceiptData) {
           ? "Abrir área de reservas"
           : locale === "fr"
             ? "Ouvrir l'espace réservation"
+            : locale === "de"
+              ? "Buchungsbereich öffnen"
             : "Apri area prenotazioni",
     ctaUrl: data.bookingPortalUrl,
   });
-  const text = `${subject}: ${data.refundAmount}. ${locale === "it" ? "Area prenotazioni" : locale === "es" ? "Área de reservas" : locale === "fr" ? "Espace réservation" : "Booking area"}: ${data.bookingPortalUrl}`;
+  const text = `${subject}: ${data.refundAmount}. ${locale === "it" ? "Area prenotazioni" : locale === "es" ? "Área de reservas" : locale === "fr" ? "Espace réservation" : locale === "de" ? "Buchungsbereich" : "Booking area"}: ${data.bookingPortalUrl}`;
   return { subject, html, text };
 }
 
@@ -217,6 +249,8 @@ export function changeRequestReceivedTemplate(data: ChangeRequestData) {
         ? `Solicitud de cambio de fecha recibida · ${data.confirmationCode}`
         : locale === "fr"
           ? `Demande de changement de date reçue · ${data.confirmationCode}`
+          : locale === "de"
+            ? `Anfrage zur Datumsänderung erhalten · ${data.confirmationCode}`
           : `Richiesta cambio data ricevuta · ${data.confirmationCode}`;
   const html = emailLayout({
     locale,
@@ -227,6 +261,8 @@ export function changeRequestReceivedTemplate(data: ChangeRequestData) {
           ? "Solicitud de cambio de fecha recibida"
           : locale === "fr"
             ? "Demande de changement de date reçue"
+            : locale === "de"
+              ? "Anfrage zur Datumsänderung erhalten"
             : "Richiesta cambio data ricevuta",
     bodyHtml: `
       <p>${escapeHtml(emailGreeting(locale, data.customerName))}</p>
@@ -237,6 +273,8 @@ export function changeRequestReceivedTemplate(data: ChangeRequestData) {
             ? `hemos recibido tu solicitud de cambio de fecha para <strong>${escapeHtml(data.serviceName)}</strong>.`
             : locale === "fr"
               ? `nous avons reçu votre demande de changement de date pour <strong>${escapeHtml(data.serviceName)}</strong>.`
+              : locale === "de"
+                ? `wir haben Ihre Anfrage zur Datumsänderung für <strong>${escapeHtml(data.serviceName)}</strong> erhalten.`
               : `abbiamo ricevuto la tua richiesta di cambio data per <strong>${escapeHtml(data.serviceName)}</strong>.`
       }</p>
       <p>${
@@ -246,9 +284,11 @@ export function changeRequestReceivedTemplate(data: ChangeRequestData) {
             ? "De"
             : locale === "fr"
               ? "Du"
+              : locale === "de"
+                ? "Von"
               : "Da"
       } <strong>${escapeHtml(data.originalDate)}</strong> ${
-        locale === "fr" ? "au" : locale === "en" ? "to" : "a"
+        locale === "fr" ? "au" : locale === "en" ? "to" : locale === "de" ? "auf" : "a"
       } <strong>${escapeHtml(data.requestedDate)}</strong>.</p>
       <p>${
         locale === "en"
@@ -257,6 +297,8 @@ export function changeRequestReceivedTemplate(data: ChangeRequestData) {
             ? "Te enviaremos una confirmación en cuanto el equipo haya verificado disponibilidad y operativa."
             : locale === "fr"
               ? "Nous vous enverrons une confirmation dès que l'équipe aura vérifié les disponibilités et l'organisation."
+              : locale === "de"
+                ? "Wir senden Ihnen eine Bestätigung, sobald das Team Verfügbarkeit und Ablauf geprüft hat."
               : "Ti invieremo una conferma appena lo staff avra' verificato disponibilita' e operativita'."
       }</p>
     `,
@@ -267,6 +309,8 @@ export function changeRequestReceivedTemplate(data: ChangeRequestData) {
           ? "Abrir área de reservas"
           : locale === "fr"
             ? "Ouvrir l'espace réservation"
+            : locale === "de"
+              ? "Buchungsbereich öffnen"
             : "Apri area prenotazioni",
     ctaUrl: data.bookingPortalUrl,
   });
@@ -283,6 +327,8 @@ export function changeRequestApprovedTemplate(data: ChangeRequestData) {
         ? `Cambio de fecha aprobado · ${data.confirmationCode}`
         : locale === "fr"
           ? `Changement de date approuvé · ${data.confirmationCode}`
+          : locale === "de"
+            ? `Datumsänderung bestätigt · ${data.confirmationCode}`
           : `Cambio data approvato · ${data.confirmationCode}`;
   const html = emailLayout({
     locale,
@@ -293,6 +339,8 @@ export function changeRequestApprovedTemplate(data: ChangeRequestData) {
           ? "Cambio de fecha aprobado"
           : locale === "fr"
             ? "Changement de date approuvé"
+            : locale === "de"
+              ? "Datumsänderung bestätigt"
             : "Cambio data approvato",
     bodyHtml: `
       <p>${escapeHtml(emailGreeting(locale, data.customerName))}</p>
@@ -303,6 +351,8 @@ export function changeRequestApprovedTemplate(data: ChangeRequestData) {
             ? `el cambio de fecha de la reserva <strong>${escapeHtml(data.confirmationCode)}</strong> ha sido aprobado.`
             : locale === "fr"
               ? `le changement de date de la réservation <strong>${escapeHtml(data.confirmationCode)}</strong> a été approuvé.`
+              : locale === "de"
+                ? `die Datumsänderung für die Buchung <strong>${escapeHtml(data.confirmationCode)}</strong> wurde bestätigt.`
               : `il cambio data della prenotazione <strong>${escapeHtml(data.confirmationCode)}</strong> e' stato approvato.`
       }</p>
       <p>${
@@ -312,6 +362,8 @@ export function changeRequestApprovedTemplate(data: ChangeRequestData) {
             ? "Nueva fecha"
             : locale === "fr"
               ? "Nouvelle date"
+              : locale === "de"
+                ? "Neues Datum"
               : "Nuova data"
       }: <strong>${escapeHtml(data.requestedDate)}</strong>.</p>
     `,
@@ -322,10 +374,12 @@ export function changeRequestApprovedTemplate(data: ChangeRequestData) {
           ? "Abrir área de reservas"
           : locale === "fr"
             ? "Ouvrir l'espace réservation"
+            : locale === "de"
+              ? "Buchungsbereich öffnen"
             : "Apri area prenotazioni",
     ctaUrl: data.bookingPortalUrl,
   });
-  const text = `${subject}. ${locale === "it" ? "Nuova data" : locale === "es" ? "Nueva fecha" : locale === "fr" ? "Nouvelle date" : "New date"}: ${data.requestedDate}.`;
+  const text = `${subject}. ${locale === "it" ? "Nuova data" : locale === "es" ? "Nueva fecha" : locale === "fr" ? "Nouvelle date" : locale === "de" ? "Neues Datum" : "New date"}: ${data.requestedDate}.`;
   return { subject, html, text };
 }
 
@@ -338,9 +392,11 @@ export function changeRequestRejectedTemplate(data: ChangeRequestData) {
         ? `Cambio de fecha no disponible · ${data.confirmationCode}`
         : locale === "fr"
           ? `Changement de date non disponible · ${data.confirmationCode}`
+          : locale === "de"
+            ? `Datumsänderung nicht verfügbar · ${data.confirmationCode}`
           : `Cambio data non disponibile · ${data.confirmationCode}`;
   const note = data.adminNote
-    ? `<p><strong>${locale === "en" ? "Team note" : locale === "es" ? "Nota del equipo" : locale === "fr" ? "Note de l'équipe" : "Nota staff"}:</strong> ${escapeHtml(data.adminNote)}</p>`
+    ? `<p><strong>${locale === "en" ? "Team note" : locale === "es" ? "Nota del equipo" : locale === "fr" ? "Note de l'équipe" : locale === "de" ? "Hinweis des Teams" : "Nota staff"}:</strong> ${escapeHtml(data.adminNote)}</p>`
     : "";
   const html = emailLayout({
     locale,
@@ -351,6 +407,8 @@ export function changeRequestRejectedTemplate(data: ChangeRequestData) {
           ? "Cambio de fecha no disponible"
           : locale === "fr"
             ? "Changement de date non disponible"
+            : locale === "de"
+              ? "Datumsänderung nicht verfügbar"
             : "Cambio data non disponibile",
     bodyHtml: `
       <p>${escapeHtml(emailGreeting(locale, data.customerName))}</p>
@@ -361,6 +419,8 @@ export function changeRequestRejectedTemplate(data: ChangeRequestData) {
             ? `no podemos confirmar el cambio de fecha solicitado para la reserva <strong>${escapeHtml(data.confirmationCode)}</strong>.`
             : locale === "fr"
               ? `nous ne pouvons pas confirmer le changement de date demandé pour la réservation <strong>${escapeHtml(data.confirmationCode)}</strong>.`
+              : locale === "de"
+                ? `wir können die angefragte Datumsänderung für die Buchung <strong>${escapeHtml(data.confirmationCode)}</strong> nicht bestätigen.`
               : `non possiamo confermare il cambio data richiesto per la prenotazione <strong>${escapeHtml(data.confirmationCode)}</strong>.`
       }</p>
       <p>${
@@ -370,6 +430,8 @@ export function changeRequestRejectedTemplate(data: ChangeRequestData) {
             ? "Fecha solicitada"
             : locale === "fr"
               ? "Date demandée"
+              : locale === "de"
+                ? "Angefragtes Datum"
               : "Data richiesta"
       }: <strong>${escapeHtml(data.requestedDate)}</strong>.</p>
       ${note}
@@ -380,6 +442,8 @@ export function changeRequestRejectedTemplate(data: ChangeRequestData) {
             ? "Tu reserva sigue siendo válida en la fecha original"
             : locale === "fr"
               ? "Votre réservation reste valable à la date initiale"
+              : locale === "de"
+                ? "Ihre Buchung bleibt am ursprünglichen Datum gültig"
               : "La prenotazione resta valida sulla data originale"
       }: <strong>${escapeHtml(data.originalDate)}</strong>.</p>
     `,
@@ -390,33 +454,38 @@ export function changeRequestRejectedTemplate(data: ChangeRequestData) {
           ? "Abrir área de reservas"
           : locale === "fr"
             ? "Ouvrir l'espace réservation"
+            : locale === "de"
+              ? "Buchungsbereich öffnen"
             : "Apri area prenotazioni",
     ctaUrl: data.bookingPortalUrl,
   });
-  const text = `${subject}. ${locale === "it" ? "Data originale confermata" : locale === "es" ? "Fecha original confirmada" : locale === "fr" ? "Date initiale confirmée" : "Original date confirmed"}: ${data.originalDate}.${data.adminNote ? ` ${locale === "it" ? "Nota staff" : locale === "es" ? "Nota del equipo" : locale === "fr" ? "Note de l'équipe" : "Team note"}: ${data.adminNote}` : ""}`;
+  const text = `${subject}. ${locale === "it" ? "Data originale confermata" : locale === "es" ? "Fecha original confirmada" : locale === "fr" ? "Date initiale confirmée" : locale === "de" ? "Ursprüngliches Datum bestätigt" : "Original date confirmed"}: ${data.originalDate}.${data.adminNote ? ` ${locale === "it" ? "Nota staff" : locale === "es" ? "Nota del equipo" : locale === "fr" ? "Note de l'équipe" : locale === "de" ? "Hinweis des Teams" : "Team note"}: ${data.adminNote}` : ""}`;
   return { subject, html, text };
 }
 
 export interface ContactAutoReplyData {
   customerName: string;
   subject: string;
-  locale?: "it" | "en" | "es" | "fr";
+  locale?: "it" | "en" | "es" | "fr" | "de";
 }
 
 export function contactAutoReplyTemplate(data: ContactAutoReplyData) {
   const isEn = data.locale === "en";
   const isEs = data.locale === "es";
   const isFr = data.locale === "fr";
+  const isDe = data.locale === "de";
   const subject = isEs
     ? "Mensaje recibido · Egadisailing"
     : isFr
       ? "Message reçu · Egadisailing"
+    : isDe
+      ? "Nachricht erhalten · Egadisailing"
     : isEn
       ? "Message received · Egadisailing"
       : "Messaggio ricevuto · Egadisailing";
   const html = emailLayout({
     locale: data.locale,
-    heading: isEs ? "Mensaje recibido" : isFr ? "Message reçu" : isEn ? "Message received" : "Messaggio ricevuto",
+    heading: isEs ? "Mensaje recibido" : isFr ? "Message reçu" : isDe ? "Nachricht erhalten" : isEn ? "Message received" : "Messaggio ricevuto",
     bodyHtml: isEs
       ? `
         <p>Hola ${escapeHtml(data.customerName)},</p>
@@ -428,6 +497,12 @@ export function contactAutoReplyTemplate(data: ContactAutoReplyData) {
         <p>Bonjour ${escapeHtml(data.customerName)},</p>
         <p>nous avons reçu votre message : <strong>${escapeHtml(data.subject)}</strong>.</p>
         <p>Nous répondrons dès que possible, généralement sous 24 heures.</p>
+      `
+      : isDe
+      ? `
+        <p>Guten Tag ${escapeHtml(data.customerName)},</p>
+        <p>wir haben Ihre Nachricht erhalten: <strong>${escapeHtml(data.subject)}</strong>.</p>
+        <p>Wir antworten Ihnen so schnell wie möglich, normalerweise innerhalb von 24 Stunden.</p>
       `
       : isEn
       ? `
@@ -445,6 +520,8 @@ export function contactAutoReplyTemplate(data: ContactAutoReplyData) {
     ? `Hola ${data.customerName}, hemos recibido tu mensaje: ${data.subject}. Te responderemos en 24 horas.`
     : isFr
     ? `Bonjour ${data.customerName}, nous avons reçu votre message : ${data.subject}. Nous répondrons sous 24 heures.`
+    : isDe
+    ? `Guten Tag ${data.customerName}, wir haben Ihre Nachricht erhalten: ${data.subject}. Wir antworten Ihnen innerhalb von 24 Stunden.`
     : isEn
     ? `Hello ${data.customerName}, we have received your message: ${data.subject}. We will reply within 24 hours.`
     : `Ciao ${data.customerName}, abbiamo ricevuto il tuo messaggio: ${data.subject}. Ti risponderemo entro 24 ore.`;
@@ -470,6 +547,8 @@ export function preDepartureReminderTemplate(data: PreDepartureReminderData) {
         ? `Recordatorio de salida · ${data.confirmationCode}`
         : locale === "fr"
           ? `Rappel de départ · ${data.confirmationCode}`
+          : locale === "de"
+            ? `Erinnerung an die Abfahrt · ${data.confirmationCode}`
           : `Promemoria partenza · ${data.confirmationCode}`;
   const balance = data.balanceAmount
     ? `<p><strong>${
@@ -479,6 +558,8 @@ export function preDepartureReminderTemplate(data: PreDepartureReminderData) {
             ? "Saldo pendiente a pagar en el lugar"
             : locale === "fr"
               ? "Solde à régler sur place"
+              : locale === "de"
+                ? "Restbetrag vor Ort zu zahlen"
               : "Saldo da pagare in loco"
       }:</strong> ${escapeHtml(data.balanceAmount)}.</p>`
     : "";
@@ -491,6 +572,8 @@ export function preDepartureReminderTemplate(data: PreDepartureReminderData) {
           ? "Nos vemos pronto a bordo"
           : locale === "fr"
             ? "À très vite à bord"
+            : locale === "de"
+              ? "Bis bald an Bord"
             : "Ci vediamo presto a bordo",
     bodyHtml: `
       <p>${escapeHtml(emailGreeting(locale, data.customerName))}</p>
@@ -501,6 +584,8 @@ export function preDepartureReminderTemplate(data: PreDepartureReminderData) {
             ? `tu experiencia <strong>${escapeHtml(data.serviceName)}</strong> está prevista para el <strong>${escapeHtml(data.startDate)}</strong>.`
             : locale === "fr"
               ? `votre expérience <strong>${escapeHtml(data.serviceName)}</strong> est prévue le <strong>${escapeHtml(data.startDate)}</strong>.`
+              : locale === "de"
+                ? `Ihr Erlebnis <strong>${escapeHtml(data.serviceName)}</strong> ist für den <strong>${escapeHtml(data.startDate)}</strong> geplant.`
               : `la tua esperienza <strong>${escapeHtml(data.serviceName)}</strong> e' prevista per <strong>${escapeHtml(data.startDate)}</strong>.`
       }</p>
       ${balance}
@@ -511,6 +596,8 @@ export function preDepartureReminderTemplate(data: PreDepartureReminderData) {
             ? "Trae bañador, crema solar, documento de identidad y tu billete QR. Te recomendamos llegar con un poco de antelación."
             : locale === "fr"
               ? "Prévoyez maillot de bain, crème solaire, pièce d'identité et billet QR. Nous vous conseillons d'arriver un peu en avance."
+              : locale === "de"
+                ? "Bringen Sie Badekleidung, Sonnenschutz, ein Ausweisdokument und Ihr QR-Ticket mit. Wir empfehlen, etwas früher anzukommen."
               : "Porta costume, crema solare, documento e il biglietto QR. Ti consigliamo di arrivare con anticipo."
       }</p>
     `,
@@ -521,10 +608,12 @@ export function preDepartureReminderTemplate(data: PreDepartureReminderData) {
           ? "Abrir billete"
           : locale === "fr"
             ? "Ouvrir le billet"
+            : locale === "de"
+              ? "Ticket öffnen"
             : "Apri biglietto",
     ctaUrl: data.ticketUrl,
   });
-  const text = `${subject}: ${data.serviceName} ${data.startDate}.${data.balanceAmount ? ` ${locale === "it" ? "Saldo in loco" : locale === "es" ? "Saldo en el lugar" : locale === "fr" ? "Solde sur place" : "On-site balance"}: ${data.balanceAmount}.` : ""} ${locale === "it" ? "Biglietto" : locale === "es" ? "Billete" : locale === "fr" ? "Billet" : "Ticket"}: ${data.ticketUrl}`;
+  const text = `${subject}: ${data.serviceName} ${data.startDate}.${data.balanceAmount ? ` ${locale === "it" ? "Saldo in loco" : locale === "es" ? "Saldo en el lugar" : locale === "fr" ? "Solde sur place" : locale === "de" ? "Restbetrag vor Ort" : "On-site balance"}: ${data.balanceAmount}.` : ""} ${locale === "it" ? "Biglietto" : locale === "es" ? "Billete" : locale === "fr" ? "Billet" : locale === "de" ? "Ticket" : "Ticket"}: ${data.ticketUrl}`;
   return { subject, html, text };
 }
 
@@ -545,6 +634,8 @@ export function reviewRequestTemplate(data: ReviewRequestData) {
         ? "¿Cómo fue la experiencia a bordo?"
         : locale === "fr"
           ? "Comment s'est passée votre sortie à bord ?"
+          : locale === "de"
+            ? "Wie war Ihre Zeit an Bord?"
           : `Com'e' andata a bordo?`;
   const googleReviewUrl = data.googleReviewUrl ?? PUBLIC_REVIEW_LINKS.google;
   const tripadvisorReviewUrl = data.tripadvisorReviewUrl ?? PUBLIC_REVIEW_LINKS.tripadvisor;
@@ -557,6 +648,8 @@ export function reviewRequestTemplate(data: ReviewRequestData) {
           ? "Gracias por subir a bordo"
           : locale === "fr"
             ? "Merci d'être montés à bord"
+            : locale === "de"
+              ? "Danke, dass Sie an Bord waren"
             : "Grazie per essere saliti a bordo",
     bodyHtml: `
       <p>${escapeHtml(emailGreeting(locale, data.customerName))}</p>
@@ -567,6 +660,8 @@ export function reviewRequestTemplate(data: ReviewRequestData) {
             ? `esperamos que la experiencia <strong>${escapeHtml(data.serviceName)}</strong> haya sido especial.`
             : locale === "fr"
               ? `nous espérons que l'expérience <strong>${escapeHtml(data.serviceName)}</strong> a été spéciale.`
+              : locale === "de"
+                ? `wir hoffen, dass Ihr Erlebnis <strong>${escapeHtml(data.serviceName)}</strong> besonders war.`
               : `speriamo che l'esperienza <strong>${escapeHtml(data.serviceName)}</strong> sia stata speciale.`
       }</p>
       <p>${
@@ -576,20 +671,22 @@ export function reviewRequestTemplate(data: ReviewRequestData) {
             ? "Una reseña nos ayuda muchísimo a dar a conocer Egadisailing. Puedes dejarla donde prefieras:"
             : locale === "fr"
               ? "Un avis nous aide beaucoup à faire connaître Egadisailing. Vous pouvez le laisser où vous préférez :"
+              : locale === "de"
+                ? "Eine Bewertung hilft uns sehr, Egadisailing bekannter zu machen. Sie können sie dort hinterlassen, wo Sie möchten:"
               : "Una recensione ci aiuta moltissimo a far conoscere Egadisailing. Puoi lasciarla dove preferisci:"
       }</p>
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 22px 0 10px;">
         <tr>
           <td align="center" style="padding: 0 0 12px;">
             <a href="${safeUrl(googleReviewUrl)}" style="display: inline-block; min-width: 220px; background: #0c3d5e; color: #ffffff; padding: 13px 22px; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; line-height: 1.2;">
-              ${locale === "en" ? "Review us on Google" : locale === "es" ? "Déjanos una reseña en Google" : locale === "fr" ? "Laisser un avis sur Google" : "Recensisci su Google"}
+              ${locale === "en" ? "Review us on Google" : locale === "es" ? "Déjanos una reseña en Google" : locale === "fr" ? "Laisser un avis sur Google" : locale === "de" ? "Auf Google bewerten" : "Recensisci su Google"}
             </a>
           </td>
         </tr>
         <tr>
           <td align="center" style="padding: 0 0 12px;">
             <a href="${safeUrl(tripadvisorReviewUrl)}" style="display: inline-block; min-width: 220px; background: #d97706; color: #ffffff; padding: 13px 22px; text-decoration: none; border-radius: 9999px; font-weight: 700; font-size: 14px; line-height: 1.2;">
-              ${locale === "en" ? "Review us on Tripadvisor" : locale === "es" ? "Déjanos una reseña en Tripadvisor" : locale === "fr" ? "Laisser un avis sur Tripadvisor" : "Recensisci su Tripadvisor"}
+              ${locale === "en" ? "Review us on Tripadvisor" : locale === "es" ? "Déjanos una reseña en Tripadvisor" : locale === "fr" ? "Laisser un avis sur Tripadvisor" : locale === "de" ? "Auf Tripadvisor bewerten" : "Recensisci su Tripadvisor"}
             </a>
           </td>
         </tr>
@@ -603,6 +700,8 @@ export function reviewRequestTemplate(data: ReviewRequestData) {
         ? `Gracias por subir a bordo. Puedes dejar una reseña en Google: ${googleReviewUrl} o en Tripadvisor: ${tripadvisorReviewUrl}`
         : locale === "fr"
           ? `Merci d'être montés à bord. Vous pouvez laisser un avis sur Google : ${googleReviewUrl} ou sur Tripadvisor : ${tripadvisorReviewUrl}`
+          : locale === "de"
+            ? `Danke, dass Sie an Bord waren. Sie können eine Bewertung auf Google hinterlassen: ${googleReviewUrl} oder auf Tripadvisor: ${tripadvisorReviewUrl}`
           : `Grazie per essere saliti a bordo. Puoi lasciare una recensione su Google: ${googleReviewUrl} oppure su Tripadvisor: ${tripadvisorReviewUrl}`;
   return { subject, html, text };
 }

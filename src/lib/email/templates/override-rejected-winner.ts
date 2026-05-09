@@ -24,6 +24,8 @@ export function overrideRejectedWinnerTemplate(
         ? `Reserva ${data.confirmationCode} no confirmada`
         : locale === "fr"
           ? `Réservation ${data.confirmationCode} non confirmée`
+          : locale === "de"
+            ? `Buchung ${data.confirmationCode} nicht bestätigt`
           : `Prenotazione ${data.confirmationCode} non confermata`;
   const altTitle =
     locale === "en"
@@ -32,6 +34,8 @@ export function overrideRejectedWinnerTemplate(
         ? "Fechas alternativas disponibles:"
         : locale === "fr"
           ? "Dates alternatives disponibles :"
+          : locale === "de"
+            ? "Verfügbare alternative Termine:"
           : "Date alternative disponibili:";
   const altList = data.alternativeDates.length > 0
     ? `<p>${altTitle}</p><ul>${data.alternativeDates
@@ -62,6 +66,14 @@ export function overrideRejectedWinnerTemplate(
               contact: "Pour toute question :",
               portal: "Espace réservation",
             }
+          : locale === "de"
+            ? {
+                greeting: emailGreeting(locale, data.customerName),
+                message: `Es tut uns leid, Ihnen mitteilen zu müssen, dass Ihre Buchungsanfrage für <strong>${escapeHtml(data.serviceName)}</strong> am <strong>${escapeHtml(data.startDate)}</strong> nicht bestätigt werden konnte.`,
+                refund: `Sie erhalten die vollständige Erstattung von <strong>${escapeHtml(data.refundAmount)}</strong> innerhalb von 5-10 Werktagen auf Ihre Karte.`,
+                contact: "Bei Fragen:",
+                portal: "Buchungsbereich",
+              }
           : {
               greeting: emailGreeting(locale, data.customerName),
               message: `Ci dispiace comunicarti che la tua richiesta di prenotazione per <strong>${escapeHtml(data.serviceName)}</strong> del <strong>${escapeHtml(data.startDate)}</strong> non e' stata confermata.`,

@@ -24,11 +24,14 @@ function recoveryCopy(locale: string) {
   const isEs = locale === "es";
   const isEn = locale === "en";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return {
     captchaRequired: isEs
       ? "Verificación CAPTCHA obligatoria"
       : isFr
         ? "Vérification CAPTCHA obligatoire"
+      : isDe
+        ? "CAPTCHA-Verifizierung erforderlich"
       : isEn
         ? "CAPTCHA verification required"
         : "Verifica CAPTCHA richiesta",
@@ -36,23 +39,29 @@ function recoveryCopy(locale: string) {
       ? "Verificación CAPTCHA fallida"
       : isFr
         ? "Échec de la vérification CAPTCHA"
+      : isDe
+        ? "CAPTCHA-Verifizierung fehlgeschlagen"
       : isEn
         ? "CAPTCHA verification failed"
         : "Verifica CAPTCHA non riuscita",
-    unknownError: isEs ? "Error desconocido" : isFr ? "Erreur inconnue" : isEn ? "Unknown error" : "Errore sconosciuto",
-    codeExpired: isEs ? "Código caducado" : isFr ? "Code expiré" : isEn ? "Code expired" : "Codice scaduto",
+    unknownError: isEs ? "Error desconocido" : isFr ? "Erreur inconnue" : isDe ? "Unbekannter Fehler" : isEn ? "Unknown error" : "Errore sconosciuto",
+    codeExpired: isEs ? "Código caducado" : isFr ? "Code expiré" : isDe ? "Code abgelaufen" : isEn ? "Code expired" : "Codice scaduto",
     tooManyAttempts: isEs
       ? "Demasiados intentos. Solicita un nuevo código"
       : isFr
         ? "Trop de tentatives. Demandez un nouveau code"
+      : isDe
+        ? "Zu viele Versuche. Fordern Sie einen neuen Code an"
       : isEn
         ? "Too many attempts. Request a new code"
         : "Troppi tentativi, richiedi un nuovo codice",
-    invalidCode: isEs ? "Código no válido" : isFr ? "Code invalide" : isEn ? "Invalid code" : "Codice non valido",
+    invalidCode: isEs ? "Código no válido" : isFr ? "Code invalide" : isDe ? "Ungültiger Code" : isEn ? "Invalid code" : "Codice non valido",
     noBooking: isEs
       ? "No se ha encontrado ninguna reserva para este email"
       : isFr
         ? "Aucune réservation trouvée pour cet email"
+      : isDe
+        ? "Für diese E-Mail wurde keine Buchung gefunden"
       : isEn
         ? "No booking found for this email"
         : "Nessuna prenotazione trovata per questa email",
@@ -224,5 +233,5 @@ export async function verifyOtpAndLogin(
     };
   }
 
-  redirect(locale === "es" ? "/es/b/sesion" : locale === "fr" ? "/fr/b/session" : `/${locale}/b/sessione`);
+  redirect(locale === "es" ? "/es/b/sesion" : locale === "fr" ? "/fr/b/session" : locale === "de" ? "/de/b/buchung" : `/${locale}/b/sessione`);
 }

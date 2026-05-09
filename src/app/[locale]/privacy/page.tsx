@@ -57,18 +57,125 @@ export async function generateMetadata({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return buildPageMetadata({
-    title: isEs ? "Política de privacidad" : isFr ? "Politique de confidentialité" : isEn ? "Privacy Policy" : "Informativa privacy",
+    title: isEs ? "Política de privacidad" : isFr ? "Politique de confidentialité" : isDe ? "Datenschutzerklärung" : isEn ? "Privacy Policy" : "Informativa privacy",
     description: isEs
       ? "Política de privacidad de Egadisailing para reservas, pagos, solicitudes de contacto, cookies, seguridad y servicios de terceros utilizados por la plataforma."
       : isFr
       ? "Politique de confidentialité Egadisailing pour réservations, paiements, demandes de contact, cookies, sécurité et services tiers utilisés par la plateforme."
+      : isDe
+      ? "Datenschutzerklärung von Egadisailing für Buchungen, Zahlungen, Kontaktanfragen, Cookies, Sicherheit und Drittanbieter-Dienste der Plattform."
       : isEn
       ? "Egadisailing Privacy Policy for bookings, payments, contact requests, cookies, security and third-party services used by the platform."
       : "Informativa privacy di Egadisailing su prenotazioni, pagamenti, contatti, cookie, sicurezza e servizi terzi utilizzati dall'app.",
     path: "/privacy",
     locale,
   });
+}
+
+function GermanPrivacyPolicyPage() {
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#071934_0%,#0b3154_22rem,#f8fafc_22rem,#ffffff_100%)] px-4 pb-20 pt-32 sm:px-6">
+      <article className="mx-auto max-w-5xl">
+        <header className="pb-10 text-white">
+          <p className={eyebrowClass}>Datenschutzerklärung</p>
+          <h1 className="mt-3 max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">
+            Datenschutzerklärung Egadisailing
+          </h1>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-white/75 md:text-lg">
+            Wie wir personenbezogene Daten verarbeiten, die über Website, Buchungen,
+            Zahlungen, Kontakte, Buchungsabruf, Sicherheit und technische Wartung erhoben werden.
+          </p>
+          <p className="mt-4 text-sm text-white/55">
+            Version {CURRENT_POLICY_VERSION} · Gültig ab {EFFECTIVE_DATE}
+          </p>
+        </header>
+
+        <div className="space-y-6">
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Verantwortlicher</p>
+            <h2 className={headingClass}>1. Verantwortlicher der Verarbeitung</h2>
+            <p className={paragraphClass}>
+              Verantwortlicher ist <strong>{PUBLIC_COMPANY_LEGAL.name}</strong>, Sitz{" "}
+              {PUBLIC_COMPANY_LEGAL.legalAddress}, USt-IdNr. {PUBLIC_COMPANY_LEGAL.vatNumber},
+              PEC{" "}
+              <a className="font-semibold text-[#0b6694]" href={getEmailHref(PUBLIC_COMPANY_LEGAL.pec)}>
+                {PUBLIC_COMPANY_LEGAL.pec}
+              </a>
+              . Für Informationen, Datenschutzanfragen und Hilfe schreiben Sie an{" "}
+              <a className="font-semibold text-[#0b6694]" href={getEmailHref(PRIVACY_CONTACT_EMAIL)}>
+                {PUBLIC_CONTACT_EMAIL}
+              </a>
+              .
+            </p>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Technische Wartung</p>
+            <h2 className={headingClass}>2. Technischer Dienstleister der Anwendung</h2>
+            <p className={paragraphClass}>
+              Code, Datenbank, Deployments, technische Wartung und Support der Plattform werden von{" "}
+              <strong>{PUBLIC_TECHNICAL_MAINTAINER.name}</strong> verwaltet. Der Dienstleister handelt
+              im Auftrag von Egadisailing als Auftragsverarbeiter, wenn er für Wartung, Sicherheit,
+              Backups oder Support auf personenbezogene Daten zugreift.
+            </p>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Datenkategorien</p>
+            <h2 className={headingClass}>3. Verarbeitete personenbezogene Daten</h2>
+            <ul className={listClass}>
+              <li><strong>Buchungen:</strong> Name, E-Mail, Telefon, Erlebnis, Boot, Datum, Teilnehmer, Beträge, Status, Buchungscode und Einwilligungen.</li>
+              <li><strong>Zahlungen:</strong> Betrag, Währung, Zahlungsstatus und technische Stripe-Referenzen. Vollständige Kartendaten werden nicht auf Egadisailing-Servern gespeichert.</li>
+              <li><strong>Kontakte:</strong> Name, E-Mail, Telefon falls angegeben, Betreff und Nachricht.</li>
+              <li><strong>Buchungsabruf:</strong> E-Mail, gehashter OTP-Code, temporäre Sitzung, IP und User-Agent aus Sicherheitsgründen.</li>
+              <li><strong>Cookies und Sicherheit:</strong> Einwilligungspräferenzen, Sprache, technische Logs, Rate-Limit, Sitzungstokens und minimale Anti-Missbrauchsdaten.</li>
+            </ul>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Zwecke</p>
+            <h2 className={headingClass}>4. Zwecke und Rechtsgrundlagen</h2>
+            <LegalTable headers={["Zweck", "Rechtsgrundlage"]}>
+              <tr><Td>Anfragen, Angebote und vorvertragliche Kommunikation verwalten</Td><Td>Vorvertragliche Maßnahmen - Art. 6 Abs. 1 lit. b DSGVO</Td></tr>
+              <tr><Td>Buchungen, Zahlungen, Restbeträge und Kundenhilfe erstellen und verwalten</Td><Td>Vertragserfüllung - Art. 6 Abs. 1 lit. b DSGVO</Td></tr>
+              <tr><Td>Steuerliche, buchhalterische und administrative Pflichten erfüllen</Td><Td>Gesetzliche Pflicht - Art. 6 Abs. 1 lit. c DSGVO</Td></tr>
+              <tr><Td>Sicherheit, Betrugsprävention, Anti-Spam und technische Audits</Td><Td>Berechtigtes Interesse - Art. 6 Abs. 1 lit. f DSGVO</Td></tr>
+              <tr><Td>Analytische oder Marketing-Cookies, sofern konfiguriert und akzeptiert</Td><Td>Einwilligung - Art. 6 Abs. 1 lit. a DSGVO und ePrivacy</Td></tr>
+            </LegalTable>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Empfänger</p>
+            <h2 className={headingClass}>5. Dienstleister und externe Dienste</h2>
+            <p className={paragraphClass}>
+              Daten können an für den Service notwendige Anbieter übermittelt werden: Stripe für
+              Zahlungen, Anbieter transaktionaler E-Mails, Cloudflare Turnstile, Hosting/Datenbank,
+              Google Maps, Sicherheitswerkzeuge und verbundene Buchungsplattformen. Einige Anbieter
+              können außerhalb des EWR tätig sein; es gelten geeignete Garantien wie DPF, SCC oder
+              andere gesetzlich vorgesehene Mechanismen.
+            </p>
+          </section>
+
+          <section className={sectionClass}>
+            <p className={eyebrowClass}>Aufbewahrung und Rechte</p>
+            <h2 className={headingClass}>6. Aufbewahrung und Betroffenenrechte</h2>
+            <p className={paragraphClass}>
+              Daten werden so lange gespeichert, wie es für vertragliche, steuerliche,
+              buchhalterische, Sicherheits- und Supportzwecke erforderlich ist. Sie können Auskunft,
+              Berichtigung, Löschung, Einschränkung, Widerspruch, Datenübertragbarkeit, soweit
+              anwendbar, und den Widerruf von Einwilligungen verlangen, indem Sie an{" "}
+              <a className="font-semibold text-[#0b6694]" href={getEmailHref(PRIVACY_CONTACT_EMAIL)}>
+                {PUBLIC_CONTACT_EMAIL}
+              </a>{" "}
+              schreiben.
+            </p>
+          </section>
+        </div>
+      </article>
+    </div>
+  );
 }
 
 function FrenchPrivacyPolicyPage() {
@@ -300,6 +407,7 @@ export default async function PrivacyPolicyPage({
   const { locale } = await params;
   if (locale === "es") return <SpanishPrivacyPolicyPage />;
   if (locale === "fr") return <FrenchPrivacyPolicyPage />;
+  if (locale === "de") return <GermanPrivacyPolicyPage />;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#071934_0%,#0b3154_22rem,#f8fafc_22rem,#ffffff_100%)] px-4 pb-20 pt-32 sm:px-6">

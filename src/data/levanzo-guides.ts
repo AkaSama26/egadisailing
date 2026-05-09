@@ -23,38 +23,46 @@ export type LevanzoGuideSlug =
   | "grotte-du-genovese"
   | "levanzo-en-une-journee"
   | "comment-venir-depuis-trapani"
-  | "excursion-bateau-depuis-trapani";
+  | "excursion-bateau-depuis-trapani"
+  | "was-man-in-levanzo-sehen-sollte"
+  | "straende-buchten-levanzo"
+  | "grotte-del-genovese"
+  | "levanzo-an-einem-tag"
+  | "anreise-ab-trapani"
+  | "schnorcheln-cala-minnola-calcara"
+  | "bootstour-ab-trapani";
 
 export const levanzoGuideSlugPairs = [
-  { it: "cosa-vedere", en: "what-to-see", es: "que-ver-en-levanzo", fr: "que-voir-a-levanzo" },
-  { it: "spiagge-cale", en: "beaches-coves", es: "playas-calas-levanzo", fr: "plages-criques-levanzo" },
-  { it: "grotta-del-genovese", en: "grotta-del-genovese", es: "gruta-del-genovese", fr: "grotte-du-genovese" },
-  { it: "levanzo-in-un-giorno", en: "levanzo-in-one-day", es: "levanzo-en-un-dia", fr: "levanzo-en-une-journee" },
-  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani", es: "como-llegar-desde-trapani", fr: "comment-venir-depuis-trapani" },
+  { it: "cosa-vedere", en: "what-to-see", es: "que-ver-en-levanzo", fr: "que-voir-a-levanzo", de: "was-man-in-levanzo-sehen-sollte" },
+  { it: "spiagge-cale", en: "beaches-coves", es: "playas-calas-levanzo", fr: "plages-criques-levanzo", de: "straende-buchten-levanzo" },
+  { it: "grotta-del-genovese", en: "grotta-del-genovese", es: "gruta-del-genovese", fr: "grotte-du-genovese", de: "grotte-del-genovese" },
+  { it: "levanzo-in-un-giorno", en: "levanzo-in-one-day", es: "levanzo-en-un-dia", fr: "levanzo-en-une-journee", de: "levanzo-an-einem-tag" },
+  { it: "come-arrivare-da-trapani", en: "how-to-get-from-trapani", es: "como-llegar-desde-trapani", fr: "comment-venir-depuis-trapani", de: "anreise-ab-trapani" },
   {
     it: "snorkeling-cala-minnola-calcara",
     en: "snorkeling-cala-minnola-calcara",
     es: "snorkel-cala-minnola-calcara",
     fr: "snorkeling-cala-minnola-calcara",
+    de: "schnorcheln-cala-minnola-calcara",
   },
-  { it: "tour-in-barca-da-trapani", en: "boat-tour-from-trapani", es: "excursion-barco-desde-trapani", fr: "excursion-bateau-depuis-trapani" },
-] as const satisfies Array<{ it: LevanzoGuideSlug; en: LevanzoGuideSlug; es: LevanzoGuideSlug; fr: LevanzoGuideSlug }>;
+  { it: "tour-in-barca-da-trapani", en: "boat-tour-from-trapani", es: "excursion-barco-desde-trapani", fr: "excursion-bateau-depuis-trapani", de: "bootstour-ab-trapani" },
+] as const satisfies Array<{ it: LevanzoGuideSlug; en: LevanzoGuideSlug; es: LevanzoGuideSlug; fr: LevanzoGuideSlug; de: LevanzoGuideSlug }>;
 
-export type LevanzoGuideLocale = "it" | "en" | "es" | "fr";
+export type LevanzoGuideLocale = "it" | "en" | "es" | "fr" | "de";
 
 export function getLevanzoGuideSlugForLocale(
   slug: string,
   locale: LevanzoGuideLocale,
 ): LevanzoGuideSlug | undefined {
   const pair = levanzoGuideSlugPairs.find(
-    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug || item.de === slug,
   );
   return pair?.[locale];
 }
 
 export function isLevanzoGuideSlug(slug: string): slug is LevanzoGuideSlug {
   return levanzoGuideSlugPairs.some(
-    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug,
+    (item) => item.it === slug || item.en === slug || item.es === slug || item.fr === slug || item.de === slug,
   );
 }
 

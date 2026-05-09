@@ -32,11 +32,14 @@ export async function generateMetadata({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return buildPageMetadata({
     title: isEs
       ? "Reserva excursiones en barco por las Islas Egadi online"
       : isFr
       ? "Réserver une excursion en bateau aux îles Égades en ligne"
+      : isDe
+      ? "Bootstouren zu den Ägadischen Inseln online buchen"
       : isEn
       ? "Book Egadi Islands Boat Tours Online"
       : "Prenota Escursioni in Barca alle Egadi Online",
@@ -44,6 +47,8 @@ export async function generateMetadata({
       ? "Reserva excursiones en barco por las Islas Egadi con disponibilidad en vivo, precios actualizados y checkout seguro Egadisailing."
       : isFr
       ? "Réservez une excursion en bateau aux îles Égades avec disponibilités en direct, prix à jour et checkout sécurisé Egadisailing."
+      : isDe
+      ? "Buchen Sie Bootstouren zu den Ägadischen Inseln mit Live-Verfügbarkeit, aktuellen Preisen und sicherem Egadisailing-Checkout."
       : isEn
       ? "Book boat tours in the Egadi Islands with live availability, updated prices and secure Egadisailing checkout."
       : "Prenota escursioni in barca alle Isole Egadi con disponibilità live, prezzi aggiornati e checkout sicuro Egadisailing.",
@@ -115,6 +120,8 @@ export default async function BookingIndexPage({
             ? "Precio bajo petición"
             : locale === "fr"
               ? "Prix sur demande"
+              : locale === "de"
+                ? "Preis auf Anfrage"
               : locale === "en"
                 ? "Price on request"
                 : "Prezzo su richiesta"),

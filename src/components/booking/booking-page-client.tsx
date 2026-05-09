@@ -66,6 +66,8 @@ function paymentLabel(service: BookingServiceOption, locale: string): string {
       ? `${pct}% de depósito hoy, saldo en destino`
       : locale === "fr"
         ? `${pct}% d'acompte aujourd'hui, solde sur place`
+        : locale === "de"
+          ? `${pct}% Anzahlung heute, Restzahlung vor Ort`
       : locale === "en"
       ? `${pct}% deposit today, balance on site`
       : `Acconto ${pct}% oggi, saldo solo in loco`;
@@ -74,6 +76,8 @@ function paymentLabel(service: BookingServiceOption, locale: string): string {
     ? "Pago completo en checkout"
     : locale === "fr"
       ? "Paiement complet au checkout"
+    : locale === "de"
+      ? "Vollständige Zahlung im Checkout"
     : locale === "en"
       ? "Full payment at checkout"
       : "Pagamento completo al checkout";
@@ -91,6 +95,8 @@ function experienceTitle(service: BookingServiceOption, locale: string): string 
       ? "Barco compartido"
       : locale === "fr"
         ? "Bateau partagé"
+        : locale === "de"
+          ? "Geteiltes Boot"
         : locale === "en"
           ? "Shared boat"
           : "Barca condivisa";
@@ -100,6 +106,8 @@ function experienceTitle(service: BookingServiceOption, locale: string): string 
       ? "Barco exclusivo"
       : locale === "fr"
         ? "Bateau privatisé"
+        : locale === "de"
+          ? "Privates Boot"
         : locale === "en"
           ? "Exclusive boat"
           : "Barca in esclusiva";
@@ -109,13 +117,13 @@ function experienceTitle(service: BookingServiceOption, locale: string): string 
 
 function durationOptionLabel(service: BookingServiceOption, locale: string): string {
   if (service.durationType === "FULL_DAY") {
-    return locale === "es" ? "Día completo" : locale === "fr" ? "Journée complète" : locale === "en" ? "Full day" : "Giornata intera";
+    return locale === "es" ? "Día completo" : locale === "fr" ? "Journée complète" : locale === "de" ? "Ganztag" : locale === "en" ? "Full day" : "Giornata intera";
   }
   if (service.durationType === "HALF_DAY_MORNING") {
-    return locale === "es" ? "Mañana" : locale === "fr" ? "Matin" : locale === "en" ? "Morning" : "Mattina";
+    return locale === "es" ? "Mañana" : locale === "fr" ? "Matin" : locale === "de" ? "Vormittag" : locale === "en" ? "Morning" : "Mattina";
   }
   if (service.durationType === "HALF_DAY_AFTERNOON") {
-    return locale === "es" ? "Tarde" : locale === "fr" ? "Après-midi" : locale === "en" ? "Afternoon" : "Pomeriggio";
+    return locale === "es" ? "Tarde" : locale === "fr" ? "Après-midi" : locale === "de" ? "Nachmittag" : locale === "en" ? "Afternoon" : "Pomeriggio";
   }
   return service.durationLabel;
 }
@@ -130,6 +138,10 @@ function durationDetail(service: BookingServiceOption, locale: string): string {
         ? service.durationHours === 1
           ? "hour"
           : "hours"
+        : locale === "de"
+          ? service.durationHours === 1
+            ? "Stunde"
+            : "Stunden"
         : locale === "fr"
           ? service.durationHours === 1
             ? "heure"
@@ -243,7 +255,7 @@ export function BookingPageClient({
       });
     }
     return Array.from(map.values()).sort((a, b) =>
-      a.title.localeCompare(b.title, locale === "es" ? "es" : locale === "fr" ? "fr" : locale === "en" ? "en" : "it"),
+      a.title.localeCompare(b.title, locale === "es" ? "es" : locale === "fr" ? "fr" : locale === "de" ? "de" : locale === "en" ? "en" : "it"),
     );
   }, [locale, services]);
 
@@ -290,7 +302,7 @@ export function BookingPageClient({
     Boolean(selectedExperience && nextStepAfterExperience(selectedExperience.services) === "duration");
   const selectedDurationLabel = selectedService
     ? selectedService.serviceType === "CABIN_CHARTER"
-      ? `${selectedCharterDays} ${locale === "es" ? "días" : locale === "fr" ? "jours" : locale === "en" ? "days" : "giornate"}`
+      ? `${selectedCharterDays} ${locale === "es" ? "días" : locale === "fr" ? "jours" : locale === "de" ? "Tage" : locale === "en" ? "days" : "giornate"}`
       : `${durationOptionLabel(selectedService, locale)} · ${durationDetail(selectedService, locale)}`
     : "";
   const fixedDurationDays =
@@ -369,7 +381,7 @@ export function BookingPageClient({
       <section className="mt-8" aria-labelledby="booking-wizard-title">
         {selectionStep === "boat" && (
           <SelectionCard
-            stepLabel="Step 1"
+            stepLabel={`${copy.step} 1`}
             title={copy.chooseBoatTitle}
             subtitle={copy.chooseBoatSubtitle}
             backLabel={copy.back}
@@ -414,7 +426,7 @@ export function BookingPageClient({
 
         {selectionStep === "experience" && (
           <SelectionCard
-            stepLabel="Step 2"
+            stepLabel={`${copy.step} 2`}
             title={copy.chooseExperienceTitle}
             subtitle={`${copy.availableFor} ${selectedBoatTitle || copy.selectedBoat}.`}
             onBack={() => resetToStep("boat")}
@@ -465,7 +477,7 @@ export function BookingPageClient({
 
         {selectionStep === "duration" && selectedExperience && (
           <SelectionCard
-            stepLabel="Step 3"
+            stepLabel={`${copy.step} 3`}
             title={copy.chooseDurationTitle}
             subtitle={copy.chooseDurationSubtitle}
             onBack={() => resetToStep("experience")}
@@ -491,7 +503,7 @@ export function BookingPageClient({
                   >
                     <span className="block text-lg font-bold text-slate-950">{days}</span>
                     <span className="text-sm text-slate-600">
-                      {locale === "es" ? "días" : locale === "fr" ? "jours" : locale === "en" ? "days" : "giornate"}
+                      {locale === "es" ? "días" : locale === "fr" ? "jours" : locale === "de" ? "Tage" : locale === "en" ? "days" : "giornate"}
                     </span>
                   </button>
                 ))}
@@ -565,7 +577,7 @@ export function BookingPageClient({
               />
               <InfoTile
                 icon={CreditCard}
-                label="Checkout"
+                label={copy.checkout}
                 value={paymentLabel(selectedService, locale)}
               />
             </div>
@@ -616,7 +628,21 @@ function StepProgress({
   locale: string;
 }) {
   const steps =
-    locale === "es"
+    locale === "fr"
+      ? ([
+          { key: "boat", label: "Bateau", shortLabel: "Bateau" },
+          { key: "experience", label: "Expérience", shortLabel: "Expérience" },
+          { key: "duration", label: "Durée", shortLabel: "Durée" },
+          { key: "booking", label: "Date et paiement", shortLabel: "Paiement" },
+        ] as const)
+      : locale === "de"
+      ? ([
+          { key: "boat", label: "Boot", shortLabel: "Boot" },
+          { key: "experience", label: "Erlebnis", shortLabel: "Erlebnis" },
+          { key: "duration", label: "Dauer", shortLabel: "Dauer" },
+          { key: "booking", label: "Datum und Zahlung", shortLabel: "Zahlung" },
+        ] as const)
+      : locale === "es"
       ? ([
           { key: "boat", label: "Barco", shortLabel: "Barco" },
           { key: "experience", label: "Experiencia", shortLabel: "Experiencia" },
@@ -756,6 +782,38 @@ function InfoTile({
 }
 
 function getBookingPageCopy(locale: string) {
+  if (locale === "de") {
+    return {
+      eyebrow: "Buchungen",
+      title: "Bootstouren zu den Ägadischen Inseln online buchen",
+      subtitle:
+        "Wählen Sie Boot, Erlebnis, Dauer und ein verfügbares Datum mit aktuellem Preis. Der Checkout erstellt eine direkte Buchung im zentralen Egadisailing-Kalender.",
+      emptyTitle: "Keine aktiven Erlebnisse",
+      emptyText: "Derzeit sind keine Services online buchbar.",
+      chooseBoatTitle: "Wählen Sie das Boot",
+      chooseBoatSubtitle: "Jedes Boot zeigt nur die Erlebnisse, die tatsächlich in der Datenbank verbunden sind.",
+      bookableOptions: "buchbare Optionen",
+      chooseExperienceTitle: "Wählen Sie das Erlebnis",
+      availableFor: "Verfügbare Erlebnisse für",
+      selectedBoat: "das ausgewählte Boot",
+      durationToChoose: "Dauer auswählen",
+      chooseDurationTitle: "Wählen Sie die Dauer",
+      chooseDurationSubtitle:
+        "Die Dauer bestimmt den tatsächlichen Service für Preise, Verfügbarkeiten und Checkout.",
+      step: "Schritt",
+      continue: "Weiter",
+      back: "Zurück",
+      selectedPath: "Ausgewählter Weg",
+      changeSelection: "Auswahl ändern",
+      duration: "Dauer",
+      capacity: "Kapazität",
+      checkout: "Zahlung",
+      upTo: "Bis zu",
+      people: "Personen",
+      bookingWizard: "Buchungsassistent",
+    };
+  }
+
   if (locale === "fr") {
     return {
       eyebrow: "Réservations",
@@ -774,12 +832,14 @@ function getBookingPageCopy(locale: string) {
       chooseDurationTitle: "Choisissez la durée",
       chooseDurationSubtitle:
         "La durée détermine le service réel utilisé pour les prix, les disponibilités et le checkout.",
+      step: "Étape",
       continue: "Continuer",
       back: "Retour",
       selectedPath: "Parcours sélectionné",
       changeSelection: "Modifier la sélection",
       duration: "Durée",
       capacity: "Capacité",
+      checkout: "Paiement",
       upTo: "Jusqu'à",
       people: "personnes",
       bookingWizard: "Assistant de réservation",
@@ -804,15 +864,17 @@ function getBookingPageCopy(locale: string) {
       chooseDurationTitle: "Elige la duración",
       chooseDurationSubtitle:
         "La duración determina el servicio real utilizado para precios, disponibilidad y checkout.",
+      step: "Paso",
       continue: "Continuar",
       back: "Atrás",
       selectedPath: "Ruta seleccionada",
       changeSelection: "Cambiar selección",
       duration: "Duración",
       capacity: "Capacidad",
+      checkout: "Pago",
       upTo: "Hasta",
       people: "personas",
-	      bookingWizard: "Asistente de reserva",
+      bookingWizard: "Asistente de reserva",
     };
   }
 
@@ -834,12 +896,14 @@ function getBookingPageCopy(locale: string) {
       chooseDurationTitle: "Choose the duration",
       chooseDurationSubtitle:
         "The duration determines the actual service used for prices, availability and checkout.",
+      step: "Step",
       continue: "Continue",
       back: "Back",
       selectedPath: "Selected path",
       changeSelection: "Change selection",
       duration: "Duration",
       capacity: "Capacity",
+      checkout: "Payment",
       upTo: "Up to",
       people: "people",
       bookingWizard: "Booking wizard",
@@ -863,12 +927,14 @@ function getBookingPageCopy(locale: string) {
     chooseDurationTitle: "Scegli per quanto tempo",
     chooseDurationSubtitle:
       "La durata determina il servizio reale usato da prezzi, disponibilità e checkout.",
+    step: "Passo",
     continue: "Continua",
     back: "Indietro",
     selectedPath: "Percorso selezionato",
     changeSelection: "Cambia selezione",
     duration: "Durata",
     capacity: "Capacità",
+    checkout: "Pagamento",
     upTo: "Fino a",
     people: "persone",
     bookingWizard: "Wizard prenotazione",

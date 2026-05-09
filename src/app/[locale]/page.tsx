@@ -61,6 +61,7 @@ function lowestHeroPriceLabel(
   if (!lowest?.amount) return null;
   if (locale === "fr") return `À partir de ${formatEur(lowest.amount, locale)}`;
   if (locale === "es") return `Desde ${formatEur(lowest.amount, locale)}`;
+  if (locale === "de") return `Ab ${formatEur(lowest.amount, locale)}`;
   return locale === "en"
     ? `From ${formatEur(lowest.amount, locale)}`
     : `A partire da ${formatEur(lowest.amount, locale)}`;
@@ -76,15 +77,16 @@ function packagePills(input: {
   const isEn = input.locale === "en";
   const isEs = input.locale === "es";
   const isFr = input.locale === "fr";
+  const isDe = input.locale === "de";
   const featureByPackage: Record<string, string> = {
-    "esperienza-gourmet-trimarano": isEs ? "Comida incluida" : isFr ? "Déjeuner inclus" : isEn ? "Lunch included" : "Pranzo incluso",
-    "charter-egadi": isEs ? "Ruta a medida" : isFr ? "Route sur mesure" : isEn ? "Tailored route" : "Itinerario su misura",
-    "tour-barca-egadi-4-ore": isEs ? "Baños flexibles" : isFr ? "Baignades flexibles" : isEn ? "Flexible swim stops" : "Soste bagno flessibili",
-    "tour-barca-egadi-8-ore": isEs ? "Snorkel" : isEn ? "Snorkelling" : "Snorkeling",
+    "esperienza-gourmet-trimarano": isEs ? "Comida incluida" : isFr ? "Déjeuner inclus" : isDe ? "Mittagessen inklusive" : isEn ? "Lunch included" : "Pranzo incluso",
+    "charter-egadi": isEs ? "Ruta a medida" : isFr ? "Route sur mesure" : isDe ? "Route nach Maß" : isEn ? "Tailored route" : "Itinerario su misura",
+    "tour-barca-egadi-4-ore": isEs ? "Baños flexibles" : isFr ? "Baignades flexibles" : isDe ? "Flexible Badestopps" : isEn ? "Flexible swim stops" : "Soste bagno flessibili",
+    "tour-barca-egadi-8-ore": isEs ? "Snorkel" : isDe ? "Schnorcheln" : isEn ? "Snorkelling" : "Snorkeling",
   };
 
   return [
-    isEs ? `Hasta ${input.capacityMax} huéspedes` : isFr ? `Jusqu'à ${input.capacityMax} hôtes` : isEn ? `Up to ${input.capacityMax} guests` : `Max ${input.capacityMax} persone`,
+    isEs ? `Hasta ${input.capacityMax} huéspedes` : isFr ? `Jusqu'à ${input.capacityMax} hôtes` : isDe ? `Bis zu ${input.capacityMax} Gäste` : isEn ? `Up to ${input.capacityMax} guests` : `Max ${input.capacityMax} persone`,
     input.durationLabel,
     featureByPackage[input.packageKey] ?? input.detailLabel,
   ];
@@ -98,43 +100,52 @@ function heroCardCopy(
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const copyByPackage: Record<string, { title: string; subtitle: string }> = {
     "esperienza-gourmet-trimarano": {
-      title: isEs ? "Chef a Bordo - Premium Experience" : isFr ? "Chef à Bord - Premium Experience" : isEn ? "Chef on board - premium experience" : "Chef a Bordo - Premium Experience",
+      title: isEs ? "Chef a Bordo - Premium Experience" : isFr ? "Chef à Bord - Premium Experience" : isDe ? "Chef an Bord - Premium Experience" : isEn ? "Chef on board - premium experience" : "Chef a Bordo - Premium Experience",
       subtitle: isEs
         ? "Trimarán privado, comida y tripulación dedicada."
         : isFr
         ? "Trimaran privé, déjeuner et équipage dédié."
+        : isDe
+        ? "Privater Trimaran, Mittagessen und dedizierte Crew."
         : isEn
         ? "Private trimaran, lunch and dedicated crew."
         : "Trimarano privato, pranzo e crew dedicata.",
     },
     "charter-egadi": {
-      title: isEs ? "Charter Islas Egadi" : isFr ? "Charter aux îles Égades" : isEn ? "Egadi charter" : "Charter Egadi",
+      title: isEs ? "Charter Islas Egadi" : isFr ? "Charter aux îles Égades" : isDe ? "Charter Ägadische Inseln" : isEn ? "Egadi charter" : "Charter Egadi",
       subtitle: isEs
         ? "3-7 días entre Favignana, Levanzo y Marettimo."
         : isFr
         ? "3-7 jours entre Favignana, Levanzo et Marettimo."
+        : isDe
+        ? "3-7 Tage zwischen Favignana, Levanzo und Marettimo."
         : isEn
         ? "3-7 days around Favignana, Levanzo and Marettimo."
         : "3-7 giornate tra Favignana, Levanzo e Marettimo.",
     },
     "tour-barca-egadi-8-ore": {
-      title: isEs ? "Excursión en barco 8 horas" : isFr ? "Excursion en bateau 8 heures" : isEn ? "8-hour boat tour" : "Barca 8 ore",
+      title: isEs ? "Excursión en barco 8 horas" : isFr ? "Excursion en bateau 8 heures" : isDe ? "Bootstour 8 Stunden" : isEn ? "8-hour boat tour" : "Barca 8 ore",
       subtitle: isEs
         ? "Día completo, snorkel y tiempo en Favignana."
         : isFr
         ? "Journée complète, snorkeling et temps à Favignana."
+        : isDe
+        ? "Ganzer Tag, Schnorcheln und Zeit auf Favignana."
         : isEn
         ? "Full day, snorkelling and lunch in Favignana."
         : "Giornata completa, snorkeling e pranzo a Favignana.",
     },
     "tour-barca-egadi-4-ore": {
-      title: isEs ? "Excursión privada 4 horas" : isFr ? "Excursion privée 4 heures" : isEn ? "4-hour boat tour" : "Barca 4 ore",
+      title: isEs ? "Excursión privada 4 horas" : isFr ? "Excursion privée 4 heures" : isDe ? "Private Bootstour 4 Stunden" : isEn ? "4-hour boat tour" : "Barca 4 ore",
       subtitle: isEs
         ? "Medio día ágil entre baños y calas protegidas."
         : isFr
         ? "Demi-journée agile entre baignades et criques protégées."
+        : isDe
+        ? "Ein agiler halber Tag zwischen Baden und geschützten Buchten."
         : isEn
         ? "A compact half day of swimming and sheltered coves."
         : "Mezza giornata agile tra bagno e cale riparate.",
@@ -203,14 +214,17 @@ function buildExperienceChoiceRecommendations({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const content = {
     shared8: {
       emoji: "🌊",
-      title: isEs ? "Excursión compartida 8 horas" : isFr ? "Excursion partagée 8 heures" : isEn ? "Shared 8-hour boat tour" : "Tour condiviso 8 ore",
+      title: isEs ? "Excursión compartida 8 horas" : isFr ? "Excursion partagée 8 heures" : isDe ? "Geteilte Bootstour 8 Stunden" : isEn ? "Shared 8-hour boat tour" : "Tour condiviso 8 ore",
       boatLabel: isEs
         ? "Cigala & Bertinetti · plaza compartida"
         : isFr
         ? "Cigala & Bertinetti · place partagée"
+        : isDe
+        ? "Cigala & Bertinetti · geteiltes Ticket"
         : isEn
         ? "Cigala & Bertinetti · shared seat"
         : "Cigala & Bertinetti · posto condiviso",
@@ -218,17 +232,21 @@ function buildExperienceChoiceRecommendations({
         ? "El día compartido más completo: más tiempo entre calas, snorkel y un ritmo relajado por las Islas Egadi."
         : isFr
         ? "La journée partagée la plus complète : plus de temps entre les criques, snorkeling et rythme détendu aux îles Égades."
+        : isDe
+        ? "Der vollständigste geteilte Tag: mehr Zeit zwischen Buchten, Schnorcheln und ein entspannter Rhythmus auf den Ägadischen Inseln."
         : isEn
         ? "The most complete shared day: more time between bays, snorkelling and a relaxed Egadi Islands rhythm."
         : "La giornata condivisa più completa: più tempo tra baie, snorkeling e ritmo lento alle Egadi.",
     },
     private4: {
       emoji: "⚡",
-      title: isEs ? "Excursión privada 4 horas" : isFr ? "Excursion privée 4 heures" : isEn ? "Private 4-hour boat tour" : "Tour privato 4 ore",
+      title: isEs ? "Excursión privada 4 horas" : isFr ? "Excursion privée 4 heures" : isDe ? "Private Bootstour 4 Stunden" : isEn ? "Private 4-hour boat tour" : "Tour privato 4 ore",
       boatLabel: isEs
         ? "Cigala & Bertinetti · barco privado ágil"
         : isFr
         ? "Cigala & Bertinetti · bateau privé agile"
+        : isDe
+        ? "Cigala & Bertinetti · agiles Privatboot"
         : isEn
         ? "Cigala & Bertinetti · private agile boat"
         : "Cigala & Bertinetti · barca privata agile",
@@ -236,17 +254,21 @@ function buildExperienceChoiceRecommendations({
 	        ? "Medio día privado para tu grupo: ruta flexible, baños y la ligereza del barco abierto."
         : isFr
         ? "Une demi-journée privée pour votre groupe : route flexible, baignades et légèreté du bateau ouvert."
+        : isDe
+        ? "Ein privater halber Tag für Ihre Gruppe: flexible Route, Badestopps und die Leichtigkeit des offenen Boots."
         : isEn
         ? "A private half-day for your group: flexible route, swim stops and the lightness of the open boat."
         : "Mezza giornata privata per il tuo gruppo: rotta flessibile, soste bagno e leggerezza della barca open.",
     },
     private8: {
       emoji: "🚤",
-      title: isEs ? "Excursión privada 8 horas" : isFr ? "Excursion privée 8 heures" : isEn ? "Private 8-hour boat tour" : "Tour privato 8 ore",
+      title: isEs ? "Excursión privada 8 horas" : isFr ? "Excursion privée 8 heures" : isDe ? "Private Bootstour 8 Stunden" : isEn ? "Private 8-hour boat tour" : "Tour privato 8 ore",
       boatLabel: isEs
         ? "Cigala & Bertinetti · barco privado ágil"
         : isFr
         ? "Cigala & Bertinetti · bateau privé agile"
+        : isDe
+        ? "Cigala & Bertinetti · agiles Privatboot"
         : isEn
         ? "Cigala & Bertinetti · private agile boat"
         : "Cigala & Bertinetti · barca privata agile",
@@ -254,17 +276,21 @@ function buildExperienceChoiceRecommendations({
         ? "Un día completo privado: más calas, más tiempo en el agua y una ruta diseñada con el patrón."
         : isFr
         ? "Une journée complète privée : plus de criques, plus de temps dans l'eau et une route conçue avec le skipper."
+        : isDe
+        ? "Ein ganzer privater Tag mit dem agilen Boot: mehr Buchten, mehr Zeit im Wasser und eine Route mit dem Skipper."
         : isEn
         ? "A full private day with the agile boat: more bays, more time in the water and a route shaped with the skipper."
         : "Una giornata intera privata con barca agile: più baie, più tempo in acqua e rotta scelta con lo skipper.",
     },
     gourmet: {
       emoji: "🍽️",
-      title: isEs ? "Chef a Bordo - Premium Experience" : isFr ? "Chef à Bord - Premium Experience" : isEn ? "Gourmet Experience on the Trimarano" : "Esperienza Gourmet sul Trimarano",
+      title: isEs ? "Chef a Bordo - Premium Experience" : isFr ? "Chef à Bord - Premium Experience" : isDe ? "Chef an Bord - Premium Experience" : isEn ? "Gourmet Experience on the Trimarano" : "Esperienza Gourmet sul Trimarano",
       boatLabel: isEs
 	        ? "Neel 47 de lujo · chef, patrón y azafata"
         : isFr
         ? "Neel 47 luxury · chef, skipper et hôtesse"
+        : isDe
+        ? "Neel 47 Luxury · Chef, Skipper und Hostess"
         : isEn
         ? "Luxury Trimarano · chef, skipper and hostess"
         : "Trimarano luxury · chef, skipper e hostess",
@@ -272,17 +298,21 @@ function buildExperienceChoiceRecommendations({
 	        ? "Buscas un día cuidado: espacios amplios, comida preparada a bordo, privacidad y ritmo premium al fondeo."
         : isFr
         ? "Vous cherchez une journée soignée : grands espaces, déjeuner préparé à bord, intimité et rythme premium au mouillage."
+        : isDe
+        ? "Sie wünschen sich einen kuratierten Tag: viel Raum, an Bord zubereitetes Mittagessen, Privatsphäre und Premium-Rhythmus vor Anker."
         : isEn
         ? "You want a day that feels cared for: wide spaces, lunch prepared on board, privacy and a premium rhythm at anchor."
         : "Vuoi una giornata curata: spazi ampi, pranzo preparato a bordo, privacy e ritmo premium in rada.",
     },
     charter: {
       emoji: "🛏️",
-      title: isEs ? "Charter Islas Egadi en Neel 47" : isFr ? "Charter aux îles Égades sur Neel 47" : isEn ? "Egadi Charter on the Trimarano" : "Charter Egadi sul Trimarano",
+      title: isEs ? "Charter Islas Egadi en Neel 47" : isFr ? "Charter aux îles Égades sur Neel 47" : isDe ? "Charter Ägadische Inseln auf dem Neel 47" : isEn ? "Egadi Charter on the Trimarano" : "Charter Egadi sul Trimarano",
       boatLabel: isEs
 	        ? "Neel 47 de lujo · camarotes y ruta a medida"
         : isFr
         ? "Neel 47 luxury · cabines et route sur mesure"
+        : isDe
+        ? "Neel 47 Luxury · Kabinen und Route nach Maß"
         : isEn
         ? "Luxury Trimarano · cabins and tailored route"
         : "Trimarano luxury · cabine e rotta su misura",
@@ -290,6 +320,8 @@ function buildExperienceChoiceRecommendations({
         ? "Para varios días en el mar: camarotes, fondeos tranquilos y ruta por Favignana, Levanzo y Marettimo."
         : isFr
         ? "Pour plusieurs jours en mer : cabines, mouillages calmes et route entre Favignana, Levanzo et Marettimo."
+        : isDe
+        ? "Für mehrere Tage auf See: Kabinen, ruhige Ankerplätze und eine Route zwischen Favignana, Levanzo und Marettimo."
         : isEn
         ? "For several days at sea: cabins, quiet anchorages and a route across Favignana, Levanzo and Marettimo."
         : "Per vivere più giorni in mare: cabine, rade tranquille e rotta tra Favignana, Levanzo e Marettimo.",
@@ -336,11 +368,14 @@ export async function generateMetadata({
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   return buildPageMetadata({
     title: isEs
       ? "Excursiones en barco a las Islas Egadi desde Trapani"
       : isFr
       ? "Excursions en bateau aux îles Égades depuis Trapani"
+      : isDe
+      ? "Bootstouren zu den Ägadischen Inseln ab Trapani"
       : isEn
       ? "Egadi Islands Boat Tours from Trapani"
       : "Tour in barca alle Isole Egadi da Trapani",
@@ -348,6 +383,8 @@ export async function generateMetadata({
       ? "Reserva excursiones en barco a las Islas Egadi desde Trapani: tours privados y compartidos, chef a bordo, trimarán Neel 47 y charter de varios días."
       : isFr
       ? "Réservez des excursions en bateau aux îles Égades depuis Trapani : tours privés et partagés, chef à bord, trimaran Neel 47 et charter de plusieurs jours."
+      : isDe
+      ? "Buchen Sie Bootstouren zu den Ägadischen Inseln ab Trapani: private und geteilte Touren, Chef an Bord, Neel 47 Trimaran und mehrtägige Charter."
       : isEn
       ? "Book Egadi Islands boat tours from Trapani: private and shared tours, chef on board, Neel 47 trimaran experiences and multi-day charters."
       : "Prenota tour in barca alle Egadi da Trapani: esperienze private e condivise, chef a bordo, trimarano Neel 47 e charter di più giorni.",

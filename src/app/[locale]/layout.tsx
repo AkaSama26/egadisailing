@@ -33,6 +33,8 @@ export default async function LocaleLayout({
           ? "Saltar al contenido"
           : locale === "fr"
             ? "Aller au contenu"
+            : locale === "de"
+              ? "Zum Inhalt springen"
             : locale === "en"
               ? "Skip to content"
               : "Vai al contenuto"}

@@ -9,6 +9,7 @@ const OG_LOCALES: Record<string, string> = {
   en: "en_US",
   es: "es_ES",
   fr: "fr_FR",
+  de: "de_DE",
 };
 
 export interface PageSeoOptions {
@@ -18,7 +19,7 @@ export interface PageSeoOptions {
   description: string;
   /** Path relativo senza locale (es. "/boats", "/experiences/social-boating"). */
   path: string;
-  /** Locale corrente (es. "it", "en", "es", "fr"). */
+  /** Locale corrente (es. "it", "en", "es", "fr", "de"). */
   locale: string;
   /** Immagine OpenGraph (1200x630 preferito). Path relativo a `env.APP_URL`. */
   image?: string;

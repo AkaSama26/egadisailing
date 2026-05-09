@@ -23,6 +23,8 @@ export function overrideSupersededTemplate(
         ? `Reserva ${data.confirmationCode} no disponible`
         : locale === "fr"
           ? `Réservation ${data.confirmationCode} non disponible`
+          : locale === "de"
+            ? `Buchung ${data.confirmationCode} nicht mehr verfügbar`
           : `Prenotazione ${data.confirmationCode} non disponibile`;
   const altTitle =
     locale === "en"
@@ -31,6 +33,8 @@ export function overrideSupersededTemplate(
         ? "Fechas alternativas:"
         : locale === "fr"
           ? "Dates alternatives :"
+          : locale === "de"
+            ? "Alternative Termine:"
           : "Date alternative:";
   const altList = data.alternativeDates.length > 0
     ? `<p>${altTitle}</p><ul>${data.alternativeDates
@@ -43,6 +47,8 @@ export function overrideSupersededTemplate(
         ? `Hola ${escapeHtml(data.customerName)},`
         : locale === "fr"
           ? `Bonjour ${escapeHtml(data.customerName)},`
+          : locale === "de"
+            ? `Guten Tag ${escapeHtml(data.customerName)},`
           : `Ciao ${escapeHtml(data.customerName)},`;
   const message =
     locale === "en"
@@ -51,6 +57,8 @@ export function overrideSupersededTemplate(
         ? `Tras la verificación operativa final de disponibilidad, sentimos comunicarte que no podemos confirmar tu reserva para <strong>${escapeHtml(data.serviceName)}</strong> del <strong>${escapeHtml(data.startDate)}</strong> (código <strong>${escapeHtml(data.confirmationCode)}</strong>).`
         : locale === "fr"
           ? `Après la vérification opérationnelle finale des disponibilités, nous sommes désolés de vous informer que nous ne pouvons pas confirmer votre réservation pour <strong>${escapeHtml(data.serviceName)}</strong> du <strong>${escapeHtml(data.startDate)}</strong> (code <strong>${escapeHtml(data.confirmationCode)}</strong>).`
+          : locale === "de"
+            ? `Nach der finalen operativen Verfügbarkeitsprüfung müssen wir Ihnen leider mitteilen, dass wir Ihre Buchung für <strong>${escapeHtml(data.serviceName)}</strong> am <strong>${escapeHtml(data.startDate)}</strong> (Code <strong>${escapeHtml(data.confirmationCode)}</strong>) nicht bestätigen können.`
           : `Ci dispiace comunicarti che, a seguito della verifica operativa sulla disponibilita', non possiamo confermare la tua prenotazione per <strong>${escapeHtml(data.serviceName)}</strong> del <strong>${escapeHtml(data.startDate)}</strong> (codice <strong>${escapeHtml(data.confirmationCode)}</strong>).`;
   const refund =
     locale === "en"
@@ -59,6 +67,8 @@ export function overrideSupersededTemplate(
         ? `Recibirás el reembolso completo de <strong>${escapeHtml(data.refundAmount)}</strong> en un plazo de 5-10 días laborables.`
         : locale === "fr"
           ? `Vous recevrez le remboursement complet de <strong>${escapeHtml(data.refundAmount)}</strong> sous 5 à 10 jours ouvrables.`
+          : locale === "de"
+            ? `Sie erhalten die vollständige Erstattung von <strong>${escapeHtml(data.refundAmount)}</strong> innerhalb von 5-10 Werktagen.`
           : `Riceverai il rimborso completo di <strong>${escapeHtml(data.refundAmount)}</strong> entro 5-10 giorni lavorativi.`;
   const portal =
     locale === "en"
@@ -67,6 +77,8 @@ export function overrideSupersededTemplate(
         ? "Área de reservas"
         : locale === "fr"
           ? "Espace réservation"
+          : locale === "de"
+            ? "Buchungsbereich"
           : "Area prenotazioni";
   const body = `
     <p>${greeting}</p>
@@ -75,6 +87,6 @@ export function overrideSupersededTemplate(
     ${altList}
     <p><a href="${safeUrl(data.bookingPortalUrl)}">${portal}</a></p>
   `;
-  const text = `${subject}. ${locale === "it" ? "Rimborso" : locale === "es" ? "Reembolso" : locale === "fr" ? "Remboursement" : "Refund"}: ${data.refundAmount}.`;
+  const text = `${subject}. ${locale === "it" ? "Rimborso" : locale === "es" ? "Reembolso" : locale === "fr" ? "Remboursement" : locale === "de" ? "Erstattung" : "Refund"}: ${data.refundAmount}.`;
   return { subject, html: emailLayout({ locale, heading: subject, bodyHtml: body }), text };
 }

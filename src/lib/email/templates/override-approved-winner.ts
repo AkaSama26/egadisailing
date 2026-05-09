@@ -23,13 +23,15 @@ export function overrideApprovedWinnerTemplate(
         ? `Reserva confirmada — ${data.confirmationCode}`
         : locale === "fr"
           ? `Réservation confirmée — ${data.confirmationCode}`
+          : locale === "de"
+            ? `Buchung bestätigt — ${data.confirmationCode}`
           : `Prenotazione confermata — ${data.confirmationCode}`;
   const labels = {
-    service: locale === "en" ? "Service" : locale === "es" ? "Servicio" : locale === "fr" ? "Service" : "Servizio",
-    date: locale === "en" ? "Date" : locale === "es" ? "Fecha" : locale === "fr" ? "Date" : "Data",
-    people: locale === "en" ? "Guests" : locale === "es" ? "Personas" : locale === "fr" ? "Personnes" : "Persone",
-    code: locale === "en" ? "Code" : locale === "es" ? "Código" : locale === "fr" ? "Code" : "Codice",
-    cta: locale === "en" ? "Manage booking" : locale === "es" ? "Gestionar reserva" : locale === "fr" ? "Gérer la réservation" : "Gestisci la prenotazione",
+    service: locale === "en" ? "Service" : locale === "es" ? "Servicio" : locale === "fr" ? "Service" : locale === "de" ? "Leistung" : "Servizio",
+    date: locale === "en" ? "Date" : locale === "es" ? "Fecha" : locale === "fr" ? "Date" : locale === "de" ? "Datum" : "Data",
+    people: locale === "en" ? "Guests" : locale === "es" ? "Personas" : locale === "fr" ? "Personnes" : locale === "de" ? "Personen" : "Persone",
+    code: locale === "en" ? "Code" : locale === "es" ? "Código" : locale === "fr" ? "Code" : locale === "de" ? "Code" : "Codice",
+    cta: locale === "en" ? "Manage booking" : locale === "es" ? "Gestionar reserva" : locale === "fr" ? "Gérer la réservation" : locale === "de" ? "Buchung verwalten" : "Gestisci la prenotazione",
   };
   const intro =
     locale === "en"
@@ -38,6 +40,8 @@ export function overrideApprovedWinnerTemplate(
         ? "Buenas noticias"
         : locale === "fr"
           ? "Bonne nouvelle"
+          : locale === "de"
+            ? "Gute Nachrichten"
           : "Ottime notizie";
   const confirmed =
     locale === "en"
@@ -46,6 +50,8 @@ export function overrideApprovedWinnerTemplate(
         ? "Tu reserva ha sido confirmada."
         : locale === "fr"
           ? "Votre réservation a été confirmée."
+          : locale === "de"
+            ? "Ihre Buchung wurde bestätigt."
           : "La tua prenotazione e' stata confermata.";
   const closing =
     locale === "en"
@@ -54,6 +60,8 @@ export function overrideApprovedWinnerTemplate(
         ? `Nos vemos a bordo. Para cualquier duda, llámanos al`
         : locale === "fr"
           ? `Nous vous attendons à bord. Pour toute question, appelez-nous au`
+          : locale === "de"
+            ? `Wir freuen uns, Sie an Bord zu begrüßen. Bei Fragen erreichen Sie uns unter`
           : `Ci vediamo a bordo. Per qualsiasi domanda chiamaci al`;
   const body = `
     <p>${intro}, ${escapeHtml(data.customerName)}!</p>

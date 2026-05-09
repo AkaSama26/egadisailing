@@ -36,6 +36,11 @@ const EUR_FORMATTER_FR = new Intl.NumberFormat("fr-FR", {
   currency: "EUR",
 });
 
+const EUR_FORMATTER_DE = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+});
+
 export function formatEur(
   amount: Decimal | string | number | null | undefined,
   locale?: string | null,
@@ -48,6 +53,8 @@ export function formatEur(
         ? EUR_FORMATTER_ES
         : locale === "fr"
           ? EUR_FORMATTER_FR
+          : locale === "de"
+            ? EUR_FORMATTER_DE
           : EUR_FORMATTER;
   return formatter.format(new Decimal(amount).toNumber());
 }

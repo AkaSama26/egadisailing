@@ -127,6 +127,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         en: `/islands/favignana/${slugs.en}`,
         es: `/islas/favignana/${slugs.es}`,
         fr: `/iles/favignana/${slugs.fr}`,
+        de: `/inseln/favignana/${slugs.de}`,
       },
       {
         lastModified: now,
@@ -145,6 +146,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         en: `/islands/levanzo/${slugs.en}`,
         es: `/islas/levanzo/${slugs.es}`,
         fr: `/iles/levanzo/${slugs.fr}`,
+        de: `/inseln/levanzo/${slugs.de}`,
       },
       {
         lastModified: now,
@@ -163,6 +165,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         en: `/islands/marettimo/${slugs.en}`,
         es: `/islas/marettimo/${slugs.es}`,
         fr: `/iles/marettimo/${slugs.fr}`,
+        de: `/inseln/marettimo/${slugs.de}`,
       },
       {
         lastModified: now,
@@ -182,6 +185,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         en: localizedPathWithoutLocale("en", `/experiences/${slug}`),
         es: localizedPathWithoutLocale("es", `/experiences/${slug}`),
         fr: localizedPathWithoutLocale("fr", `/experiences/${slug}`),
+        de: localizedPathWithoutLocale("de", `/experiences/${getExperiencePublicSlug(service.id, "de")}`),
       },
       {
         lastModified: service.updatedAt,

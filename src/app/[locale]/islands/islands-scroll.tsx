@@ -374,7 +374,88 @@ const islandsFr: readonly IslandScrollItem[] = [
   },
 ];
 
-const copyByLocale: Record<"it" | "en" | "es" | "fr", IslandsScrollCopy> = {
+const islandsDe: readonly IslandScrollItem[] = [
+  {
+    key: "favignana",
+    name: "Favignana",
+    subtitle: "Die Schmetterlingsinsel",
+    heroText: "Türkisfarbene Buchten, Tuffsteinbrüche und die Geschichte der Florio-Tonnara.",
+    image: "/images/islands/favignana/hero.webp",
+    svg: "/images/islands/favignana.svg",
+    svgWidth: 1371,
+    svgHeight: 765,
+    badge: "Ikonische Buchten",
+    intro:
+      "Favignana ist die größte der Ägadischen Inseln und lässt sich vom Boot aus besonders direkt erleben. Die Küste wechselt zwischen hellem Sand, niedrigen Felsen, Tuffsteinbrüchen und smaragdgrünen Buchten.",
+    longText:
+      "Für Gäste ab Trapani ist Favignana oft die erste Begegnung mit dem Archipel. Cala Rossa und Cala Azzurra sind die bekanntesten Bilder, doch der eigentliche Vorteil des Boots ist, die geschützteste Seite des Tages zu wählen.",
+    highlights: ["Cala Rossa", "Cala Azzurra", "Bue Marino", "Ex Stabilimento Florio"],
+    fromTheBoat: [
+      "In Buchten einfahren, wenn das Licht den Meeresgrund aufhellt und der Wind das Wasser ruhig lässt.",
+      "Lange Badestopps mit Panoramapassagen unter Tuffsteinwänden verbinden.",
+      "In den vollsten Stunden abseits der Landzugänge ankern.",
+    ],
+    practical: [
+      "Ideal für einen ganzen Tag oder Routen in Kombination mit Levanzo.",
+      "Perfekt für einfaches Schnorcheln und Fotostopps.",
+      "Die beste Seite verändert sich mit Mistral, Scirocco und Grecale.",
+    ],
+  },
+  {
+    key: "levanzo",
+    name: "Levanzo",
+    subtitle: "Stille und klares Wasser",
+    heroText: "Ein weißes Dorf, transparente Meeresgründe und kleine Buchten, die man langsam erreicht.",
+    image: "/images/islands/levanzo/hero.webp",
+    svg: "/images/islands/levanzo.svg",
+    svgWidth: 1185,
+    svgHeight: 885,
+    badge: "Langsamer Rhythmus",
+    intro:
+      "Levanzo ist die kleinste der Ägadischen Inseln, rund um Cala Dogana und eine reduzierte Landschaft gesammelt: weiße Häuser, heller Fels und Wasser für ruhige Stopps.",
+    longText:
+      "Mit dem Boot erleben Sie Levanzo ohne Eile, zwischen Cala Fredda, Cala Minnola und dem Faraglione. Die Insel bewahrt außerdem die Grotta del Genovese, eine wichtige prähistorische Stätte.",
+    highlights: ["Cala Fredda", "Cala Minnola", "Grotta del Genovese", "Faraglione"],
+    fromTheBoat: [
+      "Am Dorf Cala Dogana entlangfahren und kleine, geschützte Ankerplätze wählen.",
+      "Über den klaren Gründen von Cala Minnola schnorcheln.",
+      "Mit Favignana zu einer ausgewogenen Route zwischen berühmten Buchten und ruhigeren Ecken kombinieren.",
+    ],
+    practical: [
+      "Sehr gut für Gäste, die ein intimeres und entspannteres Erlebnis suchen.",
+      "Passt zu erweiterten Halbtagen oder leichten Ganztagesrouten.",
+      "Die besten Stopps hängen stark von der Windexposition ab.",
+    ],
+  },
+  {
+    key: "marettimo",
+    name: "Marettimo",
+    subtitle: "Der Berg im Meer",
+    heroText: "Meeresgrotten, hohe Wände und das wildeste Profil des Archipels.",
+    image: "/images/islands/marettimo/hero.webp",
+    svg: "/images/islands/marettimo.svg",
+    svgWidth: 1371,
+    svgHeight: 765,
+    badge: "Tiefe Natur",
+    intro:
+      "Marettimo ist die fernste und vertikalste der Ägadischen Inseln. Berge, Wege, Meeresgrotten und ein kleines Dorf geben ihr einen deutlich wilderen Charakter.",
+    longText:
+      "Eine Bootsfahrt nach Marettimo bedeutet mehr Navigation und passende Seebedingungen, belohnt aber mit Punta Troia, Cala Bianca, Scalo Maestro und den Grotten del Cammello, del Presepe und del Tuono.",
+    highlights: ["Grotta del Cammello", "Punta Troia", "Cala Bianca", "Scalo Maestro"],
+    fromTheBoat: [
+      "Meeresgrotten entdecken, wenn sichere und helle Einfahrten möglich sind.",
+      "Unter hohen Wänden navigieren, mit tieferen Farben als bei den anderen Inseln.",
+      "Baden, Fotografie und Panoramapassagen in einer abenteuerlicheren Route verbinden.",
+    ],
+    practical: [
+      "Empfohlen für Ganztagesausfahrten und Gäste, die Navigation mögen.",
+      "Die Machbarkeit hängt stärker vom Seewetter ab als bei den anderen Inseln.",
+      "Perfekt für alle, die wildere und weniger klassische Ägadische Inseln suchen.",
+    ],
+  },
+] as const;
+
+const copyByLocale: Record<"it" | "en" | "es" | "fr" | "de", IslandsScrollCopy> = {
   it: {
     heroEyebrow: "Arcipelago delle Egadi",
     heroTitle: "Le isole Egadi, una rotta alla volta",
@@ -443,9 +524,27 @@ const copyByLocale: Record<"it" | "en" | "es" | "fr", IslandsScrollCopy> = {
     ctaAfter: "en bateau",
     islands: islandsFr,
   },
+  de: {
+    heroEyebrow: "Ägadischer Archipel",
+    heroTitle: "Die Ägadischen Inseln, Route für Route",
+    heroText:
+      "Favignana, Levanzo und Marettimo liegen nah beieinander, fühlen sich auf dem Meer aber sehr unterschiedlich an. Diese Seite zeigt, was Sie sehen können, wie man die Inseln per Boot erlebt und welches Erlebnis ab Trapani am besten passt.",
+    navLabel: "Ägadische Inseln",
+    quickEyebrow: "Schneller Guide",
+    quickTitle: "Drei Inseln, drei Arten, das Meer zu spüren",
+    quickText:
+      "Der Ägadische Archipel ist ein Meeresschutzgebiet, in dem der beste Plan immer beim Wetter beginnt. Mit dem Boot wählen Sie die geschützte Küste, passen Stopps an und erleben jede Insel von ihrer ehrlichsten Seite: vom Wasser.",
+    imageAltSuffix: "Ägadische Inseln",
+    fromSeaTitle: "Vom Meer aus",
+    practicalTitle: "Gut zu wissen",
+    ctaBefore: "Erleben Sie",
+    ctaAfter: "mit dem Boot",
+    islands: islandsDe,
+  },
 };
 
 function getCopy(locale: string): IslandsScrollCopy {
+  if (locale === "de") return copyByLocale.de;
   if (locale === "fr") return copyByLocale.fr;
   if (locale === "es") return copyByLocale.es;
   if (locale === "en") return copyByLocale.en;
@@ -604,7 +703,7 @@ export function IslandsScrollSection({ locale }: { locale: string }) {
 
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#b58a27]">
-                    Isole Egadi
+                    {copy.navLabel}
                   </p>
                   <h2 className="mt-3 font-heading text-4xl font-bold leading-tight text-[#092337] sm:text-5xl">
                     {island.name}

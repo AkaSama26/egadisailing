@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import {
   Anchor,
@@ -61,11 +61,134 @@ function getDetailCopy(
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const isCharter = service.type === "CABIN_CHARTER";
   const isPrivateBoat = service.type === "BOAT_EXCLUSIVE";
   const isSharedBoat = service.type === "BOAT_SHARED";
   const isHalfDay = service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
   const isFullDay = service.durationType === "FULL_DAY";
+
+  if (isDe) {
+    const experienceLabel = isCharter
+      ? "Privater Charter"
+      : isPrivateBoat
+        ? "Private Bootstour zu den Ägadischen Inseln"
+        : isSharedBoat
+          ? "Geteilte Bootstour zu den Ägadischen Inseln"
+          : "Bootserlebnis auf den Ägadischen Inseln";
+    const routeText = isCharter
+      ? "Favignana, Levanzo und Marettimo werden nach Wind, Meer und gewünschtem Bordrhythmus geplant."
+      : isFullDay
+        ? "Acht Stunden geben Raum für Favignana und Levanzo, mit Buchten und Zeiten passend zu den Bedingungen."
+        : isHalfDay
+          ? "Vier Stunden konzentrieren sich auf die am besten geschützten Gewässer des Tages, mit klarer Rückkehr."
+          : "Die Crew wählt die besten Buchten zum Baden, Schnorcheln und entspannten Navigieren.";
+    const formulaText = isCharter
+      ? "Privater Trimaran-Charter mit Skipper, Kabinen und Route, die Tag für Tag entsteht."
+      : isPrivateBoat
+        ? "Das Boot ist für Ihre Gruppe reserviert; Stopps und Rhythmus werden mit dem Skipper abgestimmt."
+        : isSharedBoat
+          ? "Sie buchen einzelne Plätze und teilen das Erlebnis mit anderen Gästen."
+          : "Privater Premium-Tag auf dem Trimaran mit Chef, Skipper und Hostess.";
+    const whatYouSeeItems = isCharter
+      ? [
+          { title: "Nächte vor Anker", text: "Wachen Sie nahe geschützter Buchten auf und passen Sie jeden Tag ohne Eile an." },
+          { title: "Favignana, Levanzo, Marettimo", text: "Die Inseln werden nach Wind, Meer und Charterdauer gewählt." },
+          { title: "Leben an Bord", text: "Kabinen, Küche und Gemeinschaftsflächen machen den Trimaran zu einem schwimmenden Zuhause." },
+        ]
+      : isFullDay
+        ? [
+            { title: "Mehr Zeit im Wasser", text: "Acht Stunden geben mehr Spielraum für Buchten, Baden und Schnorcheln." },
+            { title: "Favignana und Levanzo", text: "Die Crew kann zwischen beiden Inseln arbeiten, wenn das Meer es erlaubt." },
+            { title: "Entspannte Rückfahrt", text: "Der letzte Abschnitt hält den Tag ruhig, mit wechselndem Licht Richtung Trapani." },
+          ]
+        : [
+            { title: "Klarer Zeitplan", text: "Ein kompaktes Zeitfenster für Meer, Baden und eine präzise Rückkehr." },
+            { title: "Geschützte Buchten", text: "Der Skipper wählt die sichersten und klarsten Gewässer, die in einem halben Tag erreichbar sind." },
+            { title: "Panoramafahrt", text: "Genug Zeit, um die Ägadischen Inseln auch bei einer kurzen Ausfahrt vom Meer aus zu spüren." },
+          ];
+    const faqs = [
+      {
+        question: "Wo startet die Bootstour?",
+        answer:
+          "Die Abfahrt erfolgt ab Trapani. Der übliche Treffpunkt ist Via dei Gladioli 15, 91100 Trapani, sofern die Crew nichts anderes mitteilt.",
+      },
+      {
+        question: "Ist die Route fest?",
+        answer:
+          "Nein. Der Skipper wählt die sicherste und angenehmste Route nach Wind, Meer, Auslastung und verfügbarer Zeit.",
+      },
+      {
+        question: "Ist das Erlebnis geteilt oder privat?",
+        answer: `${formulaText} Das genaue Format sehen Sie im Titel und im Buchungsbereich, bevor Sie ein Datum wählen.`,
+      },
+      {
+        question: "Was sollte ich an Bord mitbringen?",
+        answer:
+          "Badekleidung, Handtuch, Sonnenschutz, Sonnenbrille, Hut und eine weiche Tasche, die sich leicht verstauen lässt.",
+      },
+      {
+        question: "Was passiert, wenn das Meer nicht geeignet ist?",
+        answer:
+          "Die Crew prüft die Bedingungen vor der Abfahrt und stellt Sicherheit immer an erste Stelle. Falls nötig, wird die Route angepasst oder es werden verfügbare operative Optionen vorgeschlagen.",
+      },
+    ];
+
+    return {
+      experienceLabel,
+      overviewTitle: "Das Erlebnis",
+      overviewEyebrow: "Warum es passt",
+      bookingTitle: "Dieses Erlebnis planen",
+      bookingText: "Wählen Sie das Datum und fahren Sie mit aktuellen Preisen und Verfügbarkeiten zur Buchung fort.",
+      galleryTitle: "Ein Eindruck an Bord",
+      usefulInfo: "Nützliche Informationen",
+      routeTitle: isCharter ? "Route Tag für Tag" : isFullDay ? "Ganztagesroute" : isHalfDay ? "Kompakte Route" : "Route nach Seebedingungen",
+      routeText,
+      onboardTitle: isCharter ? "Leben an Bord" : isPrivateBoat ? "Reserviertes Boot" : isSharedBoat ? "Geteilte Plätze" : "Crew und Komfort",
+      onboardText: isCharter
+        ? "Kabinen, Gemeinschaftsflächen und Küche machen den Trimaran zu einem kleinen Zuhause auf dem Meer."
+        : isPrivateBoat
+          ? "Das Boot ist Ihrer Gruppe gewidmet, daher werden Stopps und Rhythmus mit dem Skipper gestaltet."
+          : isSharedBoat
+            ? "Sie buchen Ihre Plätze und teilen die Route mit anderen Gästen, einfach und zugänglich."
+            : "Skipper und Bordservice halten den Tag von der Abfahrt bis zur Rückkehr flüssig.",
+      rhythmTitle: isCharter ? "Langsame Tage" : isFullDay ? "Zeit zum Bleiben" : isHalfDay ? "Essentieller halber Tag" : "Leichter Rhythmus",
+      rhythmText: isCharter
+        ? "Schlafen Sie nahe geschützter Buchten, wachen Sie am Wasser auf und passen Sie das Programm ohne Eile an."
+        : isFullDay
+          ? "Ein längeres Zeitfenster bedeutet mehr Zeit im Wasser, mehr Flexibilität und weniger Druck zwischen den Stopps."
+          : isHalfDay
+            ? "Ein kurzes, fokussiertes Erlebnis für Gäste, die Meer, Baden und klare Zeiten wünschen."
+            : "Badestopps, Zeit vor Anker und eine klare Rückkehr halten das Erlebnis ausgewogen.",
+      priceHeader: isCharter ? "Paketpreis" : "Preis",
+      charterType: "Charterpaket",
+      daysLabel: (days: number) => `${days} Tage`,
+      bookNow: "Jetzt buchen",
+      practicalEyebrow: "Vor der Buchung",
+      practicalTitle: "Praktische Details",
+      practicalItems: [
+        { icon: Anchor, title: "Abfahrt ab Trapani", text: "Treffpunkt: Via dei Gladioli 15, 91100 Trapani." },
+        {
+          icon: Clock,
+          title: "Dauer",
+          text: isCharter
+            ? "3 bis 7 Tage, vor der Abfahrt geplant."
+            : isFullDay
+              ? "8 Stunden."
+              : isHalfDay
+                ? "4 Stunden."
+                : "Dauer wie in der Erlebnisbeschreibung angegeben.",
+        },
+        { icon: Compass, title: "Route", text: routeText },
+        { icon: Users, title: "Format und Kapazität", text: formulaText },
+      ],
+      whatYouSeeTitle: "Was Sie an Bord erleben",
+      whatYouSeeIntro: "Mehr Kontext, damit Sie vor der Buchung das passende Erlebnis wählen.",
+      whatYouSeeItems,
+      faqTitle: "Fragen zu diesem Erlebnis",
+      faqs,
+    };
+  }
 
   if (isFr) {
     const experienceLabel = isCharter
@@ -445,6 +568,7 @@ function getSeoExpansionCopy(
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
   const isCharter = service.type === "CABIN_CHARTER";
   const isPrivateBoat = service.type === "BOAT_EXCLUSIVE";
   const isSharedBoat = service.type === "BOAT_SHARED";
@@ -452,6 +576,89 @@ function getSeoExpansionCopy(
   const isHalfDay =
     service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
   const isFullDay = service.durationType === "FULL_DAY";
+
+  if (isDe) {
+    const routeText = isCharter
+      ? "Favignana, Levanzo und Marettimo können über mehrere Tage kombiniert werden, immer nach Seewetter."
+      : isFullDay
+        ? "Der ganze Tag lässt Raum für Favignana, Levanzo, Badestopps und entspannte Zeit vor Anker."
+        : isHalfDay
+          ? "Der halbe Tag konzentriert sich auf die am besten geschützten Buchten zwischen Favignana und Levanzo."
+          : "Die Crew plant die Route zwischen den schönsten und geschütztesten Buchten der Ägadischen Inseln.";
+    const formulaText = isCharter
+      ? "Privater Trimaran-Charter mit Skipper, Kabinen und Route Tag für Tag."
+      : isPrivateBoat
+        ? "Das Boot ist für Ihre Gruppe reserviert, mit Stopps und Rhythmus nach Absprache mit dem Skipper."
+        : isSharedBoat
+          ? "Sie buchen einzelne Plätze und teilen das Erlebnis mit anderen Gästen."
+          : isGourmet
+            ? "Privater Premium-Tag auf dem Trimaran mit Chef, Skipper und Hostess."
+            : "Ein sorgfältig kuratiertes Erlebnis auf den Ägadischen Inseln mit professioneller Crew.";
+    const whatYouSeeItems = isCharter
+      ? [
+          { title: "Nächte vor Anker", text: "Wachen Sie nahe geschützter Buchten auf und passen Sie jeden Tag ohne Eile an." },
+          { title: "Favignana, Levanzo, Marettimo", text: "Die Inseln werden nach Wind, Meer und Charterdauer gewählt." },
+          { title: "Leben an Bord", text: "Kabinen, Küche und Gemeinschaftsflächen machen den Trimaran zu einem kleinen schwimmenden Zuhause." },
+        ]
+      : isFullDay
+        ? [
+            { title: "Mehr Zeit im Wasser", text: "Acht Stunden bedeuten weniger Druck zwischen den Buchten und mehr Zeit zum Schnorcheln." },
+            { title: "Favignana und Levanzo", text: "Die Crew kann zwischen beiden Inseln arbeiten, wenn die Seebedingungen es erlauben." },
+            { title: "Sanfte Rückfahrt", text: "Der letzte Abschnitt hält den Tag entspannt, mit wechselndem Licht auf dem Rückweg." },
+          ]
+        : [
+            { title: "Klarer Zeitplan", text: "Ein kompaktes Zeitfenster für alle, die Meer, Baden und eine präzise Rückkehr wünschen." },
+            { title: "Geschützte Buchten", text: "Der Skipper wählt die sichersten und klarsten Gewässer, die in einem halben Tag erreichbar sind." },
+            { title: "Panoramafahrt", text: "Genug Zeit, um die Ägadischen Inseln auch bei einer kurzen Ausfahrt vom Wasser aus zu erleben." },
+          ];
+    const faqs = [
+      {
+        question: isCharter ? "Wie lange kann der Charter dauern?" : "Wo startet die Tour?",
+        answer: isCharter
+          ? "Der Charter auf den Ägadischen Inseln kann von 3 bis 7 Tagen geplant werden. Die endgültige Route wird mit dem Skipper bestätigt und an Wind, Meer und gewünschten Rhythmus angepasst."
+          : "Die Tour startet in Trapani. Der übliche Treffpunkt ist Via dei Gladioli 15, 91100 Trapani, sofern die Crew nichts anderes mitteilt.",
+      },
+      {
+        question: "Können wir die Route wählen?",
+        answer:
+          "Ja, die Route wird vor der Abfahrt mit der Crew besprochen. Der Skipper behält die notwendige Flexibilität, um die sichersten und angenehmsten Buchten des Tages zu wählen.",
+      },
+      {
+        question: "Was ist enthalten?",
+        answer: `${formulaText} Auf der Seite finden Sie außerdem Dauer, Kapazität, Preis und Hinweise dazu, was Sie an Bord mitbringen sollten.`,
+      },
+      {
+        question: "Ist das Erlebnis für Kinder geeignet?",
+        answer:
+          "Ja, wenn das gewählte Format und die Seebedingungen passen. Für Familien bietet eine private Tour oft mehr Freiheit bei Zeiten und Pausen.",
+      },
+      {
+        question: "Was passiert, wenn sich das Wetter ändert?",
+        answer:
+          "Die Route wird mit dem Skipper geprüft. Wenn die Bedingungen eine sichere Durchführung verhindern, teilt das Team die verfügbaren Optionen mit.",
+      },
+    ];
+
+    return {
+      practicalEyebrow: "Vor der Buchung",
+      practicalTitle: "Praktische Details",
+      practicalItems: [
+        { icon: Anchor, title: "Abfahrt ab Trapani", text: "Treffpunkt: Via dei Gladioli 15, 91100 Trapani." },
+        { icon: Clock, title: "Dauer", text: isCharter ? "3 bis 7 Tage, vor der Abfahrt geplant." : durationText },
+        { icon: Compass, title: "Route", text: routeText },
+        {
+          icon: Users,
+          title: "Format und Kapazität",
+          text: `${formulaText}${boatTitle ? ` Boot: ${boatTitle}.` : ""} Bis zu ${service.capacityMax} Gäste.`,
+        },
+      ],
+      whatYouSeeTitle: "Was Sie an Bord erleben",
+      whatYouSeeIntro: "Mehr Details, damit Sie vor der Buchung das richtige Erlebnis wählen.",
+      whatYouSeeItems,
+      faqTitle: "Fragen zu diesem Erlebnis",
+      faqs,
+    };
+  }
 
   if (isFr) {
     const routeText = isCharter
@@ -927,7 +1134,16 @@ function getEditorialExperienceCopy(
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
-  const boat = boatTitle ?? (isFr ? "le bateau sélectionné" : isEn ? "the selected boat" : "la barca selezionata");
+  const isDe = locale === "de";
+  const boat =
+    boatTitle ??
+    (isDe
+      ? "das ausgewählte Boot"
+      : isFr
+        ? "le bateau sélectionné"
+        : isEn
+          ? "the selected boat"
+          : "la barca selezionata");
   const isCharter = service.type === "CABIN_CHARTER";
   const isPrivateBoat = service.type === "BOAT_EXCLUSIVE";
   const isSharedBoat = service.type === "BOAT_SHARED";
@@ -936,6 +1152,62 @@ function getEditorialExperienceCopy(
     service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
   const plannedIslandsEn = isCharter ? "Favignana, Levanzo and Marettimo" : "Favignana and Levanzo";
   const plannedIslandsIt = isCharter ? "Favignana, Levanzo e Marettimo" : "Favignana e Levanzo";
+  const plannedIslandsDe = isCharter ? "Favignana, Levanzo und Marettimo" : "Favignana und Levanzo";
+
+  if (isDe) {
+    if (!isCharter && !isGourmet) {
+      const boatTourFormat = isSharedBoat
+        ? "eine geteilte Bootstour zu den Ägadischen Inseln ab Trapani, ideal, wenn Sie einen ganzen Tag auf dem Meer erleben möchten, ohne das gesamte Boot privat zu buchen"
+        : isHalfDay
+          ? "eine private 4-stündige Bootstour zu den Ägadischen Inseln, gedacht für Gäste, die klares Wasser, Badestopps und eine gut planbare Rückkehr wünschen"
+          : "eine private Ganztages-Bootstour zu den Ägadischen Inseln, bei der das Boot nur für Ihre Gruppe reserviert ist und mehr Zeit für die Route bleibt";
+
+      return {
+        eyebrow: "Erlebnisguide",
+        title: `Warum ${title} wählen`,
+        paragraphs: [
+          `${title} ist ${boatTourFormat}. Die Abfahrt erfolgt ab Trapani, und die Route wird nach den besten Bedingungen des Tages zwischen Favignana und Levanzo geplant. Das ist auf den Ägadischen Inseln wichtig: Wind, Seegang und Besucheraufkommen können sich schnell ändern, deshalb sollte eine gute Bootstour keinem starren Plan folgen. Sie sollte die Buchten wählen, in denen das Wasser klarer, der Ankerplatz ruhiger und der Tag von Anfang bis Ende entspannter ist.`,
+          "Das Erlebnis ist auf das ausgerichtet, was Gäste bei einer Bootstour zu den Ägadischen Inseln meist suchen: türkisfarbenes Wasser, Badestopps, Schnorcheln, Küstenblicke und genügend Zeit, um das Meer ohne Eile zu genießen. Cala Rossa, Cala Azzurra, Bue Marino und die ruhigeren Ecken von Levanzo gehören zu den Orten, die der Skipper im Tagesverlauf bewertet. Die endgültige Wahl hängt aber immer von den realen Bedingungen auf See ab.",
+          isSharedBoat
+            ? "Das geteilte Format ist einfach und praktisch. Sie buchen Ihre Plätze, treffen die Crew in Trapani und teilen den Tag mit anderen Gästen, die dasselbe suchen: Meer, Baden und eine gut organisierte Route. Es ist eine gute Wahl, wenn Sie eine vollständige Egadi-Bootstour mit leichterem Budget und geselliger Stimmung an Bord wünschen."
+            : isHalfDay
+              ? "Die private 4-Stunden-Tour passt, wenn Sie ein kompaktes Erlebnis möchten: klare Zeiten, Privatsphäre für Ihre Gruppe und ein oder zwei gut gewählte Stopps statt vieler Orte im Eiltempo. Sie eignet sich für Paare, Familien und Reisende, die das Meer vor oder nach einem anderen Plan in Trapani erleben möchten."
+              : "Die private Ganztagestour gibt dem Skipper mehr Freiheit, den Rhythmus an Ihre Gruppe anzupassen. Es bleibt mehr Zeit zum Baden, mehr Spielraum zwischen Favignana und Levanzo und ein ruhigeres Tempo an Bord. Sie ist die richtige Wahl, wenn Sie Privatsphäre, Raum und eine Route wünschen, die zu Kindern, Freunden oder einem besonderen Anlass passt.",
+          `An Bord von ${boat} buchen Sie nicht nur einen Bootsnamen. Sie wählen ein offenes Motorboot, das sich leicht zwischen den Buchten bewegt. Es gibt Sitzplätze für die Gruppe, Raum für Sonne, Zugang zum Meer zum Baden und Schnorcheln, einen Skipper am Steuer und praktische Unterstützung vor der Abfahrt. Sie müssen die Ägadischen Inseln nicht bereits kennen; bringen Sie Badebekleidung, Handtuch, Sonnenschutz und eine weiche Tasche mit, die Crew führt die Route nach den Bedingungen des Tages.`,
+          "Den Unterschied macht die lokale Einschätzung. Eine berühmte Bucht ist nicht immer der beste Stopp, wenn sie voll oder dem Wind ausgesetzt ist; manchmal bietet eine ruhigere Bucht klareres Wasser und ein angenehmeres Bad. Deshalb beschreiben wir diese Erfahrung als flexible Bootstour von Trapani zu den Ägadischen Inseln: Die Route hat eine klare Idee, aber der Skipper behält genug Freiheit, um Komfort, Sicherheit und Qualität des Tages zu schützen.",
+        ],
+      };
+    }
+
+    const formatText = isCharter
+      ? "ein privater mehrtägiger Charter, gedacht für Reisende, die nahe an den Inseln schlafen und der Route Raum geben möchten"
+      : isGourmet
+        ? "ein privater Premium-Tag auf dem Trimaran, aufgebaut rund um Komfort, Essen und ruhige Zeit vor Anker"
+        : isSharedBoat
+          ? "eine geteilte Ganztages-Bootstour für Gäste, die die Ägadischen Inseln in einem einfachen und zugänglichen Format erleben möchten"
+          : isHalfDay
+            ? "eine private Halbtagestour für Gruppen, die Meer, Privatsphäre und klare Rückkehrzeiten wünschen"
+            : "eine private Ganztagestour für Gruppen, die mehr Badezeit, flexible Route und ein langsameres Tempo suchen";
+
+    return {
+      eyebrow: "Erlebnisguide",
+      title: `Warum ${title} wählen`,
+      paragraphs: [
+        `${title} ist ${formatText}. Das Erlebnis startet in Trapani und richtet sich nach den Ägadischen Inseln, wie sie am Tag der Abfahrt wirklich sind: hell, wechselhaft, an manchen Stellen offen und an anderen wunderbar geschützt. Deshalb verkaufen wir keine starre Postkartenroute. Wir zeigen ein professionell geführtes Meererlebnis, bei dem der Skipper Wind, Verkehr, Seegang und Licht liest, bevor er den angenehmsten Plan für ${plannedIslandsDe} wählt.`,
+        `An Bord von ${boat} liegt der Wert nicht nur in der Liste der Buchten. Entscheidend ist, wie der Tag geführt wird: klare Abfahrt, entspannte Zeiten, sorgfältig gewählte Badestopps, ruhige Navigation und praktische Aufmerksamkeit für die Gruppe. Gäste erinnern sich oft an Cala Rossa, Cala Azzurra, Bue Marino oder die stilleren Seiten von Levanzo. Der echte Unterschied ist aber das Gefühl, von einer Crew begleitet zu werden, die weiß, wann man bleibt, wann man weiterfährt und wann eine ruhigere Bucht besser ist als der berühmteste Name auf der Karte.`,
+        isCharter
+          ? "Beim Charter wird der Rhythmus noch wichtiger. Eine mehrtägige Route lässt die Inseln langsam aufgehen: ein erster Badestopp nach der Abfahrt von Trapani, ein Abend vor Anker, wenn das Wetter passt, Morgenstunden nahe klarem Wasser und die Möglichkeit, den nächsten Tag anzupassen, statt ein fixes Programm zu erzwingen. Der Trimaran bietet dafür eine komfortable Basis mit Kabinen, Gemeinschaftsflächen und genug Raum, damit das Boot zu einem kleinen Zuhause auf dem Meer wird."
+          : isGourmet
+            ? "Beim Gourmet-Erlebnis wird das Boot zugleich Route und Tisch. Chef und Crew koordinieren die Zeiten so, dass das Mittagessen nicht wie eine Unterbrechung wirkt, sondern Teil des Tages wird: ein Bad vor dem Ankern, ruhiger Service an Bord, lokale Aromen und danach genug Zeit, wieder ins Wasser zu gehen. Es ist für Gäste gedacht, die Privatsphäre, Komfort und eine kuratiertere Art suchen, die Ägadischen Inseln zu erleben."
+            : isPrivateBoat
+              ? "Bei privaten Bootstouren ist Flexibilität der stärkste Vorteil. Das Boot ist für Ihre Gruppe reserviert, sodass der Skipper Badezeit, Tempo und Stopps anpassen kann, ohne unterschiedliche Erwartungen an Bord ausgleichen zu müssen. Das passt für Familien, Paare, Freundesgruppen und alle, die die Egadi-Inseln persönlicher erleben möchten."
+              : "Bei der geteilten Ganztagestour liegt der Reiz in der Einfachheit. Sie buchen Ihre Plätze, treffen die Crew in Trapani und nehmen an einem Tag teil, der das Wesentliche zusammenhält: klares Wasser, Badestopps, Panorama-Navigation und eine gesellige, aber gut organisierte Atmosphäre.",
+        "Die Route wird bewusst flexibel beschrieben, weil die Ägadischen Inseln Erfahrung stärker belohnen als Improvisation. Ein guter Tag auf See hängt von kleinen Entscheidungen ab: wo man mit weniger Schwell ankert, welche Inselseite klarer ist, wann eine bekannte Bucht zu voll wird und wie lange die Gruppe im Wasser bleiben kann, ohne die Rückfahrt hektisch zu machen. Die Crew hält diese Details im Gleichgewicht, damit der Ausflug natürlich wirkt. Dahinter stehen Planung, lokale Kenntnis und ständige Aufmerksamkeit für Komfort.",
+        "Das ist besonders wichtig, wenn Sie vor der Buchung verschiedene Erlebnisse vergleichen. Ein privates Format gibt mehr Kontrolle über Rhythmus und Privatsphäre; ein geteilter Ganztag hält die Kosten zugänglicher und bewahrt die wichtigsten Meeresmomente; ein Gourmet-Tag auf dem Trimaran ergänzt Service, Essen und Raum; ein Charter macht aus den Inseln eine langsamere Reise. Diese Seite soll diese Unterschiede klar machen, damit die Wahl des Datums der letzte Schritt ist und nicht der Moment, in dem Sie noch verstehen müssen, was Sie buchen.",
+        "Die Seite hilft Ihnen auch, vor der Buchung sicherer zu entscheiden. Die Bilder zeigen Boot und Atmosphäre an Bord, der Reiseverlauf erklärt die wahrscheinliche Struktur des Tages, und die FAQ beantworten die praktischen Fragen, die vor der Datumswahl zählen. Preise und Verfügbarkeit bleiben im Buchungsbereich; hier bekommen Sie den Kontext: wie sich das Erlebnis anfühlt, für wen es passt, wie die Crew arbeitet und warum eine gut geführte Route rund um die Ägadischen Inseln deutlich anders sein kann als eine generische Bootsfahrt.",
+      ],
+    };
+  }
 
   if (isFr) {
     const formatText = isCharter
@@ -1109,12 +1381,23 @@ function getGourmetMenuCopy(locale: string) {
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
 
   return {
-    eyebrow: isEs ? "Chef a bordo" : isFr ? "Chef à bord" : isEn ? "Chef on board" : "Chef a bordo",
-    title: isEs ? "Ejemplos de menús gourmet" : isFr ? "Exemples de menus gourmet" : isEn ? "Sample gourmet menus" : "Esempi di menu gourmet",
+    eyebrow: isDe ? "Chef an Bord" : isEs ? "Chef a bordo" : isFr ? "Chef à bord" : isEn ? "Chef on board" : "Chef a bordo",
+    title: isDe
+      ? "Beispielmenüs für das Gourmet-Erlebnis"
+      : isEs
+        ? "Ejemplos de menús gourmet"
+        : isFr
+          ? "Exemples de menus gourmet"
+          : isEn
+            ? "Sample gourmet menus"
+            : "Esempi di menu gourmet",
     intro: isEs
       ? "Tres ejemplos de comida servida a bordo durante la Premium Experience. El menú final se confirma con el chef según pesca fresca, temporada y necesidades de los huéspedes."
+      : isDe
+      ? "Drei Beispiele für das Mittagessen an Bord während der Premium Experience. Das endgültige Menü wird mit dem Chef nach frischem Fang, Saison und Bedürfnissen der Gäste bestätigt."
       : isFr
       ? "Trois exemples de déjeuner servis à bord pendant la Premium Experience. Le menu final est confirmé avec le chef selon la pêche fraîche, la saison et les besoins des hôtes."
       : isEn
@@ -1122,6 +1405,8 @@ function getGourmetMenuCopy(locale: string) {
       : "Tre esempi di pranzo servito a bordo durante l'Esperienza Gourmet. Il menu definitivo viene concordato con lo chef in base a pescato fresco, stagione ed esigenze degli ospiti.",
     seasonalNote: isEs
       ? "Los menús pueden variar según disponibilidad. Alergias, intolerancias y necesidades alimentarias importantes deben comunicarse antes de la salida."
+      : isDe
+      ? "Die Menüs können je nach Verfügbarkeit variieren. Allergien, Unverträglichkeiten und wichtige Ernährungsbedürfnisse sollten vor der Abfahrt mitgeteilt werden."
       : isFr
       ? "Les menus peuvent varier selon la disponibilité. Allergies, intolérances et besoins alimentaires importants doivent être communiqués avant le départ."
       : isEn
@@ -1134,11 +1419,28 @@ function getGourmetSampleMenus(locale: string) {
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
+  const isDe = locale === "de";
 
   return [
     {
-      title: isEs ? "Menú de atún de Favignana" : isFr ? "Menu thon de Favignana" : isEn ? "Favignana Tuna Menu" : "Menu tonno di Favignana",
-      subtitle: isEs ? "Pescado local, sabores sicilianos y un final ligero." : isFr ? "Poisson local, saveurs siciliennes et finale légère." : isEn ? "Local fish, Sicilian flavours and a relaxed finish." : "Pesce locale, sapori siciliani e chiusura leggera.",
+      title: isDe
+        ? "Favignana-Thunfisch-Menü"
+        : isEs
+          ? "Menú de atún de Favignana"
+          : isFr
+            ? "Menu thon de Favignana"
+            : isEn
+              ? "Favignana Tuna Menu"
+              : "Menu tonno di Favignana",
+      subtitle: isDe
+        ? "Lokaler Fisch, sizilianische Aromen und ein leichter Abschluss."
+        : isEs
+          ? "Pescado local, sabores sicilianos y un final ligero."
+          : isFr
+            ? "Poisson local, saveurs siciliennes et finale légère."
+            : isEn
+              ? "Local fish, Sicilian flavours and a relaxed finish."
+              : "Pesce locale, sapori siciliani e chiusura leggera.",
       items: isEs
         ? [
             "Aperitivo de bruschette sicilianas tradicionales a base de pescado",
@@ -1146,6 +1448,14 @@ function getGourmetSampleMenus(locale: string) {
             "Pasta a la eoliana",
             "Fruta fresca",
             "Vino trapanese y refrescos incluidos",
+          ]
+        : isDe
+        ? [
+            "Aperitif mit typischen sizilianischen Fisch-Bruschette",
+            "Roulade aus frischem Thunfisch, gefangen vor Favignana",
+            "Pasta nach äolischer Art",
+            "Frisches Obst",
+            "Wein aus Trapani und Softdrinks inklusive",
           ]
         : isFr
         ? [
@@ -1172,14 +1482,37 @@ function getGourmetSampleMenus(locale: string) {
           ],
     },
     {
-      title: isEs ? "Menú marinero trapanese" : isFr ? "Menu marin de Trapani" : isEn ? "Trapani Sea Menu" : "Menu mare trapanese",
-      subtitle: isEs ? "Una propuesta de mar más delicada, con mejillones y vino local." : isFr ? "Une proposition marine plus délicate, avec moules et vin local." : isEn ? "A softer seafood menu built around mussels and local wine." : "Una proposta di mare più delicata, con cozze e vino del territorio.",
+      title: isDe
+        ? "Trapani-Meeresmenü"
+        : isEs
+          ? "Menú marinero trapanese"
+          : isFr
+            ? "Menu marin de Trapani"
+            : isEn
+              ? "Trapani Sea Menu"
+              : "Menu mare trapanese",
+      subtitle: isDe
+        ? "Eine feinere Meeresvariante mit Muscheln und lokalem Wein."
+        : isEs
+          ? "Una propuesta de mar más delicada, con mejillones y vino local."
+          : isFr
+            ? "Une proposition marine plus délicate, avec moules et vin local."
+            : isEn
+              ? "A softer seafood menu built around mussels and local wine."
+              : "Una proposta di mare più delicata, con cozze e vino del territorio.",
       items: isEs
         ? [
             "Trío de mousses de mar",
             "Pasta con ragú de mejillones",
             "Fruta fresca",
             "Vino trapanese y refrescos incluidos",
+          ]
+        : isDe
+        ? [
+            "Dreierlei Meeresmousse",
+            "Pasta mit Muschelragout",
+            "Frisches Obst",
+            "Wein aus Trapani und Softdrinks inklusive",
           ]
         : isFr
         ? [
@@ -1203,15 +1536,38 @@ function getGourmetSampleMenus(locale: string) {
           ],
     },
     {
-      title: isEs ? "Menú crudité premium" : isFr ? "Menu crudités de mer premium" : isEn ? "Premium Raw Seafood Menu" : "Menu crudité premium",
-      subtitle: isEs ? "Disponible solo bajo petición expresa y con suplemento." : isFr ? "Disponible uniquement sur demande explicite, avec supplément." : isEn ? "Available only on explicit request with a supplement." : "Disponibile solo su esplicita richiesta e con supplemento.",
-      badge: isEs ? "Bajo petición" : isFr ? "Sur demande" : isEn ? "On request" : "Su richiesta",
+      title: isDe
+        ? "Premium-Crudité-Menü"
+        : isEs
+          ? "Menú crudité premium"
+          : isFr
+            ? "Menu crudités de mer premium"
+            : isEn
+              ? "Premium Raw Seafood Menu"
+              : "Menu crudité premium",
+      subtitle: isDe
+        ? "Nur auf ausdrückliche Anfrage und mit Aufpreis verfügbar."
+        : isEs
+          ? "Disponible solo bajo petición expresa y con suplemento."
+          : isFr
+            ? "Disponible uniquement sur demande explicite, avec supplément."
+            : isEn
+              ? "Available only on explicit request with a supplement."
+              : "Disponibile solo su esplicita richiesta e con supplemento.",
+      badge: isDe ? "Auf Anfrage" : isEs ? "Bajo petición" : isFr ? "Sur demande" : isEn ? "On request" : "Su richiesta",
       items: isEs
         ? [
             "Crudités de mar",
             "Pasta con gamba roja de Mazara del Vallo y pesto de pistacho",
             "Fruta fresca",
             "Vino trapanese y refrescos incluidos",
+          ]
+        : isDe
+        ? [
+            "Meeres-Crudités",
+            "Pasta mit roter Garnele aus Mazara del Vallo und Pistazienpesto",
+            "Frisches Obst",
+            "Wein aus Trapani und Softdrinks inklusive",
           ]
         : isFr
         ? [
@@ -1356,7 +1712,7 @@ export default async function ExperienceDetailPage({
   const content = getExperienceContent(service.id, locale);
   if (!content) notFound();
   const canonicalSlug = getExperiencePublicSlug(service.id, locale);
-  if (slug !== canonicalSlug) redirect(localizedPath(locale, `/experiences/${canonicalSlug}`));
+  if (slug !== canonicalSlug) permanentRedirect(localizedPath(locale, `/experiences/${canonicalSlug}`));
 
   const boatContent = getBoatContent(service.boatId, locale);
   const [displayPrice, itinerary] = await Promise.all([
@@ -1374,6 +1730,8 @@ export default async function ExperienceDetailPage({
       ? "Buscar reserva"
       : locale === "fr"
         ? "Retrouver réservation"
+        : locale === "de"
+          ? "Buchung finden"
         : locale === "en"
           ? "Find booking"
           : "Recupera prenotazione";
@@ -1430,18 +1788,37 @@ export default async function ExperienceDetailPage({
         ? `PT${service.durationHours}H`
         : undefined;
   const touristTypes =
-    service.type === "CABIN_CHARTER"
-      ? ["Private charter", "Multi-day sailing", "Egadi Islands"]
-      : service.type === "BOAT_SHARED"
-        ? ["Shared boat tour", "Snorkelling", "Egadi Islands"]
-        : service.type === "BOAT_EXCLUSIVE"
-          ? ["Private boat tour", "Families", "Small groups"]
-          : ["Gourmet sailing experience", "Private group", "Egadi Islands"];
+    locale === "de"
+      ? service.type === "CABIN_CHARTER"
+        ? ["Privater Charter", "Mehrtägige Segelreise", "Ägadische Inseln"]
+        : service.type === "BOAT_SHARED"
+          ? ["Geteilte Bootstour", "Schnorcheln", "Ägadische Inseln"]
+          : service.type === "BOAT_EXCLUSIVE"
+            ? ["Private Bootstour", "Familien", "Kleine Gruppen"]
+            : ["Gourmet-Erlebnis mit Chef an Bord", "Private Gruppe", "Ägadische Inseln"]
+      : service.type === "CABIN_CHARTER"
+        ? ["Private charter", "Multi-day sailing", "Egadi Islands"]
+        : service.type === "BOAT_SHARED"
+          ? ["Shared boat tour", "Snorkelling", "Egadi Islands"]
+          : service.type === "BOAT_EXCLUSIVE"
+            ? ["Private boat tour", "Families", "Small groups"]
+            : ["Gourmet sailing experience", "Private group", "Egadi Islands"];
+  const inLanguage =
+    locale === "de"
+      ? "de-DE"
+      : locale === "fr"
+        ? "fr-FR"
+        : locale === "es"
+          ? "es-ES"
+          : locale === "en"
+            ? "en-US"
+            : "it-IT";
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "BreadcrumbList",
+        inLanguage,
         itemListElement: [
           {
             "@type": "ListItem",
@@ -1466,6 +1843,7 @@ export default async function ExperienceDetailPage({
       {
         "@type": ["Product", "TouristTrip"],
         "@id": `${pageUrl}#experience`,
+        inLanguage,
         name: content.seoTitle,
         description: `${content.seoDescription} ${editorial.paragraphs[0]}`,
         duration: schemaDuration,
@@ -1514,6 +1892,7 @@ export default async function ExperienceDetailPage({
       {
         "@type": "FAQPage",
         "@id": `${pageUrl}#faq`,
+        inLanguage,
         mainEntity: seoExpansion.faqs.map((faq) => ({
           "@type": "Question",
           name: faq.question,
@@ -1531,6 +1910,8 @@ export default async function ExperienceDetailPage({
             ? "Experiencias Egadi relacionadas"
             : locale === "fr"
               ? "Expériences Égades liées"
+              : locale === "de"
+                ? "Verwandte Erlebnisse auf den Ägadischen Inseln"
               : locale === "en"
                 ? "Related Egadi experiences"
                 : "Esperienze Egadi correlate",
@@ -1664,7 +2045,17 @@ export default async function ExperienceDetailPage({
             {boatGallery.length > 0 && (
               <ScrollSection animation="fade-up">
                 <ExperienceBoatGallery
-                  eyebrow={locale === "es" ? "El barco" : locale === "fr" ? "Le bateau" : locale === "en" ? "The boat" : "La barca"}
+                  eyebrow={
+                    locale === "es"
+                      ? "El barco"
+                      : locale === "fr"
+                        ? "Le bateau"
+                        : locale === "de"
+                          ? "Das Boot"
+                          : locale === "en"
+                            ? "The boat"
+                            : "La barca"
+                  }
                   title={boatContent?.title ?? ""}
                   description={boatContent?.description ?? ""}
                   items={boatGallery}
@@ -1925,25 +2316,37 @@ export default async function ExperienceDetailPage({
             <section id="related-experiences" className="scroll-mt-28">
               <div className="max-w-3xl">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
-                  {locale === "es" ? "Más ideas" : locale === "fr" ? "Autres idées" : locale === "en" ? "More ideas" : "Altre idee"}
+                  {locale === "es"
+                    ? "Más ideas"
+                    : locale === "fr"
+                      ? "Autres idées"
+                      : locale === "de"
+                        ? "Weitere Ideen"
+                        : locale === "en"
+                          ? "More ideas"
+                          : "Altre idee"}
                 </p>
                 <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
                   {locale === "es"
                     ? "También puedes ver estas experiencias"
                     : locale === "fr"
-                    ? "Vous pouvez aussi voir ces expériences"
-                    : locale === "en"
-                    ? "You may also want to view these experiences"
-                    : "Prova a visionare anche queste esperienze"}
+                      ? "Vous pouvez aussi voir ces expériences"
+                      : locale === "de"
+                        ? "Diese Erlebnisse könnten auch passen"
+                        : locale === "en"
+                          ? "You may also want to view these experiences"
+                          : "Prova a visionare anche queste esperienze"}
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
                   {locale === "es"
                     ? "Compara formatos, barcos y horarios antes de elegir la mejor forma de vivir las Islas Egadi."
                     : locale === "fr"
-                    ? "Comparez formats, bateaux et horaires avant de choisir la meilleure façon de vivre les îles Égades."
-                    : locale === "en"
-                    ? "Compare formats, boats and timings before choosing the right way to experience the Egadi Islands."
-                    : "Confronta formule, barche e durata prima di scegliere il modo giusto per vivere le Isole Egadi."}
+                      ? "Comparez formats, bateaux et horaires avant de choisir la meilleure façon de vivre les îles Égades."
+                      : locale === "de"
+                        ? "Vergleichen Sie Formate, Boote und Zeiten, bevor Sie die passende Art wählen, die Ägadischen Inseln zu erleben."
+                        : locale === "en"
+                          ? "Compare formats, boats and timings before choosing the right way to experience the Egadi Islands."
+                          : "Confronta formule, barche e durata prima di scegliere il modo giusto per vivere le Isole Egadi."}
                 </p>
               </div>
               <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -1974,7 +2377,15 @@ export default async function ExperienceDetailPage({
                           {item.subtitle}
                         </p>
                         <span className="mt-4 inline-flex text-sm font-bold text-[var(--color-gold)]">
-                          {locale === "es" ? "Ver experiencia" : locale === "fr" ? "Voir l'expérience" : locale === "en" ? "View experience" : "Vedi esperienza"}
+                          {locale === "es"
+                            ? "Ver experiencia"
+                            : locale === "fr"
+                              ? "Voir l'expérience"
+                              : locale === "de"
+                                ? "Erlebnis ansehen"
+                                : locale === "en"
+                                  ? "View experience"
+                                  : "Vedi esperienza"}
                         </span>
                       </div>
                     </Link>

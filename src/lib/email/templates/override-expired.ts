@@ -23,6 +23,8 @@ export function overrideExpiredTemplate(
         ? `Reserva ${data.confirmationCode} caducada`
         : locale === "fr"
           ? `Réservation ${data.confirmationCode} expirée`
+          : locale === "de"
+            ? `Buchung ${data.confirmationCode} abgelaufen`
           : `Prenotazione ${data.confirmationCode} scaduta`;
   const altTitle =
     locale === "en"
@@ -31,6 +33,8 @@ export function overrideExpiredTemplate(
         ? "Fechas alternativas:"
         : locale === "fr"
           ? "Dates alternatives :"
+          : locale === "de"
+            ? "Alternative Termine:"
           : "Date alternative:";
   const altList = data.alternativeDates.length > 0
     ? `<p>${altTitle}</p><ul>${data.alternativeDates
@@ -43,6 +47,8 @@ export function overrideExpiredTemplate(
         ? `Hola ${escapeHtml(data.customerName)},`
         : locale === "fr"
           ? `Bonjour ${escapeHtml(data.customerName)},`
+          : locale === "de"
+            ? `Guten Tag ${escapeHtml(data.customerName)},`
           : `Ciao ${escapeHtml(data.customerName)},`;
   const message =
     locale === "en"
@@ -51,6 +57,8 @@ export function overrideExpiredTemplate(
         ? `No hemos podido confirmar tu reserva <strong>${escapeHtml(data.confirmationCode)}</strong> para <strong>${escapeHtml(data.serviceName)}</strong> del <strong>${escapeHtml(data.startDate)}</strong> dentro del plazo previsto. Hemos iniciado el reembolso completo de <strong>${escapeHtml(data.refundAmount)}</strong> (5-10 días laborables).`
         : locale === "fr"
           ? `Nous n'avons pas pu confirmer votre réservation <strong>${escapeHtml(data.confirmationCode)}</strong> pour <strong>${escapeHtml(data.serviceName)}</strong> du <strong>${escapeHtml(data.startDate)}</strong> dans le délai prévu. Le remboursement complet de <strong>${escapeHtml(data.refundAmount)}</strong> a été lancé (5 à 10 jours ouvrables).`
+          : locale === "de"
+            ? `Wir konnten Ihre Buchung <strong>${escapeHtml(data.confirmationCode)}</strong> für <strong>${escapeHtml(data.serviceName)}</strong> am <strong>${escapeHtml(data.startDate)}</strong> nicht innerhalb der vorgesehenen Zeit bestätigen. Die vollständige Erstattung von <strong>${escapeHtml(data.refundAmount)}</strong> wurde veranlasst (5-10 Werktage).`
           : `Non abbiamo potuto confermare la tua prenotazione <strong>${escapeHtml(data.confirmationCode)}</strong> per <strong>${escapeHtml(data.serviceName)}</strong> del <strong>${escapeHtml(data.startDate)}</strong> entro il termine previsto. Il rimborso completo di <strong>${escapeHtml(data.refundAmount)}</strong> e' stato avviato (5-10 giorni lavorativi).`;
   const portal =
     locale === "en"
@@ -59,6 +67,8 @@ export function overrideExpiredTemplate(
         ? "Área de reservas"
         : locale === "fr"
           ? "Espace réservation"
+          : locale === "de"
+            ? "Buchungsbereich"
           : "Area prenotazioni";
   const body = `
     <p>${greeting}</p>
@@ -66,6 +76,6 @@ export function overrideExpiredTemplate(
     ${altList}
     <p><a href="${safeUrl(data.bookingPortalUrl)}">${portal}</a></p>
   `;
-  const text = `${subject}. ${locale === "it" ? "Rimborso" : locale === "es" ? "Reembolso" : locale === "fr" ? "Remboursement" : "Refund"}: ${data.refundAmount}. ${altTitle} ${data.alternativeDates.join(", ")}`;
+  const text = `${subject}. ${locale === "it" ? "Rimborso" : locale === "es" ? "Reembolso" : locale === "fr" ? "Remboursement" : locale === "de" ? "Erstattung" : "Refund"}: ${data.refundAmount}. ${altTitle} ${data.alternativeDates.join(", ")}`;
   return { subject, html: emailLayout({ locale, heading: subject, bodyHtml: body }), text };
 }

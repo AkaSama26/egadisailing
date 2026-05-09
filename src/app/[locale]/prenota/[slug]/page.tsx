@@ -22,6 +22,8 @@ export async function generateMetadata({
         ? "Completa tu reserva"
         : locale === "fr"
           ? "Finalisez votre réservation"
+        : locale === "de"
+          ? "Buchung abschließen"
         : locale === "en"
           ? "Complete your booking"
           : "Completa la prenotazione",
@@ -65,7 +67,7 @@ export default async function BookingPage({
     <OceanLayout>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-white text-4xl md:text-5xl font-heading font-bold mb-8 text-center">
-          {locale === "es" ? "Reserva" : locale === "fr" ? "Réserver" : locale === "en" ? "Book" : "Prenota"} {serviceTitle}
+          {locale === "es" ? "Reserva" : locale === "fr" ? "Réserver" : locale === "de" ? "Buchen" : locale === "en" ? "Book" : "Prenota"} {serviceTitle}
         </h1>
         <BookingWizard
           locale={locale}

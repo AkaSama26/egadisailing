@@ -49,6 +49,7 @@ function getDisplayCount(realCount: number): number {
 function presenceTitle(locale: string): string {
   if (locale === "es") return "Mucho interés ahora";
   if (locale === "fr") return "Beaucoup d'intérêt en ce moment";
+  if (locale === "de") return "Gerade viel Interesse";
   return locale === "en" ? "High interest right now" : "Interesse alto ora";
 }
 
@@ -58,6 +59,9 @@ function presenceLabel(locale: string, count: number): string {
   }
   if (locale === "fr") {
     return `${count} personnes consultent cette page en ce moment`;
+  }
+  if (locale === "de") {
+    return `${count} Personen sehen sich diese Seite gerade an`;
   }
   if (locale === "en") {
     return `${count} people are viewing this page right now`;
@@ -145,7 +149,7 @@ export function ExperiencePresenceNotice({
         </div>
         <button
           type="button"
-          aria-label={locale === "es" ? "Cerrar aviso" : locale === "fr" ? "Fermer l'avis" : locale === "en" ? "Close notice" : "Chiudi avviso"}
+          aria-label={locale === "es" ? "Cerrar aviso" : locale === "fr" ? "Fermer l'avis" : locale === "de" ? "Hinweis schließen" : locale === "en" ? "Close notice" : "Chiudi avviso"}
           onClick={() => setDismissed(true)}
           className="-mr-1 -mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
         >

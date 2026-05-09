@@ -33,6 +33,8 @@ export async function generateMetadata({
         ? "Tus reservas"
         : locale === "fr"
           ? "Vos réservations"
+          : locale === "de"
+            ? "Ihre Buchungen"
           : locale === "en"
             ? "Your bookings"
             : "Le tue prenotazioni",
@@ -153,6 +155,8 @@ export default async function SessionePage({
                         ? "Previsión para tu salida"
                         : locale === "fr"
                           ? "Prévisions pour votre sortie"
+                          : locale === "de"
+                            ? "Vorhersage für Ihre Tour"
                           : locale === "en"
                             ? "Forecast for your trip"
                             : "Meteo per la tua uscita"
@@ -246,7 +250,7 @@ export default async function SessionePage({
 }
 
 function formatPublicDay(date: Date, locale?: string | null): string {
-  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "en" ? "en-GB" : "it-IT", {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : locale === "de" ? "de-DE" : locale === "en" ? "en-GB" : "it-IT", {
     timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
@@ -265,6 +269,11 @@ function formatPolicyLabel(band: string, locale?: string | null): string {
     if (band === "HALF_REFUND") return "Remboursement de 50 %";
     return "Annulation sans remboursement";
   }
+  if (locale === "de") {
+    if (band === "FULL_REFUND") return "Vollständige Erstattung";
+    if (band === "HALF_REFUND") return "50 % Erstattung";
+    return "Stornierung ohne Erstattung";
+  }
   if (locale === "en") {
     if (band === "FULL_REFUND") return "Full refund";
     if (band === "HALF_REFUND") return "50% refund";
@@ -276,6 +285,39 @@ function formatPolicyLabel(band: string, locale?: string | null): string {
 }
 
 function getSessionCopy(locale?: string | null) {
+  if (locale === "de") {
+    return {
+      title: "Ihre Buchungen",
+      logout: "Abmelden",
+      signedInAs: "Angemeldet als",
+      intro:
+        "In diesem Bereich können Sie Ihr QR-Ticket öffnen, eine Datumsänderung beantragen und für Direktbuchungen eine Stornierung oder Erstattung anfragen.",
+      policyTitle: "Stornierungen und Datumsänderungen",
+      policyBody:
+        "Bis 30 Tage vor Abfahrt: vollständige Erstattung. Von 29 bis 15 Tage vor Abfahrt: 50 % Erstattung. Unter 15 Tagen und bei Nichterscheinen: Stornierung ohne Erstattung. Datumsänderungen unterliegen der Prüfung und Genehmigung durch das Team.",
+      noBookings: "Keine Buchungen gefunden für",
+      discover: "Erlebnisse ansehen",
+      code: "Code",
+      people: "Personen",
+      total: "Gesamt",
+      paid: "Bezahlt",
+      balanceDue: "Restbetrag",
+      openQr: "QR-Ticket öffnen",
+      rescheduleTitle: "Datumsänderung beantragen",
+      rescheduleBody:
+        "Das Team prüft Verfügbarkeit und Bedingungen. Die Buchung bleibt bis zur Genehmigung der Anfrage auf dem aktuellen Datum.",
+      pendingChange: "Ausstehende Anfrage für den",
+      latestChange: "Letzte Anfrage",
+      request: "Anfragen",
+      optionalNote: "Optionale Hinweise für das Team",
+      estimatedRefund: "Geschätzte Erstattung",
+      onPaid: "von",
+      cancelBooking: "Buchung stornieren",
+      externalBookingPrefix: "Diese Buchung stammt von",
+      externalBookingSuffix: "Stornierungen und Datumsänderungen müssen über das Kaufportal verwaltet werden.",
+    };
+  }
+
   if (locale === "fr") {
     return {
       title: "Vos réservations",

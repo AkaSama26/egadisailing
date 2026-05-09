@@ -216,6 +216,7 @@ export default async function BoatsPage({
   const json = {
     "@context": "https://schema.org",
     "@type": "ItemList",
+    inLanguage: locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : locale === "en" ? "en-US" : "it-IT",
     name: copy.seoTitle,
     description: copy.seoDescription,
     itemListElement: boats.map((boat, index) => ({
@@ -239,6 +240,8 @@ export default async function BoatsPage({
               ? "Barcos Egadisailing en las Islas Egadi"
               : locale === "fr"
                 ? "Bateaux Egadisailing aux îles Égades"
+                : locale === "de"
+                  ? "Egadisailing-Boote auf den Ägadischen Inseln"
                 : locale === "en"
                   ? "Egadisailing boats in the Egadi Islands"
                   : "Barche Egadisailing alle Isole Egadi"

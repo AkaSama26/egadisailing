@@ -27,12 +27,13 @@ import {
 import { levanzoGuidesEn } from "@/data/levanzo-guides-en";
 import { levanzoGuidesEs } from "@/data/levanzo-guides-es";
 import { levanzoGuidesFr } from "@/data/levanzo-guides-fr";
+import { levanzoGuidesDe } from "@/data/levanzo-guides-de";
 import { env } from "@/lib/env";
 import { localizedPath } from "@/lib/i18n/paths";
 
 export const dynamicParams = false;
 
-const guideLocales = ["it", "en", "es", "fr"] as const;
+const guideLocales = ["it", "en", "es", "fr", "de"] as const;
 type GuideLocale = (typeof guideLocales)[number];
 
 const guidesByLocale = {
@@ -40,10 +41,11 @@ const guidesByLocale = {
   en: levanzoGuidesEn,
   es: levanzoGuidesEs,
   fr: levanzoGuidesFr,
+  de: levanzoGuidesDe,
 } satisfies Record<GuideLocale, LevanzoGuide[]>;
 
 function isGuideLocale(locale: string): locale is GuideLocale {
-  return locale === "it" || locale === "en" || locale === "es" || locale === "fr";
+  return locale === "it" || locale === "en" || locale === "es" || locale === "fr" || locale === "de";
 }
 
 function getLocalizedGuide(locale: GuideLocale, slug: string): LevanzoGuide | undefined {
@@ -146,6 +148,30 @@ const guideUi = {
     sourcesEyebrow: "Sources officielles et mises à jour",
     sourcesText:
       "Horaires, visites guidées, règles de l'Aire Marine Protégée et services peuvent changer : consultez toujours les sources officielles.",
+  },
+  de: {
+    backLabel: "Levanzo",
+    heroLabel: "Levanzo-Guide",
+    asideEyebrow: "In diesem Guide",
+    asideAriaLabel: "Inhaltsverzeichnis des Guides",
+    quickAnswer: "Kurzantwort",
+    quickAnswerTitle: "Kurz gesagt",
+    itemEyebrow: "Gut zu wissen",
+    chapterLabel: (index: number) => `Kapitel ${index + 1}`,
+    compareEyebrow: "Erlebnisse vergleichen",
+    compareTitle: "Wählen Sie die passende Art, Levanzo vom Meer aus zu erleben",
+    allExperiences: "Alle Erlebnisse",
+    routeNotePrefix: "Guide-Kontext",
+    routeNote:
+      "Die Route wird immer nach Seewetter, Sicherheit und den Hinweisen des Skippers bestätigt.",
+    faqEyebrow: "FAQ",
+    faqTitle: (title: string) => `Häufige Fragen zu ${title.toLowerCase()}`,
+    relatedEyebrow: "Weiter entdecken",
+    relatedTitle: "Weitere nützliche Seiten zu Levanzo",
+    relatedLabel: "Guide lesen",
+    sourcesEyebrow: "Offizielle Quellen und Updates",
+    sourcesText:
+      "Fahrpläne, Führungen, Regeln des Meeresschutzgebiets und Services können sich ändern: Für praktische Details prüfen Sie immer die offiziellen Quellen.",
   },
 } satisfies Record<
   GuideLocale,
@@ -294,6 +320,36 @@ const compareExperiencesByLocale = {
       meta: "Premium",
     },
   ],
+  de: [
+    {
+      title: "Private Bootstour Ägadische Inseln 4 Stunden",
+      description: "Ein kompakter halber Tag mit reserviertem Boot und Route nach Absprache mit dem Skipper.",
+      href: "/experiences/boat-exclusive-afternoon",
+      image: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
+      meta: "4 Stunden",
+    },
+    {
+      title: "Geteilte Bootstour Ägadische Inseln 8 Stunden",
+      description: "Ein ganzer Tag mit Einzeltickets, Badestopps und Schnorcheln, wenn das Meer es zulässt.",
+      href: "/experiences/boat-shared-full-day",
+      image: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
+      meta: "8 Stunden",
+    },
+    {
+      title: "Private Bootstour Ägadische Inseln 8 Stunden",
+      description: "Ein reserviertes Boot für Gruppen, die Privatsphäre, Komfort und persönlichen Rhythmus wünschen.",
+      href: "/experiences/boat-exclusive-full-day",
+      image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+      meta: "Privat",
+    },
+    {
+      title: "Chef an Bord auf dem Trimaran",
+      description: "Neel 47 mit Skipper, Hostess, privatem Chef und Mittagessen mit lokalen Produkten.",
+      href: "/experiences/exclusive-experience",
+      image: "/images/boats/neel-47/neel-47-tavolo-a-bordo.webp",
+      meta: "Premium",
+    },
+  ],
 } satisfies Record<
   GuideLocale,
   Array<{
@@ -418,6 +474,34 @@ const ctaCopyByLocale = {
       icon: Sparkles,
     },
   },
+  de: {
+    cigala: {
+      eyebrow: "Bootstour ab Trapani",
+      title: "Möchten Sie Levanzo erleben, ohne Wassertaxis, Wege und Anschlüsse zu organisieren?",
+      description:
+        "Mit Egadisailing starten Sie ab Trapani und die Route wird nach Wind, Meer und Komfort der Gruppe gewählt. So sehen Sie Levanzo einfach vom Meer aus, mit Badestopps und Schnorcheln, wenn die Bedingungen passen.",
+      href: "/experiences/boat-shared-full-day",
+      label: "8-Stunden-Tour ansehen",
+      secondaryHref: "/experiences/boat-exclusive-full-day",
+      secondaryLabel: "Private Tour ansehen",
+      image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
+      imageAlt: "Cigala & Bertinetti 34 Offshore Open auf den Ägadischen Inseln",
+      icon: Waves,
+    },
+    neel: {
+      eyebrow: "Neel 47 Trimaran",
+      title: "Für einen komfortableren Tag zwischen Favignana und Levanzo wählen Sie den Trimaran",
+      description:
+        "Großzügige Flächen, Skipper, Hostess, privater Chef und Mittagessen an Bord: eine Premium-Lösung, um die Ägadischen Inseln in ruhigerem Rhythmus zu erleben.",
+      href: "/experiences/exclusive-experience",
+      label: "Gourmet-Erlebnis ansehen",
+      secondaryHref: "/experiences/charter",
+      secondaryLabel: "Charter ansehen",
+      image: "/images/boats/neel-47/neel-47-favignana.webp",
+      imageAlt: "Neel 47 Trimaran auf den Ägadischen Inseln",
+      icon: Sparkles,
+    },
+  },
 } satisfies Record<
   GuideLocale,
   Record<
@@ -453,7 +537,16 @@ function getGuideUrl(locale: GuideLocale, slug: string): string {
 function buildGuideJsonLd(guide: LevanzoGuide, locale: GuideLocale) {
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}${getGuideUrl(locale, guide.slug)}`;
-  const inLanguage = locale === "en" ? "en-US" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : "it-IT";
+  const inLanguage =
+    locale === "en"
+      ? "en-US"
+      : locale === "es"
+        ? "es-ES"
+        : locale === "fr"
+          ? "fr-FR"
+          : locale === "de"
+            ? "de-DE"
+            : "it-IT";
   const islandsName =
     locale === "en"
       ? "Egadi Islands"
@@ -461,7 +554,9 @@ function buildGuideJsonLd(guide: LevanzoGuide, locale: GuideLocale) {
         ? "Islas Egadi"
         : locale === "fr"
           ? "Îles Égades"
-          : "Isole Egadi";
+          : locale === "de"
+            ? "Ägadische Inseln"
+            : "Isole Egadi";
   const islandsBreadcrumb =
     locale === "en"
       ? "Egadi Islands"
@@ -469,7 +564,9 @@ function buildGuideJsonLd(guide: LevanzoGuide, locale: GuideLocale) {
         ? "Islas Egadi"
         : locale === "fr"
           ? "Îles Égades"
-          : "Le Isole Egadi";
+          : locale === "de"
+            ? "Ägadische Inseln"
+            : "Le Isole Egadi";
   const graph: unknown[] = [
     {
       "@type": "BreadcrumbList",
@@ -580,9 +677,11 @@ export async function generateMetadata({
           ? "Página no encontrada"
           : locale === "fr"
             ? "Page introuvable"
-            : locale === "en"
-              ? "Page not found"
-              : "Pagina non trovata",
+            : locale === "de"
+              ? "Seite nicht gefunden"
+              : locale === "en"
+                ? "Page not found"
+                : "Pagina non trovata",
       robots: { index: false, follow: false },
     };
   }
@@ -592,11 +691,32 @@ export async function generateMetadata({
   const italianSlug = getLevanzoGuideSlugForLocale(guide.slug, "it") ?? guide.slug;
   const englishSlug = getLevanzoGuideSlugForLocale(guide.slug, "en") ?? guide.slug;
   const spanishSlug = getLevanzoGuideSlugForLocale(guide.slug, "es") ?? guide.slug;
+  const frenchSlug = getLevanzoGuideSlugForLocale(guide.slug, "fr") ?? guide.slug;
+  const germanSlug = getLevanzoGuideSlugForLocale(guide.slug, "de") ?? guide.slug;
   const image = absoluteUrl(guide.heroImage);
-  const ogLocale = locale === "en" ? "en_US" : locale === "es" ? "es_ES" : locale === "fr" ? "fr_FR" : "it_IT";
-  const alternateOgLocales = ["it", "en", "es"]
+  const ogLocale =
+    locale === "en"
+      ? "en_US"
+      : locale === "es"
+        ? "es_ES"
+        : locale === "fr"
+          ? "fr_FR"
+          : locale === "de"
+            ? "de_DE"
+            : "it_IT";
+  const alternateOgLocales = ["it", "en", "es", "fr", "de"]
     .filter((item) => item !== locale)
-    .map((item) => (item === "en" ? "en_US" : item === "es" ? "es_ES" : "it_IT"));
+    .map((item) =>
+      item === "en"
+        ? "en_US"
+        : item === "es"
+          ? "es_ES"
+          : item === "fr"
+            ? "fr_FR"
+            : item === "de"
+              ? "de_DE"
+              : "it_IT",
+    );
 
   return {
     title: guide.metaTitle,
@@ -608,6 +728,8 @@ export async function generateMetadata({
         it: `${base}${getGuideUrl("it", italianSlug)}`,
         en: `${base}${getGuideUrl("en", englishSlug)}`,
         es: `${base}${getGuideUrl("es", spanishSlug)}`,
+        fr: `${base}${getGuideUrl("fr", frenchSlug)}`,
+        de: `${base}${getGuideUrl("de", germanSlug)}`,
         "x-default": `${base}${getGuideUrl("it", italianSlug)}`,
       },
     },
@@ -690,7 +812,7 @@ export default async function LevanzoGuidePage({
           relatedGuides={relatedGuides}
           ui={ui}
         />
-        <SourcesSection ui={ui} />
+        <SourcesSection locale={locale} ui={ui} />
       </main>
     </div>
   );
@@ -1231,7 +1353,14 @@ function RelatedSection({
   );
 }
 
-function SourcesSection({ ui }: { ui: (typeof guideUi)[GuideLocale] }) {
+function localizedSourceLabel(label: string, locale: GuideLocale) {
+  if (locale === "de" && label === "AMP Isole Egadi") {
+    return "Meeresschutzgebiet Ägadische Inseln";
+  }
+  return label;
+}
+
+function SourcesSection({ locale, ui }: { locale: GuideLocale; ui: (typeof guideUi)[GuideLocale] }) {
   return (
     <section className="bg-[#071934] px-4 py-10 text-white sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -1252,7 +1381,7 @@ function SourcesSection({ ui }: { ui: (typeof guideUi)[GuideLocale] }) {
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-md border border-white/14 bg-white/[0.07] px-3 py-2 text-xs font-semibold text-white/76 transition hover:border-[var(--color-gold)] hover:text-white"
             >
-              {source.label}
+              {localizedSourceLabel(source.label, locale)}
               <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
             </a>
           ))}

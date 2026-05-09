@@ -32,10 +32,12 @@ function labelForAmount(amount: Decimal | null, locale?: string | null): string 
   if (!amount) {
     if (locale === "fr") return "Prix sur demande";
     if (locale === "es") return "Precio bajo petición";
+    if (locale === "de") return "Preis auf Anfrage";
     return locale === "en" ? "Price on request" : "Prezzo su richiesta";
   }
   if (locale === "fr") return `À partir de ${formatEur(amount, locale)}`;
   if (locale === "es") return `Desde ${formatEur(amount, locale)}`;
+  if (locale === "de") return `Ab ${formatEur(amount, locale)}`;
   return locale === "en" ? `From ${formatEur(amount, locale)}` : `Da ${formatEur(amount, locale)}`;
 }
 

@@ -1087,33 +1087,39 @@ const EXPERIENCE_PUBLIC_SLUGS: Partial<Record<ExperienceServiceId, string>> = {
 };
 
 const EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE: Partial<
-  Record<ExperienceServiceId, Partial<Record<"it" | "en" | "es" | "fr", string>>>
+  Record<ExperienceServiceId, Partial<Record<"it" | "en" | "es" | "fr" | "de", string>>>
 > = {
   "exclusive-experience": {
     es: "chef-a-bordo-neel-47",
     fr: "chef-a-bord-neel-47",
+    de: "chef-an-bord-neel-47",
   },
   "cabin-charter": {
     it: "charter",
     en: "charter",
     es: "charter-islas-egadi",
     fr: "charter-iles-egades",
+    de: "charter-aegadische-inseln",
   },
   "boat-shared-full-day": {
     es: "excursion-compartida-islas-egadi-8-horas",
     fr: "excursion-partagee-iles-egades-8-heures",
+    de: "geteilte-bootstour-aegadische-inseln-8-stunden",
   },
   "boat-exclusive-full-day": {
     es: "excursion-privada-islas-egadi-8-horas",
     fr: "excursion-privee-iles-egades-8-heures",
+    de: "private-bootstour-aegadische-inseln-8-stunden",
   },
   "boat-exclusive-morning": {
     es: "excursion-privada-islas-egadi-4-horas-manana",
     fr: "excursion-privee-iles-egades-4-heures-matin",
+    de: "private-bootstour-aegadische-inseln-4-stunden-vormittag",
   },
   "boat-exclusive-afternoon": {
     es: "excursion-privada-islas-egadi-4-horas-tarde",
     fr: "excursion-privee-iles-egades-4-heures-apres-midi",
+    de: "private-bootstour-aegadische-inseln-4-stunden-nachmittag",
   },
 };
 
@@ -1131,6 +1137,12 @@ const EXPERIENCE_SLUG_ALIASES: Record<string, ExperienceServiceId> = {
   "excursion-privee-iles-egades-8-heures": "boat-exclusive-full-day",
   "excursion-privee-iles-egades-4-heures-matin": "boat-exclusive-morning",
   "excursion-privee-iles-egades-4-heures-apres-midi": "boat-exclusive-afternoon",
+  "chef-an-bord-neel-47": "exclusive-experience",
+  "charter-aegadische-inseln": "cabin-charter",
+  "geteilte-bootstour-aegadische-inseln-8-stunden": "boat-shared-full-day",
+  "private-bootstour-aegadische-inseln-8-stunden": "boat-exclusive-full-day",
+  "private-bootstour-aegadische-inseln-4-stunden-vormittag": "boat-exclusive-morning",
+  "private-bootstour-aegadische-inseln-4-stunden-nachmittag": "boat-exclusive-afternoon",
 };
 
 export function isExperienceServiceId(serviceId: string): serviceId is ExperienceServiceId {
@@ -1144,7 +1156,7 @@ export function resolveExperienceServiceIdFromSlug(slug: string): string {
 export function getExperiencePublicSlug(serviceId: string, locale?: string | null): string {
   if (!isExperienceServiceId(serviceId)) return serviceId;
   if (locale) {
-    const localized = EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE[serviceId]?.[locale as "it" | "en" | "es" | "fr"];
+    const localized = EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE[serviceId]?.[locale as "it" | "en" | "es" | "fr" | "de"];
     if (localized) return localized;
   }
   return EXPERIENCE_PUBLIC_SLUGS[serviceId] ?? serviceId;
@@ -1410,6 +1422,31 @@ const frenchSharedBoatIncludes = [
   "Route choisie selon les conditions de mer",
 ];
 
+const germanBringItems = [
+  "Badebekleidung und Handtuch",
+  "Meeresfreundliche Sonnencreme",
+  "Sonnenbrille und Hut",
+  "Weiche Tasche, die leicht zu verstauen ist",
+];
+
+const germanPrivateBoatIncludes = [
+  "Boot exklusiv für Ihre Gruppe",
+  "Professioneller Skipper",
+  "Treibstoff gemäß geplanter Route inklusive",
+  "Badestopps und Schnorcheln",
+  "Wasser und Softdrinks",
+  "Route angepasst an Meer und Wind",
+];
+
+const germanSharedBoatIncludes = [
+  "Einzelplatz an Bord",
+  "Professioneller Skipper",
+  "Treibstoff inklusive",
+  "Badestopps und Schnorcheln",
+  "Wasser an Bord",
+  "Route je nach Seebedingungen gewählt",
+];
+
 const FRENCH_EXPERIENCE_OVERRIDES: Partial<
   Record<
     ExperienceServiceId,
@@ -1566,6 +1603,162 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
   },
 };
 
+const GERMAN_EXPERIENCE_OVERRIDES: Partial<
+  Record<
+    ExperienceServiceId,
+    Partial<
+      Pick<
+        ResolvedExperienceContent,
+        | "title"
+        | "subtitle"
+        | "detailDescription"
+        | "seoTitle"
+        | "seoDescription"
+        | "itinerary"
+        | "includes"
+        | "bringItems"
+      >
+    >
+  >
+> = {
+  "exclusive-experience": {
+    title: "Chef an Bord - Premium Experience",
+    subtitle:
+      "Privater Tag auf dem Neel 47 mit Chefkoch, Skipper und Hostess zwischen Favignana und Levanzo.",
+    detailDescription:
+      "Ein privates Gourmet-Erlebnis auf dem Trimaran, um die Ägadischen Inseln mit ruhigem Rhythmus, Mittagessen an Bord und dem Komfort des Neel 47 zu entdecken.",
+    seoTitle: "Chef an Bord auf dem Neel 47 bei den Ägadischen Inseln",
+    seoDescription:
+      "Privates Gourmet-Erlebnis auf dem Neel 47 ab Trapani mit Chef an Bord, Skipper, Hostess, sizilianischem Mittagessen und Route zwischen Favignana und Levanzo.",
+    itinerary: [
+      { time: "09:30", title: "Willkommen an Bord", text: "Treffpunkt: Via dei Gladioli 15, 91100 Trapani." },
+      {
+        time: "11:30",
+        title: "Cala Azzurra",
+        location: "Favignana",
+        text: "Erster Badestopp in klarem Wasser, mit einer von der Crew an Wind und Meer angepassten Route.",
+      },
+      {
+        time: "12:30",
+        title: "Cala Rossa",
+        location: "Favignana",
+        text: "Ankern in einer der berühmtesten Buchten von Favignana für den Gourmet-Moment des Tages.",
+      },
+      { time: "13:00", title: "Live Cooking an Bord", text: "Der Chefkoch bereitet das Mittagessen mit lokalem Fisch und sizilianischen Produkten zu." },
+      {
+        time: "14:30",
+        title: "Entspannung und Baden",
+        location: "Favignana",
+        text: "Zeit zum Schwimmen, Entspannen an Deck und Genießen der großzügigen Trimaran-Flächen.",
+      },
+      {
+        time: "16:00",
+        title: "Levanzo",
+        location: "Levanzo",
+        text: "Stopp bei Cala Dogana, Cala Fredda oder einer geschützten Zone, je nach Bedingungen des Tages.",
+      },
+      { time: "18:00", title: "Rückkehr nach Trapani", text: "Rückfahrt mit Aperitif und Ankunft im Hafen." },
+    ],
+    includes: [
+      "Neel 47 privat",
+      "Skipper, Chefkoch und Hostess",
+      "Gourmet-Mittagessen an Bord",
+      "Wein aus Trapani, Wasser und Softdrinks",
+      "Aperitif",
+      "Schnorchelausrüstung",
+      "Treibstoff inklusive",
+    ],
+    bringItems: germanBringItems,
+  },
+  "cabin-charter": {
+    title: "Charter Ägadische Inseln",
+    subtitle:
+      "3 bis 7 Tage auf dem Trimaran zwischen Favignana, Levanzo und Marettimo, mit Route nach Maß.",
+    detailDescription:
+      "Ein privater Charter, um die Ägadischen Inseln mit mehr Zeit zu erleben: Nächte vor Anker, Kabinen, Bordküche und eine flexible Route mit der Crew.",
+    seoTitle: "Trimaran-Charter auf den Ägadischen Inseln ab Trapani",
+    seoDescription:
+      "Privater Neel 47 Charter auf den Ägadischen Inseln, 3 bis 7 Tage, mit Skipper, Kabinen, Nächten vor Anker und Route nach Favignana, Levanzo und Marettimo.",
+    itinerary: [
+      { time: "Tag 1", title: "Einschiffung in Trapani", text: "Sicherheitsbriefing, Proviantorganisation und erster Ankerplatz zwischen Favignana und Levanzo." },
+      { time: "Tag 2", title: "Favignana", text: "Cala Rossa, Bue Marino und Badestopps, gewählt nach Meer, Wind und Besucheraufkommen." },
+      { time: "Tag 3", title: "Levanzo", text: "Ruhiger Ankerplatz, klares Wasser und entspannte Rückkehr nach Trapani, wenn Sie den 3-Tage-Charter wählen." },
+      { time: "Tage 4-7", title: "Marettimo und erweiterte Route", text: "Erweiterung nach Marettimo, Nächte vor Anker und täglich mit der Crew angepasster Ablauf." },
+    ],
+    includes: [
+      "Trimaran mit Kabinen",
+      "Skipper",
+      "Hostess gegen Aufpreis auf Anfrage",
+      "Bordküche und Gemeinschaftsbereiche",
+      "Routenplanung nach Wetterlage",
+      "Schnorchelausrüstung",
+      "Proviant nicht inklusive",
+    ],
+    bringItems: [
+      "Weiche Reisetasche",
+      "Badebekleidung und leichte Kleidung",
+      "Pullover für den Abend",
+      "Meeresfreundliche Sonnencreme",
+      "Persönliche Dokumente",
+    ],
+  },
+  "boat-shared-full-day": {
+    title: "Geteilte Bootstour Ägadische Inseln 8 Stunden",
+    subtitle:
+      "Ein Platz an Bord für einen ganzen Tag zwischen Buchten, Schnorcheln und Meer ab Trapani.",
+    detailDescription:
+      "Die einfachste Art, eine Bootstour zu den Ägadischen Inseln zu erleben: Datum wählen, Platz buchen und den Tag mit anderen Gästen teilen.",
+    seoTitle: "Geteilte Bootstour Ägadische Inseln 8 Stunden ab Trapani",
+    seoDescription:
+      "Geteilte 8-Stunden-Bootstour zu den Ägadischen Inseln ab Trapani mit Badestopps, Schnorcheln und Online-Buchung pro Person.",
+    itinerary: [
+      { time: "10:00", title: "Abfahrt von Trapani", location: "Hafen von Trapani", text: "Einschiffung, Sicherheitsbriefing und Route durch den Skipper nach Wind und Meer." },
+      { time: "11:00", title: "Favignana", text: "Fahrt zu den passendsten Buchten des Tages, mit Zeit zum Baden und Schnorcheln." },
+      { time: "13:00", title: "Pause auf dem Meer", text: "Entspannte Zeit an Bord und Möglichkeit zum Mittagessen je nach gewählter Formel." },
+      { time: "15:30", title: "Levanzo oder geschützte Küste", text: "Zweite Etappe der Route zwischen klarem Wasser und ruhigeren Bereichen." },
+      { time: "18:00", title: "Rückkehr", text: "Ankunft im Hafen von Trapani nach einem ganzen Tag im Archipel." },
+    ],
+    includes: germanSharedBoatIncludes,
+    bringItems: germanBringItems,
+  },
+  "boat-exclusive-full-day": {
+    title: "Private Bootstour Ägadische Inseln 8 Stunden",
+    subtitle:
+      "Boot exklusiv für Ihre Gruppe für einen ganzen Tag zwischen Buchten, Schnorcheln und flexibler Route.",
+    detailDescription:
+      "Ein privater und flexibler Tag auf den Ägadischen Inseln, mit Abfahrt ab Trapani und Stopps, die mit dem Skipper nach Wind, Meer und Rhythmus der Gruppe gewählt werden.",
+    seoTitle: "Private Bootstour Ägadische Inseln 8 Stunden ab Trapani",
+    seoDescription:
+      "Buchen Sie eine private 8-Stunden-Bootstour zu den Ägadischen Inseln ab Trapani, mit Skipper, Badestopps und flexibler Route.",
+    includes: germanPrivateBoatIncludes,
+    bringItems: germanBringItems,
+  },
+  "boat-exclusive-morning": {
+    title: "Private Bootstour Ägadische Inseln 4 Stunden vormittags",
+    subtitle:
+      "Privater Halbtagesausflug am Vormittag mit reserviertem Boot und Route nach Absprache mit dem Skipper.",
+    detailDescription:
+      "Private 4-Stunden-Tour ab Trapani, ideal für Gruppen, die Meer, Privatsphäre und eine kompakte Ausfahrt mit Badestopp suchen.",
+    seoTitle: "Private Bootstour Ägadische Inseln 4 Stunden vormittags",
+    seoDescription:
+      "Private 4-Stunden-Bootstour am Vormittag zu den Ägadischen Inseln ab Trapani, mit Skipper, Badestopps und flexibler Route.",
+    includes: germanPrivateBoatIncludes,
+    bringItems: germanBringItems,
+  },
+  "boat-exclusive-afternoon": {
+    title: "Private Bootstour Ägadische Inseln 4 Stunden nachmittags",
+    subtitle:
+      "Privater Halbtagesausflug am Nachmittag, um die Ägadischen Inseln mit Baden, Entspannung und flexibler Route zu genießen.",
+    detailDescription:
+      "Reserviertes Boot für 4 Stunden am Nachmittag ab Trapani, gedacht für Gruppen, die Privatsphäre, Baden und eine einfache Organisation suchen.",
+    seoTitle: "Private Bootstour Ägadische Inseln 4 Stunden nachmittags",
+    seoDescription:
+      "Buchen Sie eine private 4-Stunden-Bootstour am Nachmittag zu den Ägadischen Inseln ab Trapani, mit Skipper, Baden und flexibler Route.",
+    includes: germanPrivateBoatIncludes,
+    bringItems: germanBringItems,
+  },
+};
+
 function applyLocalizedExperienceOverride(
   content: ResolvedExperienceContent,
   locale?: string | null,
@@ -1575,6 +1768,8 @@ function applyLocalizedExperienceOverride(
       ? SPANISH_EXPERIENCE_OVERRIDES
       : locale === "fr"
         ? FRENCH_EXPERIENCE_OVERRIDES
+        : locale === "de"
+          ? GERMAN_EXPERIENCE_OVERRIDES
         : undefined;
   const override = overrides?.[content.serviceId as ExperienceServiceId];
   return override ? { ...content, ...override } : content;
@@ -1642,7 +1837,7 @@ export function compareExperienceOrder(aServiceId: string, bServiceId: string): 
 }
 
 function experienceHref(serviceId: string, locale?: string | null): string {
-  const base = locale === "es" ? "/experiencias" : "/experiences";
+  const base = locale === "es" ? "/experiencias" : locale === "de" ? "/erlebnisse" : "/experiences";
   return `${base}/${getExperiencePublicSlug(serviceId, locale)}`;
 }
 
@@ -1778,6 +1973,72 @@ const FRENCH_PACKAGE_OVERRIDES: Record<
   },
 };
 
+const GERMAN_PACKAGE_OVERRIDES: Record<
+  string,
+  Partial<
+    Pick<
+      ResolvedExperiencePackageContent,
+      | "title"
+      | "subtitle"
+      | "seoTitle"
+      | "seoDescription"
+      | "durationLabel"
+      | "detailLabel"
+      | "priceUnitLabel"
+      | "primaryCtaLabel"
+    >
+  >
+> = {
+  "esperienza-gourmet-trimarano": {
+    title: "Chef an Bord - Premium Experience",
+    subtitle:
+      "Neel 47 mit Chefkoch, Skipper und Hostess für einen Premium-Tag zwischen lokalen Aromen, Meer und geschützten Buchten.",
+    seoTitle: "Chef an Bord auf dem Neel 47 bei den Ägadischen Inseln",
+    seoDescription:
+      "Privater Tag auf dem Neel 47 Trimaran mit Chef an Bord, Skipper, Hostess und Route zwischen Favignana und Levanzo.",
+    durationLabel: "8 Stunden",
+    detailLabel: "Chefkoch, Skipper und Hostess",
+    priceUnitLabel: "pro Paket",
+    primaryCtaLabel: "Paket ansehen",
+  },
+  "charter-egadi": {
+    title: "Charter Ägadische Inseln",
+    subtitle:
+      "3 bis 7 Tage auf dem Trimaran, mit Route nach Maß zwischen Favignana, Levanzo und Marettimo.",
+    seoTitle: "Neel 47 Trimaran-Charter auf den Ägadischen Inseln",
+    seoDescription:
+      "Trimaran-Charter auf den Ägadischen Inseln von 3 bis 7 Tagen, mit Skipper, Kabinen und flexibler Route ab Trapani.",
+    durationLabel: "3-7 Tage",
+    detailLabel: "Route nach Maß",
+    priceUnitLabel: "pro Paket",
+    primaryCtaLabel: "Paket ansehen",
+  },
+  "tour-barca-egadi-4-ore": {
+    title: "Private Bootstour Ägadische Inseln 4 Stunden",
+    subtitle:
+      "Die agile Halbtagesformel mit reserviertem Boot, Baden, Entspannung und Route je nach Meer.",
+    seoTitle: "Private Bootstour Ägadische Inseln 4 Stunden ab Trapani",
+    seoDescription:
+      "Private 4-Stunden-Tour zu den Ägadischen Inseln ab Trapani, mit exklusivem Boot, Badestopps und flexibler Route.",
+    durationLabel: "4 Stunden",
+    detailLabel: "Privates Boot",
+    priceUnitLabel: "pro Boot",
+    primaryCtaLabel: "Paket ansehen",
+  },
+  "tour-barca-egadi-8-ore": {
+    title: "Bootstour Ägadische Inseln 8 Stunden",
+    subtitle:
+      "Ein ganzer Tag zwischen Buchten, Schnorcheln und entspannter Zeit an Bord. Geteilte Plätze oder privates Boot.",
+    seoTitle: "Bootstour Ägadische Inseln 8 Stunden ab Trapani",
+    seoDescription:
+      "8-Stunden-Bootstour zu den Ägadischen Inseln ab Trapani, geteilt oder privat, mit Schnorcheln, Badestopps und ganztägiger Route.",
+    durationLabel: "8 Stunden",
+    detailLabel: "Geteilt oder privat",
+    priceUnitLabel: "pro Person oder pro Boot",
+    primaryCtaLabel: "Paket ansehen",
+  },
+};
+
 function applyLocalizedPackageOverride(
   content: ResolvedExperiencePackageContent,
   locale?: string | null,
@@ -1787,6 +2048,8 @@ function applyLocalizedPackageOverride(
       ? SPANISH_PACKAGE_OVERRIDES
       : locale === "fr"
         ? FRENCH_PACKAGE_OVERRIDES
+        : locale === "de"
+          ? GERMAN_PACKAGE_OVERRIDES
         : undefined;
   if (!overrides) return content;
   const override = overrides[content.key];
@@ -1800,10 +2063,12 @@ function applyLocalizedPackageOverride(
     if (variant.serviceId === "boat-exclusive-morning") {
       return {
         ...variant,
-        label: locale === "fr" ? "Privé le matin" : "Privado por la mañana",
+        label: locale === "fr" ? "Privé le matin" : locale === "de" ? "Privat am Vormittag" : "Privado por la mañana",
         description:
           locale === "fr"
             ? "Bateau réservé le matin, avec retour autour de 13:00."
+            : locale === "de"
+              ? "Boot am Vormittag reserviert, Rückkehr gegen 13:00 Uhr."
             : "Barco reservado por la mañana, con regreso alrededor de las 13:00.",
         href: experienceHref(variant.serviceId, locale),
       };
@@ -1811,27 +2076,39 @@ function applyLocalizedPackageOverride(
     if (variant.serviceId === "boat-exclusive-afternoon") {
       return {
         ...variant,
-        label: locale === "fr" ? "Privé l'après-midi" : "Privado por la tarde",
+        label: locale === "fr" ? "Privé l'après-midi" : locale === "de" ? "Privat am Nachmittag" : "Privado por la tarde",
         description:
-          locale === "fr" ? "Bateau réservé pour votre groupe." : "Barco reservado para tu grupo.",
+          locale === "fr"
+            ? "Bateau réservé pour votre groupe."
+            : locale === "de"
+              ? "Boot exklusiv für Ihre Gruppe."
+              : "Barco reservado para tu grupo.",
         href: experienceHref(variant.serviceId, locale),
       };
     }
     if (variant.serviceId === "boat-shared-full-day") {
       return {
         ...variant,
-        label: locale === "fr" ? "Partagé" : "Compartido",
+        label: locale === "fr" ? "Partagé" : locale === "de" ? "Geteilt" : "Compartido",
         description:
-          locale === "fr" ? "Places individuelles pour une journée complète." : "Plazas individuales para un día completo.",
+          locale === "fr"
+            ? "Places individuelles pour une journée complète."
+            : locale === "de"
+              ? "Einzelplätze für einen ganzen Tag."
+              : "Plazas individuales para un día completo.",
         href: experienceHref(variant.serviceId, locale),
       };
     }
     if (variant.serviceId === "boat-exclusive-full-day") {
       return {
         ...variant,
-        label: locale === "fr" ? "Privé" : "Privado",
+        label: locale === "fr" ? "Privé" : locale === "de" ? "Privat" : "Privado",
         description:
-          locale === "fr" ? "Journée complète avec bateau réservé." : "Día completo con barco reservado.",
+          locale === "fr"
+            ? "Journée complète avec bateau réservé."
+            : locale === "de"
+              ? "Ganzer Tag mit reserviertem Boot."
+              : "Día completo con barco reservado.",
         href: experienceHref(variant.serviceId, locale),
       };
     }

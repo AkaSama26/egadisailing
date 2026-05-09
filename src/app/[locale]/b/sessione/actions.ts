@@ -205,6 +205,8 @@ export async function cancelCustomerBooking(bookingId: string): Promise<void> {
             ? "Reembolso completo"
             : locale === "fr"
               ? "Remboursement complet"
+              : locale === "de"
+                ? "Vollständige Erstattung"
               : policy.label
         : policy.band === "HALF_REFUND"
           ? locale === "en"
@@ -213,6 +215,8 @@ export async function cancelCustomerBooking(bookingId: string): Promise<void> {
               ? "Reembolso del 50%"
               : locale === "fr"
                 ? "Remboursement de 50 %"
+                : locale === "de"
+                  ? "50 % Erstattung"
                 : policy.label
           : locale === "en"
             ? "Cancellation without refund"
@@ -220,6 +224,8 @@ export async function cancelCustomerBooking(bookingId: string): Promise<void> {
               ? "Cancelación sin reembolso"
               : locale === "fr"
                 ? "Annulation sans remboursement"
+                : locale === "de"
+                  ? "Stornierung ohne Erstattung"
                 : policy.label;
     const tpl = customerCancellationTemplate({
       customerName: session.email,

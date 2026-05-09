@@ -10,6 +10,7 @@ export const COOKIE_CONSENT_CATEGORIES = {
       en: "Strictly necessary cookies",
       es: "Cookies técnicas",
       fr: "Cookies strictement nécessaires",
+      de: "Unbedingt erforderliche Cookies",
     },
     required: true,
   },
@@ -19,6 +20,7 @@ export const COOKIE_CONSENT_CATEGORIES = {
       en: "Analytics cookies",
       es: "Cookies analíticos",
       fr: "Cookies analytiques",
+      de: "Analyse-Cookies",
     },
     required: false,
   },
@@ -28,13 +30,14 @@ export const COOKIE_CONSENT_CATEGORIES = {
       en: "Marketing cookies",
       es: "Cookies de marketing",
       fr: "Cookies marketing",
+      de: "Marketing-Cookies",
     },
     required: false,
   },
 } as const;
 
 export type CookieConsentCategory = keyof typeof COOKIE_CONSENT_CATEGORIES;
-export type CookieConsentLocale = "it" | "en" | "es" | "fr";
+export type CookieConsentLocale = "it" | "en" | "es" | "fr" | "de";
 
 export const COOKIE_CONSENT_CATEGORY_KEYS = Object.keys(
   COOKIE_CONSENT_CATEGORIES,
@@ -52,7 +55,7 @@ export interface CookieConsentPublicServices {
 }
 
 export function normalizeCookieConsentLocale(locale: string): CookieConsentLocale {
-  if (locale === "en" || locale === "es" || locale === "fr") return locale;
+  if (locale === "en" || locale === "es" || locale === "fr" || locale === "de") return locale;
   return "it";
 }
 
@@ -259,6 +262,54 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
           domain: "Fournisseur",
           description: "Finalité",
           expiration: "Durée",
+        },
+      },
+      services: {
+        ga4: "Google Analytics 4",
+        googleAds: "Google Ads",
+        metaPixel: "Meta Pixel",
+        bingUet: "Microsoft Advertising / Bing",
+      },
+    },
+  },
+  de: {
+    consentModal: {
+      title: "Datenschutz-Einstellungen",
+      description:
+        "Wir verwenden notwendige technische Cookies. Mit Ihrer Einwilligung können wir außerdem Analyse- oder Marketing-Tools nutzen, um die Website zu verbessern und Kampagnen zu messen. Sie können Ihre Auswahl jederzeit ändern.",
+      acceptAllBtn: "Alle akzeptieren",
+      acceptNecessaryBtn: "Nur notwendige",
+      showPreferencesBtn: "Anpassen",
+      closeIconLabel: "Nur notwendige",
+      footer:
+        '<a href="/de/cookie-richtlinie">Cookie-Richtlinie</a><a href="/de/datenschutz">Datenschutz</a>',
+    },
+    preferencesModal: {
+      title: "Cookie-Einstellungen verwalten",
+      acceptAllBtn: "Alle akzeptieren",
+      acceptNecessaryBtn: "Nur notwendige",
+      savePreferencesBtn: "Einstellungen speichern",
+      closeIconLabel: "Schließen",
+      serviceCounterLabel: "Dienst|Dienste",
+      sections: {
+        intro:
+          "Sie können nach Zweck wählen. Notwendige Cookies bleiben für Sicherheit, Sessions, Sprache, Zahlungen und Bot-Schutz aktiv.",
+        necessary:
+          "Erforderlich für Navigation, Admin-/Kundensessions, Spracheinstellungen, Sicherheit, Stripe und Cloudflare Turnstile. Sie können nicht deaktiviert werden.",
+        analytics:
+          "Sie helfen uns zu verstehen, wie die Website genutzt wird und welche Seiten am besten funktionieren. Sie werden nur nach Einwilligung aktiviert.",
+        marketing:
+          "Sie dienen der Messung von Werbekampagnen und Conversions. Sie werden nur nach Einwilligung aktiviert.",
+        more:
+          'Details zu Cookies, Anbietern, Dauer und Rechten finden Sie in der <a href="/de/cookie-richtlinie">Cookie-Richtlinie</a>.',
+      },
+      cookieTable: {
+        caption: "Cookie-Liste",
+        headers: {
+          name: "Name",
+          domain: "Anbieter",
+          description: "Zweck",
+          expiration: "Dauer",
         },
       },
       services: {
