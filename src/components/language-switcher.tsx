@@ -55,7 +55,7 @@ const localizedSegments: Record<string, Record<string, string>> = {
     fr: "politique-de-cookies",
     de: "cookie-richtlinie",
   },
-  experiences: { it: "experiences", en: "experiences", es: "experiencias", fr: "experiences", de: "erlebnisse" },
+  experiences: { it: "esperienze", en: "experiences", es: "experiencias", fr: "experiences", de: "erlebnisse" },
   faq: { it: "faq", en: "faq", es: "preguntas-frecuentes", fr: "questions-frequentes", de: "haeufige-fragen" },
   islands: { it: "islands", en: "islands", es: "islas", fr: "iles", de: "inseln" },
   prenota: { it: "prenota", en: "prenota", es: "reservar", fr: "reserver", de: "buchen" },
@@ -113,6 +113,13 @@ const experienceSlugsByService: Record<string, Record<string, string>> = {
     es: "excursion-privada-islas-egadi-4-horas-tarde",
     fr: "excursion-privee-iles-egades-4-heures-apres-midi",
     de: "private-bootstour-aegadische-inseln-4-stunden-nachmittag",
+  },
+  "fishing-full-day": {
+    it: "charter-pesca-egadi",
+    en: "egadi-fishing-charter",
+    es: "charter-pesca-islas-egadi",
+    fr: "charter-peche-iles-egades",
+    de: "angelcharter-aegadische-inseln",
   },
 };
 

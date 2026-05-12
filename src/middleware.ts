@@ -123,10 +123,12 @@ function withLegacyCacheReset(req: NextRequest, response: NextResponse) {
   return response;
 }
 
-function isGermanLocalizedRoute(pathname: string) {
-  return /^\/de\/(?:ueber-uns|boote(?:\/.*)?|erlebnisse(?:\/.*)?|inseln(?:\/.*)?|kontakt|buchen(?:\/.*)?|haeufige-fragen|datenschutz|agb|cookie-richtlinie|buchung-finden|b\/buchung)\/?$/.test(
+function getDirectLocalizedRouteLocale(pathname: string): PublicLocale | null {
+  if (/^\/it\/esperienze(?:\/.*)?\/?$/.test(pathname)) return "it";
+  if (/^\/de\/(?:ueber-uns|boote(?:\/.*)?|erlebnisse(?:\/.*)?|inseln(?:\/.*)?|kontakt|buchen(?:\/.*)?|haeufige-fragen|datenschutz|agb|cookie-richtlinie|buchung-finden|b\/buchung)\/?$/.test(
     pathname,
-  );
+  )) return "de";
+  return null;
 }
 
 function nextWithLocale(req: NextRequest, locale: PublicLocale) {
@@ -202,10 +204,11 @@ export default async function middleware(req: NextRequest) {
   }
 
   // Next 16 + next-intl pathnames can re-enter middleware after rewriting a
-  // localized pathname to the internal route, causing a self-redirect on the
-  // public German URL. German canonical aliases render these paths directly.
-  if (isGermanLocalizedRoute(pathname)) {
-    return nextWithLocale(req, "de");
+  // localized pathname to the internal route, causing a self-redirect on some
+  // public localized URLs. Canonical alias routes render these paths directly.
+  const directLocalizedRouteLocale = getDirectLocalizedRouteLocale(pathname);
+  if (directLocalizedRouteLocale) {
+    return nextWithLocale(req, directLocalizedRouteLocale);
   }
 
   return withLegacyCacheReset(req, withIslandGuideAlternates(req, intlMiddleware(req)));

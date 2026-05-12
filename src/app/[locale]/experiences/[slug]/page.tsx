@@ -54,10 +54,268 @@ function jsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
+function isFishingService(service: { id?: string }) {
+  return service.id === "fishing-full-day";
+}
+
+function getFishingDetailCopy(locale: string) {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  return {
+    experienceLabel: isEs
+      ? "Charter de pesca deportiva"
+      : isFr
+        ? "Charter de pêche sportive"
+        : isDe
+          ? "Sportangel-Charter"
+          : isEn
+            ? "Sport fishing charter"
+            : "Charter di pesca sportiva",
+    bookingTitle: isEs
+      ? "Reserva el charter de pesca"
+      : isFr
+        ? "Réserver le charter de pêche"
+        : isDe
+          ? "Angelcharter buchen"
+          : isEn
+            ? "Book the fishing charter"
+            : "Prenota il charter di pesca",
+    bookingText: isEs
+      ? "Elige la fecha y reserva la neumática privada hasta 4 personas, con precio por grupo."
+      : isFr
+        ? "Choisissez la date et réservez le semi-rigide privé jusqu'à 4 personnes, avec prix par groupe."
+        : isDe
+          ? "Wählen Sie das Datum und buchen Sie das private Angel-RIB bis 4 Personen, mit Preis pro Gruppe."
+          : isEn
+            ? "Choose the date and book the private Fishing RIB for up to 4 guests, priced per group."
+            : "Scegli la data e prenota il Gommone Pesca privato fino a 4 persone, con prezzo per gruppo.",
+    galleryTitle: isEs
+      ? "Gommone y setup de pesca"
+      : isFr
+        ? "Semi-rigide et setup pêche"
+        : isDe
+          ? "Angel-RIB und Setup"
+          : isEn
+            ? "Fishing RIB and setup"
+            : "Gommone e setup pesca",
+    bookNow: isEs
+      ? "Reservar ahora"
+      : isFr
+        ? "Réserver"
+        : isDe
+          ? "Jetzt buchen"
+          : isEn
+            ? "Book now"
+            : "Prenota ora",
+  };
+}
+
+function getFishingSeoExpansionCopy(
+  locale: string,
+  durationText: string,
+  boatTitle?: string,
+  capacityMax = 4,
+) {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  const boat = boatTitle ?? (isEs ? "neumática de pesca" : isFr ? "semi-rigide de pêche" : isDe ? "Angel-RIB" : isEn ? "Fishing RIB" : "Gommone Pesca");
+  return {
+    practicalEyebrow: isEs ? "Antes de reservar" : isFr ? "Avant de réserver" : isDe ? "Vor der Buchung" : isEn ? "Before booking" : "Prima di prenotare",
+    practicalTitle: isEs ? "Detalles técnicos" : isFr ? "Détails techniques" : isDe ? "Technische Details" : isEn ? "Technical details" : "Dettagli tecnici",
+    practicalItems: [
+      {
+        icon: Anchor,
+        title: isEs ? "Salida desde Trapani" : isFr ? "Départ de Trapani" : isDe ? "Abfahrt ab Trapani" : isEn ? "Departure from Trapani" : "Partenza da Trapani",
+        text: isEs
+          ? "Punto de encuentro: Via dei Gladioli 15, 91100 Trapani."
+          : isFr
+            ? "Point de rencontre : Via dei Gladioli 15, 91100 Trapani."
+            : isDe
+              ? "Treffpunkt: Via dei Gladioli 15, 91100 Trapani."
+              : isEn
+                ? "Meeting point: Via dei Gladioli 15, 91100 Trapani."
+                : "Punto di incontro: Via dei Gladioli 15, 91100 Trapani.",
+      },
+      {
+        icon: Clock,
+        title: isEs ? "Duración" : isFr ? "Durée" : isDe ? "Dauer" : isEn ? "Duration" : "Durata",
+        text: durationText,
+      },
+      {
+        icon: Compass,
+        title: isEs ? "Ruta y normativa" : isFr ? "Route et règles" : isDe ? "Route und Regeln" : isEn ? "Route and rules" : "Rotta e normativa",
+        text: isEs
+          ? "La ruta se decide según mar, temporada y autorizaciones AMP/MASAF; no se pesca en zonas prohibidas."
+          : isFr
+            ? "La route est décidée selon mer, saison et autorisations AMP/MASAF ; aucune pêche en zone interdite."
+            : isDe
+              ? "Die Route richtet sich nach Meer, Saison und AMP/MASAF-Genehmigungen; keine Fischerei in verbotenen Zonen."
+              : isEn
+                ? "The route is chosen according to sea state, season and AMP/MASAF authorisations; no fishing in forbidden zones."
+                : "La rotta si decide in base a mare, stagione e autorizzazioni AMP/MASAF; niente pesca in zone vietate.",
+      },
+      {
+        icon: Users,
+        title: isEs ? "Formato y capacidad" : isFr ? "Format et capacité" : isDe ? "Format und Kapazität" : isEn ? "Format and capacity" : "Formula e capienza",
+        text: isEs
+          ? `${boat} privado hasta ${capacityMax} personas, con precio por grupo.`
+          : isFr
+            ? `${boat} privé jusqu'à ${capacityMax} personnes, avec prix par groupe.`
+            : isDe
+              ? `${boat} privat bis ${capacityMax} Gäste, Preis pro Gruppe.`
+              : isEn
+                ? `Private ${boat} for up to ${capacityMax} guests, priced per group.`
+                : `${boat} privato fino a ${capacityMax} persone, con prezzo per gruppo.`,
+      },
+    ],
+    whatYouSeeTitle: isEs ? "Qué harás a bordo" : isFr ? "Ce que vous ferez à bord" : isDe ? "Was Sie an Bord machen" : isEn ? "What you will do on board" : "Cosa farai a bordo",
+    whatYouSeeIntro: isEs
+      ? "Una jornada para aficionados, con técnica y cumplimiento normativo antes que promesas de captura."
+      : isFr
+        ? "Une journée pour passionnés, avec technique et conformité avant toute promesse de prise."
+        : isDe
+          ? "Ein Tag für Enthusiasten, mit Technik und Regelkonformität statt Fangversprechen."
+          : isEn
+            ? "A day for enthusiasts, with technique and compliance before catch promises."
+            : "Una giornata per appassionati, con tecnica e compliance prima delle promesse di cattura.",
+    whatYouSeeItems: [
+      {
+        title: isEs ? "Técnicas mixtas" : isFr ? "Techniques mixtes" : isDe ? "Gemischte Techniken" : isEn ? "Mixed techniques" : "Tecniche miste",
+        text: isEs
+          ? "Pesca de fondo, curricán, drifting o catch and release según condiciones y decisión del patrón."
+          : isFr
+            ? "Pêche de fond, traîne, drifting ou catch and release selon conditions et décision du skipper."
+            : isDe
+              ? "Grundangeln, Schleppangeln, Drifting oder Catch and Release je nach Bedingungen und Skipper-Entscheidung."
+              : isEn
+                ? "Bottom fishing, trolling, drifting or catch and release according to conditions and skipper decision."
+                : "Bolentino, traina, drifting o catch and release secondo condizioni e decisione dello skipper.",
+      },
+      {
+        title: isEs ? "Equipo profesional" : isFr ? "Matériel professionnel" : isDe ? "Profi-Ausrüstung" : isEn ? "Professional gear" : "Attrezzatura professionale",
+        text: isEs
+          ? "Cañas, carretes, cebos y señuelos están preparados para una salida técnica de grupo pequeño."
+          : isFr
+            ? "Cannes, moulinets, appâts et leurres sont préparés pour une sortie technique en petit groupe."
+            : isDe
+              ? "Ruten, Rollen, Köder und Kunstköder sind für eine technische Kleingruppen-Ausfahrt vorbereitet."
+              : isEn
+                ? "Rods, reels, bait and lures are prepared for a technical small-group outing."
+                : "Canne, mulinelli, esche e artificiali sono preparati per un'uscita tecnica in piccolo gruppo.",
+      },
+      {
+        title: isEs ? "Captura responsable" : isFr ? "Prise responsable" : isDe ? "Verantwortungsvoller Fang" : isEn ? "Responsible catch" : "Pescato responsabile",
+        text: isEs
+          ? "Las capturas pueden soltarse o conservarse solo dentro de ley, tallas, cupos y autorizaciones."
+          : isFr
+            ? "Les prises peuvent être relâchées ou gardées uniquement selon loi, tailles, quotas et autorisations."
+            : isDe
+              ? "Fänge dürfen nur nach Gesetz, Mindestmaßen, Quoten und Genehmigungen behalten oder freigelassen werden."
+              : isEn
+                ? "Catches can be released or kept only within law, sizes, quotas and authorisations."
+                : "Il pescato può essere rilasciato o trattenuto solo entro legge, taglie, quote e autorizzazioni.",
+      },
+    ],
+    faqTitle: isEs ? "Preguntas sobre el charter de pesca" : isFr ? "Questions sur le charter de pêche" : isDe ? "Fragen zum Angelcharter" : isEn ? "Fishing charter questions" : "Domande sul charter di pesca",
+    faqs: [
+      {
+        question: isEs ? "¿La captura está garantizada?" : isFr ? "La prise est-elle garantie ?" : isDe ? "Ist ein Fang garantiert?" : isEn ? "Is a catch guaranteed?" : "La cattura è garantita?",
+        answer: isEs
+          ? "No. La pesca depende de mar, temporada y naturaleza. El servicio garantiza guía técnica, equipo y cumplimiento de reglas."
+          : isFr
+            ? "Non. La pêche dépend de la mer, de la saison et de la nature. Le service garantit guide technique, matériel et respect des règles."
+            : isDe
+              ? "Nein. Angeln hängt von Meer, Saison und Natur ab. Der Service garantiert technische Begleitung, Ausrüstung und Regelkonformität."
+              : isEn
+                ? "No. Fishing depends on sea, season and nature. The service guarantees technical guidance, gear and rule compliance."
+                : "No. La pesca dipende da mare, stagione e natura. Il servizio garantisce guida tecnica, attrezzatura e rispetto delle regole.",
+      },
+      {
+        question: isEs ? "¿Podemos conservar el pescado?" : isFr ? "Peut-on garder le poisson ?" : isDe ? "Dürfen wir Fisch behalten?" : isEn ? "Can we keep the fish?" : "Possiamo tenere il pescato?",
+        answer: isEs
+          ? "Sí, solo cuando ley, tallas, especies, cupos y autorizaciones lo permiten. En los demás casos se practica catch and release."
+          : isFr
+            ? "Oui, seulement lorsque loi, tailles, espèces, quotas et autorisations le permettent. Sinon, catch and release."
+            : isDe
+              ? "Ja, nur wenn Gesetz, Mindestmaße, Arten, Quoten und Genehmigungen es erlauben. Sonst Catch and Release."
+              : isEn
+                ? "Yes, only when law, sizes, species, quotas and authorisations allow it. Otherwise catch and release is used."
+                : "Sì, solo quando legge, taglie, specie, quote e autorizzazioni lo permettono. Altrimenti si pratica catch and release.",
+      },
+      {
+        question: isEs ? "¿Qué técnicas se usan?" : isFr ? "Quelles techniques sont utilisées ?" : isDe ? "Welche Techniken werden genutzt?" : isEn ? "Which techniques are used?" : "Quali tecniche si usano?",
+        answer: isEs
+          ? "Pesca de fondo, curricán, drifting y catch and release se eligen el mismo día según condiciones y decisión del patrón."
+          : isFr
+            ? "Pêche de fond, traîne, drifting et catch and release sont choisis le jour même selon les conditions et le skipper."
+            : isDe
+              ? "Grundangeln, Schleppangeln, Drifting und Catch and Release werden am Tag je nach Bedingungen und Skipper gewählt."
+              : isEn
+                ? "Bottom fishing, trolling, drifting and catch and release are chosen on the day according to conditions and skipper decision."
+                : "Bolentino, traina, drifting e catch and release si scelgono in giornata secondo condizioni e decisione dello skipper.",
+      },
+    ],
+  };
+}
+
+function getFishingEditorialCopy(locale: string) {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  return {
+    eyebrow: isEs ? "Pesca deportiva Egadi" : isFr ? "Pêche sportive Égades" : isDe ? "Sportangeln Ägadische Inseln" : isEn ? "Egadi sport fishing" : "Pesca sportiva Egadi",
+    title: isEs
+      ? "Una jornada técnica para quien ama pescar de verdad"
+      : isFr
+        ? "Une journée technique pour ceux qui aiment vraiment pêcher"
+        : isDe
+          ? "Ein technischer Tag für echte Angelbegeisterte"
+          : isEn
+            ? "A technical day for people who really love fishing"
+            : "Una giornata tecnica per chi ama davvero pescare",
+    paragraphs: isEs
+      ? [
+          "El charter de pesca en las Islas Egadi está pensado para aficionados que quieren una salida privada, equipo profesional y una tripulación capaz de leer mar, temporada y normativa.",
+          "La jornada combina pesca de fondo, curricán, drifting o catch and release según condiciones reales. No se prometen capturas: se promete una experiencia técnica, seria y respetuosa.",
+          "El pescado puede soltarse o conservarse solo cuando la ley, las tallas, los cupos y las autorizaciones lo permiten. La decisión final operativa queda siempre al patrón.",
+        ]
+      : isFr
+        ? [
+            "Le charter de pêche aux îles Égades est conçu pour les passionnés qui veulent une sortie privée, du matériel professionnel et un équipage capable de lire la mer, la saison et la réglementation.",
+            "La journée combine pêche de fond, traîne, drifting ou catch and release selon les conditions réelles. Aucune prise n'est promise : l'expérience est technique, sérieuse et respectueuse.",
+            "Le poisson peut être relâché ou gardé uniquement lorsque loi, tailles, quotas et autorisations le permettent. La décision opérationnelle finale appartient toujours au skipper.",
+          ]
+        : isDe
+          ? [
+              "Der Angelcharter auf den Ägadischen Inseln ist für Enthusiasten gedacht, die eine private Ausfahrt, professionelle Ausrüstung und eine Crew suchen, die Meer, Saison und Regeln lesen kann.",
+              "Der Tag kombiniert Grundangeln, Schleppangeln, Drifting oder Catch and Release je nach echten Bedingungen. Es wird kein Fang versprochen: Versprochen wird ein technisches und respektvolles Erlebnis.",
+              "Fisch darf nur behalten oder freigelassen werden, wenn Gesetz, Mindestmaße, Quoten und Genehmigungen es erlauben. Die endgültige operative Entscheidung liegt immer beim Skipper.",
+            ]
+          : isEn
+            ? [
+                "The Egadi fishing charter is designed for enthusiasts who want a private outing, professional gear and a crew able to read the sea, the season and the rules.",
+                "The day can combine bottom fishing, trolling, drifting or catch and release according to real conditions. No catch is promised: the promise is a technical, serious and respectful experience.",
+                "Fish can be released or kept only when law, sizes, quotas and authorisations allow it. The final operational decision always belongs to the skipper.",
+              ]
+            : [
+                "Il charter di pesca alle Isole Egadi è pensato per appassionati che vogliono un'uscita privata, attrezzatura professionale e una crew capace di leggere mare, stagione e normativa.",
+                "La giornata può combinare bolentino, traina, drifting o catch and release secondo condizioni reali. Non si promette la cattura: si promette un'esperienza tecnica, seria e rispettosa.",
+                "Il pesce può essere rilasciato o trattenuto solo quando legge, taglie, quote e autorizzazioni lo permettono. La decisione operativa finale resta sempre allo skipper.",
+              ],
+  };
+}
+
 function getDetailCopy(
   locale: string,
-  service: { type: string; durationType: string },
+  service: { id?: string; type: string; durationType: string },
 ) {
+  if (isFishingService(service)) return getFishingDetailCopy(locale);
+
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
@@ -561,10 +819,14 @@ function getDetailCopy(
 
 function getSeoExpansionCopy(
   locale: string,
-  service: { type: string; durationType: string; durationHours: number; capacityMax: number },
+  service: { id?: string; type: string; durationType: string; durationHours: number; capacityMax: number },
   durationText: string,
   boatTitle?: string,
 ) {
+  if (isFishingService(service)) {
+    return getFishingSeoExpansionCopy(locale, durationText, boatTitle, service.capacityMax);
+  }
+
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
@@ -1127,10 +1389,12 @@ function getSeoExpansionCopy(
 
 function getEditorialExperienceCopy(
   locale: string,
-  service: { type: string; durationType: string; capacityMax: number },
+  service: { id?: string; type: string; durationType: string; capacityMax: number },
   title: string,
   boatTitle?: string,
 ) {
+  if (isFishingService(service)) return getFishingEditorialCopy(locale);
+
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";

@@ -57,14 +57,14 @@ export const routing = defineRouting({
       de: "/cookie-richtlinie",
     },
     "/experiences": {
-      it: "/experiences",
+      it: "/esperienze",
       en: "/experiences",
       es: "/experiencias",
       fr: "/experiences",
       de: "/erlebnisse",
     },
     "/experiences/[slug]": {
-      it: "/experiences/[slug]",
+      it: "/esperienze/[slug]",
       en: "/experiences/[slug]",
       es: "/experiencias/[slug]",
       fr: "/experiences/[slug]",

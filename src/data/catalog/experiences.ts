@@ -303,6 +303,132 @@ const fullDayBoatItinerary = [
   },
 ];
 
+const fishingItinerary = [
+  {
+    time: "08:30",
+    title: {
+      it: "Briefing tecnico a Trapani",
+      en: "Technical briefing in Trapani",
+      es: "Briefing técnico en Trapani",
+      fr: "Briefing technique à Trapani",
+      de: "Technisches Briefing in Trapani",
+    },
+    location: {
+      it: "Porto di Trapani",
+      en: "Trapani harbour",
+      es: "Puerto de Trapani",
+      fr: "Port de Trapani",
+      de: "Hafen von Trapani",
+    },
+    text: {
+      it: "Imbarco, controllo attrezzatura, sicurezza e scelta delle tecniche in base a stagione, mare e autorizzazioni.",
+      en: "Boarding, gear check, safety briefing and choice of techniques according to season, sea state and authorisations.",
+      es: "Embarque, revisión del equipo, seguridad y elección de técnicas según temporada, mar y autorizaciones.",
+      fr: "Embarquement, vérification du matériel, sécurité et choix des techniques selon saison, mer et autorisations.",
+      de: "Einschiffung, Ausrüstungscheck, Sicherheit und Wahl der Techniken je nach Saison, Meer und Genehmigungen.",
+    },
+  },
+  {
+    time: "09:30",
+    title: {
+      it: "Rotta verso gli spot consentiti",
+      en: "Route to permitted spots",
+      es: "Ruta hacia zonas permitidas",
+      fr: "Route vers les zones autorisées",
+      de: "Route zu erlaubten Spots",
+    },
+    location: {
+      it: "Isole Egadi",
+      en: "Egadi Islands",
+      es: "Islas Egadi",
+      fr: "Îles Égades",
+      de: "Ägadische Inseln",
+    },
+    text: {
+      it: "Lo skipper valuta vento, correnti e regolamento AMP: si pesca solo dove e quando è consentito.",
+      en: "The skipper evaluates wind, currents and AMP rules: fishing only happens where and when it is allowed.",
+      es: "El patrón evalúa viento, corrientes y normativa AMP: se pesca solo donde y cuando está permitido.",
+      fr: "Le skipper évalue vent, courants et règles AMP : la pêche se pratique uniquement où et quand elle est autorisée.",
+      de: "Der Skipper prüft Wind, Strömung und AMP-Regeln: Geangelt wird nur dort und dann, wo es erlaubt ist.",
+    },
+  },
+  {
+    time: "10:00",
+    title: {
+      it: "Tecniche miste",
+      en: "Mixed techniques",
+      es: "Técnicas mixtas",
+      fr: "Techniques mixtes",
+      de: "Gemischte Techniken",
+    },
+    text: {
+      it: "Sessioni di bolentino, traina, drifting o catch and release secondo condizioni, specie presenti e decisione dello skipper.",
+      en: "Sessions of bottom fishing, trolling, drifting or catch and release according to conditions, target species and skipper decision.",
+      es: "Sesiones de pesca de fondo, curricán, drifting o catch and release según condiciones, especies y decisión del patrón.",
+      fr: "Sessions de pêche de fond, traîne, drifting ou catch and release selon conditions, espèces et décision du skipper.",
+      de: "Grundangeln, Schleppangeln, Drifting oder Catch and Release je nach Bedingungen, Fischarten und Entscheidung des Skippers.",
+    },
+  },
+  {
+    time: "13:00",
+    title: {
+      it: "Pausa a bordo",
+      en: "Break on board",
+      es: "Pausa a bordo",
+      fr: "Pause à bord",
+      de: "Pause an Bord",
+    },
+    text: {
+      it: "Acqua, soft drink e snack leggeri. Il focus resta sulla pesca: pranzo completo non incluso.",
+      en: "Water, soft drinks and light snacks. The focus stays on fishing: a full lunch is not included.",
+      es: "Agua, refrescos y snacks ligeros. El foco sigue siendo la pesca: almuerzo completo no incluido.",
+      fr: "Eau, boissons fraîches et snacks légers. Le focus reste la pêche : déjeuner complet non inclus.",
+      de: "Wasser, Softdrinks und leichte Snacks. Der Fokus bleibt auf dem Angeln: Vollständiges Mittagessen ist nicht enthalten.",
+    },
+  },
+  {
+    time: "14:00",
+    title: {
+      it: "Seconda sessione",
+      en: "Second session",
+      es: "Segunda sesión",
+      fr: "Deuxième session",
+      de: "Zweite Session",
+    },
+    text: {
+      it: "Cambio spot o tecnica se serve. Il pescato può essere rilasciato o trattenuto solo entro limiti di legge, taglie e quote.",
+      en: "Spot or technique change if useful. Catches can be released or kept only within legal limits, sizes and quotas.",
+      es: "Cambio de zona o técnica si conviene. Las capturas pueden soltarse o conservarse solo dentro de límites legales, tallas y cupos.",
+      fr: "Changement de spot ou de technique si utile. Les prises peuvent être relâchées ou gardées uniquement dans les limites légales, tailles et quotas.",
+      de: "Spot- oder Technikwechsel bei Bedarf. Fänge können nur innerhalb gesetzlicher Limits, Mindestmaße und Quoten freigelassen oder behalten werden.",
+    },
+  },
+  {
+    time: "16:30",
+    title: {
+      it: "Rientro tecnico",
+      en: "Technical return",
+      es: "Regreso técnico",
+      fr: "Retour technique",
+      de: "Technische Rückfahrt",
+    },
+    location: {
+      it: "Trapani",
+      en: "Trapani",
+      es: "Trapani",
+      fr: "Trapani",
+      de: "Trapani",
+    },
+    text: {
+      it: "Rientro, riordino attrezzatura e sbarco. Nessuna cattura è garantita: l'esperienza segue mare e natura.",
+      en: "Return, gear tidy-up and disembarkation. No catch is guaranteed: the experience follows sea and nature.",
+      es: "Regreso, orden del equipo y desembarque. No se garantiza ninguna captura: la experiencia sigue al mar y la naturaleza.",
+      fr: "Retour, rangement du matériel et débarquement. Aucune prise n'est garantie : l'expérience suit la mer et la nature.",
+      de: "Rückfahrt, Ausrüstung verstauen und Ausschiffung. Kein Fang wird garantiert: Das Erlebnis folgt Meer und Natur.",
+    },
+  },
+];
+
 const halfDayMorningItinerary = [
   {
     time: "09:00",
@@ -448,12 +574,102 @@ const privateBoatIncludes = [
   { it: "Rotta flessibile con lo skipper", en: "Flexible route with the skipper" },
 ];
 
+const fishingIncludes = [
+  {
+    it: "Gommone da pesca riservato al tuo gruppo",
+    en: "Fishing RIB reserved for your group",
+    es: "Neumática de pesca reservada para tu grupo",
+    fr: "Semi-rigide de pêche réservé à votre groupe",
+    de: "Angel-RIB exklusiv für Ihre Gruppe",
+  },
+  {
+    it: "Skipper e guida tecnica",
+    en: "Skipper and technical guide",
+    es: "Patrón y guía técnica",
+    fr: "Skipper et guide technique",
+    de: "Skipper und technische Begleitung",
+  },
+  {
+    it: "Canne e mulinelli professionali",
+    en: "Professional rods and reels",
+    es: "Cañas y carretes profesionales",
+    fr: "Cannes et moulinets professionnels",
+    de: "Professionelle Ruten und Rollen",
+  },
+  {
+    it: "Esche, artificiali e setup per tecniche miste",
+    en: "Bait, lures and setup for mixed techniques",
+    es: "Cebos, señuelos y montaje para técnicas mixtas",
+    fr: "Appâts, leurres et matériel pour techniques mixtes",
+    de: "Köder, Kunstköder und Setup für gemischte Techniken",
+  },
+  {
+    it: "Carburante per la rotta prevista",
+    en: "Fuel for the planned route",
+    es: "Combustible para la ruta prevista",
+    fr: "Carburant pour la route prévue",
+    de: "Treibstoff für die geplante Route",
+  },
+  {
+    it: "Acqua, soft drink e snack leggeri",
+    en: "Water, soft drinks and light snacks",
+    es: "Agua, refrescos y snacks ligeros",
+    fr: "Eau, boissons fraîches et snacks légers",
+    de: "Wasser, Softdrinks und leichte Snacks",
+  },
+  {
+    it: "Dotazioni di sicurezza",
+    en: "Safety equipment",
+    es: "Equipo de seguridad",
+    fr: "Équipement de sécurité",
+    de: "Sicherheitsausrüstung",
+  },
+];
+
 const defaultBringItems = [
   { it: "Crema solare", en: "Sunscreen" },
   { it: "Costume da bagno", en: "Swimwear" },
   { it: "Asciugamano personale", en: "Personal towel" },
   { it: "Cappello", en: "Hat" },
   { it: "Occhiali da sole", en: "Sunglasses" },
+];
+
+const fishingBringItems = [
+  {
+    it: "Abbigliamento comodo e antivento",
+    en: "Comfortable windproof clothing",
+    es: "Ropa cómoda y cortaviento",
+    fr: "Vêtements confortables et coupe-vent",
+    de: "Bequeme windfeste Kleidung",
+  },
+  {
+    it: "Scarpe con suola morbida antiscivolo",
+    en: "Soft non-slip sole shoes",
+    es: "Calzado con suela blanda antideslizante",
+    fr: "Chaussures à semelle souple antidérapante",
+    de: "Schuhe mit weicher rutschfester Sohle",
+  },
+  {
+    it: "Cappello e occhiali polarizzati",
+    en: "Hat and polarised sunglasses",
+    es: "Sombrero y gafas polarizadas",
+    fr: "Chapeau et lunettes polarisées",
+    de: "Hut und polarisierte Sonnenbrille",
+  },
+  {
+    it: "Crema solare reef-safe",
+    en: "Reef-safe sunscreen",
+    es: "Protector solar reef-safe",
+    fr: "Crème solaire reef-safe",
+    de: "Riffreundliche Sonnencreme",
+  },
+  {
+    it: "Documento personale e comunicazione pesca sportiva se richiesta",
+    en: "Personal ID and sport fishing communication if required",
+    es: "Documento personal y comunicación de pesca deportiva si se requiere",
+    fr: "Document personnel et déclaration de pêche sportive si nécessaire",
+    de: "Ausweis und Sportfischerei-Meldung, falls erforderlich",
+  },
 ];
 
 export const EXPERIENCE_CATALOG = {
@@ -927,6 +1143,105 @@ export const EXPERIENCE_CATALOG = {
     includes: privateBoatIncludes,
     bringItems: defaultBringItems,
   },
+  "fishing-full-day": {
+    serviceId: "fishing-full-day",
+    order: 90,
+    listed: true,
+    title: {
+      it: "Charter di pesca alle Egadi",
+      en: "Egadi fishing charter",
+      es: "Charter de pesca en las Islas Egadi",
+      fr: "Charter de pêche aux îles Égades",
+      de: "Angelcharter Ägadische Inseln",
+    },
+    subtitle: {
+      it: "Giornata privata di pesca sportiva da Trapani su gommone dedicato, con attrezzatura professionale e tecniche miste.",
+      en: "Private sport fishing day from Trapani on a dedicated Fishing RIB, with professional gear and mixed techniques.",
+      es: "Jornada privada de pesca deportiva desde Trapani en neumática dedicada, con equipo profesional y técnicas mixtas.",
+      fr: "Journée privée de pêche sportive depuis Trapani sur semi-rigide dédié, avec matériel professionnel et techniques mixtes.",
+      de: "Privater Sportangeltag ab Trapani auf einem speziellen Angel-RIB, mit professioneller Ausrüstung und gemischten Techniken.",
+    },
+    detailDescription: {
+      it: "Una giornata da 8 ore per appassionati: bolentino, traina, drifting e catch and release vengono scelti dallo skipper in base a stagione, mare, specie presenti e regole AMP/MASAF. Il pescato può essere rilasciato o trattenuto solo entro limiti di legge, taglie, quote e autorizzazioni.",
+      en: "An 8-hour day for fishing enthusiasts: bottom fishing, trolling, drifting and catch and release are selected by the skipper according to season, sea state, target species and AMP/MASAF rules. Catches can be released or kept only within legal limits, sizes, quotas and authorisations.",
+      es: "Una jornada de 8 horas para aficionados: pesca de fondo, curricán, drifting y catch and release se eligen según temporada, mar, especies y normativa AMP/MASAF. Las capturas pueden soltarse o conservarse solo dentro de límites legales, tallas, cupos y autorizaciones.",
+      fr: "Une journée de 8 heures pour passionnés : pêche de fond, traîne, drifting et catch and release sont choisis selon saison, mer, espèces et règles AMP/MASAF. Les prises peuvent être relâchées ou gardées uniquement dans les limites légales, tailles, quotas et autorisations.",
+      de: "Ein 8-Stunden-Tag für Angelbegeisterte: Grundangeln, Schleppangeln, Drifting und Catch and Release werden je nach Saison, Meer, Fischarten und AMP/MASAF-Regeln gewählt. Fänge dürfen nur innerhalb gesetzlicher Limits, Mindestmaße, Quoten und Genehmigungen behalten oder freigelassen werden.",
+    },
+    seoTitle: {
+      it: "Charter di pesca Isole Egadi da Trapani",
+      en: "Egadi Islands Fishing Charter from Trapani",
+      es: "Charter de pesca en las Islas Egadi desde Trapani",
+      fr: "Charter de pêche aux îles Égades depuis Trapani",
+      de: "Angelcharter Ägadische Inseln ab Trapani",
+    },
+    seoDescription: {
+      it: "Charter di pesca alle Isole Egadi da Trapani su gommone privato fino a 4 persone, con canne professionali, bolentino, traina, drifting e catch and release secondo normativa AMP.",
+      en: "Fishing charter in the Egadi Islands from Trapani on a private RIB for up to 4 guests, with professional rods, bottom fishing, trolling, drifting and catch and release according to AMP rules.",
+      es: "Charter de pesca en las Islas Egadi desde Trapani en neumática privada hasta 4 personas, con cañas profesionales, pesca de fondo, curricán, drifting y catch and release según normativa AMP.",
+      fr: "Charter de pêche aux îles Égades depuis Trapani sur semi-rigide privé jusqu'à 4 personnes, avec cannes professionnelles, pêche de fond, traîne, drifting et catch and release selon les règles AMP.",
+      de: "Angelcharter auf den Ägadischen Inseln ab Trapani auf privatem RIB bis 4 Personen, mit professionellen Ruten, Grundangeln, Schleppangeln, Drifting und Catch and Release nach AMP-Regeln.",
+    },
+    media: [
+      {
+        caption: {
+          it: "Gommone Pesca",
+          en: "Fishing RIB",
+          es: "Neumática de pesca",
+          fr: "Semi-rigide de pêche",
+          de: "Angel-RIB",
+        },
+        alt: {
+          it: "Placeholder del gommone per il charter di pesca alle Isole Egadi",
+          en: "Placeholder image for the Egadi fishing charter RIB",
+          es: "Imagen provisional de la neumática para el charter de pesca en las Egadi",
+          fr: "Image provisoire du semi-rigide pour le charter de pêche aux Égades",
+          de: "Platzhalterbild des RIBs für den Angelcharter auf den Ägadischen Inseln",
+        },
+        color: "#BAE6FD",
+        src: "/images/experience-polaroids/fishing-charter-gommone.webp",
+      },
+      {
+        caption: {
+          it: "Setup tecnico",
+          en: "Technical setup",
+          es: "Setup técnico",
+          fr: "Setup technique",
+          de: "Technisches Setup",
+        },
+        alt: {
+          it: "Placeholder setup tecnico per canne e attrezzatura da pesca sportiva",
+          en: "Placeholder technical setup for sport fishing rods and gear",
+          es: "Imagen provisional del setup técnico de cañas y equipo de pesca deportiva",
+          fr: "Image provisoire du setup technique pour cannes et matériel de pêche sportive",
+          de: "Platzhalterbild des technischen Setups für Sportangelruten und Ausrüstung",
+        },
+        color: "#FDE68A",
+        src: "/images/experience-polaroids/fishing-charter-setup.webp",
+      },
+      {
+        caption: {
+          it: "Spot consentiti",
+          en: "Permitted spots",
+          es: "Zonas permitidas",
+          fr: "Zones autorisées",
+          de: "Erlaubte Spots",
+        },
+        alt: {
+          it: "Placeholder navigazione verso spot di pesca consentiti alle Isole Egadi",
+          en: "Placeholder navigation towards permitted fishing spots in the Egadi Islands",
+          es: "Imagen provisional de navegación hacia zonas de pesca permitidas en las Egadi",
+          fr: "Image provisoire de navigation vers les zones de pêche autorisées aux Égades",
+          de: "Platzhalterbild der Fahrt zu erlaubten Angelspots auf den Ägadischen Inseln",
+        },
+        color: "#A7F3D0",
+        src: "/images/experience-polaroids/fishing-charter-navigation.webp",
+      },
+    ],
+    itinerary: fishingItinerary,
+    includes: fishingIncludes,
+    bringItems: fishingBringItems,
+  },
 } as const satisfies Record<string, ExperienceCatalogEntry>;
 
 export const EXPERIENCE_PACKAGE_CATALOG = [
@@ -1078,12 +1393,76 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       },
     ],
   },
+  {
+    key: "charter-pesca-egadi",
+    order: 50,
+    serviceIds: ["fishing-full-day"],
+    title: {
+      it: "Charter di pesca alle Egadi",
+      en: "Egadi fishing charter",
+      es: "Charter de pesca Islas Egadi",
+      fr: "Charter de pêche îles Égades",
+      de: "Angelcharter Ägadische Inseln",
+    },
+    subtitle: {
+      it: "Giornata privata da 8 ore su Gommone Pesca, con canne professionali, tecniche miste e rotta conforme alle regole AMP.",
+      en: "Private 8-hour day on the Fishing RIB, with professional rods, mixed techniques and a route compliant with AMP rules.",
+      es: "Jornada privada de 8 horas en neumática de pesca, con cañas profesionales, técnicas mixtas y ruta conforme a la normativa AMP.",
+      fr: "Journée privée de 8 heures sur semi-rigide de pêche, avec cannes professionnelles, techniques mixtes et route conforme aux règles AMP.",
+      de: "Privater 8-Stunden-Tag auf dem Angel-RIB, mit professionellen Ruten, gemischten Techniken und Route nach AMP-Regeln.",
+    },
+    seoTitle: {
+      it: "Charter di pesca alle Isole Egadi da Trapani",
+      en: "Egadi Islands Fishing Charter from Trapani",
+      es: "Charter de pesca en las Islas Egadi desde Trapani",
+      fr: "Charter de pêche aux îles Égades depuis Trapani",
+      de: "Angelcharter Ägadische Inseln ab Trapani",
+    },
+    seoDescription: {
+      it: "Pacchetto privato di pesca sportiva alle Egadi da Trapani, 8 ore, fino a 4 persone, gommone dedicato e attrezzatura professionale.",
+      en: "Private sport fishing package in the Egadi Islands from Trapani, 8 hours, up to 4 guests, dedicated RIB and professional gear.",
+      es: "Paquete privado de pesca deportiva en las Islas Egadi desde Trapani, 8 horas, hasta 4 personas, neumática dedicada y equipo profesional.",
+      fr: "Forfait privé de pêche sportive aux îles Égades depuis Trapani, 8 heures, jusqu'à 4 personnes, semi-rigide dédié et matériel professionnel.",
+      de: "Privates Sportangel-Paket auf den Ägadischen Inseln ab Trapani, 8 Stunden, bis 4 Personen, spezielles RIB und professionelle Ausrüstung.",
+    },
+    durationLabel: {
+      it: "8 ore",
+      en: "8 hours",
+      es: "8 horas",
+      fr: "8 heures",
+      de: "8 Stunden",
+    },
+    detailLabel: {
+      it: "Gommone da pesca professionale",
+      en: "Professional fishing RIB",
+      es: "Neumática de pesca profesional",
+      fr: "Semi-rigide de pêche professionnel",
+      de: "Professionelles Angel-RIB",
+    },
+    priceUnitLabel: {
+      it: "per gruppo",
+      en: "per group",
+      es: "por grupo",
+      fr: "par groupe",
+      de: "pro Gruppe",
+    },
+    primaryCtaLabel: {
+      it: "Scopri il pacchetto",
+      en: "View package",
+      es: "Ver paquete",
+      fr: "Voir le forfait",
+      de: "Paket ansehen",
+    },
+    primaryHref: "/experiences/charter-pesca-egadi",
+    media: EXPERIENCE_CATALOG["fishing-full-day"].media,
+  },
 ] as const satisfies readonly ExperiencePackageEntry[];
 
 export type ExperienceServiceId = keyof typeof EXPERIENCE_CATALOG;
 
 const EXPERIENCE_PUBLIC_SLUGS: Partial<Record<ExperienceServiceId, string>> = {
   "cabin-charter": "charter",
+  "fishing-full-day": "charter-pesca-egadi",
 };
 
 const EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE: Partial<
@@ -1121,10 +1500,22 @@ const EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE: Partial<
     fr: "excursion-privee-iles-egades-4-heures-apres-midi",
     de: "private-bootstour-aegadische-inseln-4-stunden-nachmittag",
   },
+  "fishing-full-day": {
+    it: "charter-pesca-egadi",
+    en: "egadi-fishing-charter",
+    es: "charter-pesca-islas-egadi",
+    fr: "charter-peche-iles-egades",
+    de: "angelcharter-aegadische-inseln",
+  },
 };
 
 const EXPERIENCE_SLUG_ALIASES: Record<string, ExperienceServiceId> = {
   charter: "cabin-charter",
+  "charter-pesca-egadi": "fishing-full-day",
+  "egadi-fishing-charter": "fishing-full-day",
+  "charter-pesca-islas-egadi": "fishing-full-day",
+  "charter-peche-iles-egades": "fishing-full-day",
+  "angelcharter-aegadische-inseln": "fishing-full-day",
   "chef-a-bordo-neel-47": "exclusive-experience",
   "charter-islas-egadi": "cabin-charter",
   "excursion-compartida-islas-egadi-8-horas": "boat-shared-full-day",
@@ -1837,7 +2228,14 @@ export function compareExperienceOrder(aServiceId: string, bServiceId: string): 
 }
 
 function experienceHref(serviceId: string, locale?: string | null): string {
-  const base = locale === "es" ? "/experiencias" : locale === "de" ? "/erlebnisse" : "/experiences";
+  const base =
+    locale === "it"
+      ? "/esperienze"
+      : locale === "es"
+        ? "/experiencias"
+        : locale === "de"
+          ? "/erlebnisse"
+          : "/experiences";
   return `${base}/${getExperiencePublicSlug(serviceId, locale)}`;
 }
 
@@ -2051,14 +2449,17 @@ function applyLocalizedPackageOverride(
         : locale === "de"
           ? GERMAN_PACKAGE_OVERRIDES
         : undefined;
-  if (!overrides) return content;
-  const override = overrides[content.key];
   const primaryServiceByPackage: Record<string, string> = {
     "esperienza-gourmet-trimarano": "exclusive-experience",
     "charter-egadi": "cabin-charter",
     "tour-barca-egadi-4-ore": "boat-exclusive-afternoon",
     "tour-barca-egadi-8-ore": "boat-shared-full-day",
+    "charter-pesca-egadi": "fishing-full-day",
   };
+  const primaryHref = experienceHref(
+    primaryServiceByPackage[content.key] ?? content.serviceIds[0] ?? "",
+    locale,
+  );
   const variants = content.variants.map((variant) => {
     if (variant.serviceId === "boat-exclusive-morning") {
       return {
@@ -2115,10 +2516,12 @@ function applyLocalizedPackageOverride(
     return { ...variant, href: experienceHref(variant.serviceId, locale) };
   });
 
+  if (!overrides) return { ...content, primaryHref, variants };
+  const override = overrides[content.key];
   return {
     ...content,
     ...override,
-    primaryHref: experienceHref(primaryServiceByPackage[content.key] ?? content.serviceIds[0] ?? "", locale),
+    primaryHref,
     variants,
   };
 }

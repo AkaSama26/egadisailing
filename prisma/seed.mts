@@ -102,6 +102,50 @@ async function main() {
       images: [],
     },
   });
+  const fishingRib = await prisma.boat.upsert({
+    where: { id: "fishing-rib" },
+    update: {
+      name: "Gommone Pesca",
+      type: "RIB",
+      description:
+        "Gommone dedicato alle uscite di pesca sportiva alle Isole Egadi, con setup tecnico per piccoli gruppi fino a 4 persone.",
+      amenities: {
+        seats: 4,
+        shade: true,
+        fishingGear: true,
+        professionalRods: true,
+        bait: true,
+        cooler: true,
+        safetyEquipment: true,
+      },
+      images: [
+        "/images/boats/fishing-rib/fishing-rib-hero.webp",
+        "/images/boats/fishing-rib/fishing-rib-deck.webp",
+        "/images/boats/fishing-rib/fishing-rib-navigation.webp",
+      ],
+    },
+    create: {
+      id: "fishing-rib",
+      name: "Gommone Pesca",
+      type: "RIB",
+      description:
+        "Gommone dedicato alle uscite di pesca sportiva alle Isole Egadi, con setup tecnico per piccoli gruppi fino a 4 persone.",
+      amenities: {
+        seats: 4,
+        shade: true,
+        fishingGear: true,
+        professionalRods: true,
+        bait: true,
+        cooler: true,
+        safetyEquipment: true,
+      },
+      images: [
+        "/images/boats/fishing-rib/fishing-rib-hero.webp",
+        "/images/boats/fishing-rib/fishing-rib-deck.webp",
+        "/images/boats/fishing-rib/fishing-rib-navigation.webp",
+      ],
+    },
+  });
   console.log("✓ Boats");
 
   // Services
@@ -233,6 +277,19 @@ async function main() {
       priority: 5,
       pricingUnit: "PER_PACKAGE",
     },
+    {
+      id: "fishing-full-day",
+      name: "Charter pesca Egadi giornata intera",
+      type: "BOAT_EXCLUSIVE",
+      boatId: fishingRib.id,
+      durationType: "FULL_DAY" as const,
+      durationHours: 8,
+      capacityMax: 4,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
+      priority: 3,
+      pricingUnit: "PER_PACKAGE",
+    },
   ];
 
   for (const svc of services) {
@@ -337,6 +394,10 @@ async function main() {
     ["sp-2026-boat-shared-afternoon-low", "boat-shared-afternoon", "LOW", null, 55, "PER_PERSON"],
     ["sp-2026-boat-shared-afternoon-mid", "boat-shared-afternoon", "MID", null, 65, "PER_PERSON"],
     ["sp-2026-boat-shared-afternoon-high", "boat-shared-afternoon", "HIGH", null, 75, "PER_PERSON"],
+
+    ["sp-2026-fishing-low", "fishing-full-day", "LOW", null, 800, "PER_PACKAGE"],
+    ["sp-2026-fishing-mid", "fishing-full-day", "MID", null, 1000, "PER_PACKAGE"],
+    ["sp-2026-fishing-high", "fishing-full-day", "HIGH", null, 1000, "PER_PACKAGE"],
 
     ["sp-2026-charter-3", "cabin-charter", null, 3, 3250, "PER_PACKAGE"],
     ["sp-2026-charter-4", "cabin-charter", null, 4, 4300, "PER_PACKAGE"],

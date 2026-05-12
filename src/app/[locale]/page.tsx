@@ -83,6 +83,7 @@ function packagePills(input: {
     "charter-egadi": isEs ? "Ruta a medida" : isFr ? "Route sur mesure" : isDe ? "Route nach Maß" : isEn ? "Tailored route" : "Itinerario su misura",
     "tour-barca-egadi-4-ore": isEs ? "Baños flexibles" : isFr ? "Baignades flexibles" : isDe ? "Flexible Badestopps" : isEn ? "Flexible swim stops" : "Soste bagno flessibili",
     "tour-barca-egadi-8-ore": isEs ? "Snorkel" : isDe ? "Schnorcheln" : isEn ? "Snorkelling" : "Snorkeling",
+    "charter-pesca-egadi": isEs ? "Equipo profesional" : isFr ? "Matériel professionnel" : isDe ? "Profi-Ausrüstung" : isEn ? "Professional gear" : "Attrezzatura pro",
   };
 
   return [
@@ -149,6 +150,18 @@ function heroCardCopy(
         : isEn
         ? "A compact half day of swimming and sheltered coves."
         : "Mezza giornata agile tra bagno e cale riparate.",
+    },
+    "charter-pesca-egadi": {
+      title: isEs ? "Charter de pesca Egadi" : isFr ? "Charter de pêche Égades" : isDe ? "Angelcharter Ägadische Inseln" : isEn ? "Egadi fishing charter" : "Charter pesca Egadi",
+      subtitle: isEs
+        ? "Neumática privada, equipo profesional y técnicas mixtas."
+        : isFr
+        ? "Semi-rigide privé, matériel professionnel et techniques mixtes."
+        : isDe
+        ? "Privates Angel-RIB, Profi-Ausrüstung und gemischte Techniken."
+        : isEn
+        ? "Private Fishing RIB, professional gear and mixed techniques."
+        : "Gommone privato, attrezzatura professionale e tecniche miste.",
     },
   };
 
