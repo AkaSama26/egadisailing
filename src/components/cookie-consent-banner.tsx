@@ -45,6 +45,7 @@ declare global {
     gtag?: (...args: unknown[]) => void;
     fbq?: FbqFunction;
     _fbq?: FbqFunction;
+    __egadiGoogleConsentDefaultSet?: boolean;
     __egadiGtagLoadedIds?: Record<string, true>;
     __egadiMetaPixelLoadedIds?: Record<string, true>;
     __egadiBingUetLoadedIds?: Record<string, true>;
@@ -70,6 +71,19 @@ function ensureGtagBase() {
 function updateGoogleConsent(values: Record<string, "granted" | "denied">) {
   ensureGtagBase();
   window.gtag?.("consent", "update", values);
+}
+
+function setGoogleConsentDefault() {
+  if (window.__egadiGoogleConsentDefaultSet) return;
+  window.__egadiGoogleConsentDefaultSet = true;
+  ensureGtagBase();
+  window.gtag?.("consent", "default", {
+    analytics_storage: "denied",
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+    wait_for_update: 500,
+  });
 }
 
 function enableGtag(
@@ -349,7 +363,7 @@ function buildConfig(
           enableGtag(
             consent,
             googleAdsId,
-            { send_page_view: false },
+            {},
             {
               ad_storage: "granted",
               ad_user_data: "granted",
@@ -470,7 +484,7 @@ function buildConfig(
 
 export function CookieConsentBanner({ locale, services }: CookieConsentBannerProps) {
   const normalizedLocale = normalizeCookieConsentLocale(locale);
-  const { gaMeasurementId, googleAdsId, metaPixelId } = services;
+  const { bingUetTagId, gaMeasurementId, googleAdsId, metaPixelId } = services;
   const floatingLabel =
     normalizedLocale === "fr"
       ? "Préférences cookies"
@@ -482,9 +496,13 @@ export function CookieConsentBanner({ locale, services }: CookieConsentBannerPro
 
   useEffect(() => {
     let cancelled = false;
-    const configuredServices = { gaMeasurementId, googleAdsId, metaPixelId };
+    const configuredServices = { bingUetTagId, gaMeasurementId, googleAdsId, metaPixelId };
 
     async function init() {
+      if (gaMeasurementId || googleAdsId) {
+        setGoogleConsentDefault();
+      }
+
       const consent = await import("vanilla-cookieconsent");
       if (cancelled) return;
 
@@ -521,7 +539,7 @@ export function CookieConsentBanner({ locale, services }: CookieConsentBannerPro
     return () => {
       cancelled = true;
     };
-  }, [normalizedLocale, gaMeasurementId, googleAdsId, metaPixelId]);
+  }, [normalizedLocale, bingUetTagId, gaMeasurementId, googleAdsId, metaPixelId]);
 
   function openPreferences() {
     void import("vanilla-cookieconsent").then((consent) => {

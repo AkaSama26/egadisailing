@@ -17,6 +17,11 @@ export interface CloudflareTrafficMetric {
 
 export interface CloudflareTrafficRankItem extends CloudflareTrafficMetric {
   label: string;
+  sourceLabels?: string[];
+}
+
+export interface CloudflareHourlyTraffic extends CloudflareTrafficMetric {
+  hour: string;
 }
 
 export interface CloudflareTrafficConfigured {
@@ -28,6 +33,7 @@ export interface CloudflareTrafficConfigured {
     errors4xx: number;
     errors5xx: number;
   };
+  hourlyVisits: CloudflareHourlyTraffic[];
   topPaths: CloudflareTrafficRankItem[];
   topCountries: CloudflareTrafficRankItem[];
 }
@@ -62,6 +68,7 @@ interface CloudflareGraphQLResponse {
     viewer?: {
       zones?: Array<{
         totals24h?: CloudflareGroup[];
+        hourly24h?: CloudflareGroup[];
         errors4xx?: CloudflareGroup[];
         errors5xx?: CloudflareGroup[];
         topPaths?: CloudflareGroup[];
@@ -81,6 +88,7 @@ interface CloudflareGroup {
   dimensions?: {
     clientRequestPath?: string | null;
     clientCountryName?: string | null;
+    datetimeHour?: string | null;
   } | null;
 }
 
@@ -105,9 +113,10 @@ const TRAFFIC_QUERY = `
   query EgadiCloudflareTraffic(
     $zoneTag: string
     $summary24h: filter
+    $hourly24h: filter
     $errors4xx: filter
     $errors5xx: filter
-    $top7d: filter
+    $top24h: filter
   ) {
     viewer {
       zones(filter: { zoneTag: $zoneTag }) {
@@ -118,13 +127,23 @@ const TRAFFIC_QUERY = `
             edgeResponseBytes
           }
         }
+        hourly24h: httpRequestsAdaptiveGroups(limit: 25, filter: $hourly24h, orderBy: [datetimeHour_ASC]) {
+          count
+          sum {
+            visits
+            edgeResponseBytes
+          }
+          dimensions {
+            datetimeHour
+          }
+        }
         errors4xx: httpRequestsAdaptiveGroups(limit: 1, filter: $errors4xx) {
           count
         }
         errors5xx: httpRequestsAdaptiveGroups(limit: 1, filter: $errors5xx) {
           count
         }
-        topPaths: httpRequestsAdaptiveGroups(limit: 5, filter: $top7d, orderBy: [count_DESC]) {
+        topPaths: httpRequestsAdaptiveGroups(limit: 12, filter: $top24h, orderBy: [sum_visits_DESC]) {
           count
           sum {
             visits
@@ -134,7 +153,7 @@ const TRAFFIC_QUERY = `
             clientRequestPath
           }
         }
-        topCountries: httpRequestsAdaptiveGroups(limit: 5, filter: $top7d, orderBy: [count_DESC]) {
+        topCountries: httpRequestsAdaptiveGroups(limit: 8, filter: $top24h, orderBy: [sum_visits_DESC]) {
           count
           sum {
             visits
@@ -243,10 +262,16 @@ export function normalizeCloudflareTrafficResponse(
       errors4xx: toNumber(zone?.errors4xx?.[0]?.count),
       errors5xx: toNumber(zone?.errors5xx?.[0]?.count),
     },
-    topPaths: (zone?.topPaths ?? []).map((group) => ({
-      label: group.dimensions?.clientRequestPath || "/",
-      ...metricFromGroup(group),
-    })),
+    hourlyVisits: buildHourlyVisits(zone?.hourly24h, generatedAt),
+    topPaths: aggregateTopPaths(
+      (zone?.topPaths ?? [])
+        .map((group) => ({
+          label: group.dimensions?.clientRequestPath || "/",
+          ...metricFromGroup(group),
+        }))
+        .filter((row) => isPublicPagePath(row.label)),
+    )
+      .slice(0, 5),
     topCountries: (zone?.topCountries ?? []).map((group) => ({
       label: group.dimensions?.clientCountryName || "Paese non rilevato",
       ...metricFromGroup(group),
@@ -271,9 +296,7 @@ async function fetchCloudflareTraffic(
 ): Promise<CloudflareTrafficSummary> {
   const end = now.toISOString();
   const start24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const start7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const base24h = baseFilter(start24h, end, config.hostname);
-  const base7d = baseFilter(start7d, end, config.hostname);
 
   const res = await fetchImpl(CLOUDFLARE_GRAPHQL_ENDPOINT, {
     method: "POST",
@@ -287,9 +310,10 @@ async function fetchCloudflareTraffic(
       variables: {
         zoneTag: config.zoneId,
         summary24h: base24h,
+        hourly24h: base24h,
         errors4xx: withStatusFilter(base24h, 400, 500),
         errors5xx: withStatusFilter(base24h, 500, 600),
-        top7d: base7d,
+        top24h: base24h,
       },
     }),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
@@ -339,6 +363,32 @@ function metricFromGroup(group?: CloudflareGroup): CloudflareTrafficMetric {
   };
 }
 
+function buildHourlyVisits(
+  groups: CloudflareGroup[] | undefined,
+  generatedAt: string,
+): CloudflareHourlyTraffic[] {
+  const byHour = new Map<string, CloudflareTrafficMetric>();
+  for (const group of groups ?? []) {
+    const hour = group.dimensions?.datetimeHour;
+    if (hour) byHour.set(hour, metricFromGroup(group));
+  }
+
+  const end = new Date(generatedAt);
+  if (Number.isNaN(end.getTime())) {
+    return [...byHour.entries()].map(([hour, metric]) => ({ hour, ...metric }));
+  }
+
+  end.setUTCMinutes(0, 0, 0);
+  return Array.from({ length: 25 }, (_, index) => {
+    const hourDate = new Date(end.getTime() - (24 - index) * 60 * 60 * 1000);
+    const hour = hourDate.toISOString().replace(".000Z", "Z");
+    return {
+      hour,
+      ...(byHour.get(hour) ?? { requests: 0, visits: 0, bytes: 0 }),
+    };
+  });
+}
+
 function toNumber(value: number | string | null | undefined): number {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   if (typeof value === "string") {
@@ -355,4 +405,61 @@ function hostnameFromUrl(value?: string): string {
   } catch {
     return "";
   }
+}
+
+function isPublicPagePath(path: string): boolean {
+  if (!path || path === "/") return true;
+  if (
+    path.startsWith("/api/") ||
+    path.startsWith("/_next/") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/images/") ||
+    path.startsWith("/videos/") ||
+    path.startsWith("/fonts/")
+  ) {
+    return false;
+  }
+  return !/\.[a-z0-9]{2,5}$/i.test(path);
+}
+
+function aggregateTopPaths(rows: CloudflareTrafficRankItem[]): CloudflareTrafficRankItem[] {
+  const byLabel = new Map<string, CloudflareTrafficRankItem>();
+
+  for (const row of rows) {
+    const label = topPathGroupLabel(row.label);
+    const existing = byLabel.get(label);
+    if (!existing) {
+      byLabel.set(label, {
+        label,
+        requests: row.requests,
+        visits: row.visits,
+        bytes: row.bytes,
+        sourceLabels: [row.label],
+      });
+      continue;
+    }
+
+    existing.requests += row.requests;
+    existing.visits += row.visits;
+    existing.bytes += row.bytes;
+    if (!existing.sourceLabels?.includes(row.label)) {
+      existing.sourceLabels = [...(existing.sourceLabels ?? []), row.label];
+    }
+  }
+
+  return [...byLabel.values()].sort((a, b) => b.visits - a.visits || b.requests - a.requests);
+}
+
+function topPathGroupLabel(path: string): string {
+  const normalized = normalizeRequestPath(path);
+  if (normalized === "/" || /^\/(it|en|de|es|fr)$/.test(normalized)) {
+    return "Homepage";
+  }
+  return normalized;
+}
+
+function normalizeRequestPath(path: string): string {
+  const trimmed = path.trim() || "/";
+  if (trimmed === "/") return trimmed;
+  return trimmed.replace(/\/+$/g, "") || "/";
 }

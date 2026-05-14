@@ -315,7 +315,7 @@ const savePassengerFareRulesSchema = z.object({
 export const savePassengerFareRules = withAdminAction(
   {
     schema: savePassengerFareRulesSchema,
-    revalidatePaths: ["/admin/prezzi", "/", "/it/prenota", "/en/prenota"],
+    revalidatePaths: ["/admin/prezzi", "/", "/it/prenota", "/en/book"],
   },
   async (input, { userId }) => {
     const seen = new Set<PassengerFareCategory>();

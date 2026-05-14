@@ -2,6 +2,9 @@ import cron from "node-cron";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
+const INTERNAL_CRON_ORIGIN =
+  env.NODE_ENV === "production" ? "http://127.0.0.1:3000" : env.APP_URL;
+
 /**
  * Registra un cron schedule che fa fetch verso un endpoint interno
  * (routing HTTP → handler). Fail-tolerant: errors loggati ma non crash.
@@ -21,7 +24,7 @@ export function scheduleCronFetch(
     schedule,
     async () => {
       try {
-        const res = await fetch(`${env.APP_URL}${endpoint}`, {
+        const res = await fetch(`${INTERNAL_CRON_ORIGIN}${endpoint}`, {
           headers: { authorization: `Bearer ${env.CRON_SECRET}` },
         });
         if (!res.ok) {

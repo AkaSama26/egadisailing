@@ -19,12 +19,50 @@ const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 type PublicLocale = (typeof routing.locales)[number];
 type GuideIsland = "favignana" | "levanzo" | "marettimo";
 type GuidePair = { it: string; en: string; es: string; fr: string; de: string };
+type LegacyRedirectRule = { from: string; to: string };
 
 const GUIDE_SLUG_PAIRS = {
   favignana: favignanaGuideSlugPairs,
   levanzo: levanzoGuideSlugPairs,
   marettimo: marettimoGuideSlugPairs,
 } as const satisfies Record<GuideIsland, readonly GuidePair[]>;
+
+const LEGACY_PUBLIC_REDIRECTS = [
+  { from: "/en/prenota/success", to: "/en/book/confirmation" },
+  { from: "/en/prenota", to: "/en/book" },
+  { from: "/en/recupera-prenotazione", to: "/en/find-booking" },
+  { from: "/en/contacts", to: "/en/contact" },
+  { from: "/it/about", to: "/it/chi-siamo" },
+  { from: "/it/boats", to: "/it/barche" },
+  { from: "/it/experiences", to: "/it/esperienze" },
+  { from: "/it/islands", to: "/it/isole" },
+  { from: "/it/contacts", to: "/it/contatti" },
+] as const satisfies readonly LegacyRedirectRule[];
+
+const ISLAND_PATH_SEGMENT_BY_LOCALE = {
+  it: "isole",
+  en: "islands",
+  es: "islas",
+  fr: "iles",
+  de: "inseln",
+} as const satisfies Record<PublicLocale, string>;
+
+function getLegacyPublicRedirect(req: NextRequest) {
+  const pathname = req.nextUrl.pathname.replace(/\/$/, "");
+
+  for (const rule of LEGACY_PUBLIC_REDIRECTS) {
+    if (pathname !== rule.from && !pathname.startsWith(`${rule.from}/`)) {
+      continue;
+    }
+
+    const suffix = pathname.slice(rule.from.length);
+    const url = req.nextUrl.clone();
+    url.pathname = `${rule.to}${suffix}`;
+    return NextResponse.redirect(url, 308);
+  }
+
+  return null;
+}
 
 function findGuideSlugPair(island: GuideIsland, slug: string) {
   return (
@@ -36,7 +74,7 @@ function findGuideSlugPair(island: GuideIsland, slug: string) {
 
 function parseIslandGuidePath(pathname: string) {
   const match = pathname.match(
-    /^\/(it|en|es|fr|de)\/(?:islands|islas|iles|inseln)\/(favignana|levanzo|marettimo)\/([^/]+)\/?$/,
+    /^\/(it|en|es|fr|de)\/(?:isole|islands|islas|iles|inseln)\/(favignana|levanzo|marettimo)\/([^/]+)\/?$/,
   );
   if (!match) return null;
   const locale = match[1] as PublicLocale;
@@ -44,19 +82,14 @@ function parseIslandGuidePath(pathname: string) {
     locale,
     island: match[2] as GuideIsland,
     slug: match[3],
-    usesCanonicalSegment:
-      locale === "es"
-        ? pathname.startsWith("/es/islas/")
-        : locale === "fr"
-          ? pathname.startsWith("/fr/iles/")
-          : locale === "de"
-            ? pathname.startsWith("/de/inseln/")
-          : pathname.includes("/islands/"),
+    usesCanonicalSegment: pathname.startsWith(
+      `/${locale}/${ISLAND_PATH_SEGMENT_BY_LOCALE[locale]}/`,
+    ),
   };
 }
 
 function externalGuidePath(locale: PublicLocale, island: GuideIsland, slug: string) {
-  const base = locale === "es" ? "islas" : locale === "fr" ? "iles" : locale === "de" ? "inseln" : "islands";
+  const base = ISLAND_PATH_SEGMENT_BY_LOCALE[locale];
   return `/${locale}/${base}/${island}/${slug}`;
 }
 
@@ -195,6 +228,12 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
+  }
+
+  const legacyPublicRedirect = getLegacyPublicRedirect(req);
+
+  if (legacyPublicRedirect) {
+    return legacyPublicRedirect;
   }
 
   const islandGuideRedirect = getIslandGuideRedirect(req);

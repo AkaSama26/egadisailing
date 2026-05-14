@@ -37,12 +37,11 @@ import {
   type ControlRoomPayment,
 } from "@/lib/queries/admin-control-room-dashboard";
 import {
-  formatCloudflareBytes,
   getCloudflareTrafficSummary,
-  type CloudflareTrafficConfigured,
   type CloudflareTrafficRankItem,
   type CloudflareTrafficSummary,
 } from "@/lib/cloudflare/analytics";
+import { CloudflareHourlyLineChart } from "./cloudflare-hourly-line-chart";
 import {
   BOOKING_SOURCE_LABEL,
   BOOKING_STATUS_LABEL,
@@ -446,77 +445,192 @@ function CloudflareTrafficCard({ traffic }: { traffic: CloudflareTrafficSummary 
     );
   }
 
+  const maxCountryVisits = maxVisits(traffic.topCountries);
+  const maxPageVisits = maxVisits(traffic.topPaths);
+
   return (
-    <AdminCard className="space-y-4">
-      <SectionTitle icon={Activity} title="Traffico sito" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <CloudflareMetric label="Richieste 24h" value={formatNumber(traffic.last24h.requests)} />
-        <CloudflareMetric label="Visite 24h" value={formatNumber(traffic.last24h.visits)} />
-        <CloudflareMetric label="Dati trasferiti" value={formatCloudflareBytes(traffic.last24h.bytes)} />
-        <CloudflareMetric label="Errori 4xx" value={formatNumber(traffic.last24h.errors4xx)} />
-        <CloudflareMetric label="Errori 5xx" value={formatNumber(traffic.last24h.errors5xx)} />
+    <AdminCard className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <SectionTitle icon={Activity} title="Traffico sito" />
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+          ultime 24 ore
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <CloudflareRankList title="Top URL ultimi 7 giorni" rows={traffic.topPaths} />
-        <CloudflareRankList title="Top paesi ultimi 7 giorni" rows={traffic.topCountries} />
+      <div className="rounded-xl border border-slate-200 bg-slate-950 p-4 text-white">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-300">
+          Visite totali
+        </p>
+        <p className="mt-2 text-4xl font-bold tabular-nums">
+          {formatNumber(traffic.last24h.visits)}
+        </p>
       </div>
 
-      <p className="border-t border-slate-100 pt-3 text-xs text-slate-500">
-        Dati Cloudflare per <span className="font-medium text-slate-700">{traffic.hostname}</span> ·
-        aggiornato <TimeIso datetime={traffic.generatedAt} /> · cache{" "}
-        {Math.round(traffic.cacheTtlSeconds / 60)} min
+      <CloudflareHourlyLineChart
+        data={traffic.hourlyVisits.map((point) => ({
+          hour: point.hour,
+          visits: point.visits,
+        }))}
+      />
+
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="space-y-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <BarChart3 className="size-4 text-slate-500" aria-hidden="true" />
+            Paesi visitatori
+          </h3>
+          {traffic.topCountries.length === 0 ? (
+            <p className="rounded-lg border border-slate-200 p-3 text-sm text-slate-500">
+              Nessun dato disponibile.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {traffic.topCountries.map((country) => (
+                <CountryVisitBar
+                  key={country.label}
+                  country={country}
+                  maxVisits={maxCountryVisits}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <BarChart3 className="size-4 text-slate-500" aria-hidden="true" />
+            Pagine più viste
+          </h3>
+          {traffic.topPaths.length === 0 ? (
+            <p className="rounded-lg border border-slate-200 p-3 text-sm text-slate-500">
+              Nessun dato disponibile.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {traffic.topPaths.map((page) => (
+                <TopPageRow key={page.label} page={page} maxVisits={maxPageVisits} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-500">
+        Aggiornato <TimeIso datetime={traffic.generatedAt} />
       </p>
     </AdminCard>
   );
 }
 
-function CloudflareMetric({ label, value }: { label: string; value: string }) {
+function CountryVisitBar({
+  country,
+  maxVisits,
+}: {
+  country: CloudflareTrafficRankItem;
+  maxVisits: number;
+}) {
+  const meta = countryDisplay(country.label);
+  const visits = visitCount(country);
+  const width = barWidth(visits, maxVisits);
+
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-1 text-xl font-bold tabular-nums text-slate-900">{value}</div>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <div className="min-w-0 flex items-center gap-2">
+          <span className="text-lg leading-none" aria-hidden="true">
+            {meta.flag}
+          </span>
+          <span className="truncate font-medium text-slate-800" title={meta.label}>
+            {meta.label}
+          </span>
+        </div>
+        <span className="font-semibold tabular-nums text-slate-950">
+          {formatNumber(visits)}
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-sky-500" style={{ width: `${width}%` }} />
+      </div>
     </div>
   );
 }
 
-function CloudflareRankList({
-  title,
-  rows,
+function TopPageRow({
+  page,
+  maxVisits,
 }: {
-  title: string;
-  rows: CloudflareTrafficConfigured["topPaths"];
+  page: CloudflareTrafficRankItem;
+  maxVisits: number;
 }) {
+  const visits = visitCount(page);
+  const width = barWidth(visits, maxVisits);
+  const label = pagePathLabel(page.label);
+  const title = pagePathTitle(page);
+
   return (
     <div className="rounded-lg border border-slate-200 p-3">
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-        <BarChart3 className="size-4 text-slate-500" aria-hidden="true" />
-        {title}
-      </h3>
-      {rows.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">Nessun dato disponibile.</p>
-      ) : (
-        <div className="mt-3 space-y-2">
-          {rows.map((row) => (
-            <CloudflareRankLine key={row.label} row={row} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 text-sm">
+        <span className="truncate font-medium text-slate-800" title={title}>
+          {label}
+        </span>
+        <span className="font-semibold tabular-nums text-slate-950">
+          {formatNumber(visits)}
+        </span>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${width}%` }} />
+      </div>
     </div>
   );
 }
 
-function CloudflareRankLine({ row }: { row: CloudflareTrafficRankItem }) {
-  return (
-    <div className="grid grid-cols-[1fr_auto] gap-3 text-sm">
-      <span className="truncate text-slate-700" title={row.label}>
-        {row.label}
-      </span>
-      <span className="font-mono font-semibold tabular-nums text-slate-900">
-        {formatNumber(row.requests)}
-      </span>
-    </div>
-  );
+function maxVisits(rows: Array<{ visits: number }>): number {
+  return Math.max(...rows.map((row) => row.visits), 1);
+}
+
+function visitCount(row: CloudflareTrafficRankItem): number {
+  return row.visits;
+}
+
+function barWidth(value: number, maxValue: number): number {
+  if (value <= 0 || maxValue <= 0) return 0;
+  return Math.max(6, Math.round((value / maxValue) * 100));
+}
+
+function pagePathLabel(path: string): string {
+  if (path === "Homepage" || path === "/" || /^\/(it|en|de|es|fr)\/?$/.test(path)) {
+    return "Homepage";
+  }
+  return path;
+}
+
+function pagePathTitle(page: CloudflareTrafficRankItem): string {
+  const sources = page.sourceLabels?.filter((source) => source !== page.label);
+  if (!sources?.length) return page.label;
+  return `${pagePathLabel(page.label)}: ${sources.join(", ")}`;
+}
+
+const countryNameFormatter = new Intl.DisplayNames(["it"], { type: "region" });
+
+function countryDisplay(value: string): { flag: string; label: string } {
+  const code = value.trim().toUpperCase();
+  if (/^[A-Z]{2}$/.test(code)) {
+    return {
+      flag: countryFlag(code),
+      label: countryNameFormatter.of(code) ?? code,
+    };
+  }
+  if (!value || value === "Paese non rilevato") {
+    return { flag: "🌐", label: "Paese non rilevato" };
+  }
+  return { flag: "🌐", label: value };
+}
+
+function countryFlag(code: string): string {
+  const regionalIndicatorOffset = 127397;
+  return Array.from(code)
+    .map((letter) => String.fromCodePoint(letter.charCodeAt(0) + regionalIndicatorOffset))
+    .join("");
 }
 
 function KpiTile({

@@ -16,9 +16,8 @@ import { localizedStaticPath } from "@/lib/i18n/static-paths";
  * Round 11 SEO-A1.
  */
 const localizedPrivateDisallow = routing.locales.flatMap((locale) => [
-  `/${locale}/b`,
-  `/${locale}/b/`,
-  localizedPath(locale, "/ticket/:code").replace(":code", ""),
+  localizedStaticPath(locale, "/b/sessione"),
+  `${localizedStaticPath(locale, "/b/sessione")}/`,
   localizedPath(locale, "/ticket/:code").replace(":code", ""),
   `${localizedStaticPath(locale, "/prenota")}/`,
   localizedPath(locale, "/prenota/success/:code").replace(":code", ""),

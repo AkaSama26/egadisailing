@@ -123,7 +123,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries,
       baseUrl,
       {
-        it: `/islands/favignana/${slugs.it}`,
+        it: `/isole/favignana/${slugs.it}`,
         en: `/islands/favignana/${slugs.en}`,
         es: `/islas/favignana/${slugs.es}`,
         fr: `/iles/favignana/${slugs.fr}`,
@@ -142,7 +142,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries,
       baseUrl,
       {
-        it: `/islands/levanzo/${slugs.it}`,
+        it: `/isole/levanzo/${slugs.it}`,
         en: `/islands/levanzo/${slugs.en}`,
         es: `/islas/levanzo/${slugs.es}`,
         fr: `/iles/levanzo/${slugs.fr}`,
@@ -161,7 +161,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries,
       baseUrl,
       {
-        it: `/islands/marettimo/${slugs.it}`,
+        it: `/isole/marettimo/${slugs.it}`,
         en: `/islands/marettimo/${slugs.en}`,
         es: `/islas/marettimo/${slugs.es}`,
         fr: `/iles/marettimo/${slugs.fr}`,
