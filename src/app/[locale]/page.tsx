@@ -31,6 +31,7 @@ const CHOICE_RECOMMENDATION_SERVICE_IDS = {
   private8: "boat-exclusive-full-day",
   gourmet: "exclusive-experience",
   charter: "cabin-charter",
+  fishing: "fishing-full-day",
 } as const satisfies Record<ExperienceChoiceRecommendationKey, string>;
 
 function bookingExperienceKey(service: { id: string; type: string; boat: { id: string } }): string {
@@ -339,6 +340,28 @@ function buildExperienceChoiceRecommendations({
         ? "For several days at sea: cabins, quiet anchorages and a route across Favignana, Levanzo and Marettimo."
         : "Per vivere più giorni in mare: cabine, rade tranquille e rotta tra Favignana, Levanzo e Marettimo.",
     },
+    fishing: {
+      emoji: "🎣",
+      title: isEs ? "Charter de pesca Egadi" : isFr ? "Charter de pêche Égades" : isDe ? "Angelcharter Ägadische Inseln" : isEn ? "Egadi fishing charter" : "Charter pesca Egadi",
+      boatLabel: isEs
+        ? "Neumática de pesca · equipo profesional"
+        : isFr
+        ? "Semi-rigide de pêche · matériel professionnel"
+        : isDe
+        ? "Angel-RIB · Profi-Ausrüstung"
+        : isEn
+        ? "Fishing RIB · professional gear"
+        : "Gommone Pesca · attrezzatura professionale",
+      reason: isEs
+        ? "Para aficionados: 8 horas privadas con cañas profesionales, técnicas mixtas y ruta elegida por el patrón según mar, temporada y normativa."
+        : isFr
+        ? "Pour passionnés : 8 heures privées avec cannes professionnelles, techniques mixtes et route choisie par le skipper selon mer, saison et règles."
+        : isDe
+        ? "Für Angelbegeisterte: 8 private Stunden mit professionellen Ruten, gemischten Techniken und Route nach Meer, Saison und Regeln."
+        : isEn
+        ? "For fishing enthusiasts: 8 private hours with professional rods, mixed techniques and a route chosen by the skipper according to sea, season and rules."
+        : "Per appassionati: 8 ore private con canne professionali, tecniche miste e rotta scelta dallo skipper in base a mare, stagione e regole.",
+    },
   } satisfies Record<
     ExperienceChoiceRecommendationKey,
     Omit<
@@ -369,6 +392,7 @@ function buildExperienceChoiceRecommendations({
     private8: makeRecommendation("private8"),
     gourmet: makeRecommendation("gourmet"),
     charter: makeRecommendation("charter"),
+    fishing: makeRecommendation("fishing"),
   };
 }
 

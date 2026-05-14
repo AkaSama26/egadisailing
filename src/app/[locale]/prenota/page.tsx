@@ -108,6 +108,8 @@ export default async function BookingIndexPage({
         subtitle: content?.subtitle ?? "",
         boatId: service.boatId,
         boatTitle: boat?.title ?? service.boat.name,
+        boatImageSrc: boat?.imageSrc ?? boat?.gallery[0]?.src,
+        boatImageAlt: boat?.imageAlt,
         serviceType: service.type,
         durationType: service.durationType,
         durationHours: service.durationHours,

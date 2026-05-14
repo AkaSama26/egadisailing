@@ -7,6 +7,7 @@ export type BoatSpecIcon = "cabins" | "beds" | "kitchen" | "bath" | "relax" | "u
 export interface BoatCatalogEntry {
   id: string;
   slug: string;
+  listed?: boolean;
   aliases?: string[];
   externalUrl?: string;
   order: number;
@@ -106,11 +107,11 @@ const BOATS_PAGE_COPY = {
     de: "Boote für Touren zu den Ägadischen Inseln ab Trapani",
   },
   seoDescription: {
-    it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Trimarano con chef e charter, Cigala & Bertinetti 34 Offshore Open e Gommone Pesca per charter sportivo.",
-    en: "Discover Egadisailing boats for Egadi tours from Trapani: trimaran with chef and charter, Cigala & Bertinetti 34 Offshore Open and Fishing RIB for sport fishing charters.",
-    es: "Descubre los barcos de Egadisailing para las Islas Egadi desde Trapani: Neel 47 con chef y charter, Cigala & Bertinetti y neumática de pesca.",
-    fr: "Découvrez les bateaux Egadisailing pour les îles Égades depuis Trapani : Neel 47 avec chef et charter, Cigala & Bertinetti et semi-rigide de pêche.",
-    de: "Entdecken Sie die Egadisailing-Boote für die Ägadischen Inseln ab Trapani: Neel 47 mit Chefkoch und Charter, Cigala & Bertinetti und Angel-RIB.",
+    it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Trimarano con chef e charter e Barca open per tour privati o condivisi.",
+    en: "Discover Egadisailing boats for Egadi tours from Trapani: trimaran with chef and charter, plus an open boat for private or shared tours.",
+    es: "Descubre los barcos de Egadisailing para las Islas Egadi desde Trapani: trimarán con chef y charter y barco open para tours privados o compartidos.",
+    fr: "Découvrez les bateaux Egadisailing pour les îles Égades depuis Trapani : trimaran avec chef et charter, et bateau open pour sorties privées ou partagées.",
+    de: "Entdecken Sie die Egadisailing-Boote für die Ägadischen Inseln ab Trapani: Trimaran mit Chefkoch und Charter sowie offenes Boot für private oder geteilte Touren.",
   },
   eyebrow: {
     it: "Flotta Egadisailing",
@@ -127,25 +128,25 @@ const BOATS_PAGE_COPY = {
     de: "Unsere Boote, um die Ägadischen Inseln ab Trapani zu entdecken",
   },
   subtitle: {
-    it: "Dal Trimarano con chef alla Cigala & Bertinetti 34 Offshore Open, fino al Gommone Pesca per appassionati: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
-    en: "From the trimaran with chef to the Cigala & Bertinetti 34 Offshore Open and the Fishing RIB for enthusiasts: choose the right pace for Favignana, Levanzo and Marettimo.",
-    es: "Del Neel 47 con chef a la Cigala & Bertinetti y la neumática de pesca para aficionados: elige el ritmo adecuado para las Egadi.",
-    fr: "Du Neel 47 avec chef au Cigala & Bertinetti et au semi-rigide de pêche pour passionnés : choisissez le bon rythme aux Égades.",
-    de: "Vom Neel 47 mit Chef über die Cigala & Bertinetti bis zum Angel-RIB für Enthusiasten: Wählen Sie den passenden Rhythmus.",
+    it: "Dal Trimarano con chef alla Barca open per tour privati o condivisi: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
+    en: "From the trimaran with chef to the open boat for private or shared tours: choose the right pace for Favignana, Levanzo and Marettimo.",
+    es: "Del trimarán con chef al barco open para tours privados o compartidos: elige el ritmo adecuado para Favignana, Levanzo y Marettimo.",
+    fr: "Du trimaran avec chef au bateau open pour sorties privées ou partagées : choisissez le bon rythme pour Favignana, Levanzo et Marettimo.",
+    de: "Vom Trimaran mit Chefkoch bis zum offenen Boot für private oder geteilte Touren: Wählen Sie den passenden Rhythmus für Favignana, Levanzo und Marettimo.",
   },
   comparisonTitle: {
-    it: "Tre barche, tre modi di vivere il mare",
-    en: "Three boats, three ways to experience the sea",
-    es: "Tres barcos, tres formas de vivir el mar",
-    fr: "Trois bateaux, trois façons de vivre la mer",
-    de: "Drei Boote, drei Arten, das Meer zu erleben",
+    it: "Due barche, due modi di vivere il mare",
+    en: "Two boats, two ways to experience the sea",
+    es: "Dos barcos, dos formas de vivir el mar",
+    fr: "Deux bateaux, deux façons de vivre la mer",
+    de: "Zwei Boote, zwei Arten, das Meer zu erleben",
   },
   comparisonText: {
-    it: "Il Trimarano è pensato per comfort, chef e charter. La Cigala & Bertinetti è la scelta agile per tour in barca. Il Gommone Pesca è dedicato alle uscite sportive con attrezzatura professionale.",
-    en: "The trimaran is for comfort, chef experiences and charter. The Cigala & Bertinetti is the agile boat-tour choice. The Fishing RIB is dedicated to sport fishing with professional gear.",
-    es: "El Neel 47 está pensado para confort, chef y charter. La Cigala & Bertinetti es la opción ágil para tours. La neumática de pesca está dedicada a salidas deportivas con equipo profesional.",
-    fr: "Le Neel 47 est pensé pour le confort, le chef à bord et le charter. Le Cigala & Bertinetti est le choix agile pour les tours. Le semi-rigide de pêche est dédié aux sorties sportives avec matériel professionnel.",
-    de: "Der Neel 47 steht für Komfort, Chefkoch und Charter. Die Cigala & Bertinetti ist die agile Wahl für Bootstouren. Das Angel-RIB ist für sportliche Ausfahrten mit Profi-Ausrüstung gedacht.",
+    it: "Il Trimarano è pensato per comfort, chef e charter. La Barca è la scelta agile per tour in barca, soste bagno e rotte più snelle.",
+    en: "The trimaran is for comfort, chef experiences and charter. The Boat is the agile choice for boat tours, swim stops and lighter routes.",
+    es: "El trimarán está pensado para confort, chef y charter. El barco es la opción ágil para tours, baños y rutas más ligeras.",
+    fr: "Le trimaran est pensé pour le confort, le chef à bord et le charter. Le bateau est le choix agile pour les sorties, baignades et routes plus souples.",
+    de: "Der Trimaran steht für Komfort, Chefkoch und Charter. Das Boot ist die agile Wahl für Touren, Badestopps und leichtere Routen.",
   },
   chooserTitle: {
     it: "Quale barca scegliere?",
@@ -155,11 +156,11 @@ const BOATS_PAGE_COPY = {
     de: "Welches Boot passt zu Ihnen?",
   },
   chooserText: {
-    it: "Se cerchi spazio, tavola e privacy scegli il Trimarano. Se vuoi una rotta snella tra baie scegli la Cigala & Bertinetti. Se vuoi pescare con setup tecnico scegli il Gommone Pesca.",
-    en: "Choose the trimaran for space, food and privacy. Choose the Cigala & Bertinetti for an agile route between bays. Choose the Fishing RIB for a technical sport fishing day.",
-    es: "Elige el Neel 47 para espacio, comida y privacidad. Elige la Cigala & Bertinetti para una ruta ágil entre calas. Elige la neumática de pesca para una jornada técnica.",
-    fr: "Choisissez le Neel 47 pour l'espace, le déjeuner et l'intimité. Choisissez le Cigala & Bertinetti pour une route agile. Choisissez le semi-rigide de pêche pour une journée technique.",
-    de: "Wählen Sie den Neel 47 für Platz, Essen und Privatsphäre. Wählen Sie die Cigala & Bertinetti für eine agile Route. Wählen Sie das Angel-RIB für einen technischen Sportangeltag.",
+    it: "Se cerchi spazio, tavola e privacy scegli il Trimarano. Se vuoi una rotta snella tra baie, bagni e snorkeling scegli la Barca.",
+    en: "Choose the trimaran for space, food and privacy. Choose the Boat for an agile route between bays, swimming and snorkelling.",
+    es: "Elige el trimarán para espacio, comida y privacidad. Elige el barco para una ruta ágil entre calas, baños y snorkel.",
+    fr: "Choisissez le trimaran pour l'espace, le déjeuner et l'intimité. Choisissez le bateau pour une route agile entre criques, baignades et snorkeling.",
+    de: "Wählen Sie den Trimaran für Platz, Essen und Privatsphäre. Wählen Sie das Boot für eine agile Route zwischen Buchten, Badestopps und Schnorcheln.",
   },
   detailCtaLabel: {
     it: "Scopri la barca",
@@ -195,6 +196,7 @@ export const BOAT_CATALOG = {
   trimarano: {
     id: "trimarano",
     slug: "neel-47",
+    listed: true,
     aliases: ["trimarano-egadisailing", "neel-43"],
     externalUrl: "https://www.neel-trimarans.com/range/neel-47/",
     order: 10,
@@ -592,6 +594,7 @@ export const BOAT_CATALOG = {
   boat: {
     id: "boat",
     slug: "cigala-bertinetti-34-offshore-open",
+    listed: true,
     aliases: ["barca-egadisailing", "ciagal-bertinetti-34-offshore-open"],
     order: 20,
     title: {
@@ -854,6 +857,7 @@ export const BOAT_CATALOG = {
   "fishing-rib": {
     id: "fishing-rib",
     slug: "gommone-pesca",
+    listed: false,
     aliases: ["fishing-rib", "egadisailing-fishing-rib", "angel-rib"],
     order: 30,
     title: {
@@ -1487,14 +1491,21 @@ export function getBoatContent(boatId: string, locale?: string | null): Resolved
 
 export function getPublicBoatIds(): string[] {
   return Object.values(BOAT_CATALOG)
+    .filter((entry) => entry.listed !== false)
     .sort((a, b) => a.order - b.order)
     .map((entry) => entry.id);
 }
 
 export function getPublicBoatSlugs(): string[] {
   return Object.values(BOAT_CATALOG)
+    .filter((entry) => entry.listed !== false)
     .sort((a, b) => a.order - b.order)
     .map((entry) => entry.slug);
+}
+
+export function isPublicBoatId(boatId: string): boolean {
+  const entry = getBoatCatalogEntry(boatId);
+  return Boolean(entry && entry.listed !== false);
 }
 
 export function getBoatPublicSlug(boatId: string): string {

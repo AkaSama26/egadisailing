@@ -1192,14 +1192,14 @@ export const EXPERIENCE_CATALOG = {
           de: "Angel-RIB",
         },
         alt: {
-          it: "Placeholder del gommone per il charter di pesca alle Isole Egadi",
-          en: "Placeholder image for the Egadi fishing charter RIB",
-          es: "Imagen provisional de la neumática para el charter de pesca en las Egadi",
-          fr: "Image provisoire du semi-rigide pour le charter de pêche aux Égades",
-          de: "Platzhalterbild des RIBs für den Angelcharter auf den Ägadischen Inseln",
+          it: "Gommone Pesca per il charter di pesca alle Isole Egadi",
+          en: "Fishing RIB for the Egadi fishing charter",
+          es: "Neumática para el charter de pesca en las Islas Egadi",
+          fr: "Semi-rigide pour le charter de pêche aux îles Égades",
+          de: "Angel-RIB für den Angelcharter auf den Ägadischen Inseln",
         },
         color: "#BAE6FD",
-        src: "/images/experience-polaroids/fishing-charter-gommone.webp",
+        src: "/images/boats/fishing-rib/fishing-rib-hero.webp",
       },
       {
         caption: {

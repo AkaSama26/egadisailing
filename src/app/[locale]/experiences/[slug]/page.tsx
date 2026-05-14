@@ -258,6 +258,78 @@ function getFishingSeoExpansionCopy(
                 ? "Bottom fishing, trolling, drifting and catch and release are chosen on the day according to conditions and skipper decision."
                 : "Bolentino, traina, drifting e catch and release si scelgono in giornata secondo condizioni e decisione dello skipper.",
       },
+      {
+        question: isEs ? "¿Cuántas personas pueden participar?" : isFr ? "Combien de personnes peuvent participer ?" : isDe ? "Wie viele Personen können teilnehmen?" : isEn ? "How many people can join?" : "Quante persone possono partecipare?",
+        answer: isEs
+          ? `El charter es privado y acepta hasta ${capacityMax} personas. El precio es por grupo, no por persona.`
+          : isFr
+            ? `Le charter est privé et accepte jusqu'à ${capacityMax} personnes. Le prix est par groupe, pas par personne.`
+            : isDe
+              ? `Der Charter ist privat und für bis zu ${capacityMax} Personen. Der Preis gilt pro Gruppe, nicht pro Person.`
+              : isEn
+                ? `The charter is private and takes up to ${capacityMax} guests. The price is per group, not per person.`
+                : `Il charter è privato e può ospitare fino a ${capacityMax} persone. Il prezzo è per gruppo, non a persona.`,
+      },
+      {
+        question: isEs ? "¿El equipo de pesca está incluido?" : isFr ? "Le matériel de pêche est-il inclus ?" : isDe ? "Ist die Angelausrüstung enthalten?" : isEn ? "Is fishing gear included?" : "L'attrezzatura da pesca è inclusa?",
+        answer: isEs
+          ? "Sí. Están incluidos cañas, carretes, cebos, señuelos, combustible, agua, refrescos, snack y dotaciones de seguridad."
+          : isFr
+            ? "Oui. Cannes, moulinets, appâts, leurres, carburant, eau, boissons sans alcool, snack et équipements de sécurité sont inclus."
+            : isDe
+              ? "Ja. Ruten, Rollen, Köder, Kunstköder, Treibstoff, Wasser, Softdrinks, Snacks und Sicherheitsausrüstung sind enthalten."
+              : isEn
+                ? "Yes. Rods, reels, bait, lures, fuel, water, soft drinks, snacks and safety equipment are included."
+                : "Sì. Sono inclusi canne, mulinelli, esche, artificiali, carburante, acqua, soft drink, snack e dotazioni di sicurezza.",
+      },
+      {
+        question: isEs ? "¿Hay que tener experiencia?" : isFr ? "Faut-il avoir de l'expérience ?" : isDe ? "Braucht man Erfahrung?" : isEn ? "Do we need previous experience?" : "Serve esperienza?",
+        answer: isEs
+          ? "No es obligatorio, pero la salida está pensada para aficionados motivados. El patrón adapta técnica y ritmo al grupo y a las condiciones."
+          : isFr
+            ? "Ce n'est pas obligatoire, mais la sortie est pensée pour des passionnés motivés. Le skipper adapte technique et rythme au groupe et aux conditions."
+            : isDe
+              ? "Nein, Erfahrung ist nicht zwingend, aber die Tour richtet sich an motivierte Angler. Der Skipper passt Technik und Tempo an Gruppe und Bedingungen an."
+              : isEn
+                ? "No, it is not mandatory, but the outing is designed for motivated enthusiasts. The skipper adapts technique and pace to the group and conditions."
+                : "Non è obbligatoria, ma l'uscita è pensata per appassionati motivati. Lo skipper adatta tecnica e ritmo al gruppo e alle condizioni.",
+      },
+      {
+        question: isEs ? "¿Dónde se puede pescar en las Egadi?" : isFr ? "Où peut-on pêcher aux Égades ?" : isDe ? "Wo darf auf den Ägadischen Inseln geangelt werden?" : isEn ? "Where can we fish in the Egadi Islands?" : "Dove si può pescare alle Egadi?",
+        answer: isEs
+          ? "Solo en zonas permitidas y con las autorizaciones necesarias. La ruta evita áreas prohibidas y sigue reglas AMP/MASAF."
+          : isFr
+            ? "Uniquement dans les zones autorisées et avec les autorisations nécessaires. La route évite les zones interdites et respecte les règles AMP/MASAF."
+            : isDe
+              ? "Nur in erlaubten Zonen und mit den nötigen Genehmigungen. Die Route vermeidet verbotene Bereiche und folgt AMP/MASAF-Regeln."
+              : isEn
+                ? "Only in permitted zones and with the required authorisations. The route avoids forbidden areas and follows AMP/MASAF rules."
+                : "Solo in zone consentite e con le autorizzazioni necessarie. La rotta evita le aree vietate e segue le regole AMP/MASAF.",
+      },
+      {
+        question: isEs ? "¿Qué pasa si el mar no permite salir?" : isFr ? "Que se passe-t-il si la mer ne permet pas de sortir ?" : isDe ? "Was passiert, wenn das Meer die Ausfahrt nicht erlaubt?" : isEn ? "What happens if sea conditions are not suitable?" : "Cosa succede se il mare non permette l'uscita?",
+        answer: isEs
+          ? "La seguridad decide siempre. Si las condiciones no son adecuadas, la salida se reprograma o se gestiona según la política de reserva."
+          : isFr
+            ? "La sécurité décide toujours. Si les conditions ne sont pas adaptées, la sortie est reprogrammée ou gérée selon la politique de réservation."
+            : isDe
+              ? "Sicherheit entscheidet immer. Wenn die Bedingungen nicht geeignet sind, wird die Tour verschoben oder nach Buchungsbedingungen verwaltet."
+              : isEn
+                ? "Safety always comes first. If conditions are not suitable, the outing is rescheduled or handled according to the booking policy."
+                : "La sicurezza viene prima di tutto. Se le condizioni non sono adatte, l'uscita viene riprogrammata o gestita secondo la policy di prenotazione.",
+      },
+      {
+        question: isEs ? "¿La jornada dura siempre 8 horas?" : isFr ? "La journée dure-t-elle toujours 8 heures ?" : isDe ? "Dauert der Tag immer 8 Stunden?" : isEn ? "Does the day always last 8 hours?" : "La giornata dura sempre 8 ore?",
+        answer: isEs
+          ? "La duración prevista es de 8 horas desde la salida hasta el regreso. Ruta, técnicas y tiempos pueden cambiar por seguridad, mar y normativa."
+          : isFr
+            ? "La durée prévue est de 8 heures du départ au retour. Route, techniques et horaires peuvent changer pour sécurité, mer et réglementation."
+            : isDe
+              ? "Die geplante Dauer beträgt 8 Stunden von Abfahrt bis Rückkehr. Route, Techniken und Zeiten können sich wegen Sicherheit, Meer und Regeln ändern."
+              : isEn
+                ? "The planned duration is 8 hours from departure to return. Route, techniques and timing may change for safety, sea state and regulations."
+                : "La durata prevista è di 8 ore dalla partenza al rientro. Rotta, tecniche e tempi possono cambiare per sicurezza, mare e normativa.",
+      },
     ],
   };
 }

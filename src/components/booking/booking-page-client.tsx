@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import {
   CalendarDays,
-  CheckCircle2,
   ChevronRight,
   Clock3,
   CreditCard,
@@ -21,6 +20,8 @@ export interface BookingServiceOption {
   subtitle: string;
   boatId: string;
   boatTitle: string;
+  boatImageSrc?: string;
+  boatImageAlt?: string;
   serviceType: string;
   durationType: string;
   durationHours: number;
@@ -58,6 +59,88 @@ interface ExperienceOption {
 }
 
 const CHARTER_DURATION_DAYS = [3, 4, 5, 6, 7] as const;
+const BOOKING_BOAT_ORDER: Record<string, number> = {
+  trimarano: 10,
+  boat: 20,
+  "fishing-rib": 30,
+};
+
+function bookingBoatTitle(boatId: string, fallback: string, locale: string): string {
+  if (boatId !== "boat") return fallback;
+  if (locale === "es") return "Barco";
+  if (locale === "fr") return "Bateau";
+  if (locale === "de") return "Boot";
+  if (locale === "en") return "Boat";
+  return "Barca";
+}
+
+function bookingBoatSubtitle(boatId: string, locale: string): string {
+  if (boatId === "trimarano") {
+    return locale === "es"
+      ? "Confort premium, chef a bordo y charter privado."
+      : locale === "fr"
+        ? "Confort premium, chef à bord et charters privés."
+        : locale === "de"
+          ? "Premium-Komfort, Chefkoch an Bord und private Charter."
+          : locale === "en"
+            ? "Premium comfort, chef on board and private charters."
+            : "Comfort premium, chef a bordo e charter privati.";
+  }
+  if (boatId === "boat") {
+    return locale === "es"
+      ? "Tours ágiles en barco, privados o compartidos, con paradas de baño."
+      : locale === "fr"
+        ? "Sorties bateau agiles, privées ou partagées, avec baignades."
+        : locale === "de"
+          ? "Agile Bootstouren, privat oder geteilt, mit Badestopps."
+          : locale === "en"
+            ? "Agile boat tours, private or shared, with swim stops."
+            : "Tour in barca agili, privati o condivisi, con soste bagno.";
+  }
+  if (boatId === "fishing-rib") {
+    return locale === "es"
+      ? "Jornada de pesca deportiva con setup profesional."
+      : locale === "fr"
+        ? "Journée de pêche sportive avec setup professionnel."
+        : locale === "de"
+          ? "Sportangeltag mit professionellem Setup."
+          : locale === "en"
+            ? "Sport fishing day with professional setup."
+            : "Giornata di pesca sportiva con setup professionale.";
+  }
+  return locale === "es"
+    ? "Elige esta opción para ver las experiencias disponibles."
+    : locale === "fr"
+      ? "Choisissez cette option pour voir les expériences disponibles."
+      : locale === "de"
+        ? "Wählen Sie diese Option, um verfügbare Erlebnisse zu sehen."
+        : locale === "en"
+          ? "Choose this option to see available experiences."
+          : "Scegli questa opzione per vedere le esperienze disponibili.";
+}
+
+function bookingBoatImageSrc(service: BookingServiceOption): string {
+  if (service.boatImageSrc) return service.boatImageSrc;
+  if (service.boatId === "trimarano") return "/images/boats/neel-47/neel-47-hero.webp";
+  if (service.boatId === "boat") return "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp";
+  if (service.boatId === "fishing-rib") return "/images/boats/fishing-rib/fishing-rib-hero.webp";
+  return "/videos/hero-poster.webp";
+}
+
+function bookingBoatImageAlt(
+  boatId: string,
+  fallback: string | undefined,
+  locale: string,
+): string {
+  if (boatId === "boat") {
+    if (locale === "es") return "Barco en navegación por las Islas Egadi";
+    if (locale === "fr") return "Bateau en navigation aux îles Égades";
+    if (locale === "de") return "Boot auf Fahrt zwischen den Ägadischen Inseln";
+    if (locale === "en") return "Boat cruising through the Egadi Islands";
+    return "Barca in navigazione alle Isole Egadi";
+  }
+  return fallback ?? bookingBoatTitle(boatId, boatId, locale);
+}
 
 function paymentLabel(service: BookingServiceOption, locale: string): string {
   if (service.defaultPaymentSchedule === "DEPOSIT_BALANCE") {
@@ -245,18 +328,36 @@ export function BookingPageClient({
   const [selectedCharterDays, setSelectedCharterDays] = useState(initialDurationDays ?? 3);
 
   const boats = useMemo(() => {
-    const map = new Map<string, { id: string; title: string; serviceCount: number }>();
+    const map = new Map<
+      string,
+      {
+        id: string;
+        title: string;
+        subtitle: string;
+        imageSrc: string;
+        imageAlt: string;
+        serviceCount: number;
+      }
+    >();
     for (const service of services) {
       const current = map.get(service.boatId);
       map.set(service.boatId, {
         id: service.boatId,
-        title: service.boatTitle,
+        title: bookingBoatTitle(service.boatId, service.boatTitle, locale),
+        subtitle: bookingBoatSubtitle(service.boatId, locale),
+        imageSrc: current?.imageSrc ?? bookingBoatImageSrc(service),
+        imageAlt: current?.imageAlt ?? bookingBoatImageAlt(service.boatId, service.boatImageAlt, locale),
         serviceCount: (current?.serviceCount ?? 0) + 1,
       });
     }
-    return Array.from(map.values()).sort((a, b) =>
-      a.title.localeCompare(b.title, locale === "es" ? "es" : locale === "fr" ? "fr" : locale === "de" ? "de" : locale === "en" ? "en" : "it"),
-    );
+    return Array.from(map.values()).sort((a, b) => {
+      const byOrder = (BOOKING_BOAT_ORDER[a.id] ?? 99) - (BOOKING_BOAT_ORDER[b.id] ?? 99);
+      if (byOrder !== 0) return byOrder;
+      return a.title.localeCompare(
+        b.title,
+        locale === "es" ? "es" : locale === "fr" ? "fr" : locale === "de" ? "de" : locale === "en" ? "en" : "it",
+      );
+    });
   }, [locale, services]);
 
   const selectedBoatServices = useMemo(
@@ -386,32 +487,43 @@ export function BookingPageClient({
             subtitle={copy.chooseBoatSubtitle}
             backLabel={copy.back}
           >
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               {boats.map((boat) => (
                 <button
                   key={boat.id}
                   type="button"
                   onClick={() => chooseBoat(boat.id)}
                   className={cn(
-                    "rounded-lg border p-4 text-left transition",
+                    "group relative min-h-[220px] overflow-hidden rounded-lg border p-0 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl",
                     selectedBoatId === boat.id
-                      ? "border-sky-500 bg-sky-50"
-                      : "border-slate-200 bg-white hover:border-sky-200 hover:bg-slate-50",
+                      ? "border-sky-300 ring-2 ring-sky-300"
+                      : "border-white/30 hover:border-white/75",
                   )}
+                  style={{ backgroundImage: `url(${boat.imageSrc})` }}
                   aria-pressed={selectedBoatId === boat.id}
+                  aria-label={`${boat.title}. ${boat.subtitle}`}
                 >
-                  <span className="flex items-start justify-between gap-3">
-                    <span>
-                      <span className="block text-base font-bold text-slate-950">
-                        {boat.title}
-                      </span>
-                      <span className="mt-1 block text-sm text-slate-600">
+                  <span
+                    className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105"
+                    style={{ backgroundImage: `url(${boat.imageSrc})` }}
+                    role="img"
+                    aria-label={boat.imageAlt}
+                  />
+                  <span className="absolute inset-0 bg-gradient-to-t from-slate-950/92 via-slate-950/52 to-slate-950/10" />
+                  <span className="relative z-10 flex h-full min-h-[220px] flex-col justify-between p-5 text-white">
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
                         {boat.serviceCount} {copy.bookableOptions}
                       </span>
                     </span>
-                    {selectedBoatId === boat.id && (
-                      <CheckCircle2 className="size-5 text-emerald-600" aria-hidden="true" />
-                    )}
+                    <span>
+                      <span className="block text-2xl font-heading font-bold leading-tight">
+                        {boat.title}
+                      </span>
+                      <span className="mt-2 block text-sm leading-6 text-white/82">
+                        {boat.subtitle}
+                      </span>
+                    </span>
                   </span>
                 </button>
               ))}
@@ -455,9 +567,6 @@ export function BookingPageClient({
                         {option.subtitle}
                       </span>
                     </span>
-                    {selectedExperienceKey === option.key && (
-                      <CheckCircle2 className="size-5 text-emerald-600" aria-hidden="true" />
-                    )}
                   </span>
                   {nextStepAfterExperience(option.services) === "duration" && (
                     <span className="mt-4 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
@@ -790,8 +899,8 @@ function getBookingPageCopy(locale: string) {
         "Wählen Sie Boot, Erlebnis, Dauer und ein verfügbares Datum mit aktuellem Preis. Der Checkout erstellt eine direkte Buchung im zentralen Egadisailing-Kalender.",
       emptyTitle: "Keine aktiven Erlebnisse",
       emptyText: "Derzeit sind keine Services online buchbar.",
-      chooseBoatTitle: "Wählen Sie das Boot",
-      chooseBoatSubtitle: "Jedes Boot zeigt nur die Erlebnisse, die tatsächlich in der Datenbank verbunden sind.",
+      chooseBoatTitle: "Wählen Sie, was Sie erleben möchten",
+      chooseBoatSubtitle: "Die Bilder helfen bei der Auswahl zwischen Trimaran-Komfort, Bootstouren und Angelcharter.",
       bookableOptions: "buchbare Optionen",
       chooseExperienceTitle: "Wählen Sie das Erlebnis",
       availableFor: "Verfügbare Erlebnisse für",
@@ -822,8 +931,8 @@ function getBookingPageCopy(locale: string) {
         "Choisissez le bateau, l'expérience, la durée et une date disponible avec un prix à jour. Le checkout crée une réservation directe dans le calendrier central d'Egadisailing.",
       emptyTitle: "Aucune expérience active",
       emptyText: "Aucun service n'est actuellement disponible à la réservation en ligne.",
-      chooseBoatTitle: "Choisissez le bateau",
-      chooseBoatSubtitle: "Chaque bateau affiche uniquement les expériences réellement connectées dans la base de données.",
+      chooseBoatTitle: "Choisissez ce que vous voulez vivre",
+      chooseBoatSubtitle: "Les images aident à distinguer le confort du trimaran, les sorties bateau et le charter pêche.",
       bookableOptions: "options réservables",
       chooseExperienceTitle: "Choisissez l'expérience",
       availableFor: "Expériences disponibles pour",
@@ -854,8 +963,8 @@ function getBookingPageCopy(locale: string) {
         "Elige barco, experiencia, duración y fecha disponible con precio actualizado. El checkout crea una reserva directa en el calendario central de Egadisailing.",
       emptyTitle: "No hay experiencias activas",
       emptyText: "En este momento no hay servicios disponibles para reservar online.",
-      chooseBoatTitle: "Elige el barco",
-      chooseBoatSubtitle: "Cada barco muestra solo las experiencias realmente conectadas en la base de datos.",
+      chooseBoatTitle: "Elige lo que quieres vivir",
+      chooseBoatSubtitle: "Las imágenes ayudan a distinguir entre confort en trimarán, tours en barco y charter de pesca.",
       bookableOptions: "opciones reservables",
       chooseExperienceTitle: "Elige la experiencia",
       availableFor: "Experiencias disponibles para",
@@ -886,8 +995,8 @@ function getBookingPageCopy(locale: string) {
         "Choose the boat, experience, duration and available date with updated pricing. Checkout creates a direct booking on the central Egadisailing calendar.",
       emptyTitle: "No active experiences",
       emptyText: "There are currently no services available to book online.",
-      chooseBoatTitle: "Choose the boat",
-      chooseBoatSubtitle: "Each boat only shows the experiences actually connected in the database.",
+      chooseBoatTitle: "Choose what you want to experience",
+      chooseBoatSubtitle: "The images help you choose between trimaran comfort, boat tours and fishing charter.",
       bookableOptions: "bookable options",
       chooseExperienceTitle: "Choose the experience",
       availableFor: "Experiences available for",
@@ -917,8 +1026,8 @@ function getBookingPageCopy(locale: string) {
       "Scegli mezzo, esperienza, durata e data disponibile con prezzo aggiornato. Il checkout crea una prenotazione diretta sul calendario centrale Egadisailing.",
     emptyTitle: "Nessuna esperienza attiva",
     emptyText: "Al momento non ci sono servizi prenotabili online.",
-    chooseBoatTitle: "Scegli il mezzo",
-    chooseBoatSubtitle: "Ogni mezzo mostra solo le esperienze realmente collegate nel database.",
+    chooseBoatTitle: "Scegli cosa vuoi vivere",
+    chooseBoatSubtitle: "Le immagini aiutano a distinguere comfort in trimarano, tour in barca e charter pesca.",
     bookableOptions: "opzioni prenotabili",
     chooseExperienceTitle: "Scegli l'esperienza",
     availableFor: "Esperienze disponibili per",

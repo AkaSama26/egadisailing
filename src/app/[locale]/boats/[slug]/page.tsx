@@ -28,6 +28,7 @@ import {
   getBoatContent,
   getBoatsPageContent,
   getPublicBoatSlugs,
+  isPublicBoatId,
   resolveBoatIdFromSlug,
   type BoatSpecIcon,
   type ResolvedBoatContent,
@@ -134,7 +135,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const boat = getBoatContent(resolveBoatIdFromSlug(slug), locale);
+  const boatId = resolveBoatIdFromSlug(slug);
+  const boat = isPublicBoatId(boatId) ? getBoatContent(boatId, locale) : null;
   if (!boat) return { title: "Not Found" };
 
   return buildPageMetadata({
@@ -152,7 +154,8 @@ export default async function BoatDetailPage({
   params: Promise<{ locale: string; slug: string }>;
 }) {
   const { locale, slug } = await params;
-  const boat = getBoatContent(resolveBoatIdFromSlug(slug), locale);
+  const boatId = resolveBoatIdFromSlug(slug);
+  const boat = isPublicBoatId(boatId) ? getBoatContent(boatId, locale) : null;
   if (!boat) notFound();
   if (slug !== boat.slug) permanentRedirect(localizedPath(locale, `/boats/${boat.slug}`));
 

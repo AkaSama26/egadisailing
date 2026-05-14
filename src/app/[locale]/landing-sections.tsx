@@ -71,6 +71,7 @@ const featuredPackageOrder: Record<string, number> = {
   charter: 20,
   "barca-8-ore": 30,
   "barca-4-ore": 40,
+  "charter-pesca": 50,
 };
 
 const googleReviewsUrl = PUBLIC_REVIEW_LINKS.google;
@@ -815,6 +816,97 @@ export function LandingSections({ services }: LandingSectionsProps) {
           caption: isEs ? "Atardecer" : isFr ? "Coucher de soleil" : isDe ? "Sonnenuntergang" : isEn ? "Sunset" : "Tramonto",
           color: "#FED7AA",
           src: "/images/experience-polaroids/barca-8-ore-tramonto.webp",
+        },
+      ],
+    },
+    {
+      key: "charter-pesca",
+      eyebrow: isEs ? "Pesca deportiva" : isFr ? "Pêche sportive" : isDe ? "Sportangeln" : isEn ? "Sport fishing" : "Pesca sportiva",
+      title: isEs ? "Charter de pesca Egadi" : isFr ? "Charter de pêche Égades" : isDe ? "Angelcharter Ägadische Inseln" : isEn ? "Egadi fishing charter" : "Charter pesca Egadi",
+      subtitle:
+        isEs
+          ? "Jornada privada de 8 horas en neumática de pesca, con cañas profesionales, técnicas mixtas y ruta definida por el patrón según mar, temporada y normativa."
+          : isFr
+          ? "Journée privée de 8 heures sur semi-rigide de pêche, avec cannes professionnelles, techniques mixtes et route définie par le skipper selon mer, saison et règles."
+          : isDe
+          ? "Privater 8-Stunden-Tag auf dem Angel-RIB, mit professionellen Ruten, gemischten Techniken und Route nach Meer, Saison und Regeln."
+          : isEn
+          ? "An 8-hour private day on the Fishing RIB, with professional rods, mixed techniques and a route set by the skipper according to sea, season and rules."
+          : "Giornata privata di 8 ore su gommone da pesca, con canne professionali, tecniche miste e rotta decisa dallo skipper in base a mare, stagione e regole.",
+      durationLabel: isEs ? "8 horas" : isFr ? "8 heures" : isDe ? "8 Stunden" : isEn ? "8 hours" : "8 ore",
+      detailLabel: isEs
+        ? `Hasta ${maxPax(["fishing-full-day"])} pescadores`
+        : isFr
+        ? `Jusqu'à ${maxPax(["fishing-full-day"])} pêcheurs`
+        : isDe
+        ? `Bis zu ${maxPax(["fishing-full-day"])} Angler`
+        : isEn
+        ? `Up to ${maxPax(["fishing-full-day"])} anglers`
+        : `Max ${maxPax(["fishing-full-day"])} pescatori`,
+      chips: isEs
+        ? ["Equipo profesional", "Capturas reguladas"]
+        : isFr
+          ? ["Matériel professionnel", "Prises réglementées"]
+          : isDe
+            ? ["Profi-Ausrüstung", "Fang nach Regeln"]
+            : isEn
+              ? ["Professional gear", "Catch within limits"]
+              : ["Attrezzatura pro", "Pescato nei limiti"],
+      details: [
+        {
+          title: isEs ? "Ideal para" : isFr ? "Idéal pour" : isDe ? "Ideal für" : isEn ? "Best for" : "Per chi",
+          text: isEs
+            ? "Aficionados que quieren una salida técnica, privada y centrada en la pesca, no un tour panorámico clásico."
+            : isFr
+            ? "Passionnés qui veulent une sortie technique, privée et centrée sur la pêche, pas un simple tour panoramique."
+            : isDe
+            ? "Angelbegeisterte, die einen technischen privaten Ausflug suchen, nicht nur eine klassische Panoramatour."
+            : isEn
+            ? "Fishing enthusiasts who want a technical private outing, not a standard sightseeing boat tour."
+            : "Appassionati che vogliono un'uscita tecnica, privata e centrata sulla pesca, non un classico tour panoramico.",
+        },
+        {
+          title: isEs ? "A bordo" : isFr ? "À bord" : isDe ? "An Bord" : isEn ? "On board" : "A bordo",
+          text: isEs
+            ? "Neumática dedicada, patrón/guía, cañas, carretes, cebos, artificiales, combustible, agua, refrescos y snack."
+            : isFr
+            ? "Semi-rigide dédié, skipper/guide, cannes, moulinets, appâts, leurres, carburant, eau, boissons sans alcool et snack."
+            : isDe
+            ? "Dediziertes Angel-RIB, Skipper/Guide, Ruten, Rollen, Köder, Kunstköder, Treibstoff, Wasser, Softdrinks und Snack."
+            : isEn
+            ? "Dedicated Fishing RIB, skipper/guide, rods, reels, bait, lures, fuel, water, soft drinks and snacks."
+            : "Gommone dedicato, skipper/guida, canne, mulinelli, esche, artificiali, carburante, acqua, soft drink e snack.",
+        },
+        {
+          title: isEs ? "Reglas" : isFr ? "Règles" : isDe ? "Regeln" : isEn ? "Rules" : "Regole",
+          text: isEs
+            ? "Capturas liberadas o conservadas solo dentro de límites legales, tallas, cupos, autorizaciones y decisión del patrón."
+            : isFr
+            ? "Prises relâchées ou gardées uniquement selon limites légales, tailles, quotas, autorisations et décision du skipper."
+            : isDe
+            ? "Fänge werden nur nach gesetzlichen Limits, Mindestmaßen, Quoten, Genehmigungen und Entscheidung des Skippers behalten oder freigelassen."
+            : isEn
+            ? "Catches are released or kept only within legal limits, sizes, quotas, authorisations and the skipper's decision."
+            : "Pescato rilasciato o trattenuto solo entro limiti di legge, taglie, quote, autorizzazioni e decisione dello skipper.",
+        },
+      ],
+      href: localizedPath(locale, "/experiences/charter-pesca-egadi"),
+      ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
+      polaroids: [
+        {
+          caption: isEs ? "Neumática de pesca" : isFr ? "Semi-rigide de pêche" : isDe ? "Angel-RIB" : isEn ? "Fishing RIB" : "Gommone pesca",
+          color: "#BAE6FD",
+          src: "/images/experience-polaroids/fishing-charter-gommone.webp",
+        },
+        {
+          caption: isEs ? "Equipo técnico" : isFr ? "Setup technique" : isDe ? "Technisches Setup" : isEn ? "Technical setup" : "Setup tecnico",
+          color: "#FDE68A",
+          src: "/images/experience-polaroids/fishing-charter-setup.webp",
+        },
+        {
+          caption: isEs ? "8 horas en el mar" : isFr ? "8 heures en mer" : isDe ? "8 Stunden auf See" : isEn ? "8 hours at sea" : "8 ore in mare",
+          color: "#A7F3D0",
+          src: "/images/experience-polaroids/fishing-charter-navigation.webp",
         },
       ],
     },

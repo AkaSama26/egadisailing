@@ -17,7 +17,8 @@ export type ExperienceChoiceRecommendationKey =
   | "private4"
   | "private8"
   | "gourmet"
-  | "charter";
+  | "charter"
+  | "fishing";
 
 export interface ExperienceChoiceRecommendation {
   key: ExperienceChoiceRecommendationKey;
@@ -530,6 +531,50 @@ function RecommendationImages({
     </div>
   );
 }
+function getFishingWizardChoice(
+  locale: string,
+  recommend: (key: ExperienceChoiceRecommendationKey) => void,
+): WizardChoice {
+  if (locale === "es") {
+    return {
+      emoji: "🎣",
+      label: "Quiero pescar",
+      description: "Charter privado de pesca, equipo profesional y 8 horas en el mar.",
+      onSelect: () => recommend("fishing"),
+    };
+  }
+  if (locale === "fr") {
+    return {
+      emoji: "🎣",
+      label: "Je veux pêcher",
+      description: "Charter privé de pêche, matériel professionnel et 8 heures en mer.",
+      onSelect: () => recommend("fishing"),
+    };
+  }
+  if (locale === "de") {
+    return {
+      emoji: "🎣",
+      label: "Ich möchte angeln",
+      description: "Privater Angelcharter, Profi-Ausrüstung und 8 Stunden auf See.",
+      onSelect: () => recommend("fishing"),
+    };
+  }
+  if (locale === "en") {
+    return {
+      emoji: "🎣",
+      label: "I want to fish",
+      description: "Private fishing charter, professional gear and 8 hours at sea.",
+      onSelect: () => recommend("fishing"),
+    };
+  }
+  return {
+    emoji: "🎣",
+    label: "Voglio pescare",
+    description: "Charter di pesca privato, attrezzatura professionale e 8 ore in mare.",
+    onSelect: () => recommend("fishing"),
+  };
+}
+
 function getQuestion({
   step,
   locale,
@@ -543,20 +588,27 @@ function getQuestion({
   moveTo: (step: WizardStep) => void;
   recommend: (key: ExperienceChoiceRecommendationKey) => void;
 }): WizardQuestion {
+  let question: WizardQuestion;
   if (locale === "es") {
-    return getSpanishQuestion({ step, moveTo, recommend });
-  }
-  if (locale === "fr") {
-    return getFrenchQuestion({ step, moveTo, recommend });
-  }
-  if (locale === "de") {
-    return getGermanQuestion({ step, moveTo, recommend });
-  }
-  if (isEn) {
-    return getEnglishQuestion({ step, moveTo, recommend });
+    question = getSpanishQuestion({ step, moveTo, recommend });
+  } else if (locale === "fr") {
+    question = getFrenchQuestion({ step, moveTo, recommend });
+  } else if (locale === "de") {
+    question = getGermanQuestion({ step, moveTo, recommend });
+  } else if (isEn) {
+    question = getEnglishQuestion({ step, moveTo, recommend });
+  } else {
+    question = getItalianQuestion({ step, moveTo, recommend });
   }
 
-  return getItalianQuestion({ step, moveTo, recommend });
+  if (step === "party") {
+    return {
+      ...question,
+      choices: [...question.choices, getFishingWizardChoice(locale, recommend)],
+    };
+  }
+
+  return question;
 }
 
 function getGermanQuestion({

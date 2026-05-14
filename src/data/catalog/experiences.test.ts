@@ -42,10 +42,10 @@ describe("fishing charter catalog", () => {
     expect(german?.includes.some((item) => item.includes("Professionelle Ruten"))).toBe(true);
   });
 
-  it("adds the dedicated fishing RIB to the public fleet", () => {
+  it("keeps the dedicated fishing RIB available without listing it in the public fleet", () => {
     const boat = getBoatContent("fishing-rib", "fr");
 
-    expect(getPublicBoatIds()).toContain("fishing-rib");
+    expect(getPublicBoatIds()).not.toContain("fishing-rib");
     expect(boat?.title).toBe("Semi-rigide de pêche");
     expect(boat?.serviceIds).toEqual(["fishing-full-day"]);
     expect(boat?.specs.find((spec) => spec.value === "4")?.label).toBe("Personnes");
