@@ -12,6 +12,10 @@ import { defineRouting } from "next-intl/routing";
 export const routing = defineRouting({
   locales: ["it", "en", "es", "fr", "de"],
   defaultLocale: "it",
+  // Metadata pages and sitemap already publish canonical hreflang links.
+  // Keeping next-intl automatic HTTP Link headers enabled can expose redirecting
+  // x-default URLs for localized routes behind the production proxy.
+  alternateLinks: false,
   pathnames: {
     "/": "/",
     "/about": {
