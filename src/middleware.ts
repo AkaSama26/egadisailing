@@ -6,6 +6,11 @@ import { favignanaGuideSlugPairs } from "./data/favignana-guides";
 import { levanzoGuideSlugPairs } from "./data/levanzo-guides";
 import { marettimoGuideSlugPairs } from "./data/marettimo-guides";
 import {
+  getExperiencePublicSlug,
+  isExperienceServiceId,
+  resolveExperienceServiceIdFromSlug,
+} from "./data/catalog/experiences";
+import {
   isLegacyServiceWorkerPath,
   LEGACY_CACHE_RESET_COOKIE,
   LEGACY_CACHE_RESET_VERSION,
@@ -45,6 +50,14 @@ const ISLAND_PATH_SEGMENT_BY_LOCALE = {
   es: "islas",
   fr: "iles",
   de: "inseln",
+} as const satisfies Record<PublicLocale, string>;
+
+const EXPERIENCE_PATH_SEGMENT_BY_LOCALE = {
+  it: "esperienze",
+  en: "experiences",
+  es: "experiencias",
+  fr: "experiences",
+  de: "erlebnisse",
 } as const satisfies Record<PublicLocale, string>;
 
 function getLegacyPublicRedirect(req: NextRequest) {
@@ -93,6 +106,45 @@ function externalGuidePath(locale: PublicLocale, island: GuideIsland, slug: stri
   return `/${locale}/${base}/${island}/${slug}`;
 }
 
+function parseExperiencePath(pathname: string) {
+  const match = pathname.match(
+    /^\/(it|en|es|fr|de)\/(?:esperienze|experiences|experiencias|erlebnisse)\/([^/]+)\/?$/,
+  );
+  if (!match) return null;
+
+  return {
+    locale: match[1] as PublicLocale,
+    slug: match[2],
+  };
+}
+
+function externalExperiencePath(locale: PublicLocale, serviceId: string) {
+  return `/${locale}/${EXPERIENCE_PATH_SEGMENT_BY_LOCALE[locale]}/${getExperiencePublicSlug(
+    serviceId,
+    locale,
+  )}`;
+}
+
+function withExperienceAlternates(req: NextRequest, response: NextResponse) {
+  const parsed = parseExperiencePath(req.nextUrl.pathname);
+  if (!parsed) return response;
+
+  const serviceId = resolveExperienceServiceIdFromSlug(parsed.slug);
+  if (!isExperienceServiceId(serviceId)) return response;
+
+  const italianUrl = `${req.nextUrl.origin}${externalExperiencePath("it", serviceId)}`;
+  const englishUrl = `${req.nextUrl.origin}${externalExperiencePath("en", serviceId)}`;
+  const spanishUrl = `${req.nextUrl.origin}${externalExperiencePath("es", serviceId)}`;
+  const frenchUrl = `${req.nextUrl.origin}${externalExperiencePath("fr", serviceId)}`;
+  const germanUrl = `${req.nextUrl.origin}${externalExperiencePath("de", serviceId)}`;
+  response.headers.set(
+    "link",
+    `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${spanishUrl}>; rel="alternate"; hreflang="es", <${frenchUrl}>; rel="alternate"; hreflang="fr", <${germanUrl}>; rel="alternate"; hreflang="de", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
+  );
+
+  return response;
+}
+
 function withIslandGuideAlternates(req: NextRequest, response: NextResponse) {
   const parsed = parseIslandGuidePath(req.nextUrl.pathname);
   if (!parsed) return response;
@@ -111,6 +163,10 @@ function withIslandGuideAlternates(req: NextRequest, response: NextResponse) {
   );
 
   return response;
+}
+
+function withCustomAlternates(req: NextRequest, response: NextResponse) {
+  return withExperienceAlternates(req, withIslandGuideAlternates(req, response));
 }
 
 function getIslandGuideRedirect(req: NextRequest) {
@@ -175,7 +231,7 @@ function nextWithLocale(req: NextRequest, locale: PublicLocale) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   });
-  return withLegacyCacheReset(req, withIslandGuideAlternates(req, response));
+  return withLegacyCacheReset(req, withCustomAlternates(req, response));
 }
 
 /**
@@ -250,7 +306,7 @@ export default async function middleware(req: NextRequest) {
     return nextWithLocale(req, directLocalizedRouteLocale);
   }
 
-  return withLegacyCacheReset(req, withIslandGuideAlternates(req, intlMiddleware(req)));
+  return withLegacyCacheReset(req, withCustomAlternates(req, intlMiddleware(req)));
 }
 
 export const config = {

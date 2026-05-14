@@ -75,4 +75,19 @@ describe("fishing charter catalog", () => {
       "/esperienze/charter-pesca-egadi",
     );
   });
+
+  it("localizes fishing charter slugs from any known slug", () => {
+    expect(localizedPathWithoutLocale("it", "/experiences/egadi-fishing-charter")).toBe(
+      "/esperienze/charter-pesca-egadi",
+    );
+    expect(localizedPathWithoutLocale("es", "/experiences/egadi-fishing-charter")).toBe(
+      "/experiencias/charter-pesca-islas-egadi",
+    );
+    expect(localizedPathWithoutLocale("fr", "/experiences/egadi-fishing-charter")).toBe(
+      "/experiences/charter-peche-iles-egades",
+    );
+    expect(localizedPathWithoutLocale("de", "/experiences/egadi-fishing-charter")).toBe(
+      "/erlebnisse/angelcharter-aegadische-inseln",
+    );
+  });
 });
