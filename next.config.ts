@@ -16,13 +16,14 @@ const allowedOrigins = (process.env.SERVER_ACTIONS_ALLOWED_ORIGINS ?? "")
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  poweredByHeader: false,
   experimental: {
     serverActions: {
       allowedOrigins: allowedOrigins.length > 0 ? allowedOrigins : undefined,
     },
   },
-  // Security headers defense-in-depth (reverse proxy dovrebbe metterli, ma
-  // duplicato lato app protegge contro misconfig).
+  // Security headers defense-in-depth. HSTS resta al reverse proxy/edge per
+  // evitare header duplicati sulla risposta pubblica.
   async headers() {
     const serviceWorkerHeaders = [
       { key: "Content-Type", value: "application/javascript; charset=utf-8" },
@@ -75,6 +76,27 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: "/api/admin/:path*",
+        headers: [
+          { key: "Cache-Control", value: "private, no-store, must-revalidate" },
+          { key: "Pragma", value: "no-cache" },
+        ],
+      },
+      {
+        source: "/api/cron/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, must-revalidate" },
+          { key: "Pragma", value: "no-cache" },
+        ],
+      },
+      {
+        source: "/api/webhooks/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, must-revalidate" },
+          { key: "Pragma", value: "no-cache" },
+        ],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
@@ -91,15 +113,6 @@ const nextConfig: NextConfig = {
           // reader legacy da leggere crossdomain.xml (header legacy ma
           // obbligatorio in pen-test corporate).
           { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
-          // HSTS solo in prod (localhost lo rompe).
-          ...(process.env.NODE_ENV === "production"
-            ? [
-                {
-                  key: "Strict-Transport-Security",
-                  value: "max-age=63072000; includeSubDomains; preload",
-                },
-              ]
-            : []),
         ],
       },
       // R15-SEC-A1: admin NON deve mai essere framable (clickjacking admin
