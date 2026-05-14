@@ -1,6 +1,4 @@
-Placeholder images for the Fishing RIB / Gommone Pesca catalog entry.
-
-Replace these files with real fishing RIB photos before the final public launch:
+Fishing RIB / Gommone Pesca catalog images used by the public fishing charter experience:
 
 - `fishing-rib-hero.webp`
 - `fishing-rib-deck.webp`

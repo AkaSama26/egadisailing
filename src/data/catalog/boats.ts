@@ -943,21 +943,21 @@ export const BOAT_CATALOG = {
     },
     imageSrc: "/images/boats/fishing-rib/fishing-rib-hero.webp",
     imageAlt: {
-      it: "Placeholder del Gommone Pesca Egadisailing per charter di pesca alle Egadi",
-      en: "Placeholder image of the Egadisailing Fishing RIB for Egadi fishing charters",
-      es: "Imagen provisional de la neumática de pesca Egadisailing para charter en las Egadi",
-      fr: "Image provisoire du semi-rigide de pêche Egadisailing pour charter aux Égades",
-      de: "Platzhalterbild des Egadisailing Angel-RIBs für Angelcharter auf den Ägadischen Inseln",
+      it: "Gommone Pesca Egadisailing per charter di pesca alle Egadi",
+      en: "Egadisailing Fishing RIB for Egadi fishing charters",
+      es: "Neumática de pesca Egadisailing para charter en las Islas Egadi",
+      fr: "Semi-rigide de pêche Egadisailing pour charter aux îles Égades",
+      de: "Egadisailing Angel-RIB für Angelcharter auf den Ägadischen Inseln",
     },
     gallery: [
       {
         src: "/images/boats/fishing-rib/fishing-rib-hero.webp",
         alt: {
-          it: "Placeholder gommone per pesca sportiva alle Isole Egadi",
-          en: "Placeholder RIB for sport fishing in the Egadi Islands",
-          es: "Imagen provisional de neumática para pesca deportiva en las Egadi",
-          fr: "Image provisoire du semi-rigide pour pêche sportive aux Égades",
-          de: "Platzhalterbild des RIBs für Sportangeln auf den Ägadischen Inseln",
+          it: "Gommone per pesca sportiva alle Isole Egadi",
+          en: "RIB for sport fishing in the Egadi Islands",
+          es: "Neumática para pesca deportiva en las Islas Egadi",
+          fr: "Semi-rigide pour pêche sportive aux îles Égades",
+          de: "RIB für Sportangeln auf den Ägadischen Inseln",
         },
         caption: {
           it: "Gommone Pesca",
@@ -970,11 +970,11 @@ export const BOAT_CATALOG = {
       {
         src: "/images/boats/fishing-rib/fishing-rib-deck.webp",
         alt: {
-          it: "Placeholder setup di coperta per charter di pesca",
-          en: "Placeholder deck setup for fishing charter",
-          es: "Imagen provisional del setup de cubierta para charter de pesca",
-          fr: "Image provisoire du setup de pont pour charter de pêche",
-          de: "Platzhalterbild des Deck-Setups für Angelcharter",
+          it: "Setup di coperta per charter di pesca",
+          en: "Deck setup for fishing charter",
+          es: "Setup de cubierta para charter de pesca",
+          fr: "Setup de pont pour charter de pêche",
+          de: "Deck-Setup für Angelcharter",
         },
         caption: {
           it: "Setup tecnico",
@@ -987,11 +987,11 @@ export const BOAT_CATALOG = {
       {
         src: "/images/boats/fishing-rib/fishing-rib-navigation.webp",
         alt: {
-          it: "Placeholder navigazione verso spot di pesca consentiti",
-          en: "Placeholder navigation towards permitted fishing spots",
-          es: "Imagen provisional de navegación hacia zonas de pesca permitidas",
-          fr: "Image provisoire de navigation vers les zones de pêche autorisées",
-          de: "Platzhalterbild der Fahrt zu erlaubten Angelspots",
+          it: "Navigazione verso spot di pesca consentiti",
+          en: "Navigation towards permitted fishing spots",
+          es: "Navegación hacia zonas de pesca permitidas",
+          fr: "Navigation vers les zones de pêche autorisées",
+          de: "Fahrt zu erlaubten Angelspots",
         },
         caption: {
           it: "Rotta tecnica",

@@ -10,6 +10,8 @@ import { getBoatContent, getPublicBoatIds } from "./boats";
 import { localizedPathWithoutLocale } from "@/lib/i18n/paths";
 
 describe("fishing charter catalog", () => {
+  const locales = ["it", "en", "es", "fr", "de"] as const;
+
   it("resolves localized public slugs for every supported locale", () => {
     expect(getExperiencePublicSlug("fishing-full-day", "it")).toBe("charter-pesca-egadi");
     expect(getExperiencePublicSlug("fishing-full-day", "en")).toBe("egadi-fishing-charter");
@@ -40,6 +42,23 @@ describe("fishing charter catalog", () => {
     expect(italian?.detailDescription).toContain("limiti di legge");
     expect(german?.title).toBe("Angelcharter Ägadische Inseln");
     expect(german?.includes.some((item) => item.includes("Professionelle Ruten"))).toBe(true);
+  });
+
+  it("does not expose placeholder alt text in fishing media", () => {
+    for (const locale of locales) {
+      const experience = getExperienceContent("fishing-full-day", locale);
+      const boat = getBoatContent("fishing-rib", locale);
+
+      const mediaText = [
+        ...(experience?.media.map((item) => item.alt) ?? []),
+        boat?.imageAlt,
+        ...(boat?.gallery.map((item) => item.alt) ?? []),
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      expect(mediaText).not.toMatch(/placeholder|provisional|provisoire|platzhalter/i);
+    }
   });
 
   it("keeps the dedicated fishing RIB available without listing it in the public fleet", () => {
