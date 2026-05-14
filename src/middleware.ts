@@ -106,6 +106,17 @@ function externalGuidePath(locale: PublicLocale, island: GuideIsland, slug: stri
   return `/${locale}/${base}/${island}/${slug}`;
 }
 
+function requestPublicOrigin(req: NextRequest) {
+  const forwardedHost =
+    req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+  const forwardedProto =
+    req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "") ?? "https";
+  const host = forwardedHost.split(",")[0]?.trim() || req.nextUrl.host;
+  const proto = forwardedProto.split(",")[0]?.trim() || "https";
+
+  return `${proto}://${host}`;
+}
+
 function parseExperiencePath(pathname: string) {
   const match = pathname.match(
     /^\/(it|en|es|fr|de)\/(?:esperienze|experiences|experiencias|erlebnisse)\/([^/]+)\/?$/,
@@ -132,11 +143,12 @@ function withExperienceAlternates(req: NextRequest, response: NextResponse) {
   const serviceId = resolveExperienceServiceIdFromSlug(parsed.slug);
   if (!isExperienceServiceId(serviceId)) return response;
 
-  const italianUrl = `${req.nextUrl.origin}${externalExperiencePath("it", serviceId)}`;
-  const englishUrl = `${req.nextUrl.origin}${externalExperiencePath("en", serviceId)}`;
-  const spanishUrl = `${req.nextUrl.origin}${externalExperiencePath("es", serviceId)}`;
-  const frenchUrl = `${req.nextUrl.origin}${externalExperiencePath("fr", serviceId)}`;
-  const germanUrl = `${req.nextUrl.origin}${externalExperiencePath("de", serviceId)}`;
+  const origin = requestPublicOrigin(req);
+  const italianUrl = `${origin}${externalExperiencePath("it", serviceId)}`;
+  const englishUrl = `${origin}${externalExperiencePath("en", serviceId)}`;
+  const spanishUrl = `${origin}${externalExperiencePath("es", serviceId)}`;
+  const frenchUrl = `${origin}${externalExperiencePath("fr", serviceId)}`;
+  const germanUrl = `${origin}${externalExperiencePath("de", serviceId)}`;
   response.headers.set(
     "link",
     `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${spanishUrl}>; rel="alternate"; hreflang="es", <${frenchUrl}>; rel="alternate"; hreflang="fr", <${germanUrl}>; rel="alternate"; hreflang="de", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
@@ -152,11 +164,12 @@ function withIslandGuideAlternates(req: NextRequest, response: NextResponse) {
   const guidePair = findGuideSlugPair(parsed.island, parsed.slug);
   if (!guidePair) return response;
 
-  const italianUrl = `${req.nextUrl.origin}${externalGuidePath("it", parsed.island, guidePair.it)}`;
-  const englishUrl = `${req.nextUrl.origin}${externalGuidePath("en", parsed.island, guidePair.en)}`;
-  const spanishUrl = `${req.nextUrl.origin}${externalGuidePath("es", parsed.island, guidePair.es)}`;
-  const frenchUrl = `${req.nextUrl.origin}${externalGuidePath("fr", parsed.island, guidePair.fr)}`;
-  const germanUrl = `${req.nextUrl.origin}${externalGuidePath("de", parsed.island, guidePair.de)}`;
+  const origin = requestPublicOrigin(req);
+  const italianUrl = `${origin}${externalGuidePath("it", parsed.island, guidePair.it)}`;
+  const englishUrl = `${origin}${externalGuidePath("en", parsed.island, guidePair.en)}`;
+  const spanishUrl = `${origin}${externalGuidePath("es", parsed.island, guidePair.es)}`;
+  const frenchUrl = `${origin}${externalGuidePath("fr", parsed.island, guidePair.fr)}`;
+  const germanUrl = `${origin}${externalGuidePath("de", parsed.island, guidePair.de)}`;
   response.headers.set(
     "link",
     `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${spanishUrl}>; rel="alternate"; hreflang="es", <${frenchUrl}>; rel="alternate"; hreflang="fr", <${germanUrl}>; rel="alternate"; hreflang="de", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
