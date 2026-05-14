@@ -19,7 +19,6 @@ const localizedPrivateDisallow = routing.locales.flatMap((locale) => [
   localizedStaticPath(locale, "/b/sessione"),
   `${localizedStaticPath(locale, "/b/sessione")}/`,
   localizedPath(locale, "/ticket/:code").replace(":code", ""),
-  `${localizedStaticPath(locale, "/prenota")}/`,
   localizedPath(locale, "/prenota/success/:code").replace(":code", ""),
   localizedStaticPath(locale, "/recupera-prenotazione"),
   `${localizedStaticPath(locale, "/recupera-prenotazione")}/`,
