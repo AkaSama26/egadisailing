@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
 import { SubmitButton } from "@/components/admin/submit-button";
@@ -24,6 +25,7 @@ import {
   addBookingNote,
   registerManualPayment,
 } from "../actions";
+import { createReceiptFromPaymentsFromForm } from "../../ricevute/actions";
 
 export default async function BookingDetailPage({
   params,
@@ -37,7 +39,14 @@ export default async function BookingDetailPage({
       customer: true,
       service: { select: { name: true, type: true } },
       boat: { select: { name: true, id: true } },
-      payments: { orderBy: { createdAt: "asc" } },
+      payments: {
+        orderBy: { createdAt: "asc" },
+        include: {
+          receiptLink: {
+            include: { receipt: { select: { id: true, number: true, status: true } } },
+          },
+        },
+      },
       bookingNotes: { orderBy: { createdAt: "desc" } },
       directBooking: true,
       bokunBooking: { select: { bokunBookingId: true, channelName: true } },
@@ -77,6 +86,12 @@ export default async function BookingDetailPage({
   const canCancel = booking.status !== "CANCELLED" && booking.status !== "REFUNDED";
   const isNonDirect = booking.source !== "DIRECT";
   const hasConflicts = conflicts.length > 0;
+  const receiptablePayments = booking.payments.filter(
+    (payment) =>
+      payment.status === "SUCCEEDED" &&
+      payment.type !== "REFUND" &&
+      !payment.receiptLink,
+  );
 
   return (
     <div className="space-y-6">
@@ -239,29 +254,71 @@ export default async function BookingDetailPage({
         {booking.payments.length === 0 ? (
           <EmptyState message="Nessun pagamento registrato." />
         ) : (
-          <ul className="space-y-2 text-sm">
-            {booking.payments.map((p) => (
-              <li
-                key={p.id}
-                className="flex justify-between items-center border-b border-slate-100 pb-1 last:border-0"
-              >
-                <span>
-                  <span className="font-medium">{labelOrRaw(PAYMENT_TYPE_LABEL, p.type)}</span>
-                  {" · "}
-                  {labelOrRaw(PAYMENT_METHOD_LABEL, p.method)} ·{" "}
-                  <span className={p.status === "SUCCEEDED" ? "text-emerald-700" : "text-slate-500"}>
-                    {labelOrRaw(PAYMENT_STATUS_LABEL, p.status)}
-                  </span>
-                  {p.processedAt && (
-                    <span className="text-xs text-slate-400 ml-2">
-                      {formatItDay(p.processedAt)}
-                    </span>
-                  )}
-                </span>
-                <span className="tabular-nums font-mono">{formatEur(p.amount.toString())}</span>
-              </li>
-            ))}
-          </ul>
+          <form action={createReceiptFromPaymentsFromForm} className="space-y-3">
+            <ul className="space-y-2 text-sm">
+              {booking.payments.map((p) => {
+                const canReceipt =
+                  p.status === "SUCCEEDED" && p.type !== "REFUND" && !p.receiptLink;
+                return (
+                  <li
+                    key={p.id}
+                    className="flex justify-between items-start gap-3 border-b border-slate-100 pb-2 last:border-0"
+                  >
+                    <label className="flex min-w-0 items-start gap-2">
+                      {canReceipt && (
+                        <input
+                          type="checkbox"
+                          name="paymentId"
+                          value={p.id}
+                          className="mt-1 rounded border-slate-300"
+                        />
+                      )}
+                      <span>
+                        <span className="font-medium">{labelOrRaw(PAYMENT_TYPE_LABEL, p.type)}</span>
+                        {" · "}
+                        {labelOrRaw(PAYMENT_METHOD_LABEL, p.method)} ·{" "}
+                        <span className={p.status === "SUCCEEDED" ? "text-emerald-700" : "text-slate-500"}>
+                          {labelOrRaw(PAYMENT_STATUS_LABEL, p.status)}
+                        </span>
+                        {p.processedAt && (
+                          <span className="text-xs text-slate-400 ml-2">
+                            {formatItDay(p.processedAt)}
+                          </span>
+                        )}
+                        {p.receiptLink && (
+                          <Link
+                            href={`/admin/ricevute/${p.receiptLink.receipt.id}`}
+                            className="ml-2 font-mono text-xs font-semibold text-slate-700 underline-offset-2 hover:underline"
+                          >
+                            {p.receiptLink.receipt.number}
+                            {p.receiptLink.receipt.status === "CANCELLED" ? " (annullata)" : ""}
+                          </Link>
+                        )}
+                      </span>
+                    </label>
+                    <span className="tabular-nums font-mono">{formatEur(p.amount.toString())}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            {receiptablePayments.length > 0 && (
+              <div className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <label className="text-xs font-medium text-slate-700">
+                  Lingua ricevuta
+                  <select name="language" defaultValue="IT" className="mt-1 block rounded border px-3 py-2 text-sm">
+                    <option value="IT">Italiano</option>
+                    <option value="EN">English</option>
+                  </select>
+                </label>
+                <SubmitButton
+                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                  pendingLabel="Creazione..."
+                >
+                  Crea ricevuta
+                </SubmitButton>
+              </div>
+            )}
+          </form>
         )}
 
         <form

@@ -1,4 +1,5 @@
 import type { IslandId, IslandMapData, IslandPoi } from "./types";
+import { islandPoiDescriptions } from "./descriptions";
 
 export const favignanaPois: IslandPoi[] = [
   { id: "punta-ferro", label: "Punta Ferro", x: 18, y: 20 },
@@ -111,6 +112,23 @@ export const marettimoPois: IslandPoi[] = [
 
 export const islandOrder: IslandId[] = ["favignana", "levanzo", "marettimo"];
 
+function withItalianDescriptions(islandId: IslandId, pois: IslandPoi[]): IslandPoi[] {
+  const descriptions = islandPoiDescriptions[islandId];
+
+  return pois.map((poi) => {
+    const description = descriptions[poi.id];
+
+    if (!description) return poi;
+
+    return {
+      ...poi,
+      descriptions: {
+        it: description,
+      },
+    };
+  });
+}
+
 export const islandMapData: Record<IslandId, IslandMapData> = {
   favignana: {
     aspectClassName: "aspect-[1371/765]",
@@ -118,7 +136,7 @@ export const islandMapData: Record<IslandId, IslandMapData> = {
     id: "favignana",
     imageSrc: "/images/islands/favignana/hero.webp",
     label: "Favignana",
-    pois: favignanaPois,
+    pois: withItalianDescriptions("favignana", favignanaPois),
     src: "/images/islands/favignana.svg",
     width: 1371,
     widthStyle: "min(100%, calc(112% * 1371 / 765), 64rem)",
@@ -129,7 +147,7 @@ export const islandMapData: Record<IslandId, IslandMapData> = {
     id: "levanzo",
     imageSrc: "/images/islands/levanzo/hero.webp",
     label: "Levanzo",
-    pois: levanzoPois,
+    pois: withItalianDescriptions("levanzo", levanzoPois),
     src: "/images/islands/levanzo.svg",
     width: 1185,
     widthStyle: "min(92%, calc(112% * 1185 / 885), 40rem)",
@@ -140,7 +158,7 @@ export const islandMapData: Record<IslandId, IslandMapData> = {
     id: "marettimo",
     imageSrc: "/images/islands/marettimo/hero.webp",
     label: "Marettimo",
-    pois: marettimoPois,
+    pois: withItalianDescriptions("marettimo", marettimoPois),
     src: "/images/islands/marettimo.svg",
     width: 1371,
     widthStyle: "min(100%, calc(112% * 1371 / 765), 56rem)",

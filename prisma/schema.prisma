@@ -30,6 +30,7 @@ model User {
   // decise da questo admin. FK onDelete: SetNull preserva audit storico.
   overrideDecisions OverrideRequest[]
   changeRequestDecisions BookingChangeRequest[] @relation("BookingChangeRequestDecision")
+  cancelledReceipts Receipt[] @relation("ReceiptCancelledBy")
 }
 
 model AuditLog {
@@ -333,6 +334,7 @@ model Customer {
   emailOutboxEntries EmailOutbox[]
   // R26-A2-4: FK inverse (onDelete: SetNull in migration).
   consentRecords  ConsentRecord[]
+  receipts        Receipt[]
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -393,6 +395,7 @@ model Booking {
   bokunBooking   BokunBooking?
   charterBooking CharterBooking?
   payments       Payment[]
+  receipts       Receipt[]
   emailOutboxEntries EmailOutbox[]
   bookingNotes   BookingNote[]
   tripCrew       TripCrew[]
@@ -642,9 +645,104 @@ model Payment {
   processedAt    DateTime?
 
   booking Booking @relation(fields: [bookingId], references: [id])
+  receiptLink ReceiptPayment?
 
   @@index([bookingId, type])
   @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════
+// RICEVUTE INTERNE
+// ═══════════════════════════════════════════════════════════
+
+enum ReceiptLanguage {
+  IT
+  EN
+}
+
+enum ReceiptStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum ReceiptOrigin {
+  CUSTOM
+  PAYMENT
+}
+
+enum ReceiptVatTreatment {
+  VAT_INCLUDED
+  VAT_EXEMPT
+}
+
+model ReceiptSequence {
+  year         Int      @id
+  lastSequence Int     @default(0)
+  updatedAt    DateTime @updatedAt
+}
+
+model Receipt {
+  id                 String          @id @default(cuid())
+  number             String          @unique
+  year               Int
+  sequence           Int
+  origin             ReceiptOrigin
+  language           ReceiptLanguage @default(IT)
+  status             ReceiptStatus   @default(ACTIVE)
+  issueDate          DateTime        @db.Date
+  currency           String          @default("EUR")
+  recipientName      String
+  recipientEmail     String?
+  recipientAddress   String?         @db.Text
+  recipientTaxId     String?
+  bookingId          String?
+  customerId         String?
+  totalAmount        Decimal         @db.Decimal(10, 2)
+  note               String?         @db.Text
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  cancelledAt        DateTime?
+  cancelledByUserId  String?
+
+  booking     Booking?          @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  customer    Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  cancelledBy User?             @relation("ReceiptCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: SetNull)
+  lineItems   ReceiptLineItem[]
+  payments    ReceiptPayment[]
+
+  @@unique([year, sequence])
+  @@index([status, issueDate])
+  @@index([origin])
+  @@index([bookingId])
+  @@index([customerId])
+  @@index([recipientName])
+}
+
+model ReceiptLineItem {
+  id           String              @id @default(cuid())
+  receiptId    String
+  description  String
+  quantity     Decimal             @db.Decimal(10, 2)
+  unitPrice    Decimal             @db.Decimal(10, 2)
+  vatTreatment ReceiptVatTreatment
+  sortOrder    Int
+  createdAt    DateTime            @default(now())
+
+  receipt Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([receiptId, sortOrder])
+}
+
+model ReceiptPayment {
+  id        String   @id @default(cuid())
+  receiptId String
+  paymentId String   @unique
+  createdAt DateTime @default(now())
+
+  receipt Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([receiptId])
 }
 
 /// Event-level idempotency per webhook Stripe: se vediamo lo stesso event.id

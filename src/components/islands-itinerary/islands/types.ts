@@ -1,5 +1,8 @@
+export type IslandPoiDescriptionLocale = "it" | "en" | "es" | "fr" | "de";
+
 export interface IslandPoi {
   description?: string;
+  descriptions?: Partial<Record<IslandPoiDescriptionLocale, string>>;
   id: string;
   imageSrc?: string;
   label: string;

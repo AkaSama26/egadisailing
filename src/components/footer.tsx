@@ -158,6 +158,17 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-gray-400 sm:flex-row lg:px-8">
           <p>&copy; {new Date().getFullYear()} {PUBLIC_COMPANY_LEGAL.name}. {tFooter("rights")}.</p>
+          <p>
+            {tFooter("madeBy")}{" "}
+            <a
+              href="https://industriemarino.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-white"
+            >
+              industriemarino
+            </a>
+          </p>
           <div className="flex gap-4">
             <Link
               href={localizedStaticPath(locale, "/privacy")}

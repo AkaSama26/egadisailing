@@ -52,7 +52,11 @@ function getPoiType(label: string) {
 }
 
 function getPoiDescription(poi: IslandPoi, islandLabel: string, locale: string) {
-  if (poi.description) return poi.description;
+  const localizedDescription =
+    poi.descriptions?.[locale as keyof NonNullable<IslandPoi["descriptions"]>];
+  if (localizedDescription) return localizedDescription;
+  if (locale === "it" && poi.description) return poi.description;
+
   const isEs = locale === "es";
   const isEn = locale === "en";
   const isFr = locale === "fr";
@@ -270,7 +274,7 @@ export function IslandsItinerary() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#071934] via-[#071934]/12 to-transparent" />
                 </div>
 
-                <div className="flex flex-1 flex-col p-6 sm:p-8">
+                <div className="flex flex-1 flex-col overflow-y-auto p-6 sm:p-8">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-gold)]">
                     {activeIsland.label}
                   </p>

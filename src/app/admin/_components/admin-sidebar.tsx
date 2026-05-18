@@ -21,6 +21,7 @@ import {
   AlertCircle,
   ShieldCheck,
   ScanLine,
+  ReceiptText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -43,6 +44,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
       { href: "/admin/check-in", label: "Check-in", icon: ScanLine },
       { href: "/admin/clienti", label: "Clienti", icon: Users },
       { href: "/admin/finanza", label: "Incassi", icon: LineChart },
+      { href: "/admin/ricevute", label: "Ricevute", icon: ReceiptText },
       { href: "/admin/prezzi", label: "Listino", icon: Coins },
       { href: "/admin/itinerari", label: "Itinerari", icon: Map },
       { href: "/admin/crew", label: "Crew", icon: UserCog },
