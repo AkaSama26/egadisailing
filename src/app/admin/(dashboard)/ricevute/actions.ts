@@ -25,7 +25,6 @@ export async function createCustomReceiptFromForm(formData: FormData) {
     issueDate: String(formData.get("issueDate") ?? ""),
     recipient: readRecipient(formData),
     lineItems: readLineItems(formData),
-    manualPaymentSummary: readManualPaymentSummary(formData),
     note: String(formData.get("note") ?? ""),
   });
   const receipt = await createCustomReceipt(input, userId);
@@ -55,7 +54,6 @@ export async function updateReceiptFromForm(receiptId: string, formData: FormDat
     issueDate: String(formData.get("issueDate") ?? ""),
     recipient: readRecipient(formData),
     lineItems: readLineItems(formData),
-    manualPaymentSummary: readManualPaymentSummary(formData),
     note: String(formData.get("note") ?? ""),
   });
   const receipt = await updateReceipt(input, userId);
@@ -105,26 +103,30 @@ function readOptionalRecipient(formData: FormData) {
 
 function readLineItems(formData: FormData) {
   const ids = formData.getAll("lineId").map(String);
+  const clientKeys = formData.getAll("lineKey").map(String);
+  const lineTypes = formData.getAll("lineType").map(String);
   const descriptions = formData.getAll("description").map(String);
   const quantities = formData.getAll("quantity").map(String);
   const unitPrices = formData.getAll("unitPrice").map(String);
   const vatTreatments = formData.getAll("vatTreatment").map(String);
+  const paymentTypes = formData.getAll("paymentType").map(String);
+  const paymentMethods = formData.getAll("paymentMethod").map(String);
+  const paymentDates = formData.getAll("paymentDate").map(String);
+  const productLineKeys = formData.getAll("productLineKey").map(String);
 
   return descriptions.map((description, index) => ({
     id: ids[index] || undefined,
+    clientKey: clientKeys[index] || ids[index] || `line-${index}`,
+    lineType: lineTypes[index] || "PRODUCT",
     description,
     quantity: quantities[index] ?? "",
     unitPrice: unitPrices[index] ?? "",
     vatTreatment: vatTreatments[index] ?? "VAT_INCLUDED",
+    paymentType: paymentTypes[index] || undefined,
+    paymentMethod: paymentMethods[index] || undefined,
+    paymentDate: paymentDates[index] || undefined,
+    productLineKey: productLineKeys[index] || undefined,
   }));
-}
-
-function readManualPaymentSummary(formData: FormData) {
-  return {
-    depositPaid: String(formData.get("manualDepositPaid") ?? ""),
-    balancePaid: String(formData.get("manualBalancePaid") ?? ""),
-    fullPaid: String(formData.get("manualFullPaid") ?? ""),
-  };
 }
 
 function revalidateReceiptPaths(receiptId: string, bookingId?: string) {

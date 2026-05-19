@@ -59,7 +59,7 @@ describe("internal receipts", () => {
     await expect(db.payment.count()).resolves.toBe(0);
   });
 
-  it("creates a custom receipt with manual deposit and balance summary", async () => {
+  it("creates a custom receipt with a product-linked deposit row and residual balance", async () => {
     const { createCustomReceipt } = await import("@/lib/receipts/service");
     const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
 
@@ -70,17 +70,26 @@ describe("internal receipts", () => {
         recipient: { name: "Cliente Custom" },
         lineItems: [
           {
+            clientKey: "product-1",
+            lineType: "PRODUCT",
             description: "Servizio manuale",
             quantity: "1",
             unitPrice: "500.00",
             vatTreatment: "VAT_INCLUDED",
           },
+          {
+            clientKey: "payment-1",
+            lineType: "PAYMENT_RECEIVED",
+            description: "Acconto ricevuto",
+            quantity: "1",
+            unitPrice: "150.00",
+            vatTreatment: "VAT_INCLUDED",
+            paymentType: "DEPOSIT",
+            paymentMethod: "CASH",
+            paymentDate: "2026-05-18",
+            productLineKey: "product-1",
+          },
         ],
-        manualPaymentSummary: {
-          depositPaid: "150.00",
-          balancePaid: "0",
-          fullPaid: "0",
-        },
         note: "Nota visibile",
       },
       "admin-receipts",
@@ -88,6 +97,14 @@ describe("internal receipts", () => {
 
     const vm = await getReceiptViewModel(receipt.id);
     expect(vm.note).toBe("Nota visibile");
+    expect(receipt.totalAmount.toString()).toBe("500");
+    expect(vm.lineItems).toHaveLength(2);
+    expect(vm.lineItems[1]).toMatchObject({
+      lineType: "PAYMENT_RECEIVED",
+      paymentType: "DEPOSIT",
+      paymentMethod: "CASH",
+      productLineLabel: "Servizio manuale",
+    });
     expect(vm.paymentSummary).toMatchObject({
       bookingTotal: "500.00",
       depositPaid: "150.00",
@@ -95,9 +112,140 @@ describe("internal receipts", () => {
       totalPaid: "150.00",
       remainingBalance: "350.00",
     });
-    expect(vm.paymentSummary?.rows.map((row) => row.label)).toContain("Totale documento");
-    expect(vm.paymentSummary?.rows.map((row) => row.label)).toContain("Residuo da pagare");
-    expect(receipt.note).toContain("EGADISAILING_RECEIPT_PAYMENT_SUMMARY");
+  });
+
+  it("creates a custom receipt with an unlinked payment row", async () => {
+    const { createCustomReceipt } = await import("@/lib/receipts/service");
+    const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
+
+    const receipt = await createCustomReceipt(
+      {
+        language: "IT",
+        issueDate: "2026-05-18",
+        recipient: { name: "Cliente Custom" },
+        lineItems: [
+          {
+            clientKey: "product-1",
+            lineType: "PRODUCT",
+            description: "Servizio manuale",
+            quantity: "1",
+            unitPrice: "200.00",
+            vatTreatment: "VAT_INCLUDED",
+          },
+          {
+            clientKey: "payment-1",
+            lineType: "PAYMENT_RECEIVED",
+            description: "Acconto ricevuto libero",
+            quantity: "1",
+            unitPrice: "80.00",
+            vatTreatment: "VAT_INCLUDED",
+            paymentType: "DEPOSIT",
+            paymentMethod: "BANK_TRANSFER",
+            paymentDate: "2026-05-18",
+          },
+        ],
+      },
+      "admin-receipts",
+    );
+
+    const vm = await getReceiptViewModel(receipt.id);
+    expect(vm.lineItems[1].productLineLabel).toBeNull();
+    expect(vm.paymentSummary).toMatchObject({
+      bookingTotal: "200.00",
+      totalPaid: "80.00",
+      remainingBalance: "120.00",
+    });
+  });
+
+  it("sets custom residual to zero after deposit and balance rows", async () => {
+    const { createCustomReceipt } = await import("@/lib/receipts/service");
+    const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
+
+    const receipt = await createCustomReceipt(
+      {
+        language: "IT",
+        issueDate: "2026-05-18",
+        recipient: { name: "Cliente Custom" },
+        lineItems: [
+          {
+            clientKey: "product-1",
+            lineType: "PRODUCT",
+            description: "Servizio manuale",
+            quantity: "1",
+            unitPrice: "200.00",
+            vatTreatment: "VAT_INCLUDED",
+          },
+          {
+            clientKey: "deposit-1",
+            lineType: "PAYMENT_RECEIVED",
+            description: "Acconto ricevuto",
+            quantity: "1",
+            unitPrice: "80.00",
+            vatTreatment: "VAT_INCLUDED",
+            paymentType: "DEPOSIT",
+            paymentMethod: "CASH",
+            paymentDate: "2026-05-18",
+            productLineKey: "product-1",
+          },
+          {
+            clientKey: "balance-1",
+            lineType: "PAYMENT_RECEIVED",
+            description: "Saldo ricevuto",
+            quantity: "1",
+            unitPrice: "120.00",
+            vatTreatment: "VAT_INCLUDED",
+            paymentType: "BALANCE",
+            paymentMethod: "CASH",
+            paymentDate: "2026-05-19",
+            productLineKey: "product-1",
+          },
+        ],
+      },
+      "admin-receipts",
+    );
+
+    const vm = await getReceiptViewModel(receipt.id);
+    expect(vm.paymentSummary).toMatchObject({
+      depositPaid: "80.00",
+      balancePaid: "120.00",
+      totalPaid: "200.00",
+      remainingBalance: "0.00",
+    });
+  });
+
+  it("blocks custom payment rows greater than product total", async () => {
+    const { createCustomReceipt } = await import("@/lib/receipts/service");
+
+    await expect(
+      createCustomReceipt(
+        {
+          language: "IT",
+          issueDate: "2026-05-18",
+          recipient: { name: "Cliente Custom" },
+          lineItems: [
+            {
+              clientKey: "product-1",
+              lineType: "PRODUCT",
+              description: "Servizio manuale",
+              quantity: "1",
+              unitPrice: "100.00",
+              vatTreatment: "VAT_INCLUDED",
+            },
+            {
+              clientKey: "payment-1",
+              lineType: "PAYMENT_RECEIVED",
+              description: "Acconto ricevuto",
+              quantity: "1",
+              unitPrice: "120.00",
+              vatTreatment: "VAT_INCLUDED",
+              paymentType: "DEPOSIT",
+              paymentMethod: "CASH",
+            },
+          ],
+        },
+        "admin-receipts",
+      ),
+    ).rejects.toThrow("eccedono il totale prodotti");
   });
 
   it("creates one booking-style receipt from multiple payments of the same booking", async () => {
@@ -119,10 +267,15 @@ describe("internal receipts", () => {
     await expect(db.receiptPayment.count()).resolves.toBe(2);
 
     const lines = await db.receiptLineItem.findMany({ where: { receiptId: receipt.id } });
-    expect(lines).toHaveLength(1);
-    expect(lines[0].quantity.toString()).toBe("1");
-    expect(lines[0].unitPrice.toString()).toBe("200");
-    expect(lines[0].description).toContain("Service");
+    expect(lines).toHaveLength(3);
+    const productLine = lines.find((line) => line.lineType === "PRODUCT");
+    const paymentLines = lines.filter((line) => line.lineType === "PAYMENT_RECEIVED");
+    expect(productLine?.quantity.toString()).toBe("1");
+    expect(productLine?.unitPrice.toString()).toBe("200");
+    expect(productLine?.description).toContain("Service");
+    expect(paymentLines).toHaveLength(2);
+    expect(paymentLines.map((line) => line.unitPrice.toString()).sort()).toEqual(["120", "80"]);
+    expect(paymentLines.every((line) => line.productLineItemId === productLine?.id)).toBe(true);
 
     const vm = await getReceiptViewModel(receipt.id);
     expect(vm.paymentSummary).toMatchObject({
@@ -165,7 +318,7 @@ describe("internal receipts", () => {
     expect(vm.paymentSummary?.rows.map((row) => row.label)).toContain("Residuo da pagare");
   });
 
-  it("shows balance paid after a previous deposit with zero residual", async () => {
+  it("shows balance paid as the selected payment while preserving residual", async () => {
     const { createReceiptFromPayments } = await import("@/lib/receipts/service");
     const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
     const seeded = await seedBookingWithPayments("BALANCE_ONLY");
@@ -178,11 +331,11 @@ describe("internal receipts", () => {
 
     expect(vm.paymentSummary).toMatchObject({
       bookingTotal: "200.00",
-      depositPaid: "80.00",
+      depositPaid: "0.00",
       balancePaid: "120.00",
-      totalPaid: "200.00",
+      totalPaid: "120.00",
       includedPayments: "120.00",
-      remainingBalance: "0.00",
+      remainingBalance: "80.00",
     });
   });
 

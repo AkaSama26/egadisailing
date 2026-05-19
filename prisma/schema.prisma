@@ -674,6 +674,11 @@ enum ReceiptVatTreatment {
   VAT_EXEMPT
 }
 
+enum ReceiptLineType {
+  PRODUCT
+  PAYMENT_RECEIVED
+}
+
 model ReceiptSequence {
   year         Int      @id
   lastSequence Int     @default(0)
@@ -718,18 +723,27 @@ model Receipt {
 }
 
 model ReceiptLineItem {
-  id           String              @id @default(cuid())
-  receiptId    String
-  description  String
-  quantity     Decimal             @db.Decimal(10, 2)
-  unitPrice    Decimal             @db.Decimal(10, 2)
-  vatTreatment ReceiptVatTreatment
-  sortOrder    Int
-  createdAt    DateTime            @default(now())
+  id                String              @id @default(cuid())
+  receiptId         String
+  lineType          ReceiptLineType     @default(PRODUCT)
+  description       String
+  quantity          Decimal             @db.Decimal(10, 2)
+  unitPrice         Decimal             @db.Decimal(10, 2)
+  vatTreatment      ReceiptVatTreatment
+  paymentType       PaymentType?
+  paymentMethod     PaymentMethod?
+  paymentDate       DateTime?           @db.Date
+  productLineItemId String?
+  sortOrder         Int
+  createdAt         DateTime            @default(now())
 
-  receipt Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  receipt                 Receipt           @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  productLineItem         ReceiptLineItem?  @relation("ReceiptPaymentProductLine", fields: [productLineItemId], references: [id], onDelete: SetNull)
+  linkedPaymentLineItems  ReceiptLineItem[] @relation("ReceiptPaymentProductLine")
 
   @@index([receiptId, sortOrder])
+  @@index([receiptId, lineType])
+  @@index([productLineItemId])
 }
 
 model ReceiptPayment {

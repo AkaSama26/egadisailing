@@ -129,20 +129,18 @@ export default async function ReceiptDetailPage({
               recipientAddress: receipt.recipient.address,
               recipientTaxId: receipt.recipient.taxId,
               note: receipt.note,
-              manualPaymentSummary:
-                receipt.origin === "CUSTOM" && receipt.paymentSummary
-                  ? {
-                      depositPaid: receipt.paymentSummary.depositPaid,
-                      balancePaid: receipt.paymentSummary.balancePaid,
-                      fullPaid: receipt.paymentSummary.fullPaid,
-                    }
-                  : undefined,
               lineItems: receipt.lineItems.map((line) => ({
-                id: line.id,
+                id: line.isLegacySynthetic ? undefined : line.id,
+                clientKey: line.clientKey,
+                lineType: line.lineType,
                 description: line.description,
                 quantity: line.quantity,
                 unitPrice: line.unitPrice,
                 vatTreatment: line.vatTreatment,
+                paymentType: line.paymentType,
+                paymentMethod: line.paymentMethod,
+                paymentDate: line.paymentDate,
+                productLineKey: line.productLineItemId,
               })),
             }}
           />

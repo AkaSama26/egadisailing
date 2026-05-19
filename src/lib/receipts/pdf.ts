@@ -57,12 +57,17 @@ export async function renderReceiptPdf(viewModel: ReceiptViewModel): Promise<Uin
   ensureSpace(112);
   y = drawLineTableHeader(page, fonts, viewModel, y);
   for (const line of viewModel.lineItems) {
-    const wrapped = wrapText(line.description, fonts.regular, 9, 232);
-    const rowHeight = Math.max(32, wrapped.length * 12 + 16);
+    const descriptionText = line.paymentMetaLabel
+      ? `${line.description} - ${line.paymentMetaLabel}`
+      : line.description;
+    const wrapped = wrapText(descriptionText, fonts.regular, 9, 214);
+    const rowHeight = Math.max(34, wrapped.length * 12 + 16);
     ensureSpace(rowHeight + 8);
     y = drawLineRow(page, fonts, y, {
+      type: line.lineTypeLabel,
+      isPayment: line.lineType === "PAYMENT_RECEIVED",
       descriptionLines: wrapped,
-      quantity: line.quantity,
+      quantity: line.lineType === "PAYMENT_RECEIVED" ? "-" : line.quantity,
       unitPrice: moneyForPdf(line.unitPriceLabel),
       vat: line.vatLabel,
       total: moneyForPdf(line.lineTotalLabel),
@@ -77,12 +82,6 @@ export async function renderReceiptPdf(viewModel: ReceiptViewModel): Promise<Uin
   if (viewModel.paymentSummary) {
     ensureSpace(62 + viewModel.paymentSummary.rows.length * 18);
     y = drawPaymentSummary(page, fonts, viewModel, y);
-    y -= 18;
-  }
-
-  if (viewModel.payments.length > 0) {
-    ensureSpace(72 + viewModel.payments.length * 18);
-    y = drawPayments(page, fonts, viewModel, y);
     y -= 18;
   }
 
@@ -240,12 +239,12 @@ function drawLineTableHeader(
   y: number,
 ): number {
   const labels = vm.language === "EN"
-    ? ["Description", "Qty", "Unit", "VAT", "Total"]
-    : ["Descrizione", "Qta", "Prezzo", "IVA", "Totale"];
+    ? ["Type", "Description", "Qty", "Unit", "VAT", "Total"]
+    : ["Tipo", "Descrizione", "Qta", "Prezzo", "IVA", "Totale"];
   const x = PAGE_MARGIN;
   const width = page.getWidth() - PAGE_MARGIN * 2;
   page.drawRectangle({ x, y: y - 26, width, height: 26, color: HEADER_COLOR });
-  [x + 10, x + 262, x + 318, x + 390, x + 456].forEach((colX, index) => {
+  [x + 10, x + 92, x + 306, x + 354, x + 418, x + 472].forEach((colX, index) => {
     page.drawText(labels[index], {
       x: colX,
       y: y - 17,
@@ -262,6 +261,8 @@ function drawLineRow(
   fonts: { regular: PDFFont; bold: PDFFont },
   y: number,
   row: {
+    type: string;
+    isPayment: boolean;
     descriptionLines: string[];
     quantity: string;
     unitPrice: string;
@@ -277,22 +278,30 @@ function drawLineRow(
     y: y - row.height,
     width,
     height: row.height,
+    color: row.isPayment ? rgb(0.94, 0.99, 0.96) : undefined,
     borderColor: BORDER_COLOR,
     borderWidth: 0.6,
   });
+  page.drawText(pdfText(row.type), {
+    x: x + 10,
+    y: y - 15,
+    size: 7.5,
+    font: fonts.bold,
+    color: MUTED_COLOR,
+  });
   row.descriptionLines.forEach((line, index) => {
     page.drawText(pdfText(line), {
-      x: x + 10,
+      x: x + 92,
       y: y - 15 - index * 12,
       size: 9,
       font: fonts.regular,
       color: HEADER_COLOR,
     });
   });
-  page.drawText(row.quantity, { x: x + 262, y: y - 15, size: 9, font: fonts.regular, color: HEADER_COLOR });
-  page.drawText(row.unitPrice, { x: x + 318, y: y - 15, size: 9, font: fonts.regular, color: HEADER_COLOR });
-  page.drawText(pdfText(row.vat), { x: x + 390, y: y - 15, size: 8, font: fonts.regular, color: MUTED_COLOR });
-  page.drawText(row.total, { x: x + 456, y: y - 15, size: 9, font: fonts.bold, color: HEADER_COLOR });
+  page.drawText(row.quantity, { x: x + 306, y: y - 15, size: 9, font: fonts.regular, color: HEADER_COLOR });
+  page.drawText(row.unitPrice, { x: x + 354, y: y - 15, size: 9, font: fonts.regular, color: HEADER_COLOR });
+  page.drawText(pdfText(row.vat), { x: x + 418, y: y - 15, size: 8, font: fonts.regular, color: MUTED_COLOR });
+  page.drawText(row.total, { x: x + 472, y: y - 15, size: 9, font: fonts.bold, color: HEADER_COLOR });
   return y - row.height;
 }
 

@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
@@ -5,39 +6,47 @@ import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { isoDay, parseIsoDay } from "@/lib/dates";
 import { Prisma } from "@/generated/prisma/client";
 import {
+  PaymentMethod,
+  PaymentType,
   ReceiptLanguage,
+  ReceiptLineType,
   ReceiptOrigin,
   ReceiptVatTreatment,
 } from "@/generated/prisma/enums";
 import { RECEIPT_CURRENCY } from "./constants";
-import { computeReceiptTotal, normalizeMoney, normalizeQuantity } from "./calculations";
-import {
-  manualReceiptPaymentSummaryTotal,
-  normalizeManualReceiptPaymentSummary,
-  serializeReceiptNoteWithManualPaymentSummary,
-} from "./custom-summary";
+import { computeReceiptLineTotal, normalizeMoney, normalizeQuantity } from "./calculations";
+import { parseReceiptNoteWithManualPaymentSummary } from "./custom-summary";
 import { formatReceiptNumber } from "./numbering";
 import type { CustomReceiptInput, PaymentReceiptInput, UpdateReceiptInput } from "./schemas";
 import { formatDateForReceipt } from "./view-model";
 
 type ReceiptTx = Prisma.TransactionClient;
+type ReceiptInputLine = CustomReceiptInput["lineItems"][number] | UpdateReceiptInput["lineItems"][number];
+
+type NormalizedReceiptLine = {
+  id?: string;
+  clientKey: string;
+  lineType: ReceiptLineType;
+  description: string;
+  quantity: Decimal;
+  unitPrice: Decimal;
+  vatTreatment: ReceiptVatTreatment;
+  paymentType: PaymentType | null;
+  paymentMethod: PaymentMethod | null;
+  paymentDate: Date | null;
+  productLineKey: string | null;
+  sortOrder: number;
+};
 
 export async function createCustomReceipt(input: CustomReceiptInput, userId: string) {
   const issueDate = parseIsoDay(input.issueDate);
-  const normalizedLines = input.lineItems.map((line, index) => ({
-    description: line.description.trim(),
-    quantity: normalizeQuantity(line.quantity),
-    unitPrice: normalizeMoney(line.unitPrice),
-    vatTreatment: line.vatTreatment,
-    sortOrder: index,
-  }));
-  const totalAmount = computeReceiptTotal(normalizedLines);
-  assertManualPaymentSummaryWithinTotal(input.manualPaymentSummary, totalAmount);
-  const note = serializeReceiptNoteWithManualPaymentSummary(input.note, input.manualPaymentSummary);
+  const normalizedLines = normalizeReceiptLines(input.lineItems);
+  const { productTotal } = summarizeReceiptLines(normalizedLines);
+  const note = cleanReceiptNote(input.note);
 
   const receipt = await db.$transaction(async (tx) => {
     const number = await nextReceiptNumber(tx, issueDate.getUTCFullYear());
-    return tx.receipt.create({
+    const created = await tx.receipt.create({
       data: {
         number,
         year: issueDate.getUTCFullYear(),
@@ -50,18 +59,14 @@ export async function createCustomReceipt(input: CustomReceiptInput, userId: str
         recipientEmail: input.recipient.email,
         recipientAddress: input.recipient.address,
         recipientTaxId: input.recipient.taxId,
-        totalAmount: totalAmount.toFixed(2),
+        totalAmount: productTotal.toFixed(2),
         note,
-        lineItems: {
-          create: normalizedLines.map((line) => ({
-            description: line.description,
-            quantity: line.quantity.toFixed(2),
-            unitPrice: line.unitPrice.toFixed(2),
-            vatTreatment: line.vatTreatment,
-            sortOrder: line.sortOrder,
-          })),
-        },
       },
+      include: { lineItems: true, payments: true },
+    });
+    await createReceiptLineItems(tx, created.id, normalizedLines);
+    return tx.receipt.findUniqueOrThrow({
+      where: { id: created.id },
       include: { lineItems: true, payments: true },
     });
   });
@@ -126,8 +131,11 @@ export async function createReceiptFromPayments(input: PaymentReceiptInput, user
       address: input.recipient?.address,
       taxId: input.recipient?.taxId,
     };
-    const lines = [
+    const productKey = "booking-product";
+    const lines = normalizeReceiptLines([
       {
+        clientKey: productKey,
+        lineType: ReceiptLineType.PRODUCT,
         description: bookingReceiptLineDescription({
           language: input.language,
           bookingCode: booking.confirmationCode,
@@ -135,16 +143,27 @@ export async function createReceiptFromPayments(input: PaymentReceiptInput, user
           startDate: booking.startDate,
           endDate: booking.endDate,
         }),
-        quantity: normalizeQuantity("1"),
-        unitPrice: normalizeMoney(booking.totalPrice.toString()),
+        quantity: "1",
+        unitPrice: booking.totalPrice.toString(),
         vatTreatment: ReceiptVatTreatment.VAT_INCLUDED,
-        sortOrder: 0,
       },
-    ];
-    const totalAmount = normalizeMoney(booking.totalPrice.toString());
+      ...payments.map((payment) => ({
+        clientKey: `payment-${payment.id}`,
+        lineType: ReceiptLineType.PAYMENT_RECEIVED,
+        description: paymentLineDescription(payment.type, input.language),
+        quantity: "1",
+        unitPrice: payment.amount.toString(),
+        vatTreatment: ReceiptVatTreatment.VAT_INCLUDED,
+        paymentType: payment.type,
+        paymentMethod: payment.method,
+        paymentDate: isoDay(payment.processedAt ?? payment.createdAt),
+        productLineKey: productKey,
+      })),
+    ]);
+    const { productTotal } = summarizeReceiptLines(lines);
     const number = await nextReceiptNumber(tx, issueDate.getUTCFullYear());
 
-    return tx.receipt.create({
+    const created = await tx.receipt.create({
       data: {
         number,
         year: issueDate.getUTCFullYear(),
@@ -159,21 +178,17 @@ export async function createReceiptFromPayments(input: PaymentReceiptInput, user
         recipientTaxId: recipient.taxId,
         bookingId: booking.id,
         customerId: customer.id,
-        totalAmount: totalAmount.toFixed(2),
+        totalAmount: productTotal.toFixed(2),
         note: input.note,
-        lineItems: {
-          create: lines.map((line) => ({
-            description: line.description,
-            quantity: line.quantity.toFixed(2),
-            unitPrice: line.unitPrice.toFixed(2),
-            vatTreatment: line.vatTreatment,
-            sortOrder: line.sortOrder,
-          })),
-        },
         payments: {
           create: payments.map((payment) => ({ paymentId: payment.id })),
         },
       },
+      include: { lineItems: true, payments: true },
+    });
+    await createReceiptLineItems(tx, created.id, lines);
+    return tx.receipt.findUniqueOrThrow({
+      where: { id: created.id },
       include: { lineItems: true, payments: true },
     });
   }).catch((err: unknown) => {
@@ -205,19 +220,12 @@ export async function updateReceipt(input: UpdateReceiptInput, userId: string) {
     }
 
     if (existing.origin === ReceiptOrigin.CUSTOM) {
-      const normalizedLines = input.lineItems.map((line, index) => ({
-        description: line.description.trim(),
-        quantity: normalizeQuantity(line.quantity),
-        unitPrice: normalizeMoney(line.unitPrice),
-        vatTreatment: line.vatTreatment,
-        sortOrder: index,
-      }));
-      const totalAmount = computeReceiptTotal(normalizedLines);
-      assertManualPaymentSummaryWithinTotal(input.manualPaymentSummary, totalAmount);
-      const note = serializeReceiptNoteWithManualPaymentSummary(input.note, input.manualPaymentSummary);
+      const normalizedLines = normalizeReceiptLines(input.lineItems);
+      const { productTotal } = summarizeReceiptLines(normalizedLines);
+      const note = cleanReceiptNote(input.note);
 
       await tx.receiptLineItem.deleteMany({ where: { receiptId: existing.id } });
-      return tx.receipt.update({
+      const updated = await tx.receipt.update({
         where: { id: existing.id },
         data: {
           language: input.language,
@@ -226,39 +234,24 @@ export async function updateReceipt(input: UpdateReceiptInput, userId: string) {
           recipientEmail: input.recipient.email,
           recipientAddress: input.recipient.address,
           recipientTaxId: input.recipient.taxId,
-          totalAmount: totalAmount.toFixed(2),
+          totalAmount: productTotal.toFixed(2),
           note,
-          lineItems: {
-            create: normalizedLines.map((line) => ({
-              description: line.description,
-              quantity: line.quantity.toFixed(2),
-              unitPrice: line.unitPrice.toFixed(2),
-              vatTreatment: line.vatTreatment,
-              sortOrder: line.sortOrder,
-            })),
-          },
         },
+        include: { lineItems: true, payments: true },
+      });
+      await createReceiptLineItems(tx, updated.id, normalizedLines);
+      return tx.receipt.findUniqueOrThrow({
+        where: { id: updated.id },
         include: { lineItems: true, payments: true },
       });
     }
 
-    const currentLineIds = new Set(existing.lineItems.map((line) => line.id));
-    if (input.lineItems.length !== existing.lineItems.length) {
-      throw new ValidationError("Le ricevute collegate a pagamenti non possono cambiare numero righe");
-    }
-    const inputLineIds = new Set(input.lineItems.map((line) => line.id));
-    if (
-      inputLineIds.size !== existing.lineItems.length ||
-      existing.lineItems.some((line) => !inputLineIds.has(line.id))
-    ) {
-      throw new ValidationError("Righe ricevuta non valide");
-    }
+    assertPaymentReceiptUpdate(existing.lineItems, input.lineItems);
     for (const line of input.lineItems) {
-      if (!line.id || !currentLineIds.has(line.id)) {
-        throw new ValidationError("Riga ricevuta non valida");
-      }
+      const existingLine = existing.lineItems.find((item) => item.id === line.id);
+      if (!existingLine || existingLine.lineType !== ReceiptLineType.PRODUCT) continue;
       await tx.receiptLineItem.update({
-        where: { id: line.id },
+        where: { id: existingLine.id },
         data: {
           description: line.description.trim(),
           vatTreatment: line.vatTreatment,
@@ -275,7 +268,7 @@ export async function updateReceipt(input: UpdateReceiptInput, userId: string) {
         recipientEmail: input.recipient.email,
         recipientAddress: input.recipient.address,
         recipientTaxId: input.recipient.taxId,
-        note: input.note,
+        note: cleanReceiptNote(input.note),
       },
       include: { lineItems: true, payments: true },
     });
@@ -326,6 +319,177 @@ export async function cancelReceipt(receiptId: string, userId: string) {
   return result.receipt;
 }
 
+function normalizeReceiptLines(lines: ReceiptInputLine[]): NormalizedReceiptLine[] {
+  const normalized = lines.map((line, index) => {
+    const lineType = line.lineType ?? ReceiptLineType.PRODUCT;
+    const base = {
+      id: line.id,
+      clientKey: line.clientKey || line.id || `line-${index}`,
+      lineType,
+      description: line.description.trim(),
+      quantity: lineType === ReceiptLineType.PAYMENT_RECEIVED ? normalizeQuantity("1") : normalizeQuantity(line.quantity),
+      unitPrice: normalizeMoney(line.unitPrice),
+      vatTreatment: line.vatTreatment,
+      paymentType: null as PaymentType | null,
+      paymentMethod: null as PaymentMethod | null,
+      paymentDate: null as Date | null,
+      productLineKey: null as string | null,
+      sortOrder: index,
+    };
+
+    if (lineType === ReceiptLineType.PRODUCT) {
+      return base;
+    }
+
+    if (!line.paymentType || line.paymentType === PaymentType.REFUND) {
+      throw new ValidationError("Le righe pagamento richiedono tipo pagamento valido");
+    }
+    if (!line.paymentMethod) {
+      throw new ValidationError("Le righe pagamento richiedono metodo pagamento");
+    }
+    if (base.unitPrice.lte(0)) {
+      throw new ValidationError("Le righe pagamento devono avere importo positivo");
+    }
+
+    return {
+      ...base,
+      vatTreatment: ReceiptVatTreatment.VAT_INCLUDED,
+      paymentType: line.paymentType,
+      paymentMethod: line.paymentMethod,
+      paymentDate: line.paymentDate ? parseIsoDay(line.paymentDate) : null,
+      productLineKey: line.productLineKey || null,
+    };
+  });
+
+  summarizeReceiptLines(normalized);
+  return normalized;
+}
+
+function summarizeReceiptLines(lines: NormalizedReceiptLine[]) {
+  const productKeys = new Set(
+    lines
+      .filter((line) => line.lineType === ReceiptLineType.PRODUCT)
+      .map((line) => line.clientKey),
+  );
+  if (productKeys.size === 0) {
+    throw new ValidationError("La ricevuta deve avere almeno una riga prodotto/servizio");
+  }
+
+  for (const line of lines) {
+    if (line.lineType === ReceiptLineType.PAYMENT_RECEIVED && line.productLineKey && !productKeys.has(line.productLineKey)) {
+      throw new ValidationError("Una riga pagamento e' collegata a un prodotto non valido");
+    }
+  }
+
+  const productTotal = lines
+    .filter((line) => line.lineType === ReceiptLineType.PRODUCT)
+    .reduce(
+      (sum, line) => sum.plus(computeReceiptLineTotal({ quantity: line.quantity.toString(), unitPrice: line.unitPrice.toString() })),
+      new Decimal(0),
+    )
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const paymentTotal = lines
+    .filter((line) => line.lineType === ReceiptLineType.PAYMENT_RECEIVED)
+    .reduce((sum, line) => sum.plus(line.unitPrice), new Decimal(0))
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  if (paymentTotal.gt(productTotal)) {
+    throw new ValidationError(
+      `Pagamenti ricevuti eccedono il totale prodotti: pagato ${paymentTotal.toFixed(2)} su ${productTotal.toFixed(2)}`,
+    );
+  }
+
+  return { productTotal, paymentTotal };
+}
+
+async function createReceiptLineItems(tx: ReceiptTx, receiptId: string, lines: NormalizedReceiptLine[]) {
+  const productIdByKey = new Map<string, string>();
+  for (const line of lines.filter((item) => item.lineType === ReceiptLineType.PRODUCT)) {
+    const created = await tx.receiptLineItem.create({
+      data: {
+        receiptId,
+        lineType: ReceiptLineType.PRODUCT,
+        description: line.description,
+        quantity: line.quantity.toFixed(2),
+        unitPrice: line.unitPrice.toFixed(2),
+        vatTreatment: line.vatTreatment,
+        sortOrder: line.sortOrder,
+      },
+      select: { id: true },
+    });
+    productIdByKey.set(line.clientKey, created.id);
+  }
+
+  for (const line of lines.filter((item) => item.lineType === ReceiptLineType.PAYMENT_RECEIVED)) {
+    await tx.receiptLineItem.create({
+      data: {
+        receiptId,
+        lineType: ReceiptLineType.PAYMENT_RECEIVED,
+        description: line.description,
+        quantity: "1.00",
+        unitPrice: line.unitPrice.toFixed(2),
+        vatTreatment: ReceiptVatTreatment.VAT_INCLUDED,
+        paymentType: line.paymentType,
+        paymentMethod: line.paymentMethod,
+        paymentDate: line.paymentDate,
+        productLineItemId: line.productLineKey ? productIdByKey.get(line.productLineKey) : null,
+        sortOrder: line.sortOrder,
+      },
+    });
+  }
+}
+
+function assertPaymentReceiptUpdate(existingLines: Array<{
+  id: string;
+  lineType: ReceiptLineType;
+  quantity: Decimal;
+  unitPrice: Decimal;
+  paymentType: PaymentType | null;
+  paymentMethod: PaymentMethod | null;
+  paymentDate: Date | null;
+  productLineItemId: string | null;
+}>, inputLines: ReceiptInputLine[]) {
+  if (inputLines.length !== existingLines.length) {
+    throw new ValidationError("Le ricevute collegate a pagamenti non possono cambiare numero righe");
+  }
+  const existingById = new Map(existingLines.map((line) => [line.id, line]));
+  for (const input of inputLines) {
+    if (!input.id || !existingById.has(input.id)) {
+      throw new ValidationError("Righe ricevuta non valide");
+    }
+    const existing = existingById.get(input.id)!;
+    if (input.lineType !== existing.lineType) {
+      throw new ValidationError("Le ricevute collegate a pagamenti non possono cambiare tipo righe");
+    }
+    if (existing.lineType === ReceiptLineType.PRODUCT) {
+      const qty = normalizeQuantity(input.quantity);
+      const unitPrice = normalizeMoney(input.unitPrice);
+      if (!qty.eq(existing.quantity.toString()) || !unitPrice.eq(existing.unitPrice.toString())) {
+        throw new ValidationError("Le ricevute collegate a pagamenti non possono cambiare importi");
+      }
+      continue;
+    }
+
+    const unitPrice = normalizeMoney(input.unitPrice);
+    const paymentDate = input.paymentDate ? parseIsoDay(input.paymentDate) : null;
+    if (
+      input.paymentType !== existing.paymentType ||
+      input.paymentMethod !== existing.paymentMethod ||
+      !unitPrice.eq(existing.unitPrice.toString()) ||
+      !sameOptionalDay(paymentDate, existing.paymentDate) ||
+      (input.productLineKey || null) !== (existing.productLineItemId || null)
+    ) {
+      throw new ValidationError("Le righe pagamento collegate non possono essere modificate");
+    }
+  }
+}
+
+function sameOptionalDay(a: Date | null, b: Date | null): boolean {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return isoDay(a) === isoDay(b);
+}
+
 async function nextReceiptNumber(tx: ReceiptTx, year: number): Promise<string> {
   const rows = await tx.$queryRaw<Array<{ lastSequence: number }>>(Prisma.sql`
     INSERT INTO "ReceiptSequence" ("year", "lastSequence", "updatedAt")
@@ -367,18 +531,15 @@ function bookingReceiptLineDescription(input: {
   return `${input.serviceName} - prenotazione ${input.bookingCode} - giornata ${dateRange}`;
 }
 
-function assertManualPaymentSummaryWithinTotal(
-  input: { depositPaid?: string; balancePaid?: string; fullPaid?: string } | undefined,
-  totalAmount: { toString(): string },
-) {
-  const summary = normalizeManualReceiptPaymentSummary(input);
-  const totalPaid = manualReceiptPaymentSummaryTotal(summary);
-  const receiptTotal = normalizeMoney(totalAmount.toString());
-  if (totalPaid.gt(receiptTotal)) {
-    throw new ValidationError(
-      `Acconto/saldo eccedono il totale documento: pagato ${totalPaid.toFixed(2)} su ${receiptTotal.toFixed(2)}`,
-    );
-  }
+function paymentLineDescription(type: PaymentType, language: ReceiptLanguage): string {
+  const labels = language === "EN"
+    ? { DEPOSIT: "Deposit received", BALANCE: "Balance received", FULL: "Full payment received" }
+    : { DEPOSIT: "Acconto ricevuto", BALANCE: "Saldo ricevuto", FULL: "Pagamento intero ricevuto" };
+  return labels[type as "DEPOSIT" | "BALANCE" | "FULL"] ?? (language === "EN" ? "Payment received" : "Pagamento ricevuto");
+}
+
+function cleanReceiptNote(note: string | null | undefined): string | null {
+  return parseReceiptNoteWithManualPaymentSummary(note).note;
 }
 
 async function auditReceipt(

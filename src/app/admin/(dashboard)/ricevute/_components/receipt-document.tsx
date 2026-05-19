@@ -75,6 +75,7 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
         <table className="w-full text-sm">
           <thead className="bg-slate-950 text-left text-white">
             <tr>
+              <th className="px-3 py-2">Tipo</th>
               <th className="px-3 py-2">
                 {receipt.language === "EN" ? "Description" : "Descrizione"}
               </th>
@@ -88,9 +89,22 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {receipt.lineItems.map((line) => (
-              <tr key={line.id}>
-                <td className="px-3 py-3">{line.description}</td>
-                <td className="px-3 py-3 font-mono">{line.quantity}</td>
+              <tr
+                key={line.id}
+                className={line.lineType === "PAYMENT_RECEIVED" ? "bg-emerald-50/50" : undefined}
+              >
+                <td className="px-3 py-3 text-xs font-semibold uppercase text-slate-500">
+                  {line.lineTypeLabel}
+                </td>
+                <td className="px-3 py-3">
+                  <div>{line.description}</div>
+                  {line.paymentMetaLabel && (
+                    <div className="mt-1 text-xs text-slate-500">{line.paymentMetaLabel}</div>
+                  )}
+                </td>
+                <td className="px-3 py-3 font-mono">
+                  {line.lineType === "PAYMENT_RECEIVED" ? "-" : line.quantity}
+                </td>
                 <td className="px-3 py-3 font-mono">{line.unitPriceLabel}</td>
                 <td className="px-3 py-3 text-xs text-slate-500">{line.vatLabel}</td>
                 <td className="px-3 py-3 text-right font-mono font-semibold">
@@ -109,11 +123,7 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
       </section>
 
       {receipt.paymentSummary && (
-        <section
-          className={`mt-8 grid gap-4 ${
-            receipt.payments.length > 0 ? "md:grid-cols-[1.4fr_1fr]" : ""
-          }`}
-        >
+        <section className="mt-8">
           <div className="rounded-lg border border-slate-200 p-4">
             <div className="flex items-start justify-between gap-4">
               <h2 className="text-xs font-semibold uppercase text-slate-500">
@@ -134,48 +144,6 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
               ))}
             </dl>
           </div>
-
-          {receipt.payments.length > 0 && (
-            <div className="rounded-lg border border-slate-200 p-4">
-              <h2 className="text-xs font-semibold uppercase text-slate-500">
-                {receipt.language === "EN" ? "Included payments" : "Pagamenti inclusi"}
-              </h2>
-              <ul className="mt-3 divide-y divide-slate-100 text-sm">
-                {receipt.payments.map((payment) => (
-                  <li key={payment.id} className="py-2">
-                    <div className="flex justify-between gap-3">
-                      <span className="text-slate-700">
-                        {payment.typeLabel} · {payment.methodLabel}
-                      </span>
-                      <span className="font-mono font-semibold">{payment.amountLabel}</span>
-                    </div>
-                    {payment.processedAtLabel && (
-                      <div className="mt-0.5 text-xs text-slate-500">{payment.processedAtLabel}</div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
-      )}
-
-      {!receipt.paymentSummary && receipt.payments.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-xs font-semibold uppercase text-slate-500">
-            {receipt.language === "EN" ? "Linked payments" : "Pagamenti collegati"}
-          </h2>
-          <ul className="mt-3 divide-y divide-slate-100 text-sm">
-            {receipt.payments.map((payment) => (
-              <li key={payment.id} className="flex justify-between py-2">
-                <span>
-                  {payment.typeLabel} · {payment.methodLabel}
-                  {payment.processedAtLabel ? ` · ${payment.processedAtLabel}` : ""}
-                </span>
-                <span className="font-mono font-semibold">{payment.amountLabel}</span>
-              </li>
-            ))}
-          </ul>
         </section>
       )}
 
