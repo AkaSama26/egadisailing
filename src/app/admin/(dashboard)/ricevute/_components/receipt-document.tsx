@@ -1,6 +1,14 @@
 import type { ReceiptViewModel } from "@/lib/receipts/view-model";
 
 export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
+  const totalTitle = receipt.paymentSummary
+    ? receipt.language === "EN"
+      ? "Booking total"
+      : "Totale prenotazione"
+    : receipt.language === "EN"
+      ? "Total"
+      : "Totale";
+
   return (
     <main className="mx-auto max-w-4xl rounded-lg bg-white p-10 shadow-sm print:max-w-none print:rounded-none print:p-0 print:shadow-none">
       <header className="flex items-start justify-between gap-8 border-b border-slate-200 pb-6">
@@ -41,7 +49,7 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
             {receipt.recipient.address && <div>{receipt.recipient.address}</div>}
             {receipt.recipient.taxId && (
               <div>
-                {receipt.language === "EN" ? "Tax/VAT ID" : "Codice fiscale / P.IVA"}:{" "}
+                {receipt.language === "EN" ? "Tax/VAT ID" : "Codice fiscale / P.IVA"}: {" "}
                 {receipt.recipient.taxId}
               </div>
             )}
@@ -72,7 +80,7 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
               <th className="px-3 py-2">
                 {receipt.language === "EN" ? "Description" : "Descrizione"}
               </th>
-              <th className="px-3 py-2">{receipt.language === "EN" ? "Qty" : "Qtà"}</th>
+              <th className="px-3 py-2">{receipt.language === "EN" ? "Qty" : "Qta"}</th>
               <th className="px-3 py-2">{receipt.language === "EN" ? "Unit" : "Prezzo"}</th>
               <th className="px-3 py-2">IVA</th>
               <th className="px-3 py-2 text-right">
@@ -96,15 +104,61 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
         </table>
         <div className="mt-5 flex justify-end">
           <div className="w-64 rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <div className="text-xs font-semibold uppercase text-slate-500">
-              {receipt.language === "EN" ? "Total" : "Totale"}
-            </div>
+            <div className="text-xs font-semibold uppercase text-slate-500">{totalTitle}</div>
             <div className="mt-1 text-2xl font-bold text-slate-950">{receipt.totalLabel}</div>
           </div>
         </div>
       </section>
 
-      {receipt.payments.length > 0 && (
+      {receipt.paymentSummary && (
+        <section className="mt-8 grid gap-4 md:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-lg border border-slate-200 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="text-xs font-semibold uppercase text-slate-500">
+                {receipt.language === "EN" ? "Deposit and balance" : "Acconto e saldo"}
+              </h2>
+              <span className="text-xs text-slate-500">
+                {receipt.paymentSummary.snapshotAtLabel}
+              </span>
+            </div>
+            <dl className="mt-3 divide-y divide-slate-100 text-sm">
+              {receipt.paymentSummary.rows.map((row) => (
+                <div key={row.label} className="flex justify-between gap-4 py-2">
+                  <dt className={row.emphasis ? "font-semibold text-slate-900" : "text-slate-600"}>
+                    {row.label}
+                  </dt>
+                  <dd className="font-mono font-semibold text-slate-950">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {receipt.payments.length > 0 && (
+            <div className="rounded-lg border border-slate-200 p-4">
+              <h2 className="text-xs font-semibold uppercase text-slate-500">
+                {receipt.language === "EN" ? "Included payments" : "Pagamenti inclusi"}
+              </h2>
+              <ul className="mt-3 divide-y divide-slate-100 text-sm">
+                {receipt.payments.map((payment) => (
+                  <li key={payment.id} className="py-2">
+                    <div className="flex justify-between gap-3">
+                      <span className="text-slate-700">
+                        {payment.typeLabel} · {payment.methodLabel}
+                      </span>
+                      <span className="font-mono font-semibold">{payment.amountLabel}</span>
+                    </div>
+                    {payment.processedAtLabel && (
+                      <div className="mt-0.5 text-xs text-slate-500">{payment.processedAtLabel}</div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
+      {!receipt.paymentSummary && receipt.payments.length > 0 && (
         <section className="mt-8">
           <h2 className="text-xs font-semibold uppercase text-slate-500">
             {receipt.language === "EN" ? "Linked payments" : "Pagamenti collegati"}
@@ -113,7 +167,7 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
             {receipt.payments.map((payment) => (
               <li key={payment.id} className="flex justify-between py-2">
                 <span>
-                  {payment.type} · {payment.method}
+                  {payment.typeLabel} · {payment.methodLabel}
                   {payment.processedAtLabel ? ` · ${payment.processedAtLabel}` : ""}
                 </span>
                 <span className="font-mono font-semibold">{payment.amountLabel}</span>
@@ -136,4 +190,3 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
     </main>
   );
 }
-

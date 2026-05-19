@@ -1,11 +1,9 @@
-import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { isoDay, parseIsoDay } from "@/lib/dates";
 import { Prisma } from "@/generated/prisma/client";
-import type { PaymentMethod, PaymentType } from "@/generated/prisma/enums";
 import {
   ReceiptLanguage,
   ReceiptOrigin,
@@ -18,36 +16,6 @@ import type { CustomReceiptInput, PaymentReceiptInput, UpdateReceiptInput } from
 import { formatDateForReceipt } from "./view-model";
 
 type ReceiptTx = Prisma.TransactionClient;
-
-const PAYMENT_TYPE_LABELS: Record<ReceiptLanguage, Record<PaymentType, string>> = {
-  IT: {
-    DEPOSIT: "Acconto",
-    BALANCE: "Saldo",
-    FULL: "Pagamento intero",
-    REFUND: "Rimborso",
-  },
-  EN: {
-    DEPOSIT: "Deposit",
-    BALANCE: "Balance",
-    FULL: "Full payment",
-    REFUND: "Refund",
-  },
-};
-
-const PAYMENT_METHOD_LABELS: Record<ReceiptLanguage, Record<PaymentMethod, string>> = {
-  IT: {
-    STRIPE: "Stripe",
-    CASH: "Contanti",
-    BANK_TRANSFER: "Bonifico",
-    EXTERNAL: "Canale esterno",
-  },
-  EN: {
-    STRIPE: "Stripe",
-    CASH: "Cash",
-    BANK_TRANSFER: "Bank transfer",
-    EXTERNAL: "External channel",
-  },
-};
 
 export async function createCustomReceipt(input: CustomReceiptInput, userId: string) {
   const issueDate = parseIsoDay(input.issueDate);
@@ -151,24 +119,22 @@ export async function createReceiptFromPayments(input: PaymentReceiptInput, user
       address: input.recipient?.address,
       taxId: input.recipient?.taxId,
     };
-    const lines = payments.map((payment, index) => ({
-      description: paymentReceiptLineDescription({
-        language: input.language,
-        type: payment.type,
-        method: payment.method,
-        bookingCode: booking.confirmationCode,
-        serviceName: booking.service.name,
-        date: payment.processedAt ?? payment.createdAt,
-      }),
-      quantity: new Decimal(1),
-      unitPrice: normalizeMoney(payment.amount.toString()),
-      vatTreatment: ReceiptVatTreatment.VAT_INCLUDED,
-      sortOrder: index,
-    }));
-    const totalAmount = payments.reduce(
-      (sum, payment) => sum.plus(payment.amount.toString()),
-      new Decimal(0),
-    ).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+    const lines = [
+      {
+        description: bookingReceiptLineDescription({
+          language: input.language,
+          bookingCode: booking.confirmationCode,
+          serviceName: booking.service.name,
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+        }),
+        quantity: normalizeQuantity("1"),
+        unitPrice: normalizeMoney(booking.totalPrice.toString()),
+        vatTreatment: ReceiptVatTreatment.VAT_INCLUDED,
+        sortOrder: 0,
+      },
+    ];
+    const totalAmount = normalizeMoney(booking.totalPrice.toString());
     const number = await nextReceiptNumber(tx, issueDate.getUTCFullYear());
 
     return tx.receipt.create({
@@ -376,21 +342,20 @@ function parseReceiptSequence(number: string): number {
   return sequence;
 }
 
-function paymentReceiptLineDescription(input: {
+function bookingReceiptLineDescription(input: {
   language: ReceiptLanguage;
-  type: PaymentType;
-  method: PaymentMethod;
   bookingCode: string;
   serviceName: string;
-  date: Date;
+  startDate: Date;
+  endDate: Date;
 }): string {
-  const type = PAYMENT_TYPE_LABELS[input.language][input.type];
-  const method = PAYMENT_METHOD_LABELS[input.language][input.method];
-  const date = formatDateForReceipt(input.date, input.language);
+  const start = formatDateForReceipt(input.startDate, input.language);
+  const end = formatDateForReceipt(input.endDate, input.language);
+  const dateRange = start === end ? start : `${start} / ${end}`;
   if (input.language === "EN") {
-    return `${type} received by ${method} for booking ${input.bookingCode} - ${input.serviceName} (${date})`;
+    return `${input.serviceName} - booking ${input.bookingCode} - service date ${dateRange}`;
   }
-  return `${type} ricevuto tramite ${method} per prenotazione ${input.bookingCode} - ${input.serviceName} (${date})`;
+  return `${input.serviceName} - prenotazione ${input.bookingCode} - giornata ${dateRange}`;
 }
 
 async function auditReceipt(

@@ -59,8 +59,9 @@ describe("internal receipts", () => {
     await expect(db.payment.count()).resolves.toBe(0);
   });
 
-  it("creates one receipt from multiple payments of the same booking", async () => {
+  it("creates one booking-style receipt from multiple payments of the same booking", async () => {
     const { createReceiptFromPayments } = await import("@/lib/receipts/service");
+    const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
     const seeded = await seedBookingWithPayments();
 
     const receipt = await createReceiptFromPayments(
@@ -75,6 +76,111 @@ describe("internal receipts", () => {
     expect(receipt.bookingId).toBe(seeded.booking.id);
     expect(receipt.totalAmount.toString()).toBe("200");
     await expect(db.receiptPayment.count()).resolves.toBe(2);
+
+    const lines = await db.receiptLineItem.findMany({ where: { receiptId: receipt.id } });
+    expect(lines).toHaveLength(1);
+    expect(lines[0].quantity.toString()).toBe("1");
+    expect(lines[0].unitPrice.toString()).toBe("200");
+    expect(lines[0].description).toContain("Service");
+
+    const vm = await getReceiptViewModel(receipt.id);
+    expect(vm.paymentSummary).toMatchObject({
+      bookingTotal: "200.00",
+      depositPaid: "80.00",
+      balancePaid: "120.00",
+      totalPaid: "200.00",
+      includedPayments: "200.00",
+      remainingBalance: "0.00",
+    });
+  });
+
+  it("shows deposit paid and residual balance for a deposit-only receipt", async () => {
+    const { createReceiptFromPayments } = await import("@/lib/receipts/service");
+    const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
+    const seeded = await seedBookingWithPayments("DEPOSIT_ONLY", [
+      {
+        amount: "80.00",
+        type: "DEPOSIT",
+        method: "STRIPE",
+        processedAt: new Date("2026-05-10T10:00:00.000Z"),
+      },
+    ]);
+
+    const receipt = await createReceiptFromPayments(
+      { paymentIds: [seeded.payments[0].id], language: "IT" },
+      "admin-receipts",
+    );
+    const vm = await getReceiptViewModel(receipt.id);
+
+    expect(receipt.totalAmount.toString()).toBe("200");
+    expect(vm.paymentSummary).toMatchObject({
+      bookingTotal: "200.00",
+      depositPaid: "80.00",
+      balancePaid: "0.00",
+      totalPaid: "80.00",
+      includedPayments: "80.00",
+      remainingBalance: "120.00",
+    });
+    expect(vm.paymentSummary?.rows.map((row) => row.label)).toContain("Residuo da pagare");
+  });
+
+  it("shows balance paid after a previous deposit with zero residual", async () => {
+    const { createReceiptFromPayments } = await import("@/lib/receipts/service");
+    const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
+    const seeded = await seedBookingWithPayments("BALANCE_ONLY");
+
+    const receipt = await createReceiptFromPayments(
+      { paymentIds: [seeded.payments[1].id], language: "IT" },
+      "admin-receipts",
+    );
+    const vm = await getReceiptViewModel(receipt.id);
+
+    expect(vm.paymentSummary).toMatchObject({
+      bookingTotal: "200.00",
+      depositPaid: "80.00",
+      balancePaid: "120.00",
+      totalPaid: "200.00",
+      includedPayments: "120.00",
+      remainingBalance: "0.00",
+    });
+  });
+
+  it("keeps a deposit receipt snapshot unchanged after a later balance payment", async () => {
+    const { createReceiptFromPayments } = await import("@/lib/receipts/service");
+    const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
+    const seeded = await seedBookingWithPayments("SNAPSHOT", [
+      {
+        amount: "80.00",
+        type: "DEPOSIT",
+        method: "STRIPE",
+        processedAt: new Date("2026-05-10T10:00:00.000Z"),
+      },
+    ]);
+
+    const receipt = await createReceiptFromPayments(
+      { paymentIds: [seeded.payments[0].id], language: "IT" },
+      "admin-receipts",
+    );
+    await db.payment.create({
+      data: {
+        bookingId: seeded.booking.id,
+        amount: "120.00",
+        currency: "EUR",
+        type: "BALANCE",
+        method: "BANK_TRANSFER",
+        status: "SUCCEEDED",
+        processedAt: new Date(receipt.createdAt.getTime() + 60_000),
+      },
+    });
+
+    const vm = await getReceiptViewModel(receipt.id);
+    expect(vm.paymentSummary).toMatchObject({
+      depositPaid: "80.00",
+      balancePaid: "0.00",
+      totalPaid: "80.00",
+      includedPayments: "80.00",
+      remainingBalance: "120.00",
+    });
   });
 
   it("blocks payments already linked to a receipt", async () => {
@@ -239,7 +345,7 @@ describe("internal receipts", () => {
     ).resolves.toBe(1);
   });
 
-  it("rejects duplicate line ids when updating payment-linked receipts", async () => {
+  it("rejects row count changes when updating payment-linked receipts", async () => {
     const { createReceiptFromPayments, updateReceipt } = await import("@/lib/receipts/service");
     const seeded = await seedBookingWithPayments();
     const receipt = await createReceiptFromPayments(
@@ -280,11 +386,34 @@ describe("internal receipts", () => {
         },
         "admin-receipts",
       ),
-    ).rejects.toThrow("Righe ricevuta non valide");
+    ).rejects.toThrow("non possono cambiare numero righe");
   });
 });
 
-async function seedBookingWithPayments(suffix = "") {
+type ReceiptPaymentSpec = {
+  amount: string;
+  type: "DEPOSIT" | "BALANCE" | "FULL";
+  method: "STRIPE" | "CASH" | "BANK_TRANSFER" | "EXTERNAL";
+  processedAt: Date;
+};
+
+async function seedBookingWithPayments(
+  suffix = "",
+  paymentSpecs: ReceiptPaymentSpec[] = [
+    {
+      amount: "80.00",
+      type: "DEPOSIT",
+      method: "STRIPE",
+      processedAt: new Date("2026-05-10T10:00:00.000Z"),
+    },
+    {
+      amount: "120.00",
+      type: "BALANCE",
+      method: "BANK_TRANSFER",
+      processedAt: new Date("2026-05-11T10:00:00.000Z"),
+    },
+  ],
+) {
   const boat = await db.boat.create({
     data: {
       id: `boat-receipt-${suffix || "main"}`,
@@ -329,29 +458,20 @@ async function seedBookingWithPayments(suffix = "") {
       status: "CONFIRMED",
     },
   });
-  const payments = await Promise.all([
-    db.payment.create({
-      data: {
-        bookingId: booking.id,
-        amount: "80.00",
-        currency: "EUR",
-        type: "DEPOSIT",
-        method: "STRIPE",
-        status: "SUCCEEDED",
-        processedAt: new Date("2026-05-18T10:00:00.000Z"),
-      },
-    }),
-    db.payment.create({
-      data: {
-        bookingId: booking.id,
-        amount: "120.00",
-        currency: "EUR",
-        type: "BALANCE",
-        method: "BANK_TRANSFER",
-        status: "SUCCEEDED",
-        processedAt: new Date("2026-05-19T10:00:00.000Z"),
-      },
-    }),
-  ]);
+  const payments = await Promise.all(
+    paymentSpecs.map((payment) =>
+      db.payment.create({
+        data: {
+          bookingId: booking.id,
+          amount: payment.amount,
+          currency: "EUR",
+          type: payment.type,
+          method: payment.method,
+          status: "SUCCEEDED",
+          processedAt: payment.processedAt,
+        },
+      }),
+    ),
+  );
   return { boat, service, customer, booking, payments };
 }

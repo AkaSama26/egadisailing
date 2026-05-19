@@ -55,7 +55,7 @@ export async function renderReceiptPdf(viewModel: ReceiptViewModel): Promise<Uin
   }
 
   ensureSpace(112);
-  y = drawLineTableHeader(page, fonts, y);
+  y = drawLineTableHeader(page, fonts, viewModel, y);
   for (const line of viewModel.lineItems) {
     const wrapped = wrapText(line.description, fonts.regular, 9, 232);
     const rowHeight = Math.max(32, wrapped.length * 12 + 16);
@@ -74,6 +74,12 @@ export async function renderReceiptPdf(viewModel: ReceiptViewModel): Promise<Uin
   y = drawTotal(page, fonts, viewModel, y);
   y -= 22;
 
+  if (viewModel.paymentSummary) {
+    ensureSpace(62 + viewModel.paymentSummary.rows.length * 18);
+    y = drawPaymentSummary(page, fonts, viewModel, y);
+    y -= 18;
+  }
+
   if (viewModel.payments.length > 0) {
     ensureSpace(72 + viewModel.payments.length * 18);
     y = drawPayments(page, fonts, viewModel, y);
@@ -83,7 +89,7 @@ export async function renderReceiptPdf(viewModel: ReceiptViewModel): Promise<Uin
   if (viewModel.note) {
     const lines = wrapText(viewModel.note, fonts.regular, 9, 490);
     ensureSpace(lines.length * 12 + 44);
-    y = drawNote(page, fonts, y, lines);
+    y = drawNote(page, fonts, viewModel, y, lines);
     y -= 14;
   }
 
@@ -230,9 +236,12 @@ function drawBooking(
 function drawLineTableHeader(
   page: PDFPage,
   fonts: { regular: PDFFont; bold: PDFFont },
+  vm: ReceiptViewModel,
   y: number,
 ): number {
-  const labels = ["Description", "Qty", "Unit", "VAT", "Total"];
+  const labels = vm.language === "EN"
+    ? ["Description", "Qty", "Unit", "VAT", "Total"]
+    : ["Descrizione", "Qta", "Prezzo", "IVA", "Totale"];
   const x = PAGE_MARGIN;
   const width = page.getWidth() - PAGE_MARGIN * 2;
   page.drawRectangle({ x, y: y - 26, width, height: 26, color: HEADER_COLOR });
@@ -293,7 +302,13 @@ function drawTotal(
   vm: ReceiptViewModel,
   y: number,
 ): number {
-  const label = vm.language === "EN" ? "Total" : "Totale";
+  const label = vm.paymentSummary
+    ? vm.language === "EN"
+      ? "Booking total"
+      : "Totale prenotazione"
+    : vm.language === "EN"
+      ? "Total"
+      : "Totale";
   const x = page.getWidth() - PAGE_MARGIN - 190;
   page.drawRectangle({
     x,
@@ -315,21 +330,88 @@ function drawTotal(
   return y - 46;
 }
 
+function drawPaymentSummary(
+  page: PDFPage,
+  fonts: { regular: PDFFont; bold: PDFFont },
+  vm: ReceiptViewModel,
+  y: number,
+): number {
+  const summary = vm.paymentSummary;
+  if (!summary) return y;
+  const x = PAGE_MARGIN;
+  const width = page.getWidth() - PAGE_MARGIN * 2;
+  const height = 40 + summary.rows.length * 18;
+  page.drawRectangle({
+    x,
+    y: y - height,
+    width,
+    height,
+    color: SOFT_BG,
+    borderColor: BORDER_COLOR,
+    borderWidth: 1,
+  });
+  page.drawText(vm.language === "EN" ? "Deposit and balance" : "Acconto e saldo", {
+    x: x + 12,
+    y: y - 17,
+    size: 11,
+    font: fonts.bold,
+    color: HEADER_COLOR,
+  });
+  const snapshot = summary.snapshotAtLabel;
+  const snapshotWidth = fonts.regular.widthOfTextAtSize(snapshot, 8);
+  page.drawText(snapshot, {
+    x: x + width - 12 - snapshotWidth,
+    y: y - 16,
+    size: 8,
+    font: fonts.regular,
+    color: MUTED_COLOR,
+  });
+  summary.rows.forEach((row, index) => {
+    const rowY = y - 38 - index * 18;
+    const value = moneyForPdf(row.value);
+    const valueWidth = fonts.bold.widthOfTextAtSize(value, 9);
+    page.drawText(pdfText(row.label), {
+      x: x + 12,
+      y: rowY,
+      size: 9,
+      font: row.emphasis ? fonts.bold : fonts.regular,
+      color: row.emphasis ? HEADER_COLOR : MUTED_COLOR,
+    });
+    page.drawText(value, {
+      x: x + width - 12 - valueWidth,
+      y: rowY,
+      size: 9,
+      font: fonts.bold,
+      color: HEADER_COLOR,
+    });
+  });
+  return y - height;
+}
+
 function drawPayments(
   page: PDFPage,
   fonts: { regular: PDFFont; bold: PDFFont },
   vm: ReceiptViewModel,
   y: number,
 ): number {
-  page.drawText(vm.language === "EN" ? "Linked payments" : "Pagamenti collegati", {
-    x: PAGE_MARGIN,
-    y,
-    size: 12,
-    font: fonts.bold,
-    color: HEADER_COLOR,
-  });
+  page.drawText(
+    vm.paymentSummary
+      ? vm.language === "EN"
+        ? "Included payments"
+        : "Pagamenti inclusi"
+      : vm.language === "EN"
+        ? "Linked payments"
+        : "Pagamenti collegati",
+    {
+      x: PAGE_MARGIN,
+      y,
+      size: 12,
+      font: fonts.bold,
+      color: HEADER_COLOR,
+    },
+  );
   vm.payments.forEach((payment, index) => {
-    const line = `${payment.type} - ${payment.method}${payment.processedAtLabel ? ` - ${payment.processedAtLabel}` : ""} - ${moneyForPdf(payment.amountLabel)}`;
+    const line = `${payment.typeLabel} - ${payment.methodLabel}${payment.processedAtLabel ? ` - ${payment.processedAtLabel}` : ""} - ${moneyForPdf(payment.amountLabel)}`;
     page.drawText(pdfText(line), {
       x: PAGE_MARGIN,
       y: y - 20 - index * 15,
@@ -344,10 +426,17 @@ function drawPayments(
 function drawNote(
   page: PDFPage,
   fonts: { regular: PDFFont; bold: PDFFont },
+  vm: ReceiptViewModel,
   y: number,
   lines: string[],
 ): number {
-  page.drawText("Note", { x: PAGE_MARGIN, y, size: 12, font: fonts.bold, color: HEADER_COLOR });
+  page.drawText(vm.language === "EN" ? "Note" : "Note", {
+    x: PAGE_MARGIN,
+    y,
+    size: 12,
+    font: fonts.bold,
+    color: HEADER_COLOR,
+  });
   lines.forEach((line, index) => {
     page.drawText(pdfText(line), {
       x: PAGE_MARGIN,

@@ -105,7 +105,7 @@ export default async function ReceiptDetailPage({
                 <span className="text-slate-600">
                   <span className="font-mono text-slate-900">{payment.paymentId.slice(0, 10)}</span>
                   {" · "}
-                  {payment.type} · {payment.method}
+                  {payment.typeLabel} · {payment.methodLabel}
                   {payment.processedAtLabel ? ` · ${payment.processedAtLabel}` : ""}
                 </span>
                 <span className="font-mono font-semibold">{payment.amountLabel}</span>

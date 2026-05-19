@@ -69,6 +69,7 @@ function makeReceiptViewModel(): ReceiptViewModel {
       },
     ],
     payments: [],
+    paymentSummary: null,
     createdAt: date,
     updatedAt: date,
     cancelledAt: null,
