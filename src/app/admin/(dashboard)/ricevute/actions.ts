@@ -25,6 +25,7 @@ export async function createCustomReceiptFromForm(formData: FormData) {
     issueDate: String(formData.get("issueDate") ?? ""),
     recipient: readRecipient(formData),
     lineItems: readLineItems(formData),
+    manualPaymentSummary: readManualPaymentSummary(formData),
     note: String(formData.get("note") ?? ""),
   });
   const receipt = await createCustomReceipt(input, userId);
@@ -54,6 +55,7 @@ export async function updateReceiptFromForm(receiptId: string, formData: FormDat
     issueDate: String(formData.get("issueDate") ?? ""),
     recipient: readRecipient(formData),
     lineItems: readLineItems(formData),
+    manualPaymentSummary: readManualPaymentSummary(formData),
     note: String(formData.get("note") ?? ""),
   });
   const receipt = await updateReceipt(input, userId);
@@ -115,6 +117,14 @@ function readLineItems(formData: FormData) {
     unitPrice: unitPrices[index] ?? "",
     vatTreatment: vatTreatments[index] ?? "VAT_INCLUDED",
   }));
+}
+
+function readManualPaymentSummary(formData: FormData) {
+  return {
+    depositPaid: String(formData.get("manualDepositPaid") ?? ""),
+    balancePaid: String(formData.get("manualBalancePaid") ?? ""),
+    fullPaid: String(formData.get("manualFullPaid") ?? ""),
+  };
 }
 
 function revalidateReceiptPaths(receiptId: string, bookingId?: string) {

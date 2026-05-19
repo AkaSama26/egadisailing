@@ -303,9 +303,7 @@ function drawTotal(
   y: number,
 ): number {
   const label = vm.paymentSummary
-    ? vm.language === "EN"
-      ? "Booking total"
-      : "Totale prenotazione"
+    ? vm.paymentSummary.totalTitle
     : vm.language === "EN"
       ? "Total"
       : "Totale";
@@ -350,7 +348,7 @@ function drawPaymentSummary(
     borderColor: BORDER_COLOR,
     borderWidth: 1,
   });
-  page.drawText(vm.language === "EN" ? "Deposit and balance" : "Acconto e saldo", {
+  page.drawText(pdfText(summary.sectionTitle), {
     x: x + 12,
     y: y - 17,
     size: 11,

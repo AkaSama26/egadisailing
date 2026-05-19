@@ -59,6 +59,47 @@ describe("internal receipts", () => {
     await expect(db.payment.count()).resolves.toBe(0);
   });
 
+  it("creates a custom receipt with manual deposit and balance summary", async () => {
+    const { createCustomReceipt } = await import("@/lib/receipts/service");
+    const { getReceiptViewModel } = await import("@/lib/receipts/view-model");
+
+    const receipt = await createCustomReceipt(
+      {
+        language: "IT",
+        issueDate: "2026-05-18",
+        recipient: { name: "Cliente Custom" },
+        lineItems: [
+          {
+            description: "Servizio manuale",
+            quantity: "1",
+            unitPrice: "500.00",
+            vatTreatment: "VAT_INCLUDED",
+          },
+        ],
+        manualPaymentSummary: {
+          depositPaid: "150.00",
+          balancePaid: "0",
+          fullPaid: "0",
+        },
+        note: "Nota visibile",
+      },
+      "admin-receipts",
+    );
+
+    const vm = await getReceiptViewModel(receipt.id);
+    expect(vm.note).toBe("Nota visibile");
+    expect(vm.paymentSummary).toMatchObject({
+      bookingTotal: "500.00",
+      depositPaid: "150.00",
+      balancePaid: "0.00",
+      totalPaid: "150.00",
+      remainingBalance: "350.00",
+    });
+    expect(vm.paymentSummary?.rows.map((row) => row.label)).toContain("Totale documento");
+    expect(vm.paymentSummary?.rows.map((row) => row.label)).toContain("Residuo da pagare");
+    expect(receipt.note).toContain("EGADISAILING_RECEIPT_PAYMENT_SUMMARY");
+  });
+
   it("creates one booking-style receipt from multiple payments of the same booking", async () => {
     const { createReceiptFromPayments } = await import("@/lib/receipts/service");
     const { getReceiptViewModel } = await import("@/lib/receipts/view-model");

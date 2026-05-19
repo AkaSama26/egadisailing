@@ -129,6 +129,14 @@ export default async function ReceiptDetailPage({
               recipientAddress: receipt.recipient.address,
               recipientTaxId: receipt.recipient.taxId,
               note: receipt.note,
+              manualPaymentSummary:
+                receipt.origin === "CUSTOM" && receipt.paymentSummary
+                  ? {
+                      depositPaid: receipt.paymentSummary.depositPaid,
+                      balancePaid: receipt.paymentSummary.balancePaid,
+                      fullPaid: receipt.paymentSummary.fullPaid,
+                    }
+                  : undefined,
               lineItems: receipt.lineItems.map((line) => ({
                 id: line.id,
                 description: line.description,

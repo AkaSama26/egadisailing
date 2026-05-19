@@ -2,9 +2,7 @@ import type { ReceiptViewModel } from "@/lib/receipts/view-model";
 
 export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
   const totalTitle = receipt.paymentSummary
-    ? receipt.language === "EN"
-      ? "Booking total"
-      : "Totale prenotazione"
+    ? receipt.paymentSummary.totalTitle
     : receipt.language === "EN"
       ? "Total"
       : "Totale";
@@ -111,11 +109,15 @@ export function ReceiptDocument({ receipt }: { receipt: ReceiptViewModel }) {
       </section>
 
       {receipt.paymentSummary && (
-        <section className="mt-8 grid gap-4 md:grid-cols-[1.4fr_1fr]">
+        <section
+          className={`mt-8 grid gap-4 ${
+            receipt.payments.length > 0 ? "md:grid-cols-[1.4fr_1fr]" : ""
+          }`}
+        >
           <div className="rounded-lg border border-slate-200 p-4">
             <div className="flex items-start justify-between gap-4">
               <h2 className="text-xs font-semibold uppercase text-slate-500">
-                {receipt.language === "EN" ? "Deposit and balance" : "Acconto e saldo"}
+                {receipt.paymentSummary.sectionTitle}
               </h2>
               <span className="text-xs text-slate-500">
                 {receipt.paymentSummary.snapshotAtLabel}

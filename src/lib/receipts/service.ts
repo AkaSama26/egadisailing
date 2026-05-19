@@ -11,6 +11,11 @@ import {
 } from "@/generated/prisma/enums";
 import { RECEIPT_CURRENCY } from "./constants";
 import { computeReceiptTotal, normalizeMoney, normalizeQuantity } from "./calculations";
+import {
+  manualReceiptPaymentSummaryTotal,
+  normalizeManualReceiptPaymentSummary,
+  serializeReceiptNoteWithManualPaymentSummary,
+} from "./custom-summary";
 import { formatReceiptNumber } from "./numbering";
 import type { CustomReceiptInput, PaymentReceiptInput, UpdateReceiptInput } from "./schemas";
 import { formatDateForReceipt } from "./view-model";
@@ -27,6 +32,8 @@ export async function createCustomReceipt(input: CustomReceiptInput, userId: str
     sortOrder: index,
   }));
   const totalAmount = computeReceiptTotal(normalizedLines);
+  assertManualPaymentSummaryWithinTotal(input.manualPaymentSummary, totalAmount);
+  const note = serializeReceiptNoteWithManualPaymentSummary(input.note, input.manualPaymentSummary);
 
   const receipt = await db.$transaction(async (tx) => {
     const number = await nextReceiptNumber(tx, issueDate.getUTCFullYear());
@@ -44,7 +51,7 @@ export async function createCustomReceipt(input: CustomReceiptInput, userId: str
         recipientAddress: input.recipient.address,
         recipientTaxId: input.recipient.taxId,
         totalAmount: totalAmount.toFixed(2),
-        note: input.note,
+        note,
         lineItems: {
           create: normalizedLines.map((line) => ({
             description: line.description,
@@ -206,6 +213,8 @@ export async function updateReceipt(input: UpdateReceiptInput, userId: string) {
         sortOrder: index,
       }));
       const totalAmount = computeReceiptTotal(normalizedLines);
+      assertManualPaymentSummaryWithinTotal(input.manualPaymentSummary, totalAmount);
+      const note = serializeReceiptNoteWithManualPaymentSummary(input.note, input.manualPaymentSummary);
 
       await tx.receiptLineItem.deleteMany({ where: { receiptId: existing.id } });
       return tx.receipt.update({
@@ -218,7 +227,7 @@ export async function updateReceipt(input: UpdateReceiptInput, userId: string) {
           recipientAddress: input.recipient.address,
           recipientTaxId: input.recipient.taxId,
           totalAmount: totalAmount.toFixed(2),
-          note: input.note,
+          note,
           lineItems: {
             create: normalizedLines.map((line) => ({
               description: line.description,
@@ -356,6 +365,20 @@ function bookingReceiptLineDescription(input: {
     return `${input.serviceName} - booking ${input.bookingCode} - service date ${dateRange}`;
   }
   return `${input.serviceName} - prenotazione ${input.bookingCode} - giornata ${dateRange}`;
+}
+
+function assertManualPaymentSummaryWithinTotal(
+  input: { depositPaid?: string; balancePaid?: string; fullPaid?: string } | undefined,
+  totalAmount: { toString(): string },
+) {
+  const summary = normalizeManualReceiptPaymentSummary(input);
+  const totalPaid = manualReceiptPaymentSummaryTotal(summary);
+  const receiptTotal = normalizeMoney(totalAmount.toString());
+  if (totalPaid.gt(receiptTotal)) {
+    throw new ValidationError(
+      `Acconto/saldo eccedono il totale documento: pagato ${totalPaid.toFixed(2)} su ${receiptTotal.toFixed(2)}`,
+    );
+  }
 }
 
 async function auditReceipt(

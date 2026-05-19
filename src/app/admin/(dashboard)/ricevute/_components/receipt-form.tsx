@@ -13,6 +13,12 @@ export interface ReceiptFormLine {
   vatTreatment: ReceiptVatTreatment;
 }
 
+export interface ReceiptFormManualPaymentSummary {
+  depositPaid?: string | null;
+  balancePaid?: string | null;
+  fullPaid?: string | null;
+}
+
 export interface ReceiptFormValues {
   language: ReceiptLanguage;
   issueDate: string;
@@ -21,6 +27,7 @@ export interface ReceiptFormValues {
   recipientAddress?: string | null;
   recipientTaxId?: string | null;
   note?: string | null;
+  manualPaymentSummary?: ReceiptFormManualPaymentSummary | null;
   lineItems: ReceiptFormLine[];
 }
 
@@ -41,17 +48,30 @@ export function ReceiptForm({
       key: line.id ?? `line-${index}`,
     })),
   );
+  const [manualSummary, setManualSummary] = useState(() => ({
+    depositPaid: initialValues.manualPaymentSummary?.depositPaid ?? "",
+    balancePaid: initialValues.manualPaymentSummary?.balancePaid ?? "",
+    fullPaid: initialValues.manualPaymentSummary?.fullPaid ?? "",
+  }));
   const amountsLocked = origin === "PAYMENT";
-  const total = useMemo(() => {
-    return rows
-      .reduce((sum, row) => {
-        const qty = Number(String(row.quantity).replace(",", "."));
-        const unit = Number(String(row.unitPrice).replace(",", "."));
-        if (!Number.isFinite(qty) || !Number.isFinite(unit)) return sum;
-        return sum + qty * unit;
-      }, 0)
-      .toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+  const showManualPaymentSummary = origin === "CUSTOM";
+  const totalValue = useMemo(() => {
+    return rows.reduce((sum, row) => {
+      const qty = parseMoneyInput(row.quantity);
+      const unit = parseMoneyInput(row.unitPrice);
+      if (!Number.isFinite(qty) || !Number.isFinite(unit)) return sum;
+      return sum + qty * unit;
+    }, 0);
   }, [rows]);
+  const total = formatEuro(totalValue);
+  const manualPaidValue = useMemo(() => {
+    return (
+      parseMoneyInput(manualSummary.depositPaid) +
+      parseMoneyInput(manualSummary.balancePaid) +
+      parseMoneyInput(manualSummary.fullPaid)
+    );
+  }, [manualSummary]);
+  const manualResidual = Math.max(totalValue - manualPaidValue, 0);
 
   return (
     <form action={action} className="space-y-6">
@@ -232,6 +252,72 @@ export function ReceiptForm({
         </div>
       </div>
 
+      {showManualPaymentSummary && (
+        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-base font-semibold text-slate-900">Acconto e saldo</h2>
+            <p className="text-sm text-slate-500">
+              Valori manuali indicativi per ricevute custom non collegate a una prenotazione.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <label className="text-sm font-medium text-slate-700">
+              Acconto registrato
+              <input
+                name="manualDepositPaid"
+                inputMode="decimal"
+                value={manualSummary.depositPaid}
+                onChange={(event) =>
+                  setManualSummary((current) => ({
+                    ...current,
+                    depositPaid: event.target.value,
+                  }))
+                }
+                placeholder="0,00"
+                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              Saldo registrato
+              <input
+                name="manualBalancePaid"
+                inputMode="decimal"
+                value={manualSummary.balancePaid}
+                onChange={(event) =>
+                  setManualSummary((current) => ({
+                    ...current,
+                    balancePaid: event.target.value,
+                  }))
+                }
+                placeholder="0,00"
+                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              />
+            </label>
+            <label className="text-sm font-medium text-slate-700">
+              Pagamento intero registrato
+              <input
+                name="manualFullPaid"
+                inputMode="decimal"
+                value={manualSummary.fullPaid}
+                onChange={(event) =>
+                  setManualSummary((current) => ({
+                    ...current,
+                    fullPaid: event.target.value,
+                  }))
+                }
+                placeholder="0,00"
+                className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              />
+            </label>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <SummaryMetric label="Totale documento" value={formatEuro(totalValue)} />
+            <SummaryMetric label="Totale pagato indicato" value={formatEuro(manualPaidValue)} />
+            <SummaryMetric label="Residuo da pagare" value={formatEuro(manualResidual)} />
+          </div>
+        </div>
+      )}
+
       <label className="block text-sm font-medium text-slate-700">
         Note
         <textarea
@@ -261,3 +347,22 @@ export function ReceiptForm({
   }
 }
 
+
+
+function SummaryMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+      <div className="text-xs font-medium uppercase text-slate-500">{label}</div>
+      <div className="mt-1 font-mono text-base font-semibold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function parseMoneyInput(value: string) {
+  const parsed = Number(String(value || "0").replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatEuro(value: number) {
+  return value.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+}

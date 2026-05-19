@@ -24,6 +24,11 @@ const moneyTextSchema = decimalTextSchema
   .refine((value) => new Decimal(value).gte(0), "Importo non valido")
   .refine((value) => new Decimal(value).lte("1000000"), "Importo troppo alto");
 
+const optionalMoneyTextSchema = z.preprocess((value) => {
+  const text = String(value ?? "").trim();
+  return text ? text : "0";
+}, moneyTextSchema);
+
 const noHtmlOptionalText = (max: number) =>
   z.preprocess((value) => {
     if (value === undefined || value === null) return undefined;
@@ -51,11 +56,18 @@ export const receiptLineInputSchema = z.object({
   vatTreatment: z.enum(ReceiptVatTreatment),
 });
 
+export const manualReceiptPaymentSummaryInputSchema = z.object({
+  depositPaid: optionalMoneyTextSchema,
+  balancePaid: optionalMoneyTextSchema,
+  fullPaid: optionalMoneyTextSchema,
+});
+
 export const customReceiptInputSchema = z.object({
   language: z.enum(ReceiptLanguage),
   issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data non valida"),
   recipient: receiptRecipientSchema,
   lineItems: z.array(receiptLineInputSchema).min(1).max(RECEIPT_MAX_LINE_ITEMS),
+  manualPaymentSummary: manualReceiptPaymentSummaryInputSchema.optional(),
   note: noHtmlOptionalText(2000),
 });
 
@@ -73,6 +85,7 @@ export const updateReceiptInputSchema = z.object({
   issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data non valida"),
   recipient: receiptRecipientSchema,
   lineItems: z.array(receiptLineInputSchema).min(1).max(RECEIPT_MAX_LINE_ITEMS),
+  manualPaymentSummary: manualReceiptPaymentSummaryInputSchema.optional(),
   note: noHtmlOptionalText(2000),
 });
 

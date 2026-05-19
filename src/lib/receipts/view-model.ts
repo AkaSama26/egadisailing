@@ -15,6 +15,11 @@ import type {
 } from "@/generated/prisma/enums";
 import { computeReceiptLineTotal, normalizeQuantity } from "./calculations";
 import { receiptDisclaimer } from "./constants";
+import {
+  manualReceiptPaymentSummaryTotal,
+  parseReceiptNoteWithManualPaymentSummary,
+  type ManualReceiptPaymentSummary,
+} from "./custom-summary";
 
 export interface ReceiptLineViewModel {
   id: string;
@@ -46,6 +51,9 @@ export interface ReceiptPaymentSummaryRowViewModel {
 }
 
 export interface ReceiptPaymentSummaryViewModel {
+  totalTitle: string;
+  sectionTitle: string;
+  includedPaymentsTitle: string;
   bookingTotal: string;
   bookingTotalLabel: string;
   depositPaid: string;
@@ -139,20 +147,24 @@ const PAYMENT_METHOD_LABELS: Record<ReceiptLanguage, Record<PaymentMethod, strin
 const PAYMENT_SUMMARY_LABELS = {
   IT: {
     bookingTotal: "Totale prenotazione",
+    documentTotal: "Totale documento",
     depositPaid: "Acconto registrato",
     balancePaid: "Saldo registrato",
     fullPaid: "Pagamento intero registrato",
     totalPaid: "Totale pagato alla data documento",
     includedPayments: "Pagamenti inclusi in questa ricevuta",
+    includedPaymentsCustom: "Totale pagato indicato in questa ricevuta",
     remainingBalance: "Residuo da pagare",
   },
   EN: {
     bookingTotal: "Booking total",
+    documentTotal: "Document total",
     depositPaid: "Registered deposit",
     balancePaid: "Registered balance",
     fullPaid: "Registered full payment",
     totalPaid: "Total paid at document date",
     includedPayments: "Payments included in this receipt",
+    includedPaymentsCustom: "Total paid stated in this receipt",
     remainingBalance: "Balance outstanding",
   },
 } satisfies Record<ReceiptLanguage, Record<string, string>>;
@@ -196,6 +208,7 @@ export async function getReceiptViewModel(id: string): Promise<ReceiptViewModel>
   });
   if (!receipt) throw new NotFoundError("Receipt", id);
 
+  const parsedNote = parseReceiptNoteWithManualPaymentSummary(receipt.note);
   const paymentSummary = receipt.booking
     ? buildPaymentSummary({
         bookingTotal: receipt.booking.totalPrice.toString(),
@@ -205,7 +218,14 @@ export async function getReceiptViewModel(id: string): Promise<ReceiptViewModel>
         bookingPayments: receipt.booking.payments,
         linkedPayments: receipt.payments.map(({ payment }) => payment),
       })
-    : null;
+    : parsedNote.manualPaymentSummary
+      ? buildManualPaymentSummary({
+          documentTotal: receipt.totalAmount.toString(),
+          language: receipt.language,
+          receiptCreatedAt: receipt.createdAt,
+          manualPaymentSummary: parsedNote.manualPaymentSummary,
+        })
+      : null;
 
   return {
     id: receipt.id,
@@ -220,7 +240,7 @@ export async function getReceiptViewModel(id: string): Promise<ReceiptViewModel>
     currency: receipt.currency,
     totalAmount: receipt.totalAmount.toString(),
     totalLabel: formatReceiptMoney(receipt.totalAmount.toString(), receipt.language),
-    note: receipt.note,
+    note: parsedNote.note,
     disclaimer: receiptDisclaimer(receipt.language),
     company: {
       name: PUBLIC_COMPANY_LEGAL.name,
@@ -326,6 +346,9 @@ function buildPaymentSummary(input: {
 
   const labels = PAYMENT_SUMMARY_LABELS[input.language];
   const summary = {
+    totalTitle: labels.bookingTotal,
+    sectionTitle: input.language === "EN" ? "Deposit and balance" : "Acconto e saldo",
+    includedPaymentsTitle: labels.includedPayments,
     bookingTotal: bookingTotal.toFixed(2),
     bookingTotalLabel: formatReceiptMoney(bookingTotal, input.language),
     depositPaid: depositPaid.toFixed(2),
@@ -353,6 +376,60 @@ function buildPaymentSummary(input: {
       : []),
     { label: labels.totalPaid, value: summary.totalPaidLabel, emphasis: true },
     { label: labels.includedPayments, value: summary.includedPaymentsLabel, emphasis: false },
+    { label: labels.remainingBalance, value: summary.remainingBalanceLabel, emphasis: true },
+  ];
+
+  return summary;
+}
+
+
+function buildManualPaymentSummary(input: {
+  documentTotal: string;
+  language: ReceiptLanguage;
+  receiptCreatedAt: Date;
+  manualPaymentSummary: ManualReceiptPaymentSummary;
+}): ReceiptPaymentSummaryViewModel {
+  const labels = PAYMENT_SUMMARY_LABELS[input.language];
+  const documentTotal = new Decimal(input.documentTotal).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const depositPaid = new Decimal(input.manualPaymentSummary.depositPaid).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const balancePaid = new Decimal(input.manualPaymentSummary.balancePaid).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const fullPaid = new Decimal(input.manualPaymentSummary.fullPaid).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const totalPaid = manualReceiptPaymentSummaryTotal(input.manualPaymentSummary);
+  const remainingBalance = Decimal.max(documentTotal.minus(totalPaid), new Decimal(0)).toDecimalPlaces(
+    2,
+    Decimal.ROUND_HALF_UP,
+  );
+
+  const summary = {
+    totalTitle: labels.documentTotal,
+    sectionTitle: input.language === "EN" ? "Deposit and balance" : "Acconto e saldo",
+    includedPaymentsTitle: labels.includedPaymentsCustom,
+    bookingTotal: documentTotal.toFixed(2),
+    bookingTotalLabel: formatReceiptMoney(documentTotal, input.language),
+    depositPaid: depositPaid.toFixed(2),
+    depositPaidLabel: formatReceiptMoney(depositPaid, input.language),
+    balancePaid: balancePaid.toFixed(2),
+    balancePaidLabel: formatReceiptMoney(balancePaid, input.language),
+    fullPaid: fullPaid.toFixed(2),
+    fullPaidLabel: formatReceiptMoney(fullPaid, input.language),
+    totalPaid: totalPaid.toFixed(2),
+    totalPaidLabel: formatReceiptMoney(totalPaid, input.language),
+    includedPayments: totalPaid.toFixed(2),
+    includedPaymentsLabel: formatReceiptMoney(totalPaid, input.language),
+    remainingBalance: remainingBalance.toFixed(2),
+    remainingBalanceLabel: formatReceiptMoney(remainingBalance, input.language),
+    snapshotAtLabel: formatDateForReceipt(input.receiptCreatedAt, input.language),
+    rows: [] as ReceiptPaymentSummaryRowViewModel[],
+  };
+
+  summary.rows = [
+    { label: labels.documentTotal, value: summary.bookingTotalLabel, emphasis: true },
+    { label: labels.depositPaid, value: summary.depositPaidLabel, emphasis: false },
+    { label: labels.balancePaid, value: summary.balancePaidLabel, emphasis: false },
+    ...(fullPaid.gt(0)
+      ? [{ label: labels.fullPaid, value: summary.fullPaidLabel, emphasis: false }]
+      : []),
+    { label: labels.includedPaymentsCustom, value: summary.includedPaymentsLabel, emphasis: true },
     { label: labels.remainingBalance, value: summary.remainingBalanceLabel, emphasis: true },
   ];
 
