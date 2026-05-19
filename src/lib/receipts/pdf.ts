@@ -427,15 +427,24 @@ function splitLongWord(word: string, font: PDFFont, size: number, maxWidth: numb
 }
 
 function moneyForPdf(label: string): string {
-  return pdfText(label.replace(/€/g, "EUR ").replace(/\s+/g, " ").trim());
+  return normalizeReceiptPdfMoney(label);
 }
 
 function pdfText(text: string): string {
+  return normalizeReceiptPdfText(text);
+}
+
+export function normalizeReceiptPdfMoney(label: string): string {
+  return normalizeReceiptPdfText(label.replace(/\s+/g, " ").trim());
+}
+
+export function normalizeReceiptPdfText(text: string): string {
   return text
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
     .replace(/[–—]/g, "-")
     .replace(/→/g, "->")
     .replace(/\u00a0/g, " ")
-    .replace(/[^\x09\x0a\x0d\x20-\x7e\u00a0-\u00ff]/g, "?");
+    .replace(/\u202f/g, " ")
+    .replace(/[^\x09\x0a\x0d\x20-\x7e\u00a0-\u00ff\u20ac]/g, "?");
 }

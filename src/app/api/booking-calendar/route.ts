@@ -41,6 +41,7 @@ interface CalendarDay {
   priceHint: string | null;
   priceAmount: number | null;
   pricingUnit: string | null;
+  passengerCategoryPrices: Array<{ category: string; amount: number }> | null;
   spotsRemaining: number | null;
   reasonLabel: string | null;
 }
@@ -114,6 +115,7 @@ async function evaluateCalendarDay(params: {
       priceHint: null,
       priceAmount: null,
       pricingUnit: null,
+      passengerCategoryPrices: null,
       spotsRemaining: null,
       reasonLabel: reasonLabel("past", locale),
     };
@@ -131,6 +133,7 @@ async function evaluateCalendarDay(params: {
       priceHint: null,
       priceAmount: null,
       pricingUnit: null,
+      passengerCategoryPrices: null,
       spotsRemaining: null,
       reasonLabel: reasonLabel("missing_price", locale),
     };
@@ -174,6 +177,7 @@ async function evaluateCalendarDay(params: {
         priceHint: priceHintLabel(quote.pricingUnit, locale),
         priceAmount: quote.totalPrice.toNumber(),
         pricingUnit: quote.pricingUnit,
+        passengerCategoryPrices: quote.passengerCategoryPrices ?? null,
         spotsRemaining: 0,
         reasonLabel: reasonLabel("sold_out", locale),
       };
@@ -229,6 +233,7 @@ async function evaluateCalendarDay(params: {
       priceHint: priceHintLabel(quote.pricingUnit, locale),
       priceAmount: quote.totalPrice.toNumber(),
       pricingUnit: quote.pricingUnit,
+      passengerCategoryPrices: quote.passengerCategoryPrices ?? null,
       spotsRemaining,
       reasonLabel:
         locale === "es"
@@ -252,6 +257,7 @@ async function evaluateCalendarDay(params: {
       priceHint: priceHintLabel(quote.pricingUnit, locale),
       priceAmount: quote.totalPrice.toNumber(),
       pricingUnit: quote.pricingUnit,
+      passengerCategoryPrices: quote.passengerCategoryPrices ?? null,
       spotsRemaining,
       reasonLabel:
         locale === "es"
@@ -274,6 +280,7 @@ async function evaluateCalendarDay(params: {
     priceHint: priceHintLabel(quote.pricingUnit, locale),
     priceAmount: quote.totalPrice.toNumber(),
     pricingUnit: quote.pricingUnit,
+    passengerCategoryPrices: quote.passengerCategoryPrices ?? null,
     spotsRemaining: null,
     reasonLabel: reasonLabel(result.reason, locale),
   };

@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "node:crypto";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
@@ -168,8 +169,8 @@ export const deletePricingPeriod = withAdminAction(
 );
 
 const PRICE_BUCKETS = ["LOW", "MID", "HIGH"] as const;
+type PriceBucket = (typeof PRICE_BUCKETS)[number];
 const SEASON_KEYS = ["LOW", "MID", "HIGH", "LATE_LOW"] as const;
-const PASSENGER_PRICING_MODES = ["MULTIPLIER", "FIXED"] as const;
 
 const PUBLIC_PRICING_PATHS = [
   "/",
@@ -205,6 +206,31 @@ const saveServicePriceMatrixSchema = z.object({
 });
 
 type ServicePriceInput = z.infer<typeof servicePriceInputSchema>;
+
+
+async function upsertPassengerFareSeasonPrice(
+  tx: Prisma.TransactionClient,
+  row: {
+    serviceId: string;
+    year: number;
+    priceBucket: PriceBucket;
+    category: PassengerFareCategory;
+    amount: number;
+  },
+) {
+  const id = crypto.randomUUID();
+  const amount = new Prisma.Decimal(row.amount.toFixed(2));
+  await tx.$executeRaw(Prisma.sql`
+    INSERT INTO "PassengerFareSeasonPrice"
+      ("id", "serviceId", "year", "priceBucket", "category", "amount", "createdAt", "updatedAt")
+    VALUES
+      (${id}, ${row.serviceId}, ${row.year}, ${row.priceBucket}, ${row.category}, ${amount}, NOW(), NOW())
+    ON CONFLICT ("serviceId", "year", "priceBucket", "category")
+    DO UPDATE SET
+      "amount" = EXCLUDED."amount",
+      "updatedAt" = NOW()
+  `);
+}
 
 async function upsertServicePrice(
   tx: Prisma.TransactionClient,
@@ -270,6 +296,19 @@ export const saveServicePriceMatrix = withAdminAction(
         }
 
         await upsertServicePrice(tx, input.year, row);
+        if (
+          serviceType === PASSENGER_FARE_SERVICE_TYPE &&
+          row.priceBucket &&
+          !row.durationDays
+        ) {
+          await upsertPassengerFareSeasonPrice(tx, {
+            serviceId: row.serviceId,
+            year: input.year,
+            priceBucket: row.priceBucket,
+            category: "ADULT",
+            amount: row.amount,
+          });
+        }
       }
     });
 
@@ -295,120 +334,93 @@ export const saveServicePriceMatrix = withAdminAction(
   },
 );
 
-const passengerFareRuleInputSchema = z.object({
+const passengerFareSeasonPriceInputSchema = z.object({
+  serviceId: z.string().min(1),
+  priceBucket: z.enum(PRICE_BUCKETS),
   category: z.enum(PASSENGER_FARE_CATEGORIES),
-  label: z.string().trim().min(1).max(40),
-  ageLabel: z.string().trim().min(1).max(40),
-  pricingMode: z.enum(PASSENGER_PRICING_MODES),
-  multiplier: z.number().min(0).max(10).nullable().optional(),
-  fixedAmount: z.number().min(0).max(100_000).nullable().optional(),
-  occupiesSeat: z.boolean(),
-  active: z.boolean(),
-  sortOrder: z.number().int().min(0).max(1000),
+  amount: z.number().min(0).max(100_000),
 });
 
-const savePassengerFareRulesSchema = z.object({
-  serviceType: z.literal(PASSENGER_FARE_SERVICE_TYPE),
-  rules: z.array(passengerFareRuleInputSchema).length(PASSENGER_FARE_CATEGORIES.length),
+const savePassengerFareSeasonPricesSchema = z.object({
+  year: z.number().int().min(2020).max(2100),
+  rows: z.array(passengerFareSeasonPriceInputSchema).min(1),
 });
 
-export const savePassengerFareRules = withAdminAction(
+export const savePassengerFareSeasonPrices = withAdminAction(
   {
-    schema: savePassengerFareRulesSchema,
-    revalidatePaths: ["/admin/prezzi", "/", "/it/prenota", "/en/book"],
+    schema: savePassengerFareSeasonPricesSchema,
+    revalidatePaths: (input) => pricingRevalidatePaths(input.rows.map((row) => row.serviceId)),
   },
   async (input, { userId }) => {
-    const seen = new Set<PassengerFareCategory>();
-    const normalized = input.rules.map((rule) => {
-      if (seen.has(rule.category)) {
-        throw new ValidationError(`Categoria duplicata: ${rule.category}`);
-      }
-      seen.add(rule.category);
-
-      if (rule.category === "ADULT") {
-        return {
-          ...rule,
-          pricingMode: "MULTIPLIER" as const,
-          multiplier: 1,
-          fixedAmount: null,
-          occupiesSeat: true,
-          active: true,
-        };
-      }
-
-      if (rule.pricingMode === "MULTIPLIER" && rule.multiplier == null) {
-        throw new ValidationError(`Percentuale mancante per ${rule.label}`);
-      }
-      if (rule.pricingMode === "FIXED" && rule.fixedAmount == null) {
-        throw new ValidationError(`Prezzo fisso mancante per ${rule.label}`);
-      }
-
-      return {
-        ...rule,
-        multiplier: rule.pricingMode === "MULTIPLIER" ? rule.multiplier : 0,
-        fixedAmount: rule.pricingMode === "FIXED" ? rule.fixedAmount : null,
-      };
-    });
+    const touchedServiceIds = Array.from(new Set(input.rows.map((row) => row.serviceId)));
+    const seen = new Set<string>();
 
     await db.$transaction(async (tx) => {
-      await acquireTxAdvisoryLock(tx, "passenger-fare-rules", input.serviceType);
-      for (const rule of normalized) {
-        await tx.passengerFareRule.upsert({
-          where: {
-            serviceType_category: {
-              serviceType: input.serviceType,
-              category: rule.category,
-            },
-          },
-          update: {
-            label: rule.label,
-            ageLabel: rule.ageLabel,
-            pricingMode: rule.pricingMode,
-            multiplier: new Prisma.Decimal((rule.multiplier ?? 0).toFixed(3)),
-            fixedAmount:
-              rule.fixedAmount == null
-                ? null
-                : new Prisma.Decimal(rule.fixedAmount.toFixed(2)),
-            occupiesSeat: rule.occupiesSeat,
-            active: rule.active,
-            sortOrder: rule.sortOrder,
-          },
-          create: {
-            serviceType: input.serviceType,
-            category: rule.category,
-            label: rule.label,
-            ageLabel: rule.ageLabel,
-            pricingMode: rule.pricingMode,
-            multiplier: new Prisma.Decimal((rule.multiplier ?? 0).toFixed(3)),
-            fixedAmount:
-              rule.fixedAmount == null
-                ? null
-                : new Prisma.Decimal(rule.fixedAmount.toFixed(2)),
-            occupiesSeat: rule.occupiesSeat,
-            active: rule.active,
-            sortOrder: rule.sortOrder,
-          },
+      await acquireTxAdvisoryLock(tx, "passenger-fare-season-prices", String(input.year));
+      const services = await tx.service.findMany({
+        where: { id: { in: touchedServiceIds } },
+        select: { id: true, type: true },
+      });
+      const serviceTypeById = new Map(services.map((service) => [service.id, service.type]));
+
+      for (const row of input.rows) {
+        const dedupKey = `${row.serviceId}:${row.priceBucket}:${row.category}`;
+        if (seen.has(dedupKey)) {
+          throw new ValidationError(`Prezzo categoria duplicato: ${dedupKey}`);
+        }
+        seen.add(dedupKey);
+
+        const serviceType = serviceTypeById.get(row.serviceId);
+        if (!serviceType) throw new ValidationError(`Servizio non trovato: ${row.serviceId}`);
+        if (serviceType !== PASSENGER_FARE_SERVICE_TYPE) {
+          throw new ValidationError("I prezzi categoria stagionali sono supportati solo per barca condivisa");
+        }
+        if (row.category === "ADULT" && row.amount <= 0) {
+          throw new ValidationError("Il prezzo adulti deve essere maggiore di zero");
+        }
+
+        await upsertPassengerFareSeasonPrice(tx, {
+          serviceId: row.serviceId,
+          year: input.year,
+          priceBucket: row.priceBucket,
+          category: row.category,
+          amount: row.amount,
         });
+
+        // Mantiene ServicePrice allineato al prezzo adulti: resta il fallback
+        // storico e la base usata da UI/listini esterni finche' il canale non
+        // supporta category pricing nativo.
+        if (row.category === "ADULT") {
+          await upsertServicePrice(tx, input.year, {
+            serviceId: row.serviceId,
+            priceBucket: row.priceBucket,
+            durationDays: null,
+            amount: row.amount,
+            pricingUnit: "PER_PERSON",
+          });
+        }
       }
     });
 
     await auditLog({
       userId,
       action: AUDIT_ACTIONS.UPDATE,
-      entity: "PassengerFareRule",
-      entityId: input.serviceType,
+      entity: "PassengerFareSeasonPrice",
+      entityId: String(input.year),
       after: {
-        serviceType: input.serviceType,
-        categories: normalized.map((rule) => ({
-          category: rule.category,
-          pricingMode: rule.pricingMode,
-          multiplier: rule.multiplier,
-          fixedAmount: rule.fixedAmount,
-          occupiesSeat: rule.occupiesSeat,
-          active: rule.active,
-        })),
+        year: input.year,
+        services: touchedServiceIds,
+        rows: input.rows.length,
       },
     });
+
+    const seasons = await db.season.findMany({ where: { year: input.year } });
+    const dates = seasons.flatMap((season) =>
+      Array.from(eachUtcDayInclusive(season.startDate, season.endDate)),
+    );
+    if (dates.length > 0) {
+      await scheduleBokunPricingSync({ dates, serviceIds: touchedServiceIds });
+    }
   },
 );
 

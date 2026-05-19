@@ -1,17 +1,15 @@
 import Decimal from "decimal.js";
 import { z } from "zod";
 import {
-  DEFAULT_PASSENGER_FARE_RULES,
   estimatePaidUnitEquivalent,
-  occupiedSeatCountForRules,
-  type PassengerFareRuleConfig,
+  occupiedSeatCountForPassengerCategories,
+  totalGuestCountFromBreakdown,
+  type PassengerBreakdownLike,
 } from "@/lib/pricing/passenger-fare-rules-shared";
 
-export interface PassengerBreakdown {
-  adults: number;
-  children: number;
+export interface PassengerBreakdown extends PassengerBreakdownLike {
+  // Legacy field kept for old drafts/bookings/API clients. New UI always sends 0.
   freeChildren: number;
-  infants: number;
 }
 
 export const passengerBreakdownSchema = z
@@ -21,6 +19,12 @@ export const passengerBreakdownSchema = z
     freeChildren: z.number().int().min(0).max(50).default(0),
     infants: z.number().int().min(0).max(50).default(0),
   })
+  .transform((value) => ({
+    adults: value.adults,
+    children: value.children + value.freeChildren,
+    freeChildren: 0,
+    infants: value.infants,
+  }))
   .refine((value) => occupiedSeatCount(value) >= 1, {
     message: "Almeno una persona deve occupare un posto",
   })
@@ -49,37 +53,26 @@ export function normalizePassengerBreakdown(
   });
 }
 
-export function occupiedSeatCount(
-  passengers: PassengerBreakdown,
-  rules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
-): number {
-  return occupiedSeatCountForRules(passengers, rules);
+export function occupiedSeatCount(passengers: PassengerBreakdown): number {
+  return occupiedSeatCountForPassengerCategories(passengers);
 }
 
 export function totalGuestCount(passengers: PassengerBreakdown): number {
-  return occupiedSeatCount(passengers) + passengers.infants;
+  return totalGuestCountFromBreakdown(passengers);
 }
 
-export function paidTicketUnitsForShared(
-  passengers: PassengerBreakdown,
-  rules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
-): Decimal {
+export function paidTicketUnitsForShared(passengers: PassengerBreakdown): Decimal {
   return new Decimal(
     estimatePaidUnitEquivalent({
       serviceType: "BOAT_SHARED",
       pricingUnit: "PER_PERSON",
       unitPrice: 1,
       passengers,
-      rules,
     }),
   );
 }
 
-export function paidUnitsForService(
-  serviceType: string,
-  passengers: PassengerBreakdown,
-  rules: PassengerFareRuleConfig[] = DEFAULT_PASSENGER_FARE_RULES,
-): Decimal {
-  if (serviceType === "BOAT_SHARED") return paidTicketUnitsForShared(passengers, rules);
-  return new Decimal(occupiedSeatCount(passengers, rules));
+export function paidUnitsForService(serviceType: string, passengers: PassengerBreakdown): Decimal {
+  if (serviceType === "BOAT_SHARED") return paidTicketUnitsForShared(passengers);
+  return new Decimal(occupiedSeatCount(passengers));
 }

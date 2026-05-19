@@ -6,56 +6,79 @@ import {
   totalGuestCount,
 } from "@/lib/booking/passengers";
 import {
-  DEFAULT_PASSENGER_FARE_RULES,
+  DEFAULT_PASSENGER_FARE_CATEGORIES,
   estimatePassengerFareTotal,
 } from "@/lib/pricing/passenger-fare-rules-shared";
 
 describe("passenger breakdown pricing helpers", () => {
-  it("calcola posti occupati: neonati 0-2 esclusi", () => {
+  it("espone solo fasce passeggeri non sovrapposte", () => {
+    expect(
+      DEFAULT_PASSENGER_FARE_CATEGORIES.map((category) => ({
+        category: category.category,
+        ageLabel: category.ageLabel,
+      })),
+    ).toEqual([
+      { category: "ADULT", ageLabel: "10+ anni" },
+      { category: "CHILD", ageLabel: "4-9 anni" },
+      { category: "INFANT", ageLabel: "0-3 anni" },
+    ]);
+  });
+
+  it("calcola posti occupati: neonati 0-3 esclusi", () => {
     const passengers = normalizePassengerBreakdown({
       adults: 2,
       children: 1,
-      freeChildren: 1,
       infants: 1,
     });
 
-    expect(occupiedSeatCount(passengers)).toBe(4);
-    expect(totalGuestCount(passengers)).toBe(5);
+    expect(occupiedSeatCount(passengers)).toBe(3);
+    expect(totalGuestCount(passengers)).toBe(4);
   });
 
-  it("applica sconto bambini solo a BOAT_SHARED", () => {
+  it("converte il vecchio campo freeChildren in bambini", () => {
     const passengers = normalizePassengerBreakdown({
-      adults: 2,
-      children: 2,
-      freeChildren: 1,
+      adults: 1,
+      children: 1,
+      freeChildren: 2,
       infants: 1,
     });
 
-    expect(paidUnitsForService("BOAT_SHARED", passengers).toString()).toBe("3");
+    expect(passengers.children).toBe(3);
+    expect(passengers.freeChildren).toBe(0);
+    expect(occupiedSeatCount(passengers)).toBe(4);
+  });
+
+  it("applica il fallback hardcoded bambini solo a BOAT_SHARED", () => {
+    const passengers = normalizePassengerBreakdown({
+      adults: 2,
+      children: 3,
+      infants: 1,
+    });
+
+    expect(paidUnitsForService("BOAT_SHARED", passengers).toString()).toBe("3.5");
     expect(paidUnitsForService("BOAT_EXCLUSIVE", passengers).toString()).toBe("5");
   });
 
-  it("applica regole configurabili per categorie passeggeri shared", () => {
+  it("usa prezzi esatti categoria/stagione quando disponibili", () => {
     const passengers = normalizePassengerBreakdown({
       adults: 1,
       children: 2,
-      freeChildren: 1,
       infants: 1,
     });
-    const rules = DEFAULT_PASSENGER_FARE_RULES.map((rule) =>
-      rule.category === "CHILD" ? { ...rule, multiplier: 0.25 } : rule,
-    );
 
-    expect(occupiedSeatCount(passengers, rules)).toBe(4);
     expect(
       estimatePassengerFareTotal({
         serviceType: "BOAT_SHARED",
         pricingUnit: "PER_PERSON",
-        unitPrice: 100,
+        unitPrice: 999,
         passengers,
-        rules,
+        categoryPrices: [
+          { category: "ADULT", amount: 90 },
+          { category: "CHILD", amount: 60 },
+          { category: "INFANT", amount: 0 },
+        ],
       }),
-    ).toBe(150);
+    ).toBe(210);
   });
 
   it("rifiuta prenotazioni composte solo da neonati", () => {
@@ -63,7 +86,6 @@ describe("passenger breakdown pricing helpers", () => {
       normalizePassengerBreakdown({
         adults: 0,
         children: 0,
-        freeChildren: 0,
         infants: 1,
       }),
     ).toThrow(/posto/i);

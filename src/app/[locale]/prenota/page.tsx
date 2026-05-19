@@ -11,8 +11,6 @@ import {
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getDisplayPriceMap } from "@/lib/pricing/display";
-import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
-import { PASSENGER_FARE_SERVICE_TYPE } from "@/lib/pricing/passenger-fare-rules-shared";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
 import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
@@ -92,10 +90,7 @@ export default async function BookingIndexPage({
       },
     },
   });
-  const [displayPrices, passengerFareRules] = await Promise.all([
-    getDisplayPriceMap(services.map((service) => service.id), 2026, locale),
-    getPassengerFareRulesForServiceType(PASSENGER_FARE_SERVICE_TYPE),
-  ]);
+  const displayPrices = await getDisplayPriceMap(services.map((service) => service.id), 2026, locale);
 
   const options: BookingServiceOption[] = services
     .sort((a, b) => compareExperienceOrder(a.id, b.id))
@@ -190,7 +185,6 @@ export default async function BookingIndexPage({
         turnstileSiteKey={getPublicTurnstileSiteKey()}
         appUrl={env.APP_URL}
         useStripeCheckout={env.FEATURE_STRIPE_CHECKOUT_ENABLED}
-        passengerFareRules={passengerFareRules}
         initialStartDate={initialStartDate}
         initialEndDate={initialEndDate}
         initialDurationDays={initialDurationDays}

@@ -1,16 +1,11 @@
 export const PASSENGER_FARE_SERVICE_TYPE = "BOAT_SHARED";
 
-export const PASSENGER_FARE_CATEGORIES = [
-  "ADULT",
-  "CHILD",
-  "FREE_CHILD",
-  "INFANT",
-] as const;
+export const PASSENGER_FARE_CATEGORIES = ["ADULT", "CHILD", "INFANT"] as const;
 
 export type PassengerFareCategory = (typeof PASSENGER_FARE_CATEGORIES)[number];
 export type PassengerFarePricingMode = "MULTIPLIER" | "FIXED";
 
-export interface PassengerFareRuleConfig {
+export interface PassengerFareCategoryConfig {
   category: PassengerFareCategory;
   label: string;
   ageLabel: string;
@@ -22,14 +17,18 @@ export interface PassengerFareRuleConfig {
   sortOrder: number;
 }
 
+export interface PassengerFareCategoryPriceConfig {
+  category: PassengerFareCategory;
+  amount: number;
+}
+
 export interface PassengerBreakdownLike {
   adults: number;
   children: number;
-  freeChildren: number;
   infants: number;
 }
 
-export const DEFAULT_PASSENGER_FARE_RULES: PassengerFareRuleConfig[] = [
+export const DEFAULT_PASSENGER_FARE_CATEGORIES: PassengerFareCategoryConfig[] = [
   {
     category: "ADULT",
     label: "Adulti",
@@ -44,7 +43,7 @@ export const DEFAULT_PASSENGER_FARE_RULES: PassengerFareRuleConfig[] = [
   {
     category: "CHILD",
     label: "Bambini",
-    ageLabel: "5-9 anni",
+    ageLabel: "4-9 anni",
     pricingMode: "MULTIPLIER",
     multiplier: 0.5,
     fixedAmount: null,
@@ -53,33 +52,21 @@ export const DEFAULT_PASSENGER_FARE_RULES: PassengerFareRuleConfig[] = [
     sortOrder: 20,
   },
   {
-    category: "FREE_CHILD",
-    label: "Bimbi piccoli",
-    ageLabel: "3-4 anni",
-    pricingMode: "FIXED",
-    multiplier: 0,
-    fixedAmount: 0,
-    occupiesSeat: true,
-    active: true,
-    sortOrder: 30,
-  },
-  {
     category: "INFANT",
     label: "Neonati",
-    ageLabel: "0-2 anni",
+    ageLabel: "0-3 anni",
     pricingMode: "FIXED",
     multiplier: 0,
     fixedAmount: 0,
     occupiesSeat: false,
     active: true,
-    sortOrder: 40,
+    sortOrder: 30,
   },
 ];
 
 const CATEGORY_TO_FIELD: Record<PassengerFareCategory, keyof PassengerBreakdownLike> = {
   ADULT: "adults",
   CHILD: "children",
-  FREE_CHILD: "freeChildren",
   INFANT: "infants",
 };
 
@@ -90,44 +77,27 @@ export function passengerCountForCategory(
   return Math.max(0, Math.trunc(passengers[CATEGORY_TO_FIELD[category]] ?? 0));
 }
 
-export function normalizePassengerFareRules(
-  rules?: Array<Partial<PassengerFareRuleConfig>> | null,
-): PassengerFareRuleConfig[] {
-  const byCategory = new Map<PassengerFareCategory, Partial<PassengerFareRuleConfig>>();
-  for (const rule of rules ?? []) {
-    if (rule.category && PASSENGER_FARE_CATEGORIES.includes(rule.category)) {
-      byCategory.set(rule.category, rule);
-    }
+export function normalizePassengerFareCategoryPrices(
+  prices?: Array<Partial<PassengerFareCategoryPriceConfig>> | null,
+): PassengerFareCategoryPriceConfig[] {
+  const byCategory = new Map<PassengerFareCategory, PassengerFareCategoryPriceConfig>();
+  for (const price of prices ?? []) {
+    if (!price.category || !PASSENGER_FARE_CATEGORIES.includes(price.category)) continue;
+    if (typeof price.amount !== "number" || !Number.isFinite(price.amount)) continue;
+    byCategory.set(price.category, {
+      category: price.category,
+      amount: Math.max(0, price.amount),
+    });
   }
-
-  return DEFAULT_PASSENGER_FARE_RULES.map((fallback) => {
-    const override = byCategory.get(fallback.category);
-    return {
-      ...fallback,
-      ...override,
-      category: fallback.category,
-      multiplier:
-        typeof override?.multiplier === "number" && Number.isFinite(override.multiplier)
-          ? Math.max(0, override.multiplier)
-          : fallback.multiplier,
-      fixedAmount:
-        typeof override?.fixedAmount === "number" && Number.isFinite(override.fixedAmount)
-          ? Math.max(0, override.fixedAmount)
-          : fallback.fixedAmount,
-      sortOrder:
-        typeof override?.sortOrder === "number" && Number.isFinite(override.sortOrder)
-          ? override.sortOrder
-          : fallback.sortOrder,
-    };
-  }).sort((a, b) => a.sortOrder - b.sortOrder);
+  return PASSENGER_FARE_CATEGORIES.flatMap((category) => {
+    const price = byCategory.get(category);
+    return price ? [price] : [];
+  });
 }
 
-export function occupiedSeatCountForRules(
-  passengers: PassengerBreakdownLike,
-  rules?: Array<Partial<PassengerFareRuleConfig>> | null,
-): number {
-  return normalizePassengerFareRules(rules).reduce((sum, rule) => {
-    if (!rule.active || !rule.occupiesSeat) return sum;
+export function occupiedSeatCountForPassengerCategories(passengers: PassengerBreakdownLike): number {
+  return DEFAULT_PASSENGER_FARE_CATEGORIES.reduce((sum, rule) => {
+    if (!rule.occupiesSeat) return sum;
     return sum + passengerCountForCategory(passengers, rule.category);
   }, 0);
 }
@@ -139,43 +109,29 @@ export function totalGuestCountFromBreakdown(passengers: PassengerBreakdownLike)
   );
 }
 
-export function inactivePassengerCategories(
-  passengers: PassengerBreakdownLike,
-  rules?: Array<Partial<PassengerFareRuleConfig>> | null,
-): PassengerFareRuleConfig[] {
-  return normalizePassengerFareRules(rules).filter(
-    (rule) => !rule.active && passengerCountForCategory(passengers, rule.category) > 0,
-  );
-}
-
-export function sanitizePassengerBreakdownForRules<T extends PassengerBreakdownLike>(
-  passengers: T,
-  rules?: Array<Partial<PassengerFareRuleConfig>> | null,
-): T {
-  const next: PassengerBreakdownLike = { ...passengers };
-  for (const rule of normalizePassengerFareRules(rules)) {
-    if (rule.active) continue;
-    next[CATEGORY_TO_FIELD[rule.category]] = 0;
-  }
-  return next as T;
-}
-
 export function estimatePassengerFareTotal(params: {
   serviceType: string;
   pricingUnit: string;
   unitPrice: number;
   passengers: PassengerBreakdownLike;
-  rules?: Array<Partial<PassengerFareRuleConfig>> | null;
+  categoryPrices?: Array<Partial<PassengerFareCategoryPriceConfig>> | null;
 }): number {
-  const { serviceType, pricingUnit, unitPrice, passengers, rules } = params;
+  const { serviceType, pricingUnit, unitPrice, passengers, categoryPrices } = params;
   if (pricingUnit === "PER_PACKAGE") return unitPrice;
   if (serviceType !== PASSENGER_FARE_SERVICE_TYPE) {
-    return unitPrice * occupiedSeatCountForRules(passengers);
+    return unitPrice * occupiedSeatCountForPassengerCategories(passengers);
   }
 
-  return normalizePassengerFareRules(rules).reduce((sum, rule) => {
-    if (!rule.active) return sum;
+  const priceByCategory = new Map(
+    normalizePassengerFareCategoryPrices(categoryPrices).map((price) => [price.category, price.amount]),
+  );
+
+  return DEFAULT_PASSENGER_FARE_CATEGORIES.reduce((sum, rule) => {
     const count = passengerCountForCategory(passengers, rule.category);
+    const seasonalAmount = priceByCategory.get(rule.category);
+    if (seasonalAmount !== undefined) {
+      return sum + count * seasonalAmount;
+    }
     if (rule.pricingMode === "FIXED") {
       return sum + count * (rule.fixedAmount ?? 0);
     }
@@ -188,7 +144,7 @@ export function estimatePaidUnitEquivalent(params: {
   pricingUnit: string;
   unitPrice: number;
   passengers: PassengerBreakdownLike;
-  rules?: Array<Partial<PassengerFareRuleConfig>> | null;
+  categoryPrices?: Array<Partial<PassengerFareCategoryPriceConfig>> | null;
 }): number {
   if (params.pricingUnit === "PER_PACKAGE") return 1;
   if (params.unitPrice <= 0) return 0;

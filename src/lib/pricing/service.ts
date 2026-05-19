@@ -10,9 +10,9 @@ import {
 } from "@/lib/booking/passengers";
 import {
   calculatePassengerFareTotal,
-  getPassengerFareRulesForServiceType,
+  getPassengerFareSeasonPricesForService,
 } from "@/lib/pricing/passenger-fare-rules";
-import type { PassengerFareRuleConfig } from "@/lib/pricing/passenger-fare-rules-shared";
+import type { PassengerFareCategoryPriceConfig } from "@/lib/pricing/passenger-fare-rules-shared";
 
 export interface PriceQuote {
   basePricePerPerson: Decimal;
@@ -29,12 +29,12 @@ export interface PriceQuote {
   priceBucket?: string;
   durationDays?: number;
   legacyFallback: boolean;
+  passengerCategoryPrices?: PassengerFareCategoryPriceConfig[];
 }
 
 export interface QuotePriceOptions {
   durationDays?: number;
   passengers?: Partial<PassengerBreakdown> | null;
-  passengerFareRules?: PassengerFareRuleConfig[];
 }
 
 interface PriceSource {
@@ -44,6 +44,7 @@ interface PriceSource {
   priceBucket?: string;
   durationDays?: number;
   legacyFallback: boolean;
+  passengerCategoryPrices?: PassengerFareCategoryPriceConfig[];
 }
 
 type QuoteService = {
@@ -209,14 +210,20 @@ export async function quotePrice(
   const finalPrice = basePrice;
   const pricingUnit = source.pricingUnit;
   const passengers = normalizePassengerBreakdown(options.passengers, numPeople);
-  const passengerFareRules =
-    options.passengerFareRules ?? (await getPassengerFareRulesForServiceType(service.type));
+  const passengerCategoryPrices =
+    service.type === "BOAT_SHARED" && source.priceBucket
+      ? await getPassengerFareSeasonPricesForService({
+          serviceId: service.id,
+          year: dateOnly.getUTCFullYear(),
+          priceBucket: source.priceBucket,
+        })
+      : [];
   const total = calculatePassengerFareTotal({
     serviceType: service.type,
     pricingUnit,
     unitPrice: finalPrice,
     passengers,
-    rules: passengerFareRules,
+    categoryPrices: passengerCategoryPrices,
   });
 
   return {
@@ -233,6 +240,7 @@ export async function quotePrice(
     priceBucket: source.priceBucket,
     durationDays: source.durationDays,
     legacyFallback: source.legacyFallback,
+    passengerCategoryPrices,
   };
 }
 
@@ -256,5 +264,6 @@ export function quoteToJson(q: PriceQuote) {
     priceBucket: q.priceBucket,
     durationDays: q.durationDays,
     legacyFallback: q.legacyFallback,
+    passengerCategoryPrices: q.passengerCategoryPrices,
   };
 }

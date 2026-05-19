@@ -32,8 +32,6 @@ import {
   occupiedSeatCount,
   type PassengerBreakdown,
 } from "@/lib/booking/passengers";
-import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
-import { inactivePassengerCategories } from "@/lib/pricing/passenger-fare-rules-shared";
 import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
 import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
 
@@ -119,15 +117,8 @@ export async function createPendingDirectBooking(
     throw new ValidationError("Telefono obbligatorio");
   }
 
-  const passengerFareRules = await getPassengerFareRulesForServiceType(service.type);
   const passengers = normalizePassengerBreakdown(input.passengers, input.numPeople ?? 1);
-  const inactiveCategories = inactivePassengerCategories(passengers, passengerFareRules);
-  if (inactiveCategories.length > 0) {
-    throw new ValidationError(
-      `Categoria passeggeri non prenotabile: ${inactiveCategories.map((rule) => rule.label).join(", ")}`,
-    );
-  }
-  const occupiedSeats = occupiedSeatCount(passengers, passengerFareRules);
+  const occupiedSeats = occupiedSeatCount(passengers);
 
   if (occupiedSeats < 1 || occupiedSeats > service.capacityMax) {
     throw new ValidationError(
@@ -196,7 +187,6 @@ export async function createPendingDirectBooking(
   const quote = await quotePrice(input.serviceId, startDay, occupiedSeats, {
     durationDays: charterDurationDays,
     passengers,
-    passengerFareRules,
   });
   const totalCents = toCents(quote.totalPrice);
 
@@ -475,7 +465,7 @@ export async function createPendingDirectBooking(
         numPeople: occupiedSeats,
         adultCount: passengers.adults,
         childCount: passengers.children,
-        freeChildSeatCount: passengers.freeChildren,
+        freeChildSeatCount: 0,
         infantCount: passengers.infants,
         totalPrice: quote.totalPrice.toFixed(2),
         notes: input.notes,

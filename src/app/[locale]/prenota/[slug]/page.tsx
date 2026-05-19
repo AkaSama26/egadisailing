@@ -5,7 +5,6 @@ import { env } from "@/lib/env";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { getExperienceContent } from "@/data/catalog/experiences";
-import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
 import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
 // Round 11 SEO-M3: wizard di prenotazione non indexabile (no SEO value,
@@ -42,7 +41,6 @@ export default async function BookingPage({
   const sp = await searchParams;
   const service = await db.service.findUnique({ where: { id: slug } });
   if (!service || !service.active) notFound();
-  const passengerFareRules = await getPassengerFareRulesForServiceType(service.type);
   const content = getExperienceContent(service.id, locale);
   const serviceTitle = content?.title ?? service.name;
   const initialStartDate =
@@ -82,7 +80,6 @@ export default async function BookingPage({
           turnstileSiteKey={getPublicTurnstileSiteKey()}
           appUrl={env.APP_URL}
           useStripeCheckout={env.FEATURE_STRIPE_CHECKOUT_ENABLED}
-          passengerFareRules={passengerFareRules}
           initialStartDate={initialStartDate}
           initialEndDate={initialEndDate}
           initialDurationDays={initialDurationDays}

@@ -1,40 +1,88 @@
 import Decimal from "decimal.js";
+import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import {
-  DEFAULT_PASSENGER_FARE_RULES,
+  PASSENGER_FARE_CATEGORIES,
+  DEFAULT_PASSENGER_FARE_CATEGORIES,
   PASSENGER_FARE_SERVICE_TYPE,
-  normalizePassengerFareRules,
+  normalizePassengerFareCategoryPrices,
+  occupiedSeatCountForPassengerCategories,
   passengerCountForCategory,
-  occupiedSeatCountForRules,
   type PassengerBreakdownLike,
-  type PassengerFareRuleConfig,
+  type PassengerFareCategory,
+  type PassengerFareCategoryPriceConfig,
 } from "./passenger-fare-rules-shared";
 
-export async function getPassengerFareRulesForServiceType(
-  serviceType: string,
-): Promise<PassengerFareRuleConfig[]> {
-  if (serviceType !== PASSENGER_FARE_SERVICE_TYPE) {
-    return DEFAULT_PASSENGER_FARE_RULES;
-  }
+export interface PassengerFareSeasonPriceRow extends PassengerFareCategoryPriceConfig {
+  serviceId: string;
+  year: number;
+  priceBucket: string;
+}
 
-  const rows = await db.passengerFareRule.findMany({
-    where: { serviceType },
-    orderBy: [{ sortOrder: "asc" }, { category: "asc" }],
+type PassengerFareSeasonPriceDbRow = {
+  serviceId: string;
+  year: number;
+  priceBucket: string;
+  category: string;
+  amount: Prisma.Decimal | string | number;
+};
+
+function toSeasonPriceRow(row: PassengerFareSeasonPriceDbRow): PassengerFareSeasonPriceRow | null {
+  if (!PASSENGER_FARE_CATEGORIES.includes(row.category as PassengerFareCategory)) return null;
+  return {
+    serviceId: row.serviceId,
+    year: row.year,
+    priceBucket: row.priceBucket,
+    category: row.category as PassengerFareCategory,
+    amount: Number(row.amount.toString()),
+  };
+}
+
+export async function getPassengerFareSeasonPricesForService(params: {
+  serviceId: string;
+  year: number;
+  priceBucket?: string | null;
+}): Promise<PassengerFareCategoryPriceConfig[]> {
+  if (!params.priceBucket) return [];
+
+  const rows = await db.$queryRaw<PassengerFareSeasonPriceDbRow[]>(Prisma.sql`
+    SELECT "serviceId", "year", "priceBucket", "category", "amount"
+    FROM "PassengerFareSeasonPrice"
+    WHERE "serviceId" = ${params.serviceId}
+      AND "year" = ${params.year}
+      AND "priceBucket" = ${params.priceBucket}
+    ORDER BY "category" ASC
+  `);
+
+  return rows.flatMap((row) => {
+    const mapped = toSeasonPriceRow(row);
+    return mapped ? [{ category: mapped.category, amount: mapped.amount }] : [];
   });
+}
 
-  return normalizePassengerFareRules(
-    rows.map((row) => ({
-      category: row.category as PassengerFareRuleConfig["category"],
-      label: row.label,
-      ageLabel: row.ageLabel,
-      pricingMode: row.pricingMode as PassengerFareRuleConfig["pricingMode"],
-      multiplier: Number(row.multiplier),
-      fixedAmount: row.fixedAmount == null ? null : Number(row.fixedAmount),
-      occupiesSeat: row.occupiesSeat,
-      active: row.active,
-      sortOrder: row.sortOrder,
-    })),
-  );
+export async function getPassengerFareSeasonPricesForYear(params: {
+  year: number;
+  serviceIds?: string[];
+}): Promise<PassengerFareSeasonPriceRow[]> {
+  const rows = params.serviceIds?.length
+    ? await db.$queryRaw<PassengerFareSeasonPriceDbRow[]>(Prisma.sql`
+        SELECT "serviceId", "year", "priceBucket", "category", "amount"
+        FROM "PassengerFareSeasonPrice"
+        WHERE "year" = ${params.year}
+          AND "serviceId" IN (${Prisma.join(params.serviceIds)})
+        ORDER BY "serviceId" ASC, "priceBucket" ASC, "category" ASC
+      `)
+    : await db.$queryRaw<PassengerFareSeasonPriceDbRow[]>(Prisma.sql`
+        SELECT "serviceId", "year", "priceBucket", "category", "amount"
+        FROM "PassengerFareSeasonPrice"
+        WHERE "year" = ${params.year}
+        ORDER BY "serviceId" ASC, "priceBucket" ASC, "category" ASC
+      `);
+
+  return rows.flatMap((row) => {
+    const mapped = toSeasonPriceRow(row);
+    return mapped ? [mapped] : [];
+  });
 }
 
 export function calculatePassengerFareTotal(params: {
@@ -42,17 +90,24 @@ export function calculatePassengerFareTotal(params: {
   pricingUnit: string;
   unitPrice: Decimal;
   passengers: PassengerBreakdownLike;
-  rules?: PassengerFareRuleConfig[] | null;
+  categoryPrices?: PassengerFareCategoryPriceConfig[] | null;
 }): Decimal {
-  const { serviceType, pricingUnit, unitPrice, passengers, rules } = params;
+  const { serviceType, pricingUnit, unitPrice, passengers, categoryPrices } = params;
   if (pricingUnit === "PER_PACKAGE") return unitPrice;
   if (serviceType !== PASSENGER_FARE_SERVICE_TYPE) {
-    return unitPrice.mul(occupiedSeatCountForRules(passengers));
+    return unitPrice.mul(occupiedSeatCountForPassengerCategories(passengers));
   }
 
-  return normalizePassengerFareRules(rules).reduce((sum, rule) => {
-    if (!rule.active) return sum;
+  const priceByCategory = new Map(
+    normalizePassengerFareCategoryPrices(categoryPrices).map((price) => [price.category, price.amount]),
+  );
+
+  return DEFAULT_PASSENGER_FARE_CATEGORIES.reduce((sum, rule) => {
     const count = passengerCountForCategory(passengers, rule.category);
+    const seasonalAmount = priceByCategory.get(rule.category);
+    if (seasonalAmount !== undefined) {
+      return sum.plus(new Decimal(seasonalAmount).mul(count));
+    }
     if (rule.pricingMode === "FIXED") {
       return sum.plus(new Decimal(rule.fixedAmount ?? 0).mul(count));
     }

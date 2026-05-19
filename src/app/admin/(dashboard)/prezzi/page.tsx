@@ -3,8 +3,7 @@ import { db } from "@/lib/db";
 import { AdminCard } from "@/components/admin/admin-card";
 import { PageHeader } from "@/components/admin/page-header";
 import { PriceMatrixForm } from "./_components/price-matrix-form";
-import { getPassengerFareRulesForServiceType } from "@/lib/pricing/passenger-fare-rules";
-import { PASSENGER_FARE_SERVICE_TYPE } from "@/lib/pricing/passenger-fare-rules-shared";
+import { getPassengerFareSeasonPricesForYear } from "@/lib/pricing/passenger-fare-rules";
 
 const LIST_YEAR = 2026;
 
@@ -13,7 +12,7 @@ function isoDate(date: Date): string {
 }
 
 export default async function PrezziPage() {
-  const [services, prices, seasons, legacyPeriods, passengerFareRules] = await Promise.all([
+  const [services, prices, seasons, legacyPeriods, passengerFareSeasonPrices] = await Promise.all([
     db.service.findMany({
       where: { active: true },
       select: {
@@ -43,7 +42,7 @@ export default async function PrezziPage() {
       orderBy: { startDate: "asc" },
     }),
     db.pricingPeriod.count({ where: { year: LIST_YEAR } }),
-    getPassengerFareRulesForServiceType(PASSENGER_FARE_SERVICE_TYPE),
+    getPassengerFareSeasonPricesForYear({ year: LIST_YEAR }),
   ]);
 
   const configuredServices = new Set(prices.map((price) => price.serviceId)).size;
@@ -121,7 +120,7 @@ export default async function PrezziPage() {
           endDate: isoDate(season.endDate),
           priceBucket: season.priceBucket as "LOW" | "MID" | "HIGH",
         }))}
-        passengerFareRules={passengerFareRules}
+        passengerFareSeasonPrices={passengerFareSeasonPrices}
       />
     </div>
   );

@@ -112,9 +112,10 @@ model Service {
 
   boat            Boat             @relation(fields: [boatId], references: [id])
   bookings        Booking[]
-  pricingPeriods  PricingPeriod[]
-  servicePrices   ServicePrice[]
-  hotDayOverrides HotDayOverride[]
+  pricingPeriods             PricingPeriod[]
+  servicePrices              ServicePrice[]
+  passengerFareSeasonPrices  PassengerFareSeasonPrice[]
+  hotDayOverrides            HotDayOverride[]
   itinerarySteps  ExperienceItineraryStep[]
 }
 
@@ -185,23 +186,21 @@ model ServicePrice {
   @@index([year, priceBucket])
 }
 
-model PassengerFareRule {
-  id           String   @id @default(cuid())
-  serviceType  String   @default("BOAT_SHARED")
-  category     String
-  label        String
-  ageLabel     String
-  pricingMode  String
-  multiplier   Decimal  @default(1.0) @db.Decimal(6, 3)
-  fixedAmount  Decimal? @db.Decimal(10, 2)
-  occupiesSeat Boolean  @default(true)
-  active       Boolean  @default(true)
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model PassengerFareSeasonPrice {
+  id          String   @id @default(cuid())
+  serviceId   String
+  year        Int
+  priceBucket String
+  category    String
+  amount      Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@unique([serviceType, category])
-  @@index([serviceType, sortOrder])
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, year, priceBucket, category])
+  @@index([serviceId, year, priceBucket])
+  @@index([year, priceBucket, category])
 }
 
 model PricingPeriod {

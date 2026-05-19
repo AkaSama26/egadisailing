@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { receiptPdfFilename, renderReceiptPdf } from "./pdf";
+import {
+  normalizeReceiptPdfMoney,
+  normalizeReceiptPdfText,
+  receiptPdfFilename,
+  renderReceiptPdf,
+} from "./pdf";
 import type { ReceiptViewModel } from "./view-model";
 
 describe("receipt PDF", () => {
@@ -10,6 +15,13 @@ describe("receipt PDF", () => {
     expect(signature).toBe("%PDF");
     expect(bytes.length).toBeGreaterThan(1000);
     expect(receiptPdfFilename("RC-2026-0001")).toBe("RC-2026-0001.pdf");
+  });
+
+  test("preserves euro labels for PDF text", () => {
+    expect(normalizeReceiptPdfMoney("€120.00")).toBe("€120.00");
+    expect(normalizeReceiptPdfMoney("120,00\u00a0€")).toBe("120,00 €");
+    expect(normalizeReceiptPdfText("€120.00")).toBe("€120.00");
+    expect(normalizeReceiptPdfText("Paid → confirmed ✓")).toBe("Paid -> confirmed ?");
   });
 });
 
