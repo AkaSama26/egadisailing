@@ -17,6 +17,8 @@
   "hero": {
     "title": "Leave the Shore Behind",
     "subtitle": "Discover the Egadi Islands: a trimaran with chef, exclusive tours and charters from Trapani.",
+    "seoTitle": "Egadi Islands boat tours from Trapani",
+    "seoSubtitle": "Favignana and Levanzo day trips, private and shared boat tours, Egadi trimaran charters with catamaran-style comfort, skipper, snorkelling and chef on board.",
     "cta": "Explore experiences",
     "vehicleLabel": "Boat",
     "vehiclePlaceholder": "Choose a boat",
@@ -167,7 +169,7 @@
   },
   "experiences": {
     "title": "Egadi Boat Tours from Trapani",
-    "subtitle": "Choose your Egadi tour: chef on board, trimaran charter, private 4-hour tours and shared or private 8-hour boat tours. Prices and availability online."
+    "subtitle": "Curated routes around Favignana and Levanzo, private and shared boat tours, trimaran charters and sport fishing from Trapani harbour."
   },
   "boats": {
     "title": "Boats for Egadi Tours from Trapani",
@@ -240,7 +242,7 @@
     }
   },
   "landing": {
-    "experiencesTitle": "Ready to set sail?",
+    "experiencesTitle": "Boat tours in the Egadi Islands: Favignana, Levanzo and Marettimo",
     "experiencesSubtitle": "",
     "islandsTitle": "The Egadi Islands",
     "islandsSubtitle": "Three jewels in the heart of the Mediterranean",
@@ -254,8 +256,8 @@
     "whyIslands": "Unspoiled islands",
     "whyIslandsDesc": "The clearest waters of the Mediterranean, sea caves and hidden coves.",
     "testimonialsTitle": "What our guests say",
-    "ctaTitle": "Book your experience",
-    "ctaSubtitle": "Choose your adventure in the Egadi Islands",
+    "ctaTitle": "Book your Egadi Islands boat tour from Trapani",
+    "ctaSubtitle": "Choose a shared tour, private boat, chef on board or Egadi charter",
     "ctaButton": "Explore experiences"
   }
 }

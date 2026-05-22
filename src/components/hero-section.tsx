@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HERO_VIDEO_SRC } from "@/lib/public-assets";
@@ -19,44 +18,6 @@ export interface HeroExperienceCard {
   pills: string[];
   bookingHref: string;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Rotating words animation                                          */
-/* ------------------------------------------------------------------ */
-
-const islands = ["Favignana", "Levanzo", "Marettimo"];
-
-function RotatingWord() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % islands.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <span className="inline-block relative h-[1.1em] overflow-hidden align-bottom">
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={islands[index]}
-          initial={{ y: -80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 80, opacity: 0 }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          className="inline-block text-white"
-        >
-          {islands[index]}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Wave shapes at the bottom                                         */
-/* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
 /*  Gold waves divider — exported for use between sections            */
@@ -460,14 +421,13 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
 
       {/* ---- Hero content ---- */}
       <div className="relative z-40 flex min-h-[860px] w-full flex-col justify-center px-4 pb-20 pt-28 md:min-h-[820px] md:px-8 lg:px-12">
-        <div className="max-w-5xl">
-          {/* H1 with rotating island name */}
-          <h1 className="font-heading text-6xl font-extrabold leading-[1] tracking-tight text-white drop-shadow-lg sm:text-7xl md:text-8xl lg:text-[9rem] xl:text-[10rem]">
-            <RotatingWord />
+        <div className="max-w-6xl">
+          <h1 className="max-w-5xl font-heading text-4xl font-extrabold leading-[0.98] text-white drop-shadow-lg sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
+            {t("seoTitle")}
           </h1>
 
-          <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-white drop-shadow-md sm:text-xl md:text-2xl">
-            {t("subtitle")}
+          <p className="mt-5 max-w-3xl text-lg font-medium leading-relaxed text-white drop-shadow-md sm:text-xl md:text-2xl">
+            {t("seoSubtitle")}
           </p>
         </div>
 
@@ -582,9 +542,15 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                         </div>
 
                         <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                          <h2 className="text-xl font-bold leading-tight [text-shadow:0_3px_18px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
-                            {experience.title}
-                          </h2>
+                          {isDuplicate ? (
+                            <p className="text-xl font-bold leading-tight [text-shadow:0_3px_18px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
+                              {experience.title}
+                            </p>
+                          ) : (
+                            <h3 className="text-xl font-bold leading-tight [text-shadow:0_3px_18px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
+                              {experience.title}
+                            </h3>
+                          )}
                           <p className="mt-2 h-12 overflow-hidden text-sm font-medium leading-6 text-white [text-shadow:0_3px_16px_rgba(0,0,0,0.96),0_1px_3px_rgba(0,0,0,0.96)]">
                             {experience.subtitle}
                           </p>

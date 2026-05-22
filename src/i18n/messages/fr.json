@@ -28,6 +28,8 @@
   "hero": {
     "title": "Quittez la terre ferme",
     "subtitle": "Découvrez les îles Égades : trimaran avec chef, excursions privées et charter depuis Trapani.",
+    "seoTitle": "Excursions en bateau aux îles Égades depuis Trapani",
+    "seoSubtitle": "Sorties à Favignana et Levanzo, excursions privées et partagées, charter en trimaran aux Égades avec confort de catamaran, skipper, snorkeling et chef à bord.",
     "cta": "Voir les expériences",
     "vehicleLabel": "Bateau",
     "vehiclePlaceholder": "Choisir un bateau",
@@ -227,7 +229,7 @@
   },
   "experiences": {
     "title": "Excursions en bateau aux îles Égades depuis Trapani",
-    "subtitle": "Choisissez votre excursion aux îles Égades : chef à bord, charter en trimaran, tours privés de 4 heures et excursions partagées ou privées de 8 heures. Prix et disponibilités en ligne."
+    "subtitle": "Itinéraires soignés entre Favignana et Levanzo, excursions privées et partagées, charter en trimaran et pêche sportive depuis le port de Trapani."
   },
   "boats": {
     "title": "Bateaux pour excursions aux îles Égades depuis Trapani",
@@ -317,7 +319,7 @@
     }
   },
   "landing": {
-    "experiencesTitle": "Prêt à partir ?",
+    "experiencesTitle": "Excursions en bateau aux îles Égades : Favignana, Levanzo et Marettimo",
     "experiencesSubtitle": "",
     "islandsTitle": "Les îles Égades",
     "islandsSubtitle": "Trois joyaux au cœur de la Méditerranée",
@@ -331,12 +333,12 @@
     "whyIslands": "Îles préservées",
     "whyIslandsDesc": "Des eaux parmi les plus claires de Méditerranée, grottes marines et criques cachées.",
     "testimonialsTitle": "Ce que disent nos invités",
-    "ctaTitle": "Réservez votre expérience",
-    "ctaSubtitle": "Choisissez votre aventure aux îles Égades",
+    "ctaTitle": "Réservez votre excursion en bateau aux îles Égades depuis Trapani",
+    "ctaSubtitle": "Choisissez tour partagé, bateau privé, chef à bord ou charter aux Égades",
     "ctaButton": "Voir les expériences"
   },
   "home": {
-    "experiencesTitle": "Prêt à partir ?",
+    "experiencesTitle": "Excursions en bateau aux îles Égades : Favignana, Levanzo et Marettimo",
     "experiencesSubtitle": "",
     "islandsTitle": "Les îles Égades",
     "islandsSubtitle": "Trois joyaux au cœur de la Méditerranée",
@@ -350,8 +352,8 @@
     "whyIslands": "Îles préservées",
     "whyIslandsDesc": "Des eaux parmi les plus claires de Méditerranée, grottes marines et criques cachées.",
     "testimonialsTitle": "Ce que disent nos invités",
-    "ctaTitle": "Réservez votre expérience",
-    "ctaSubtitle": "Choisissez votre aventure aux îles Égades",
+    "ctaTitle": "Réservez votre excursion en bateau aux îles Égades depuis Trapani",
+    "ctaSubtitle": "Choisissez tour partagé, bateau privé, chef à bord ou charter aux Égades",
     "ctaButton": "Voir les expériences"
   }
 }

@@ -17,6 +17,8 @@
   "hero": {
     "title": "Lascia la Terra Ferma",
     "subtitle": "Scopri le Isole Egadi. Trimarano con chef, escursioni esclusive e charter da Trapani",
+    "seoTitle": "Tour in barca alle Isole Egadi da Trapani",
+    "seoSubtitle": "Escursioni a Favignana e Levanzo, tour privati e condivisi, charter in trimarano alle Egadi con comfort da catamarano, skipper, snorkeling e chef a bordo.",
     "cta": "Esplora le Esperienze",
     "vehicleLabel": "Mezzo",
     "vehiclePlaceholder": "Scegli il mezzo",
@@ -167,7 +169,7 @@
   },
   "experiences": {
     "title": "Tour in barca alle Egadi da Trapani",
-    "subtitle": "Scegli il tuo tour alle Egadi: chef a bordo, charter in trimarano, tour privati da 4 ore e tour da 8 ore condivisi o privati. Prezzi e disponibilità online."
+    "subtitle": "Itinerari curati tra Favignana e Levanzo, tour privati e condivisi, charter in trimarano e pesca sportiva dal Porto di Trapani."
   },
   "boats": {
     "title": "Barche per tour alle Egadi da Trapani",
@@ -240,7 +242,7 @@
     }
   },
   "landing": {
-    "experiencesTitle": "Pronto a Salpare?",
+    "experiencesTitle": "Escursioni in barca alle Egadi: Favignana, Levanzo e Marettimo",
     "experiencesSubtitle": "",
     "islandsTitle": "Le Isole Egadi",
     "islandsSubtitle": "Tre gioielli nel cuore del Mediterraneo",
@@ -254,8 +256,8 @@
     "whyIslands": "Isole Incontaminate",
     "whyIslandsDesc": "Le acque più cristalline del Mediterraneo, grotte marine e calette nascoste.",
     "testimonialsTitle": "Cosa Dicono i Nostri Ospiti",
-    "ctaTitle": "Prenota la Tua Esperienza",
-    "ctaSubtitle": "Scegli la tua avventura nelle Isole Egadi",
+    "ctaTitle": "Prenota il tuo tour in barca alle Egadi da Trapani",
+    "ctaSubtitle": "Scegli tour condiviso, barca privata, chef a bordo o charter alle Egadi",
     "ctaButton": "Esplora le Esperienze"
   }
 }

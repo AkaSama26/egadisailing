@@ -22,6 +22,191 @@ const nextConfig: NextConfig = {
       allowedOrigins: allowedOrigins.length > 0 ? allowedOrigins : undefined,
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/it/esperienze/boat-shared-full-day",
+        destination: "/it/esperienze/escursione-barca-favignana-levanzo-da-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/it/esperienze/boat-exclusive-full-day",
+        destination: "/it/esperienze/tour-privato-favignana-levanzo-da-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/en/experiences/boat-shared-full-day",
+        destination: "/en/experiences/favignana-levanzo-boat-tour-from-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/en/experiences/boat-exclusive-full-day",
+        destination: "/en/experiences/private-favignana-levanzo-boat-tour-from-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/es/experiencias/boat-shared-full-day",
+        destination: "/es/experiencias/excursion-compartida-islas-egadi-8-horas",
+        statusCode: 301,
+      },
+      {
+        source: "/es/experiencias/boat-exclusive-full-day",
+        destination: "/es/experiencias/excursion-privada-islas-egadi-8-horas",
+        statusCode: 301,
+      },
+      {
+        source: "/fr/experiences/boat-shared-full-day",
+        destination: "/fr/experiences/excursion-partagee-iles-egades-8-heures",
+        statusCode: 301,
+      },
+      {
+        source: "/fr/experiences/boat-exclusive-full-day",
+        destination: "/fr/experiences/excursion-privee-iles-egades-8-heures",
+        statusCode: 301,
+      },
+      {
+        source: "/de/erlebnisse/boat-shared-full-day",
+        destination: "/de/erlebnisse/geteilte-bootstour-aegadische-inseln-8-stunden",
+        statusCode: 301,
+      },
+      {
+        source: "/de/erlebnisse/boat-exclusive-full-day",
+        destination: "/de/erlebnisse/private-bootstour-aegadische-inseln-8-stunden",
+        statusCode: 301,
+      },
+      {
+        source: "/it/esperienze/exclusive-experience",
+        destination: "/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/it/esperienze/charter",
+        destination: "/it/esperienze/charter-egadi-trimarano-da-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/it/esperienze/boat-exclusive-morning",
+        destination: "/it/esperienze/tour-privato-egadi-4-ore-mattina-da-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/it/esperienze/boat-exclusive-afternoon",
+        destination: "/it/esperienze/tour-privato-egadi-4-ore-pomeriggio-da-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/it/esperienze/charter-pesca-egadi",
+        destination: "/it/esperienze/charter-pesca-egadi-da-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/en/experiences/exclusive-experience",
+        destination: "/en/experiences/chef-on-board-egadi-trimaran-from-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/en/experiences/charter",
+        destination: "/en/experiences/egadi-trimaran-charter-from-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/en/experiences/boat-exclusive-morning",
+        destination: "/en/experiences/private-egadi-4-hour-morning-boat-tour-from-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/en/experiences/boat-exclusive-afternoon",
+        destination: "/en/experiences/private-egadi-4-hour-afternoon-boat-tour-from-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/en/experiences/egadi-fishing-charter",
+        destination: "/en/experiences/egadi-fishing-charter-from-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/es/experiencias/chef-a-bordo-neel-47",
+        destination: "/es/experiencias/chef-a-bordo-egadi-trimaran-desde-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/es/experiencias/charter-islas-egadi",
+        destination: "/es/experiencias/charter-egadi-trimaran-desde-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/es/experiencias/excursion-privada-islas-egadi-4-horas-manana",
+        destination: "/es/experiencias/tour-privado-egadi-4-horas-manana-desde-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/es/experiencias/excursion-privada-islas-egadi-4-horas-tarde",
+        destination: "/es/experiencias/tour-privado-egadi-4-horas-tarde-desde-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/es/experiencias/charter-pesca-islas-egadi",
+        destination: "/es/experiencias/charter-pesca-egadi-desde-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/fr/experiences/chef-a-bord-neel-47",
+        destination: "/fr/experiences/chef-a-bord-egades-trimaran-depuis-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/fr/experiences/charter-iles-egades",
+        destination: "/fr/experiences/charter-egades-trimaran-depuis-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/fr/experiences/excursion-privee-iles-egades-4-heures-matin",
+        destination: "/fr/experiences/excursion-privee-egades-4-heures-matin-depuis-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/fr/experiences/excursion-privee-iles-egades-4-heures-apres-midi",
+        destination: "/fr/experiences/excursion-privee-egades-4-heures-apres-midi-depuis-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/fr/experiences/charter-peche-iles-egades",
+        destination: "/fr/experiences/charter-peche-egades-depuis-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/de/erlebnisse/chef-an-bord-neel-47",
+        destination: "/de/erlebnisse/chef-an-bord-aegadische-inseln-trimaran-ab-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/de/erlebnisse/charter-aegadische-inseln",
+        destination: "/de/erlebnisse/trimaran-charter-aegadische-inseln-ab-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/de/erlebnisse/private-bootstour-aegadische-inseln-4-stunden-vormittag",
+        destination: "/de/erlebnisse/private-bootstour-aegadische-inseln-4-stunden-vormittag-ab-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/de/erlebnisse/private-bootstour-aegadische-inseln-4-stunden-nachmittag",
+        destination: "/de/erlebnisse/private-bootstour-aegadische-inseln-4-stunden-nachmittag-ab-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/de/erlebnisse/angelcharter-aegadische-inseln",
+        destination: "/de/erlebnisse/angelcharter-aegadische-inseln-ab-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.egadisailing.com" }],
+        destination: "https://egadisailing.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   // Security headers defense-in-depth. HSTS resta al reverse proxy/edge per
   // evitare header duplicati sulla risposta pubblica.
   async headers() {

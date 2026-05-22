@@ -1,7 +1,11 @@
 import type { MetadataRoute } from "next";
 import { routing } from "@/i18n/routing";
 import { db } from "@/lib/db";
-import { getExperiencePublicSlug, getListedExperienceIds } from "@/data/catalog/experiences";
+import {
+  getExperiencePackageServiceIds,
+  getExperiencePublicSlug,
+  getListedExperienceIds,
+} from "@/data/catalog/experiences";
 import { getPublicBoatSlugs } from "@/data/catalog/boats";
 import { favignanaGuideSlugPairs } from "@/data/favignana-guides";
 import { levanzoGuideSlugPairs } from "@/data/levanzo-guides";
@@ -75,15 +79,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
   const lowPriorityPages = new Set(["/privacy", "/terms", "/cookie-policy"]);
 
-  const listedExperienceIds = getListedExperienceIds();
-  let services = listedExperienceIds.map((id) => ({ id, updatedAt: new Date() }));
+  const listedExperienceIds = Array.from(
+    new Set([...getListedExperienceIds(), ...getExperiencePackageServiceIds()]),
+  );
+  let serviceLastModifiedById = new Map(
+    listedExperienceIds.map((id) => [id, now] as const),
+  );
 
   try {
-    services = await db.service.findMany({
+    const services = await db.service.findMany({
       where: { active: true, id: { in: listedExperienceIds } },
       select: { id: true, updatedAt: true },
       orderBy: { priority: "desc" },
     });
+    serviceLastModifiedById = new Map(
+      listedExperienceIds.map((id) => [
+        id,
+        services.find((service) => service.id === id)?.updatedAt ?? now,
+      ] as const),
+    );
   } catch (err) {
     if (process.env.NEXT_PHASE !== "phase-production-build") {
       console.error("[sitemap] falling back to static catalog", err);
@@ -175,20 +189,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
   }
 
-  for (const service of services) {
-    const slug = getExperiencePublicSlug(service.id);
+  for (const serviceId of listedExperienceIds) {
     addLocalizedEntries(
       entries,
       baseUrl,
       {
-        it: localizedPathWithoutLocale("it", `/experiences/${slug}`),
-        en: localizedPathWithoutLocale("en", `/experiences/${slug}`),
-        es: localizedPathWithoutLocale("es", `/experiences/${slug}`),
-        fr: localizedPathWithoutLocale("fr", `/experiences/${slug}`),
-        de: localizedPathWithoutLocale("de", `/experiences/${getExperiencePublicSlug(service.id, "de")}`),
+        it: localizedPathWithoutLocale("it", `/experiences/${getExperiencePublicSlug(serviceId, "it")}`),
+        en: localizedPathWithoutLocale("en", `/experiences/${getExperiencePublicSlug(serviceId, "en")}`),
+        es: localizedPathWithoutLocale("es", `/experiences/${getExperiencePublicSlug(serviceId, "es")}`),
+        fr: localizedPathWithoutLocale("fr", `/experiences/${getExperiencePublicSlug(serviceId, "fr")}`),
+        de: localizedPathWithoutLocale("de", `/experiences/${getExperiencePublicSlug(serviceId, "de")}`),
       },
       {
-        lastModified: service.updatedAt,
+        lastModified: serviceLastModifiedById.get(serviceId) ?? now,
         changeFrequency: "weekly",
         priority: 0.8,
       },

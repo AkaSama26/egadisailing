@@ -17,6 +17,8 @@
   "hero": {
     "title": "Deja la costa atrás",
     "subtitle": "Descubre las Islas Egadi: trimarán con chef, excursiones privadas y charter desde Trapani.",
+    "seoTitle": "Excursiones en barco a las Islas Egadi desde Trapani",
+    "seoSubtitle": "Excursiones a Favignana y Levanzo, tours privados y compartidos, charter en trimarán en las Egadi con confort de catamarán, patrón, snorkel y chef a bordo.",
     "cta": "Ver experiencias",
     "vehicleLabel": "Barco",
     "vehiclePlaceholder": "Elige un barco",
@@ -167,7 +169,7 @@
   },
   "experiences": {
     "title": "Excursiones en barco a las Islas Egadi desde Trapani",
-    "subtitle": "Elige tu excursión por las Islas Egadi: chef a bordo, charter en trimarán, tours privados de 4 horas y excursiones compartidas o privadas de 8 horas. Precios y disponibilidad online."
+    "subtitle": "Itinerarios cuidados entre Favignana y Levanzo, tours privados y compartidos, charter en trimarán y pesca deportiva desde el Puerto de Trapani."
   },
   "boats": {
     "title": "Barcos para excursiones a las Islas Egadi desde Trapani",
@@ -240,7 +242,7 @@
     }
   },
   "landing": {
-    "experiencesTitle": "¿Listo para zarpar?",
+    "experiencesTitle": "Excursiones en barco en las Islas Egadi: Favignana, Levanzo y Marettimo",
     "experiencesSubtitle": "",
     "islandsTitle": "Las Islas Egadi",
     "islandsSubtitle": "Tres joyas en el corazón del Mediterráneo",
@@ -254,8 +256,8 @@
     "whyIslands": "Islas vírgenes",
     "whyIslandsDesc": "Las aguas más claras del Mediterráneo, cuevas marinas y calas escondidas.",
     "testimonialsTitle": "Qué dicen nuestros huéspedes",
-    "ctaTitle": "Reserva tu experiencia",
-    "ctaSubtitle": "Elige tu aventura en las Islas Egadi",
+    "ctaTitle": "Reserva tu excursión en barco a las Islas Egadi desde Trapani",
+    "ctaSubtitle": "Elige tour compartido, barco privado, chef a bordo o charter en las Egadi",
     "ctaButton": "Ver experiencias"
   }
 }

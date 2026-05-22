@@ -164,7 +164,7 @@ export function IslandsItinerary() {
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-gold)]">
             {isEs ? "Islas Egadi" : isFr ? "Îles Égades" : isDe ? "Ägadische Inseln" : isEn ? "Egadi Islands" : "Isole Egadi"}
           </p>
-          <h1 className="mt-4 font-heading text-4xl font-bold leading-none sm:text-5xl lg:text-7xl">
+          <h2 className="mt-4 font-heading text-4xl font-bold leading-none sm:text-5xl lg:text-7xl">
             {isEs
               ? "El mapa de las Islas Egadi"
               : isFr
@@ -174,7 +174,7 @@ export function IslandsItinerary() {
                   : isEn
                     ? "The map of the Egadi Islands"
                     : "La mappa delle Isole Egadi"}
-          </h1>
+          </h2>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white/68 sm:text-lg">
             {isEs
               ? "Calas, cuevas, desembarcaderos y senderos reunidos en un mapa visual para explorar Favignana, Levanzo y Marettimo con una mirada más precisa."

@@ -222,57 +222,90 @@ const fullDayBoatItinerary = [
   {
     time: "10:00",
     title: {
-      it: "Partenza da Trapani",
-      en: "Departure from Trapani",
+      it: "Partenza dal Porto di Trapani",
+      en: "Departure from Trapani harbour",
+      es: "Salida desde el Puerto de Trapani",
+      fr: "Départ du port de Trapani",
+      de: "Abfahrt vom Hafen Trapani",
     },
     location: {
-      it: "Porto di Trapani",
-      en: "Trapani harbour",
+      it: "Via dei Gladioli 15, 91100 Trapani",
+      en: "Via dei Gladioli 15, 91100 Trapani",
+      es: "Via dei Gladioli 15, 91100 Trapani",
+      fr: "Via dei Gladioli 15, 91100 Trapani",
+      de: "Via dei Gladioli 15, 91100 Trapani",
     },
     text: {
-      it: "Imbarco, briefing sicurezza e rotta definita con lo skipper in base a vento e mare.",
-      en: "Boarding, safety briefing and route agreed with the skipper according to wind and sea conditions.",
+      it: "Imbarco, briefing sicurezza e partenza per un tour in barca di 8 ore verso Favignana e Levanzo, con rotta definita dallo skipper in base a vento e mare.",
+      en: "Boarding, safety briefing and departure for an 8-hour boat tour towards Favignana and Levanzo, with the skipper shaping the route around wind and sea conditions.",
+      es: "Embarque, briefing de seguridad y salida para una excursión en barco de 8 horas hacia Favignana y Levanzo, con ruta definida por el patrón según viento y mar.",
+      fr: "Embarquement, briefing sécurité et départ pour une excursion en bateau de 8 heures vers Favignana et Levanzo, avec route définie par le skipper selon vent et mer.",
+      de: "Einschiffung, Sicherheitsbriefing und Start zu einer 8-stündigen Bootstour nach Favignana und Levanzo, mit Route nach Wind und Meer.",
     },
   },
   {
     time: "11:00",
     title: {
-      it: "Favignana",
-      en: "Favignana",
+      it: "Favignana: Cala Rossa, Cala Azzurra e Bue Marino",
+      en: "Favignana: Cala Rossa, Cala Azzurra and Bue Marino",
+      es: "Favignana: Cala Rossa, Cala Azzurra y Bue Marino",
+      fr: "Favignana : Cala Rossa, Cala Azzurra et Bue Marino",
+      de: "Favignana: Cala Rossa, Cala Azzurra und Bue Marino",
     },
     location: {
-      it: "Cale riparate",
-      en: "Sheltered coves",
+      it: "Favignana",
+      en: "Favignana",
+      es: "Favignana",
+      fr: "Favignana",
+      de: "Favignana",
     },
     text: {
-      it: "Prima sosta bagno tra Cala Rossa, Bue Marino, Cala Azzurra o una rada più protetta.",
-      en: "First swim stop at Cala Rossa, Bue Marino, Cala Azzurra or a more sheltered anchorage.",
+      it: "Prime possibili soste bagno e snorkeling tra Cala Rossa, Cala Azzurra, Bue Marino, Scalo Cavallo o Grotta degli Innamorati, sempre secondo meteo, mare e affollamento.",
+      en: "Possible first swim and snorkelling stops around Cala Rossa, Cala Azzurra, Bue Marino, Scalo Cavallo or Grotta degli Innamorati, always according to weather, sea state and crowds.",
+      es: "Primeras posibles paradas de baño y snorkel entre Cala Rossa, Cala Azzurra, Bue Marino, Scalo Cavallo o Grotta degli Innamorati, siempre según meteorología, mar y afluencia.",
+      fr: "Premiers arrêts baignade et snorkeling possibles entre Cala Rossa, Cala Azzurra, Bue Marino, Scalo Cavallo ou Grotta degli Innamorati, toujours selon météo, mer et affluence.",
+      de: "Mögliche erste Bade- und Schnorchelstopps bei Cala Rossa, Cala Azzurra, Bue Marino, Scalo Cavallo oder Grotta degli Innamorati, immer je nach Wetter, Meer und Andrang.",
     },
   },
   {
     time: "13:00",
     title: {
-      it: "Pausa in rada",
-      en: "Anchorage break",
+      it: "Pausa in rada e pranzo libero",
+      en: "Anchorage break and free lunch",
+      es: "Pausa fondeados y comida libre",
+      fr: "Pause au mouillage et déjeuner libre",
+      de: "Ankerpause und freie Mittagspause",
     },
     text: {
-      it: "Tempo per relax, snorkeling e pranzo libero o servizio extra organizzato su richiesta.",
-      en: "Time to relax, snorkel and enjoy lunch independently or as an extra service on request.",
+      it: "Tempo per relax, snorkeling e pranzo libero in rada. Eventuali servizi extra a bordo sono organizzati solo se concordati prima della partenza.",
+      en: "Time to relax, snorkel and enjoy lunch independently at anchor. Any extra on-board services are arranged only if agreed before departure.",
+      es: "Tiempo para relajarse, hacer snorkel y comer libremente fondeados. Los servicios extra a bordo se organizan solo si se acuerdan antes de la salida.",
+      fr: "Temps pour se détendre, faire du snorkeling et déjeuner librement au mouillage. Les services extra à bord sont organisés uniquement s'ils sont convenus avant le départ.",
+      de: "Zeit zum Entspannen, Schnorcheln und freien Mittagessen vor Anker. Zusätzliche Bordservices werden nur organisiert, wenn sie vor der Abfahrt vereinbart wurden.",
     },
   },
   {
     time: "15:00",
     title: {
-      it: "Levanzo",
-      en: "Levanzo",
+      it: "Levanzo: Cala Fredda, Cala Minnola e Faraglione",
+      en: "Levanzo: Cala Fredda, Cala Minnola and the Faraglione",
+      es: "Levanzo: Cala Fredda, Cala Minnola y el Faraglione",
+      fr: "Levanzo : Cala Fredda, Cala Minnola et le Faraglione",
+      de: "Levanzo: Cala Fredda, Cala Minnola und Faraglione",
     },
     location: {
-      it: "Cala Dogana o Cala Fredda",
-      en: "Cala Dogana or Cala Fredda",
+      it: "Levanzo",
+      en: "Levanzo",
+      es: "Levanzo",
+      fr: "Levanzo",
+      de: "Levanzo",
     },
     text: {
-      it: "Seconda isola o seconda baia: una sosta più tranquilla, scelta secondo mare e affollamento.",
-      en: "Second island or second bay: a quieter stop chosen according to sea conditions and crowds.",
+      it: "Seconda parte dell'itinerario tra Cala Fredda, Cala Minnola, Cala Dogana o il Faraglione di Levanzo, con soste bagno scelte in base al lato più riparato.",
+      en: "Second part of the itinerary around Cala Fredda, Cala Minnola, Cala Dogana or the Faraglione di Levanzo, with swim stops chosen on the most sheltered side.",
+      es: "Segunda parte del itinerario entre Cala Fredda, Cala Minnola, Cala Dogana o el Faraglione de Levanzo, con paradas de baño elegidas en la zona más resguardada.",
+      fr: "Deuxième partie de l'itinéraire entre Cala Fredda, Cala Minnola, Cala Dogana ou le Faraglione de Levanzo, avec arrêts baignade choisis du côté le plus abrité.",
+      de: "Zweiter Teil der Route bei Cala Fredda, Cala Minnola, Cala Dogana oder dem Faraglione di Levanzo, mit Badestopps auf der geschütztesten Seite.",
     },
   },
   {
@@ -280,25 +313,40 @@ const fullDayBoatItinerary = [
     title: {
       it: "Navigazione panoramica",
       en: "Scenic navigation",
+      es: "Navegación panorámica",
+      fr: "Navigation panoramique",
+      de: "Panoramafahrt",
     },
     text: {
-      it: "Ultimo bagno e rientro morbido verso Trapani con vista sulle Egadi.",
-      en: "Final swim and an easy return towards Trapani with views of the Egadi Islands.",
+      it: "Ultimo bagno se le condizioni lo permettono, poi rientro morbido verso il Porto di Trapani con vista sulle Isole Egadi.",
+      en: "Final swim if conditions allow, then an easy return towards Trapani harbour with views of the Egadi Islands.",
+      es: "Último baño si las condiciones lo permiten y regreso suave hacia el Puerto de Trapani con vistas a las Islas Egadi.",
+      fr: "Dernier bain si les conditions le permettent, puis retour doux vers le port de Trapani avec vue sur les îles Égades.",
+      de: "Letzter Badestopp, wenn die Bedingungen es erlauben, dann entspannte Rückfahrt zum Hafen Trapani mit Blick auf die Ägadischen Inseln.",
     },
   },
   {
     time: "18:00",
     title: {
-      it: "Rientro",
-      en: "Return",
+      it: "Rientro al Porto di Trapani",
+      en: "Return to Trapani harbour",
+      es: "Regreso al Puerto de Trapani",
+      fr: "Retour au port de Trapani",
+      de: "Rückkehr zum Hafen Trapani",
     },
     location: {
-      it: "Trapani",
-      en: "Trapani",
+      it: "Porto di Trapani",
+      en: "Trapani harbour",
+      es: "Puerto de Trapani",
+      fr: "Port de Trapani",
+      de: "Hafen Trapani",
     },
     text: {
-      it: "Sbarco a Trapani.",
-      en: "Disembarkation in Trapani.",
+      it: "Sbarco a Trapani dopo la giornata tra Favignana e Levanzo.",
+      en: "Disembarkation in Trapani after the day between Favignana and Levanzo.",
+      es: "Desembarque en Trapani después de la jornada entre Favignana y Levanzo.",
+      fr: "Débarquement à Trapani après la journée entre Favignana et Levanzo.",
+      de: "Ausschiffung in Trapani nach dem Tag zwischen Favignana und Levanzo.",
     },
   },
 ];
@@ -678,24 +726,24 @@ export const EXPERIENCE_CATALOG = {
     order: 10,
     listed: true,
     title: {
-      it: "Esperienza Gourmet",
-      en: "Gourmet Experience",
+      it: "Chef a bordo alle Egadi in trimarano da Trapani",
+      en: "Chef on board in an Egadi trimaran from Trapani",
     },
     subtitle: {
-      it: "Il trimarano tutto per te, con chef a bordo e rotta costruita sulla giornata migliore alle Egadi.",
-      en: "The trimaran reserved for you, with an on-board chef and a route shaped around the best Egadi conditions.",
+      it: "Il trimarano tutto per te, con chef a bordo e comfort da catamarano tra Favignana e Levanzo.",
+      en: "The trimaran reserved for you, with an on-board chef and catamaran-style comfort between Favignana and Levanzo.",
     },
     detailDescription: {
-      it: "Una giornata privata sul Trimarano: skipper, hostess e chef coordinano ritmo, tavola e soste bagno. È il pacchetto più completo per chi vuole vivere le Egadi senza compromessi.",
-      en: "A private day on the Egadisailing trimaran: skipper, hostess and chef coordinate the pace, meal service and swim stops. This is the most complete package for experiencing the Egadi Islands without compromise.",
+      it: "Una giornata privata sul trimarano con comfort da catamarano: skipper, hostess e chef coordinano ritmo, pranzo a bordo e soste bagno tra Favignana e Levanzo.",
+      en: "A private day on the trimaran with catamaran-style comfort: skipper, hostess and chef coordinate the pace, lunch on board and swim stops between Favignana and Levanzo.",
     },
     seoTitle: {
-      it: "Chef a bordo alle Egadi sul Neel 47",
-      en: "Neel 47 Chef Experience in the Egadi",
+      it: "Chef a bordo alle Egadi in trimarano da Trapani",
+      en: "Chef on Board in an Egadi Trimaran from Trapani",
     },
     seoDescription: {
-      it: "Prenota il Trimarano in esclusiva con chef a bordo, skipper e itinerario tra Favignana e Levanzo.",
-      en: "Book the Egadisailing trimaran privately with an on-board chef, skipper and itinerary around Favignana and Levanzo.",
+      it: "Chef a bordo alle Egadi in trimarano da Trapani: pranzo a bordo, skipper, hostess, Favignana e Levanzo, snorkeling e comfort da catamarano.",
+      en: "Chef on board in an Egadi trimaran from Trapani: lunch on board, skipper, hostess, Favignana and Levanzo, snorkelling and catamaran-style comfort.",
     },
     media: [
       {
@@ -741,8 +789,8 @@ export const EXPERIENCE_CATALOG = {
     order: 20,
     listed: true,
     title: {
-      it: "Charter Egadi",
-      en: "Egadi Charter",
+      it: "Charter Egadi in trimarano da Trapani",
+      en: "Egadi trimaran charter from Trapani",
     },
     subtitle: {
       it: "Da 3 a 7 giornate sul trimarano, con le Egadi come casa galleggiante.",
@@ -753,12 +801,12 @@ export const EXPERIENCE_CATALOG = {
       en: "A flexible charter for sleeping on board, waking up near the bays and shaping the route day by day. Provisioning is not included, a hostess is available as an extra and pantry top-ups can be arranged with the crew.",
     },
     seoTitle: {
-      it: "Charter Egadi in trimarano Neel 47",
-      en: "Egadi Trimaran Charter on the Neel 47",
+      it: "Charter Egadi in trimarano da Trapani",
+      en: "Egadi Trimaran Charter from Trapani",
     },
     seoDescription: {
-      it: "Charter in trimarano alle Isole Egadi da 3 a 7 giornate con skipper e pernottamento a bordo.",
-      en: "Trimaran charter in the Egadi Islands for 3 to 7 days with skipper and overnight stay on board.",
+      it: "Charter Egadi in trimarano da Trapani da 3 a 7 giorni: Favignana, Levanzo, Marettimo, skipper, cabine, pernottamento e rotta meteo.",
+      en: "Egadi trimaran charter from Trapani for 3 to 7 days: Favignana, Levanzo, Marettimo, skipper, cabins, overnight stay and weather-aware route.",
     },
     media: [
       {
@@ -841,26 +889,35 @@ export const EXPERIENCE_CATALOG = {
     serviceId: "boat-shared-full-day",
     order: 30,
     listed: true,
-    title: { it: "Tour in barca Egadi 8 ore condiviso", en: "Shared 8-hour Egadi boat tour" },
+    title: {
+      it: "Escursione in barca Favignana e Levanzo da Trapani",
+      en: "Favignana and Levanzo boat tour from Trapani",
+    },
     subtitle: {
-      it: "Un posto a bordo per una giornata completa tra baie, snorkeling e tempo lento alle Egadi.",
-      en: "A seat on board for a full day of bays, snorkelling and slow time in the Egadi.",
+      it: "Tour condiviso di 8 ore tra Cala Rossa, Cala Azzurra, Bue Marino, soste bagno e snorkeling.",
+      en: "Shared 8-hour boat tour with Cala Rossa, Cala Azzurra, Bue Marino, swim stops and snorkelling.",
     },
     detailDescription: {
-      it: "La formula più semplice per vivere un tour in barca alle Isole Egadi da Trapani: scegli la data, prenota i posti e condividi la giornata con altri ospiti.",
-      en: "The easiest way to enjoy a boat tour in the Egadi Islands from Trapani: choose your date, book your seats and share the day with other guests.",
+      it: "Escursione condivisa in barca da Trapani a Favignana e Levanzo: 8 ore con skipper, soste bagno, snorkeling e possibili tappe a Cala Rossa, Cala Azzurra e Bue Marino.",
+      en: "Shared boat tour from Trapani to Favignana and Levanzo: 8 hours with skipper, swim stops, snorkelling and possible stops at Cala Rossa, Cala Azzurra and Bue Marino.",
     },
-    seoTitle: { it: "Tour Egadi 8 ore condiviso da Trapani", en: "Shared 8-Hour Egadi Boat Tour from Trapani" },
+    seoTitle: {
+      it: "Escursione in barca Favignana e Levanzo da Trapani",
+      en: "Favignana and Levanzo Boat Tour from Trapani",
+    },
     seoDescription: {
-      it: "Tour condiviso in barca alle Egadi di 8 ore da Trapani con soste bagno, snorkeling e posti prenotabili online.",
-      en: "Shared 8-hour boat tour in the Egadi from Trapani with swim stops, snorkelling and online booking.",
+      it: "Escursione condivisa in barca Favignana e Levanzo da Trapani: 8 ore, Cala Rossa, Cala Azzurra, Bue Marino, snorkeling e soste bagno.",
+      en: "Shared Favignana and Levanzo boat tour from Trapani: 8 hours, Cala Rossa, Cala Azzurra, Bue Marino, snorkelling and swim stops.",
     },
     media: [
       {
         caption: { it: "Giornata intera", en: "Full day" },
         alt: {
-          it: "Gruppo a bordo durante un tour in barca di 8 ore alle Isole Egadi",
-          en: "Group on board during an 8-hour boat tour in the Egadi Islands",
+          it: "Gruppo a bordo durante escursione in barca Favignana e Levanzo da Trapani di 8 ore",
+          en: "Group on board during an 8-hour Favignana and Levanzo boat tour from Trapani",
+          es: "Grupo a bordo durante excursión en barco Favignana y Levanzo desde Trapani de 8 horas",
+          fr: "Groupe à bord pendant une excursion en bateau Favignana et Levanzo depuis Trapani de 8 heures",
+          de: "Gruppe an Bord während einer 8-stündigen Bootstour Favignana und Levanzo ab Trapani",
         },
         color: "#A7F3D0",
         src: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
@@ -868,8 +925,11 @@ export const EXPERIENCE_CATALOG = {
       {
         caption: { it: "Snorkeling", en: "Snorkelling" },
         alt: {
-          it: "Snorkeling in acqua limpida durante il tour in barca alle Egadi",
-          en: "Snorkelling in clear water during the Egadi boat tour",
+          it: "Snorkeling durante il tour condiviso Favignana e Levanzo con soste bagno",
+          en: "Snorkelling during the shared Favignana and Levanzo boat tour with swim stops",
+          es: "Snorkel durante la excursión compartida Favignana y Levanzo con paradas de baño",
+          fr: "Snorkeling pendant l'excursion partagée Favignana et Levanzo avec arrêts baignade",
+          de: "Schnorcheln während der geteilten Bootstour Favignana und Levanzo mit Badestopps",
         },
         color: "#BFDBFE",
         src: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
@@ -877,8 +937,11 @@ export const EXPERIENCE_CATALOG = {
       {
         caption: { it: "Rientro dorato", en: "Golden return" },
         alt: {
-          it: "Rientro in barca con luce dorata dopo una giornata alle Isole Egadi",
-          en: "Boat return in golden light after a day in the Egadi Islands",
+          it: "Rientro al Porto di Trapani dopo escursione in barca a Favignana e Levanzo",
+          en: "Return to Trapani harbour after a Favignana and Levanzo boat excursion",
+          es: "Regreso al Puerto de Trapani tras excursión en barco a Favignana y Levanzo",
+          fr: "Retour au port de Trapani après excursion en bateau à Favignana et Levanzo",
+          de: "Rückkehr zum Hafen Trapani nach der Bootstour nach Favignana und Levanzo",
         },
         color: "#FED7AA",
         src: "/images/experience-polaroids/barca-8-ore-tramonto.webp",
@@ -994,26 +1057,35 @@ export const EXPERIENCE_CATALOG = {
     serviceId: "boat-exclusive-full-day",
     order: 60,
     listed: true,
-    title: { it: "Tour in barca Egadi 8 ore privato", en: "Private 8-hour Egadi boat tour" },
+    title: {
+      it: "Tour privato in barca Favignana e Levanzo da Trapani",
+      en: "Private Favignana and Levanzo boat tour from Trapani",
+    },
     subtitle: {
-      it: "La barca riservata al tuo gruppo per una giornata completa tra baie, snorkeling e tempi scelti con lo skipper.",
-      en: "The boat reserved for your group for a full day of bays, snorkelling and a schedule shaped with the skipper.",
+      it: "Barca riservata per 8 ore tra Cala Rossa, Cala Azzurra, Bue Marino, soste bagno e snorkeling.",
+      en: "Reserved boat for 8 hours around Cala Rossa, Cala Azzurra, Bue Marino, swim stops and snorkelling.",
     },
     detailDescription: {
-      it: "Una giornata privata e flessibile alle Isole Egadi, con partenza da Trapani e soste decise insieme allo skipper in base a vento, mare e ritmo del gruppo.",
-      en: "A private and flexible day in the Egadi Islands, departing from Trapani with stops chosen with the skipper according to wind, sea and group pace.",
+      it: "Tour privato in barca da Trapani a Favignana e Levanzo: 8 ore con skipper, rotta flessibile, soste bagno, snorkeling e possibili tappe a Cala Rossa, Cala Azzurra e Bue Marino.",
+      en: "Private boat tour from Trapani to Favignana and Levanzo: 8 hours with skipper, flexible route, swim stops, snorkelling and possible stops at Cala Rossa, Cala Azzurra and Bue Marino.",
     },
-    seoTitle: { it: "Tour Egadi 8 ore privato da Trapani", en: "Private 8-Hour Egadi Boat Tour from Trapani" },
+    seoTitle: {
+      it: "Tour privato in barca Favignana e Levanzo da Trapani",
+      en: "Private Favignana and Levanzo Boat Tour from Trapani",
+    },
     seoDescription: {
-      it: "Prenota una barca privata alle Egadi per 8 ore con partenza da Trapani, skipper, soste bagno e rotta flessibile.",
-      en: "Book a private 8-hour boat tour in the Egadi from Trapani, with skipper, swim stops and flexible route.",
+      it: "Tour privato in barca Favignana e Levanzo da Trapani: 8 ore, Cala Rossa, Cala Azzurra, Bue Marino, snorkeling e rotta flessibile.",
+      en: "Private Favignana and Levanzo boat tour from Trapani: 8 hours, Cala Rossa, Cala Azzurra, Bue Marino, snorkelling and flexible route.",
     },
     media: [
       {
         caption: { it: "Barca privata", en: "Private boat" },
         alt: {
-          it: "Gruppo su barca privata durante un tour di 8 ore alle Isole Egadi",
-          en: "Group on a private boat during an 8-hour tour in the Egadi Islands",
+          it: "Gruppo su barca privata per tour Favignana e Levanzo da Trapani di 8 ore",
+          en: "Group on a private boat for an 8-hour Favignana and Levanzo tour from Trapani",
+          es: "Grupo en barco privado para tour Favignana y Levanzo desde Trapani de 8 horas",
+          fr: "Groupe sur bateau privé pour tour Favignana et Levanzo depuis Trapani de 8 heures",
+          de: "Gruppe auf privatem Boot für eine 8-stündige Tour Favignana und Levanzo ab Trapani",
         },
         color: "#A7F3D0",
         src: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
@@ -1021,8 +1093,11 @@ export const EXPERIENCE_CATALOG = {
       {
         caption: { it: "Snorkeling", en: "Snorkelling" },
         alt: {
-          it: "Snorkeling vicino alla barca privata nelle acque limpide delle Egadi",
-          en: "Snorkelling near a private boat in the clear waters of the Egadi",
+          it: "Snorkeling durante tour privato Favignana e Levanzo con soste bagno",
+          en: "Snorkelling during a private Favignana and Levanzo boat tour with swim stops",
+          es: "Snorkel durante tour privado Favignana y Levanzo con paradas de baño",
+          fr: "Snorkeling pendant tour privé Favignana et Levanzo avec arrêts baignade",
+          de: "Schnorcheln während privater Bootstour Favignana und Levanzo mit Badestopps",
         },
         color: "#BFDBFE",
         src: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
@@ -1030,8 +1105,11 @@ export const EXPERIENCE_CATALOG = {
       {
         caption: { it: "Luce dorata", en: "Golden light" },
         alt: {
-          it: "Aperitivo e rientro in barca privata con luce dorata alle Egadi",
-          en: "Aperitivo and return on a private boat in golden Egadi light",
+          it: "Rientro al Porto di Trapani dopo tour privato in barca Favignana e Levanzo",
+          en: "Return to Trapani harbour after a private Favignana and Levanzo boat tour",
+          es: "Regreso al Puerto de Trapani tras tour privado en barco Favignana y Levanzo",
+          fr: "Retour au port de Trapani après tour privé en bateau Favignana et Levanzo",
+          de: "Rückkehr zum Hafen Trapani nach privater Bootstour Favignana und Levanzo",
         },
         color: "#FED7AA",
         src: "/images/experience-polaroids/barca-8-ore-tramonto.webp",
@@ -1045,7 +1123,10 @@ export const EXPERIENCE_CATALOG = {
     serviceId: "boat-exclusive-morning",
     order: 70,
     listed: false,
-    title: { it: "Tour in barca Egadi 4 ore mattina privato", en: "Private 4-hour morning Egadi boat tour" },
+    title: {
+      it: "Tour privato in barca alle Egadi 4 ore da Trapani",
+      en: "Private 4-hour Egadi boat tour from Trapani",
+    },
     subtitle: {
       it: "Mezza giornata privata al mattino, con barca riservata e rotta scelta con lo skipper.",
       en: "A private morning half-day, with a reserved boat and route chosen with the skipper.",
@@ -1054,10 +1135,13 @@ export const EXPERIENCE_CATALOG = {
       it: "Tour privato di 4 ore alle Isole Egadi da Trapani, ideale per gruppi che vogliono mare, privacy e soste bagno in una fascia compatta.",
       en: "A private 4-hour tour in the Egadi Islands from Trapani, ideal for groups who want sea, privacy and swim stops in a compact slot.",
     },
-    seoTitle: { it: "Tour Egadi 4 ore privato mattina da Trapani", en: "Private 4-Hour Morning Egadi Boat Tour from Trapani" },
+    seoTitle: {
+      it: "Tour privato Egadi 4 ore mattina da Trapani",
+      en: "Private 4-Hour Morning Egadi Boat Tour from Trapani",
+    },
     seoDescription: {
-      it: "Tour privato in barca alle Egadi di 4 ore al mattino da Trapani, con skipper, soste bagno e rotta flessibile.",
-      en: "Private 4-hour morning boat tour in the Egadi from Trapani, with skipper, swim stops and flexible route.",
+      it: "Tour privato in barca alle Egadi di 4 ore al mattino da Trapani, con skipper, carburante, soste bagno, snorkeling e rotta flessibile.",
+      en: "Private 4-hour morning boat tour in the Egadi from Trapani, with skipper, fuel, swim stops, snorkelling and flexible route.",
     },
     media: [
       {
@@ -1096,7 +1180,10 @@ export const EXPERIENCE_CATALOG = {
     serviceId: "boat-exclusive-afternoon",
     order: 80,
     listed: true,
-    title: { it: "Tour in barca Egadi 4 ore pomeriggio privato", en: "Private 4-hour afternoon Egadi boat tour" },
+    title: {
+      it: "Tour privato in barca alle Egadi 4 ore da Trapani",
+      en: "Private 4-hour Egadi boat tour from Trapani",
+    },
     subtitle: {
       it: "Una mezza giornata privata nel pomeriggio per godersi le Egadi con ritmo rilassato, soste bagno e rotta flessibile.",
       en: "A private afternoon half-day to enjoy the Egadi Islands at a relaxed pace, with swim stops and a flexible route.",
@@ -1105,10 +1192,13 @@ export const EXPERIENCE_CATALOG = {
       it: "Barca riservata per 4 ore nel pomeriggio alle Isole Egadi da Trapani, pensata per gruppi che vogliono privacy, soste bagno e una rotta decisa con lo skipper.",
       en: "A private 4-hour afternoon boat tour in the Egadi Islands from Trapani, designed for groups who want privacy, swim stops and a route shaped with the skipper.",
     },
-    seoTitle: { it: "Tour Egadi 4 ore privato pomeriggio da Trapani", en: "Private 4-Hour Afternoon Egadi Boat Tour from Trapani" },
+    seoTitle: {
+      it: "Tour privato Egadi 4 ore pomeriggio da Trapani",
+      en: "Private 4-Hour Afternoon Egadi Boat Tour from Trapani",
+    },
     seoDescription: {
-      it: "Prenota un tour privato in barca alle Egadi di 4 ore al pomeriggio da Trapani, con skipper, soste bagno e rotta flessibile.",
-      en: "Book a private 4-hour afternoon boat tour in the Egadi from Trapani, with skipper, swim stops and flexible route.",
+      it: "Prenota un tour privato in barca alle Egadi di 4 ore al pomeriggio da Trapani, con skipper, carburante, soste bagno, snorkeling e rotta flessibile.",
+      en: "Book a private 4-hour afternoon boat tour in the Egadi from Trapani, with skipper, fuel, swim stops, snorkelling and flexible route.",
     },
     media: [
       {
@@ -1148,7 +1238,7 @@ export const EXPERIENCE_CATALOG = {
     order: 90,
     listed: true,
     title: {
-      it: "Charter di pesca alle Egadi",
+      it: "Charter pesca Egadi da Trapani",
       en: "Egadi fishing charter",
       es: "Charter de pesca en las Islas Egadi",
       fr: "Charter de pêche aux îles Égades",
@@ -1169,7 +1259,7 @@ export const EXPERIENCE_CATALOG = {
       de: "Ein 8-Stunden-Tag für Angelbegeisterte: Grundangeln, Schleppangeln, Drifting und Catch and Release werden je nach Saison, Meer, Fischarten und AMP/MASAF-Regeln gewählt. Fänge dürfen nur innerhalb gesetzlicher Limits, Mindestmaße, Quoten und Genehmigungen behalten oder freigelassen werden.",
     },
     seoTitle: {
-      it: "Charter di pesca Isole Egadi da Trapani",
+      it: "Charter pesca Egadi da Trapani",
       en: "Egadi Islands Fishing Charter from Trapani",
       es: "Charter de pesca en las Islas Egadi desde Trapani",
       fr: "Charter de pêche aux îles Égades depuis Trapani",
@@ -1247,23 +1337,23 @@ export const EXPERIENCE_CATALOG = {
 export const EXPERIENCE_PACKAGE_CATALOG = [
   {
     key: "esperienza-gourmet-trimarano",
-    order: 10,
+    order: 30,
     serviceIds: ["exclusive-experience"],
     title: {
-      it: "Esperienza Gourmet in trimarano",
-      en: "Gourmet trimaran experience",
+      it: "Chef a bordo alle Egadi in trimarano",
+      en: "Chef on board in an Egadi trimaran",
     },
     subtitle: {
-      it: "Il Trimarano con chef, skipper e hostess per una giornata premium tra sapori locali, mare e soste in rada.",
-      en: "The Egadisailing trimaran with chef, skipper and hostess for a premium day of local flavours, sea and swim stops at anchor.",
+      it: "Trimarano con comfort da catamarano, chef, skipper e hostess per pranzo a bordo, snorkeling e soste tra Favignana e Levanzo.",
+      en: "Trimaran with catamaran-style comfort, chef, skipper and hostess for lunch on board, snorkelling and stops between Favignana and Levanzo.",
     },
     seoTitle: {
-      it: "Chef a bordo alle Egadi sul Neel 47",
-      en: "Neel 47 Chef Experience in the Egadi",
+      it: "Chef a bordo alle Egadi in trimarano",
+      en: "Chef on Board in an Egadi Trimaran",
     },
     seoDescription: {
-      it: "Giornata privata sul Trimarano con chef a bordo, skipper, hostess e rotta tra Favignana e Levanzo.",
-      en: "Private day on the Egadisailing trimaran with an on-board chef, skipper, hostess and route around Favignana and Levanzo.",
+      it: "Giornata privata alle Egadi con chef a bordo, trimarano con comfort da catamarano, skipper, hostess, Favignana e Levanzo.",
+      en: "Private Egadi day with chef on board, trimaran with catamaran-style comfort, skipper, hostess, Favignana and Levanzo.",
     },
     durationLabel: { it: "8 ore", en: "8 hours" },
     detailLabel: { it: "Chef, skipper e hostess", en: "Chef, skipper and hostess" },
@@ -1274,19 +1364,19 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
   },
   {
     key: "charter-egadi",
-    order: 20,
+    order: 40,
     serviceIds: ["cabin-charter"],
     title: {
-      it: "Charter Egadi",
-      en: "Egadi Charter",
+      it: "Charter Egadi in trimarano da Trapani",
+      en: "Egadi trimaran charter from Trapani",
     },
     subtitle: {
       it: "Da 3 a 7 giornate sul trimarano, con itinerario concordato tra Favignana, Levanzo e Marettimo in base alle tue preferenze.",
       en: "Three to seven days on the trimaran, with an itinerary agreed around Favignana, Levanzo and Marettimo according to your preferences.",
     },
     seoTitle: {
-      it: "Charter Egadi in trimarano Neel 47",
-      en: "Egadi Trimaran Charter on the Neel 47",
+      it: "Charter Egadi in trimarano da Trapani",
+      en: "Egadi Trimaran Charter from Trapani",
     },
     seoDescription: {
       it: "Charter in trimarano alle Isole Egadi da 3 a 7 giornate con skipper, pernottamento a bordo e rotta meteo-dipendente.",
@@ -1301,18 +1391,18 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
   },
   {
     key: "tour-barca-egadi-4-ore",
-    order: 40,
+    order: 20,
     serviceIds: ["boat-exclusive-morning", "boat-exclusive-afternoon"],
     title: {
-      it: "Tour in barca Egadi 4 ore",
-      en: "4-hour Egadi boat tour",
+      it: "Tour privato alle Egadi 4 ore da Trapani",
+      en: "Private 4-hour Egadi boat tour from Trapani",
     },
     subtitle: {
       it: "La formula agile per vivere le Egadi in mezza giornata, con barca riservata, bagno, relax e rotta scelta in base al mare.",
       en: "The agile half-day way to experience the Egadi Islands, with a reserved boat, swimming, relaxation and a route shaped by the sea.",
     },
     seoTitle: {
-      it: "Tour Egadi 4 ore privato da Trapani",
+      it: "Tour privato alle Egadi 4 ore da Trapani",
       en: "Private 4-Hour Egadi Boat Tour from Trapani",
     },
     seoDescription: {
@@ -1348,19 +1438,19 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
   },
   {
     key: "tour-barca-egadi-8-ore",
-    order: 30,
+    order: 10,
     serviceIds: ["boat-shared-full-day", "boat-exclusive-full-day"],
     title: {
-      it: "Tour in barca Egadi 8 ore",
-      en: "8-hour Egadi boat tour",
+      it: "Escursione in barca Favignana e Levanzo 8 ore da Trapani",
+      en: "Favignana and Levanzo 8-hour boat tour from Trapani",
     },
     subtitle: {
       it: "Una giornata completa tra baie, snorkeling e tempo lento a bordo. Puoi scegliere posti condivisi o la barca in esclusiva.",
       en: "A full day of bays, snorkelling and slow time on board. Choose shared seats or the whole boat privately.",
     },
     seoTitle: {
-      it: "Tour Egadi 8 ore da Trapani",
-      en: "8-Hour Egadi Boat Tour from Trapani",
+      it: "Escursione in barca Favignana e Levanzo 8 ore da Trapani",
+      en: "Favignana and Levanzo 8-Hour Boat Tour from Trapani",
     },
     seoDescription: {
       it: "Tour in barca alle Egadi di 8 ore da Trapani, condiviso o privato, con snorkeling, soste bagno e giornata completa.",
@@ -1398,11 +1488,11 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     order: 50,
     serviceIds: ["fishing-full-day"],
     title: {
-      it: "Charter di pesca alle Egadi",
-      en: "Egadi fishing charter",
-      es: "Charter de pesca Islas Egadi",
-      fr: "Charter de pêche îles Égades",
-      de: "Angelcharter Ägadische Inseln",
+      it: "Charter pesca Egadi da Trapani",
+      en: "Egadi fishing charter from Trapani",
+      es: "Charter de pesca Islas Egadi desde Trapani",
+      fr: "Charter de pêche îles Égades depuis Trapani",
+      de: "Angelcharter Ägadische Inseln ab Trapani",
     },
     subtitle: {
       it: "Giornata privata da 8 ore su Gommone Pesca, con canne professionali, tecniche miste e rotta conforme alle regole AMP.",
@@ -1461,55 +1551,94 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
 export type ExperienceServiceId = keyof typeof EXPERIENCE_CATALOG;
 
 const EXPERIENCE_PUBLIC_SLUGS: Partial<Record<ExperienceServiceId, string>> = {
-  "cabin-charter": "charter",
-  "fishing-full-day": "charter-pesca-egadi",
+  "exclusive-experience": "chef-a-bordo-egadi-trimarano-da-trapani",
+  "boat-shared-full-day": "escursione-barca-favignana-levanzo-da-trapani",
+  "boat-exclusive-full-day": "tour-privato-favignana-levanzo-da-trapani",
+  "cabin-charter": "charter-egadi-trimarano-da-trapani",
+  "boat-exclusive-morning": "tour-privato-egadi-4-ore-mattina-da-trapani",
+  "boat-exclusive-afternoon": "tour-privato-egadi-4-ore-pomeriggio-da-trapani",
+  "fishing-full-day": "charter-pesca-egadi-da-trapani",
 };
 
 const EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE: Partial<
   Record<ExperienceServiceId, Partial<Record<"it" | "en" | "es" | "fr" | "de", string>>>
 > = {
   "exclusive-experience": {
-    es: "chef-a-bordo-neel-47",
-    fr: "chef-a-bord-neel-47",
-    de: "chef-an-bord-neel-47",
+    en: "chef-on-board-egadi-trimaran-from-trapani",
+    es: "chef-a-bordo-egadi-trimaran-desde-trapani",
+    fr: "chef-a-bord-egades-trimaran-depuis-trapani",
+    de: "chef-an-bord-aegadische-inseln-trimaran-ab-trapani",
   },
   "cabin-charter": {
-    it: "charter",
-    en: "charter",
-    es: "charter-islas-egadi",
-    fr: "charter-iles-egades",
-    de: "charter-aegadische-inseln",
+    it: "charter-egadi-trimarano-da-trapani",
+    en: "egadi-trimaran-charter-from-trapani",
+    es: "charter-egadi-trimaran-desde-trapani",
+    fr: "charter-egades-trimaran-depuis-trapani",
+    de: "trimaran-charter-aegadische-inseln-ab-trapani",
   },
   "boat-shared-full-day": {
+    en: "favignana-levanzo-boat-tour-from-trapani",
     es: "excursion-compartida-islas-egadi-8-horas",
     fr: "excursion-partagee-iles-egades-8-heures",
     de: "geteilte-bootstour-aegadische-inseln-8-stunden",
   },
   "boat-exclusive-full-day": {
+    en: "private-favignana-levanzo-boat-tour-from-trapani",
     es: "excursion-privada-islas-egadi-8-horas",
     fr: "excursion-privee-iles-egades-8-heures",
     de: "private-bootstour-aegadische-inseln-8-stunden",
   },
   "boat-exclusive-morning": {
-    es: "excursion-privada-islas-egadi-4-horas-manana",
-    fr: "excursion-privee-iles-egades-4-heures-matin",
-    de: "private-bootstour-aegadische-inseln-4-stunden-vormittag",
+    en: "private-egadi-4-hour-morning-boat-tour-from-trapani",
+    es: "tour-privado-egadi-4-horas-manana-desde-trapani",
+    fr: "excursion-privee-egades-4-heures-matin-depuis-trapani",
+    de: "private-bootstour-aegadische-inseln-4-stunden-vormittag-ab-trapani",
   },
   "boat-exclusive-afternoon": {
-    es: "excursion-privada-islas-egadi-4-horas-tarde",
-    fr: "excursion-privee-iles-egades-4-heures-apres-midi",
-    de: "private-bootstour-aegadische-inseln-4-stunden-nachmittag",
+    en: "private-egadi-4-hour-afternoon-boat-tour-from-trapani",
+    es: "tour-privado-egadi-4-horas-tarde-desde-trapani",
+    fr: "excursion-privee-egades-4-heures-apres-midi-depuis-trapani",
+    de: "private-bootstour-aegadische-inseln-4-stunden-nachmittag-ab-trapani",
   },
   "fishing-full-day": {
-    it: "charter-pesca-egadi",
-    en: "egadi-fishing-charter",
-    es: "charter-pesca-islas-egadi",
-    fr: "charter-peche-iles-egades",
-    de: "angelcharter-aegadische-inseln",
+    it: "charter-pesca-egadi-da-trapani",
+    en: "egadi-fishing-charter-from-trapani",
+    es: "charter-pesca-egadi-desde-trapani",
+    fr: "charter-peche-egades-depuis-trapani",
+    de: "angelcharter-aegadische-inseln-ab-trapani",
   },
 };
 
 const EXPERIENCE_SLUG_ALIASES: Record<string, ExperienceServiceId> = {
+  "chef-a-bordo-egadi-trimarano-da-trapani": "exclusive-experience",
+  "chef-on-board-egadi-trimaran-from-trapani": "exclusive-experience",
+  "chef-a-bordo-egadi-trimaran-desde-trapani": "exclusive-experience",
+  "chef-a-bord-egades-trimaran-depuis-trapani": "exclusive-experience",
+  "chef-an-bord-aegadische-inseln-trimaran-ab-trapani": "exclusive-experience",
+  "escursione-barca-favignana-levanzo-da-trapani": "boat-shared-full-day",
+  "tour-privato-favignana-levanzo-da-trapani": "boat-exclusive-full-day",
+  "favignana-levanzo-boat-tour-from-trapani": "boat-shared-full-day",
+  "private-favignana-levanzo-boat-tour-from-trapani": "boat-exclusive-full-day",
+  "charter-egadi-trimarano-da-trapani": "cabin-charter",
+  "egadi-trimaran-charter-from-trapani": "cabin-charter",
+  "charter-egadi-trimaran-desde-trapani": "cabin-charter",
+  "charter-egades-trimaran-depuis-trapani": "cabin-charter",
+  "trimaran-charter-aegadische-inseln-ab-trapani": "cabin-charter",
+  "tour-privato-egadi-4-ore-mattina-da-trapani": "boat-exclusive-morning",
+  "tour-privato-egadi-4-ore-pomeriggio-da-trapani": "boat-exclusive-afternoon",
+  "private-egadi-4-hour-morning-boat-tour-from-trapani": "boat-exclusive-morning",
+  "private-egadi-4-hour-afternoon-boat-tour-from-trapani": "boat-exclusive-afternoon",
+  "tour-privado-egadi-4-horas-manana-desde-trapani": "boat-exclusive-morning",
+  "tour-privado-egadi-4-horas-tarde-desde-trapani": "boat-exclusive-afternoon",
+  "excursion-privee-egades-4-heures-matin-depuis-trapani": "boat-exclusive-morning",
+  "excursion-privee-egades-4-heures-apres-midi-depuis-trapani": "boat-exclusive-afternoon",
+  "private-bootstour-aegadische-inseln-4-stunden-vormittag-ab-trapani": "boat-exclusive-morning",
+  "private-bootstour-aegadische-inseln-4-stunden-nachmittag-ab-trapani": "boat-exclusive-afternoon",
+  "charter-pesca-egadi-da-trapani": "fishing-full-day",
+  "egadi-fishing-charter-from-trapani": "fishing-full-day",
+  "charter-pesca-egadi-desde-trapani": "fishing-full-day",
+  "charter-peche-egades-depuis-trapani": "fishing-full-day",
+  "angelcharter-aegadische-inseln-ab-trapani": "fishing-full-day",
   charter: "cabin-charter",
   "charter-pesca-egadi": "fishing-full-day",
   "egadi-fishing-charter": "fishing-full-day",
@@ -1602,12 +1731,12 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
   >
 > = {
   "exclusive-experience": {
-    title: "Chef a Bordo - Premium Experience",
+    title: "Chef a bordo en trimarán por las Islas Egadi desde Trapani",
     subtitle:
-      "Día privado en el Neel 47 con chef, patrón y azafata entre Favignana y Levanzo.",
+      "Día privado en trimarán con comodidad de catamarán, chef, patrón y azafata entre Favignana y Levanzo.",
     detailDescription:
-      "Una experiencia gourmet privada en trimarán para descubrir las Islas Egadi con ritmo lento, comida a bordo y la comodidad del Neel 47.",
-    seoTitle: "Chef a bordo en Neel 47 por las Islas Egadi",
+      "Una experiencia gourmet privada en trimarán con comodidad de catamarán para descubrir las Islas Egadi con ritmo lento, comida a bordo y ruta entre Favignana y Levanzo.",
+    seoTitle: "Chef a bordo en trimarán por las Islas Egadi desde Trapani",
     seoDescription:
       "Experiencia gourmet privada en trimarán Neel 47 desde Trapani, con chef a bordo, patrón, azafata, comida siciliana y ruta entre Favignana y Levanzo.",
     itinerary: [
@@ -1663,12 +1792,12 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
     bringItems: spanishBringItems,
   },
   "cabin-charter": {
-    title: "Charter Islas Egadi",
+    title: "Charter Islas Egadi en trimarán desde Trapani",
     subtitle:
       "De 3 a 7 días en trimarán entre Favignana, Levanzo y Marettimo, con ruta a medida.",
     detailDescription:
       "Un charter privado para vivir las Islas Egadi con más tiempo: noches al fondeo, camarotes, cocina y una ruta flexible diseñada con la tripulación.",
-    seoTitle: "Charter en trimarán por las Islas Egadi desde Trapani",
+    seoTitle: "Charter Islas Egadi en trimarán desde Trapani",
     seoDescription:
       "Charter privado en Neel 47 por las Islas Egadi, de 3 a 7 días, con patrón, camarotes, noches al fondeo y ruta por Favignana, Levanzo y Marettimo.",
     itinerary: [
@@ -1711,14 +1840,14 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
     ],
   },
   "boat-shared-full-day": {
-    title: "Excursión compartida Islas Egadi 8 horas",
+    title: "Excursión en barco Favignana y Levanzo desde Trapani",
     subtitle:
-      "Una plaza a bordo para un día completo entre calas, snorkel y mar desde Trapani.",
+      "Tour compartido de 8 horas entre Cala Rossa, Cala Azzurra, Bue Marino, paradas de baño y snorkel.",
     detailDescription:
-      "La forma más sencilla de vivir una excursión en barco por las Islas Egadi: eliges fecha, reservas tu plaza y compartes la jornada con otros huéspedes.",
-    seoTitle: "Excursión compartida en barco a las Islas Egadi 8 horas",
+      "Excursión compartida en barco desde Trapani a Favignana y Levanzo: 8 horas con patrón, paradas de baño, snorkel y posibles paradas en Cala Rossa, Cala Azzurra y Bue Marino.",
+    seoTitle: "Excursión en barco Favignana y Levanzo desde Trapani",
     seoDescription:
-      "Tour compartido de 8 horas por las Islas Egadi desde Trapani, con paradas de baño, snorkel y reserva online por persona.",
+      "Excursión compartida en barco Favignana y Levanzo desde Trapani: 8 horas, Cala Rossa, Cala Azzurra, Bue Marino, snorkel y baño.",
     itinerary: [
       {
         time: "10:00",
@@ -1751,38 +1880,38 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
     bringItems: spanishBringItems,
   },
   "boat-exclusive-full-day": {
-    title: "Excursión privada Islas Egadi 8 horas",
+    title: "Tour privado en barco Favignana y Levanzo desde Trapani",
     subtitle:
-      "Barco reservado para tu grupo durante un día completo entre calas, snorkel y ruta flexible.",
+      "Barco reservado durante 8 horas entre Cala Rossa, Cala Azzurra, Bue Marino, paradas de baño y snorkel.",
     detailDescription:
-      "Una jornada privada y flexible por las Islas Egadi, con salida desde Trapani y paradas decididas con el patrón según viento, mar y ritmo del grupo.",
-    seoTitle: "Excursión privada en barco a las Islas Egadi 8 horas",
+      "Tour privado en barco desde Trapani a Favignana y Levanzo: 8 horas con patrón, ruta flexible, paradas de baño, snorkel y posibles paradas en Cala Rossa, Cala Azzurra y Bue Marino.",
+    seoTitle: "Tour privado en barco Favignana y Levanzo desde Trapani",
     seoDescription:
-      "Reserva una excursión privada de 8 horas por las Islas Egadi desde Trapani, con patrón, paradas de baño y ruta flexible.",
+      "Tour privado en barco Favignana y Levanzo desde Trapani: 8 horas, Cala Rossa, Cala Azzurra, Bue Marino, snorkel y ruta flexible.",
     includes: spanishPrivateBoatIncludes,
     bringItems: spanishBringItems,
   },
   "boat-exclusive-morning": {
-    title: "Excursión privada Islas Egadi 4 horas por la mañana",
+    title: "Tour privado en barco Islas Egadi 4 horas desde Trapani",
     subtitle:
       "Medio día privado por la mañana, con barco reservado y ruta elegida con el patrón.",
     detailDescription:
       "Tour privado de 4 horas desde Trapani, ideal para grupos que quieren mar, privacidad y una salida compacta con baño.",
-    seoTitle: "Excursión privada Islas Egadi 4 horas por la mañana",
+    seoTitle: "Tour privado Islas Egadi 4 horas por la mañana desde Trapani",
     seoDescription:
-      "Tour privado de 4 horas por la mañana en las Islas Egadi desde Trapani, con patrón, paradas de baño y ruta flexible.",
+      "Tour privado de 4 horas por la mañana en las Islas Egadi desde Trapani, con patrón, combustible, paradas de baño, snorkel y ruta flexible.",
     includes: spanishPrivateBoatIncludes,
     bringItems: spanishBringItems,
   },
   "boat-exclusive-afternoon": {
-    title: "Excursión privada Islas Egadi 4 horas por la tarde",
+    title: "Tour privado en barco Islas Egadi 4 horas desde Trapani",
     subtitle:
       "Medio día privado por la tarde para disfrutar de las Egadi con baño, descanso y una ruta flexible.",
     detailDescription:
       "Barco reservado durante 4 horas por la tarde desde Trapani, pensado para grupos que buscan privacidad, baño y una ruta sencilla de organizar.",
-    seoTitle: "Excursión privada Islas Egadi 4 horas por la tarde",
+    seoTitle: "Tour privado Islas Egadi 4 horas por la tarde desde Trapani",
     seoDescription:
-      "Reserva una excursión privada de 4 horas por la tarde en las Islas Egadi desde Trapani, con patrón, baño y ruta flexible.",
+      "Reserva un tour privado de 4 horas por la tarde en las Islas Egadi desde Trapani, con patrón, combustible, baño, snorkel y ruta flexible.",
     includes: spanishPrivateBoatIncludes,
     bringItems: spanishBringItems,
   },
@@ -1857,12 +1986,12 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
   >
 > = {
   "exclusive-experience": {
-    title: "Chef à Bord - Premium Experience",
+    title: "Chef à bord aux îles Égades en trimaran depuis Trapani",
     subtitle:
-      "Journée privée sur le Neel 47 avec chef, skipper et hôtesse entre Favignana et Levanzo.",
+      "Journée privée en trimaran avec confort de catamaran, chef, skipper et hôtesse entre Favignana et Levanzo.",
     detailDescription:
-      "Une expérience gourmet privée en trimaran pour découvrir les îles Égades avec un rythme lent, déjeuner à bord et le confort du Neel 47.",
-    seoTitle: "Chef à bord sur Neel 47 aux îles Égades",
+      "Une expérience gourmet privée en trimaran avec confort de catamaran pour découvrir les îles Égades avec rythme lent, déjeuner à bord et route entre Favignana et Levanzo.",
+    seoTitle: "Chef à bord aux îles Égades en trimaran depuis Trapani",
     seoDescription:
       "Expérience gourmet privée en trimaran Neel 47 depuis Trapani, avec chef à bord, skipper, hôtesse, déjeuner sicilien et itinéraire entre Favignana et Levanzo.",
     itinerary: [
@@ -1906,12 +2035,12 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
     bringItems: frenchBringItems,
   },
   "cabin-charter": {
-    title: "Charter aux îles Égades",
+    title: "Charter aux îles Égades en trimaran depuis Trapani",
     subtitle:
       "De 3 à 7 jours en trimaran entre Favignana, Levanzo et Marettimo, avec itinéraire sur mesure.",
     detailDescription:
       "Un charter privé pour vivre les îles Égades avec plus de temps : nuits au mouillage, cabines, cuisine et route flexible conçue avec l'équipage.",
-    seoTitle: "Charter en trimaran aux îles Égades depuis Trapani",
+    seoTitle: "Charter aux îles Égades en trimaran depuis Trapani",
     seoDescription:
       "Charter privé en Neel 47 aux îles Égades, de 3 à 7 jours, avec skipper, cabines, nuits au mouillage et route vers Favignana, Levanzo et Marettimo.",
     itinerary: [
@@ -1938,14 +2067,14 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
     ],
   },
   "boat-shared-full-day": {
-    title: "Excursion partagée îles Égades 8 heures",
+    title: "Excursion en bateau Favignana et Levanzo depuis Trapani",
     subtitle:
-      "Une place à bord pour une journée complète entre criques, snorkeling et mer depuis Trapani.",
+      "Excursion partagée de 8 heures entre Cala Rossa, Cala Azzurra, Bue Marino, arrêts baignade et snorkeling.",
     detailDescription:
-      "La façon la plus simple de vivre une excursion en bateau aux îles Égades : choisissez la date, réservez votre place et partagez la journée avec d'autres hôtes.",
-    seoTitle: "Excursion partagée en bateau aux îles Égades 8 heures",
+      "Excursion partagée en bateau depuis Trapani vers Favignana et Levanzo : 8 heures avec skipper, arrêts baignade, snorkeling et possibles étapes à Cala Rossa, Cala Azzurra et Bue Marino.",
+    seoTitle: "Excursion en bateau Favignana et Levanzo depuis Trapani",
     seoDescription:
-      "Tour partagé de 8 heures aux îles Égades depuis Trapani, avec arrêts baignade, snorkeling et réservation en ligne par personne.",
+      "Excursion partagée en bateau Favignana et Levanzo depuis Trapani : 8 heures, Cala Rossa, Cala Azzurra, Bue Marino, snorkeling et baignade.",
     itinerary: [
       { time: "10:00", title: "Départ de Trapani", location: "Port de Trapani", text: "Embarquement, briefing sécurité et route définie par le skipper selon le vent et la mer." },
       { time: "11:00", title: "Favignana", text: "Navigation vers les criques les plus adaptées du jour, avec temps pour baignade et snorkeling." },
@@ -1957,38 +2086,38 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
     bringItems: frenchBringItems,
   },
   "boat-exclusive-full-day": {
-    title: "Excursion privée îles Égades 8 heures",
+    title: "Excursion privée en bateau Favignana et Levanzo depuis Trapani",
     subtitle:
-      "Bateau réservé pour votre groupe pendant une journée complète entre criques, snorkeling et route flexible.",
+      "Bateau réservé 8 heures entre Cala Rossa, Cala Azzurra, Bue Marino, arrêts baignade et snorkeling.",
     detailDescription:
-      "Une journée privée et flexible aux îles Égades, avec départ de Trapani et arrêts décidés avec le skipper selon le vent, la mer et le rythme du groupe.",
-    seoTitle: "Excursion privée en bateau aux îles Égades 8 heures",
+      "Excursion privée en bateau depuis Trapani vers Favignana et Levanzo : 8 heures avec skipper, route flexible, arrêts baignade, snorkeling et possibles étapes à Cala Rossa, Cala Azzurra et Bue Marino.",
+    seoTitle: "Excursion privée en bateau Favignana et Levanzo depuis Trapani",
     seoDescription:
-      "Réservez une excursion privée de 8 heures aux îles Égades depuis Trapani, avec skipper, arrêts baignade et route flexible.",
+      "Excursion privée en bateau Favignana et Levanzo depuis Trapani : 8 heures, Cala Rossa, Cala Azzurra, Bue Marino, snorkeling et route flexible.",
     includes: frenchPrivateBoatIncludes,
     bringItems: frenchBringItems,
   },
   "boat-exclusive-morning": {
-    title: "Excursion privée îles Égades 4 heures le matin",
+    title: "Excursion privée en bateau îles Égades 4 heures depuis Trapani",
     subtitle:
       "Demi-journée privée le matin, avec bateau réservé et route choisie avec le skipper.",
     detailDescription:
       "Tour privé de 4 heures depuis Trapani, idéal pour les groupes qui veulent mer, intimité et sortie compacte avec baignade.",
-    seoTitle: "Excursion privée îles Égades 4 heures le matin",
+    seoTitle: "Excursion privée îles Égades 4 heures le matin depuis Trapani",
     seoDescription:
-      "Tour privé de 4 heures le matin aux îles Égades depuis Trapani, avec skipper, arrêts baignade et route flexible.",
+      "Tour privé de 4 heures le matin aux îles Égades depuis Trapani, avec skipper, carburant, arrêts baignade, snorkeling et route flexible.",
     includes: frenchPrivateBoatIncludes,
     bringItems: frenchBringItems,
   },
   "boat-exclusive-afternoon": {
-    title: "Excursion privée îles Égades 4 heures l'après-midi",
+    title: "Excursion privée en bateau îles Égades 4 heures depuis Trapani",
     subtitle:
       "Demi-journée privée l'après-midi pour profiter des Égades avec baignade, détente et route flexible.",
     detailDescription:
       "Bateau réservé pendant 4 heures l'après-midi depuis Trapani, pensé pour les groupes qui cherchent intimité, baignade et organisation simple.",
-    seoTitle: "Excursion privée îles Égades 4 heures l'après-midi",
+    seoTitle: "Excursion privée îles Égades 4 heures l'après-midi depuis Trapani",
     seoDescription:
-      "Réservez une excursion privée de 4 heures l'après-midi aux îles Égades depuis Trapani, avec skipper, baignade et route flexible.",
+      "Réservez une excursion privée de 4 heures l'après-midi aux îles Égades depuis Trapani, avec skipper, carburant, baignade, snorkeling et route flexible.",
     includes: frenchPrivateBoatIncludes,
     bringItems: frenchBringItems,
   },
@@ -2013,12 +2142,12 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
   >
 > = {
   "exclusive-experience": {
-    title: "Chef an Bord - Premium Experience",
+    title: "Chef an Bord auf Trimaran zu den Ägadischen Inseln ab Trapani",
     subtitle:
-      "Privater Tag auf dem Neel 47 mit Chefkoch, Skipper und Hostess zwischen Favignana und Levanzo.",
+      "Privater Tag auf dem Trimaran mit Katamaran-Komfort, Chefkoch, Skipper und Hostess zwischen Favignana und Levanzo.",
     detailDescription:
-      "Ein privates Gourmet-Erlebnis auf dem Trimaran, um die Ägadischen Inseln mit ruhigem Rhythmus, Mittagessen an Bord und dem Komfort des Neel 47 zu entdecken.",
-    seoTitle: "Chef an Bord auf dem Neel 47 bei den Ägadischen Inseln",
+      "Ein privates Gourmet-Erlebnis auf dem Trimaran mit Katamaran-Komfort, um die Ägadischen Inseln mit ruhigem Rhythmus, Mittagessen an Bord und Route zwischen Favignana und Levanzo zu entdecken.",
+    seoTitle: "Chef an Bord auf Trimaran zu den Ägadischen Inseln ab Trapani",
     seoDescription:
       "Privates Gourmet-Erlebnis auf dem Neel 47 ab Trapani mit Chef an Bord, Skipper, Hostess, sizilianischem Mittagessen und Route zwischen Favignana und Levanzo.",
     itinerary: [
@@ -2062,12 +2191,12 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
     bringItems: germanBringItems,
   },
   "cabin-charter": {
-    title: "Charter Ägadische Inseln",
+    title: "Trimaran-Charter Ägadische Inseln ab Trapani",
     subtitle:
       "3 bis 7 Tage auf dem Trimaran zwischen Favignana, Levanzo und Marettimo, mit Route nach Maß.",
     detailDescription:
       "Ein privater Charter, um die Ägadischen Inseln mit mehr Zeit zu erleben: Nächte vor Anker, Kabinen, Bordküche und eine flexible Route mit der Crew.",
-    seoTitle: "Trimaran-Charter auf den Ägadischen Inseln ab Trapani",
+    seoTitle: "Trimaran-Charter Ägadische Inseln ab Trapani",
     seoDescription:
       "Privater Neel 47 Charter auf den Ägadischen Inseln, 3 bis 7 Tage, mit Skipper, Kabinen, Nächten vor Anker und Route nach Favignana, Levanzo und Marettimo.",
     itinerary: [
@@ -2094,14 +2223,14 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
     ],
   },
   "boat-shared-full-day": {
-    title: "Geteilte Bootstour Ägadische Inseln 8 Stunden",
+    title: "Bootstour Favignana und Levanzo ab Trapani",
     subtitle:
-      "Ein Platz an Bord für einen ganzen Tag zwischen Buchten, Schnorcheln und Meer ab Trapani.",
+      "Geteilte 8-Stunden-Tour mit Cala Rossa, Cala Azzurra, Bue Marino, Badestopps und Schnorcheln.",
     detailDescription:
-      "Die einfachste Art, eine Bootstour zu den Ägadischen Inseln zu erleben: Datum wählen, Platz buchen und den Tag mit anderen Gästen teilen.",
-    seoTitle: "Geteilte Bootstour Ägadische Inseln 8 Stunden ab Trapani",
+      "Geteilte Bootstour ab Trapani nach Favignana und Levanzo: 8 Stunden mit Skipper, Badestopps, Schnorcheln und möglichen Stopps bei Cala Rossa, Cala Azzurra und Bue Marino.",
+    seoTitle: "Bootstour Favignana und Levanzo ab Trapani",
     seoDescription:
-      "Geteilte 8-Stunden-Bootstour zu den Ägadischen Inseln ab Trapani mit Badestopps, Schnorcheln und Online-Buchung pro Person.",
+      "Geteilte Bootstour Favignana und Levanzo ab Trapani: 8 Stunden, Cala Rossa, Cala Azzurra, Bue Marino, Schnorcheln und Badestopps.",
     itinerary: [
       { time: "10:00", title: "Abfahrt von Trapani", location: "Hafen von Trapani", text: "Einschiffung, Sicherheitsbriefing und Route durch den Skipper nach Wind und Meer." },
       { time: "11:00", title: "Favignana", text: "Fahrt zu den passendsten Buchten des Tages, mit Zeit zum Baden und Schnorcheln." },
@@ -2113,38 +2242,38 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
     bringItems: germanBringItems,
   },
   "boat-exclusive-full-day": {
-    title: "Private Bootstour Ägadische Inseln 8 Stunden",
+    title: "Private Bootstour Favignana und Levanzo ab Trapani",
     subtitle:
-      "Boot exklusiv für Ihre Gruppe für einen ganzen Tag zwischen Buchten, Schnorcheln und flexibler Route.",
+      "Reserviertes Boot für 8 Stunden mit Cala Rossa, Cala Azzurra, Bue Marino, Badestopps und Schnorcheln.",
     detailDescription:
-      "Ein privater und flexibler Tag auf den Ägadischen Inseln, mit Abfahrt ab Trapani und Stopps, die mit dem Skipper nach Wind, Meer und Rhythmus der Gruppe gewählt werden.",
-    seoTitle: "Private Bootstour Ägadische Inseln 8 Stunden ab Trapani",
+      "Private Bootstour ab Trapani nach Favignana und Levanzo: 8 Stunden mit Skipper, flexibler Route, Badestopps, Schnorcheln und möglichen Stopps bei Cala Rossa, Cala Azzurra und Bue Marino.",
+    seoTitle: "Private Bootstour Favignana und Levanzo ab Trapani",
     seoDescription:
-      "Buchen Sie eine private 8-Stunden-Bootstour zu den Ägadischen Inseln ab Trapani, mit Skipper, Badestopps und flexibler Route.",
+      "Private Bootstour Favignana und Levanzo ab Trapani: 8 Stunden, Cala Rossa, Cala Azzurra, Bue Marino, Schnorcheln und flexible Route.",
     includes: germanPrivateBoatIncludes,
     bringItems: germanBringItems,
   },
   "boat-exclusive-morning": {
-    title: "Private Bootstour Ägadische Inseln 4 Stunden vormittags",
+    title: "Private Bootstour Ägadische Inseln 4 Stunden ab Trapani",
     subtitle:
       "Privater Halbtagesausflug am Vormittag mit reserviertem Boot und Route nach Absprache mit dem Skipper.",
     detailDescription:
       "Private 4-Stunden-Tour ab Trapani, ideal für Gruppen, die Meer, Privatsphäre und eine kompakte Ausfahrt mit Badestopp suchen.",
-    seoTitle: "Private Bootstour Ägadische Inseln 4 Stunden vormittags",
+    seoTitle: "Private Bootstour Ägadische Inseln 4 Stunden vormittags ab Trapani",
     seoDescription:
-      "Private 4-Stunden-Bootstour am Vormittag zu den Ägadischen Inseln ab Trapani, mit Skipper, Badestopps und flexibler Route.",
+      "Private 4-Stunden-Bootstour am Vormittag zu den Ägadischen Inseln ab Trapani, mit Skipper, Treibstoff, Badestopps, Schnorcheln und flexibler Route.",
     includes: germanPrivateBoatIncludes,
     bringItems: germanBringItems,
   },
   "boat-exclusive-afternoon": {
-    title: "Private Bootstour Ägadische Inseln 4 Stunden nachmittags",
+    title: "Private Bootstour Ägadische Inseln 4 Stunden ab Trapani",
     subtitle:
       "Privater Halbtagesausflug am Nachmittag, um die Ägadischen Inseln mit Baden, Entspannung und flexibler Route zu genießen.",
     detailDescription:
       "Reserviertes Boot für 4 Stunden am Nachmittag ab Trapani, gedacht für Gruppen, die Privatsphäre, Baden und eine einfache Organisation suchen.",
-    seoTitle: "Private Bootstour Ägadische Inseln 4 Stunden nachmittags",
+    seoTitle: "Private Bootstour Ägadische Inseln 4 Stunden nachmittags ab Trapani",
     seoDescription:
-      "Buchen Sie eine private 4-Stunden-Bootstour am Nachmittag zu den Ägadischen Inseln ab Trapani, mit Skipper, Baden und flexibler Route.",
+      "Buchen Sie eine private 4-Stunden-Bootstour am Nachmittag zu den Ägadischen Inseln ab Trapani, mit Skipper, Treibstoff, Baden, Schnorcheln und flexibler Route.",
     includes: germanPrivateBoatIncludes,
     bringItems: germanBringItems,
   },
@@ -2160,10 +2289,21 @@ function applyLocalizedExperienceOverride(
       : locale === "fr"
         ? FRENCH_EXPERIENCE_OVERRIDES
         : locale === "de"
-          ? GERMAN_EXPERIENCE_OVERRIDES
+        ? GERMAN_EXPERIENCE_OVERRIDES
         : undefined;
   const override = overrides?.[content.serviceId as ExperienceServiceId];
-  return override ? { ...content, ...override } : content;
+  if (!override) return content;
+
+  if (
+    content.serviceId === "boat-shared-full-day" ||
+    content.serviceId === "boat-exclusive-full-day"
+  ) {
+    const localizedOverride = { ...override };
+    delete localizedOverride.itinerary;
+    return { ...content, ...localizedOverride };
+  }
+
+  return { ...content, ...override };
 }
 
 export function getExperienceContent(
@@ -2256,10 +2396,10 @@ const SPANISH_PACKAGE_OVERRIDES: Record<
   >
 > = {
   "esperienza-gourmet-trimarano": {
-    title: "Chef a Bordo - Premium Experience",
+    title: "Chef a bordo en trimarán por las Islas Egadi",
     subtitle:
-      "Neel 47 con chef, patrón y azafata para una jornada premium entre sabores locales, mar y calas protegidas.",
-    seoTitle: "Chef a bordo en Neel 47 por las Islas Egadi",
+      "Trimarán con comodidad de catamarán, chef, patrón y azafata para comida a bordo, snorkel y paradas entre Favignana y Levanzo.",
+    seoTitle: "Chef a bordo en trimarán por las Islas Egadi",
     seoDescription:
       "Día privado en trimarán Neel 47 con chef a bordo, patrón, azafata y ruta entre Favignana y Levanzo.",
     durationLabel: "8 horas",
@@ -2268,10 +2408,10 @@ const SPANISH_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Ver paquete",
   },
   "charter-egadi": {
-    title: "Charter Islas Egadi",
+    title: "Charter Islas Egadi en trimarán desde Trapani",
     subtitle:
       "De 3 a 7 días en el trimarán, con itinerario a medida entre Favignana, Levanzo y Marettimo.",
-    seoTitle: "Charter en trimarán Neel 47 por las Islas Egadi",
+    seoTitle: "Charter Islas Egadi en trimarán desde Trapani",
     seoDescription:
       "Charter en trimarán por las Islas Egadi de 3 a 7 días, con patrón, camarotes y ruta flexible desde Trapani.",
     durationLabel: "3-7 días",
@@ -2280,10 +2420,10 @@ const SPANISH_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Ver paquete",
   },
   "tour-barca-egadi-4-ore": {
-    title: "Excursión privada Islas Egadi 4 horas",
+    title: "Tour privado Islas Egadi 4 horas desde Trapani",
     subtitle:
       "La fórmula ágil de medio día, con barco reservado, baño, descanso y ruta elegida según el mar.",
-    seoTitle: "Excursión privada Islas Egadi 4 horas desde Trapani",
+    seoTitle: "Tour privado Islas Egadi 4 horas desde Trapani",
     seoDescription:
       "Tour privado de 4 horas por las Islas Egadi desde Trapani, con barco exclusivo, paradas de baño y ruta flexible.",
     durationLabel: "4 horas",
@@ -2292,10 +2432,10 @@ const SPANISH_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Ver paquete",
   },
   "tour-barca-egadi-8-ore": {
-    title: "Excursión en barco Islas Egadi 8 horas",
+    title: "Excursión en barco Favignana y Levanzo 8 horas desde Trapani",
     subtitle:
       "Un día completo entre calas, snorkel y tiempo relajado a bordo. Puedes elegir plazas compartidas o barco privado.",
-    seoTitle: "Excursión en barco Islas Egadi 8 horas desde Trapani",
+    seoTitle: "Excursión en barco Favignana y Levanzo 8 horas desde Trapani",
     seoDescription:
       "Tour de 8 horas por las Islas Egadi desde Trapani, compartido o privado, con snorkel, paradas de baño y jornada completa.",
     durationLabel: "8 horas",
@@ -2322,10 +2462,10 @@ const FRENCH_PACKAGE_OVERRIDES: Record<
   >
 > = {
   "esperienza-gourmet-trimarano": {
-    title: "Chef à Bord - Premium Experience",
+    title: "Chef à bord aux îles Égades en trimaran",
     subtitle:
-      "Neel 47 avec chef, skipper et hôtesse pour une journée premium entre saveurs locales, mer et criques protégées.",
-    seoTitle: "Chef à bord sur Neel 47 aux îles Égades",
+      "Trimaran avec confort de catamaran, chef, skipper et hôtesse pour déjeuner à bord, snorkeling et arrêts entre Favignana et Levanzo.",
+    seoTitle: "Chef à bord aux îles Égades en trimaran",
     seoDescription:
       "Journée privée en trimaran Neel 47 avec chef à bord, skipper, hôtesse et itinéraire entre Favignana et Levanzo.",
     durationLabel: "8 heures",
@@ -2334,10 +2474,10 @@ const FRENCH_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Voir le forfait",
   },
   "charter-egadi": {
-    title: "Charter aux îles Égades",
+    title: "Charter aux îles Égades en trimaran depuis Trapani",
     subtitle:
       "De 3 à 7 jours en trimaran, avec itinéraire sur mesure entre Favignana, Levanzo et Marettimo.",
-    seoTitle: "Charter en trimaran Neel 47 aux îles Égades",
+    seoTitle: "Charter aux îles Égades en trimaran depuis Trapani",
     seoDescription:
       "Charter en trimaran aux îles Égades de 3 à 7 jours, avec skipper, cabines et route flexible depuis Trapani.",
     durationLabel: "3-7 jours",
@@ -2346,7 +2486,7 @@ const FRENCH_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Voir le forfait",
   },
   "tour-barca-egadi-4-ore": {
-    title: "Excursion privée îles Égades 4 heures",
+    title: "Excursion privée îles Égades 4 heures depuis Trapani",
     subtitle:
       "La formule agile de demi-journée, avec bateau réservé, baignade, détente et route choisie selon la mer.",
     seoTitle: "Excursion privée îles Égades 4 heures depuis Trapani",
@@ -2358,10 +2498,10 @@ const FRENCH_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Voir le forfait",
   },
   "tour-barca-egadi-8-ore": {
-    title: "Excursion en bateau îles Égades 8 heures",
+    title: "Excursion en bateau Favignana et Levanzo 8 heures depuis Trapani",
     subtitle:
       "Une journée complète entre criques, snorkeling et temps détendu à bord. Places partagées ou bateau privé.",
-    seoTitle: "Excursion en bateau îles Égades 8 heures depuis Trapani",
+    seoTitle: "Excursion en bateau Favignana et Levanzo 8 heures depuis Trapani",
     seoDescription:
       "Tour de 8 heures aux îles Égades depuis Trapani, partagé ou privé, avec snorkeling, arrêts baignade et journée complète.",
     durationLabel: "8 heures",
@@ -2388,10 +2528,10 @@ const GERMAN_PACKAGE_OVERRIDES: Record<
   >
 > = {
   "esperienza-gourmet-trimarano": {
-    title: "Chef an Bord - Premium Experience",
+    title: "Chef an Bord auf Trimaran zu den Ägadischen Inseln",
     subtitle:
-      "Neel 47 mit Chefkoch, Skipper und Hostess für einen Premium-Tag zwischen lokalen Aromen, Meer und geschützten Buchten.",
-    seoTitle: "Chef an Bord auf dem Neel 47 bei den Ägadischen Inseln",
+      "Trimaran mit Katamaran-Komfort, Chefkoch, Skipper und Hostess für Mittagessen an Bord, Schnorcheln und Stopps zwischen Favignana und Levanzo.",
+    seoTitle: "Chef an Bord auf Trimaran zu den Ägadischen Inseln",
     seoDescription:
       "Privater Tag auf dem Neel 47 Trimaran mit Chef an Bord, Skipper, Hostess und Route zwischen Favignana und Levanzo.",
     durationLabel: "8 Stunden",
@@ -2400,10 +2540,10 @@ const GERMAN_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Paket ansehen",
   },
   "charter-egadi": {
-    title: "Charter Ägadische Inseln",
+    title: "Trimaran-Charter Ägadische Inseln ab Trapani",
     subtitle:
       "3 bis 7 Tage auf dem Trimaran, mit Route nach Maß zwischen Favignana, Levanzo und Marettimo.",
-    seoTitle: "Neel 47 Trimaran-Charter auf den Ägadischen Inseln",
+    seoTitle: "Trimaran-Charter Ägadische Inseln ab Trapani",
     seoDescription:
       "Trimaran-Charter auf den Ägadischen Inseln von 3 bis 7 Tagen, mit Skipper, Kabinen und flexibler Route ab Trapani.",
     durationLabel: "3-7 Tage",
@@ -2412,7 +2552,7 @@ const GERMAN_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Paket ansehen",
   },
   "tour-barca-egadi-4-ore": {
-    title: "Private Bootstour Ägadische Inseln 4 Stunden",
+    title: "Private Bootstour Ägadische Inseln 4 Stunden ab Trapani",
     subtitle:
       "Die agile Halbtagesformel mit reserviertem Boot, Baden, Entspannung und Route je nach Meer.",
     seoTitle: "Private Bootstour Ägadische Inseln 4 Stunden ab Trapani",
@@ -2424,10 +2564,10 @@ const GERMAN_PACKAGE_OVERRIDES: Record<
     primaryCtaLabel: "Paket ansehen",
   },
   "tour-barca-egadi-8-ore": {
-    title: "Bootstour Ägadische Inseln 8 Stunden",
+    title: "Bootstour Favignana und Levanzo 8 Stunden ab Trapani",
     subtitle:
       "Ein ganzer Tag zwischen Buchten, Schnorcheln und entspannter Zeit an Bord. Geteilte Plätze oder privates Boot.",
-    seoTitle: "Bootstour Ägadische Inseln 8 Stunden ab Trapani",
+    seoTitle: "Bootstour Favignana und Levanzo 8 Stunden ab Trapani",
     seoDescription:
       "8-Stunden-Bootstour zu den Ägadischen Inseln ab Trapani, geteilt oder privat, mit Schnorcheln, Badestopps und ganztägiger Route.",
     durationLabel: "8 Stunden",
@@ -2461,35 +2601,54 @@ function applyLocalizedPackageOverride(
     locale,
   );
   const variants = content.variants.map((variant) => {
+    const localizedVariant = { ...variant, href: experienceHref(variant.serviceId, locale) };
+
     if (variant.serviceId === "boat-exclusive-morning") {
+      if (locale !== "es" && locale !== "fr" && locale !== "de") {
+        return localizedVariant;
+      }
       return {
-        ...variant,
-        label: locale === "fr" ? "Privé le matin" : locale === "de" ? "Privat am Vormittag" : "Privado por la mañana",
+        ...localizedVariant,
+        label:
+          locale === "fr"
+            ? "Privé le matin"
+            : locale === "de"
+              ? "Privat am Vormittag"
+              : "Privado por la mañana",
         description:
           locale === "fr"
             ? "Bateau réservé le matin, avec retour autour de 13:00."
             : locale === "de"
               ? "Boot am Vormittag reserviert, Rückkehr gegen 13:00 Uhr."
-            : "Barco reservado por la mañana, con regreso alrededor de las 13:00.",
-        href: experienceHref(variant.serviceId, locale),
+              : "Barco reservado por la mañana, con regreso alrededor de las 13:00.",
       };
     }
     if (variant.serviceId === "boat-exclusive-afternoon") {
+      if (locale !== "es" && locale !== "fr" && locale !== "de") {
+        return localizedVariant;
+      }
       return {
-        ...variant,
-        label: locale === "fr" ? "Privé l'après-midi" : locale === "de" ? "Privat am Nachmittag" : "Privado por la tarde",
+        ...localizedVariant,
+        label:
+          locale === "fr"
+            ? "Privé l'après-midi"
+            : locale === "de"
+              ? "Privat am Nachmittag"
+              : "Privado por la tarde",
         description:
           locale === "fr"
             ? "Bateau réservé pour votre groupe."
             : locale === "de"
               ? "Boot exklusiv für Ihre Gruppe."
               : "Barco reservado para tu grupo.",
-        href: experienceHref(variant.serviceId, locale),
       };
     }
     if (variant.serviceId === "boat-shared-full-day") {
+      if (locale !== "es" && locale !== "fr" && locale !== "de") {
+        return localizedVariant;
+      }
       return {
-        ...variant,
+        ...localizedVariant,
         label: locale === "fr" ? "Partagé" : locale === "de" ? "Geteilt" : "Compartido",
         description:
           locale === "fr"
@@ -2497,12 +2656,14 @@ function applyLocalizedPackageOverride(
             : locale === "de"
               ? "Einzelplätze für einen ganzen Tag."
               : "Plazas individuales para un día completo.",
-        href: experienceHref(variant.serviceId, locale),
       };
     }
     if (variant.serviceId === "boat-exclusive-full-day") {
+      if (locale !== "es" && locale !== "fr" && locale !== "de") {
+        return localizedVariant;
+      }
       return {
-        ...variant,
+        ...localizedVariant,
         label: locale === "fr" ? "Privé" : locale === "de" ? "Privat" : "Privado",
         description:
           locale === "fr"
@@ -2510,10 +2671,9 @@ function applyLocalizedPackageOverride(
             : locale === "de"
               ? "Ganzer Tag mit reserviertem Boot."
               : "Día completo con barco reservado.",
-        href: experienceHref(variant.serviceId, locale),
       };
     }
-    return { ...variant, href: experienceHref(variant.serviceId, locale) };
+    return localizedVariant;
   });
 
   if (!overrides) return { ...content, primaryHref, variants };

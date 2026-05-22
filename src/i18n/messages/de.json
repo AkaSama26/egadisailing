@@ -28,6 +28,8 @@
   "hero": {
     "title": "Lassen Sie das Ufer hinter sich",
     "subtitle": "Entdecken Sie die Ägadischen Inseln: Trimaran mit Chefkoch, exklusive Touren und Charter ab Trapani.",
+    "seoTitle": "Bootstouren zu den Ägadischen Inseln ab Trapani",
+    "seoSubtitle": "Ausflüge nach Favignana und Levanzo, private und geteilte Bootstouren, Trimaran-Charter zu den Ägadischen Inseln mit Katamaran-Komfort, Skipper, Schnorcheln und Chef an Bord.",
     "cta": "Erlebnisse ansehen",
     "vehicleLabel": "Boot",
     "vehiclePlaceholder": "Boot auswählen",
@@ -227,7 +229,7 @@
   },
   "experiences": {
     "title": "Bootstouren zu den Ägadischen Inseln ab Trapani",
-    "subtitle": "Wählen Sie Ihre Bootstour: Chef an Bord, Trimaran-Charter, private 4-Stunden-Touren sowie geteilte oder private 8-Stunden-Bootstouren. Preise und Verfügbarkeiten online."
+    "subtitle": "Sorgfältig geplante Routen rund um Favignana und Levanzo, private und geteilte Bootstouren, Trimaran-Charter und Sportangeln ab Hafen Trapani."
   },
   "boats": {
     "title": "Boote für Touren zu den Ägadischen Inseln ab Trapani",
@@ -441,7 +443,7 @@
     }
   },
   "landing": {
-    "experiencesTitle": "Bereit zum Ablegen?",
+    "experiencesTitle": "Bootstouren zu den Ägadischen Inseln: Favignana, Levanzo und Marettimo",
     "experiencesSubtitle": "",
     "islandsTitle": "Die Ägadischen Inseln",
     "islandsSubtitle": "Drei Juwelen im Herzen des Mittelmeers",
@@ -455,12 +457,12 @@
     "whyIslands": "Unberührte Inseln",
     "whyIslandsDesc": "Klares Mittelmeerwasser, Meereshöhlen und versteckte Buchten.",
     "testimonialsTitle": "Was unsere Gäste sagen",
-    "ctaTitle": "Buchen Sie Ihr Erlebnis",
-    "ctaSubtitle": "Wählen Sie Ihr Abenteuer auf den Ägadischen Inseln",
+    "ctaTitle": "Buchen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani",
+    "ctaSubtitle": "Wählen Sie geteilte Tour, privates Boot, Chef an Bord oder Egadi-Charter",
     "ctaButton": "Erlebnisse ansehen"
   },
   "home": {
-    "experiencesTitle": "Bereit zum Ablegen?",
+    "experiencesTitle": "Bootstouren zu den Ägadischen Inseln: Favignana, Levanzo und Marettimo",
     "experiencesSubtitle": "",
     "islandsTitle": "Die Ägadischen Inseln",
     "islandsSubtitle": "Drei Juwelen im Herzen des Mittelmeers",
@@ -474,8 +476,8 @@
     "whyIslands": "Unberührte Inseln",
     "whyIslandsDesc": "Klares Mittelmeerwasser, Meereshöhlen und versteckte Buchten.",
     "testimonialsTitle": "Was unsere Gäste sagen",
-    "ctaTitle": "Buchen Sie Ihr Erlebnis",
-    "ctaSubtitle": "Wählen Sie Ihr Abenteuer auf den Ägadischen Inseln",
+    "ctaTitle": "Buchen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani",
+    "ctaSubtitle": "Wählen Sie geteilte Tour, privates Boot, Chef an Bord oder Egadi-Charter",
     "ctaButton": "Erlebnisse ansehen"
   }
 }

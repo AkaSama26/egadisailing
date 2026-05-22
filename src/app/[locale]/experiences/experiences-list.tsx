@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
 import { ImageStack } from "@/components/image-stack";
-import { ArrowRight, Clock, Ship, Ticket } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Ship, Ticket, Users, Waves } from "lucide-react";
 import { vatIncludedLabel } from "@/lib/pricing/vat-label";
 
 /* ------------------------------------------------------------------ */
@@ -20,6 +20,16 @@ interface ExperiencePackage {
   priceUnitLabel: string;
   primaryHref: string;
   primaryCtaLabel: string;
+  capacityLabel: string;
+  facts: {
+    formula: string;
+    route: string;
+    includes: string;
+  };
+  labels: {
+    route: string;
+    includes: string;
+  };
   media: Array<{ caption: string; alt: string; color: string; src?: string }>;
   variants: Array<{
     label: string;
@@ -180,6 +190,8 @@ export function ExperiencesList({
       <div className="max-w-7xl mx-auto space-y-32">
         {packages.map((experience, i) => {
           const isEven = i % 2 === 0;
+          const textAnimation = i === 0 ? "none" : isEven ? "fade-left" : "fade-right";
+          const mediaAnimation = i === 0 ? "none" : isEven ? "fade-right" : "fade-left";
 
           return (
             <div
@@ -189,18 +201,18 @@ export function ExperiencesList({
             >
               {/* Text column */}
               <ScrollSection
-                animation={isEven ? "fade-left" : "fade-right"}
-                className={`space-y-6 ${isEven ? "lg:order-1" : "lg:order-2"}`}
+                animation={textAnimation}
+                className={`min-w-0 space-y-6 ${isEven ? "lg:order-1" : "lg:order-2"}`}
               >
-                <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                <h2 className="max-w-[20rem] break-words font-heading text-3xl font-bold leading-tight text-white sm:max-w-lg sm:text-4xl md:max-w-none md:text-5xl lg:text-6xl">
                   {experience.title}
                 </h2>
 
-                <p className="text-white/70 text-lg leading-relaxed max-w-lg">
+                <p className="max-w-[20rem] text-base leading-relaxed text-white/70 sm:max-w-lg sm:text-lg">
                   {experience.subtitle}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-4 text-white/50 text-sm">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/50 sm:text-sm">
                   <span className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     {experience.durationLabel}
@@ -209,16 +221,42 @@ export function ExperiencesList({
                     <Ship className="h-4 w-4" />
                     {experience.detailLabel}
                   </span>
+                  <span className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    {experience.capacityLabel}
+                  </span>
                 </div>
 
                 {experience.priceLabel && (
-                  <p className="text-2xl font-semibold text-[var(--color-gold)]">
+                  <p className="text-xl font-semibold text-[var(--color-gold)] sm:text-2xl">
                     {experience.priceLabel}{" "}
-                    <span className="text-base font-medium text-white/55">
+                    <span className="block text-sm font-medium leading-6 text-white/55 sm:inline sm:text-base">
                       {experience.priceUnitLabel} · {vatIncludedLabel(locale)}
                     </span>
                   </p>
                 )}
+
+                <div className="max-w-[20rem] space-y-5 border-y border-white/10 py-5 sm:max-w-xl">
+                  <div className="space-y-2">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
+                      <Waves className="h-4 w-4" />
+                      {experience.labels.route}
+                    </p>
+                    <p className="text-sm leading-6 text-white/68 md:text-base md:leading-7">
+                      {experience.facts.route}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {experience.labels.includes}
+                    </p>
+                    <p className="text-sm leading-6 text-white/58">
+                      <span className="text-white/75">{experience.facts.formula}.</span>{" "}
+                      {experience.facts.includes}
+                    </p>
+                  </div>
+                </div>
 
                 {experience.variants.length > 0 && (
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -250,7 +288,7 @@ export function ExperiencesList({
 
               {/* Image stack column */}
               <ScrollSection
-                animation={isEven ? "fade-right" : "fade-left"}
+                animation={mediaAnimation}
                 className={`flex justify-center ${isEven ? "lg:order-2" : "lg:order-1"}`}
               >
                 <div className="relative flex min-h-[26rem] w-full items-center justify-center overflow-visible py-8 md:min-h-[34rem] lg:min-h-[38rem]">

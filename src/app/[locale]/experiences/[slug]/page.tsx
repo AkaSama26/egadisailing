@@ -11,6 +11,7 @@ import {
   Clock,
   Compass,
   Luggage,
+  ShieldCheck,
   Ship,
   Users,
 } from "lucide-react";
@@ -36,7 +37,12 @@ import { getExperienceItinerary } from "@/lib/experiences/itineraries";
 import { getDisplayPrice } from "@/lib/pricing/display";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
-import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
+import {
+  PUBLIC_COMPANY_LEGAL,
+  PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_LOCATION,
+  PUBLIC_CONTACT_PHONE_TEXT,
+} from "@/lib/public-contact";
 import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
@@ -170,6 +176,19 @@ function getFishingSeoExpansionCopy(
               : isEn
                 ? `Private ${boat} for up to ${capacityMax} guests, priced per group.`
                 : `${boat} privato fino a ${capacityMax} persone, con prezzo per gruppo.`,
+      },
+      {
+        icon: ShieldCheck,
+        title: isEs ? "Meteorología, cancelación y reembolso" : isFr ? "Météo, annulation et remboursement" : isDe ? "Wetter, Storno und Erstattung" : isEn ? "Weather, cancellation and refund" : "Meteo, cancellazione e rimborso",
+        text: isEs
+          ? "Si Egadisailing cancela por mar no seguro, puedes elegir cambio de fecha gratuito o reembolso completo. Cancelación cliente: 100% hasta 30 días, 50% de 29 a 15 días, sin reembolso bajo 15 días o no-show."
+          : isFr
+            ? "Si Egadisailing annule pour mer non sûre, vous choisissez un changement de date gratuit ou un remboursement complet. Annulation client : 100% jusqu'à 30 jours, 50% de 29 à 15 jours, aucun remboursement sous 15 jours ou no-show."
+            : isDe
+              ? "Wenn Egadisailing wegen unsicherer Seebedingungen storniert, wählen Sie kostenlosen Terminwechsel oder volle Erstattung. Kundenstorno: 100% bis 30 Tage, 50% von 29 bis 15 Tage, keine Erstattung unter 15 Tagen oder bei No-show."
+              : isEn
+                ? "If Egadisailing cancels because of unsafe sea conditions, you can choose a free date change or full refund. Customer cancellation: 100% up to 30 days, 50% from 29 to 15 days, no refund under 15 days or no-show."
+                : "Se Egadisailing cancella per mare non sicuro, puoi scegliere cambio data gratuito o rimborso completo. Cancellazione cliente: 100% fino a 30 giorni, 50% da 29 a 15 giorni, nessun rimborso sotto i 15 giorni o no-show.",
       },
     ],
     whatYouSeeTitle: isEs ? "Qué harás a bordo" : isFr ? "Ce que vous ferez à bord" : isDe ? "Was Sie an Bord machen" : isEn ? "What you will do on board" : "Cosa farai a bordo",
@@ -332,6 +351,407 @@ function getFishingSeoExpansionCopy(
       },
     ],
   };
+}
+
+function isPriorityFullDayBoatService(service: { id?: string }) {
+  return (
+    service.id === "boat-shared-full-day" ||
+    service.id === "boat-exclusive-full-day"
+  );
+}
+
+function getFullDayBoatSeoExpansionCopy(
+  locale: string,
+  service: { id?: string; type: string; capacityMax: number },
+  durationText: string,
+  boatTitle?: string,
+) {
+  const isPrivate = service.type === "BOAT_EXCLUSIVE";
+  const boatNote = boatTitle ? ` ${boatTitle}.` : "";
+
+  if (locale === "es") {
+    const formulaText = isPrivate
+      ? `Tour privado en barco Favignana y Levanzo desde Trapani, con barco reservado para tu grupo.${boatNote} Hasta ${service.capacityMax} personas.`
+      : `Excursión compartida en barco Favignana y Levanzo desde Trapani, con plazas individuales a bordo.${boatNote} Hasta ${service.capacityMax} personas.`;
+    return {
+      practicalEyebrow: "Antes de reservar",
+      practicalTitle: "Detalles del tour Favignana y Levanzo",
+      practicalItems: [
+        {
+          icon: Anchor,
+          title: "Salida desde el Puerto de Trapani",
+          text: "Punto de encuentro: Via dei Gladioli 15, 91100 Trapani. El embarque se confirma con la tripulación antes de la salida.",
+        },
+        {
+          icon: Clock,
+          title: "Duración 8 horas",
+          text: `Duración prevista: ${durationText}, con salida desde Trapani y regreso al Puerto de Trapani.`,
+        },
+        {
+          icon: Users,
+          title: isPrivate ? "Tour privado" : "Tour compartido",
+          text: formulaText,
+        },
+        {
+          icon: Check,
+          title: "Qué incluye",
+          text: "Patrón, combustible para la ruta prevista, equipo de snorkel, agua y refrescos, paradas de baño y asistencia a bordo.",
+        },
+        {
+          icon: ShieldCheck,
+          title: "Meteorología, cancelación y reembolso",
+          text: "Si Egadisailing cancela por mar no seguro, puedes elegir cambio de fecha gratuito o reembolso completo. Cancelación cliente: 100% hasta 30 días, 50% de 29 a 15 días, sin reembolso bajo 15 días o no-show.",
+        },
+      ],
+      whatYouSeeTitle: "Itinerario Favignana y Levanzo",
+      whatYouSeeIntro:
+        "Las paradas se eligen el mismo día para mantener seguridad, comodidad y agua clara, no como una lista rígida.",
+      whatYouSeeItems: [
+        {
+          title: "Cala Rossa, Cala Azzurra y Bue Marino",
+          text: "Las calas más buscadas de Favignana se evalúan para baño, snorkel, luz y afluencia.",
+        },
+        {
+          title: "Grotta degli Innamorati y Scalo Cavallo",
+          text: "Posibles pasos panorámicos cuando el mar permite navegar cerca de la costa con seguridad.",
+        },
+        {
+          title: "Cala Fredda, Cala Minnola y Faraglione de Levanzo",
+          text: "La segunda isla se trabaja buscando el lado más protegido para baño y relax.",
+        },
+        {
+          title: "Snorkel y paradas de baño",
+          text: "La jornada mantiene tiempo en el agua sin forzar etapas cuando viento o afluencia cambian.",
+        },
+      ],
+      faqTitle: "Preguntas sobre Favignana y Levanzo en barco",
+      faqs: [
+        {
+          question: "¿Desde dónde sale la excursión?",
+          answer: "La salida es desde el Puerto de Trapani. El punto de encuentro habitual es Via dei Gladioli 15, 91100 Trapani.",
+        },
+        {
+          question: "¿La excursión dura 8 horas?",
+          answer: "Sí, la duración prevista es de 8 horas desde la salida hasta el regreso. Horarios y ruta pueden adaptarse por seguridad, mar y tráfico portuario.",
+        },
+        {
+          question: "¿Qué calas se pueden ver?",
+          answer: "Las posibles paradas incluyen Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Scalo Cavallo, Cala Fredda, Cala Minnola y el Faraglione de Levanzo.",
+        },
+        {
+          question: "¿Es un tour compartido o privado?",
+          answer: `${formulaText} El formato exacto está indicado en el título y en el panel de reserva.`,
+        },
+        {
+          question: "¿Qué está incluido?",
+          answer: "Están incluidos patrón, combustible para la ruta prevista, equipo de snorkel, agua y refrescos, paradas de baño y asistencia a bordo.",
+        },
+        {
+          question: "¿Qué pasa si hay mal tiempo?",
+          answer: "Si Egadisailing cancela por condiciones de mar no seguras, puedes elegir cambio de fecha gratuito o reembolso completo. La ruta puede cambiar si la experiencia se puede realizar con seguridad.",
+        },
+      ],
+    };
+  }
+
+  if (locale === "fr") {
+    const formulaText = isPrivate
+      ? `Excursion privée en bateau Favignana et Levanzo depuis Trapani, avec bateau réservé pour votre groupe.${boatNote} Jusqu'à ${service.capacityMax} personnes.`
+      : `Excursion partagée en bateau Favignana et Levanzo depuis Trapani, avec places individuelles à bord.${boatNote} Jusqu'à ${service.capacityMax} personnes.`;
+    return {
+      practicalEyebrow: "Avant de réserver",
+      practicalTitle: "Détails du tour Favignana et Levanzo",
+      practicalItems: [
+        {
+          icon: Anchor,
+          title: "Départ du port de Trapani",
+          text: "Point de rencontre : Via dei Gladioli 15, 91100 Trapani. L'embarquement est confirmé par l'équipage avant le départ.",
+        },
+        {
+          icon: Clock,
+          title: "Durée 8 heures",
+          text: `Durée prévue : ${durationText}, avec départ de Trapani et retour au port de Trapani.`,
+        },
+        {
+          icon: Users,
+          title: isPrivate ? "Tour privé" : "Tour partagé",
+          text: formulaText,
+        },
+        {
+          icon: Check,
+          title: "Ce qui est inclus",
+          text: "Skipper, carburant pour la route prévue, équipement de snorkeling, eau et boissons fraîches, arrêts baignade et assistance à bord.",
+        },
+        {
+          icon: ShieldCheck,
+          title: "Météo, annulation et remboursement",
+          text: "Si Egadisailing annule pour mer non sûre, vous choisissez un changement de date gratuit ou un remboursement complet. Annulation client : 100% jusqu'à 30 jours, 50% de 29 à 15 jours, aucun remboursement sous 15 jours ou no-show.",
+        },
+      ],
+      whatYouSeeTitle: "Itinéraire Favignana et Levanzo",
+      whatYouSeeIntro:
+        "Les arrêts sont choisis le jour même pour garder sécurité, confort et eau claire, pas comme une liste rigide.",
+      whatYouSeeItems: [
+        {
+          title: "Cala Rossa, Cala Azzurra et Bue Marino",
+          text: "Les criques les plus recherchées de Favignana sont évaluées pour baignade, snorkeling, lumière et affluence.",
+        },
+        {
+          title: "Grotta degli Innamorati et Scalo Cavallo",
+          text: "Passages panoramiques possibles lorsque la mer permet une navigation côtière sûre.",
+        },
+        {
+          title: "Cala Fredda, Cala Minnola et Faraglione de Levanzo",
+          text: "La deuxième île se travaille en cherchant le côté le plus abrité pour baignade et détente.",
+        },
+        {
+          title: "Snorkeling et arrêts baignade",
+          text: "La journée garde du temps dans l'eau sans forcer les étapes quand vent ou affluence changent.",
+        },
+      ],
+      faqTitle: "Questions sur Favignana et Levanzo en bateau",
+      faqs: [
+        {
+          question: "D'où part l'excursion ?",
+          answer: "Le départ se fait depuis le port de Trapani. Le point habituel est Via dei Gladioli 15, 91100 Trapani.",
+        },
+        {
+          question: "L'excursion dure-t-elle 8 heures ?",
+          answer: "Oui, la durée prévue est de 8 heures du départ au retour. Horaires et route peuvent s'adapter pour sécurité, mer et trafic portuaire.",
+        },
+        {
+          question: "Quelles criques peut-on voir ?",
+          answer: "Les arrêts possibles incluent Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Scalo Cavallo, Cala Fredda, Cala Minnola et le Faraglione de Levanzo.",
+        },
+        {
+          question: "Le tour est-il partagé ou privé ?",
+          answer: `${formulaText} Le format exact est indiqué dans le titre et le panneau de réservation.`,
+        },
+        {
+          question: "Qu'est-ce qui est inclus ?",
+          answer: "Skipper, carburant pour la route prévue, équipement de snorkeling, eau et boissons fraîches, arrêts baignade et assistance à bord sont inclus.",
+        },
+        {
+          question: "Que se passe-t-il en cas de mauvaise météo ?",
+          answer: "Si Egadisailing annule pour conditions de mer non sûres, vous choisissez un changement de date gratuit ou un remboursement complet. La route peut changer si l'expérience reste réalisable en sécurité.",
+        },
+      ],
+    };
+  }
+
+  if (locale === "de") {
+    const formulaText = isPrivate
+      ? `Private Bootstour Favignana und Levanzo ab Trapani, mit Boot exklusiv für Ihre Gruppe.${boatNote} Bis zu ${service.capacityMax} Personen.`
+      : `Geteilte Bootstour Favignana und Levanzo ab Trapani, mit Einzelplätzen an Bord.${boatNote} Bis zu ${service.capacityMax} Personen.`;
+    return {
+      practicalEyebrow: "Vor der Buchung",
+      practicalTitle: "Details zur Tour Favignana und Levanzo",
+      practicalItems: [
+        {
+          icon: Anchor,
+          title: "Abfahrt vom Hafen Trapani",
+          text: "Treffpunkt: Via dei Gladioli 15, 91100 Trapani. Die Einschiffung wird vor der Abfahrt von der Crew bestätigt.",
+        },
+        {
+          icon: Clock,
+          title: "Dauer 8 Stunden",
+          text: `Geplante Dauer: ${durationText}, mit Abfahrt in Trapani und Rückkehr zum Hafen Trapani.`,
+        },
+        {
+          icon: Users,
+          title: isPrivate ? "Private Tour" : "Geteilte Tour",
+          text: formulaText,
+        },
+        {
+          icon: Check,
+          title: "Was enthalten ist",
+          text: "Skipper, Treibstoff für die geplante Route, Schnorchelausrüstung, Wasser und Softdrinks, Badestopps und Betreuung an Bord.",
+        },
+        {
+          icon: ShieldCheck,
+          title: "Wetter, Stornierung und Erstattung",
+          text: "Wenn Egadisailing wegen unsicherer Seebedingungen storniert, wählen Sie kostenlosen Terminwechsel oder volle Erstattung. Kundenstorno: 100% bis 30 Tage, 50% von 29 bis 15 Tage, keine Erstattung unter 15 Tagen oder bei No-show.",
+        },
+      ],
+      whatYouSeeTitle: "Route Favignana und Levanzo",
+      whatYouSeeIntro:
+        "Die Stopps werden am Tag selbst gewählt, damit Sicherheit, Komfort und klares Wasser Vorrang vor einer starren Liste haben.",
+      whatYouSeeItems: [
+        {
+          title: "Cala Rossa, Cala Azzurra und Bue Marino",
+          text: "Die meistgesuchten Buchten von Favignana werden für Baden, Schnorcheln, Licht und Andrang geprüft.",
+        },
+        {
+          title: "Grotta degli Innamorati und Scalo Cavallo",
+          text: "Mögliche Panoramapassagen, wenn das Meer eine sichere Küstennavigation erlaubt.",
+        },
+        {
+          title: "Cala Fredda, Cala Minnola und Faraglione di Levanzo",
+          text: "Auf der zweiten Insel sucht der Skipper die geschützteste Seite zum Baden und Entspannen.",
+        },
+        {
+          title: "Schnorcheln und Badestopps",
+          text: "Der Tag lässt Zeit im Wasser, ohne Stopps zu erzwingen, wenn Wind oder Andrang wechseln.",
+        },
+      ],
+      faqTitle: "Fragen zu Favignana und Levanzo per Boot",
+      faqs: [
+        {
+          question: "Wo startet die Tour?",
+          answer: "Die Abfahrt erfolgt vom Hafen Trapani. Der übliche Treffpunkt ist Via dei Gladioli 15, 91100 Trapani.",
+        },
+        {
+          question: "Dauert die Tour 8 Stunden?",
+          answer: "Ja, die geplante Dauer beträgt 8 Stunden von Abfahrt bis Rückkehr. Zeiten und Route können sich aus Sicherheits-, See- und Hafengründen anpassen.",
+        },
+        {
+          question: "Welche Buchten können wir sehen?",
+          answer: "Mögliche Stopps sind Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Scalo Cavallo, Cala Fredda, Cala Minnola und Faraglione di Levanzo.",
+        },
+        {
+          question: "Ist die Tour geteilt oder privat?",
+          answer: `${formulaText} Das genaue Format steht im Titel und im Buchungsbereich.`,
+        },
+        {
+          question: "Was ist enthalten?",
+          answer: "Enthalten sind Skipper, Treibstoff für die geplante Route, Schnorchelausrüstung, Wasser und Softdrinks, Badestopps und Betreuung an Bord.",
+        },
+        {
+          question: "Was passiert bei schlechtem Wetter?",
+          answer: "Wenn Egadisailing wegen unsicherer Seebedingungen storniert, wählen Sie kostenlosen Terminwechsel oder volle Erstattung. Die Route kann sich ändern, wenn die Tour sicher durchführbar bleibt.",
+        },
+      ],
+    };
+  }
+
+  const isEn = locale === "en";
+  const formulaText = isPrivate
+    ? isEn
+      ? `Private Favignana and Levanzo boat tour from Trapani, with the boat reserved for your group.${boatNote} Up to ${service.capacityMax} guests.`
+      : `Tour privato in barca Favignana e Levanzo da Trapani, con barca riservata al tuo gruppo.${boatNote} Fino a ${service.capacityMax} persone.`
+    : isEn
+      ? `Shared Favignana and Levanzo boat tour from Trapani, with individual seats on board.${boatNote} Up to ${service.capacityMax} guests.`
+      : `Escursione condivisa in barca Favignana e Levanzo da Trapani, con posti singoli a bordo.${boatNote} Fino a ${service.capacityMax} persone.`;
+
+  return {
+    practicalEyebrow: isEn ? "Before booking" : "Prima di prenotare",
+    practicalTitle: isEn ? "Favignana and Levanzo tour details" : "Dettagli del tour Favignana e Levanzo",
+    practicalItems: [
+      {
+        icon: Anchor,
+        title: isEn ? "Departure from Trapani harbour" : "Partenza dal Porto di Trapani",
+        text: isEn
+          ? "Meeting point: Via dei Gladioli 15, 91100 Trapani. Boarding is confirmed by the crew before departure."
+          : "Punto di incontro: Via dei Gladioli 15, 91100 Trapani. L'imbarco viene confermato dalla crew prima della partenza.",
+      },
+      {
+        icon: Clock,
+        title: isEn ? "8-hour duration" : "Durata 8 ore",
+        text: isEn
+          ? `Planned duration: ${durationText}, departing from Trapani and returning to Trapani harbour.`
+          : `Durata prevista: ${durationText}, con partenza da Trapani e rientro al Porto di Trapani.`,
+      },
+      {
+        icon: Users,
+        title: isPrivate ? (isEn ? "Private tour" : "Tour privato") : isEn ? "Shared tour" : "Tour condiviso",
+        text: formulaText,
+      },
+      {
+        icon: Check,
+        title: isEn ? "What is included" : "Cosa include",
+        text: isEn
+          ? "Skipper, fuel for the planned route, snorkelling equipment, water and soft drinks, swim stops and on-board assistance."
+          : "Skipper, carburante per la rotta prevista, attrezzatura snorkeling, acqua e soft drink, soste bagno e assistenza a bordo.",
+      },
+      {
+        icon: ShieldCheck,
+        title: isEn ? "Weather, cancellation and refund" : "Meteo, cancellazione e rimborso",
+        text: isEn
+          ? "If Egadisailing cancels because of unsafe sea conditions, you can choose a free date change or full refund. Customer cancellation: 100% up to 30 days, 50% from 29 to 15 days, no refund under 15 days or no-show."
+          : "Se Egadisailing cancella per mare non sicuro, puoi scegliere cambio data gratuito o rimborso completo. Cancellazione cliente: 100% fino a 30 giorni, 50% da 29 a 15 giorni, nessun rimborso sotto i 15 giorni o no-show.",
+      },
+    ],
+    whatYouSeeTitle: isEn ? "Favignana and Levanzo itinerary" : "Itinerario Favignana e Levanzo",
+    whatYouSeeIntro: isEn
+      ? "Stops are chosen on the day to protect safety, comfort and clear water instead of forcing a rigid list."
+      : "Le tappe vengono scelte il giorno stesso per proteggere sicurezza, comfort e acqua limpida, non per forzare una lista rigida.",
+    whatYouSeeItems: [
+      {
+        title: "Cala Rossa, Cala Azzurra e Bue Marino",
+        text: isEn
+          ? "The most searched Favignana coves are evaluated for swimming, snorkelling, light and crowds."
+          : "Le cale più cercate di Favignana vengono valutate per bagno, snorkeling, luce e affollamento.",
+      },
+      {
+        title: "Grotta degli Innamorati e Scalo Cavallo",
+        text: isEn
+          ? "Possible scenic passages when sea conditions allow safe coastal navigation."
+          : "Possibili passaggi panoramici quando il mare permette una navigazione costiera sicura.",
+      },
+      {
+        title: isEn ? "Cala Fredda, Cala Minnola and Faraglione di Levanzo" : "Cala Fredda, Cala Minnola e Faraglione di Levanzo",
+        text: isEn
+          ? "On the second island, the skipper looks for the most sheltered side for swimming and relaxed time."
+          : "Sulla seconda isola si cerca il lato più riparato per bagno e tempo in rada.",
+      },
+      {
+        title: isEn ? "Snorkelling and swim stops" : "Snorkeling e soste bagno",
+        text: isEn
+          ? "The day keeps real time in the water without forcing stops when wind or crowds change."
+          : "La giornata lascia tempo vero in acqua senza forzare tappe quando vento o affollamento cambiano.",
+      },
+    ],
+    faqTitle: isEn ? "Favignana and Levanzo boat tour questions" : "Domande sul tour Favignana e Levanzo in barca",
+    faqs: [
+      {
+        question: isEn ? "Where does the boat tour depart from?" : "Da dove parte l'escursione?",
+        answer: isEn
+          ? "The tour departs from Trapani harbour. The usual meeting point is Via dei Gladioli 15, 91100 Trapani."
+          : "La partenza avviene dal Porto di Trapani. Il punto di incontro abituale è Via dei Gladioli 15, 91100 Trapani.",
+      },
+      {
+        question: isEn ? "Does the tour last 8 hours?" : "Il tour dura 8 ore?",
+        answer: isEn
+          ? "Yes, the planned duration is 8 hours from departure to return. Timing and route can adapt for safety, sea conditions and harbour traffic."
+          : "Sì, la durata prevista è di 8 ore dalla partenza al rientro. Orari e rotta possono adattarsi per sicurezza, mare e traffico portuale.",
+      },
+      {
+        question: isEn ? "Which coves can be visited?" : "Quali cale si possono vedere?",
+        answer: isEn
+          ? "Possible stops include Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Scalo Cavallo, Cala Fredda, Cala Minnola and Faraglione di Levanzo."
+          : "Le possibili tappe includono Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Scalo Cavallo, Cala Fredda, Cala Minnola e Faraglione di Levanzo.",
+      },
+      {
+        question: isEn ? "Is this a shared or private tour?" : "Il tour è condiviso o privato?",
+        answer: isEn
+          ? `${formulaText} The exact format is shown in the page title and booking panel.`
+          : `${formulaText} La formula esatta è indicata nel titolo e nel box di prenotazione.`,
+      },
+      {
+        question: isEn ? "What is included?" : "Cosa è incluso?",
+        answer: isEn
+          ? "Skipper, fuel for the planned route, snorkelling equipment, water and soft drinks, swim stops and on-board assistance are included."
+          : "Sono inclusi skipper, carburante per la rotta prevista, attrezzatura snorkeling, acqua e soft drink, soste bagno e assistenza a bordo.",
+      },
+      {
+        question: isEn ? "What happens in bad weather?" : "Cosa succede in caso di maltempo?",
+        answer: isEn
+          ? "If Egadisailing cancels because sea conditions are unsafe, you can choose a free date change or a full refund. The route may change when the experience can still be safely provided."
+          : "Se Egadisailing cancella per condizioni di mare non sicure, puoi scegliere cambio data gratuito o rimborso completo. La rotta può cambiare quando l'esperienza resta svolgibile in sicurezza.",
+      },
+    ],
+  };
+}
+
+function getItineraryHeading(locale: string, service: { id?: string; durationType: string }, fallback: string) {
+  if (service.durationType !== "FULL_DAY" || !isPriorityFullDayBoatService(service)) {
+    return fallback;
+  }
+  if (locale === "es") return "Itinerario y posibles paradas";
+  if (locale === "fr") return "Itinéraire et arrêts possibles";
+  if (locale === "de") return "Route und mögliche Stopps";
+  if (locale === "en") return "Itinerary and possible stops";
+  return "Itinerario e possibili tappe";
 }
 
 function getFishingEditorialCopy(locale: string) {
@@ -911,6 +1331,10 @@ function getSeoExpansionCopy(
     service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
   const isFullDay = service.durationType === "FULL_DAY";
 
+  if (isFullDay && isPriorityFullDayBoatService(service)) {
+    return getFullDayBoatSeoExpansionCopy(locale, service, durationText, boatTitle);
+  }
+
   if (isDe) {
     const routeText = isCharter
       ? "Favignana, Levanzo und Marettimo können über mehrere Tage kombiniert werden, immer nach Seewetter."
@@ -984,6 +1408,11 @@ function getSeoExpansionCopy(
           icon: Users,
           title: "Format und Kapazität",
           text: `${formulaText}${boatTitle ? ` Boot: ${boatTitle}.` : ""} Bis zu ${service.capacityMax} Gäste.`,
+        },
+        {
+          icon: ShieldCheck,
+          title: "Wetter, Storno und Erstattung",
+          text: "Wenn Egadisailing wegen unsicherer Seebedingungen storniert, wählen Sie kostenlosen Terminwechsel oder volle Erstattung. Kundenstorno: 100% bis 30 Tage, 50% von 29 bis 15 Tage, keine Erstattung unter 15 Tagen oder bei No-show.",
         },
       ],
       whatYouSeeTitle: "Was Sie an Bord erleben",
@@ -1068,6 +1497,11 @@ function getSeoExpansionCopy(
           title: "Format et capacité",
           text: `${formulaText}${boatTitle ? ` Bateau : ${boatTitle}.` : ""} Jusqu'à ${service.capacityMax} hôtes.`,
         },
+        {
+          icon: ShieldCheck,
+          title: "Météo, annulation et remboursement",
+          text: "Si Egadisailing annule pour mer non sûre, vous choisissez un changement de date gratuit ou un remboursement complet. Annulation client : 100% jusqu'à 30 jours, 50% de 29 à 15 jours, aucun remboursement sous 15 jours ou no-show.",
+        },
       ],
       whatYouSeeTitle: "Ce que vous vivrez à bord",
       whatYouSeeIntro: "Plus de détails pour choisir la bonne expérience avant de réserver.",
@@ -1150,6 +1584,11 @@ function getSeoExpansionCopy(
           icon: Users,
           title: "Formato y capacidad",
           text: `${formulaText}${boatTitle ? ` Barco: ${boatTitle}.` : ""} Hasta ${service.capacityMax} huéspedes.`,
+        },
+        {
+          icon: ShieldCheck,
+          title: "Meteorología, cancelación y reembolso",
+          text: "Si Egadisailing cancela por mar no seguro, puedes elegir cambio de fecha gratuito o reembolso completo. Cancelación cliente: 100% hasta 30 días, 50% de 29 a 15 días, sin reembolso bajo 15 días o no-show.",
         },
       ],
       whatYouSeeTitle: "Qué vivirás a bordo",
@@ -1447,6 +1886,13 @@ function getSeoExpansionCopy(
         text: `${formulaText}${boatTitle ? ` ${isEn ? "Boat" : "Barca"}: ${boatTitle}.` : ""} ${
           isEn ? `Up to ${service.capacityMax} guests.` : `Fino a ${service.capacityMax} ospiti.`
         }`,
+      },
+      {
+        icon: ShieldCheck,
+        title: isEn ? "Weather, cancellation and refund" : "Meteo, cancellazione e rimborso",
+        text: isEn
+          ? "If Egadisailing cancels because of unsafe sea conditions, you can choose a free date change or full refund. Customer cancellation: 100% up to 30 days, 50% from 29 to 15 days, no refund under 15 days or no-show."
+          : "Se Egadisailing cancella per mare non sicuro, puoi scegliere cambio data gratuito o rimborso completo. Cancellazione cliente: 100% fino a 30 giorni, 50% da 29 a 15 giorni, nessun rimborso sotto i 15 giorni o no-show.",
       },
     ],
     whatYouSeeTitle: isEn ? "What you will experience" : "Cosa vivrai a bordo",
@@ -2070,8 +2516,9 @@ export default async function ExperienceDetailPage({
           ? "Buchung finden"
         : locale === "en"
           ? "Find booking"
-          : "Recupera prenotazione";
+      : "Recupera prenotazione";
   const durationText = getServiceDurationLabel(service, locale);
+  const itineraryHeading = getItineraryHeading(locale, service, t("experience.itinerary"));
   const seoExpansion = getSeoExpansionCopy(locale, service, durationText, boatContent?.title);
   const priceUnit =
     service.type === "CABIN_CHARTER" || service.pricingUnit === "PER_PACKAGE"
@@ -2149,6 +2596,37 @@ export default async function ExperienceDetailPage({
           : locale === "en"
             ? "en-US"
             : "it-IT";
+  const meetingPointId = `${pageUrl}#meeting-point`;
+  const meetingPointName =
+    locale === "es"
+      ? "Puerto de Trapani - punto de encuentro Egadisailing"
+      : locale === "fr"
+        ? "Port de Trapani - point de rencontre Egadisailing"
+        : locale === "de"
+          ? "Hafen Trapani - Egadisailing Treffpunkt"
+          : locale === "en"
+            ? "Trapani harbour - Egadisailing meeting point"
+            : "Porto di Trapani - punto di incontro Egadisailing";
+  const meetingPoint = {
+    "@type": "Place",
+    "@id": meetingPointId,
+    name: meetingPointName,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Via dei Gladioli 15",
+      postalCode: "91100",
+      addressLocality: "Trapani",
+      addressRegion: "Sicilia",
+      addressCountry: "IT",
+    },
+    hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
+  };
+  const areaServed = [
+    { "@type": "Place", name: "Trapani" },
+    { "@type": "Place", name: "Isole Egadi" },
+    { "@type": "Place", name: "Favignana" },
+    { "@type": "Place", name: "Levanzo" },
+  ];
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -2176,6 +2654,7 @@ export default async function ExperienceDetailPage({
           },
         ],
       },
+      meetingPoint,
       {
         "@type": ["Product", "TouristTrip"],
         "@id": `${pageUrl}#experience`,
@@ -2184,6 +2663,9 @@ export default async function ExperienceDetailPage({
         description: `${content.seoDescription} ${editorial.paragraphs[0]}`,
         duration: schemaDuration,
         touristType: touristTypes,
+        areaServed,
+        location: { "@id": meetingPointId },
+        availableAtOrFrom: { "@id": meetingPointId },
         image:
           gallery.length + boatGallery.length > 0
             ? [...gallery.map((item) => absoluteUrl(item.src!)), ...boatGallery.map((item) => absoluteUrl(item.src))]
@@ -2203,6 +2685,7 @@ export default async function ExperienceDetailPage({
           alternateName: "Egadi Sailing",
           url: siteBase,
           email: PUBLIC_CONTACT_EMAIL,
+          telephone: PUBLIC_CONTACT_PHONE_TEXT,
           taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
           address: {
             "@type": "PostalAddress",
@@ -2223,6 +2706,8 @@ export default async function ExperienceDetailPage({
           priceCurrency: "EUR",
           ...(displayPrice.amount ? { price: displayPrice.amount.toFixed(2) } : {}),
           availability: "https://schema.org/InStock",
+          areaServed,
+          availableAtOrFrom: { "@id": meetingPointId },
         },
       },
       {
@@ -2341,7 +2826,7 @@ export default async function ExperienceDetailPage({
                 targetId="itinerary"
                 className={`inline-flex w-full items-center justify-center rounded-lg px-8 py-3 text-base font-semibold text-white sm:w-auto ${liquidGlassButton}`}
               >
-                {t("experience.itinerary")}
+                {itineraryHeading}
               </SmoothAnchorLink>
               <Link
                 href={recoveryHref}
@@ -2482,7 +2967,7 @@ export default async function ExperienceDetailPage({
             <ScrollSection animation="fade-up">
               <section id="itinerary" className="scroll-mt-28">
                 <h2 className="font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
-                  {t("experience.itinerary")}
+                  {itineraryHeading}
                 </h2>
                 <div className="mt-6 space-y-3 sm:mt-8 sm:space-y-4">
                   {itinerary.map((item, index) => (

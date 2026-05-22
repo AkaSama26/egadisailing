@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/hero-section";
 import {
@@ -19,7 +18,14 @@ import {
 import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
 import { getDisplayPriceMap, type DisplayPrice } from "@/lib/pricing/display";
-import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL, WHATSAPP_CONTACTS } from "@/lib/public-contact";
+import {
+  PUBLIC_COMPANY_LEGAL,
+  PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_LOCATION,
+  PUBLIC_CONTACT_PHONE_TEXT,
+  WHATSAPP_CONTACTS,
+} from "@/lib/public-contact";
+import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 import { localizedPath } from "@/lib/i18n/paths";
 
@@ -33,6 +39,38 @@ const CHOICE_RECOMMENDATION_SERVICE_IDS = {
   charter: "cabin-charter",
   fishing: "fishing-full-day",
 } as const satisfies Record<ExperienceChoiceRecommendationKey, string>;
+
+const HOME_SEO_COPY = {
+  it: {
+    title: "Tour in barca Egadi da Trapani",
+    description:
+      "Tour in barca alle Egadi da Trapani: Favignana e Levanzo, tour privati o condivisi, snorkeling, chef a bordo e charter in trimarano con comfort da catamarano.",
+  },
+  en: {
+    title: "Egadi Islands Boat Tours from Trapani",
+    description:
+      "Boat tours to the Egadi Islands from Trapani: Favignana and Levanzo, private or shared tours, snorkelling, chef on board and trimaran charters with catamaran-style comfort.",
+  },
+  es: {
+    title: "Excursiones en barco Islas Egadi desde Trapani",
+    description:
+      "Excursiones en barco a las Islas Egadi desde Trapani: Favignana y Levanzo, tours privados o compartidos, snorkel, chef a bordo y charter en trimarán con confort de catamarán.",
+  },
+  fr: {
+    title: "Excursions en bateau îles Égades depuis Trapani",
+    description:
+      "Excursions en bateau aux îles Égades depuis Trapani : Favignana et Levanzo, tours privés ou partagés, snorkeling, chef à bord et charter en trimaran avec confort de catamaran.",
+  },
+  de: {
+    title: "Bootstouren Ägadische Inseln ab Trapani",
+    description:
+      "Bootstouren zu den Ägadischen Inseln ab Trapani: Favignana und Levanzo, private oder geteilte Touren, Schnorcheln, Chef an Bord und Trimaran-Charter mit Katamaran-Komfort.",
+  },
+} as const;
+
+function homeSeoCopy(locale: string) {
+  return HOME_SEO_COPY[locale as keyof typeof HOME_SEO_COPY] ?? HOME_SEO_COPY.it;
+}
 
 function bookingExperienceKey(service: { id: string; type: string; boat: { id: string } }): string {
   if (BOAT_SERVICE_TYPES.has(service.type)) return `${service.boat.id}:${service.type}`;
@@ -49,6 +87,20 @@ function lowestHeroPriceLabel(
   displayPrices: Map<string, DisplayPrice>,
   locale: string,
 ): string | null {
+  const lowest = lowestDisplayPrice(serviceIds, displayPrices);
+  if (!lowest?.amount) return null;
+  if (locale === "fr") return `À partir de ${formatEur(lowest.amount, locale)}`;
+  if (locale === "es") return `Desde ${formatEur(lowest.amount, locale)}`;
+  if (locale === "de") return `Ab ${formatEur(lowest.amount, locale)}`;
+  return locale === "en"
+    ? `From ${formatEur(lowest.amount, locale)}`
+    : `A partire da ${formatEur(lowest.amount, locale)}`;
+}
+
+function lowestDisplayPrice(
+  serviceIds: string[],
+  displayPrices: Map<string, DisplayPrice>,
+): DisplayPrice | null {
   let lowest: DisplayPrice | null = null;
 
   for (const serviceId of serviceIds) {
@@ -59,13 +111,158 @@ function lowestHeroPriceLabel(
     }
   }
 
-  if (!lowest?.amount) return null;
-  if (locale === "fr") return `À partir de ${formatEur(lowest.amount, locale)}`;
-  if (locale === "es") return `Desde ${formatEur(lowest.amount, locale)}`;
-  if (locale === "de") return `Ab ${formatEur(lowest.amount, locale)}`;
+  return lowest;
+}
+
+function structuredDurationLabel(key: ExperienceChoiceRecommendationKey, locale: string): string {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  if (key === "private4") {
+    return isEs ? "4 horas" : isFr ? "4 heures" : isDe ? "4 Stunden" : isEn ? "4 hours" : "4 ore";
+  }
+  if (key === "charter") {
+    return isEs ? "3-7 días" : isFr ? "3-7 jours" : isDe ? "3-7 Tage" : isEn ? "3-7 days" : "3-7 giornate";
+  }
+  return isEs ? "8 horas" : isFr ? "8 heures" : isDe ? "8 Stunden" : isEn ? "8 hours" : "8 ore";
+}
+
+function departurePropertyValue(locale: string) {
+  if (locale === "es") return "Via dei Gladioli 15, Puerto de Trapani";
+  if (locale === "fr") return "Via dei Gladioli 15, port de Trapani";
+  if (locale === "de") return "Via dei Gladioli 15, Hafen von Trapani";
   return locale === "en"
-    ? `From ${formatEur(lowest.amount, locale)}`
-    : `A partire da ${formatEur(lowest.amount, locale)}`;
+    ? "Via dei Gladioli 15, Trapani harbour"
+    : "Via dei Gladioli 15, Porto di Trapani";
+}
+
+function structuredPackageDetails(key: ExperienceChoiceRecommendationKey, locale: string) {
+  const duration = structuredDurationLabel(key, locale);
+  const departure = departurePropertyValue(locale);
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  const formulaByKey: Record<ExperienceChoiceRecommendationKey, string> = {
+    shared8: isEs
+      ? "Tour compartido 8 horas"
+      : isFr
+        ? "Tour partagé 8 heures"
+        : isDe
+          ? "Geteilte 8-Stunden-Tour"
+          : isEn
+            ? "Shared 8-hour tour"
+            : "Tour condiviso 8 ore",
+    private4: isEs
+      ? "Tour privado 4 horas"
+      : isFr
+        ? "Tour privé 4 heures"
+        : isDe
+          ? "Private 4-Stunden-Tour"
+          : isEn
+            ? "Private 4-hour tour"
+            : "Tour privato 4 ore",
+    private8: isEs
+      ? "Tour privado 8 horas"
+      : isFr
+        ? "Tour privé 8 heures"
+        : isDe
+          ? "Private 8-Stunden-Tour"
+          : isEn
+            ? "Private 8-hour tour"
+            : "Tour privato 8 ore",
+    gourmet: isEs
+      ? "Experiencia privada en trimarán con chef a bordo"
+      : isFr
+        ? "Expérience privée en trimaran avec chef à bord"
+        : isDe
+          ? "Privates Trimaran-Erlebnis mit Chef an Bord"
+          : isEn
+            ? "Private trimaran experience with chef on board"
+            : "Esperienza privata in trimarano con chef a bordo",
+    charter: isEs
+      ? "Charter privado en trimarán 3-7 días"
+      : isFr
+        ? "Charter privé en trimaran 3-7 jours"
+        : isDe
+          ? "Privater Trimaran-Charter 3-7 Tage"
+          : isEn
+            ? "Private 3-7 day trimaran charter"
+            : "Charter privato in trimarano 3-7 giorni",
+    fishing: isEs
+      ? "Pesca deportiva privada"
+      : isFr
+        ? "Pêche sportive privée"
+        : isDe
+          ? "Private Sportangel-Tour"
+          : isEn
+            ? "Private sport fishing"
+            : "Pesca sportiva privata",
+  };
+  const includedByKey: Record<ExperienceChoiceRecommendationKey, string> = {
+    shared8: isEs
+      ? "patrón, snorkel, bebidas, combustible, paradas para bañarte y pausa en Favignana"
+      : isFr
+        ? "skipper, snorkeling, boissons, carburant, arrêts baignade et pause à Favignana"
+        : isDe
+          ? "Skipper, Schnorcheln, Getränke, Treibstoff, Badestopps und Pause auf Favignana"
+          : isEn
+            ? "skipper, snorkelling, drinks, fuel, swim stops and a Favignana stop"
+            : "skipper, snorkeling, bevande, carburante, soste bagno e pausa a Favignana",
+    private4: isEs
+      ? "barco privado, patrón, snorkel, bebidas, combustible y paradas para bañarte"
+      : isFr
+        ? "bateau privé, skipper, snorkeling, boissons, carburant et arrêts baignade"
+        : isDe
+          ? "privates Boot, Skipper, Schnorcheln, Getränke, Treibstoff und Badestopps"
+          : isEn
+            ? "private boat, skipper, snorkelling, drinks, fuel and swim stops"
+            : "barca privata, skipper, snorkeling, bevande, carburante e soste bagno",
+    private8: isEs
+      ? "barco privado, patrón, snorkel, bebidas, combustible y ruta flexible"
+      : isFr
+        ? "bateau privé, skipper, snorkeling, boissons, carburant et route flexible"
+        : isDe
+          ? "privates Boot, Skipper, Schnorcheln, Getränke, Treibstoff und flexible Route"
+          : isEn
+            ? "private boat, skipper, snorkelling, drinks, fuel and flexible route"
+            : "barca privata, skipper, snorkeling, bevande, carburante e rotta flessibile",
+    gourmet: isEs
+      ? "trimarán con confort de catamarán, patrón, azafata, chef a bordo, comida, snorkel y combustible"
+      : isFr
+        ? "trimaran avec confort de catamaran, skipper, hôtesse, chef à bord, déjeuner, snorkeling et carburant"
+        : isDe
+          ? "Trimaran mit Katamaran-Komfort, Skipper, Hostess, Chef an Bord, Mittagessen, Schnorcheln und Treibstoff"
+          : isEn
+            ? "trimaran with catamaran-style comfort, skipper, hostess, chef on board, lunch, snorkelling and fuel"
+            : "trimarano con comfort da catamarano, skipper, hostess, chef a bordo, pranzo, snorkeling e carburante",
+    charter: isEs
+      ? "trimarán con confort de catamarán, patrón, cabinas, cocina, snorkel y planificación meteorológica"
+      : isFr
+        ? "trimaran avec confort de catamaran, skipper, cabines, cuisine, snorkeling et planification météo"
+        : isDe
+          ? "Trimaran mit Katamaran-Komfort, Skipper, Kabinen, Küche, Schnorcheln und Wetterplanung"
+          : isEn
+            ? "trimaran with catamaran-style comfort, skipper, cabins, galley, snorkelling and weather-aware planning"
+            : "trimarano con comfort da catamarano, skipper, cabine, cucina, snorkeling e pianificazione meteo",
+    fishing: isEs
+      ? "patrón/guía, cañas, carretes, cebos, combustible, agua y snack"
+      : isFr
+        ? "skipper/guide, cannes, moulinets, appâts, carburant, eau et snack"
+        : isDe
+          ? "Skipper/Guide, Ruten, Rollen, Köder, Treibstoff, Wasser und Snack"
+          : isEn
+            ? "skipper/guide, rods, reels, bait, fuel, water and snacks"
+            : "skipper/guida, canne, mulinelli, esche, carburante, acqua e snack",
+  };
+
+  return [
+    { "@type": "PropertyValue", name: "Duration", value: duration },
+    { "@type": "PropertyValue", name: "Departure", value: departure },
+    { "@type": "PropertyValue", name: "Formula", value: formulaByKey[key] },
+    { "@type": "PropertyValue", name: "Included", value: includedByKey[key] },
+  ];
 }
 
 function packagePills(input: {
@@ -105,7 +302,15 @@ function heroCardCopy(
   const isDe = locale === "de";
   const copyByPackage: Record<string, { title: string; subtitle: string }> = {
     "esperienza-gourmet-trimarano": {
-      title: isEs ? "Chef a Bordo - Premium Experience" : isFr ? "Chef à Bord - Premium Experience" : isDe ? "Chef an Bord - Premium Experience" : isEn ? "Chef on board - premium experience" : "Chef a Bordo - Premium Experience",
+      title: isEs
+        ? "Chef a bordo en trimarán en las Islas Egadi"
+        : isFr
+        ? "Chef à bord en trimaran aux îles Égades"
+        : isDe
+        ? "Chef an Bord auf dem Trimaran zu den Ägadischen Inseln"
+        : isEn
+        ? "Chef on board in a trimaran in the Egadi Islands"
+        : "Chef a bordo in trimarano alle Egadi",
       subtitle: isEs
         ? "Trimarán privado, comida y tripulación dedicada."
         : isFr
@@ -117,19 +322,27 @@ function heroCardCopy(
         : "Trimarano privato, pranzo e crew dedicata.",
     },
     "charter-egadi": {
-      title: isEs ? "Charter Islas Egadi" : isFr ? "Charter aux îles Égades" : isDe ? "Charter Ägadische Inseln" : isEn ? "Egadi charter" : "Charter Egadi",
+      title: isEs ? "Charter Islas Egadi en trimarán" : isFr ? "Charter aux îles Égades en trimaran" : isDe ? "Charter Ägadische Inseln im Trimaran" : isEn ? "Egadi trimaran charter" : "Charter Egadi in trimarano",
       subtitle: isEs
-        ? "3-7 días entre Favignana, Levanzo y Marettimo."
+        ? "3-7 días entre Favignana, Levanzo y Marettimo, con confort de catamarán."
         : isFr
-        ? "3-7 jours entre Favignana, Levanzo et Marettimo."
+        ? "3-7 jours entre Favignana, Levanzo et Marettimo, avec confort de catamaran."
         : isDe
-        ? "3-7 Tage zwischen Favignana, Levanzo und Marettimo."
+        ? "3-7 Tage zwischen Favignana, Levanzo und Marettimo, mit Katamaran-Komfort."
         : isEn
-        ? "3-7 days around Favignana, Levanzo and Marettimo."
-        : "3-7 giornate tra Favignana, Levanzo e Marettimo.",
+        ? "3-7 days around Favignana, Levanzo and Marettimo, with catamaran-style comfort."
+        : "3-7 giornate tra Favignana, Levanzo e Marettimo, con comfort da catamarano.",
     },
     "tour-barca-egadi-8-ore": {
-      title: isEs ? "Excursión en barco 8 horas" : isFr ? "Excursion en bateau 8 heures" : isDe ? "Bootstour 8 Stunden" : isEn ? "8-hour boat tour" : "Barca 8 ore",
+      title: isEs
+        ? "Tour en barco Favignana y Levanzo desde Trapani"
+        : isFr
+        ? "Tour en bateau Favignana et Levanzo depuis Trapani"
+        : isDe
+        ? "Bootstour Favignana und Levanzo ab Trapani"
+        : isEn
+        ? "Favignana and Levanzo boat tour from Trapani"
+        : "Tour in barca Favignana e Levanzo da Trapani",
       subtitle: isEs
         ? "Día completo, snorkel y tiempo en Favignana."
         : isFr
@@ -141,7 +354,15 @@ function heroCardCopy(
         : "Giornata completa, snorkeling e pranzo a Favignana.",
     },
     "tour-barca-egadi-4-ore": {
-      title: isEs ? "Excursión privada 4 horas" : isFr ? "Excursion privée 4 heures" : isDe ? "Private Bootstour 4 Stunden" : isEn ? "4-hour boat tour" : "Barca 4 ore",
+      title: isEs
+        ? "Excursión en barco 4 horas a las Islas Egadi"
+        : isFr
+        ? "Excursion en bateau 4 heures aux îles Égades"
+        : isDe
+        ? "4-Stunden-Bootstour zu den Ägadischen Inseln"
+        : isEn
+        ? "4-hour Egadi Islands boat tour"
+        : "Escursione in barca 4 ore alle Egadi",
       subtitle: isEs
         ? "Medio día ágil entre baños y calas protegidas."
         : isFr
@@ -153,7 +374,7 @@ function heroCardCopy(
         : "Mezza giornata agile tra bagno e cale riparate.",
     },
     "charter-pesca-egadi": {
-      title: isEs ? "Charter de pesca Egadi" : isFr ? "Charter de pêche Égades" : isDe ? "Angelcharter Ägadische Inseln" : isEn ? "Egadi fishing charter" : "Charter pesca Egadi",
+      title: isEs ? "Charter de pesca Egadi en neumática" : isFr ? "Charter de pêche Égades en semi-rigide" : isDe ? "Angelcharter Ägadische Inseln im RIB" : isEn ? "Egadi fishing charter by RIB" : "Charter pesca Egadi in gommone",
       subtitle: isEs
         ? "Neumática privada, equipo profesional y técnicas mixtas."
         : isFr
@@ -232,7 +453,15 @@ function buildExperienceChoiceRecommendations({
   const content = {
     shared8: {
       emoji: "🌊",
-      title: isEs ? "Excursión compartida 8 horas" : isFr ? "Excursion partagée 8 heures" : isDe ? "Geteilte Bootstour 8 Stunden" : isEn ? "Shared 8-hour boat tour" : "Tour condiviso 8 ore",
+      title: isEs
+        ? "Tour en barco Favignana y Levanzo desde Trapani"
+        : isFr
+        ? "Tour en bateau Favignana et Levanzo depuis Trapani"
+        : isDe
+        ? "Bootstour Favignana und Levanzo ab Trapani"
+        : isEn
+        ? "Favignana and Levanzo boat tour from Trapani"
+        : "Tour in barca Favignana e Levanzo da Trapani",
       boatLabel: isEs
         ? "Cigala & Bertinetti · plaza compartida"
         : isFr
@@ -254,7 +483,15 @@ function buildExperienceChoiceRecommendations({
     },
     private4: {
       emoji: "⚡",
-      title: isEs ? "Excursión privada 4 horas" : isFr ? "Excursion privée 4 heures" : isDe ? "Private Bootstour 4 Stunden" : isEn ? "Private 4-hour boat tour" : "Tour privato 4 ore",
+      title: isEs
+        ? "Excursión en barco 4 horas a las Islas Egadi"
+        : isFr
+        ? "Excursion en bateau 4 heures aux îles Égades"
+        : isDe
+        ? "4-Stunden-Bootstour zu den Ägadischen Inseln"
+        : isEn
+        ? "4-hour Egadi Islands boat tour"
+        : "Escursione in barca 4 ore alle Egadi",
       boatLabel: isEs
         ? "Cigala & Bertinetti · barco privado ágil"
         : isFr
@@ -276,7 +513,15 @@ function buildExperienceChoiceRecommendations({
     },
     private8: {
       emoji: "🚤",
-      title: isEs ? "Excursión privada 8 horas" : isFr ? "Excursion privée 8 heures" : isDe ? "Private Bootstour 8 Stunden" : isEn ? "Private 8-hour boat tour" : "Tour privato 8 ore",
+      title: isEs
+        ? "Tour privado a las Islas Egadi 8 horas desde Trapani"
+        : isFr
+        ? "Tour privé aux îles Égades 8 heures depuis Trapani"
+        : isDe
+        ? "Private Bootstour Ägadische Inseln 8 Stunden ab Trapani"
+        : isEn
+        ? "Private Egadi Islands 8-hour boat tour from Trapani"
+        : "Tour privato alle Egadi 8 ore da Trapani",
       boatLabel: isEs
         ? "Cigala & Bertinetti · barco privado ágil"
         : isFr
@@ -298,16 +543,24 @@ function buildExperienceChoiceRecommendations({
     },
     gourmet: {
       emoji: "🍽️",
-      title: isEs ? "Chef a Bordo - Premium Experience" : isFr ? "Chef à Bord - Premium Experience" : isDe ? "Chef an Bord - Premium Experience" : isEn ? "Gourmet Experience on the Trimarano" : "Esperienza Gourmet sul Trimarano",
-      boatLabel: isEs
-	        ? "Neel 47 de lujo · chef, patrón y azafata"
+      title: isEs
+        ? "Chef a bordo en trimarán en las Islas Egadi"
         : isFr
-        ? "Neel 47 luxury · chef, skipper et hôtesse"
+        ? "Chef à bord en trimaran aux îles Égades"
         : isDe
-        ? "Neel 47 Luxury · Chef, Skipper und Hostess"
+        ? "Chef an Bord auf dem Trimaran zu den Ägadischen Inseln"
         : isEn
-        ? "Luxury Trimarano · chef, skipper and hostess"
-        : "Trimarano luxury · chef, skipper e hostess",
+        ? "Chef on board in a trimaran in the Egadi Islands"
+        : "Chef a bordo in trimarano alle Egadi",
+      boatLabel: isEs
+	        ? "Trimarán · confort de catamarán, chef y patrón"
+        : isFr
+        ? "Trimaran · confort de catamaran, chef et skipper"
+        : isDe
+        ? "Trimaran · Katamaran-Komfort, Chef und Skipper"
+        : isEn
+        ? "Trimaran · catamaran-style comfort, chef and skipper"
+        : "Trimarano · comfort da catamarano, chef e skipper",
       reason: isEs
 	        ? "Buscas un día cuidado: espacios amplios, comida preparada a bordo, privacidad y ritmo premium al fondeo."
         : isFr
@@ -320,16 +573,16 @@ function buildExperienceChoiceRecommendations({
     },
     charter: {
       emoji: "🛏️",
-      title: isEs ? "Charter Islas Egadi en Neel 47" : isFr ? "Charter aux îles Égades sur Neel 47" : isDe ? "Charter Ägadische Inseln auf dem Neel 47" : isEn ? "Egadi Charter on the Trimarano" : "Charter Egadi sul Trimarano",
+      title: isEs ? "Charter Islas Egadi en trimarán" : isFr ? "Charter aux îles Égades en trimaran" : isDe ? "Charter Ägadische Inseln im Trimaran" : isEn ? "Egadi trimaran charter" : "Charter Egadi in trimarano",
       boatLabel: isEs
-	        ? "Neel 47 de lujo · camarotes y ruta a medida"
+	        ? "Trimarán · confort de catamarán y ruta a medida"
         : isFr
-        ? "Neel 47 luxury · cabines et route sur mesure"
+        ? "Trimaran · confort de catamaran et route sur mesure"
         : isDe
-        ? "Neel 47 Luxury · Kabinen und Route nach Maß"
+        ? "Trimaran · Katamaran-Komfort und Route nach Maß"
         : isEn
-        ? "Luxury Trimarano · cabins and tailored route"
-        : "Trimarano luxury · cabine e rotta su misura",
+        ? "Trimaran · catamaran-style comfort and tailored route"
+        : "Trimarano · comfort da catamarano e rotta su misura",
       reason: isEs
         ? "Para varios días en el mar: camarotes, fondeos tranquilos y ruta por Favignana, Levanzo y Marettimo."
         : isFr
@@ -342,7 +595,7 @@ function buildExperienceChoiceRecommendations({
     },
     fishing: {
       emoji: "🎣",
-      title: isEs ? "Charter de pesca Egadi" : isFr ? "Charter de pêche Égades" : isDe ? "Angelcharter Ägadische Inseln" : isEn ? "Egadi fishing charter" : "Charter pesca Egadi",
+      title: isEs ? "Charter de pesca Egadi en neumática" : isFr ? "Charter de pêche Égades en semi-rigide" : isDe ? "Angelcharter Ägadische Inseln im RIB" : isEn ? "Egadi fishing charter by RIB" : "Charter pesca Egadi in gommone",
       boatLabel: isEs
         ? "Neumática de pesca · equipo profesional"
         : isFr
@@ -402,29 +655,10 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const isEn = locale === "en";
-  const isEs = locale === "es";
-  const isFr = locale === "fr";
-  const isDe = locale === "de";
+  const seo = homeSeoCopy(locale);
   return buildPageMetadata({
-    title: isEs
-      ? "Excursiones en barco a las Islas Egadi desde Trapani"
-      : isFr
-      ? "Excursions en bateau aux îles Égades depuis Trapani"
-      : isDe
-      ? "Bootstouren zu den Ägadischen Inseln ab Trapani"
-      : isEn
-      ? "Egadi Islands Boat Tours from Trapani"
-      : "Tour in barca alle Isole Egadi da Trapani",
-    description: isEs
-      ? "Reserva excursiones en barco a las Islas Egadi desde Trapani: tours privados y compartidos, chef a bordo, trimarán Neel 47 y charter de varios días."
-      : isFr
-      ? "Réservez des excursions en bateau aux îles Égades depuis Trapani : tours privés et partagés, chef à bord, trimaran Neel 47 et charter de plusieurs jours."
-      : isDe
-      ? "Buchen Sie Bootstouren zu den Ägadischen Inseln ab Trapani: private und geteilte Touren, Chef an Bord, Neel 47 Trimaran und mehrtägige Charter."
-      : isEn
-      ? "Book Egadi Islands boat tours from Trapani: private and shared tours, chef on board, Neel 47 trimaran experiences and multi-day charters."
-      : "Prenota tour in barca alle Egadi da Trapani: esperienze private e condivise, chef a bordo, trimarano Neel 47 e charter di più giorni.",
+    title: seo.title,
+    description: seo.description,
     path: "/",
     locale,
   });
@@ -460,6 +694,8 @@ export default async function HomePage({
       durationHours: s.durationHours,
       capacityMax: s.capacityMax,
       pricingUnit: s.pricingUnit,
+      priceAmount: displayPrices.get(s.id)?.amount?.toString() ?? null,
+      priceLabel: lowestHeroPriceLabel([s.id], displayPrices, locale),
     }))
     .sort((a, b) => compareExperienceOrder(a.id, b.id));
   const servicesById = new Map(publicServices.map((service) => [service.id, service]));
@@ -523,50 +759,125 @@ export default async function HomePage({
     displayPrices,
   });
   const siteBase = env.APP_URL.replace(/\/$/, "");
+  const pageUrl = `${siteBase}${localizedPath(locale, "/")}`;
+  const seo = homeSeoCopy(locale);
+  const areaServed = ["Isole Egadi", "Favignana", "Levanzo", "Marettimo", "Trapani"];
+  const boardingAddress = {
+    "@type": "PostalAddress",
+    streetAddress: "Via dei Gladioli 15",
+    postalCode: "91100",
+    addressLocality: "Trapani",
+    addressRegion: "Sicilia",
+    addressCountry: "IT",
+  };
+  const homepageOffers = Object.values(choiceRecommendations).map((recommendation) => {
+    const serviceId = CHOICE_RECOMMENDATION_SERVICE_IDS[recommendation.key];
+    const price = lowestDisplayPrice([serviceId], displayPrices);
+    const url = `${siteBase}${recommendation.detailHref}`;
+
+    return {
+      "@type": "Offer",
+      url,
+      availability: "https://schema.org/InStock",
+      priceCurrency: "EUR",
+      ...(price?.amount ? { price: price.amount.toFixed(2) } : {}),
+      seller: { "@id": `${siteBase}/#organization` },
+      areaServed,
+      itemOffered: {
+        "@type": "Service",
+        name: recommendation.title,
+        description: recommendation.reason,
+        url,
+        provider: { "@id": `${siteBase}/#organization` },
+        areaServed,
+        additionalProperty: structuredPackageDetails(recommendation.key, locale),
+      },
+    };
+  });
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${siteBase}/#website`,
+        name: "Egadisailing",
+        alternateName: "Egadi Sailing",
+        url: siteBase,
+        inLanguage: locale,
+        publisher: { "@id": `${siteBase}/#organization` },
+      },
+      {
+        "@type": "WebPage",
+        "@id": `${pageUrl}#webpage`,
+        url: pageUrl,
+        name: seo.title,
+        description: seo.description,
+        isPartOf: { "@id": `${siteBase}/#website` },
+        about: { "@id": `${siteBase}/#organization` },
+        inLanguage: locale,
+        primaryImageOfPage: {
+          "@type": "ImageObject",
+          url: `${siteBase}/og-default.jpg`,
+        },
+      },
+      {
+        "@type": ["Organization", "LocalBusiness", "TravelAgency"],
+        "@id": `${siteBase}/#organization`,
+        name: "Egadi Sailing",
+        legalName: PUBLIC_COMPANY_LEGAL.name,
+        alternateName: "Egadisailing",
+        description: seo.description,
+        url: siteBase,
+        email: PUBLIC_CONTACT_EMAIL,
+        telephone: PUBLIC_CONTACT_PHONE_TEXT,
+        taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
+        priceRange: "€€€",
+        image: `${siteBase}/og-default.jpg`,
+        sameAs: [PUBLIC_REVIEW_LINKS.google, PUBLIC_REVIEW_LINKS.tripadvisor],
+        hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
+        address: boardingAddress,
+        location: {
+          "@type": "Place",
+          name: departurePropertyValue(locale),
+          address: boardingAddress,
+          hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
+        },
+        contactPoint: WHATSAPP_CONTACTS.map((contact) => ({
+          "@type": "ContactPoint",
+          telephone: `+${contact.phoneE164}`,
+          contactType: "customer service",
+          availableLanguage: contact.key === "en" ? ["en", "it"] : ["it"],
+          areaServed: "IT",
+        })),
+        areaServed,
+        knowsAbout: [
+          "Boat tours in the Egadi Islands",
+          "Favignana and Levanzo boat tours from Trapani",
+          "Private boat charter",
+          "Sailing experiences in Sicily",
+          "Chef on board boat experiences",
+        ],
+        makesOffer: homepageOffers,
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${pageUrl}#homepage-experiences`,
+        name: seo.title,
+        itemListElement: Object.values(choiceRecommendations).map((recommendation, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: homepageOffers[index],
+        })),
+      },
+    ],
+  };
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": ["Organization", "LocalBusiness", "TravelAgency"],
-            name: PUBLIC_COMPANY_LEGAL.name,
-            alternateName: "Egadi Sailing",
-            description: "Boat experiences in the Egadi Islands, Sicily",
-            email: PUBLIC_CONTACT_EMAIL,
-            taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
-            priceRange: "€€€",
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: "Via Calipso 42",
-              postalCode: "91100",
-              addressLocality: "Trapani",
-              addressRegion: "Sicilia",
-              addressCountry: "IT",
-            },
-            contactPoint: WHATSAPP_CONTACTS.map((contact) => ({
-              "@type": "ContactPoint",
-              telephone: `+${contact.phoneE164}`,
-              contactType: "customer service",
-              availableLanguage: contact.key === "en" ? ["en", "it"] : ["it"],
-              areaServed: "IT",
-            })),
-            areaServed: [
-              "Isole Egadi",
-              "Favignana",
-              "Levanzo",
-              "Marettimo",
-              "Trapani",
-            ],
-            knowsAbout: [
-              "Boat tours in the Egadi Islands",
-              "Private boat charter",
-              "Sailing experiences in Sicily",
-            ],
-            url: siteBase,
-          }),
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
         }}
       />
       <HeroSection experiences={heroExperiences} />
