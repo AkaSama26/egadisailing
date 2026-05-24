@@ -17,8 +17,8 @@
   "hero": {
     "title": "Lascia la Terra Ferma",
     "subtitle": "Scopri le Isole Egadi. Trimarano con chef, escursioni esclusive e charter da Trapani",
-    "seoTitle": "Tour in barca alle Isole Egadi da Trapani",
-    "seoSubtitle": "Escursioni a Favignana e Levanzo, tour privati e condivisi, charter in trimarano alle Egadi con comfort da catamarano, skipper, snorkeling e chef a bordo.",
+    "seoTitle": "Tour in barca alle Egadi da Trapani",
+    "seoSubtitle": "Tour privati e condivisi, chef a bordo e charter in trimarano tra Favignana, Levanzo e Marettimo, con skipper locale e partenza dal Porto di Trapani.",
     "cta": "Esplora le Esperienze",
     "vehicleLabel": "Mezzo",
     "vehiclePlaceholder": "Scegli il mezzo",
@@ -242,7 +242,7 @@
     }
   },
   "landing": {
-    "experiencesTitle": "Escursioni in barca alle Egadi: Favignana, Levanzo e Marettimo",
+    "experiencesTitle": "Escursioni Egadi da Trapani",
     "experiencesSubtitle": "",
     "islandsTitle": "Le Isole Egadi",
     "islandsSubtitle": "Tre gioielli nel cuore del Mediterraneo",

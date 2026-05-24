@@ -2,12 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useState, useEffect, useRef } from "react";
+import {
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HERO_VIDEO_SRC } from "@/lib/public-assets";
-import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 
 export interface HeroExperienceCard {
   key: string;
@@ -27,6 +33,8 @@ export function GoldWavesDivider() {
   return (
     <div className="relative w-full z-30 pointer-events-none" style={{ height: 0, marginTop: "-1px" }}>
       <svg
+        aria-hidden="true"
+        focusable="false"
         viewBox="0 0 1440 300"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -146,7 +154,11 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
   const carouselPositionRef = useRef(0);
   const cardsAutoplayPausedRef = useRef(false);
   const cardsAutoplayResumeTimeoutRef = useRef<number | null>(null);
-  const cardsTransitionTimeoutRef = useRef<number | null>(null);
+  const cardsDragStartXRef = useRef(0);
+  const cardsDragStartPositionRef = useRef(0);
+  const isDraggingCardsRef = useRef(false);
+  const hasDraggedCardsRef = useRef(false);
+  const suppressCardClickRef = useRef(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [hoveredExperienceKey, setHoveredExperienceKey] = useState<string | null>(null);
@@ -156,15 +168,6 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
   const isFr = locale === "fr";
   const isDe = locale === "de";
   const copy = {
-    eyebrow: isEs
-      ? "Elige tu experiencia"
-      : isFr
-        ? "Choisissez votre expérience"
-        : isDe
-          ? "Wählen Sie Ihr Erlebnis"
-          : isEn
-            ? "Choose your experience"
-            : "Scegli la tua esperienza",
     book: isEs
       ? "Reservar ahora"
       : isFr
@@ -174,24 +177,15 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
           : isEn
             ? "Book now"
             : "Prenota ora",
-    previous: isEs
-      ? "Experiencias anteriores"
+    cardsLabel: isEs
+      ? "Tours en barco por las Islas Egadi destacados"
       : isFr
-        ? "Expériences précédentes"
+        ? "Tours en bateau aux îles Égades en vedette"
         : isDe
-          ? "Vorherige Erlebnisse"
+          ? "Ausgewählte Bootstouren zu den Ägadischen Inseln"
           : isEn
-            ? "Previous experiences"
-            : "Esperienze precedenti",
-    next: isEs
-      ? "Experiencias siguientes"
-      : isFr
-        ? "Expériences suivantes"
-        : isDe
-          ? "Nächste Erlebnisse"
-          : isEn
-            ? "Next experiences"
-            : "Esperienze successive",
+            ? "Featured Egadi Islands boat tours"
+            : "Tour in barca alle Egadi in evidenza",
   };
 
   useEffect(() => {
@@ -290,9 +284,6 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
       if (cardsAutoplayResumeTimeoutRef.current) {
         window.clearTimeout(cardsAutoplayResumeTimeoutRef.current);
       }
-      if (cardsTransitionTimeoutRef.current) {
-        window.clearTimeout(cardsTransitionTimeoutRef.current);
-      }
     };
   }, []);
 
@@ -344,50 +335,64 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     resumeCardsAutoplay();
   }
 
-  function scrollCards(direction: -1 | 1) {
-    const track = cardsTrackRef.current;
-    if (!track) return;
-    pauseCardsAutoplay();
+  function startCardsDrag(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    holdCardsAutoplay();
+    cardsDragStartXRef.current = event.clientX;
+    cardsDragStartPositionRef.current = carouselPositionRef.current;
+    isDraggingCardsRef.current = true;
+    hasDraggedCardsRef.current = false;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
 
-    const firstCard = track.querySelector<HTMLElement>("[data-hero-experience-card]");
-    const styles = window.getComputedStyle(track);
-    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
-    const cardAdvance = (firstCard?.offsetWidth ?? 360) + gap;
-    const resetPoint = getLoopResetPoint(track);
-
-    if (resetPoint > 0 && direction < 0 && carouselPositionRef.current < cardAdvance) {
-      carouselPositionRef.current += resetPoint;
-      track.style.transition = "";
-      track.style.transform = `translate3d(${-carouselPositionRef.current}px, 0, 0)`;
-      track.getBoundingClientRect();
+  function moveCardsDrag(event: PointerEvent<HTMLDivElement>) {
+    if (!isDraggingCardsRef.current) return;
+    const deltaX = event.clientX - cardsDragStartXRef.current;
+    if (Math.abs(deltaX) > 6) {
+      hasDraggedCardsRef.current = true;
+      event.preventDefault();
     }
-
-    if (
-      resetPoint > 0 &&
-      direction > 0 &&
-      carouselPositionRef.current > resetPoint - cardAdvance
-    ) {
-      carouselPositionRef.current -= resetPoint;
-      track.style.transition = "";
-      track.style.transform = `translate3d(${-carouselPositionRef.current}px, 0, 0)`;
-      track.getBoundingClientRect();
-    }
-
-    track.style.transition = "transform 480ms cubic-bezier(0.22, 1, 0.36, 1)";
-    carouselPositionRef.current += direction * cardAdvance;
+    carouselPositionRef.current = cardsDragStartPositionRef.current - deltaX;
     applyCarouselTransform();
+  }
 
-    if (cardsTransitionTimeoutRef.current) {
-      window.clearTimeout(cardsTransitionTimeoutRef.current);
+  function endCardsDrag(event: PointerEvent<HTMLDivElement>) {
+    if (!isDraggingCardsRef.current) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    cardsTransitionTimeoutRef.current = window.setTimeout(() => {
-      track.style.transition = "";
-      cardsTransitionTimeoutRef.current = null;
-    }, 500);
+    isDraggingCardsRef.current = false;
+    if (hasDraggedCardsRef.current) {
+      suppressCardClickRef.current = true;
+    }
+    if (hoveredExperienceKey) {
+      holdCardsAutoplay();
+    } else {
+      pauseCardsAutoplay(2200);
+    }
+  }
+
+  function cancelCardsDrag(event: PointerEvent<HTMLDivElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    isDraggingCardsRef.current = false;
+    hasDraggedCardsRef.current = false;
+    if (!hoveredExperienceKey) resumeCardsAutoplay();
+  }
+
+  function preventDraggedCardClick(event: MouseEvent<HTMLDivElement>) {
+    if (!suppressCardClickRef.current) return;
+    suppressCardClickRef.current = false;
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   return (
-    <section className="egadi-water-reflection relative w-full min-h-[860px] overflow-hidden bg-[#071934] select-none md:min-h-[820px]">
+    <section
+      aria-labelledby="home-hero-title"
+      className="egadi-water-reflection relative w-full min-h-[860px] overflow-hidden bg-[#071934] select-none md:min-h-[820px]"
+    >
       <div
         aria-hidden="true"
         className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_38%,rgba(14,165,233,0.24),transparent_42%),linear-gradient(180deg,#071934_0%,#0a2a4a_56%,#071934_100%)]"
@@ -422,7 +427,10 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
       {/* ---- Hero content ---- */}
       <div className="relative z-40 flex min-h-[860px] w-full flex-col justify-center px-4 pb-20 pt-28 md:min-h-[820px] md:px-8 lg:px-12">
         <div className="max-w-6xl">
-          <h1 className="max-w-5xl font-heading text-4xl font-extrabold leading-[0.98] text-white drop-shadow-lg sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
+          <h1
+            id="home-hero-title"
+            className="max-w-5xl font-heading text-4xl font-extrabold leading-[0.98] text-white drop-shadow-lg sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+          >
             {t("seoTitle")}
           </h1>
 
@@ -433,37 +441,12 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
 
         {experiences.length > 0 && (
           <div className="mt-8 w-full max-w-[1120px] md:mt-10">
-            <div className="mb-3 flex items-center justify-between gap-4">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/75">
-                {copy.eyebrow}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  aria-label={copy.previous}
-                  onClick={() => scrollCards(-1)}
-                  className={cn(
-                    "inline-flex size-10 items-center justify-center rounded-full text-white",
-                    liquidGlassButton,
-                  )}
-                >
-                  <ChevronLeft className="size-5" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  aria-label={copy.next}
-                  onClick={() => scrollCards(1)}
-                  className={cn(
-                    "inline-flex size-10 items-center justify-center rounded-full text-white",
-                    liquidGlassButton,
-                  )}
-                >
-                  <ChevronRight className="size-5" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-
+            <h2 id="home-hero-experiences-title" className="sr-only">
+              {copy.cardsLabel}
+            </h2>
             <div
+              role="region"
+              aria-labelledby="home-hero-experiences-title"
               onFocus={() => {
                 holdCardsAutoplay();
               }}
@@ -473,16 +456,12 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                   resumeCardsAutoplay();
                 }
               }}
-              onPointerDown={() => {
-                pauseCardsAutoplay(2400);
-              }}
-              onPointerUp={() => {
-                if (!hoveredExperienceKey) resumeCardsAutoplay();
-              }}
-              onPointerCancel={() => {
-                if (!hoveredExperienceKey) resumeCardsAutoplay();
-              }}
-              className="overflow-hidden pb-3"
+              onPointerDown={startCardsDrag}
+              onPointerMove={moveCardsDrag}
+              onPointerUp={endCardsDrag}
+              onPointerCancel={cancelCardsDrag}
+              onClickCapture={preventDraggedCardClick}
+              className="relative cursor-grab overflow-hidden pb-3 touch-pan-y active:cursor-grabbing"
             >
               <div ref={cardsTrackRef} className="flex w-max gap-4 will-change-transform">
                 {Array.from({ length: experiences.length > 1 ? 3 : 1 }).flatMap((_, repeatIndex) =>
@@ -507,7 +486,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                             hideExperiencePreview();
                           }
                         }}
-                        className="hero-experience-card relative h-[340px] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-slate-950/35 lg:h-[360px]"
+                        className="hero-experience-card relative h-[370px] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-slate-950/35 lg:h-[400px]"
                       >
                         {experience.images.map((image, imageIndex) => (
                           <Image
@@ -515,13 +494,12 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                             src={image.src}
                             alt={isDuplicate ? "" : image.alt}
                             fill
-                            priority={
+                            preload={
                               !isDuplicate &&
                               experience.key === experiences[0]?.key &&
                               imageIndex === 0
                             }
                             sizes="(min-width: 1024px) 27vw, (min-width: 640px) 48vw, 82vw"
-                            unoptimized
                             className={cn(
                               "object-cover transition-opacity duration-500",
                               image.src === activeImage.src ? "opacity-100" : "opacity-0",

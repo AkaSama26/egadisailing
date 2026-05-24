@@ -15,7 +15,7 @@ export function stripe(): Stripe {
     // (p99 5-8s normale + retry). 15s + 1 retry = worst-case ~32s, ancora
     // sotto pending-gc lease TTL 5min e webhook Stripe timeout 30s+.
     globalForStripe.__stripe__ = new Stripe(env.STRIPE_SECRET_KEY, {
-      apiVersion: "2026-03-25.dahlia",
+      apiVersion: "2026-04-22.dahlia",
       typescript: true,
       timeout: 15_000,
       maxNetworkRetries: 1,

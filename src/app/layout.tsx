@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Poppins, Inter, Caveat } from "next/font/google";
+import { Inter, Caveat, Manrope } from "next/font/google";
 import { getLocale } from "next-intl/server";
 import { ServiceWorkerCleanup } from "@/components/service-worker-cleanup";
 import { env } from "@/lib/env";
@@ -8,10 +8,9 @@ import { getSiteVerificationMetadata } from "@/lib/site-verification";
 import "vanilla-cookieconsent/dist/cookieconsent.css";
 import "./globals.css";
 
-const poppins = Poppins({
-  variable: "--font-heading",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["300", "400", "600", "700", "800"],
   display: "swap",
 });
 
@@ -112,7 +111,7 @@ export default async function RootLayout({
   // (es. `/admin/*`, admin e' IT-only).
   const locale = await getLocale();
   return (
-    <html lang={locale} className={`${poppins.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
+    <html lang={locale} className={`${manrope.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
         <Script
           id="egadisailing-service-worker-inline-cleanup"

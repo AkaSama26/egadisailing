@@ -1,23 +1,23 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { ScrollSection } from "@/components/scroll-section";
-import { IslandsItinerary } from "@/components/islands-itinerary";
-import { BookingSearch } from "@/components/booking-search";
 import {
   TestimonialsColumn,
   type TestimonialColumnItem,
 } from "@/components/ui/testimonials-columns-1";
 import Link from "next/link";
-import Image from "next/image";
-import {
-  ArrowRight,
-  ExternalLink,
-} from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { localizedPath } from "@/lib/i18n/paths";
+import { HomeExperiencesSection } from "./_components/home/home-experiences-section";
+import {
+  HomePackagesSection,
+  type FeaturedPackage,
+} from "./_components/home/home-packages-section";
+import { HomeGourmetSection } from "./_components/home/home-gourmet-section";
+import { HomeItinerarySection } from "./_components/home/home-itinerary-section";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -39,33 +39,6 @@ interface SerializedService {
 
 interface LandingSectionsProps {
   services: SerializedService[];
-}
-
-interface FeaturedPolaroid {
-  caption: string;
-  color: string;
-  src?: string;
-}
-
-interface FeaturedPackage {
-  key: string;
-  serviceIds: string[];
-  eyebrow: string;
-  title: string;
-  subtitle: string;
-  priceLabel: string;
-  durationLabel: string;
-  detailLabel: string;
-  capacityLabel: string;
-  formulaLabel: string;
-  scheduleLabel: string;
-  details: Array<{
-    title: string;
-    text: string;
-  }>;
-  href: string;
-  ctaLabel: string;
-  polaroids: FeaturedPolaroid[];
 }
 
 const featuredPackageOrder: Record<string, number> = {
@@ -239,32 +212,15 @@ function getPackagePriceLabel(
   return locale === "en" ? "Price on request" : "Prezzo su richiesta";
 }
 
-function infoCopy(locale: string) {
-  const isEn = locale === "en";
-  const isEs = locale === "es";
-  const isFr = locale === "fr";
-  const isDe = locale === "de";
-
-  return {
-    price: isEs ? "Precio" : isFr ? "Prix" : isDe ? "Preis" : isEn ? "Price" : "Prezzo",
-    duration: isEs ? "Duración" : isFr ? "Durée" : isDe ? "Dauer" : isEn ? "Duration" : "Durata",
-    departure: isEs ? "Salida" : isFr ? "Départ" : isDe ? "Abfahrt" : isEn ? "Departure" : "Partenza",
-    capacity: isEs ? "Capacidad" : isFr ? "Capacité" : isDe ? "Kapazität" : isEn ? "Capacity" : "Max persone",
-    formula: isEs ? "Fórmula" : isFr ? "Formule" : isDe ? "Format" : isEn ? "Format" : "Formula",
-    includes: isEs ? "Qué incluye" : isFr ? "Ce qui est inclus" : isDe ? "Inklusive" : isEn ? "What's included" : "Cosa include",
-    schedule: isEs ? "Horarios y salida" : isFr ? "Horaires et départ" : isDe ? "Zeiten und Abfahrt" : isEn ? "Times and departure" : "Orari e partenza",
-    policy: isEs ? "Cancelación y mal tiempo" : isFr ? "Annulation et météo" : isDe ? "Stornierung und Wetter" : isEn ? "Cancellation and weather" : "Cancellazione e maltempo",
-  };
-}
-
 /* ------------------------------------------------------------------ */
 /*  Reveal Title — gold line sweeps left to right revealing text      */
 /* ------------------------------------------------------------------ */
 
-function RevealTitle({ text, compact = false }: { text: string; compact?: boolean }) {
+function RevealTitle({ text, compact = false, id }: { text: string; compact?: boolean; id?: string }) {
   return (
     <div className="relative inline-block">
       <motion.h2
+        id={id}
         className={
           compact
             ? "relative font-heading text-3xl font-semibold leading-tight text-white/95 md:text-4xl lg:text-5xl xl:text-6xl"
@@ -279,6 +235,8 @@ function RevealTitle({ text, compact = false }: { text: string; compact?: boolea
       </motion.h2>
       {/* SVG underline decoration — animated wave */}
       <motion.svg
+        aria-hidden="true"
+        focusable="false"
         viewBox="0 0 400 20"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -330,241 +288,18 @@ function RevealTitle({ text, compact = false }: { text: string; compact?: boolea
   );
 }
 
-/* Polaroid scattered positions */
-const polaroidLayouts = [
-  { x: 2, y: 0, rotate: -8 },
-  { x: 40, y: 5, rotate: 6 },
-  { x: 15, y: 52, rotate: -4 },
-];
-
-const mobilePolaroidLayouts = [
-  { x: 0, y: 24, rotate: -7, zIndex: 10 },
-  { x: 27, y: 0, rotate: 5, zIndex: 20 },
-  { x: 54, y: 30, rotate: -4, zIndex: 30 },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Experience Row — alternating layout, polaroid appear on scroll    */
-/* ------------------------------------------------------------------ */
-
-function ExperienceRow({
-  experience,
-  index,
-  locale,
-}: {
-  experience: FeaturedPackage;
-  index: number;
-  locale: string;
-}) {
-  const isEven = index % 2 === 0;
-  const polaroids = experience.polaroids.slice(0, 3);
-  const copy = infoCopy(locale);
-  const facts = [
-    { label: copy.price, value: experience.priceLabel },
-    { label: copy.duration, value: experience.durationLabel },
-    { label: copy.formula, value: experience.formulaLabel },
-    { label: copy.capacity, value: experience.capacityLabel },
-  ];
-  const commercialDetails = [
-    {
-      title: copy.schedule,
-      text: experience.scheduleLabel,
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center min-h-[450px]">
-      {/* Content column */}
-      <ScrollSection
-        animation={isEven ? "fade-left" : "fade-right"}
-        className={`space-y-6 ${isEven ? "lg:order-1" : "lg:order-2"}`}
-      >
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
-          {experience.eyebrow}
-        </p>
-
-        <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-          {experience.title}
-        </h2>
-
-        <p className="text-white/70 text-lg leading-relaxed max-w-lg">
-          {experience.subtitle}
-        </p>
-
-        <dl className="grid max-w-2xl gap-4 sm:grid-cols-4">
-          {facts.map((fact) => (
-            <div key={fact.label} className="border-l border-[var(--color-gold)]/60 pl-4">
-              <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
-                {fact.label}
-              </dt>
-              <dd className="mt-2 text-sm font-semibold leading-6 text-white/82">
-                {fact.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-
-        <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
-          {[...commercialDetails, ...experience.details].map((detail) => (
-            <div key={detail.title} className="border-l border-white/18 pl-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-white/85">
-                {detail.title}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-white/58">
-                {detail.text}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <Link
-          href={experience.href}
-          aria-label={`${experience.ctaLabel}: ${experience.title}`}
-          className="inline-flex items-center gap-2 text-white font-medium hover:gap-3 transition-all"
-        >
-          {experience.ctaLabel} <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-
-        <div className="relative mx-auto h-[19rem] w-full max-w-[24rem] overflow-hidden pt-2 sm:h-[23rem] lg:hidden">
-          {polaroids.map((p, i) => {
-            const layout = mobilePolaroidLayouts[i];
-
-            return (
-              <motion.div
-                key={p.caption}
-                className="absolute w-[43%] max-w-[12rem] sm:max-w-[15rem]"
-                style={{
-                  left: `${layout.x}%`,
-                  top: `${layout.y}%`,
-                  zIndex: layout.zIndex,
-                }}
-                initial={{ opacity: 0, scale: 0.85, rotate: 0, y: 32 }}
-                whileInView={{
-                  opacity: 1,
-                  scale: 1,
-                  rotate: layout.rotate,
-                  y: 0,
-                }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{
-                  duration: 0.55,
-                  delay: i * 0.12,
-                  ease: [0.34, 1.2, 0.64, 1],
-                }}
-              >
-                <div className="bg-white p-[5%] pb-[18%] shadow-2xl">
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm" style={{ backgroundColor: p.color }}>
-                    {p.src && (
-                      <Image
-                        src={p.src}
-                        alt={p.caption}
-                        fill
-                        sizes="45vw"
-                        unoptimized
-                        className="object-cover"
-                      />
-                    )}
-                  </div>
-                  <p
-                    className="mt-3 text-center text-base text-gray-600 sm:text-lg"
-                    style={{ fontFamily: "var(--font-handwriting), cursive" }}
-                  >
-                    {p.caption}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </ScrollSection>
-
-      {/* Polaroid column */}
-      <div
-        className={`relative h-[450px] hidden lg:block ${isEven ? "lg:order-2" : "lg:order-1"}`}
-      >
-        {/* Polaroids */}
-        {polaroids.map((p, i) => {
-          const layout = polaroidLayouts[i];
-          return (
-            <motion.div
-              key={i}
-              className="absolute"
-              style={{
-                left: `${layout.x}%`,
-                top: `${layout.y}%`,
-                width: "48%",
-              }}
-              initial={{ opacity: 0, scale: 0.3, rotate: 0, y: 60 }}
-              whileInView={{
-                opacity: 1,
-                scale: 1,
-                rotate: layout.rotate,
-                y: 0,
-              }}
-              whileHover={{
-                scale: 1.15,
-                rotate: 0,
-                zIndex: 50,
-                transition: { duration: 0.3 },
-              }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{
-                duration: 0.7,
-                delay: i * 0.15,
-                ease: [0.34, 1.56, 0.64, 1],
-              }}
-            >
-              <div className="bg-white p-[5%] pb-[18%] shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.4)] transition-shadow duration-300">
-                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm" style={{ backgroundColor: p.color }}>
-                  {p.src && (
-                    <Image
-                      src={p.src}
-                      alt={p.caption}
-                      fill
-                      sizes="(min-width: 1024px) 24vw, 48vw"
-                      unoptimized
-                      className="object-cover"
-                    />
-                  )}
-                </div>
-                <p
-                  className="mt-4 text-center text-lg text-gray-600 md:text-xl lg:text-2xl"
-                  style={{ fontFamily: "var(--font-handwriting), cursive" }}
-                >
-                  {p.caption}
-                </p>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
 
 export function LandingSections({ services }: LandingSectionsProps) {
-  const t = useTranslations();
   const locale = useLocale();
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
   const isDe = locale === "de";
-  const sectionInfoCopy = infoCopy(locale);
   const maxPax = (serviceIds: string[]) => getMaxCapacity(services, serviceIds);
   const reviewColumns = getReviewColumns();
-  const seoIntro = isEs
-    ? "Nuestras excursiones en barco a las Islas Egadi salen de Trapani y llegan a Favignana y Levanzo con itinerarios ajustados al mar, al viento y al ritmo del grupo. Puedes elegir un tour compartido de 8 horas, un tour privado de 4 u 8 horas, la experiencia con chef a bordo en trimarán, una alternativa espaciosa al catamarán, o un charter de varios días. A bordo tienes patrón, paradas para bañarte, snorkel, calas como Cala Rossa y Cala Azzurra y el tiempo adecuado para vivir las islas sin prisa."
-    : isFr
-    ? "Nos excursions en bateau aux îles Égades partent de Trapani et rejoignent Favignana et Levanzo avec des itinéraires adaptés à la mer, au vent et au rythme du groupe. Vous pouvez choisir un tour partagé de 8 heures, un tour privé de 4 ou 8 heures, l'expérience avec chef à bord en trimaran, une alternative spacieuse au catamaran, ou un charter de plusieurs jours. À bord : skipper, baignades, snorkeling, criques comme Cala Rossa et Cala Azzurra, et le temps juste pour vivre les îles sans hâte."
-    : isDe
-    ? "Unsere Bootstouren zu den Ägadischen Inseln starten in Trapani und führen nach Favignana und Levanzo, mit Kursen je nach Meer, Wind und Tempo der Gruppe. Sie wählen eine geteilte 8-Stunden-Tour, eine private Bootstour von 4 oder 8 Stunden, das Erlebnis mit Chef an Bord im Trimaran, einer geräumigen Alternative zum Katamaran, oder einen mehrtägigen Charter. An Bord gibt es Skipper, Badestopps, Schnorcheln, Buchten wie Cala Rossa und Cala Azzurra und genug Zeit, die Inseln ohne Eile zu erleben."
-    : isEn
-    ? "Our Egadi Islands boat tours depart from Trapani and reach Favignana and Levanzo with routes shaped around sea conditions, wind and the pace of the group. You can choose a shared 8-hour tour, a private 4 or 8-hour boat tour, the chef-on-board trimaran experience, a spacious alternative to a catamaran, or a multi-day charter. On board you have a skipper, swim stops, snorkelling, bays such as Cala Rossa and Cala Azzurra, and enough time to enjoy the islands without rushing."
-    : "Le nostre escursioni in barca alle Egadi partono da Trapani e raggiungono Favignana e Levanzo con itinerari pensati in base a mare, vento e ritmo del gruppo. Puoi scegliere un tour condiviso di 8 ore, una barca privata da 4 o 8 ore, l'esperienza con chef a bordo in trimarano, alternativa spaziosa al catamarano, o un charter di più giorni. A bordo trovi skipper, soste bagno, snorkeling, baie come Cala Rossa e Cala Azzurra e il tempo giusto per vivere le isole senza fretta.";
   const finalCtaTitle = isEs
     ? "Reserva tu excursión en barco a las Islas Egadi desde Trapani"
     : isFr
@@ -575,32 +310,59 @@ export function LandingSections({ services }: LandingSectionsProps) {
     ? "Book your Egadi Islands boat tour from Trapani"
     : "Prenota il tuo tour in barca alle Egadi da Trapani";
   const finalCtaSubtitle = isEs
-    ? "Elige fecha, experiencia y fórmula: tour compartido, barco privado, chef a bordo o charter."
+    ? "Elige tour compartido, tour privado, chef a bordo en trimarán o charter Egadi. Salida desde el Porto di Trapani y ruta flexible entre Favignana y Levanzo."
     : isFr
-    ? "Choisissez la date, l'expérience et la formule : tour partagé, bateau privé, chef à bord ou charter."
+    ? "Choisissez tour partagé, tour privé, chef à bord en trimaran ou charter aux Égades. Départ du Porto di Trapani et route flexible entre Favignana et Levanzo."
     : isDe
-    ? "Wählen Sie Datum, Erlebnis und Format: geteilte Tour, privates Boot, Chef an Bord oder Charter."
+    ? "Wählen Sie geteilte Tour, private Tour, Chef an Bord im Trimaran oder Egadi-Charter. Abfahrt vom Porto di Trapani und flexible Route zwischen Favignana und Levanzo."
     : isEn
-    ? "Choose your date, experience and format: shared tour, private boat, chef on board or charter."
-    : "Scegli data, esperienza e formula: tour condiviso, barca privata, chef a bordo o charter.";
-  const departureLabel = isEs
-    ? "Via dei Gladioli 15, Puerto de Trapani"
+    ? "Choose a shared tour, private tour, chef on board in a trimaran or Egadi charter. Departure from Trapani harbour and a flexible route between Favignana and Levanzo."
+    : "Scegli tour condiviso, tour privato, chef a bordo in trimarano o charter Egadi. Partenza dal Porto di Trapani e rotta flessibile tra Favignana e Levanzo.";
+  const finalCtaLabel = isEs
+    ? "Reservar ahora"
     : isFr
-    ? "Via dei Gladioli 15, port de Trapani"
+    ? "Réserver maintenant"
     : isDe
-    ? "Via dei Gladioli 15, Hafen von Trapani"
+    ? "Jetzt buchen"
     : isEn
-    ? "Via dei Gladioli 15, Trapani harbour"
-    : "Via dei Gladioli 15, Porto di Trapani";
-  const policyLabel = isEs
-    ? "Mal tiempo: cambio de fecha o reembolso completo. Cancelación: 100% hasta 30 días, 50% de 29 a 15 días."
+    ? "Book now"
+    : "Prenota ora";
+  const finalCtaTrustItems = isEs
+    ? ["Salida Porto di Trapani", "Skipper local", "Tour compartidos, privados y charter"]
     : isFr
-    ? "Mauvaise météo : changement de date ou remboursement complet. Annulation : 100 % jusqu'à 30 jours, 50 % de 29 à 15 jours."
+    ? ["Départ Porto di Trapani", "Skipper local", "Tours partagés, privés et charter"]
     : isDe
-    ? "Schlechtes Wetter: Umbuchung oder vollständige Erstattung. Storno: 100 % bis 30 Tage, 50 % von 29 bis 15 Tagen."
+    ? ["Abfahrt Porto di Trapani", "Lokaler Skipper", "Geteilte Touren, private Touren und Charter"]
     : isEn
-    ? "Bad weather: date change or full refund. Cancellation: 100% up to 30 days, 50% from 29 to 15 days."
-    : "Maltempo: cambio data o rimborso completo. Cancellazione: 100% fino a 30 giorni, 50% da 29 a 15 giorni.";
+    ? ["Trapani harbour departure", "Local skipper", "Shared tours, private tours and charter"]
+    : ["Partenza Porto di Trapani", "Skipper locale", "Tour condivisi, privati e charter"];
+  const reviewTitle = isEs
+    ? "Reseñas de los tours en barco por las Islas Egadi"
+    : isFr
+    ? "Avis sur les tours en bateau aux îles Égades"
+    : isDe
+    ? "Bewertungen der Bootstouren zu den Ägadischen Inseln"
+    : isEn
+    ? "Reviews of Egadi Islands boat tours"
+    : "Recensioni sui tour in barca alle Isole Egadi";
+  const reviewSubtitle = isEs
+    ? "Experiencias reales entre Favignana, Levanzo, snorkeling, chef a bordo, charter y días en trimarán con salida desde Trapani."
+    : isFr
+    ? "Expériences réelles entre Favignana, Levanzo, snorkeling, chef à bord, charter et journées en trimaran au départ de Trapani."
+    : isDe
+    ? "Echte Erfahrungen zwischen Favignana, Levanzo, Schnorcheln, Chef an Bord, Charter und Trimaran-Tagen ab Trapani."
+    : isEn
+    ? "Real guest experiences between Favignana, Levanzo, snorkelling, chef on board, charter and trimaran days from Trapani."
+    : "Esperienze reali tra Favignana, Levanzo, snorkeling, chef a bordo, charter e giornate in trimarano con partenza da Trapani.";
+  const reviewTrustItems = isEs
+    ? ["Google y Tripadvisor", "Tour Favignana y Levanzo", "Experiencias privadas y gourmet"]
+    : isFr
+    ? ["Google et Tripadvisor", "Tour Favignana et Levanzo", "Expériences privées et gourmet"]
+    : isDe
+    ? ["Google und Tripadvisor", "Tour Favignana und Levanzo", "Private und Gourmet-Erlebnisse"]
+    : isEn
+    ? ["Google and Tripadvisor", "Favignana and Levanzo tours", "Private and gourmet experiences"]
+    : ["Google e Tripadvisor", "Tour Favignana e Levanzo", "Esperienze private e gourmet"];
   const idealForTitle = isEs ? "Ideal para" : isFr ? "Idéal pour" : isDe ? "Ideal für" : isEn ? "Best for" : "Ideale per";
   const routeTitle = isEs ? "Ruta / etapas principales" : isFr ? "Route / étapes principales" : isDe ? "Route / wichtigste Stopps" : isEn ? "Route / main stops" : "Rotta / tappe principali";
   const capacityLabelFor = (serviceIds: string[], noun: string) => {
@@ -701,19 +463,49 @@ export function LandingSections({ services }: LandingSectionsProps) {
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
-          caption: isEs ? "Chef a bordo" : isFr ? "Chef à bord" : isDe ? "Chef an Bord" : isEn ? "Chef on board" : "Chef a bordo",
+          caption: isEs ? "Ingredientes del día" : isFr ? "Ingrédients du jour" : isDe ? "Zutaten des Tages" : isEn ? "Daily ingredients" : "Ingredienti del giorno",
           color: "#FFB6C1",
-          src: "/images/experience-polaroids/chef-a-bordo-cucina.webp",
+          src: "/images/boats/neel-47/trimarano-ingredienti-alto.webp",
         },
         {
-          caption: isEs ? "Aperitivo al atardecer" : isFr ? "Apéritif au coucher du soleil" : isDe ? "Aperitif bei Sonnenuntergang" : isEn ? "Sunset aperitivo" : "Aperitivo al tramonto",
+          caption: isEs ? "Pesca fresca" : isFr ? "Poisson frais" : isDe ? "Frischer Fisch" : isEn ? "Fresh fish" : "Pesce fresco",
           color: "#FFDAB9",
-          src: "/images/experience-polaroids/chef-a-bordo-rada.webp",
+          src: "/images/boats/neel-47/trimarano-ingredienti.webp",
         },
         {
-          caption: isEs ? "Trimarán Egadi" : isFr ? "Trimaran aux Égades" : isDe ? "Trimaran der Ägadischen Inseln" : isEn ? "Egadi trimaran" : "Trimarano Egadi",
+          caption: isEs ? "Pranzo in trimarán" : isFr ? "Déjeuner en trimaran" : isDe ? "Mittagessen im Trimaran" : isEn ? "Trimaran lunch" : "Pranzo in trimarano",
           color: "#DDA0DD",
-          src: "/images/boats/neel-47/neel-47-hero.webp",
+          src: "/images/boats/neel-47/trimarano-pasta-rete.webp",
+        },
+        {
+          caption: isEs ? "Chef a bordo" : isFr ? "Chef à bord" : isDe ? "Chef an Bord" : isEn ? "Chef on board" : "Chef a bordo",
+          color: "#FDE68A",
+          src: "/images/boats/neel-47/trimarano-chef.webp",
+        },
+        {
+          caption: isEs ? "San Pedro fresco" : isFr ? "Saint-pierre frais" : isDe ? "Frischer Petersfisch" : isEn ? "Fresh John Dory" : "San Pietro fresco",
+          color: "#BAE6FD",
+          src: "/images/boats/neel-47/trimarano-sanpietro.webp",
+        },
+        {
+          caption: isEs ? "Salsa terminada" : isFr ? "Sauce prête" : isDe ? "Fertige Sauce" : isEn ? "Finished sauce" : "Sugo pronto",
+          color: "#FDBA74",
+          src: "/images/boats/neel-47/trimarano-sugo-finito.webp",
+        },
+        {
+          caption: isEs ? "Levanzo en lujo" : isFr ? "Levanzo en luxe" : isDe ? "Levanzo im Luxus" : isEn ? "Levanzo in luxury" : "Levanzo nel lusso",
+          color: "#C4B5FD",
+          src: "/images/boats/neel-47/trimarano-wow-prendisole-levanzo.webp",
+        },
+        {
+          caption: isEs ? "Relax en Levanzo" : isFr ? "Relax à Levanzo" : isDe ? "Relax vor Levanzo" : isEn ? "Relax in Levanzo" : "Relax a Levanzo",
+          color: "#A7F3D0",
+          src: "/images/boats/neel-47/trimarano-levanzo-relax.webp",
+        },
+        {
+          caption: isEs ? "Relax visto desde dron" : isFr ? "Relax vu par drone" : isDe ? "Relax aus der Drohnenperspektive" : isEn ? "Relax seen by drone" : "Relax visto dal drone",
+          color: "#93C5FD",
+          src: "/images/home/trimarano-relax-drone.webp",
         },
       ],
     },
@@ -796,19 +588,74 @@ export function LandingSections({ services }: LandingSectionsProps) {
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
-          caption: isEs ? "Trimarán Egadi" : isFr ? "Trimaran aux Égades" : isDe ? "Trimaran der Ägadischen Inseln" : isEn ? "Egadi Trimarano" : "Trimarano Egadi",
+          caption: isEs ? "Puerto de Trapani" : isFr ? "Port de Trapani" : isDe ? "Hafen Trapani" : isEn ? "Trapani harbour" : "Porto di Trapani",
           color: "#ADD8E6",
-          src: "/images/experience-polaroids/charter-trimarano-egadi.webp",
+          src: "/images/home/trimarano-porto.webp",
         },
         {
-          caption: isEs ? "Vida a bordo" : isFr ? "Vie à bord" : isDe ? "Leben an Bord" : isEn ? "Life on board" : "Vita a bordo",
+          caption: isEs ? "Trimarán Favignana" : isFr ? "Trimaran Favignana" : isDe ? "Trimaran Favignana" : isEn ? "Favignana trimaran" : "Trimarano Favignana",
           color: "#B2DFDB",
-          src: "/images/experience-polaroids/charter-cabina-bordo.webp",
+          src: "/images/home/trimarano-favignana.webp",
         },
         {
-          caption: isEs ? "Fondeo tranquilo" : isFr ? "Mouillage tranquille" : isDe ? "Ruhiger Ankerplatz" : isEn ? "Quiet anchorage" : "Rada tranquilla",
+          caption: isEs ? "Levanzo en trimarán" : isFr ? "Levanzo en trimaran" : isDe ? "Levanzo im Trimaran" : isEn ? "Levanzo by trimaran" : "Levanzo in trimarano",
           color: "#C5CAE9",
-          src: "/images/experience-polaroids/charter-rada-tranquilla.webp",
+          src: "/images/home/traimarano-levanzo.webp",
+        },
+        {
+          caption: isEs ? "Vida en rada" : isFr ? "Vie au mouillage" : isDe ? "Leben in der Bucht" : isEn ? "Life at anchor" : "Vita in rada",
+          color: "#FDE68A",
+          src: "/images/home/ragazza-primopiano.webp",
+        },
+        {
+          caption: isEs ? "Prendisol a bordo" : isFr ? "Bain de soleil à bord" : isDe ? "Sonnendeck an Bord" : isEn ? "Sundeck on board" : "Prendisole a bordo",
+          color: "#FBCFE8",
+          src: "/images/boats/neel-47/neel-47-.donna.webp",
+        },
+        {
+          caption: isEs ? "Cabina del trimarán" : isFr ? "Cabine du trimaran" : isDe ? "Trimaran-Kabine" : isEn ? "Trimaran cabin" : "Cabina del trimarano",
+          color: "#BFDBFE",
+          src: "/images/boats/neel-47/neel-47-cabina.webp",
+        },
+        {
+          caption: isEs ? "Cabina de invitados" : isFr ? "Cabine invités" : isDe ? "Gästekabine" : isEn ? "Guest cabin" : "Cabina ospiti",
+          color: "#DDD6FE",
+          src: "/images/boats/neel-47/neel-47-cabina2.webp",
+        },
+        {
+          caption: isEs ? "Favignana desde el mar" : isFr ? "Favignana depuis la mer" : isDe ? "Favignana vom Meer" : isEn ? "Favignana from the sea" : "Favignana dal mare",
+          color: "#A7F3D0",
+          src: "/images/boats/neel-47/neel-47-favignana.webp",
+        },
+        {
+          caption: isEs ? "Trimarán Egadi" : isFr ? "Trimaran Égades" : isDe ? "Egadi-Trimaran" : isEn ? "Egadi trimaran" : "Trimarano Egadi",
+          color: "#FCA5A5",
+          src: "/images/boats/neel-47/triamarano-logo.webp",
+        },
+        {
+          caption: isEs ? "Interior del trimarán" : isFr ? "Intérieur du trimaran" : isDe ? "Innenbereich des Trimarans" : isEn ? "Trimaran interior" : "Interni del trimarano",
+          color: "#FDBA74",
+          src: "/images/boats/neel-47/trimarano-interno-tavolo.webp",
+        },
+        {
+          caption: isEs ? "Embarque en Trapani" : isFr ? "Embarquement à Trapani" : isDe ? "Boarding in Trapani" : isEn ? "Boarding in Trapani" : "Imbarco a Trapani",
+          color: "#93C5FD",
+          src: "/images/boats/neel-47/trimarano-porto1.webp",
+        },
+        {
+          caption: isEs ? "Prendisol premium" : isFr ? "Bain de soleil premium" : isDe ? "Premium-Sonnendeck" : isEn ? "Premium sundeck" : "Prendisole premium",
+          color: "#C4B5FD",
+          src: "/images/boats/neel-47/trimarano-prendisole-primopiano.webp",
+        },
+        {
+          caption: isEs ? "Brindis en rada" : isFr ? "Toast au mouillage" : isDe ? "Anstoßen in der Bucht" : isEn ? "Toast at anchor" : "Brindisi in rada",
+          color: "#F9A8D4",
+          src: "/images/boats/neel-47/trimarano-rada-brindisi.webp",
+        },
+        {
+          caption: isEs ? "Relax al sol" : isFr ? "Relax au soleil" : isDe ? "Relax in der Sonne" : isEn ? "Relax in the sun" : "Relax al sole",
+          color: "#FDE68A",
+          src: "/images/boats/neel-47/trimarano-relax-sole.webp",
         },
       ],
     },
@@ -891,19 +738,19 @@ export function LandingSections({ services }: LandingSectionsProps) {
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
-          caption: isEs ? "Tour ágil" : isFr ? "Tour agile" : isDe ? "Agile Tour" : isEn ? "Agile tour" : "Tour agile",
+          caption: isEs ? "Tour privado" : isFr ? "Tour privé" : isDe ? "Private Tour" : isEn ? "Private tour" : "Tour privato",
           color: "#BFDBFE",
-          src: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
+          src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
         },
         {
-          caption: isEs ? "Baño rápido" : isFr ? "Baignade rapide" : isDe ? "Kurzer Badestopp" : isEn ? "Quick swim" : "Tuffo veloce",
-          color: "#A7F3D0",
-          src: "/images/experience-polaroids/barca-4-ore-tuffo.webp",
-        },
-        {
-          caption: "Cala Rossa",
+          caption: isEs ? "Barco exclusivo" : isFr ? "Bateau exclusif" : isDe ? "Exklusives Boot" : isEn ? "Exclusive boat" : "Barca esclusiva",
           color: "#FDE68A",
-          src: "/images/experience-polaroids/barca-4-ore-cala-rossa.webp",
+          src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
+        },
+        {
+          caption: isEs ? "Giro Egadi 4 horas" : isFr ? "Tour Égades 4 heures" : isDe ? "Egadi-Tour 4 Stunden" : isEn ? "4-hour Egadi tour" : "Giro Egadi 4 ore",
+          color: "#A7F3D0",
+          src: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
         },
       ],
     },
@@ -986,19 +833,29 @@ export function LandingSections({ services }: LandingSectionsProps) {
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
-          caption: isEs ? "Día completo" : isFr ? "Journée complète" : isDe ? "Ganzer Tag" : isEn ? "Full day" : "Giornata intera",
+          caption: isEs ? "Salida desde Trapani" : isFr ? "Départ de Trapani" : isDe ? "Abfahrt ab Trapani" : isEn ? "Departure from Trapani" : "Partenza da Trapani",
           color: "#A7F3D0",
-          src: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+          src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp",
         },
         {
-          caption: isEs ? "Snorkel" : isFr ? "Snorkeling" : isDe ? "Schnorcheln" : isEn ? "Snorkelling" : "Snorkeling",
+          caption: isEs ? "Favignana y Levanzo" : isFr ? "Favignana et Levanzo" : isDe ? "Favignana und Levanzo" : isEn ? "Favignana and Levanzo" : "Favignana e Levanzo",
           color: "#BFDBFE",
-          src: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
+          src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-primo-piano.webp",
+        },
+        {
+          caption: isEs ? "Baño en Cala Rossa" : isFr ? "Baignade à Cala Rossa" : isDe ? "Badestopp in Cala Rossa" : isEn ? "Swim at Cala Rossa" : "Bagno a Cala Rossa",
+          color: "#BAE6FD",
+          src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
         },
         {
           caption: isEs ? "Atardecer" : isFr ? "Coucher de soleil" : isDe ? "Sonnenuntergang" : isEn ? "Sunset" : "Tramonto",
           color: "#FED7AA",
           src: "/images/experience-polaroids/barca-8-ore-tramonto.webp",
+        },
+        {
+          caption: "Cala Rossa",
+          color: "#FDE68A",
+          src: "/images/experience-polaroids/barca-4-ore-cala-rossa.webp",
         },
       ],
     },
@@ -1104,6 +961,92 @@ export function LandingSections({ services }: LandingSectionsProps) {
         (featuredPackageOrder[a.key] ?? Number.MAX_SAFE_INTEGER) -
         (featuredPackageOrder[b.key] ?? Number.MAX_SAFE_INTEGER),
     );
+  const sectionMedia = [
+    {
+      src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-primo-piano.webp",
+      alt: isEs
+        ? "Cigala Bertinetti 34 Offshore Open durante una excursión en barco por las Islas Egadi"
+        : isFr
+        ? "Cigala Bertinetti 34 Offshore Open pendant une excursion en bateau aux îles Égades"
+        : isDe
+        ? "Cigala Bertinetti 34 Offshore Open während einer Bootstour zu den Ägadischen Inseln"
+        : isEn
+        ? "Cigala Bertinetti 34 Offshore Open during an Egadi Islands boat excursion"
+        : "Cigala Bertinetti 34 Offshore Open durante un'escursione in barca alle Isole Egadi",
+      caption: isEs
+        ? "Barco privado a Favignana"
+        : isFr
+        ? "Bateau privé à Favignana"
+        : isDe
+        ? "Privatboot nach Favignana"
+        : isEn
+        ? "Private boat to Favignana"
+        : "Barca privata a Favignana",
+    },
+    {
+      src: "/images/boats/neel-47/trimarano-calice-primopiano-bere.webp",
+      alt: isEs
+        ? "Aperitivo a bordo durante un tour en trimarán por las Islas Egadi"
+        : isFr
+        ? "Apéritif à bord pendant un tour en trimaran aux îles Égades"
+        : isDe
+        ? "Aperitif an Bord während einer Trimaran-Tour zu den Ägadischen Inseln"
+        : isEn
+        ? "Aperitivo on board during an Egadi Islands trimaran tour"
+        : "Aperitivo a bordo durante un tour in trimarano alle Isole Egadi",
+      caption: isEs
+        ? "Vino de Trapani servido a bordo"
+        : isFr
+        ? "Vin de Trapani servi à bord"
+        : isDe
+        ? "Trapani-Wein an Bord serviert"
+        : isEn
+        ? "Trapani wine served on board"
+        : "Vino trapanese servito a bordo",
+    },
+    {
+      src: "/images/home/trimarano-favignana.webp",
+      alt: isEs
+        ? "Trimarán Egadi Sailing frente a Favignana durante un tour en barco"
+        : isFr
+        ? "Trimaran Egadi Sailing devant Favignana pendant un tour en bateau"
+        : isDe
+        ? "Egadi Sailing Trimaran vor Favignana während einer Bootstour"
+        : isEn
+        ? "Egadi Sailing trimaran off Favignana during a boat tour"
+        : "Trimarano Egadi Sailing davanti a Favignana durante un tour in barca",
+      caption: isEs
+        ? "Trimarán navegando hacia Favignana"
+        : isFr
+        ? "Trimaran en navigation vers Favignana"
+        : isDe
+        ? "Trimaran auf dem Weg nach Favignana"
+        : isEn
+        ? "Trimaran sailing to Favignana"
+        : "Trimarano in navigazione verso Favignana",
+    },
+    {
+      src: "/images/home/trimarano-relax.webp",
+      alt: isEs
+        ? "Relax en trimarán durante una excursión a Favignana y Levanzo"
+        : isFr
+        ? "Relax en trimaran pendant une excursion à Favignana et Levanzo"
+        : isDe
+        ? "Entspannung auf dem Trimaran während einer Tour nach Favignana und Levanzo"
+        : isEn
+        ? "Relaxing on the trimaran during a Favignana and Levanzo excursion"
+        : "Relax in trimarano durante un'escursione a Favignana e Levanzo",
+      caption: isEs
+        ? "Relax en trimarán en Levanzo"
+        : isFr
+        ? "Relax en trimaran à Levanzo"
+        : isDe
+        ? "Relax im Trimaran vor Levanzo"
+        : isEn
+        ? "Relax on a trimaran in Levanzo"
+        : "Relax in trimarano a Levanzo",
+    },
+  ];
 
   return (
     <div className="overflow-x-clip">
@@ -1111,382 +1054,31 @@ export function LandingSections({ services }: LandingSectionsProps) {
       {/*  Section 1: Le Nostre Esperienze                             */}
       {/*  Background blends from hero video sea color to teal         */}
       {/* ============================================================ */}
-      <section
-        className="egadi-water-reflection relative py-32 px-4 md:px-8 lg:px-12"
-        style={{
-          background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 60%, #071934 100%)",
-        }}
-      >
-        <div className="max-w-7xl mx-auto relative z-10">
-          <ScrollSection animation="fade-up">
-            <div className="mx-auto mb-24 max-w-5xl text-center">
-              <RevealTitle text={t("landing.experiencesTitle")} compact />
-              <p className="mx-auto mt-8 max-w-4xl text-base font-medium leading-8 text-white/75 md:text-lg">
-                {seoIntro}
-              </p>
-              <div className="mx-auto mt-10 grid max-w-4xl gap-5 text-left md:grid-cols-2">
-                <div className="border-l border-[var(--color-gold)]/60 pl-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
-                    {sectionInfoCopy.departure}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-white/72">
-                    {departureLabel}
-                  </p>
-                </div>
-                <div className="border-l border-[var(--color-gold)]/60 pl-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
-                    {sectionInfoCopy.policy}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-white/72">
-                    {policyLabel}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </ScrollSection>
+      <HomeExperiencesSection
+        locale={locale}
+        sectionMedia={sectionMedia}
+      />
 
-          <div className="space-y-32">
-            {featuredPackages.map((experience, i) => (
-              <ExperienceRow
-                key={experience.key}
-                experience={experience}
-                index={i}
-                locale={locale}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomePackagesSection
+        locale={locale}
+        featuredPackages={featuredPackages}
+      />
 
       {/* ============================================================ */}
-      {/*  Section 2: Le Isole Egadi — Interactive Itinerary           */}
+      {/*  Section 3: Esperienza gourmet in trimarano                  */}
       {/* ============================================================ */}
-      <IslandsItinerary />
+      <HomeGourmetSection locale={locale} />
 
       {/* ============================================================ */}
-      {/*  Section 3: La scelta giusta per il tour in barca alle Egadi */}
+      {/*  Section 4: Itinerario tour in barca alle Egadi              */}
+      {/* ============================================================ */}
+      <HomeItinerarySection locale={locale} />
+
+      {/* ============================================================ */}
+      {/*  Section 5: Fatti convincere — Recensioni Google             */}
       {/* ============================================================ */}
       <section
-        className="egadi-water-reflection relative overflow-hidden px-4 py-28 md:px-8 lg:px-12 lg:py-32"
-        style={{
-          background: "linear-gradient(180deg, #071934 0%, #0a2a4a 38%, #0c3d5e 72%, #071934 100%)",
-        }}
-      >
-        <div className="relative z-10 mx-auto max-w-7xl">
-          <ScrollSection animation="fade-up">
-            <div className="mx-auto mb-20 max-w-7xl text-center">
-              <div className="relative inline-block max-w-6xl">
-                <motion.h2
-                  className="font-heading text-4xl font-bold leading-[1.04] text-white md:text-5xl lg:text-6xl xl:text-7xl"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                >
-                  {isEs
-                    ? "Itinerario en barco por las Egadi: Favignana y Levanzo desde Trapani"
-                    : isFr
-                    ? "Itinéraire en bateau aux Égades : Favignana et Levanzo depuis Trapani"
-                    : isDe
-                    ? "Bootstour-Route Egadi: Favignana und Levanzo ab Trapani"
-                    : isEn
-                    ? "Egadi boat tour itinerary: Favignana and Levanzo from Trapani"
-                    : "Tour in barca alle Egadi: itinerario Favignana e Levanzo da Trapani"}
-                </motion.h2>
-                <motion.svg
-                  viewBox="0 0 400 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="mx-auto mt-4 w-[52%]"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  whileInView={{ pathLength: 1, opacity: 1 }}
-                  viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 1.2, delay: 0.4, ease: "easeInOut" }}
-                >
-                  <motion.path
-                    d="M0 10 Q50 2 100 10 T200 10 T300 10 T400 10"
-                    stroke="url(#tourTitleGold)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    fill="none"
-                    initial={{ pathLength: 0 }}
-                    whileInView={{ pathLength: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.2, delay: 0.4, ease: "easeInOut" }}
-                  />
-                  <defs>
-                    <linearGradient id="tourTitleGold" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#d97706" stopOpacity="0" />
-                      <stop offset="20%" stopColor="#f59e0b" stopOpacity="0.8" />
-                      <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
-                      <stop offset="80%" stopColor="#f59e0b" stopOpacity="0.8" />
-                      <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                </motion.svg>
-              </div>
-              <p className="mx-auto mt-8 max-w-3xl text-base leading-relaxed text-white/70 md:text-lg">
-                {isEs
-                  ? "La salida es desde el Porto di Trapani, Via dei Gladioli 15: itinerarios de 8 horas o 4 horas entre Favignana y Levanzo, con paradas de baño, snorkeling, skipper, aperitivo y rutas adaptadas al mar. Puedes elegir tour compartido, tour privado, chef a bordo en trimarán con confort de catamarán o charter de varios días."
-                  : isFr
-                  ? "Le départ se fait depuis le Porto di Trapani, Via dei Gladioli 15 : itinéraires de 8 heures ou 4 heures entre Favignana et Levanzo, avec baignades, snorkeling, skipper, apéritif et routes adaptées à la mer. Vous pouvez choisir un tour partagé, un tour privé, un chef à bord en trimaran avec confort de catamaran ou un charter de plusieurs jours."
-                  : isDe
-                  ? "Die Abfahrt erfolgt ab Porto di Trapani, Via dei Gladioli 15: 8-Stunden- oder 4-Stunden-Routen zwischen Favignana und Levanzo, mit Badestopps, Snorkeling, Skipper, Aperitif und Kursen je nach Meer. Sie wählen geteilte Bootstour, private Tour, Chef an Bord im Trimaran mit Katamaran-Komfort oder mehrtägigen Charter."
-                  : isEn
-                  ? "Departure is from the Porto di Trapani, Via dei Gladioli 15: 8-hour or 4-hour routes between Favignana and Levanzo, with swim stops, snorkeling, skipper, aperitivo and routes shaped by the sea. Choose a shared tour, private tour, chef on board in a trimaran with catamaran-style comfort or a multi-day charter."
-                  : "La partenza è dal Porto di Trapani, Via dei Gladioli 15: itinerari da 8 ore o 4 ore tra Favignana e Levanzo, con soste bagno, snorkeling, skipper, aperitivo e rotte adattate al mare. Puoi scegliere tour condiviso, tour privato, chef a bordo in trimarano con comfort da catamarano o charter di più giorni."}
-              </p>
-            </div>
-          </ScrollSection>
-
-          <div className="grid items-stretch gap-10 lg:min-h-[620px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
-            <ScrollSection animation="fade-left" className="space-y-7">
-              <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
-                {isEs ? "Ruta y horarios" : isFr ? "Route et horaires" : isDe ? "Route und Zeiten" : isEn ? "Route and timing" : "Rotta e orari"}
-              </p>
-              <div className="space-y-5">
-                <h3 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                  {isEs
-                    ? "Favignana y Levanzo desde Trapani: ruta y horarios"
-                    : isFr
-                    ? "Favignana et Levanzo depuis Trapani : route et horaires"
-                    : isDe
-                    ? "Favignana und Levanzo ab Trapani: Route und Zeiten"
-                    : isEn
-                    ? "Favignana and Levanzo from Trapani: route and timing"
-                    : "Favignana e Levanzo da Trapani: rotta e orari"}
-                </h3>
-                <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
-                  {isEs
-                    ? "El tour en barco de 8 horas sale del Porto di Trapani y une Favignana y Levanzo con una ruta flexible: check-in, navegación, paradas de baño y tiempo en Favignana. Cala Fredda, Cala Minnola y la Grotta degli Innamorati entran en el itinerario cuando mar y seguridad lo permiten."
-                    : isFr
-                    ? "Le tour en bateau de 8 heures part du Porto di Trapani et relie Favignana et Levanzo avec une route flexible : check-in, navigation, baignades et temps à Favignana. Cala Fredda, Cala Minnola et la Grotta degli Innamorati entrent dans l'itinéraire lorsque la mer et la sécurité le permettent."
-                    : isDe
-                    ? "Die 8-Stunden-Bootstour startet am Porto di Trapani und verbindet Favignana und Levanzo mit flexibler Route: Check-in, Fahrt, Badestopps und Zeit auf Favignana. Cala Fredda, Cala Minnola und die Grotta degli Innamorati werden eingeplant, wenn Meer und Sicherheit passen."
-                    : isEn
-                    ? "The 8-hour boat tour departs from the Porto di Trapani and links Favignana and Levanzo with a flexible route: check-in, navigation, swim stops and time in Favignana. Cala Fredda, Cala Minnola and the Grotta degli Innamorati become part of the itinerary when sea and safety allow."
-                    : "Il tour in barca di 8 ore parte dal Porto di Trapani e collega Favignana e Levanzo con una rotta flessibile: check-in, navigazione, soste bagno e tempo a Favignana. Cala Fredda, Cala Minnola e Grotta degli Innamorati entrano nell'itinerario quando mare e sicurezza lo permettono."}
-                </p>
-              </div>
-              <Link
-                href={localizedPath(locale, "/experiences/boat-shared-full-day")}
-                className="inline-flex items-center gap-2 text-base font-semibold text-[var(--color-gold)] transition-all hover:gap-3 md:text-lg"
-              >
-                {isEs ? "Ver el tour de 8 horas" : isFr ? "Voir le tour de 8 heures" : isDe ? "8-Stunden-Tour ansehen" : isEn ? "View the 8-hour tour" : "Vedi il tour 8 ore"}{" "}
-                <ArrowRight className="h-5 w-5" aria-hidden="true" />
-              </Link>
-            </ScrollSection>
-
-            <ScrollSection animation="fade-right" className="h-full">
-              <div className="relative h-full">
-                <div className="relative z-10 h-full min-h-[520px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.28)]">
-                  <Image
-                    src="/images/egadisailing-experience/01-cooking-experience-chef-a-bordo.webp"
-                    alt={isEs ? "Chef y skipper a bordo durante un tour en barco Favignana y Levanzo desde Trapani" : isFr ? "Chef et skipper à bord pendant un tour en bateau Favignana et Levanzo depuis Trapani" : isDe ? "Chef und Skipper an Bord bei einer Bootstour Favignana und Levanzo ab Trapani" : isEn ? "Chef and skipper on board during a Favignana and Levanzo boat tour from Trapani" : "Chef e skipper a bordo durante un tour in barca Favignana e Levanzo da Trapani"}
-                    fill
-                    sizes="(min-width: 1024px) 50vw, 100vw"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#071934]/45 via-transparent to-transparent" />
-                </div>
-                <div
-                  className="pointer-events-none absolute -right-8 -top-5 z-0 flex w-44 flex-col items-end gap-2 md:-right-14 md:w-56"
-                  aria-hidden="true"
-                >
-                  <span className="h-px w-full bg-[var(--color-gold)]/85" />
-                  <span className="h-px w-[92%] bg-[var(--color-gold)]/75" />
-                  <span className="h-px w-[84%] bg-[var(--color-gold)]/65" />
-                  <span className="h-px w-[76%] bg-[var(--color-gold)]/55" />
-                  <span className="h-px w-[68%] bg-[var(--color-gold)]/45" />
-                  <span className="h-px w-[60%] bg-[var(--color-gold)]/35" />
-                </div>
-              </div>
-            </ScrollSection>
-          </div>
-
-          <div className="mt-28 grid items-stretch gap-10 lg:min-h-[560px] lg:grid-cols-[1.06fr_0.94fr] lg:gap-16">
-            <ScrollSection animation="fade-left" className="order-2 h-full lg:order-1">
-              <div className="relative h-full">
-                <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
-                  <Image
-                    src="/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp"
-                    alt={isEs ? "Cala Rossa, Cala Azzurra y Bue Marino vistos desde el mar durante un tour en barco por Favignana" : isFr ? "Cala Rossa, Cala Azzurra et Bue Marino vus depuis la mer pendant un tour en bateau à Favignana" : isDe ? "Cala Rossa, Cala Azzurra und Bue Marino vom Meer aus bei einer Bootstour auf Favignana" : isEn ? "Cala Rossa, Cala Azzurra and Bue Marino seen from the sea during a Favignana boat tour" : "Cala Rossa, Cala Azzurra e Bue Marino visti dal mare durante un tour in barca a Favignana"}
-                    fill
-                    sizes="(min-width: 1024px) 52vw, 100vw"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#071934]/35 via-transparent to-transparent" />
-                </div>
-                <div
-                  className="pointer-events-none absolute -bottom-5 -left-8 z-0 flex w-44 flex-col gap-2 md:-left-14 md:w-56"
-                  aria-hidden="true"
-                >
-                  <span className="h-px w-full bg-[var(--color-gold)]/85" />
-                  <span className="h-px w-[92%] bg-[var(--color-gold)]/75" />
-                  <span className="h-px w-[84%] bg-[var(--color-gold)]/65" />
-                  <span className="h-px w-[76%] bg-[var(--color-gold)]/55" />
-                  <span className="h-px w-[68%] bg-[var(--color-gold)]/45" />
-                  <span className="h-px w-[60%] bg-[var(--color-gold)]/35" />
-                </div>
-              </div>
-            </ScrollSection>
-
-            <ScrollSection animation="fade-right" className="order-1 flex items-center lg:order-2">
-              <div className="space-y-7">
-                <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
-                  {isEs ? "Calas de Favignana" : isFr ? "Criques de Favignana" : isDe ? "Buchten von Favignana" : isEn ? "Favignana coves" : "Cale di Favignana"}
-                </p>
-                <div className="space-y-5">
-                  <h3 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                    {isEs ? "Cala Rossa, Cala Azzurra y Bue Marino" : isFr ? "Cala Rossa, Cala Azzurra et Bue Marino" : isDe ? "Cala Rossa, Cala Azzurra und Bue Marino" : isEn ? "Cala Rossa, Cala Azzurra and Bue Marino" : "Cala Rossa, Cala Azzurra e Bue Marino"}
-                  </h3>
-                  <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
-                    {isEs
-                        ? "Los mejores itinerarios pasan por las calas que definen Favignana: Cala Rossa para el agua turquesa, Cala Azzurra para el baño, Bue Marino para roca y cuevas. El skipper ajusta las paradas según viento, corrientes y afluencia, para vivir Favignana y Levanzo sin una ruta rígida."
-                        : isFr
-                        ? "Les meilleurs itinéraires passent par les criques qui définissent Favignana : Cala Rossa pour l'eau turquoise, Cala Azzurra pour la baignade, Bue Marino pour la roche et les grottes. Le skipper ajuste les arrêts selon le vent, les courants et l'affluence, pour vivre Favignana et Levanzo sans route rigide."
-                        : isDe
-                        ? "Die besten Routen führen zu den Buchten, die Favignana prägen: Cala Rossa für türkisfarbenes Wasser, Cala Azzurra zum Baden, Bue Marino für Felsen und Grotten. Der Skipper passt die Stopps an Wind, Strömung und Andrang an, damit Favignana und Levanzo ohne starre Route erlebbar bleiben."
-                        : isEn
-                        ? "The best itineraries pass through the coves that define Favignana: Cala Rossa for turquoise water, Cala Azzurra for swimming, Bue Marino for rock and caves. The skipper adjusts the stops according to wind, currents and crowding, so Favignana and Levanzo stay flexible rather than locked to a rigid route."
-                        : "Gli itinerari migliori passano dalle cale che definiscono Favignana: Cala Rossa per l'acqua turchese, Cala Azzurra per il bagno, Bue Marino per roccia e grotte. Lo skipper adatta le soste a vento, correnti e affollamento, così Favignana e Levanzo restano un itinerario vivo e non una rotta rigida."}
-                  </p>
-                </div>
-                <Link
-                  href={localizedPath(locale, "/experiences/boat-exclusive-full-day")}
-                  className="inline-flex items-center gap-2 text-base font-semibold text-[var(--color-gold)] transition-all hover:gap-3 md:text-lg"
-                >
-                  {isEs ? "Ver el tour privado" : isFr ? "Voir le tour privé" : isDe ? "Private Tour ansehen" : isEn ? "View the private tour" : "Vedi il tour privato"}{" "}
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                </Link>
-              </div>
-            </ScrollSection>
-          </div>
-
-          <div className="mt-28 grid items-stretch gap-10 lg:min-h-[560px] lg:grid-cols-[0.94fr_1.06fr] lg:gap-16">
-            <ScrollSection animation="fade-left" className="flex items-center">
-              <div className="space-y-7">
-                <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
-                  {isEs ? "Baño y cocina a bordo" : isFr ? "Baignade et cuisine à bord" : isDe ? "Baden und Bordküche" : isEn ? "Swim stops and food on board" : "Bagno e cucina a bordo"}
-                </p>
-                <div className="space-y-5">
-                  <h3 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                    {isEs ? "Paradas de baño, snorkeling y almuerzo/chef a bordo" : isFr ? "Baignades, snorkeling et déjeuner/chef à bord" : isDe ? "Badestopps, Snorkeling und Mittagessen/Chef an Bord" : isEn ? "Swim stops, snorkeling and lunch/chef on board" : "Soste bagno, snorkeling e pranzo/chef a bordo"}
-                  </h3>
-                  <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
-                    {isEs
-                        ? "El tour no se vende solo por la ruta: cuenta lo que pasa a bordo. Máscaras para snorkeling, paradas para nadar, aperitivo, almuerzo a bordo y, en la experiencia premium, chef en trimarán con confort de catamarán hacen que la excursión sea más clara y más fácil de elegir."
-                        : isFr
-                        ? "Le tour ne se vend pas seulement par la route : il doit dire ce qui se passe à bord. Masques pour le snorkeling, baignades, apéritif, déjeuner à bord et, dans l'expérience premium, chef en trimaran avec confort de catamaran rendent l'excursion plus lisible et plus facile à choisir."
-                        : isDe
-                        ? "Die Tour überzeugt nicht nur durch die Route, sondern durch das, was an Bord passiert. Masken fürs Snorkeling, Badestopps, Aperitif, Mittagessen an Bord und im Premium-Erlebnis ein Chef im Trimaran mit Katamaran-Komfort machen das Angebot klarer und leichter wählbar."
-                        : isEn
-                        ? "The tour is not only about the route: it must explain what happens on board. Masks for snorkeling, swim stops, aperitivo, lunch on board and, in the premium experience, a chef on a trimaran with catamaran-style comfort make the excursion clearer and easier for guests to choose."
-                        : "Il tour non si vende solo con la rotta: deve dire cosa succede a bordo. Maschere per snorkeling, soste bagno, aperitivo, pranzo a bordo e, nell'esperienza premium, chef in trimarano con comfort da catamarano rendono l'escursione più chiara e più facile da scegliere."}
-                  </p>
-                </div>
-                <Link
-                  href={localizedPath(locale, "/experiences/exclusive-experience")}
-                  className="inline-flex items-center gap-2 text-base font-semibold text-[var(--color-gold)] transition-all hover:gap-3 md:text-lg"
-                >
-                  {isEs ? "Ver la experiencia con chef" : isFr ? "Voir l'expérience avec chef" : isDe ? "Chef-Erlebnis ansehen" : isEn ? "View the chef experience" : "Vedi l'esperienza con chef"}{" "}
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                </Link>
-              </div>
-            </ScrollSection>
-
-            <ScrollSection animation="fade-right" className="h-full">
-              <div className="relative h-full">
-                <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
-                  <Image
-                    src="/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp"
-                    alt={isEs ? "Parada de baño y snorkeling en Cala Rossa durante una excursión en barco por Favignana y Levanzo" : isFr ? "Baignade et snorkeling à Cala Rossa pendant une excursion en bateau à Favignana et Levanzo" : isDe ? "Badestopp und Snorkeling in Cala Rossa bei einer Bootstour Favignana und Levanzo" : isEn ? "Swim stop and snorkeling in Cala Rossa during a Favignana and Levanzo boat excursion" : "Sosta bagno e snorkeling a Cala Rossa durante un'escursione in barca Favignana e Levanzo"}
-                    fill
-                    sizes="(min-width: 1024px) 52vw, 100vw"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#071934]/35 via-transparent to-transparent" />
-                </div>
-                <div
-                  className="pointer-events-none absolute -right-8 -top-5 z-0 flex w-44 flex-col items-end gap-2 md:-right-14 md:w-56"
-                  aria-hidden="true"
-                >
-                  <span className="h-px w-full bg-[var(--color-gold)]/85" />
-                  <span className="h-px w-[92%] bg-[var(--color-gold)]/75" />
-                  <span className="h-px w-[84%] bg-[var(--color-gold)]/65" />
-                  <span className="h-px w-[76%] bg-[var(--color-gold)]/55" />
-                  <span className="h-px w-[68%] bg-[var(--color-gold)]/45" />
-                  <span className="h-px w-[60%] bg-[var(--color-gold)]/35" />
-                </div>
-              </div>
-            </ScrollSection>
-          </div>
-
-          <div className="mt-28 grid items-stretch gap-10 lg:min-h-[560px] lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
-            <ScrollSection animation="fade-left" className="order-2 h-full lg:order-1">
-              <div className="relative h-full">
-                <div className="relative z-10 h-full min-h-[460px] overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04] shadow-[0_30px_90px_rgba(0,0,0,0.24)]">
-                  <Image
-                    src="/images/egadisailing-experience/04-aperitivo-tramonto-isole-egadi.webp"
-                    alt={isEs ? "Aperitivo a bordo durante un tour compartido o privado en barco por las Islas Egadi" : isFr ? "Apéritif à bord pendant un tour partagé ou privé en bateau aux îles Égades" : isDe ? "Aperitif an Bord während einer geteilten oder privaten Bootstour zu den Ägadischen Inseln" : isEn ? "Aperitivo on board during a shared or private Egadi Islands boat tour" : "Aperitivo a bordo durante un tour condiviso o privato in barca alle Isole Egadi"}
-                    fill
-                    sizes="(min-width: 1024px) 54vw, 100vw"
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#071934]/40 via-transparent to-transparent" />
-                </div>
-                <div
-                  className="pointer-events-none absolute -bottom-5 -left-8 z-0 flex w-44 flex-col gap-2 md:-left-14 md:w-56"
-                  aria-hidden="true"
-                >
-                  <span className="h-px w-full bg-[var(--color-gold)]/85" />
-                  <span className="h-px w-[92%] bg-[var(--color-gold)]/75" />
-                  <span className="h-px w-[84%] bg-[var(--color-gold)]/65" />
-                  <span className="h-px w-[76%] bg-[var(--color-gold)]/55" />
-                  <span className="h-px w-[68%] bg-[var(--color-gold)]/45" />
-                  <span className="h-px w-[60%] bg-[var(--color-gold)]/35" />
-                </div>
-              </div>
-            </ScrollSection>
-
-            <ScrollSection animation="fade-right" className="order-1 flex items-center lg:order-2">
-              <div className="space-y-7">
-                <p className="text-xs font-semibold uppercase tracking-[2.5px] text-[var(--color-gold)]">
-                  {isEs ? "Elige la fórmula" : isFr ? "Choisir la formule" : isDe ? "Format wählen" : isEn ? "Choose your format" : "Scegli la formula"}
-                </p>
-                <div className="space-y-5">
-                  <h3 className="font-heading text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
-                    {isEs ? "Tour compartido, tour privado o charter por las Egadi" : isFr ? "Tour partagé, tour privé ou charter aux Égades" : isDe ? "Geteilte Tour, private Tour oder Charter zu den Egadi" : isEn ? "Shared tour, private tour or Egadi charter" : "Tour condiviso, tour privato o charter alle Egadi"}
-                  </h3>
-                  <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
-                    {isEs
-                        ? "Si quieres una excursión de día completo, el tour compartido de 8 horas es la opción más directa; si viajas en grupo, el tour privado de 4 u 8 horas da más control. Para vivir Favignana, Levanzo y Marettimo con más margen, el charter en trimarán permite construir una ruta de varios días."
-                        : isFr
-                        ? "Si vous voulez une excursion d'une journée, le tour partagé de 8 heures est l'option la plus directe ; si vous voyagez en groupe, le tour privé de 4 ou 8 heures donne plus de contrôle. Pour vivre Favignana, Levanzo et Marettimo avec plus de marge, le charter en trimaran permet une route de plusieurs jours."
-                        : isDe
-                        ? "Wenn Sie einen Tagesausflug suchen, ist die geteilte 8-Stunden-Tour die direkteste Wahl; wenn Sie als Gruppe reisen, bietet die private 4- oder 8-Stunden-Tour mehr Kontrolle. Für Favignana, Levanzo und Marettimo mit mehr Spielraum eignet sich ein mehrtägiger Charter im Trimaran."
-                        : isEn
-                        ? "If you want a full-day excursion, the shared 8-hour tour is the most direct option; if you travel as a group, the private 4 or 8-hour tour gives more control. To experience Favignana, Levanzo and Marettimo with more margin, the trimaran charter lets you build a multi-day route."
-                        : "Se vuoi un'escursione giornaliera, il tour condiviso di 8 ore è la risposta più diretta; se viaggi in gruppo, il tour privato da 4 o 8 ore dà più controllo. Per vivere Favignana, Levanzo e Marettimo con più margine, il charter in trimarano permette una rotta di più giorni."}
-                  </p>
-                </div>
-                <Link
-                  href={localizedPath(locale, "/experiences/charter")}
-                  className="inline-flex items-center gap-2 text-base font-semibold text-[var(--color-gold)] transition-all hover:gap-3 md:text-lg"
-                >
-                  {isEs ? "Ver el charter Egadi" : isFr ? "Voir le charter Égades" : isDe ? "Egadi-Charter ansehen" : isEn ? "View the Egadi charter" : "Vedi il charter Egadi"}{" "}
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                </Link>
-              </div>
-            </ScrollSection>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/*  Section 4: Fatti convincere — Recensioni Google             */}
-      {/* ============================================================ */}
-      <section
+        aria-labelledby="home-reviews-title"
         className="relative py-32 px-4 md:px-8 lg:px-12"
         style={{
           background: "linear-gradient(180deg, #071934 0%, #0a2a4a 50%, #071934 100%)",
@@ -1495,18 +1087,20 @@ export function LandingSections({ services }: LandingSectionsProps) {
         <div className="relative z-10 max-w-7xl mx-auto">
           <ScrollSection animation="fade-up">
             <div className="text-center mb-20">
-              <RevealTitle text={isEs ? "Déjate convencer" : isFr ? "Laissez-vous convaincre" : isDe ? "Lassen Sie sich überzeugen" : isEn ? "Let our guests convince you" : "Fatti convincere"} />
-              <p className="text-white/50 text-lg mt-6">
-                {isEs
-                  ? "Reseñas verificadas de Google y Tripadvisor"
-                  : isFr
-                  ? "Avis vérifiés de Google et Tripadvisor"
-                  : isDe
-                  ? "Verifizierte Bewertungen von Google und Tripadvisor"
-                  : isEn
-                  ? "Verified reviews from Google and Tripadvisor"
-                  : "Recensioni verificate da Google e Tripadvisor"}
+              <RevealTitle id="home-reviews-title" text={reviewTitle} compact />
+              <p className="text-white/70 text-lg mt-6">
+                {reviewSubtitle}
               </p>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                {reviewTrustItems.map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-white/12 bg-white/[0.045] px-4 py-2 text-sm font-semibold text-white/72"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-4">
                 <a
                   href={googleReviewsUrl}
@@ -1549,9 +1143,10 @@ export function LandingSections({ services }: LandingSectionsProps) {
       </section>
 
       {/* ============================================================ */}
-      {/*  Section 5: CTA Finale con pennellata SVG + form pillola    */}
+      {/*  Section 6: CTA Finale con pennellata SVG                   */}
       {/* ============================================================ */}
       <section
+        aria-labelledby="home-final-cta-title"
         className="relative py-32 px-4 md:px-8 lg:px-12"
         style={{
           background: "linear-gradient(180deg, #071934 0%, #0c3d5e 50%, #071934 100%)",
@@ -1560,11 +1155,16 @@ export function LandingSections({ services }: LandingSectionsProps) {
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <ScrollSection animation="fade-up">
             <div className="relative inline-block mb-8">
-              <h2 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-white relative z-10">
+              <h2
+                id="home-final-cta-title"
+                className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-white relative z-10"
+              >
                 {finalCtaTitle}
               </h2>
               {/* SVG brush stroke under title */}
               <svg
+                aria-hidden="true"
+                focusable="false"
                 viewBox="0 0 400 30"
                 className="absolute -bottom-3 left-0 w-full h-auto z-0"
                 fill="none"
@@ -1595,11 +1195,27 @@ export function LandingSections({ services }: LandingSectionsProps) {
                 </defs>
               </svg>
             </div>
-            <p className="text-white/60 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
+            <p className="text-white/72 text-lg md:text-xl mb-12 max-w-2xl mx-auto">
               {finalCtaSubtitle}
             </p>
             <div className="flex justify-center">
-              <BookingSearch services={services} />
+              <Link
+                href={localizedPath(locale, "/prenota")}
+                className="inline-flex min-h-14 items-center justify-center rounded-full bg-[var(--color-gold)] px-9 text-base font-bold text-[#071934] shadow-[0_22px_60px_rgba(245,158,11,0.28)] transition hover:-translate-y-0.5 hover:bg-[#f2b84b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-gold)]"
+              >
+                {finalCtaLabel}
+              </Link>
+            </div>
+            <div className="mx-auto mt-7 flex max-w-3xl flex-wrap items-center justify-center gap-3">
+              {finalCtaTrustItems.map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-sm font-semibold text-white/74"
+                >
+                  <Check className="h-4 w-4 text-[var(--color-gold)]" aria-hidden="true" />
+                  {item}
+                </span>
+              ))}
             </div>
           </ScrollSection>
         </div>

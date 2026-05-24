@@ -390,6 +390,65 @@ function heroCardCopy(
   return copyByPackage[packageKey] ?? fallback;
 }
 
+function heroCardImagesForPackage(packageKey: string, locale: string): Array<{ src: string; alt: string }> | null {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  const imagesByPackage: Record<string, { src: string; alt: string }> = {
+    "tour-barca-egadi-4-ore": {
+      src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp",
+      alt: isEs
+        ? "Cigala Bertinetti 34 Offshore Open para una excursión en barco de 4 horas a las Islas Egadi"
+        : isFr
+        ? "Cigala Bertinetti 34 Offshore Open pour une excursion en bateau de 4 heures aux îles Égades"
+        : isDe
+        ? "Cigala Bertinetti 34 Offshore Open für eine 4-Stunden-Bootstour zu den Ägadischen Inseln"
+        : isEn
+        ? "Cigala Bertinetti 34 Offshore Open for a 4-hour Egadi Islands boat tour"
+        : "Cigala Bertinetti 34 Offshore Open per escursione in barca 4 ore alle Egadi",
+    },
+    "tour-barca-egadi-8-ore": {
+      src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-drone.webp",
+      alt: isEs
+        ? "Tour en barco Favignana y Levanzo desde Trapani visto desde dron"
+        : isFr
+        ? "Tour en bateau Favignana et Levanzo depuis Trapani vu par drone"
+        : isDe
+        ? "Bootstour Favignana und Levanzo ab Trapani aus der Drohnenperspektive"
+        : isEn
+        ? "Favignana and Levanzo boat tour from Trapani seen by drone"
+        : "Tour in barca Favignana e Levanzo da Trapani visto dal drone",
+    },
+    "esperienza-gourmet-trimarano": {
+      src: "/images/boats/neel-47/trimarano-pasta-saltata.webp",
+      alt: isEs
+        ? "Chef a bordo en trimarán durante una experiencia gourmet en las Islas Egadi"
+        : isFr
+        ? "Chef à bord en trimaran pendant une expérience gourmet aux îles Égades"
+        : isDe
+        ? "Chef an Bord auf dem Trimaran während eines Gourmet-Erlebnisses zu den Ägadischen Inseln"
+        : isEn
+        ? "Chef on board a trimaran during an Egadi Islands gourmet experience"
+        : "Chef a bordo in trimarano durante esperienza gourmet alle Egadi",
+    },
+    "charter-egadi": {
+      src: "/images/boats/neel-47/trimarano-relax-rete.webp",
+      alt: isEs
+        ? "Charter Egadi en trimarán con relax en la red frente al mar"
+        : isFr
+        ? "Charter aux Égades en trimaran avec détente sur le filet face à la mer"
+        : isDe
+        ? "Egadi Charter im Trimaran mit Entspannung im Netz am Meer"
+        : isEn
+        ? "Egadi trimaran charter with relaxing on the net at sea"
+        : "Charter Egadi in trimarano con relax sulla rete in mare",
+    },
+  };
+  const image = imagesByPackage[packageKey];
+  return image ? [image] : null;
+}
+
 function bookingHrefForService(
   service: { id: string; type: string; durationType: string; boat: { id: string } } | undefined,
   serviceId: string,
@@ -714,6 +773,10 @@ export default async function HomePage({
         experience: bookingExperienceKey(service),
         durationType: service.durationType,
       });
+      const heroCopy = heroCardCopy(experience.key, locale, {
+        title: experience.title,
+        subtitle: experience.subtitle,
+      });
       const images = experience.media
         .filter((item): item is { caption: string; alt: string; color: string; src: string } =>
           Boolean(item.src),
@@ -722,19 +785,16 @@ export default async function HomePage({
           src: item.src,
           alt: item.alt,
         }));
-      const heroImages =
+      const fallbackHeroImages =
         images.length > 0
           ? images
           : [
               {
                 src: "/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp",
-                alt: experience.title,
+                alt: heroCopy.title,
               },
             ];
-      const heroCopy = heroCardCopy(experience.key, locale, {
-        title: experience.title,
-        subtitle: experience.subtitle,
-      });
+      const heroImages = heroCardImagesForPackage(experience.key, locale) ?? fallbackHeroImages;
 
       return {
         key: experience.key,

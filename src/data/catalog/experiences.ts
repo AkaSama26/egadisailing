@@ -1334,6 +1334,234 @@ export const EXPERIENCE_CATALOG = {
   },
 } as const satisfies Record<string, ExperienceCatalogEntry>;
 
+const EXPERIENCE_HUB_8_HOUR_MEDIA = [
+  {
+    caption: {
+      it: "Tour Favignana",
+      en: "Favignana tour",
+      es: "Tour Favignana",
+      fr: "Tour Favignana",
+      de: "Favignana Tour",
+    },
+    alt: {
+      it: "Barca alle Isole Egadi durante un'escursione in barca Favignana e Levanzo da Trapani",
+      en: "Boat in the Egadi Islands during a Favignana and Levanzo boat tour from Trapani",
+      es: "Barco en las Islas Egadi durante una excursión en barco Favignana y Levanzo desde Trapani",
+      fr: "Bateau aux îles Égades pendant une excursion en bateau Favignana et Levanzo depuis Trapani",
+      de: "Boot auf den Ägadischen Inseln während einer Bootstour Favignana und Levanzo ab Trapani",
+    },
+    color: "#BAE6FD",
+    src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
+  },
+  {
+    caption: {
+      it: "Barca alle Egadi",
+      en: "Egadi boat",
+      es: "Barco Egadi",
+      fr: "Bateau Égades",
+      de: "Egadi Boot",
+    },
+    alt: {
+      it: "Cigala Bertinetti in primo piano per tour in barca Favignana e Levanzo da Trapani",
+      en: "Cigala Bertinetti close-up for a Favignana and Levanzo boat tour from Trapani",
+      es: "Cigala Bertinetti en primer plano para tour en barco Favignana y Levanzo desde Trapani",
+      fr: "Cigala Bertinetti en premier plan pour tour en bateau Favignana et Levanzo depuis Trapani",
+      de: "Cigala Bertinetti in Nahaufnahme für Bootstour Favignana und Levanzo ab Trapani",
+    },
+    color: "#A7F3D0",
+    src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-primo-piano.webp",
+  },
+  {
+    caption: {
+      it: "Nuoto a Cala Rossa",
+      en: "Swimming at Cala Rossa",
+      es: "Baño en Cala Rossa",
+      fr: "Baignade à Cala Rossa",
+      de: "Schwimmen in Cala Rossa",
+    },
+    alt: {
+      it: "Nuoto in acqua cristallina a Cala Rossa durante escursione Favignana e Levanzo 8 ore",
+      en: "Swimming in crystal-clear water at Cala Rossa during an 8-hour Favignana and Levanzo tour",
+      es: "Baño en agua cristalina en Cala Rossa durante excursión Favignana y Levanzo de 8 horas",
+      fr: "Baignade en eau cristalline à Cala Rossa pendant excursion Favignana et Levanzo de 8 heures",
+      de: "Schwimmen in kristallklarem Wasser in Cala Rossa während 8-Stunden-Tour Favignana und Levanzo",
+    },
+    color: "#BFDBFE",
+    src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
+  },
+] as const satisfies readonly ExperienceCatalogMedia[];
+
+const EXPERIENCE_HUB_4_HOUR_MEDIA = [
+  {
+    caption: {
+      it: "Tour Egadi 4 ore",
+      en: "4-hour Egadi tour",
+      es: "Tour Egadi 4 horas",
+      fr: "Tour Égades 4 heures",
+      de: "Egadi Tour 4 Stunden",
+    },
+    alt: {
+      it: "Tour privato alle Egadi 4 ore da Trapani con barca in navigazione",
+      en: "Private 4-hour Egadi boat tour from Trapani with boat sailing",
+      es: "Tour privado por las Egadi de 4 horas desde Trapani con barco navegando",
+      fr: "Tour privé aux Égades de 4 heures depuis Trapani avec bateau en navigation",
+      de: "Private 4-Stunden-Bootstour zu den Egadi ab Trapani mit fahrendem Boot",
+    },
+    color: "#BAE6FD",
+    src: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
+  },
+  {
+    caption: {
+      it: "Cala Rossa",
+      en: "Cala Rossa",
+      es: "Cala Rossa",
+      fr: "Cala Rossa",
+      de: "Cala Rossa",
+    },
+    alt: {
+      it: "Cala Rossa durante un tour privato in barca alle Egadi da Trapani",
+      en: "Cala Rossa during a private Egadi boat tour from Trapani",
+      es: "Cala Rossa durante un tour privado en barco por las Egadi desde Trapani",
+      fr: "Cala Rossa pendant un tour privé en bateau aux Égades depuis Trapani",
+      de: "Cala Rossa während einer privaten Bootstour zu den Egadi ab Trapani",
+    },
+    color: "#FDE68A",
+    src: "/images/experience-polaroids/barca-4-ore-cala-rossa.webp",
+  },
+  {
+    caption: {
+      it: "Barca privata",
+      en: "Private boat",
+      es: "Barco privado",
+      fr: "Bateau privé",
+      de: "Privates Boot",
+    },
+    alt: {
+      it: "Barca privata Cigala Bertinetti per tour alle Isole Egadi di 4 ore",
+      en: "Private Cigala Bertinetti boat for a 4-hour Egadi Islands tour",
+      es: "Barco privado Cigala Bertinetti para tour de 4 horas por las Islas Egadi",
+      fr: "Bateau privé Cigala Bertinetti pour tour de 4 heures aux îles Égades",
+      de: "Privates Cigala Bertinetti Boot für 4-Stunden-Tour zu den Ägadischen Inseln",
+    },
+    color: "#C7D2FE",
+    src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
+  },
+] as const satisfies readonly ExperienceCatalogMedia[];
+
+const EXPERIENCE_HUB_GOURMET_MEDIA = [
+  {
+    caption: {
+      it: "Chef e ingredienti",
+      en: "Chef and ingredients",
+      es: "Chef e ingredientes",
+      fr: "Chef et ingrédients",
+      de: "Chef und Zutaten",
+    },
+    alt: {
+      it: "Chef a bordo con ingredienti freschi per esperienza gourmet in trimarano alle Egadi",
+      en: "Chef on board with fresh ingredients for a gourmet trimaran experience in the Egadi Islands",
+      es: "Chef a bordo con ingredientes frescos para experiencia gourmet en trimarán por las Egadi",
+      fr: "Chef à bord avec ingrédients frais pour expérience gourmet en trimaran aux Égades",
+      de: "Chef an Bord mit frischen Zutaten für Gourmet-Erlebnis im Trimaran auf den Egadi",
+    },
+    color: "#FFDAB9",
+    src: "/images/boats/neel-47/trimarano-chef-ingredienti.webp",
+  },
+  {
+    caption: {
+      it: "Ingredienti locali",
+      en: "Local ingredients",
+      es: "Ingredientes locales",
+      fr: "Ingrédients locaux",
+      de: "Lokale Zutaten",
+    },
+    alt: {
+      it: "Ingredienti locali e pesce fresco per pranzo a bordo del trimarano alle Egadi",
+      en: "Local ingredients and fresh fish for lunch on board the Egadi trimaran",
+      es: "Ingredientes locales y pescado fresco para comida a bordo del trimarán en las Egadi",
+      fr: "Ingrédients locaux et poisson frais pour déjeuner à bord du trimaran aux Égades",
+      de: "Lokale Zutaten und frischer Fisch für Mittagessen an Bord des Egadi Trimarans",
+    },
+    color: "#FDE68A",
+    src: "/images/boats/neel-47/trimarano-ingredienti.webp",
+  },
+  {
+    caption: {
+      it: "Pranzo a bordo",
+      en: "Lunch on board",
+      es: "Comida a bordo",
+      fr: "Déjeuner à bord",
+      de: "Mittagessen an Bord",
+    },
+    alt: {
+      it: "Pasta cucinata a bordo durante chef experience in trimarano alle Isole Egadi",
+      en: "Pasta cooked on board during a chef experience on an Egadi Islands trimaran",
+      es: "Pasta cocinada a bordo durante experiencia chef en trimarán por las Islas Egadi",
+      fr: "Pâtes cuisinées à bord pendant expérience chef en trimaran aux îles Égades",
+      de: "Pasta an Bord gekocht während Chef-Erlebnis im Trimaran auf den Ägadischen Inseln",
+    },
+    color: "#DDA0DD",
+    src: "/images/boats/neel-47/trimarano-pasta-saltata.webp",
+  },
+] as const satisfies readonly ExperienceCatalogMedia[];
+
+const EXPERIENCE_HUB_CHARTER_MEDIA = [
+  {
+    caption: {
+      it: "Relax in trimarano",
+      en: "Trimaran relaxation",
+      es: "Relax en trimarán",
+      fr: "Relax en trimaran",
+      de: "Relax im Trimaran",
+    },
+    alt: {
+      it: "Relax al sole durante charter Egadi in trimarano da Trapani",
+      en: "Relaxing in the sun during an Egadi trimaran charter from Trapani",
+      es: "Relax al sol durante charter Egadi en trimarán desde Trapani",
+      fr: "Relax au soleil pendant charter Égades en trimaran depuis Trapani",
+      de: "Entspannung in der Sonne während Egadi Trimaran-Charter ab Trapani",
+    },
+    color: "#FED7AA",
+    src: "/images/boats/neel-47/trimarano-relax-sole.webp",
+  },
+  {
+    caption: {
+      it: "Prendisole a Levanzo",
+      en: "Sundeck in Levanzo",
+      es: "Solárium en Levanzo",
+      fr: "Bain de soleil à Levanzo",
+      de: "Sonnendeck vor Levanzo",
+    },
+    alt: {
+      it: "Prendisole del trimarano davanti a Levanzo durante charter alle Egadi",
+      en: "Trimaran sundeck off Levanzo during an Egadi charter",
+      es: "Solárium del trimarán frente a Levanzo durante charter por las Egadi",
+      fr: "Bain de soleil du trimaran face à Levanzo pendant charter aux Égades",
+      de: "Sonnendeck des Trimarans vor Levanzo während Egadi Charter",
+    },
+    color: "#C5CAE9",
+    src: "/images/boats/neel-47/trimarano-wow-prendisole-levanzo.webp",
+  },
+  {
+    caption: {
+      it: "Trimarano alle Egadi",
+      en: "Egadi trimaran",
+      es: "Trimarán Egadi",
+      fr: "Trimaran Égades",
+      de: "Egadi Trimaran",
+    },
+    alt: {
+      it: "Trimarano visto dal drone durante charter alle Isole Egadi",
+      en: "Trimaran seen from above during a charter in the Egadi Islands",
+      es: "Trimarán visto desde dron durante charter por las Islas Egadi",
+      fr: "Trimaran vu par drone pendant charter aux îles Égades",
+      de: "Trimaran aus Drohnenperspektive während Charter auf den Ägadischen Inseln",
+    },
+    color: "#B2DFDB",
+    src: "/images/home/trimarano-relax-drone.webp",
+  },
+] as const satisfies readonly ExperienceCatalogMedia[];
+
 export const EXPERIENCE_PACKAGE_CATALOG = [
   {
     key: "esperienza-gourmet-trimarano",
@@ -1360,7 +1588,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     priceUnitLabel: { it: "per pacchetto", en: "per package" },
     primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
     primaryHref: "/experiences/exclusive-experience",
-    media: EXPERIENCE_CATALOG["exclusive-experience"].media,
+    media: EXPERIENCE_HUB_GOURMET_MEDIA,
   },
   {
     key: "charter-egadi",
@@ -1387,7 +1615,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     priceUnitLabel: { it: "per pacchetto", en: "per package" },
     primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
     primaryHref: "/experiences/charter",
-    media: EXPERIENCE_CATALOG["cabin-charter"].media,
+    media: EXPERIENCE_HUB_CHARTER_MEDIA,
   },
   {
     key: "tour-barca-egadi-4-ore",
@@ -1414,7 +1642,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     priceUnitLabel: { it: "per barca", en: "per boat" },
     primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
     primaryHref: "/experiences/boat-exclusive-afternoon",
-    media: EXPERIENCE_CATALOG["boat-exclusive-afternoon"].media,
+    media: EXPERIENCE_HUB_4_HOUR_MEDIA,
     variants: [
       {
         label: { it: "Privato mattina", en: "Private morning" },
@@ -1461,7 +1689,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     priceUnitLabel: { it: "a persona o per barca", en: "per person or per boat" },
     primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
     primaryHref: "/experiences/boat-shared-full-day",
-    media: EXPERIENCE_CATALOG["boat-shared-full-day"].media,
+    media: EXPERIENCE_HUB_8_HOUR_MEDIA,
     variants: [
       {
         label: { it: "Condiviso", en: "Shared" },

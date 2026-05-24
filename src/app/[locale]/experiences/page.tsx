@@ -82,11 +82,17 @@ function packageCapacityLabel(
   return guestsLabel(Math.max(...capacities), locale);
 }
 
+function packageSchemaDuration(packageKey: string): string {
+  if (packageKey === "tour-barca-egadi-4-ore") return "PT4H";
+  if (packageKey === "charter-egadi") return "P3D";
+  return "PT8H";
+}
+
 function getHubCopy(locale: string) {
   if (locale === "es") {
     return {
       intro:
-        "Experiencias diseñadas para elegir con claridad: días completos a Favignana y Levanzo, tours privados de medio día, charter en trimarán, chef a bordo y pesca deportiva. La salida es desde el Puerto de Trapani, con ruta definida según meteo, viento y condiciones del mar.",
+        "Elige tu tour en barco por las Islas Egadi desde Trapani comparando duración, precio, capacidad, fórmula y ruta. Desde Via dei Gladioli 15, cerca del Puerto de Trapani, puedes reservar excursiones compartidas de 8 horas a Favignana y Levanzo, tours privados de 4 horas, charter en trimarán, chef a bordo o pesca deportiva. Las rutas posibles incluyen Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda y Cala Minnola, siempre según meteo, viento y seguridad. Cada paquete indica incluidos, snorkel, patrón, combustible y política de cancelación o reembolso por mal tiempo.",
       labels: {
         duration: "Duración",
         price: "Precio",
@@ -159,7 +165,7 @@ function getHubCopy(locale: string) {
   if (locale === "fr") {
     return {
       intro:
-        "Des expériences pensées pour choisir avec clarté : journées complètes à Favignana et Levanzo, excursions privées d'une demi-journée, charter en trimaran, chef à bord et pêche sportive. Le départ se fait depuis le port de Trapani, avec route définie selon météo, vent et conditions de mer.",
+        "Choisissez votre excursion en bateau aux îles Égades depuis Trapani en comparant durée, prix, capacité, formule et route. Depuis Via dei Gladioli 15, près du port de Trapani, vous pouvez réserver excursions partagées de 8 heures à Favignana et Levanzo, tours privés de 4 heures, charter en trimaran, chef à bord ou pêche sportive. Les étapes possibles incluent Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda et Cala Minnola, toujours selon météo, vent et sécurité. Chaque forfait indique inclus, snorkeling, skipper, carburant et politique d'annulation ou remboursement en cas de mauvaise météo.",
       labels: {
         duration: "Durée",
         price: "Prix",
@@ -232,7 +238,7 @@ function getHubCopy(locale: string) {
   if (locale === "de") {
     return {
       intro:
-        "Erlebnisse, die eine klare Auswahl ermöglichen: ganze Tage nach Favignana und Levanzo, private Halbtagestouren, Trimaran-Charter, Chef an Bord und Sportangeln. Die Abfahrt erfolgt ab Hafen Trapani; die Route richtet sich nach Wetter, Wind und Seegang.",
+        "Wählen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani mit klarem Vergleich von Dauer, Preis, Kapazität, Format und Route. Ab Via dei Gladioli 15, nahe dem Hafen Trapani, buchen Sie geteilte 8-Stunden-Touren nach Favignana und Levanzo, private 4-Stunden-Touren, Trimaran-Charter, Chef an Bord oder Sportangeln. Mögliche Stopps sind Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda und Cala Minnola, immer nach Wetter, Wind und Sicherheit. Jedes Paket zeigt Inklusivleistungen, Schnorcheln, Skipper, Treibstoff sowie Storno- oder Erstattungsregeln bei schlechtem Wetter.",
       labels: {
         duration: "Dauer",
         price: "Preis",
@@ -305,7 +311,7 @@ function getHubCopy(locale: string) {
   if (locale === "en") {
     return {
       intro:
-        "Experiences designed to make the choice clear: full days to Favignana and Levanzo, private half-day tours, trimaran charters, chef on board and sport fishing. Departure is from Trapani harbour, with the route shaped around weather, wind and sea conditions.",
+        "Choose your Egadi Islands boat tour from Trapani by comparing duration, price, capacity, format and route. From Via dei Gladioli 15, near Trapani harbour, you can book shared 8-hour tours to Favignana and Levanzo, private 4-hour tours, trimaran charters, chef on board or sport fishing. Possible stops include Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda and Cala Minnola, always according to weather, wind and safety. Each package shows inclusions, snorkelling, skipper, fuel and the cancellation or refund policy for unsafe sea conditions.",
       labels: {
         duration: "Duration",
         price: "Price",
@@ -377,7 +383,7 @@ function getHubCopy(locale: string) {
 
   return {
     intro:
-      "Esperienze costruite per scegliere con chiarezza: giornate complete a Favignana e Levanzo, tour privati di mezza giornata, charter in trimarano, chef a bordo e pesca sportiva. La partenza è dal Porto di Trapani, con rotta definita in base a meteo, vento e condizioni del mare.",
+      "Scegli il tuo tour in barca alle Isole Egadi da Trapani confrontando durata, prezzo, capienza, formula e rotta. Da Via dei Gladioli 15, vicino al Porto di Trapani, puoi prenotare escursioni condivise di 8 ore a Favignana e Levanzo, tour privati di 4 ore, charter in trimarano, chef a bordo o pesca sportiva. Le tappe possibili includono Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda e Cala Minnola, sempre in base a meteo, vento e sicurezza. Ogni pacchetto indica inclusi, snorkeling, skipper, carburante e policy di cancellazione o rimborso in caso di mare non sicuro.",
     labels: {
       duration: "Durata",
       price: "Prezzo",
@@ -642,6 +648,7 @@ export default async function ExperiencesPage({
               name: item.seoTitle,
               description: `${item.seoDescription} ${facts?.route ?? ""}`,
               url: itemUrl,
+              duration: packageSchemaDuration(item.key),
               provider: { "@id": organizationId },
               areaServed: [
                 { "@type": "Place", name: "Trapani" },
@@ -650,6 +657,23 @@ export default async function ExperiencesPage({
                 { "@type": "Place", name: "Levanzo" },
               ],
               availableAtOrFrom: { "@id": meetingPointId },
+              additionalProperty: [
+                {
+                  "@type": "PropertyValue",
+                  name: hubCopy.labels.duration,
+                  value: item.durationLabel,
+                },
+                {
+                  "@type": "PropertyValue",
+                  name: hubCopy.labels.departure,
+                  value: hubCopy.departure,
+                },
+                {
+                  "@type": "PropertyValue",
+                  name: hubCopy.labels.policy,
+                  value: hubCopy.policy,
+                },
+              ],
               offers: {
                 "@type": "Offer",
                 url: itemUrl,
@@ -704,6 +728,17 @@ export default async function ExperiencesPage({
               <p className="mx-auto max-w-[20rem] text-base leading-7 text-white/50 sm:max-w-3xl sm:text-lg md:text-xl">
                 {t("subtitle")}
               </p>
+              <div className="mx-auto mt-8 max-w-4xl border-t border-white/12 pt-6 text-left">
+                <p className="text-sm font-medium leading-7 text-white/72 sm:text-base sm:leading-8">
+                  {hubCopy.intro}
+                </p>
+                <p className="mt-4 text-sm font-medium leading-6 text-white/62 sm:text-base sm:leading-7">
+                  <span className="font-semibold text-[var(--color-gold)]">
+                    {hubCopy.labels.policy}:
+                  </span>{" "}
+                  {hubCopy.policy}
+                </p>
+              </div>
             </ScrollSection>
           </div>
         </section>
