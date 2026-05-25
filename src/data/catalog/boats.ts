@@ -128,11 +128,11 @@ const BOATS_PAGE_COPY = {
     de: "Katamaran, Trimaran und Boote für die Egadi ab Trapani",
   },
   subtitle: {
-    it: "La flotta Egadisailing nasce per vivere le Isole Egadi da Trapani con due esperienze diverse: il trimarano con comfort da catamarano per charter, chef a bordo e giornate premium, e la Barca Egadi Sailing Cigala & Bertinetti 34 per escursioni in barca a Favignana e Levanzo, tour privati, uscite condivise, soste bagno e snorkeling. Se stai cercando un catamarano alle Egadi, la soluzione premium è il nostro trimarano: spazi ampi, stabilità da multiscafo e una vita a bordo più comoda.",
-    en: "The Egadisailing fleet is built for experiencing the Egadi Islands from Trapani in two different ways: a trimaran with catamaran-style comfort for charters, chef experiences and premium days, and Barca Egadi Sailing Cigala & Bertinetti 34 for Favignana and Levanzo boat tours, private trips, shared outings, swim stops and snorkelling. If you are looking for an Egadi catamaran, our premium solution is the trimaran: wide spaces, multihull stability and more comfortable life on board.",
-    es: "La flota Egadisailing está pensada para vivir las Islas Egadi desde Trapani de dos formas: un trimarán con confort de catamarán para charter, chef a bordo y jornadas premium, y Barca Egadi Sailing Cigala & Bertinetti 34 para excursiones en barco a Favignana y Levanzo, tours privados, salidas compartidas, baños y snorkel. Si buscas un catamarán en las Egadi, nuestra solución premium es el trimarán: espacios amplios, estabilidad de multicasco y una vida a bordo más cómoda.",
-    fr: "La flotte Egadisailing permet de vivre les îles Égades depuis Trapani de deux façons : un trimaran au confort de catamaran pour charter, chef à bord et journées premium, et Barca Egadi Sailing Cigala & Bertinetti 34 pour excursions en bateau à Favignana et Levanzo, sorties privées ou partagées, baignades et snorkeling. Si vous cherchez un catamaran aux Égades, notre solution premium est le trimaran : grands espaces, stabilité de multicoque et vie à bord plus confortable.",
-    de: "Die Egadisailing-Flotte ist für zwei Arten gedacht, die Egadi ab Trapani zu erleben: ein Trimaran mit Katamaran-Komfort für Charter, Chef an Bord und Premium-Tage sowie die Barca Egadi Sailing Cigala & Bertinetti 34 für Bootstouren nach Favignana und Levanzo, private Touren, geteilte Ausfahrten, Badestopps und Schnorcheln. Wenn Sie einen Katamaran auf den Egadi suchen, ist unser Trimaran die Premium-Lösung: viel Platz, Multihull-Stabilität und komfortableres Leben an Bord.",
+    it: "La flotta Egadisailing nasce per vivere le Isole Egadi da Trapani con due esperienze diverse: il trimarano con comfort da catamarano per charter e giornate premium con skipper, e la Barca Egadi Sailing Cigala & Bertinetti 34 per escursioni in barca a Favignana e Levanzo, tour privati, uscite condivise, soste bagno e snorkeling. Se stai cercando un catamarano alle Egadi, la soluzione premium è il nostro trimarano: spazi ampi, stabilità da multiscafo e una vita a bordo più comoda.",
+    en: "The Egadisailing fleet is built for experiencing the Egadi Islands from Trapani in two different ways: a trimaran with catamaran-style comfort for skippered charters and premium days, and Barca Egadi Sailing Cigala & Bertinetti 34 for Favignana and Levanzo boat tours, private trips, shared outings, swim stops and snorkelling. If you are looking for an Egadi catamaran, our premium solution is the trimaran: wide spaces, multihull stability and more comfortable life on board.",
+    es: "La flota Egadisailing está pensada para vivir las Islas Egadi desde Trapani de dos formas: un trimarán con confort de catamarán para charter con patrón y jornadas premium, y Barca Egadi Sailing Cigala & Bertinetti 34 para excursiones en barco a Favignana y Levanzo, tours privados, salidas compartidas, baños y snorkel. Si buscas un catamarán en las Egadi, nuestra solución premium es el trimarán: espacios amplios, estabilidad de multicasco y una vida a bordo más cómoda.",
+    fr: "La flotte Egadisailing permet de vivre les îles Égades depuis Trapani de deux façons : un trimaran au confort de catamaran pour charter avec skipper et journées premium, et Barca Egadi Sailing Cigala & Bertinetti 34 pour excursions en bateau à Favignana et Levanzo, sorties privées ou partagées, baignades et snorkeling. Si vous cherchez un catamaran aux Égades, notre solution premium est le trimaran : grands espaces, stabilité de multicoque et vie à bord plus confortable.",
+    de: "Die Egadisailing-Flotte ist für zwei Arten gedacht, die Egadi ab Trapani zu erleben: ein Trimaran mit Katamaran-Komfort für Charter mit Skipper und Premium-Tage sowie die Barca Egadi Sailing Cigala & Bertinetti 34 für Bootstouren nach Favignana und Levanzo, private Touren, geteilte Ausfahrten, Badestopps und Schnorcheln. Wenn Sie einen Katamaran auf den Egadi suchen, ist unser Trimaran die Premium-Lösung: viel Platz, Multihull-Stabilität und komfortableres Leben an Bord.",
   },
   comparisonTitle: {
     it: "Due barche, due modi di vivere il mare",
@@ -142,11 +142,11 @@ const BOATS_PAGE_COPY = {
     de: "Zwei Boote, zwei Arten, das Meer zu erleben",
   },
   comparisonText: {
-    it: "Il Trimarano è pensato per comfort, chef e charter: una soluzione multiscafo ideale se stai valutando un tour in catamarano alle Egadi ma vuoi più spazio e servizio a bordo. La Barca è la scelta agile per tour in barca, soste bagno e rotte più snelle.",
-    en: "The trimaran is for comfort, chef experiences and charter: a multihull solution if you are considering a catamaran tour in the Egadi Islands but want more space and onboard service. The Boat is the agile choice for boat tours, swim stops and lighter routes.",
-    es: "El trimarán está pensado para confort, chef y charter: una solución multicasco si estás valorando un tour en catamarán por las Egadi y quieres más espacio y servicio a bordo. El barco es la opción ágil para tours, baños y rutas más ligeras.",
-    fr: "Le trimaran est pensé pour le confort, le chef à bord et le charter : une solution multicoque si vous envisagez un tour en catamaran aux Égades et souhaitez plus d'espace et de service à bord. Le bateau est le choix agile pour les sorties, baignades et routes plus souples.",
-    de: "Der Trimaran steht für Komfort, Chef an Bord und Charter: eine Multihull-Lösung, wenn Sie eine Katamaran-Tour auf den Egadi suchen und mehr Platz sowie Service an Bord wünschen. Das Boot ist die agile Wahl für Touren, Badestopps und leichtere Routen.",
+    it: "Il Trimarano è pensato per comfort e charter con skipper: una soluzione multiscafo ideale se stai valutando un tour in catamarano alle Egadi ma vuoi più spazio e servizio a bordo. La Barca è la scelta agile per tour in barca, soste bagno e rotte più snelle.",
+    en: "The trimaran is for comfort and skippered charter: a multihull solution if you are considering a catamaran tour in the Egadi Islands but want more space and onboard service. The Boat is the agile choice for boat tours, swim stops and lighter routes.",
+    es: "El trimarán está pensado para confort y charter con patrón: una solución multicasco si estás valorando un tour en catamarán por las Egadi y quieres más espacio y servicio a bordo. El barco es la opción ágil para tours, baños y rutas más ligeras.",
+    fr: "Le trimaran est pensé pour le confort et le charter avec skipper : une solution multicoque si vous envisagez un tour en catamaran aux Égades et souhaitez plus d'espace et de service à bord. Le bateau est le choix agile pour les sorties, baignades et routes plus souples.",
+    de: "Der Trimaran steht für Komfort und Charter mit Skipper: eine Multihull-Lösung, wenn Sie eine Katamaran-Tour auf den Egadi suchen und mehr Platz sowie Service an Bord wünschen. Das Boot ist die agile Wahl für Touren, Badestopps und leichtere Routen.",
   },
   chooserTitle: {
     it: "Quale barca scegliere?",
@@ -209,12 +209,12 @@ export const BOAT_CATALOG = {
       en: "Catamaran / Trimaran",
     },
     eyebrow: {
-      it: "Comfort, chef e charter",
-      en: "Comfort, chef and charter",
+      it: "Comfort e charter",
+      en: "Comfort and charter",
     },
     description: {
-      it: "Cerchi un catamarano alle Egadi? La nostra proposta premium è un trimarano multiscafo con spazi ampi, cabine, cucina, stabilità e comfort da catamarano per giornate private, chef a bordo e charter di più giorni.",
-      en: "Looking for a catamaran in the Egadi Islands? Our premium proposal is a trimaran multihull with wide spaces, cabins, galley, stability and catamaran-style comfort for private day trips, chef experiences and multi-day charters.",
+      it: "Cerchi un catamarano alle Egadi? La nostra proposta premium è un trimarano multiscafo con spazi ampi, cabine, cucina, stabilità e comfort da catamarano per giornate private con skipper e charter di più giorni.",
+      en: "Looking for a catamaran in the Egadi Islands? Our premium proposal is a trimaran multihull with wide spaces, cabins, galley, stability and catamaran-style comfort for private skippered days and multi-day charters.",
     },
     detail: {
       eyebrow: {
@@ -231,8 +231,8 @@ export const BOAT_CATALOG = {
           en: "This boat is designed for guests looking for a more comfortable, curated and private Egadi Islands boat experience than a classic fast tour. Many guests search for an Egadi catamaran, a catamaran tour from Trapani or a skippered catamaran charter: technically, this is a trimaran, with three hulls, excellent stability and highly liveable spaces.",
         },
         {
-          it: "A bordo il tempo non è solo navigazione: ci sono spazi per pranzare, rilassarsi, prendere il sole, cambiarsi e vivere la giornata con ritmo lento. Per l'esperienza gourmet la rotta viene costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo a base di pesce locale e prodotti del territorio. Nei programmi charter, invece, il trimarano permette di allargare il viaggio verso Marettimo e, su richiesta, valutare anche San Vito lo Capo quando durata e meteo lo consentono.",
-          en: "Time on board is not just navigation: there is space for lunch, relaxing, sunbathing, changing and enjoying the day at a slower pace. For the gourmet experience, the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and lunch based on local fish and regional products. On charter programmes, the trimaran can extend the trip towards Marettimo and, on request, San Vito lo Capo when duration and weather allow it.",
+          it: "A bordo il tempo non è solo navigazione: ci sono spazi per rilassarsi, prendere il sole, cambiarsi e vivere la giornata con ritmo lento. Nei programmi charter il trimarano permette di allargare il viaggio verso Favignana, Levanzo, Marettimo e, su richiesta, valutare anche San Vito Lo Capo quando durata e meteo lo consentono.",
+          en: "Time on board is not just navigation: there is space for relaxing, sunbathing, changing and enjoying the day at a slower pace. On charter programmes, the trimaran can extend the trip towards Favignana, Levanzo, Marettimo and, on request, San Vito Lo Capo when duration and weather allow it.",
         },
         {
           it: "Chi cerca parole semplici può immaginarlo così: è l'alternativa premium al noleggio catamarano alle Egadi, con skipper, crew, comfort reale e un modo più elegante di vivere il mare. Non serve essere esperti di vela o conoscere già le cale: rotta, orari e soste vengono gestiti dalla crew in base a meteo, mare e obiettivo della giornata.",
@@ -245,8 +245,8 @@ export const BOAT_CATALOG = {
       en: "Egadi catamaran from Trapani: skippered trimaran",
     },
     seoDescription: {
-      it: "Catamarano alle Egadi da Trapani: trimarano multiscafo con comfort da catamarano, chef a bordo, charter con skipper, Favignana, Levanzo e Marettimo.",
-      en: "Catamaran-style charter in the Egadi Islands from Trapani: multihull trimaran with skipper, chef on board, Favignana, Levanzo and Marettimo.",
+      it: "Catamarano alle Egadi da Trapani: trimarano multiscafo con comfort da catamarano, charter con skipper, cabine, Favignana, Levanzo e Marettimo.",
+      en: "Catamaran-style charter in the Egadi Islands from Trapani: multihull trimaran with skipper, cabins, Favignana, Levanzo and Marettimo.",
     },
     imageSrc: "/images/boats/neel-47/neel-47-hero.webp",
     heroVideoSrc: "/images/boats/neel-47/hero-video.webm",
@@ -362,10 +362,10 @@ export const BOAT_CATALOG = {
       {
         src: "/images/boats/neel-47/neel-47-chef.webp",
         alt: {
-          it: "Chef e crew preparano l'aperitivo a bordo del Trimarano",
-          en: "Chef and crew preparing the aperitif on board the Trimarano",
+          it: "Crew prepara il servizio a bordo del Trimarano",
+          en: "Crew preparing onboard service on the Trimarano",
         },
-        caption: { it: "Chef a bordo", en: "Chef on board" },
+        caption: { it: "Servizio a bordo", en: "Onboard service" },
       },
       {
         src: "/images/boats/neel-47/neel-47-cucina.webp",
@@ -434,8 +434,8 @@ export const BOAT_CATALOG = {
     ],
     idealFor: [
       {
-        it: "Esperienze gourmet private con chef, pranzo a bordo e spazi comodi per chi desidera una giornata in catamarano alle Egadi, ma con la stabilità del trimarano.",
-        en: "Private gourmet experiences with a chef, lunch on board and comfortable spaces for an easy-going day.",
+        it: "Charter privati con skipper, spazi comodi e stabilità da multiscafo per chi desidera una giornata in catamarano alle Egadi reinterpretata in trimarano.",
+        en: "Private skippered charters with comfortable spaces and multihull stability for guests looking for a catamaran-style Egadi day on a trimaran.",
       },
       {
         it: "Charter alle Egadi di più giorni, con cabine, cucina e zone relax pensate per dormire a bordo tra Favignana, Levanzo e Marettimo.",
@@ -448,8 +448,8 @@ export const BOAT_CATALOG = {
     ],
     routes: [
       {
-        it: "Nelle giornate gourmet la rotta è costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo cucinato a bordo dallo chef.",
-        en: "On gourmet days the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and lunch on board.",
+        it: "Nel charter la rotta è costruita con lo skipper tra Favignana, Levanzo e Marettimo, scegliendo baie riparate per bagno, snorkeling e soste in rada.",
+        en: "On charter days the route is shaped with the skipper between Favignana, Levanzo and Marettimo, choosing sheltered bays for swimming, snorkelling and anchor stops.",
       },
       {
         it: "Nei programmi charter di più giorni si possono includere Favignana, Levanzo e Marettimo, con soste più lunghe e notti in rada quando il meteo lo permette.",
@@ -478,8 +478,8 @@ export const BOAT_CATALOG = {
           en: "Is it suitable for guests looking for a catamaran tour in the Egadi Islands?",
         },
         answer: {
-          it: "Sì. Se il tuo obiettivo è vivere una giornata in catamarano alle Egadi con spazi ampi, stabilità, skipper e servizio curato, il trimarano risponde allo stesso bisogno con una configurazione a tre scafi. È ideale per chef a bordo, pranzo in rada, bagno e snorkeling tra Favignana e Levanzo.",
-          en: "Yes. If you are looking for catamaran-style comfort, wide spaces, stability, skipper and curated service, the trimaran answers the same need with a three-hull configuration. It is ideal for chef experiences, lunch at anchor, swimming and snorkelling between Favignana and Levanzo.",
+          it: "Sì. Se il tuo obiettivo è vivere una giornata in catamarano alle Egadi con spazi ampi, stabilità, skipper e servizio curato, il trimarano risponde allo stesso bisogno con una configurazione a tre scafi. È ideale per charter con bagno, snorkeling e soste in rada tra Favignana, Levanzo e Marettimo.",
+          en: "Yes. If you are looking for catamaran-style comfort, wide spaces, stability, skipper and curated service, the trimaran answers the same need with a three-hull configuration. It is ideal for charters with swimming, snorkelling and anchor stops between Favignana, Levanzo and Marettimo.",
         },
       },
       {
@@ -504,12 +504,12 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Il trimarano è adatto a un'esperienza con chef?",
-          en: "Is the trimaran suitable for an experience with chef?",
+          it: "Il pranzo o la cambusa sono inclusi nel charter?",
+          en: "Are lunch or provisioning included in the charter?",
         },
         answer: {
-          it: "Sì. Il Trimarano ha cucina, tavolo, zone relax e spazi ampi per servire il pranzo a bordo senza trasformare la giornata in un semplice trasferimento in barca.",
-          en: "Yes. The Trimarano has a galley, table, relax areas and wide spaces to serve lunch on board without turning the day into a simple boat transfer.",
+          it: "No, nel charter standard pasti e cambusa non sono inclusi. La barca ha cucina, tavolo e spazi comuni: eventuale cambusa, pranzo a bordo o servizi extra vengono concordati separatamente prima della partenza.",
+          en: "No, food and provisioning are not included in the standard charter. The boat has a galley, table and shared spaces: provisioning, lunch on board or extra services are agreed separately before departure.",
         },
       },
       {
@@ -524,12 +524,12 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Quante persone possono partecipare all'esperienza gourmet?",
-          en: "How many guests can join the gourmet experience?",
+          it: "Quante persone possono salire a bordo?",
+          en: "How many guests can come on board?",
         },
         answer: {
-          it: "L'esperienza gourmet è privata e viene organizzata fino a un massimo di 10 persone, così il pranzo, gli spazi a bordo e le soste restano comodi per tutti.",
-          en: "The gourmet experience is private and is organized for up to 10 guests, so lunch, onboard spaces and swim stops stay comfortable for everyone.",
+          it: "La capienza dipende dalla formula scelta, dalla durata e dal programma. Prima della conferma verifichiamo numero ospiti, comfort a bordo e assetto migliore per la rotta.",
+          en: "Capacity depends on the selected format, duration and programme. Before confirmation we check guest count, onboard comfort and the best setup for the route.",
         },
       },
       {
@@ -564,12 +564,12 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Cosa comprende una giornata gourmet sul Trimarano?",
-          en: "What is included in a gourmet day on the Trimarano?",
+          it: "Cosa comprende il charter in trimarano?",
+          en: "What is included in the trimaran charter?",
         },
         answer: {
-          it: "L'esperienza gourmet include skipper, hostess, cuoco privato, pranzo a base di pesce locale e prodotti del territorio, carburante, aperitivo, acqua, vino, bevande e attrezzatura da snorkeling. È pensata come esperienza privata, non come semplice noleggio barca.",
-          en: "The gourmet experience includes skipper, hostess, private chef, lunch based on local fish and regional products, fuel, aperitif, water, wine, drinks and snorkelling equipment. It is designed as a private experience, not a simple boat rental.",
+          it: "Il charter comprende trimarano con skipper, gestione della rotta, spazi a bordo e pianificazione in base a meteo e durata. Cambusa, pasti, porti extra e servizi aggiuntivi vengono definiti a parte in base al programma.",
+          en: "The charter includes the trimaran with skipper, route management, onboard spaces and planning around weather and duration. Provisioning, meals, extra harbours and additional services are defined separately according to the programme.",
         },
       },
       {
@@ -578,8 +578,8 @@ export const BOAT_CATALOG = {
           en: "Does the Trimarano always sail to Marettimo?",
         },
         answer: {
-          it: "No. Nell'esperienza gourmet la rotta è tra Favignana e Levanzo. Marettimo può essere valutata nei programmi charter di più giorni, quando tempi, meteo e programma permettono una navigazione più ampia.",
-          en: "No. On the gourmet experience, the route is between Favignana and Levanzo. Marettimo can be considered on multi-day charter programmes, when timing, weather and itinerary allow a wider navigation plan.",
+          it: "No. Marettimo può essere valutata nei programmi charter di più giorni, quando tempi, meteo e programma permettono una navigazione più ampia. Nei programmi brevi la rotta resta più vicina a Favignana e Levanzo.",
+          en: "No. Marettimo can be considered on multi-day charter programmes, when timing, weather and itinerary allow a wider navigation plan. Shorter programmes stay closer to Favignana and Levanzo.",
         },
       },
       {
@@ -1155,30 +1155,30 @@ const SPANISH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent
   trimarano: {
     title: "Catamarán y trimarán en las Egadi",
     shortTitle: "Catamarán / Trimarán",
-    eyebrow: "Confort, chef y charter",
+    eyebrow: "Confort y charter",
     description:
-      "¿Buscas un catamarán en las Egadi? Nuestra propuesta premium es un trimarán multicasco con espacios amplios, camarotes, cocina, estabilidad y confort de catamarán para días privados, chef a bordo y charters de varios días.",
+      "¿Buscas un catamarán en las Egadi? Nuestra propuesta premium es un trimarán multicasco con espacios amplios, camarotes, cocina, estabilidad y confort de catamarán para días privados con patrón y charters de varios días.",
     detail: {
       eyebrow: "Trimarán para tours por las Egadi",
       title: "¿Catamarán en las Egadi? El trimarán con patrón desde Trapani",
       paragraphs: [
         "Esta embarcación está pensada para quienes buscan una experiencia en barco por las Islas Egadi más cómoda, cuidada y privada que un tour rápido clásico. Muchos huéspedes llegan buscando un catamarán en las Egadi, un tour en catamarán desde Trapani o un charter en catamarán con patrón: técnicamente es un trimarán, con tres cascos, gran estabilidad y espacios muy habitables.",
-        "A bordo no todo es navegación: hay espacio para comer, relajarse, tomar el sol, cambiarse y vivir el día con un ritmo lento. En la experiencia gourmet, la ruta se organiza entre Favignana y Levanzo, eligiendo bahías protegidas para baño, snorkel y almuerzo con pescado local y productos del territorio.",
+        "A bordo no todo es navegación: hay espacio para relajarse, tomar el sol, cambiarse y vivir el día con un ritmo lento. En el charter, la ruta se organiza con el patrón entre Favignana, Levanzo y Marettimo, eligiendo bahías protegidas para baño, snorkel y fondeos cómodos.",
         "En palabras sencillas, es la alternativa premium al alquiler de catamarán en las Egadi: patrón, tripulación, confort real y una forma más elegante de vivir el mar. No hace falta conocer las calas ni tener experiencia en vela: ruta, horarios y paradas se ajustan con la tripulación según meteorología, mar y objetivo de la jornada.",
       ],
     },
     seoTitle: "Catamarán Egadi desde Trapani: trimarán con patrón",
     seoDescription:
-      "Catamarán en las Egadi desde Trapani: trimarán multicasco con confort de catamarán, chef a bordo, charter con patrón, Favignana, Levanzo y Marettimo.",
+      "Catamarán en las Egadi desde Trapani: trimarán multicasco con confort de catamarán, charter con patrón, camarotes, Favignana, Levanzo y Marettimo.",
     imageAlt: "Catamarán en las Egadi en trimarán con confort multicasco",
     idealFor: [
-      "Experiencia gourmet con chef a bordo",
+      "Charter privado con patrón y confort de catamarán",
       "Charter privado de varios días",
       "Grupos que buscan espacio, privacidad y ritmo lento",
-      "Comida a bordo y paradas en calas protegidas",
+      "Fondeos tranquilos y paradas en calas protegidas",
     ],
     routes: [
-      "Favignana y Levanzo para la experiencia gourmet",
+      "Favignana, Levanzo y Marettimo para charter con patrón",
       "Favignana, Levanzo y Marettimo para charters de varios días",
       "Rutas adaptadas a mar, viento y confort a bordo",
     ],
@@ -1191,7 +1191,7 @@ const SPANISH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent
       {
         question: "¿Es adecuado para quien busca un tour en catamarán por las Egadi?",
         answer:
-          "Sí. Si buscas espacios amplios, estabilidad, patrón y servicio cuidado, el trimarán responde a la misma necesidad con una configuración de tres cascos. Es ideal para chef a bordo, almuerzo en fondeo, baño y snorkel entre Favignana y Levanzo.",
+          "Sí. Si buscas espacios amplios, estabilidad, patrón y servicio cuidado, el trimarán responde a la misma necesidad con una configuración de tres cascos. Es ideal para charter con baño, snorkel y fondeos entre Favignana, Levanzo y Marettimo.",
       },
       {
         question: "¿Se puede dormir a bordo?",
@@ -1264,30 +1264,30 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
   trimarano: {
     title: "Catamaran et trimaran aux Égades",
     shortTitle: "Catamaran / Trimaran",
-    eyebrow: "Confort, chef et charter",
+    eyebrow: "Confort et charter",
     description:
-      "Vous cherchez un catamaran aux Égades ? Notre proposition premium est un trimaran multicoque avec grands espaces, cabines, cuisine, stabilité et confort de catamaran pour journées privées, chef à bord et charters de plusieurs jours.",
+      "Vous cherchez un catamaran aux Égades ? Notre proposition premium est un trimaran multicoque avec grands espaces, cabines, cuisine, stabilité et confort de catamaran pour journées privées avec skipper et charters de plusieurs jours.",
     detail: {
       eyebrow: "Trimaran pour excursions aux Égades",
       title: "Catamaran aux Égades ? Le trimaran avec skipper depuis Trapani",
       paragraphs: [
         "Ce bateau est pensé pour ceux qui cherchent une expérience en bateau aux îles Égades plus confortable, soignée et privée qu'un tour rapide classique. Beaucoup d'hôtes recherchent un catamaran aux Égades, un tour en catamaran depuis Trapani ou un charter en catamaran avec skipper : techniquement, c'est un trimaran, avec trois coques, une grande stabilité et des espaces très habitables.",
-        "À bord, le temps ne se limite pas à la navigation : il y a de l'espace pour déjeuner, se détendre, prendre le soleil, se changer et vivre la journée à un rythme lent. Pour l'expérience gourmet, la route est construite entre Favignana et Levanzo, en choisissant des baies abritées pour baignade, snorkeling et déjeuner à base de poisson local et de produits du territoire.",
+        "À bord, le temps ne se limite pas à la navigation : il y a de l'espace pour se détendre, prendre le soleil, se changer et vivre la journée à un rythme lent. En charter, la route est construite avec le skipper entre Favignana, Levanzo et Marettimo, en choisissant des baies abritées pour baignade, snorkeling et mouillages confortables.",
         "En termes simples, c'est l'alternative premium à la location de catamaran aux Égades : skipper, équipage, confort réel et une manière plus élégante de vivre la mer. Il n'est pas nécessaire de connaître les criques ni d'avoir de l'expérience en voile : route, horaires et arrêts sont ajustés avec l'équipage selon la météo, la mer et l'objectif de la journée.",
       ],
     },
     seoTitle: "Catamaran Égades depuis Trapani : trimaran avec skipper",
     seoDescription:
-      "Catamaran aux Égades depuis Trapani : trimaran multicoque avec confort de catamaran, chef à bord, charter avec skipper, Favignana, Levanzo et Marettimo.",
+      "Catamaran aux Égades depuis Trapani : trimaran multicoque avec confort de catamaran, charter avec skipper, cabines, Favignana, Levanzo et Marettimo.",
     imageAlt: "Catamaran aux Égades en trimaran au confort multicoque",
     idealFor: [
-      "Expérience gourmet avec chef à bord",
+      "Charter privé avec skipper et confort de catamaran",
       "Charter privé de plusieurs jours",
       "Groupes qui cherchent espace, intimité et rythme lent",
-      "Déjeuner à bord et arrêts dans des criques protégées",
+      "Mouillages calmes et arrêts dans des criques protégées",
     ],
     routes: [
-      "Favignana et Levanzo pour l'expérience gourmet",
+      "Favignana, Levanzo et Marettimo pour charter avec skipper",
       "Favignana, Levanzo et Marettimo pour les charters de plusieurs jours",
       "Routes adaptées à la mer, au vent et au confort à bord",
     ],
@@ -1300,7 +1300,7 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
       {
         question: "Convient-il à ceux qui cherchent un tour en catamaran aux Égades ?",
         answer:
-          "Oui. Si vous cherchez de grands espaces, de la stabilité, un skipper et un service soigné, le trimaran répond au même besoin avec une configuration à trois coques. Il est idéal pour chef à bord, déjeuner au mouillage, baignade et snorkeling entre Favignana et Levanzo.",
+          "Oui. Si vous cherchez de grands espaces, de la stabilité, un skipper et un service soigné, le trimaran répond au même besoin avec une configuration à trois coques. Il est idéal pour charter avec baignade, snorkeling et mouillages entre Favignana, Levanzo et Marettimo.",
       },
       {
         question: "Peut-on dormir à bord ?",
@@ -1373,30 +1373,30 @@ const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
   trimarano: {
     title: "Katamaran und Trimaran auf den Egadi",
     shortTitle: "Katamaran / Trimaran",
-    eyebrow: "Komfort, Chef und Charter",
+    eyebrow: "Komfort und Charter",
     description:
-      "Sie suchen einen Katamaran auf den Egadi? Unsere Premium-Lösung ist ein Multihull-Trimaran mit viel Platz, Kabinen, Bordküche, Stabilität und Katamaran-Komfort für private Tage, Chef an Bord und mehrtägige Charter.",
+      "Sie suchen einen Katamaran auf den Egadi? Unsere Premium-Lösung ist ein Multihull-Trimaran mit viel Platz, Kabinen, Bordküche, Stabilität und Katamaran-Komfort für private Tage mit Skipper und mehrtägige Charter.",
     detail: {
       eyebrow: "Trimaran für Touren zu den Ägadischen Inseln",
       title: "Katamaran auf den Egadi? Der Trimaran mit Skipper ab Trapani",
       paragraphs: [
         "Dieses Boot ist für Gäste gedacht, die ein komfortableres, gepflegteres und privateres Bootserlebnis auf den Egadi suchen als eine klassische schnelle Tour. Viele Gäste suchen nach einem Katamaran auf den Egadi, einer Katamaran-Tour ab Trapani oder einem Katamaran-Charter mit Skipper: technisch ist es ein Trimaran mit drei Rümpfen, hoher Stabilität und sehr gut nutzbaren Bereichen.",
-        "An Bord geht es nicht nur um Navigation: Es gibt Platz zum Essen, Entspannen, Sonnenbaden und Umziehen, damit der Tag in ruhigem Tempo verlaufen kann. Beim Gourmet-Erlebnis wird die Route zwischen Favignana und Levanzo geplant, mit geschützten Buchten zum Baden, Schnorcheln und Mittagessen mit lokalem Fisch und regionalen Produkten.",
+        "An Bord geht es nicht nur um Navigation: Es gibt Platz zum Entspannen, Sonnenbaden und Umziehen, damit der Tag in ruhigem Tempo verlaufen kann. Beim Charter wird die Route mit dem Skipper zwischen Favignana, Levanzo und Marettimo geplant, mit geschützten Buchten zum Baden, Schnorcheln und Ankern.",
         "Einfach gesagt: Es ist die Premium-Alternative zur Katamaran-Miete auf den Egadi, mit Skipper, Crew, echtem Komfort und einer eleganteren Art, das Meer zu erleben. Sie müssen die Buchten nicht kennen und keine Segelerfahrung haben: Route, Zeiten und Stopps werden mit der Crew nach Wetter, Meer und Tagesziel angepasst.",
       ],
     },
     seoTitle: "Katamaran Egadi ab Trapani: Trimaran mit Skipper",
     seoDescription:
-      "Katamaran auf den Egadi ab Trapani: Multihull-Trimaran mit Katamaran-Komfort, Chef an Bord, Charter mit Skipper, Favignana, Levanzo und Marettimo.",
+      "Katamaran auf den Egadi ab Trapani: Multihull-Trimaran mit Katamaran-Komfort, Charter mit Skipper, Kabinen, Favignana, Levanzo und Marettimo.",
     imageAlt: "Katamaran auf den Egadi als Trimaran mit Multihull-Komfort",
     idealFor: [
-      "Gourmet-Erlebnis mit Chef an Bord",
+      "Privater Charter mit Skipper und Katamaran-Komfort",
       "Privater mehrtägiger Charter",
       "Gruppen, die Platz, Privatsphäre und ruhigen Rhythmus suchen",
-      "Mittagessen an Bord und Stopps in geschützten Buchten",
+      "Ruhige Ankerplätze und Stopps in geschützten Buchten",
     ],
     routes: [
-      "Favignana und Levanzo für das Gourmet-Erlebnis",
+      "Favignana, Levanzo und Marettimo für Charter mit Skipper",
       "Favignana, Levanzo und Marettimo für mehrtägige Charter",
       "Routen angepasst an Meer, Wind und Komfort an Bord",
     ],
@@ -1409,7 +1409,7 @@ const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
       {
         question: "Eignet er sich für Gäste, die eine Katamaran-Tour auf den Egadi suchen?",
         answer:
-          "Ja. Wenn Sie viel Platz, Stabilität, Skipper und gepflegten Service suchen, erfüllt der Trimaran denselben Wunsch mit einer Drei-Rumpf-Konfiguration. Er eignet sich ideal für Chef an Bord, Mittagessen vor Anker, Baden und Schnorcheln zwischen Favignana und Levanzo.",
+          "Ja. Wenn Sie viel Platz, Stabilität, Skipper und gepflegten Service suchen, erfüllt der Trimaran denselben Wunsch mit einer Drei-Rumpf-Konfiguration. Er eignet sich ideal für Charter mit Baden, Schnorcheln und Ankern zwischen Favignana, Levanzo und Marettimo.",
       },
       {
         question: "Kann man an Bord übernachten?",

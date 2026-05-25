@@ -58,7 +58,7 @@ function copy(locale: string) {
     directLabel: isEs ? "Catamarán / trimarán" : isFr ? "Catamaran / trimaran" : isDe ? "Katamaran / Trimaran" : isEn ? "Catamaran / trimaran" : "Catamarano / trimarano",
     multihullLabel: isEs ? "Confort multicasco" : isFr ? "Confort multicoque" : isDe ? "Mehrrumpf-Komfort" : isEn ? "Multihull comfort" : "Comfort multiscafo",
     skipperLabel: isEs ? "Con patrón" : isFr ? "Avec skipper" : isDe ? "Mit Skipper" : isEn ? "With skipper" : "Con skipper",
-    chefCharterLabel: isEs ? "Chef y charter" : isFr ? "Chef et charter" : isDe ? "Chef und Charter" : isEn ? "Chef and charter" : "Chef e charter",
+    charterLabel: isEs ? "Charter con patrón" : isFr ? "Charter avec skipper" : isDe ? "Charter mit Skipper" : isEn ? "Skippered charter" : "Charter con skipper",
     introEyebrow: isEs ? "El multicasco" : isFr ? "Le multicoque" : isDe ? "Der Mehrrumpf" : isEn ? "The multihull" : "Il multiscafo",
     introTitle: isEs
       ? "Para quien busca catamarán en las Egadi, con la estabilidad de un trimarán"
@@ -91,27 +91,27 @@ function copy(locale: string) {
     relatedEyebrow: isEs ? "Experiencias" : isFr ? "Expériences" : isDe ? "Erlebnisse" : isEn ? "Experiences" : "Esperienze",
     relatedTitle: isEs ? "Cómo vivir el trimarán en las Egadi" : isFr ? "Comment vivre le trimaran aux Égades" : isDe ? "Wie Sie den Trimaran auf den Egadi erleben" : isEn ? "Ways to experience the Egadi trimaran" : "Come vivere il trimarano alle Egadi",
     relatedText: isEs
-      ? "Elige una jornada privada con chef o un charter de varios días con ruta flexible por las Egadi."
+      ? "Elige el charter en trimarán o compara las fórmulas disponibles antes de reservar."
       : isFr
-        ? "Choisissez une journée privée avec chef ou un charter de plusieurs jours avec route flexible aux Égades."
+        ? "Choisissez le charter en trimaran ou comparez les formules disponibles avant de réserver."
         : isDe
-          ? "Wählen Sie einen privaten Tag mit Chefkoch oder einen mehrtägigen Charter mit flexibler Route."
+          ? "Wählen Sie den Trimaran-Charter oder vergleichen Sie die verfügbaren Formate vor der Buchung."
           : isEn
-            ? "Choose a private chef day or a multi-day charter with a flexible route across the Egadi Islands."
-            : "Scegli una giornata privata con chef a bordo oppure un charter di più giorni con rotta flessibile alle Egadi.",
+            ? "Choose the trimaran charter or compare the available formats before booking."
+            : "Scegli il charter in trimarano o confronta le formule disponibili prima di prenotare.",
     viewExperience: isEs ? "Ver experiencia" : isFr ? "Voir l'expérience" : isDe ? "Erlebnis ansehen" : isEn ? "View experience" : "Vedi esperienza",
     faqEyebrow: isEs ? "Preguntas frecuentes" : isFr ? "Questions fréquentes" : isDe ? "Häufige Fragen" : isEn ? "FAQ" : "Domande frequenti",
     faqTitle: isEs ? "Catamarán, trimarán y charter: respuestas claras" : isFr ? "Catamaran, trimaran et charter : réponses claires" : isDe ? "Katamaran, Trimaran und Charter: klare Antworten" : isEn ? "Catamaran, trimaran and charter: clear answers" : "Catamarano, trimarano e charter: risposte chiare",
     ctaTitle: isEs ? "Sube a bordo del trimarán" : isFr ? "Montez à bord du trimaran" : isDe ? "An Bord des Trimarans" : isEn ? "Step aboard the trimaran" : "Sali a bordo del trimarano",
     ctaText: isEs
-      ? "Compara chef a bordo y charter antes de elegir la fórmula adecuada."
+      ? "Compara el charter en trimarán y las fórmulas disponibles antes de elegir."
       : isFr
-        ? "Comparez chef à bord et charter avant de choisir la bonne formule."
+        ? "Comparez le charter en trimaran et les formules disponibles avant de choisir."
         : isDe
-          ? "Vergleichen Sie Chef an Bord und Charter, bevor Sie das passende Format wählen."
+          ? "Vergleichen Sie Trimaran-Charter und verfügbare Formate, bevor Sie wählen."
           : isEn
-            ? "Compare chef on board and charter before choosing the right format."
-            : "Confronta chef a bordo e charter prima di scegliere la formula più adatta.",
+            ? "Compare the trimaran charter and available formats before choosing the right option."
+            : "Confronta il charter in trimarano e le formule disponibili prima di scegliere.",
     previousPhotos: isEs ? "Fotos anteriores" : isFr ? "Photos précédentes" : isDe ? "Vorherige Fotos" : isEn ? "Previous photos" : "Foto precedenti",
     nextPhotos: isEs ? "Fotos siguientes" : isFr ? "Photos suivantes" : isDe ? "Weitere Fotos" : isEn ? "Next photos" : "Foto successive",
   };
@@ -119,24 +119,90 @@ function copy(locale: string) {
 
 function getProgramParagraphs(locale: string) {
   const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+
+  if (isEs) {
+    return [
+      {
+        lead: "Una alternativa premium al catamarán en las Egadi.",
+        text: "El trimarán es la embarcación adecuada cuando no quieres solo moverte entre calas, sino vivir el tiempo a bordo con más espacio: sombra, camarotes, cubierta amplia y una sensación estable de multicasco.",
+      },
+      {
+        lead: "Ruta entre Favignana, Levanzo y Marettimo.",
+        text: "En el charter, el itinerario se construye con el patrón según viento, mar y duración: se pueden combinar bahías protegidas, baños, snorkel, fondeos tranquilos y navegación más amplia cuando las condiciones lo permiten.",
+      },
+      {
+        lead: "San Vito Lo Capo bajo petición.",
+        text: "Para programas de varios días, y solo si tiempos y meteorología son adecuados, se puede valorar una extensión hacia San Vito Lo Capo como parte de una ruta más amplia.",
+      },
+      {
+        lead: "Con patrón, comidas aparte.",
+        text: "El charter incluye la gestión profesional de navegación, fondeos y tiempos. Comida, cambusa y servicios extra se organizan por separado según la fórmula elegida.",
+      },
+    ];
+  }
+
+  if (isFr) {
+    return [
+      {
+        lead: "Une alternative premium au catamaran aux Égades.",
+        text: "Le trimaran est le bon bateau lorsque l'objectif n'est pas seulement de passer d'une crique à l'autre, mais de vivre le temps à bord avec plus d'espace : ombre, cabines, grand pont et sensation stable de multicoque.",
+      },
+      {
+        lead: "Route entre Favignana, Levanzo et Marettimo.",
+        text: "En charter, l'itinéraire est construit avec le skipper selon le vent, la mer et la durée : baies abritées, baignades, snorkeling, mouillages calmes et navigation plus large lorsque les conditions le permettent.",
+      },
+      {
+        lead: "San Vito Lo Capo sur demande.",
+        text: "Pour les programmes de plusieurs jours, et seulement si le temps disponible et la météo le permettent, une extension vers San Vito Lo Capo peut être évaluée dans une route plus complète.",
+      },
+      {
+        lead: "Avec skipper, repas séparés.",
+        text: "Le charter inclut la gestion professionnelle de la navigation, des mouillages et des horaires. Repas, avitaillement et services extra sont organisés séparément selon la formule choisie.",
+      },
+    ];
+  }
+
+  if (isDe) {
+    return [
+      {
+        lead: "Eine Premium-Alternative zum Katamaran auf den Egadi.",
+        text: "Der Trimaran ist das richtige Boot, wenn es nicht nur darum geht, von Bucht zu Bucht zu fahren, sondern die Zeit an Bord mit mehr Raum zu erleben: Schatten, Kabinen, breites Deck und ein stabiles Multihull-Gefühl.",
+      },
+      {
+        lead: "Route zwischen Favignana, Levanzo und Marettimo.",
+        text: "Beim Charter wird die Route mit dem Skipper nach Wind, Meer und Dauer geplant: geschützte Buchten, Baden, Schnorcheln, ruhige Ankerplätze und eine weitere Navigation, wenn die Bedingungen passen.",
+      },
+      {
+        lead: "San Vito Lo Capo auf Anfrage.",
+        text: "Bei mehrtägigen Programmen kann eine Erweiterung nach San Vito Lo Capo geprüft werden, wenn Zeitfenster und Wetter eine längere Route sinnvoll machen.",
+      },
+      {
+        lead: "Mit Skipper, Verpflegung separat.",
+        text: "Der Charter umfasst die professionelle Organisation von Navigation, Ankerplätzen und Timing. Verpflegung, Proviant und Extra-Services werden je nach gewählter Formel separat organisiert.",
+      },
+    ];
+  }
 
   if (isEn) {
     return [
       {
         lead: "A premium alternative to a catamaran in the Egadi Islands.",
-        text: "The trimaran is the right boat when the goal is not simply moving between coves, but having space to live the day on board: lunch, shade, cabins, wide deck areas and a stable multihull feeling.",
-      },
-      {
-        lead: "Favignana and Levanzo for the chef experience.",
-        text: "On the private chef day, the route is shaped between Favignana and Levanzo, with sheltered anchorages for swimming, snorkelling and lunch prepared on board with local ingredients.",
+        text: "The trimaran is the right boat when the goal is not simply moving between coves, but having space to live the day on board: shade, cabins, wide deck areas and a stable multihull feeling.",
       },
       {
         lead: "Favignana, Levanzo and Marettimo for charter.",
-        text: "On multi-day programmes the itinerary opens up: nights at anchor, slower mornings, route changes according to weather and enough time to include Marettimo when conditions are right.",
+        text: "On charter programmes, the itinerary is shaped with the skipper around wind, sea and duration: sheltered bays, swimming, snorkelling, quiet anchorages and wider navigation when conditions are right.",
       },
       {
-        lead: "With skipper, not bareboat.",
-        text: "The trimaran is organised with skipper and crew, so navigation, anchorages and timing are managed professionally while you enjoy the boat without technical decisions.",
+        lead: "San Vito Lo Capo on request.",
+        text: "For multi-day programmes, and only when timing and weather allow it, an extension towards San Vito Lo Capo can be considered as part of a wider route.",
+      },
+      {
+        lead: "With skipper, meals arranged separately.",
+        text: "The charter includes professional management of navigation, anchorages and timing. Food, provisioning and extra services are arranged separately according to the selected formula.",
       },
     ];
   }
@@ -144,19 +210,19 @@ function getProgramParagraphs(locale: string) {
   return [
     {
       lead: "Un'alternativa premium al catamarano alle Egadi.",
-      text: "Il trimarano è la barca giusta quando non vuoi solo spostarti tra le cale, ma vivere davvero il tempo a bordo: pranzo, ombra, cabine, ponte ampio e una sensazione di stabilità da multiscafo.",
-    },
-    {
-      lead: "Favignana e Levanzo per la giornata con chef.",
-      text: "Nell'esperienza chef a bordo la rotta viene costruita tra Favignana e Levanzo, con rade riparate per bagno, snorkeling e pranzo cucinato a bordo con ingredienti del territorio.",
+      text: "Il trimarano è la barca giusta quando non vuoi solo spostarti tra le cale, ma vivere davvero il tempo a bordo: ombra, cabine, ponte ampio e una sensazione di stabilità da multiscafo.",
     },
     {
       lead: "Favignana, Levanzo e Marettimo per il charter.",
-      text: "Nei programmi di più giorni l'itinerario si apre: notti in rada, mattine lente, rotta aggiornata secondo meteo e tempo sufficiente per includere Marettimo quando le condizioni sono favorevoli.",
+      text: "Nel charter l'itinerario viene costruito con lo skipper in base a vento, mare e durata: baie riparate, bagni, snorkeling, rade tranquille e navigazione più ampia quando le condizioni lo permettono.",
     },
     {
-      lead: "Con skipper, non bareboat.",
-      text: "Il trimarano viene organizzato con skipper e crew: navigazione, ancoraggi e tempi sono gestiti in modo professionale, così puoi goderti il comfort senza occuparti delle decisioni tecniche.",
+      lead: "San Vito Lo Capo su richiesta.",
+      text: "Nei programmi di più giorni, e solo quando tempi e meteo lo rendono sensato, si può valutare un'estensione verso San Vito Lo Capo dentro una rotta più ampia.",
+    },
+    {
+      lead: "Con skipper, pasti a parte.",
+      text: "Il charter include la gestione professionale di navigazione, ancoraggi e tempi. Pasti, cambusa e servizi extra vengono organizzati separatamente in base alla formula scelta.",
     },
   ];
 }
@@ -364,8 +430,8 @@ export default async function BoatDetailPage({
                     {t.skipperLabel}
                   </span>
                   <span className="inline-flex items-center gap-2">
-                    <UtensilsCrossed className="h-4 w-4 text-[var(--color-gold)]" />
-                    {t.chefCharterLabel}
+                    <Ship className="h-4 w-4 text-[var(--color-gold)]" />
+                    {t.charterLabel}
                   </span>
                 </div>
 
