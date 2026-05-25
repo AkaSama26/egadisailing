@@ -95,27 +95,6 @@ export const routing = defineRouting({
       fr: "/iles/[slug]",
       de: "/inseln/[slug]",
     },
-    "/islands/favignana/[guideSlug]": {
-      it: "/isole/favignana/[guideSlug]",
-      en: "/islands/favignana/[guideSlug]",
-      es: "/islas/favignana/[guideSlug]",
-      fr: "/iles/favignana/[guideSlug]",
-      de: "/inseln/favignana/[guideSlug]",
-    },
-    "/islands/levanzo/[guideSlug]": {
-      it: "/isole/levanzo/[guideSlug]",
-      en: "/islands/levanzo/[guideSlug]",
-      es: "/islas/levanzo/[guideSlug]",
-      fr: "/iles/levanzo/[guideSlug]",
-      de: "/inseln/levanzo/[guideSlug]",
-    },
-    "/islands/marettimo/[guideSlug]": {
-      it: "/isole/marettimo/[guideSlug]",
-      en: "/islands/marettimo/[guideSlug]",
-      es: "/islas/marettimo/[guideSlug]",
-      fr: "/iles/marettimo/[guideSlug]",
-      de: "/inseln/marettimo/[guideSlug]",
-    },
     "/prenota": {
       it: "/prenota",
       en: "/book",

@@ -3,13 +3,8 @@ import {
   getExperiencePublicSlug,
   resolveExperienceServiceIdFromSlug,
 } from "@/data/catalog/experiences";
-import { favignanaGuideSlugPairs } from "@/data/favignana-guides";
-import { levanzoGuideSlugPairs } from "@/data/levanzo-guides";
-import { marettimoGuideSlugPairs } from "@/data/marettimo-guides";
 
 type PathLocale = Locale;
-type GuideIsland = "favignana" | "levanzo" | "marettimo";
-type GuideSlugPair = { it: string; en: string; es: string; fr: string; de: string };
 
 const STATIC_PATHS = {
   "/": { it: "/", en: "/", es: "/", fr: "/", de: "/" },
@@ -39,12 +34,6 @@ const STATIC_PATHS = {
   "/terms": { it: "/terms", en: "/terms", es: "/terminos-y-condiciones", fr: "/conditions-generales", de: "/agb" },
 } as const satisfies Record<string, Record<PathLocale, string>>;
 
-const GUIDE_PAIRS = {
-  favignana: favignanaGuideSlugPairs,
-  levanzo: levanzoGuideSlugPairs,
-  marettimo: marettimoGuideSlugPairs,
-} as const satisfies Record<GuideIsland, readonly GuideSlugPair[]>;
-
 function splitHref(href: string) {
   const hashIndex = href.indexOf("#");
   const hash = hashIndex >= 0 ? href.slice(hashIndex) : "";
@@ -59,21 +48,6 @@ function normalizedLocale(locale: string): PathLocale {
   return routing.locales.includes(locale as PathLocale)
     ? (locale as PathLocale)
     : routing.defaultLocale;
-}
-
-function findGuidePair(island: GuideIsland, slug: string): GuideSlugPair | undefined {
-  return GUIDE_PAIRS[island].find(
-    (pair) => pair.it === slug || pair.en === slug || pair.es === slug || pair.fr === slug || pair.de === slug,
-  );
-}
-
-export function getGuideSlugForLocale(
-  island: GuideIsland,
-  slug: string,
-  locale: string,
-): string {
-  const loc = normalizedLocale(locale);
-  return findGuidePair(island, slug)?.[loc] ?? slug;
 }
 
 export function localizedPath(locale: string, href: string): string {
@@ -99,12 +73,6 @@ export function localizedPath(locale: string, href: string): string {
 
   if (first === "islands" && second && !third) {
     return `/${loc}${STATIC_PATHS["/islands"][loc]}/${second}${query}${hash}`;
-  }
-
-  if (first === "islands" && second && third && second in GUIDE_PAIRS) {
-    const island = second as GuideIsland;
-    const slug = getGuideSlugForLocale(island, third, loc);
-    return `/${loc}${STATIC_PATHS["/islands"][loc]}/${island}/${slug}${query}${hash}`;
   }
 
   if (first === "prenota" && second === "success" && third) {

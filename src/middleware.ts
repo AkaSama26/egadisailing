@@ -2,9 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 import { getToken } from "next-auth/jwt";
 import { routing } from "./i18n/routing";
-import { favignanaGuideSlugPairs } from "./data/favignana-guides";
-import { levanzoGuideSlugPairs } from "./data/levanzo-guides";
-import { marettimoGuideSlugPairs } from "./data/marettimo-guides";
 import {
   getExperiencePublicSlug,
   isExperienceServiceId,
@@ -22,15 +19,7 @@ const intlMiddleware = createIntlMiddleware(routing);
 const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 
 type PublicLocale = (typeof routing.locales)[number];
-type GuideIsland = "favignana" | "levanzo" | "marettimo";
-type GuidePair = { it: string; en: string; es: string; fr: string; de: string };
 type LegacyRedirectRule = { from: string; to: string };
-
-const GUIDE_SLUG_PAIRS = {
-  favignana: favignanaGuideSlugPairs,
-  levanzo: levanzoGuideSlugPairs,
-  marettimo: marettimoGuideSlugPairs,
-} as const satisfies Record<GuideIsland, readonly GuidePair[]>;
 
 const LEGACY_PUBLIC_REDIRECTS = [
   { from: "/en/prenota/success", to: "/en/book/confirmation" },
@@ -44,14 +33,6 @@ const LEGACY_PUBLIC_REDIRECTS = [
   { from: "/it/contacts", to: "/it/contatti" },
 ] as const satisfies readonly LegacyRedirectRule[];
 
-const ISLAND_PATH_SEGMENT_BY_LOCALE = {
-  it: "isole",
-  en: "islands",
-  es: "islas",
-  fr: "iles",
-  de: "inseln",
-} as const satisfies Record<PublicLocale, string>;
-
 const EXPERIENCE_PATH_SEGMENT_BY_LOCALE = {
   it: "esperienze",
   en: "experiences",
@@ -59,6 +40,9 @@ const EXPERIENCE_PATH_SEGMENT_BY_LOCALE = {
   fr: "experiences",
   de: "erlebnisse",
 } as const satisfies Record<PublicLocale, string>;
+
+const REMOVED_ISLAND_GUIDE_PATH_PATTERN =
+  /^\/(?:it|en|es|fr|de)\/(?:isole|islands|islas|iles|inseln)\/(?:favignana|levanzo|marettimo)\/[^/]+(?:\/.*)?$/;
 
 function getLegacyPublicRedirect(req: NextRequest) {
   const pathname = req.nextUrl.pathname.replace(/\/$/, "");
@@ -75,35 +59,6 @@ function getLegacyPublicRedirect(req: NextRequest) {
   }
 
   return null;
-}
-
-function findGuideSlugPair(island: GuideIsland, slug: string) {
-  return (
-    GUIDE_SLUG_PAIRS[island].find(
-      (guide) => guide.it === slug || guide.en === slug || guide.es === slug || guide.fr === slug || guide.de === slug,
-    ) ?? null
-  );
-}
-
-function parseIslandGuidePath(pathname: string) {
-  const match = pathname.match(
-    /^\/(it|en|es|fr|de)\/(?:isole|islands|islas|iles|inseln)\/(favignana|levanzo|marettimo)\/([^/]+)\/?$/,
-  );
-  if (!match) return null;
-  const locale = match[1] as PublicLocale;
-  return {
-    locale,
-    island: match[2] as GuideIsland,
-    slug: match[3],
-    usesCanonicalSegment: pathname.startsWith(
-      `/${locale}/${ISLAND_PATH_SEGMENT_BY_LOCALE[locale]}/`,
-    ),
-  };
-}
-
-function externalGuidePath(locale: PublicLocale, island: GuideIsland, slug: string) {
-  const base = ISLAND_PATH_SEGMENT_BY_LOCALE[locale];
-  return `/${locale}/${base}/${island}/${slug}`;
 }
 
 function requestPublicOrigin(req: NextRequest) {
@@ -157,44 +112,23 @@ function withExperienceAlternates(req: NextRequest, response: NextResponse) {
   return response;
 }
 
-function withIslandGuideAlternates(req: NextRequest, response: NextResponse) {
-  const parsed = parseIslandGuidePath(req.nextUrl.pathname);
-  if (!parsed) return response;
-
-  const guidePair = findGuideSlugPair(parsed.island, parsed.slug);
-  if (!guidePair) return response;
-
-  const origin = requestPublicOrigin(req);
-  const italianUrl = `${origin}${externalGuidePath("it", parsed.island, guidePair.it)}`;
-  const englishUrl = `${origin}${externalGuidePath("en", parsed.island, guidePair.en)}`;
-  const spanishUrl = `${origin}${externalGuidePath("es", parsed.island, guidePair.es)}`;
-  const frenchUrl = `${origin}${externalGuidePath("fr", parsed.island, guidePair.fr)}`;
-  const germanUrl = `${origin}${externalGuidePath("de", parsed.island, guidePair.de)}`;
-  response.headers.set(
-    "link",
-    `<${italianUrl}>; rel="alternate"; hreflang="it", <${englishUrl}>; rel="alternate"; hreflang="en", <${spanishUrl}>; rel="alternate"; hreflang="es", <${frenchUrl}>; rel="alternate"; hreflang="fr", <${germanUrl}>; rel="alternate"; hreflang="de", <${italianUrl}>; rel="alternate"; hreflang="x-default"`,
-  );
-
-  return response;
-}
-
 function withCustomAlternates(req: NextRequest, response: NextResponse) {
-  return withExperienceAlternates(req, withIslandGuideAlternates(req, response));
+  return withExperienceAlternates(req, response);
 }
 
-function getIslandGuideRedirect(req: NextRequest) {
-  const parsed = parseIslandGuidePath(req.nextUrl.pathname);
-  if (!parsed) return null;
+function isRemovedIslandGuidePath(pathname: string) {
+  return REMOVED_ISLAND_GUIDE_PATH_PATTERN.test(pathname.replace(/\/$/, ""));
+}
 
-  const guidePair = findGuideSlugPair(parsed.island, parsed.slug);
-  if (!guidePair) return null;
-
-  const canonicalSlug = guidePair[parsed.locale];
-  if (parsed.usesCanonicalSegment && canonicalSlug === parsed.slug) return null;
-
-  const url = req.nextUrl.clone();
-  url.pathname = externalGuidePath(parsed.locale, parsed.island, canonicalSlug);
-  return NextResponse.redirect(url, 308);
+function createGoneResponse() {
+  return new NextResponse("Gone", {
+    status: 410,
+    headers: {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      "X-Robots-Tag": "noindex",
+    },
+  });
 }
 
 function createServiceWorkerTombstoneResponse() {
@@ -262,13 +196,7 @@ export default async function middleware(req: NextRequest) {
   }
 
   if (pathname.startsWith("/wp-")) {
-    return new NextResponse(null, {
-      status: 410,
-      headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-      },
-    });
+    return createGoneResponse();
   }
 
   // R26-P3 dev-test found: tutto `/admin*` bypassa il next-intl middleware.
@@ -299,16 +227,14 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  if (isRemovedIslandGuidePath(pathname)) {
+    return createGoneResponse();
+  }
+
   const legacyPublicRedirect = getLegacyPublicRedirect(req);
 
   if (legacyPublicRedirect) {
     return legacyPublicRedirect;
-  }
-
-  const islandGuideRedirect = getIslandGuideRedirect(req);
-
-  if (islandGuideRedirect) {
-    return islandGuideRedirect;
   }
 
   // Next 16 + next-intl pathnames can re-enter middleware after rewriting a

@@ -7,9 +7,6 @@ import {
   getListedExperienceIds,
 } from "@/data/catalog/experiences";
 import { getPublicBoatSlugs } from "@/data/catalog/boats";
-import { favignanaGuideSlugPairs } from "@/data/favignana-guides";
-import { levanzoGuideSlugPairs } from "@/data/levanzo-guides";
-import { marettimoGuideSlugPairs } from "@/data/marettimo-guides";
 import { env } from "@/lib/env";
 import { localizedAbsoluteUrl, localizedPathWithoutLocale } from "@/lib/i18n/paths";
 
@@ -128,63 +125,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: now,
         changeFrequency: "weekly",
         priority: 0.75,
-      },
-    );
-  }
-
-  for (const slugs of favignanaGuideSlugPairs) {
-    addLocalizedEntries(
-      entries,
-      baseUrl,
-      {
-        it: `/isole/favignana/${slugs.it}`,
-        en: `/islands/favignana/${slugs.en}`,
-        es: `/islas/favignana/${slugs.es}`,
-        fr: `/iles/favignana/${slugs.fr}`,
-        de: `/inseln/favignana/${slugs.de}`,
-      },
-      {
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.78,
-      },
-    );
-  }
-
-  for (const slugs of levanzoGuideSlugPairs) {
-    addLocalizedEntries(
-      entries,
-      baseUrl,
-      {
-        it: `/isole/levanzo/${slugs.it}`,
-        en: `/islands/levanzo/${slugs.en}`,
-        es: `/islas/levanzo/${slugs.es}`,
-        fr: `/iles/levanzo/${slugs.fr}`,
-        de: `/inseln/levanzo/${slugs.de}`,
-      },
-      {
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.76,
-      },
-    );
-  }
-
-  for (const slugs of marettimoGuideSlugPairs) {
-    addLocalizedEntries(
-      entries,
-      baseUrl,
-      {
-        it: `/isole/marettimo/${slugs.it}`,
-        en: `/islands/marettimo/${slugs.en}`,
-        es: `/islas/marettimo/${slugs.es}`,
-        fr: `/iles/marettimo/${slugs.fr}`,
-        de: `/inseln/marettimo/${slugs.de}`,
-      },
-      {
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.76,
       },
     );
   }

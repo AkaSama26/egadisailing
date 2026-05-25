@@ -248,7 +248,7 @@ export const BOAT_CATALOG = {
       it: "Catamarano alle Egadi da Trapani: trimarano multiscafo con comfort da catamarano, charter con skipper, cabine, Favignana, Levanzo e Marettimo.",
       en: "Catamaran-style charter in the Egadi Islands from Trapani: multihull trimaran with skipper, cabins, Favignana, Levanzo and Marettimo.",
     },
-    imageSrc: "/images/boats/neel-47/neel-47-hero.webp",
+    imageSrc: "/images/home/traimarano-levanzo.webp",
     heroVideoSrc: "/images/boats/neel-47/hero-video.webm",
     imageAlt: {
       it: "Catamarano alle Egadi in trimarano con comfort multiscafo",
