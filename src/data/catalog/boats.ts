@@ -100,18 +100,18 @@ export interface ResolvedBoatsPageContent {
 
 const BOATS_PAGE_COPY = {
   seoTitle: {
-    it: "Barche per tour alle Egadi da Trapani",
-    en: "Boats for Egadi Tours from Trapani",
-    es: "Barcos para excursiones a las Islas Egadi desde Trapani",
-    fr: "Bateaux pour excursions aux îles Égades depuis Trapani",
-    de: "Boote für Touren zu den Ägadischen Inseln ab Trapani",
+    it: "Catamarano Egadi, trimarano e barche da Trapani",
+    en: "Egadi catamaran, trimaran and boats from Trapani",
+    es: "Catamarán, trimarán y barcos a las Egadi desde Trapani",
+    fr: "Catamaran, trimaran et bateaux aux Égades depuis Trapani",
+    de: "Katamaran, Trimaran und Boote auf den Egadi ab Trapani",
   },
   seoDescription: {
-    it: "Scopri le barche Egadisailing per tour alle Egadi da Trapani: Trimarano con chef e charter e Barca open per tour privati o condivisi.",
-    en: "Discover Egadisailing boats for Egadi tours from Trapani: trimaran with chef and charter, plus an open boat for private or shared tours.",
-    es: "Descubre los barcos de Egadisailing para las Islas Egadi desde Trapani: trimarán con chef y charter y barco open para tours privados o compartidos.",
-    fr: "Découvrez les bateaux Egadisailing pour les îles Égades depuis Trapani : trimaran avec chef et charter, et bateau open pour sorties privées ou partagées.",
-    de: "Entdecken Sie die Egadisailing-Boote für die Ägadischen Inseln ab Trapani: Trimaran mit Chefkoch und Charter sowie offenes Boot für private oder geteilte Touren.",
+    it: "Cerchi un catamarano alle Egadi? Scopri il trimarano con comfort da catamarano da Trapani e la barca open per tour privati o condivisi.",
+    en: "Looking for a catamaran in the Egadi Islands? Discover the trimaran with catamaran-style comfort from Trapani and the open boat for private or shared tours.",
+    es: "¿Buscas un catamarán en las Egadi? Descubre el trimarán con confort de catamarán desde Trapani y el barco open para tours privados o compartidos.",
+    fr: "Vous cherchez un catamaran aux Égades ? Découvrez le trimaran au confort de catamaran depuis Trapani et le bateau open pour sorties privées ou partagées.",
+    de: "Sie suchen einen Katamaran auf den Egadi? Entdecken Sie den Trimaran mit Katamaran-Komfort ab Trapani und das offene Boot für private oder geteilte Touren.",
   },
   eyebrow: {
     it: "Flotta Egadisailing",
@@ -121,18 +121,18 @@ const BOATS_PAGE_COPY = {
     de: "Egadisailing-Flotte",
   },
   title: {
-    it: "Le nostre barche per scoprire le Egadi da Trapani",
-    en: "Our boats for discovering the Egadi Islands from Trapani",
-    es: "Nuestros barcos para descubrir las Islas Egadi desde Trapani",
-    fr: "Nos bateaux pour découvrir les îles Égades depuis Trapani",
-    de: "Unsere Boote, um die Ägadischen Inseln ab Trapani zu entdecken",
+    it: "Catamarano, trimarano e barche per scoprire le Egadi da Trapani",
+    en: "Catamaran, trimaran and boats for discovering the Egadi Islands from Trapani",
+    es: "Catamarán, trimarán y barcos para descubrir las Egadi desde Trapani",
+    fr: "Catamaran, trimaran et bateaux pour découvrir les Égades depuis Trapani",
+    de: "Katamaran, Trimaran und Boote für die Egadi ab Trapani",
   },
   subtitle: {
-    it: "Dal Trimarano con chef alla Barca open per tour privati o condivisi: scegli il ritmo giusto per Favignana, Levanzo e Marettimo.",
-    en: "From the trimaran with chef to the open boat for private or shared tours: choose the right pace for Favignana, Levanzo and Marettimo.",
-    es: "Del trimarán con chef al barco open para tours privados o compartidos: elige el ritmo adecuado para Favignana, Levanzo y Marettimo.",
-    fr: "Du trimaran avec chef au bateau open pour sorties privées ou partagées : choisissez le bon rythme pour Favignana, Levanzo et Marettimo.",
-    de: "Vom Trimaran mit Chefkoch bis zum offenen Boot für private oder geteilte Touren: Wählen Sie den passenden Rhythmus für Favignana, Levanzo und Marettimo.",
+    it: "La flotta Egadisailing nasce per vivere le Isole Egadi da Trapani con due esperienze diverse: il trimarano con comfort da catamarano per charter, chef a bordo e giornate premium, e la Barca Egadi Sailing Cigala & Bertinetti 34 per escursioni in barca a Favignana e Levanzo, tour privati, uscite condivise, soste bagno e snorkeling. Se stai cercando un catamarano alle Egadi, la soluzione premium è il nostro trimarano: spazi ampi, stabilità da multiscafo e una vita a bordo più comoda.",
+    en: "The Egadisailing fleet is built for experiencing the Egadi Islands from Trapani in two different ways: a trimaran with catamaran-style comfort for charters, chef experiences and premium days, and Barca Egadi Sailing Cigala & Bertinetti 34 for Favignana and Levanzo boat tours, private trips, shared outings, swim stops and snorkelling. If you are looking for an Egadi catamaran, our premium solution is the trimaran: wide spaces, multihull stability and more comfortable life on board.",
+    es: "La flota Egadisailing está pensada para vivir las Islas Egadi desde Trapani de dos formas: un trimarán con confort de catamarán para charter, chef a bordo y jornadas premium, y Barca Egadi Sailing Cigala & Bertinetti 34 para excursiones en barco a Favignana y Levanzo, tours privados, salidas compartidas, baños y snorkel. Si buscas un catamarán en las Egadi, nuestra solución premium es el trimarán: espacios amplios, estabilidad de multicasco y una vida a bordo más cómoda.",
+    fr: "La flotte Egadisailing permet de vivre les îles Égades depuis Trapani de deux façons : un trimaran au confort de catamaran pour charter, chef à bord et journées premium, et Barca Egadi Sailing Cigala & Bertinetti 34 pour excursions en bateau à Favignana et Levanzo, sorties privées ou partagées, baignades et snorkeling. Si vous cherchez un catamaran aux Égades, notre solution premium est le trimaran : grands espaces, stabilité de multicoque et vie à bord plus confortable.",
+    de: "Die Egadisailing-Flotte ist für zwei Arten gedacht, die Egadi ab Trapani zu erleben: ein Trimaran mit Katamaran-Komfort für Charter, Chef an Bord und Premium-Tage sowie die Barca Egadi Sailing Cigala & Bertinetti 34 für Bootstouren nach Favignana und Levanzo, private Touren, geteilte Ausfahrten, Badestopps und Schnorcheln. Wenn Sie einen Katamaran auf den Egadi suchen, ist unser Trimaran die Premium-Lösung: viel Platz, Multihull-Stabilität und komfortableres Leben an Bord.",
   },
   comparisonTitle: {
     it: "Due barche, due modi di vivere il mare",
@@ -142,11 +142,11 @@ const BOATS_PAGE_COPY = {
     de: "Zwei Boote, zwei Arten, das Meer zu erleben",
   },
   comparisonText: {
-    it: "Il Trimarano è pensato per comfort, chef e charter. La Barca è la scelta agile per tour in barca, soste bagno e rotte più snelle.",
-    en: "The trimaran is for comfort, chef experiences and charter. The Boat is the agile choice for boat tours, swim stops and lighter routes.",
-    es: "El trimarán está pensado para confort, chef y charter. El barco es la opción ágil para tours, baños y rutas más ligeras.",
-    fr: "Le trimaran est pensé pour le confort, le chef à bord et le charter. Le bateau est le choix agile pour les sorties, baignades et routes plus souples.",
-    de: "Der Trimaran steht für Komfort, Chefkoch und Charter. Das Boot ist die agile Wahl für Touren, Badestopps und leichtere Routen.",
+    it: "Il Trimarano è pensato per comfort, chef e charter: una soluzione multiscafo ideale se stai valutando un tour in catamarano alle Egadi ma vuoi più spazio e servizio a bordo. La Barca è la scelta agile per tour in barca, soste bagno e rotte più snelle.",
+    en: "The trimaran is for comfort, chef experiences and charter: a multihull solution if you are considering a catamaran tour in the Egadi Islands but want more space and onboard service. The Boat is the agile choice for boat tours, swim stops and lighter routes.",
+    es: "El trimarán está pensado para confort, chef y charter: una solución multicasco si estás valorando un tour en catamarán por las Egadi y quieres más espacio y servicio a bordo. El barco es la opción ágil para tours, baños y rutas más ligeras.",
+    fr: "Le trimaran est pensé pour le confort, le chef à bord et le charter : une solution multicoque si vous envisagez un tour en catamaran aux Égades et souhaitez plus d'espace et de service à bord. Le bateau est le choix agile pour les sorties, baignades et routes plus souples.",
+    de: "Der Trimaran steht für Komfort, Chef an Bord und Charter: eine Multihull-Lösung, wenn Sie eine Katamaran-Tour auf den Egadi suchen und mehr Platz sowie Service an Bord wünschen. Das Boot ist die agile Wahl für Touren, Badestopps und leichtere Routen.",
   },
   chooserTitle: {
     it: "Quale barca scegliere?",
@@ -156,11 +156,11 @@ const BOATS_PAGE_COPY = {
     de: "Welches Boot passt zu Ihnen?",
   },
   chooserText: {
-    it: "Se cerchi spazio, tavola e privacy scegli il Trimarano. Se vuoi una rotta snella tra baie, bagni e snorkeling scegli la Barca.",
-    en: "Choose the trimaran for space, food and privacy. Choose the Boat for an agile route between bays, swimming and snorkelling.",
-    es: "Elige el trimarán para espacio, comida y privacidad. Elige el barco para una ruta ágil entre calas, baños y snorkel.",
-    fr: "Choisissez le trimaran pour l'espace, le déjeuner et l'intimité. Choisissez le bateau pour une route agile entre criques, baignades et snorkeling.",
-    de: "Wählen Sie den Trimaran für Platz, Essen und Privatsphäre. Wählen Sie das Boot für eine agile Route zwischen Buchten, Badestopps und Schnorcheln.",
+    it: "Se cerchi spazio, tavola e privacy scegli il Trimarano, soprattutto se il tuo riferimento è una giornata in catamarano alle Egadi con skipper e comfort. Se vuoi una rotta snella tra baie, bagni e snorkeling scegli la Barca.",
+    en: "Choose the trimaran for space, dining and privacy, especially if you are looking for a catamaran-style day in the Egadi Islands with skipper and comfort. Choose the Boat for an agile route between bays, swimming and snorkelling.",
+    es: "Elige el trimarán para espacio, mesa y privacidad, sobre todo si buscas una jornada tipo catamarán en las Egadi con patrón y confort. Elige el barco para una ruta ágil entre calas, baños y snorkel.",
+    fr: "Choisissez le trimaran pour l'espace, le déjeuner et l'intimité, surtout si vous cherchez une journée type catamaran aux Égades avec skipper et confort. Choisissez le bateau pour une route agile entre criques, baignades et snorkeling.",
+    de: "Wählen Sie den Trimaran für Platz, Essen und Privatsphäre, besonders wenn Sie einen Tag wie auf einem Katamaran auf den Egadi mit Skipper und Komfort suchen. Wählen Sie das Boot für eine agile Route zwischen Buchten, Badestopps und Schnorcheln.",
   },
   detailCtaLabel: {
     it: "Scopri la barca",
@@ -195,26 +195,26 @@ const BOATS_PAGE_COPY = {
 export const BOAT_CATALOG = {
   trimarano: {
     id: "trimarano",
-    slug: "neel-47",
+    slug: "catamarano-egadi-trimarano-da-trapani",
     listed: true,
-    aliases: ["trimarano-egadisailing", "neel-43"],
+    aliases: ["neel-47", "trimarano-egadisailing", "trimarano-egadi", "catamarano-egadi", "neel-43"],
     externalUrl: "https://www.neel-trimarans.com/range/neel-47/",
     order: 10,
     title: {
-      it: "Trimarano",
-      en: "Trimarano",
+      it: "Catamarano e trimarano alle Egadi",
+      en: "Catamaran and trimaran in the Egadi",
     },
     shortTitle: {
-      it: "Trimarano",
-      en: "Trimarano",
+      it: "Catamarano / Trimarano",
+      en: "Catamaran / Trimaran",
     },
     eyebrow: {
       it: "Comfort, chef e charter",
       en: "Comfort, chef and charter",
     },
     description: {
-      it: "Il trimarano è la barca per le esperienze più complete alle Egadi: spazi ampi, cabine, cucina e comfort per giornate private, chef a bordo e charter di più giorni.",
-      en: "The trimaran is the boat for the most complete Egadi experiences: spacious areas, cabins, galley and comfort for private day trips, chef experiences and multi-day charters.",
+      it: "Cerchi un catamarano alle Egadi? La nostra proposta premium è un trimarano multiscafo con spazi ampi, cabine, cucina, stabilità e comfort da catamarano per giornate private, chef a bordo e charter di più giorni.",
+      en: "Looking for a catamaran in the Egadi Islands? Our premium proposal is a trimaran multihull with wide spaces, cabins, galley, stability and catamaran-style comfort for private day trips, chef experiences and multi-day charters.",
     },
     detail: {
       eyebrow: {
@@ -222,43 +222,43 @@ export const BOAT_CATALOG = {
         en: "Trimarano for Egadi tours",
       },
       title: {
-        it: "Trimarano: comfort, chef e charter alle Egadi",
-        en: "Trimarano: the Egadisailing trimaran for space, chef experiences and comfort in the Egadi Islands",
+        it: "Catamarano alle Egadi? Il trimarano con skipper da Trapani",
+        en: "Catamaran in the Egadi Islands? The skippered trimaran from Trapani",
       },
       paragraphs: [
         {
-          it: "Il Trimarano è pensato per chi cerca un'esperienza in barca alle Isole Egadi più comoda, curata e privata rispetto a un classico tour veloce. È la scelta giusta per un tour Egadi da Trapani con chef a bordo, per una giornata gourmet tra Favignana e Levanzo o per un charter di più giorni con cabine, cucina e zone relax. La sua struttura a tre scafi offre ampiezza, stabilità e una sensazione di spazio che aiuta anche chi non è abituato alla vita in barca.",
-          en: "The Trimarano is the Egadisailing trimaran for guests looking for a more comfortable, curated and private Egadi Islands boat experience than a classic fast tour. It is the right choice for an Egadi tour from Trapani with a chef on board, for a gourmet day between Favignana and Levanzo or for a multi-day charter with cabins, galley and relaxation areas. Its three-hull layout offers space, stability and comfort even for guests who are not used to life on board.",
+          it: "Questa barca è pensata per chi cerca un'esperienza in barca alle Isole Egadi più comoda, curata e privata rispetto a un classico tour veloce. Molti ospiti arrivano cercando un catamarano alle Egadi, un tour in catamarano da Trapani o un charter catamarano con skipper: tecnicamente è un trimarano, quindi ha tre scafi, grande stabilità e spazi molto vivibili.",
+          en: "This boat is designed for guests looking for a more comfortable, curated and private Egadi Islands boat experience than a classic fast tour. Many guests search for an Egadi catamaran, a catamaran tour from Trapani or a skippered catamaran charter: technically, this is a trimaran, with three hulls, excellent stability and highly liveable spaces.",
         },
         {
-          it: "A bordo il tempo non è solo navigazione: ci sono spazi per pranzare, rilassarsi, prendere il sole, cambiarsi e vivere la giornata con ritmo lento. Per l'esperienza gourmet la rotta viene costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo a base di pesce locale e prodotti del territorio. Nei programmi charter, invece, il Trimarano permette di allargare il viaggio verso Marettimo e organizzare un itinerario più completo nell'arcipelago.",
-          en: "Time on board is not just navigation: there is space for lunch, relaxing, sunbathing, changing and enjoying the day at a slower pace. For the gourmet experience, the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and lunch based on local fish and regional products. On charter programmes, the Trimarano can extend the trip towards Marettimo and create a more complete itinerary through the archipelago.",
+          it: "A bordo il tempo non è solo navigazione: ci sono spazi per pranzare, rilassarsi, prendere il sole, cambiarsi e vivere la giornata con ritmo lento. Per l'esperienza gourmet la rotta viene costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo a base di pesce locale e prodotti del territorio. Nei programmi charter, invece, il trimarano permette di allargare il viaggio verso Marettimo e, su richiesta, valutare anche San Vito lo Capo quando durata e meteo lo consentono.",
+          en: "Time on board is not just navigation: there is space for lunch, relaxing, sunbathing, changing and enjoying the day at a slower pace. For the gourmet experience, the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and lunch based on local fish and regional products. On charter programmes, the trimaran can extend the trip towards Marettimo and, on request, San Vito lo Capo when duration and weather allow it.",
         },
         {
-          it: "Chi cerca parole semplici può immaginarlo così: è la barca per un'esperienza premium alle Egadi, con skipper, crew, comfort reale e un modo più elegante di vivere il mare. Non serve essere esperti di vela o conoscere già le cale: la rotta, gli orari e le soste vengono gestiti dalla crew in base a meteo, mare e obiettivo della giornata.",
-          en: "In simple words, this is the boat for a premium Egadi experience, with skipper, crew, real comfort and a more elegant way to enjoy the sea. You do not need sailing experience or previous knowledge of the coves: route, timing and stops are managed by the crew according to weather, sea conditions and the goal of the day.",
+          it: "Chi cerca parole semplici può immaginarlo così: è l'alternativa premium al noleggio catamarano alle Egadi, con skipper, crew, comfort reale e un modo più elegante di vivere il mare. Non serve essere esperti di vela o conoscere già le cale: rotta, orari e soste vengono gestiti dalla crew in base a meteo, mare e obiettivo della giornata.",
+          en: "In simple words, it is the premium alternative to catamaran rental in the Egadi Islands, with skipper, crew, real comfort and a more elegant way to enjoy the sea. You do not need sailing experience or previous knowledge of the coves: route, timing and stops are managed by the crew according to weather, sea conditions and the goal of the day.",
         },
       ],
     },
     seoTitle: {
-      it: "Neel 47 alle Egadi con chef a bordo",
-      en: "Neel 47 Trimaran with Chef in the Egadi",
+      it: "Catamarano Egadi da Trapani: trimarano con skipper",
+      en: "Egadi catamaran from Trapani: skippered trimaran",
     },
     seoDescription: {
-      it: "Trimarano da Trapani per tour Egadi con chef a bordo, esperienza gourmet Favignana e Levanzo, charter alle Isole Egadi, cabine e comfort privato.",
-      en: "Neel 47 trimaran from Trapani for Egadi tours with a chef on board, gourmet experiences in Favignana and Levanzo, charters, cabins and private comfort.",
+      it: "Catamarano alle Egadi da Trapani: trimarano multiscafo con comfort da catamarano, chef a bordo, charter con skipper, Favignana, Levanzo e Marettimo.",
+      en: "Catamaran-style charter in the Egadi Islands from Trapani: multihull trimaran with skipper, chef on board, Favignana, Levanzo and Marettimo.",
     },
     imageSrc: "/images/boats/neel-47/neel-47-hero.webp",
     heroVideoSrc: "/images/boats/neel-47/hero-video.webm",
     imageAlt: {
-      it: "Trimarano",
-      en: "Trimarano",
+      it: "Catamarano alle Egadi in trimarano con comfort multiscafo",
+      en: "Catamaran-style trimaran in the Egadi Islands",
     },
     gallery: [
       {
         src: "/images/boats/neel-47/neel-47-hero.webp",
         alt: {
-          it: "Trimarano in navigazione",
+          it: "Trimarano in navigazione alle Egadi con comfort da catamarano",
           en: "Trimarano sailing",
         },
         caption: { it: "Trimarano", en: "Trimarano" },
@@ -434,21 +434,21 @@ export const BOAT_CATALOG = {
     ],
     idealFor: [
       {
-        it: "Esperienze gourmet private con chef, pranzo a bordo e spazi comodi per vivere la giornata con calma.",
+        it: "Esperienze gourmet private con chef, pranzo a bordo e spazi comodi per chi desidera una giornata in catamarano alle Egadi, ma con la stabilità del trimarano.",
         en: "Private gourmet experiences with a chef, lunch on board and comfortable spaces for an easy-going day.",
       },
       {
-        it: "Charter alle Egadi di più giorni, con cabine, cucina e zone relax pensate per dormire a bordo.",
+        it: "Charter alle Egadi di più giorni, con cabine, cucina e zone relax pensate per dormire a bordo tra Favignana, Levanzo e Marettimo.",
         en: "Multi-day Egadi charters with cabins, galley and relaxation areas designed for overnight stays on board.",
       },
       {
-        it: "Gruppi, famiglie e occasioni speciali che cercano privacy, comfort e una barca stabile anche per chi non è esperto.",
+        it: "Gruppi, famiglie e occasioni speciali che cercano privacy, comfort, skipper e una barca multiscafo stabile anche per chi non è esperto.",
         en: "Groups, families and special occasions looking for privacy, comfort and a stable boat even for non-experts.",
       },
     ],
     routes: [
       {
-        it: "Nelle giornate gourmet la rotta è costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo a bordo.",
+        it: "Nelle giornate gourmet la rotta è costruita tra Favignana e Levanzo, scegliendo baie riparate per bagno, snorkeling e pranzo cucinato a bordo dallo chef.",
         en: "On gourmet days the route is shaped between Favignana and Levanzo, choosing sheltered bays for swimming, snorkelling and lunch on board.",
       },
       {
@@ -462,6 +462,46 @@ export const BOAT_CATALOG = {
     ],
     serviceIds: ["exclusive-experience", "cabin-charter"],
     faqs: [
+      {
+        question: {
+          it: "È un catamarano o un trimarano?",
+          en: "Is it a catamaran or a trimaran?",
+        },
+        answer: {
+          it: "È un trimarano, non un catamarano classico. Per chi cerca un catamarano alle Egadi o un tour in catamarano da Trapani, questa è la nostra soluzione multiscafo più vicina per comfort, spazi e stabilità, con il vantaggio di una struttura a tre scafi.",
+          en: "It is a trimaran, not a classic catamaran. For guests looking for a catamaran in the Egadi Islands or a catamaran tour from Trapani, this is our closest multihull solution for comfort, space and stability, with the benefit of a three-hull layout.",
+        },
+      },
+      {
+        question: {
+          it: "È adatto a chi cerca un tour in catamarano alle Egadi?",
+          en: "Is it suitable for guests looking for a catamaran tour in the Egadi Islands?",
+        },
+        answer: {
+          it: "Sì. Se il tuo obiettivo è vivere una giornata in catamarano alle Egadi con spazi ampi, stabilità, skipper e servizio curato, il trimarano risponde allo stesso bisogno con una configurazione a tre scafi. È ideale per chef a bordo, pranzo in rada, bagno e snorkeling tra Favignana e Levanzo.",
+          en: "Yes. If you are looking for catamaran-style comfort, wide spaces, stability, skipper and curated service, the trimaran answers the same need with a three-hull configuration. It is ideal for chef experiences, lunch at anchor, swimming and snorkelling between Favignana and Levanzo.",
+        },
+      },
+      {
+        question: {
+          it: "Si può fare noleggio catamarano alle Egadi con skipper?",
+          en: "Can it be booked as a skippered catamaran-style charter in the Egadi Islands?",
+        },
+        answer: {
+          it: "La barca non viene proposta come catamarano classico, ma come trimarano con skipper. È la scelta Egadisailing per chi cerca noleggio catamarani alle Egadi con comfort, cabine, cucina e rotta flessibile, mantenendo una gestione professionale a bordo.",
+          en: "The boat is not offered as a classic catamaran, but as a skippered trimaran. It is the Egadisailing choice for guests looking for multihull comfort, cabins, galley and a flexible route with professional management on board.",
+        },
+      },
+      {
+        question: {
+          it: "È disponibile bareboat, senza skipper?",
+          en: "Is bareboat rental available?",
+        },
+        answer: {
+          it: "No. Non è un noleggio bareboat: il trimarano viene organizzato con skipper e crew, così la rotta tra le Isole Egadi resta sicura, flessibile e coerente con meteo, ancoraggi e tempi di navigazione.",
+          en: "No. It is not a bareboat rental: the trimaran is organised with skipper and crew, so the route across the Egadi Islands remains safe, flexible and aligned with weather, anchorages and navigation timing.",
+        },
+      },
       {
         question: {
           it: "Il trimarano è adatto a un'esperienza con chef?",
@@ -598,20 +638,20 @@ export const BOAT_CATALOG = {
     aliases: ["barca-egadisailing", "ciagal-bertinetti-34-offshore-open"],
     order: 20,
     title: {
-      it: "Cigala & Bertinetti 34 Offshore Open",
-      en: "Cigala & Bertinetti 34 Offshore Open",
+      it: "Barca Egadi Sailing",
+      en: "Barca Egadi Sailing",
     },
     shortTitle: {
-      it: "Cigala & Bertinetti 34",
-      en: "Cigala & Bertinetti 34",
+      it: "Barca Egadi Sailing",
+      en: "Barca Egadi Sailing",
     },
     eyebrow: {
       it: "4 ore esclusiva · 8 ore condivisa o privata",
       en: "4 hours private · 8 hours shared or private",
     },
     description: {
-      it: "La Cigala & Bertinetti 34 Offshore Open è una barca aperta, veloce e comoda per muoversi tra le cale delle Egadi. A bordo trovi sedute per il gruppo, spazio per prendere il sole, accesso al mare per bagno e snorkeling, skipper e una navigazione pensata per soste frequenti tra Favignana e Levanzo.",
-      en: "The Cigala & Bertinetti 34 Offshore Open is an open, fast and comfortable boat for moving among coves in the Egadi Islands. On board you have seating for the group, space to enjoy the sun, sea access for swimming and snorkelling, a skipper and a route designed for frequent stops between Favignana and Levanzo.",
+      it: "La Barca Egadi Sailing è una barca aperta, veloce e comoda per muoversi tra le cale delle Egadi. A bordo trovi sedute per il gruppo, spazio per prendere il sole, accesso al mare per bagno e snorkeling, skipper e una navigazione pensata per soste frequenti tra Favignana e Levanzo.",
+      en: "Barca Egadi Sailing is an open, fast and comfortable boat for moving among coves in the Egadi Islands. On board you have seating for the group, space to enjoy the sun, sea access for swimming and snorkelling, a skipper and a route designed for frequent stops between Favignana and Levanzo.",
     },
     detail: {
       eyebrow: {
@@ -619,13 +659,13 @@ export const BOAT_CATALOG = {
         en: "Open boat for Egadi tours from Trapani",
       },
       title: {
-        it: "Cigala & Bertinetti 34 Offshore Open: la barca agile per tour Egadi, Favignana e Levanzo",
-        en: "Cigala & Bertinetti 34 Offshore Open: the agile boat for Egadi, Favignana and Levanzo tours",
+        it: "Barca Egadi Sailing: la barca agile per tour Egadi, Favignana e Levanzo",
+        en: "Barca Egadi Sailing: the agile boat for Egadi, Favignana and Levanzo tours",
       },
       paragraphs: [
         {
-          it: "La Cigala & Bertinetti 34 Offshore Open è la barca Egadisailing dedicata ai tour in barca alle Egadi da Trapani per chi vuole vivere Favignana e Levanzo in modo semplice, dinamico e vicino al mare. È una barca open, quindi aperta: non devi immaginarla come uno yacht con cabine, ma come una barca comoda e veloce per spostarsi tra le cale, fermarsi spesso, fare bagno, snorkeling e godersi il mare senza complicazioni.",
-          en: "The Cigala & Bertinetti 34 Offshore Open is the Egadisailing boat for Egadi boat tours from Trapani, designed for guests who want to experience Favignana and Levanzo in a simple, dynamic and sea-focused way. It is an open boat: not a yacht with cabins, but a comfortable and fast boat for moving between coves, stopping often, swimming, snorkelling and enjoying the sea without complications.",
+          it: "La Barca Egadi Sailing è la barca Egadisailing dedicata ai tour in barca alle Egadi da Trapani per chi vuole vivere Favignana e Levanzo in modo semplice, dinamico e vicino al mare. È una barca open, quindi aperta: non devi immaginarla come uno yacht con cabine, ma come una barca comoda e veloce per spostarsi tra le cale, fermarsi spesso, fare bagno, snorkeling e godersi il mare senza complicazioni.",
+          en: "Barca Egadi Sailing is the Egadisailing boat for Egadi boat tours from Trapani, designed for guests who want to experience Favignana and Levanzo in a simple, dynamic and sea-focused way. It is an open boat: not a yacht with cabins, but a comfortable and fast boat for moving between coves, stopping often, swimming, snorkelling and enjoying the sea without complications.",
         },
         {
           it: "È adatta sia ai tour privati da 4 ore, al mattino o al pomeriggio, sia ai tour da 8 ore condivisi o privati. Nei tour brevi la rotta si concentra sulle soste migliori raggiungibili con tempi comodi; nella giornata intera c'è più margine per muoversi tra Favignana e Levanzo, scegliere baie riparate, alternare navigazione e pause in acqua e vivere l'arcipelago con meno fretta.",
@@ -638,57 +678,57 @@ export const BOAT_CATALOG = {
       ],
     },
     seoTitle: {
-      it: "Cigala & Bertinetti 34 per tour Egadi da Trapani",
-      en: "Cigala & Bertinetti 34 for Egadi Tours from Trapani",
+      it: "Barca Egadi Sailing per tour Egadi da Trapani",
+      en: "Barca Egadi Sailing for Egadi Tours from Trapani",
     },
     seoDescription: {
-      it: "Cigala & Bertinetti 34 Offshore Open per tour Egadi da Trapani: barca open con skipper, snorkeling, soste bagno, Favignana, Levanzo e tour privati o condivisi.",
-      en: "Cigala & Bertinetti 34 Offshore Open for Egadi tours from Trapani: open boat with skipper, snorkelling, swim stops, Favignana, Levanzo and private or shared tours.",
+      it: "Barca Egadi Sailing per tour Egadi da Trapani: barca open con skipper, snorkeling, soste bagno, Favignana, Levanzo e tour privati o condivisi.",
+      en: "Barca Egadi Sailing for Egadi tours from Trapani: open boat with skipper, snorkelling, swim stops, Favignana, Levanzo and private or shared tours.",
     },
     imageSrc: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
     heroVideoSrc: "/images/boats/cigala-bertinetti-34-offshore-open/hero-video.webm",
     imageAlt: {
-      it: "Cigala & Bertinetti 34 Offshore Open durante un tour alle Egadi",
-      en: "Cigala & Bertinetti 34 Offshore Open during an Egadi tour",
+      it: "Barca Egadi Sailing durante un tour alle Egadi",
+      en: "Barca Egadi Sailing during an Egadi tour",
     },
     gallery: [
       {
         src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
         alt: {
-          it: "Gruppo a bordo della Cigala & Bertinetti 34 Offshore Open alle Egadi",
-          en: "Group on board the Cigala & Bertinetti 34 Offshore Open in the Egadi",
+          it: "Gruppo a bordo della Barca Egadi Sailing alle Egadi",
+          en: "Group on board Barca Egadi Sailing in the Egadi",
         },
         caption: { it: "Tour 8 ore", en: "8-hour tour" },
       },
       {
         src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-drone.webp",
         alt: {
-          it: "Cigala & Bertinetti 34 Offshore Open vista dall'alto durante la navigazione",
-          en: "Cigala & Bertinetti 34 Offshore Open seen from above while sailing",
+          it: "Barca Egadi Sailing vista dall'alto durante la navigazione",
+          en: "Barca Egadi Sailing seen from above while sailing",
         },
         caption: { it: "Vista dall'alto", en: "Aerial view" },
       },
       {
         src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp",
         alt: {
-          it: "Vista frontale della Cigala & Bertinetti 34 Offshore Open",
-          en: "Front view of the Cigala & Bertinetti 34 Offshore Open",
+          it: "Vista frontale della Barca Egadi Sailing",
+          en: "Front view of Barca Egadi Sailing",
         },
         caption: { it: "Vista frontale", en: "Front view" },
       },
       {
         src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-primo-piano.webp",
         alt: {
-          it: "Dettaglio della Cigala & Bertinetti 34 Offshore Open",
-          en: "Detail of the Cigala & Bertinetti 34 Offshore Open",
+          it: "Dettaglio della Barca Egadi Sailing",
+          en: "Detail of Barca Egadi Sailing",
         },
         caption: { it: "Dettaglio barca", en: "Boat detail" },
       },
       {
         src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
         alt: {
-          it: "Momento a bordo della Cigala & Bertinetti 34 Offshore Open alle Egadi",
-          en: "Moment on board the Cigala & Bertinetti 34 Offshore Open in the Egadi",
+          it: "Momento a bordo della Barca Egadi Sailing alle Egadi",
+          en: "Moment on board Barca Egadi Sailing in the Egadi",
         },
         caption: { it: "Esperienza a bordo", en: "On-board experience" },
       },
@@ -734,8 +774,8 @@ export const BOAT_CATALOG = {
           en: "Can the boat be booked privately?",
         },
         answer: {
-          it: "Sì. Puoi scegliere i tour privati da 4 o 8 ore se vuoi la Cigala & Bertinetti riservata solo al tuo gruppo, con tempi e soste gestiti insieme allo skipper.",
-          en: "Yes. You can choose private 4 or 8-hour tours if you want the Cigala & Bertinetti reserved for your group, with timing and stops managed with the skipper.",
+          it: "Sì. Puoi scegliere i tour privati da 4 o 8 ore se vuoi la Barca Egadi Sailing riservata solo al tuo gruppo, con tempi e soste gestiti insieme allo skipper.",
+          en: "Yes. You can choose private 4 or 8-hour tours if you want Barca Egadi Sailing reserved for your group, with timing and stops managed with the skipper.",
         },
       },
       {
@@ -750,8 +790,8 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Che tipo di barca è la Cigala & Bertinetti 34 Offshore Open?",
-          en: "What kind of boat is the Cigala & Bertinetti 34 Offshore Open?",
+          it: "Che tipo di barca è la Barca Egadi Sailing?",
+          en: "What kind of boat is Barca Egadi Sailing?",
         },
         answer: {
           it: "È una barca open, quindi aperta, veloce e pensata per vivere il mare durante la giornata. Non è una barca con cabine per dormire: è ideale per spostarsi tra le cale, fare bagno, snorkeling e rientrare a Trapani.",
@@ -804,14 +844,14 @@ export const BOAT_CATALOG = {
           en: "Is a shared tour or private boat better?",
         },
         answer: {
-          it: "Il tour condiviso è adatto se vuoi acquistare posti singoli e vivere una giornata completa con altri ospiti. La barca privata è migliore se vuoi privacy, tempi più flessibili e la Cigala & Bertinetti riservata solo al tuo gruppo.",
-          en: "The shared tour works well if you want to buy individual seats and enjoy a full day with other guests. The private boat is better if you want privacy, more flexible timing and the Cigala & Bertinetti reserved only for your group.",
+          it: "Il tour condiviso è adatto se vuoi acquistare posti singoli e vivere una giornata completa con altri ospiti. La barca privata è migliore se vuoi privacy, tempi più flessibili e la Barca Egadi Sailing riservata solo al tuo gruppo.",
+          en: "The shared tour works well if you want to buy individual seats and enjoy a full day with other guests. The private boat is better if you want privacy, more flexible timing and Barca Egadi Sailing reserved only for your group.",
         },
       },
       {
         question: {
-          it: "La Cigala & Bertinetti ha cabine o spazi interni?",
-          en: "Does the Cigala & Bertinetti have cabins or indoor spaces?",
+          it: "La Barca Egadi Sailing ha cabine o spazi interni?",
+          en: "Does Barca Egadi Sailing have cabins or indoor spaces?",
         },
         answer: {
           it: "No, è una barca open pensata per il mare di giorno. Ha sedute, spazio prendisole e accesso all'acqua, ma non è la barca adatta per dormire a bordo o per un charter con cabine.",
@@ -840,8 +880,8 @@ export const BOAT_CATALOG = {
       },
       {
         question: {
-          it: "Cosa devo portare sulla Cigala & Bertinetti?",
-          en: "What should I bring on the Cigala & Bertinetti?",
+          it: "Cosa devo portare sulla Barca Egadi Sailing?",
+          en: "What should I bring on Barca Egadi Sailing?",
         },
         answer: {
           it: "Porta costume, asciugamano, crema solare, cappello, occhiali da sole e una borsa morbida. Evita valigie rigide e oggetti ingombranti: su una barca open è meglio viaggiare leggeri.",
@@ -1113,24 +1153,24 @@ export function getBoatCatalogEntry(boatId: string): BoatCatalogEntry | null {
 
 const SPANISH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>>> = {
   trimarano: {
-    title: "Neel 47",
-    shortTitle: "Neel 47",
+    title: "Catamarán y trimarán en las Egadi",
+    shortTitle: "Catamarán / Trimarán",
     eyebrow: "Confort, chef y charter",
     description:
-      "El Neel 47 es el trimarán para las experiencias más completas en las Islas Egadi: espacios amplios, camarotes, cocina y estabilidad para días privados, chef a bordo y charters de varios días.",
+      "¿Buscas un catamarán en las Egadi? Nuestra propuesta premium es un trimarán multicasco con espacios amplios, camarotes, cocina, estabilidad y confort de catamarán para días privados, chef a bordo y charters de varios días.",
     detail: {
       eyebrow: "Trimarán para tours por las Egadi",
-      title: "Neel 47: confort, chef y charter en las Islas Egadi",
+      title: "¿Catamarán en las Egadi? El trimarán con patrón desde Trapani",
       paragraphs: [
-        "El Neel 47 es la opción de Egadisailing para quienes buscan una experiencia en barco más cómoda, cuidada y privada que un tour rápido clásico. Es ideal para una excursión con chef a bordo, una jornada gourmet entre Favignana y Levanzo o un charter de varios días.",
-        "A bordo hay espacio para comer, relajarse, tomar el sol, cambiarse y vivir el día con un ritmo lento. Su estructura de trimarán ofrece estabilidad y amplitud incluso para huéspedes que no están acostumbrados a navegar.",
-        "No hace falta conocer las calas ni tener experiencia en vela: la ruta, los horarios y las paradas se ajustan con la tripulación según meteorología, mar y objetivo de la jornada.",
+        "Esta embarcación está pensada para quienes buscan una experiencia en barco por las Islas Egadi más cómoda, cuidada y privada que un tour rápido clásico. Muchos huéspedes llegan buscando un catamarán en las Egadi, un tour en catamarán desde Trapani o un charter en catamarán con patrón: técnicamente es un trimarán, con tres cascos, gran estabilidad y espacios muy habitables.",
+        "A bordo no todo es navegación: hay espacio para comer, relajarse, tomar el sol, cambiarse y vivir el día con un ritmo lento. En la experiencia gourmet, la ruta se organiza entre Favignana y Levanzo, eligiendo bahías protegidas para baño, snorkel y almuerzo con pescado local y productos del territorio.",
+        "En palabras sencillas, es la alternativa premium al alquiler de catamarán en las Egadi: patrón, tripulación, confort real y una forma más elegante de vivir el mar. No hace falta conocer las calas ni tener experiencia en vela: ruta, horarios y paradas se ajustan con la tripulación según meteorología, mar y objetivo de la jornada.",
       ],
     },
-    seoTitle: "Neel 47 con chef a bordo en las Islas Egadi",
+    seoTitle: "Catamarán Egadi desde Trapani: trimarán con patrón",
     seoDescription:
-      "Trimarán Neel 47 desde Trapani para excursiones por las Islas Egadi con chef a bordo, experiencia gourmet, charter, camarotes y confort privado.",
-    imageAlt: "Trimarán Neel 47 en las Islas Egadi",
+      "Catamarán en las Egadi desde Trapani: trimarán multicasco con confort de catamarán, chef a bordo, charter con patrón, Favignana, Levanzo y Marettimo.",
+    imageAlt: "Catamarán en las Egadi en trimarán con confort multicasco",
     idealFor: [
       "Experiencia gourmet con chef a bordo",
       "Charter privado de varios días",
@@ -1144,14 +1184,14 @@ const SPANISH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent
     ],
     faqs: [
       {
-        question: "¿Por qué elegir el Neel 47?",
+        question: "¿Es un catamarán o un trimarán?",
         answer:
-          "Porque ofrece más espacio, estabilidad y confort que un barco abierto. Es la mejor elección para chef a bordo, charter y jornadas privadas premium.",
+          "Es un trimarán, no un catamarán clásico. Para quien busca un catamarán en las Egadi o un tour en catamarán desde Trapani, es nuestra solución multicasco más cercana por confort, espacios y estabilidad, con la ventaja de una estructura de tres cascos.",
       },
       {
-        question: "¿El Neel 47 es adecuado para familias?",
+        question: "¿Es adecuado para quien busca un tour en catamarán por las Egadi?",
         answer:
-          "Sí. Sus zonas amplias y protegidas ayudan a vivir el día con más calma, siempre con ruta y horarios adaptados por la tripulación.",
+          "Sí. Si buscas espacios amplios, estabilidad, patrón y servicio cuidado, el trimarán responde a la misma necesidad con una configuración de tres cascos. Es ideal para chef a bordo, almuerzo en fondeo, baño y snorkel entre Favignana y Levanzo.",
       },
       {
         question: "¿Se puede dormir a bordo?",
@@ -1167,24 +1207,24 @@ const SPANISH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent
     ],
   },
   boat: {
-    title: "Cigala & Bertinetti 34 Offshore Open",
-    shortTitle: "Cigala & Bertinetti",
+    title: "Barca Egadi Sailing",
+    shortTitle: "Barca Egadi Sailing",
     eyebrow: "Ágil, rápida y abierta",
     description:
-      "La Cigala & Bertinetti 34 Offshore Open es el barco ágil para excursiones privadas de 4 horas y salidas de 8 horas compartidas o privadas entre Favignana y Levanzo.",
+      "La Barca Egadi Sailing es el barco ágil para excursiones privadas de 4 horas alrededor de Favignana y salidas de 8 horas compartidas o privadas entre Favignana y Levanzo.",
     detail: {
-	      eyebrow: "Barco abierto para las Islas Egadi",
-      title: "Cigala & Bertinetti: el barco ágil para calas, baños y rutas flexibles",
+      eyebrow: "Barco abierto para las Islas Egadi",
+      title: "Barca Egadi Sailing: el barco ágil para calas, baños y rutas flexibles",
       paragraphs: [
-        "La Cigala & Bertinetti es ideal para quienes quieren moverse con rapidez entre calas, hacer paradas de baño y vivir una experiencia más directa con el mar.",
-        "Funciona muy bien para tours privados de 4 horas por la mañana o por la tarde, y para jornadas de 8 horas cuando quieres más tiempo para Favignana, Levanzo y las zonas protegidas del día.",
+        "La Barca Egadi Sailing es ideal para quienes quieren moverse con rapidez entre calas, hacer paradas de baño y vivir una experiencia más directa con el mar.",
+        "Funciona muy bien para tours privados de 4 horas por la mañana o por la tarde alrededor de Favignana, y para jornadas de 8 horas cuando quieres más tiempo para Favignana, Levanzo y las zonas protegidas del día.",
         "Es un barco abierto y deportivo: perfecto para grupos que buscan agua clara, snorkel y una ruta flexible con patrón.",
       ],
     },
-    seoTitle: "Cigala & Bertinetti para excursiones en barco por las Islas Egadi",
+    seoTitle: "Barca Egadi Sailing para excursiones en barco por las Islas Egadi",
     seoDescription:
-      "Cigala & Bertinetti 34 Offshore Open desde Trapani para tours privados de 4 horas y excursiones de 8 horas compartidas o privadas por Favignana y Levanzo.",
-    imageAlt: "Cigala & Bertinetti navegando por las Islas Egadi",
+      "Barca Egadi Sailing desde Trapani para tours privados de 4 horas alrededor de Favignana y excursiones de 8 horas compartidas o privadas por Favignana y Levanzo.",
+    imageAlt: "Barca Egadi Sailing navegando por las Islas Egadi",
     idealFor: [
       "Excursiones privadas de 4 horas por la mañana o por la tarde",
       "Tour compartido de 8 horas con plazas individuales",
@@ -1203,7 +1243,7 @@ const SPANISH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent
           "No. La fórmula de 4 horas se ofrece como experiencia privada, por la mañana o por la tarde.",
       },
       {
-        question: "¿La Cigala & Bertinetti sirve para un tour compartido?",
+        question: "¿La Barca Egadi Sailing sirve para un tour compartido?",
         answer:
           "Sí, el tour compartido disponible es el de 8 horas, con plazas individuales y salida desde Trapani.",
       },
@@ -1222,24 +1262,24 @@ const SPANISH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent
 
 const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>>> = {
   trimarano: {
-    title: "Neel 47",
-    shortTitle: "Neel 47",
+    title: "Catamaran et trimaran aux Égades",
+    shortTitle: "Catamaran / Trimaran",
     eyebrow: "Confort, chef et charter",
     description:
-      "Le Neel 47 est le trimaran des expériences les plus complètes aux îles Égades : grands espaces, cabines, cuisine et stabilité pour journées privées, chef à bord et charters de plusieurs jours.",
+      "Vous cherchez un catamaran aux Égades ? Notre proposition premium est un trimaran multicoque avec grands espaces, cabines, cuisine, stabilité et confort de catamaran pour journées privées, chef à bord et charters de plusieurs jours.",
     detail: {
       eyebrow: "Trimaran pour excursions aux Égades",
-      title: "Neel 47 : confort, chef et charter aux îles Égades",
+      title: "Catamaran aux Égades ? Le trimaran avec skipper depuis Trapani",
       paragraphs: [
-        "Le Neel 47 est l'option Egadisailing pour ceux qui cherchent une expérience en bateau plus confortable, soignée et privée qu'un tour rapide classique. Il est idéal pour une excursion avec chef à bord, une journée gourmet entre Favignana et Levanzo ou un charter de plusieurs jours.",
-        "À bord, il y a de l'espace pour déjeuner, se détendre, prendre le soleil, se changer et vivre la journée à un rythme lent. Sa structure de trimaran offre stabilité et amplitude même aux hôtes peu habitués à naviguer.",
-        "Il n'est pas nécessaire de connaître les criques ni d'avoir de l'expérience en voile : route, horaires et arrêts sont ajustés avec l'équipage selon la météo, la mer et l'objectif de la journée.",
+        "Ce bateau est pensé pour ceux qui cherchent une expérience en bateau aux îles Égades plus confortable, soignée et privée qu'un tour rapide classique. Beaucoup d'hôtes recherchent un catamaran aux Égades, un tour en catamaran depuis Trapani ou un charter en catamaran avec skipper : techniquement, c'est un trimaran, avec trois coques, une grande stabilité et des espaces très habitables.",
+        "À bord, le temps ne se limite pas à la navigation : il y a de l'espace pour déjeuner, se détendre, prendre le soleil, se changer et vivre la journée à un rythme lent. Pour l'expérience gourmet, la route est construite entre Favignana et Levanzo, en choisissant des baies abritées pour baignade, snorkeling et déjeuner à base de poisson local et de produits du territoire.",
+        "En termes simples, c'est l'alternative premium à la location de catamaran aux Égades : skipper, équipage, confort réel et une manière plus élégante de vivre la mer. Il n'est pas nécessaire de connaître les criques ni d'avoir de l'expérience en voile : route, horaires et arrêts sont ajustés avec l'équipage selon la météo, la mer et l'objectif de la journée.",
       ],
     },
-    seoTitle: "Neel 47 avec chef à bord aux îles Égades",
+    seoTitle: "Catamaran Égades depuis Trapani : trimaran avec skipper",
     seoDescription:
-      "Trimaran Neel 47 depuis Trapani pour excursions aux îles Égades avec chef à bord, expérience gourmet, charter, cabines et confort privé.",
-    imageAlt: "Trimaran Neel 47 aux îles Égades",
+      "Catamaran aux Égades depuis Trapani : trimaran multicoque avec confort de catamaran, chef à bord, charter avec skipper, Favignana, Levanzo et Marettimo.",
+    imageAlt: "Catamaran aux Égades en trimaran au confort multicoque",
     idealFor: [
       "Expérience gourmet avec chef à bord",
       "Charter privé de plusieurs jours",
@@ -1253,14 +1293,14 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
     ],
     faqs: [
       {
-        question: "Pourquoi choisir le Neel 47 ?",
+        question: "Est-ce un catamaran ou un trimaran ?",
         answer:
-          "Parce qu'il offre plus d'espace, de stabilité et de confort qu'un bateau ouvert. C'est le meilleur choix pour chef à bord, charter et journées privées premium.",
+          "C'est un trimaran, pas un catamaran classique. Pour ceux qui cherchent un catamaran aux Égades ou un tour en catamaran depuis Trapani, c'est notre solution multicoque la plus proche pour le confort, l'espace et la stabilité, avec l'avantage d'une structure à trois coques.",
       },
       {
-        question: "Le Neel 47 convient-il aux familles ?",
+        question: "Convient-il à ceux qui cherchent un tour en catamaran aux Égades ?",
         answer:
-          "Oui. Ses zones larges et protégées aident à vivre la journée plus calmement, toujours avec route et horaires adaptés par l'équipage.",
+          "Oui. Si vous cherchez de grands espaces, de la stabilité, un skipper et un service soigné, le trimaran répond au même besoin avec une configuration à trois coques. Il est idéal pour chef à bord, déjeuner au mouillage, baignade et snorkeling entre Favignana et Levanzo.",
       },
       {
         question: "Peut-on dormir à bord ?",
@@ -1276,24 +1316,24 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
     ],
   },
   boat: {
-    title: "Cigala & Bertinetti 34 Offshore Open",
-    shortTitle: "Cigala & Bertinetti",
+    title: "Barca Egadi Sailing",
+    shortTitle: "Barca Egadi Sailing",
     eyebrow: "Agile, rapide et ouvert",
     description:
-      "Le Cigala & Bertinetti 34 Offshore Open est le bateau agile pour excursions privées de 4 heures et sorties de 8 heures partagées ou privées entre Favignana et Levanzo.",
+      "La Barca Egadi Sailing est le bateau agile pour excursions privées de 4 heures autour de Favignana et sorties de 8 heures partagées ou privées entre Favignana et Levanzo.",
     detail: {
       eyebrow: "Bateau ouvert pour les îles Égades",
-      title: "Cigala & Bertinetti : le bateau agile pour criques, baignades et routes flexibles",
+      title: "Barca Egadi Sailing : le bateau agile pour criques, baignades et routes flexibles",
       paragraphs: [
-        "Le Cigala & Bertinetti est idéal pour ceux qui veulent se déplacer rapidement entre les criques, faire des arrêts baignade et vivre une expérience plus directe avec la mer.",
-        "Il fonctionne très bien pour les tours privés de 4 heures le matin ou l'après-midi, et pour les journées de 8 heures lorsque vous voulez plus de temps pour Favignana, Levanzo et les zones protégées du jour.",
+        "La Barca Egadi Sailing est idéale pour ceux qui veulent se déplacer rapidement entre les criques, faire des arrêts baignade et vivre une expérience plus directe avec la mer.",
+        "Il fonctionne très bien pour les tours privés de 4 heures le matin ou l'après-midi autour de Favignana, et pour les journées de 8 heures lorsque vous voulez plus de temps pour Favignana, Levanzo et les zones protégées du jour.",
         "C'est un bateau ouvert et sportif : parfait pour les groupes qui cherchent eau claire, snorkeling et route flexible avec skipper.",
       ],
     },
-    seoTitle: "Cigala & Bertinetti pour excursions en bateau aux îles Égades",
+    seoTitle: "Barca Egadi Sailing pour excursions en bateau aux îles Égades",
     seoDescription:
-      "Cigala & Bertinetti 34 Offshore Open depuis Trapani pour tours privés de 4 heures et excursions de 8 heures partagées ou privées à Favignana et Levanzo.",
-    imageAlt: "Cigala & Bertinetti naviguant aux îles Égades",
+      "Barca Egadi Sailing depuis Trapani pour tours privés de 4 heures autour de Favignana et excursions de 8 heures partagées ou privées à Favignana et Levanzo.",
+    imageAlt: "Barca Egadi Sailing naviguant aux îles Égades",
     idealFor: [
       "Excursions privées de 4 heures le matin ou l'après-midi",
       "Tour partagé de 8 heures avec places individuelles",
@@ -1312,7 +1352,7 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
           "Non. La formule de 4 heures est proposée comme expérience privée, le matin ou l'après-midi.",
       },
       {
-        question: "Le Cigala & Bertinetti convient-il à un tour partagé ?",
+        question: "La Barca Egadi Sailing convient-elle à un tour partagé ?",
         answer:
           "Oui, le tour partagé disponible est celui de 8 heures, avec places individuelles et départ depuis Trapani.",
       },
@@ -1331,24 +1371,24 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
 
 const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>>> = {
   trimarano: {
-    title: "Neel 47",
-    shortTitle: "Neel 47",
+    title: "Katamaran und Trimaran auf den Egadi",
+    shortTitle: "Katamaran / Trimaran",
     eyebrow: "Komfort, Chef und Charter",
     description:
-      "Der Neel 47 ist der Trimaran für die umfassendsten Erlebnisse auf den Ägadischen Inseln: großzügige Flächen, Kabinen, Bordküche und Stabilität für private Tage, Chef an Bord und mehrtägige Charter.",
+      "Sie suchen einen Katamaran auf den Egadi? Unsere Premium-Lösung ist ein Multihull-Trimaran mit viel Platz, Kabinen, Bordküche, Stabilität und Katamaran-Komfort für private Tage, Chef an Bord und mehrtägige Charter.",
     detail: {
       eyebrow: "Trimaran für Touren zu den Ägadischen Inseln",
-      title: "Neel 47: Komfort, Chef an Bord und Charter auf den Ägadischen Inseln",
+      title: "Katamaran auf den Egadi? Der Trimaran mit Skipper ab Trapani",
       paragraphs: [
-        "Der Neel 47 ist die Egadisailing-Option für Gäste, die ein komfortableres, gepflegteres und privateres Bootserlebnis suchen als eine klassische schnelle Tour. Er eignet sich für ein Gourmet-Erlebnis mit Chef an Bord, einen Tag zwischen Favignana und Levanzo oder einen mehrtägigen Charter.",
-        "An Bord gibt es Platz zum Essen, Entspannen, Sonnenbaden und Umziehen. Die Trimaran-Struktur bietet Stabilität und Weite, auch für Gäste, die nicht an das Leben auf dem Boot gewöhnt sind.",
-        "Sie müssen die Buchten nicht kennen und keine Segelerfahrung haben: Route, Zeiten und Stopps werden mit der Crew nach Wetter, Meer und Ziel des Tages angepasst.",
+        "Dieses Boot ist für Gäste gedacht, die ein komfortableres, gepflegteres und privateres Bootserlebnis auf den Egadi suchen als eine klassische schnelle Tour. Viele Gäste suchen nach einem Katamaran auf den Egadi, einer Katamaran-Tour ab Trapani oder einem Katamaran-Charter mit Skipper: technisch ist es ein Trimaran mit drei Rümpfen, hoher Stabilität und sehr gut nutzbaren Bereichen.",
+        "An Bord geht es nicht nur um Navigation: Es gibt Platz zum Essen, Entspannen, Sonnenbaden und Umziehen, damit der Tag in ruhigem Tempo verlaufen kann. Beim Gourmet-Erlebnis wird die Route zwischen Favignana und Levanzo geplant, mit geschützten Buchten zum Baden, Schnorcheln und Mittagessen mit lokalem Fisch und regionalen Produkten.",
+        "Einfach gesagt: Es ist die Premium-Alternative zur Katamaran-Miete auf den Egadi, mit Skipper, Crew, echtem Komfort und einer eleganteren Art, das Meer zu erleben. Sie müssen die Buchten nicht kennen und keine Segelerfahrung haben: Route, Zeiten und Stopps werden mit der Crew nach Wetter, Meer und Tagesziel angepasst.",
       ],
     },
-    seoTitle: "Neel 47 mit Chef an Bord auf den Ägadischen Inseln",
+    seoTitle: "Katamaran Egadi ab Trapani: Trimaran mit Skipper",
     seoDescription:
-      "Neel 47 Trimaran ab Trapani für Bootstouren zu den Ägadischen Inseln mit Chef an Bord, Gourmet-Erlebnis, Charter, Kabinen und privatem Komfort.",
-    imageAlt: "Neel 47 Trimaran auf den Ägadischen Inseln",
+      "Katamaran auf den Egadi ab Trapani: Multihull-Trimaran mit Katamaran-Komfort, Chef an Bord, Charter mit Skipper, Favignana, Levanzo und Marettimo.",
+    imageAlt: "Katamaran auf den Egadi als Trimaran mit Multihull-Komfort",
     idealFor: [
       "Gourmet-Erlebnis mit Chef an Bord",
       "Privater mehrtägiger Charter",
@@ -1362,14 +1402,14 @@ const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
     ],
     faqs: [
       {
-        question: "Warum den Neel 47 wählen?",
+        question: "Ist es ein Katamaran oder ein Trimaran?",
         answer:
-          "Weil er mehr Platz, Stabilität und Komfort bietet als ein offenes Boot. Er ist die beste Wahl für Chef an Bord, Charter und private Premium-Tage.",
+          "Es ist ein Trimaran, kein klassischer Katamaran. Für Gäste, die einen Katamaran auf den Egadi oder eine Katamaran-Tour ab Trapani suchen, ist es unsere nächstliegende Multihull-Lösung für Komfort, Platz und Stabilität, mit dem Vorteil einer Struktur mit drei Rümpfen.",
       },
       {
-        question: "Ist der Neel 47 für Familien geeignet?",
+        question: "Eignet er sich für Gäste, die eine Katamaran-Tour auf den Egadi suchen?",
         answer:
-          "Ja. Die großzügigen und geschützten Bereiche helfen, den Tag ruhiger zu erleben, während Route und Zeiten von der Crew angepasst werden.",
+          "Ja. Wenn Sie viel Platz, Stabilität, Skipper und gepflegten Service suchen, erfüllt der Trimaran denselben Wunsch mit einer Drei-Rumpf-Konfiguration. Er eignet sich ideal für Chef an Bord, Mittagessen vor Anker, Baden und Schnorcheln zwischen Favignana und Levanzo.",
       },
       {
         question: "Kann man an Bord übernachten?",
@@ -1385,24 +1425,24 @@ const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
     ],
   },
   boat: {
-    title: "Cigala & Bertinetti 34 Offshore Open",
-    shortTitle: "Cigala & Bertinetti",
+    title: "Barca Egadi Sailing",
+    shortTitle: "Barca Egadi Sailing",
     eyebrow: "Agil, schnell und offen",
     description:
-      "Die Cigala & Bertinetti 34 Offshore Open ist das agile Boot für private 4-Stunden-Touren und geteilte oder private 8-Stunden-Ausfahrten zwischen Favignana und Levanzo.",
+      "Die Barca Egadi Sailing ist das agile Boot für private 4-Stunden-Touren rund um Favignana und geteilte oder private 8-Stunden-Ausfahrten zwischen Favignana und Levanzo.",
     detail: {
       eyebrow: "Offenes Boot für die Ägadischen Inseln",
-      title: "Cigala & Bertinetti: das agile Boot für Buchten, Badestopps und flexible Routen",
+      title: "Barca Egadi Sailing: das agile Boot für Buchten, Badestopps und flexible Routen",
       paragraphs: [
-        "Die Cigala & Bertinetti ist ideal, wenn Sie sich schnell zwischen Buchten bewegen, Badestopps einlegen und das Meer direkter erleben möchten.",
-        "Sie eignet sich sehr gut für private 4-Stunden-Touren am Vormittag oder Nachmittag sowie für 8-Stunden-Tage, wenn Sie mehr Zeit für Favignana, Levanzo und die geschützten Bereiche des Tages wünschen.",
+        "Die Barca Egadi Sailing ist ideal, wenn Sie sich schnell zwischen Buchten bewegen, Badestopps einlegen und das Meer direkter erleben möchten.",
+        "Sie eignet sich sehr gut für private 4-Stunden-Touren am Vormittag oder Nachmittag rund um Favignana sowie für 8-Stunden-Tage, wenn Sie mehr Zeit für Favignana, Levanzo und die geschützten Bereiche des Tages wünschen.",
         "Es ist ein offenes, sportliches Boot: perfekt für Gruppen, die klares Wasser, Schnorcheln und eine flexible Route mit Skipper suchen.",
       ],
     },
-    seoTitle: "Cigala & Bertinetti für Bootstouren zu den Ägadischen Inseln",
+    seoTitle: "Barca Egadi Sailing für Bootstouren zu den Ägadischen Inseln",
     seoDescription:
-      "Cigala & Bertinetti 34 Offshore Open ab Trapani für private 4-Stunden-Touren und geteilte oder private 8-Stunden-Bootstouren nach Favignana und Levanzo.",
-    imageAlt: "Cigala & Bertinetti auf den Ägadischen Inseln",
+      "Barca Egadi Sailing ab Trapani für private 4-Stunden-Touren und geteilte oder private 8-Stunden-Bootstouren nach Favignana und Levanzo.",
+    imageAlt: "Barca Egadi Sailing auf den Ägadischen Inseln",
     idealFor: [
       "Private 4-Stunden-Touren am Vormittag oder Nachmittag",
       "Geteilte 8-Stunden-Tour mit Einzelplätzen",
@@ -1421,7 +1461,7 @@ const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
           "Nein. Die 4-Stunden-Formel wird als private Erfahrung am Vormittag oder Nachmittag angeboten.",
       },
       {
-        question: "Eignet sich die Cigala & Bertinetti für eine geteilte Tour?",
+        question: "Eignet sich die Barca Egadi Sailing für eine geteilte Tour?",
         answer:
           "Ja, die geteilte Tour ist die 8-Stunden-Variante mit Einzelplätzen und Abfahrt ab Trapani.",
       },

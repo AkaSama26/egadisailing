@@ -131,8 +131,8 @@ export function ExperiencePresenceNotice({
   return (
     <aside
       aria-live="polite"
-      className={`fixed right-3 bottom-24 z-[70] w-[min(calc(100vw_-_1.5rem),22rem)] rounded-lg border border-emerald-200/70 bg-white/[0.96] p-4 text-slate-900 shadow-2xl shadow-slate-950/20 backdrop-blur transition duration-700 motion-reduce:transition-none sm:right-5 sm:top-28 sm:bottom-auto ${
-        visible ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+      className={`fixed left-3 right-3 top-20 z-[70] rounded-lg border border-emerald-200/70 bg-white/[0.96] p-4 text-slate-900 shadow-2xl shadow-slate-950/20 backdrop-blur transition duration-700 motion-reduce:transition-none sm:left-auto sm:right-5 sm:top-28 sm:w-[22rem] ${
+        visible ? "translate-y-0 opacity-100 sm:translate-x-0" : "translate-y-4 opacity-0 sm:translate-x-8 sm:translate-y-0"
       }`}
     >
       <div className="flex items-start gap-3">

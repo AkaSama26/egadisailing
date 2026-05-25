@@ -722,17 +722,17 @@ export function LandingSections({ services }: LandingSectionsProps) {
             : "Barca privata con skipper e soste compatte nelle acque più riparate.",
         },
         {
-          title: routeTitle,
-          text: isEs
-            ? "Favignana o Levanzo, eligiendo la cala más bonita que se pueda alcanzar con seguridad en 4 horas."
-            : isFr
-            ? "Favignana ou Levanzo, en choisissant la plus belle crique accessible en sécurité en 4 heures."
-            : isDe
-            ? "Favignana oder Levanzo, mit der schönsten Bucht, die in 4 Stunden sicher erreichbar ist."
-            : isEn
-            ? "Favignana or Levanzo, choosing the best cove that can be reached safely in 4 hours."
-            : "Favignana o Levanzo, scegliendo la cala migliore raggiungibile in sicurezza in 4 ore.",
-        },
+	          title: routeTitle,
+	          text: isEs
+	            ? "Favignana, eligiendo la cala más bonita que se pueda alcanzar con seguridad en 4 horas."
+	            : isFr
+	            ? "Favignana, en choisissant la plus belle crique accessible en sécurité en 4 heures."
+	            : isDe
+	            ? "Favignana, mit der schönsten Bucht, die in 4 Stunden sicher erreichbar ist."
+	            : isEn
+	            ? "Favignana, choosing the best cove that can be reached safely in 4 hours."
+	            : "Favignana, scegliendo la cala migliore raggiungibile in sicurezza in 4 ore.",
+	        },
       ],
       href: localizedPath(locale, "/experiences/boat-exclusive-afternoon"),
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
@@ -965,14 +965,14 @@ export function LandingSections({ services }: LandingSectionsProps) {
     {
       src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-primo-piano.webp",
       alt: isEs
-        ? "Cigala Bertinetti 34 Offshore Open durante una excursión en barco por las Islas Egadi"
+        ? "Barca Egadi Sailing durante una excursión en barco por las Islas Egadi"
         : isFr
-        ? "Cigala Bertinetti 34 Offshore Open pendant une excursion en bateau aux îles Égades"
+        ? "Barca Egadi Sailing pendant une excursion en bateau aux îles Égades"
         : isDe
-        ? "Cigala Bertinetti 34 Offshore Open während einer Bootstour zu den Ägadischen Inseln"
+        ? "Barca Egadi Sailing während einer Bootstour zu den Ägadischen Inseln"
         : isEn
-        ? "Cigala Bertinetti 34 Offshore Open during an Egadi Islands boat excursion"
-        : "Cigala Bertinetti 34 Offshore Open durante un'escursione in barca alle Isole Egadi",
+        ? "Barca Egadi Sailing during an Egadi Islands boat excursion"
+        : "Barca Egadi Sailing durante un'escursione in barca alle Isole Egadi",
       caption: isEs
         ? "Barco privado a Favignana"
         : isFr

@@ -346,7 +346,7 @@ export const levanzoGuidesFr: LevanzoGuide[] = [
     itemList: [
       { name: "Tour partagé", description: "Pour réserver une ou plusieurs places simplement." },
       { name: "Tour privé", description: "Pour adapter le rythme aux envies du groupe." },
-      { name: "Expérience premium", description: "Avec plus de confort et déjeuner à bord sur Neel 47." },
+      { name: "Expérience premium", description: "Avec plus de confort de catamaran et déjeuner à bord en trimaran." },
     ],
     sections: [
       {
@@ -367,7 +367,7 @@ export const levanzoGuidesFr: LevanzoGuide[] = [
       },
     ],
     faqs: [
-      { question: "Peut-on réserver une seule place ?", answer: "Oui, les experiences partagees permettent de réserver même un billet individuel." },
+      { question: "Peut-on réserver une seule place ?", answer: "Oui, les expériences partagées permettent de réserver même un billet individuel." },
       { question: "Levanzo est-elle incluse dans tous les tours ?", answer: "Non, il faut choisir une expérience qui prevoit clairement Favignana et Levanzo." },
     ],
     relatedSlugs: ["levanzo-en-une-journee", "plages-criques-levanzo", "snorkeling-cala-minnola-calcara"],

@@ -489,7 +489,7 @@ export const favignanaGuides: FavignanaGuide[] = [
     metaTitle: "Favignana in un giorno: itinerario da Trapani e cose da vedere",
     metaDescription:
       "Itinerario pratico per visitare Favignana in un giorno da Trapani: cale, centro, tonnara, consigli su barca, bici, aliscafo e tempi.",
-    heroImage: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+    heroImage: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
     heroAlt: "Gruppo in barca durante una giornata alle Isole Egadi da Trapani",
     eyebrow: "Itinerario pratico",
     intro:
@@ -1077,7 +1077,7 @@ export const favignanaGuides: FavignanaGuide[] = [
     metaDescription:
       "Confronto tra tour in barca Favignana e Levanzo da Trapani: 4 ore, 8 ore, privato, condiviso, gourmet in trimarano e charter Egadi.",
     heroImage: "/images/boats/neel-47/neel-47-favignana.webp",
-    heroAlt: "Trimarano Neel 47 alle Egadi vicino a Favignana",
+    heroAlt: "Trimarano con comfort da catamarano alle Egadi vicino a Favignana",
     eyebrow: "Esperienze Egadisailing",
     intro:
       "Favignana e Levanzo sono due isole vicine ma diverse: la prima è più ampia, ricca di cale famose e storia Florio; la seconda è più raccolta, silenziosa e trasparente. Un tour in barca da Trapani permette di leggerle insieme quando meteo e durata lo consentono.",
@@ -1153,7 +1153,7 @@ export const favignanaGuides: FavignanaGuide[] = [
         eyebrow: "Premium",
         title: "Quando scegliere il trimarano gourmet",
         body: [
-          "L'esperienza gourmet sul Neel 47 è pensata per chi vuole vivere le Egadi con comfort, spazi ampi e pranzo a bordo. Non è la scelta più essenziale, ma quella più adatta a eventi, coppie, famiglie o gruppi che vogliono un momento speciale.",
+          "L'esperienza gourmet sul trimarano è pensata per chi vuole vivere le Egadi con comfort da catamarano, spazi ampi e pranzo a bordo. Non è la scelta più essenziale, ma quella più adatta a eventi, coppie, famiglie o gruppi che vogliono un momento speciale.",
           "Chef, skipper e hostess permettono di concentrarsi sulla giornata, mentre la rotta resta costruita su meteo, mare e comfort degli ospiti.",
         ],
         cta: "neel",

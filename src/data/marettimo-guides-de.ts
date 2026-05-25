@@ -2,7 +2,6 @@ import type { MarettimoGuide } from "./marettimo-guides";
 
 const marettimoHero = "/images/islands/marettimo/hero.webp";
 const charterImage = "/images/experience-polaroids/charter-trimarano-egadi.webp";
-const privateBoatImage = "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp";
 
 type GuideInput = Omit<MarettimoGuide, "eyebrow"> & { eyebrow?: string };
 
@@ -274,7 +273,7 @@ export const marettimoGuidesDe: MarettimoGuide[] = [
     metaDescription:
       "Guide zu Bootstour und Charter für Marettimo: wann es sinnvoll ist, Unterschiede zu Favignana und Levanzo, Wetter, Höhlen, Cala Bianca und Trimaran-Route.",
     heroImage: charterImage,
-    heroAlt: "Neel 47 Trimaran während eines Charters auf den Ägadischen Inseln",
+    heroAlt: "Trimaran mit Katamaran-Komfort während eines Charters auf den Ägadischen Inseln",
     eyebrow: "Egadisailing-Erlebnisse",
     intro:
       "Marettimo ist die Insel, bei der eine ehrliche Planung am wichtigsten ist. Sie ist weit, kraftvoll und wunderschön, aber nicht immer passend für ein standardisiertes Tagesversprechen.",

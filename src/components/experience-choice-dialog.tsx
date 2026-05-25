@@ -110,7 +110,7 @@ export function ExperienceChoiceDialog({
             introEyebrow: "Egadi Sailing Concierge",
             introTitle: "Welche Art von Tag auf dem Meer wünschen Sie sich?",
             introDescription:
-              "Ein paar schnelle Entscheidungen, damit wir die passende Route zwischen Neel 47 und unserem agilen offenen Boot finden.",
+              "Ein paar schnelle Entscheidungen, damit wir die passende Route zwischen Trimaran mit Katamaran-Komfort und unserem agilen offenen Boot finden.",
           }
         : isEs
         ? {
@@ -127,8 +127,8 @@ export function ExperienceChoiceDialog({
             resultTitle: "Esta es la mejor opción",
             introEyebrow: "Concierge Egadi Sailing",
             introTitle: "¿Qué día de mar tienes en mente?",
-	            introDescription:
-	              "Unas pocas respuestas para encontrar la ruta adecuada entre el Neel 47 y nuestro barco abierto más ágil.",
+            introDescription:
+              "Unas pocas respuestas para encontrar la ruta adecuada entre el trimarán con confort de catamarán y nuestro barco abierto más ágil.",
           }
         : isEn
         ? {
@@ -164,7 +164,7 @@ export function ExperienceChoiceDialog({
             introEyebrow: "Concierge Egadi Sailing",
             introTitle: "Quelle journée en mer imaginez-vous ?",
             introDescription:
-              "Quelques choix rapides pour trouver la bonne route, entre le Neel 47 et notre bateau ouvert plus agile.",
+              "Quelques choix rapides pour trouver la bonne route, entre le trimaran au confort de catamaran et notre bateau ouvert plus agile.",
           }
         : {
             close: "Chiudi",
@@ -666,7 +666,7 @@ function getGermanQuestion({
       return {
         eyebrow: "Mittagessen",
         title: "Möchten Sie an Bord oder auf der Insel zu Mittag essen?",
-        description: "Mittagessen an Bord führt zum Neel 47 mit Chef, Hostess und Premium-Flächen.",
+        description: "Mittagessen an Bord führt zum Trimaran mit Chef, Hostess und Premium-Flächen.",
         choices: [
           {
             emoji: "🍽️",
@@ -686,18 +686,18 @@ function getGermanQuestion({
       return {
         eyebrow: "Stil",
         title: "Welche Art von privatem Tag stellen Sie sich vor?",
-        description: "Hier wählen wir zwischen dem Premium-Komfort des Neel 47 und dem agileren offenen Boot.",
+        description: "Hier wählen wir zwischen dem Premium-Komfort des Trimarans und dem agileren offenen Boot.",
         choices: [
           {
             emoji: "✨",
             label: "Maximaler Komfort, Raum und langsamer Rhythmus",
-            description: "Neel 47, Privatsphäre, Relaxbereiche und eine besonders gepflegte Route.",
+            description: "Trimaran, Privatsphäre, Relaxbereiche und eine besonders gepflegte Route.",
             onSelect: () => moveTo("premiumDuration"),
           },
           {
             emoji: "🚤",
             label: "Agiles Boot, Baden und Buchten",
-            description: "Cigala & Bertinetti, leichte Route und flexible Badestopps.",
+            description: "Barca Egadi Sailing, leichte Route und flexible Badestopps.",
             onSelect: () => moveTo("agilePace"),
           },
         ],
@@ -706,7 +706,7 @@ function getGermanQuestion({
       return {
         eyebrow: "Zeit an Bord",
         title: "Ein Premium-Tag oder mehrere Tage auf den Ägadischen Inseln?",
-        description: "Der Neel 47 eignet sich für einen kuratierten Tag ebenso wie für mehrere Tage zwischen den Inseln.",
+        description: "Der Trimaran eignet sich für einen kuratierten Tag ebenso wie für mehrere Tage zwischen den Inseln.",
         choices: [
           {
             emoji: "🌅",
@@ -821,7 +821,7 @@ function getFrenchQuestion({
       return {
         eyebrow: "Déjeuner",
         title: "Vous voulez déjeuner à bord ou sur l'île ?",
-        description: "Le déjeuner à bord oriente vers le Neel 47, avec chef, hôtesse et espaces premium.",
+        description: "Le déjeuner à bord oriente vers le trimaran, avec chef, hôtesse et espaces premium.",
         choices: [
           {
             emoji: "🍽️",
@@ -841,18 +841,18 @@ function getFrenchQuestion({
       return {
         eyebrow: "Style",
         title: "Quel type de journée privée imaginez-vous ?",
-        description: "On choisit ici entre le confort premium du Neel 47 et le bateau ouvert plus agile.",
+        description: "On choisit ici entre le confort premium du trimaran et le bateau ouvert plus agile.",
         choices: [
           {
             emoji: "✨",
             label: "Confort maximal, espace et rythme lent",
-            description: "Neel 47, intimité, espaces détente et route plus soignée.",
+            description: "Trimaran, intimité, espaces détente et route plus soignée.",
             onSelect: () => moveTo("premiumDuration"),
           },
           {
             emoji: "🚤",
             label: "Bateau agile, baignades et criques",
-            description: "Cigala & Bertinetti, route fluide et arrêts baignade flexibles.",
+            description: "Barca Egadi Sailing, route fluide et arrêts baignade flexibles.",
             onSelect: () => moveTo("agilePace"),
           },
         ],
@@ -861,7 +861,7 @@ function getFrenchQuestion({
       return {
         eyebrow: "Temps à bord",
         title: "Une journée premium ou plusieurs jours aux îles Égades ?",
-        description: "Le Neel 47 est pensé pour une journée soignée comme pour vivre plusieurs jours entre les îles.",
+        description: "Le trimaran est pensé pour une journée soignée comme pour vivre plusieurs jours entre les îles.",
         choices: [
           {
             emoji: "🌅",
@@ -976,7 +976,7 @@ function getSpanishQuestion({
       return {
         eyebrow: "Comida",
         title: "¿Quieres comer a bordo o en la isla?",
-        description: "Comer a bordo apunta al Neel 47 con chef, azafata y espacios premium.",
+        description: "Comer a bordo apunta al trimarán con chef, azafata y espacios premium.",
         choices: [
           {
             emoji: "🍽️",
@@ -996,18 +996,18 @@ function getSpanishQuestion({
       return {
         eyebrow: "Estilo",
         title: "¿Qué tipo de día imagináis?",
-        description: "Aquí elegimos entre el confort de lujo del Neel 47 y el barco abierto más ágil.",
+        description: "Aquí elegimos entre el confort premium del trimarán y el barco abierto más ágil.",
         choices: [
           {
             emoji: "✨",
             label: "Máximo confort, espacio y ritmo lento",
-            description: "Neel 47, privacidad, zonas de descanso y ruta más cuidada.",
+            description: "Trimarán, privacidad, zonas de descanso y ruta más cuidada.",
             onSelect: () => moveTo("premiumDuration"),
           },
           {
             emoji: "🚤",
             label: "Barco ágil, baños y calas",
-            description: "Cigala & Bertinetti, ruta ligera y paradas de baño flexibles.",
+            description: "Barca Egadi Sailing, ruta ligera y paradas de baño flexibles.",
             onSelect: () => moveTo("agilePace"),
           },
         ],
@@ -1016,7 +1016,7 @@ function getSpanishQuestion({
       return {
         eyebrow: "Tiempo a bordo",
         title: "¿Un día premium o varios días en las Egadi?",
-        description: "El Neel 47 sirve tanto para una jornada cuidada como para vivir las islas con pernocta.",
+        description: "El trimarán sirve tanto para una jornada cuidada como para vivir las islas con pernocta.",
         choices: [
           {
             emoji: "🌅",
@@ -1162,7 +1162,7 @@ function getItalianQuestion({
           {
             emoji: "🚤",
             label: "Barca agile, bagni e cale",
-            description: "Cigala & Bertinetti, rotta snella e soste bagno flessibili.",
+            description: "Barca Egadi Sailing, rotta snella e soste bagno flessibili.",
             onSelect: () => moveTo("agilePace"),
           },
         ],
@@ -1317,7 +1317,7 @@ function getEnglishQuestion({
           {
             emoji: "🚤",
             label: "Agile boat, swims and coves",
-            description: "Cigala & Bertinetti, a streamlined route and flexible swim stops.",
+            description: "Barca Egadi Sailing, a streamlined route and flexible swim stops.",
             onSelect: () => moveTo("agilePace"),
           },
         ],

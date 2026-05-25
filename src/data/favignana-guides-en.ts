@@ -305,7 +305,7 @@ export const favignanaGuidesEn: FavignanaGuide[] = [
     metaTitle: "Favignana in one day: itinerary from Trapani and what to see",
     metaDescription:
       "A practical one-day Favignana itinerary from Trapani: coves, town, tuna factory, boat tour, bike, hydrofoil and timing advice.",
-    heroImage: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+    heroImage: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
     heroAlt: "Group on a boat during a day trip to the Egadi Islands from Trapani",
     eyebrow: "Practical itinerary",
     intro:
@@ -896,7 +896,7 @@ export const favignanaGuidesEn: FavignanaGuide[] = [
     metaDescription:
       "Compare Favignana and Levanzo boat tours from Trapani: 4-hour, 8-hour, private, shared, gourmet trimaran experience and Egadi charter.",
     heroImage: "/images/boats/neel-47/neel-47-favignana.webp",
-    heroAlt: "Neel 47 trimaran in the Egadi Islands near Favignana",
+    heroAlt: "Catamaran-style trimaran in the Egadi Islands near Favignana",
     eyebrow: "Egadisailing experiences",
     intro:
       "Favignana and Levanzo are close but different islands: the first is larger, full of famous coves and Florio history; the second is smaller, quieter and very clear. A boat tour from Trapani lets you read them together when weather and duration allow it.",
@@ -972,7 +972,7 @@ export const favignanaGuidesEn: FavignanaGuide[] = [
         eyebrow: "Premium",
         title: "When to choose the gourmet trimaran",
         body: [
-          "The gourmet experience on the Neel 47 is designed for guests who want comfort, wide spaces and lunch on board. It is not the most essential option, but it is ideal for events, couples, families or groups looking for a special day.",
+          "The gourmet experience on the trimaran is designed for guests who want catamaran-style comfort, wide spaces and lunch on board. It is not the most essential option, but it is ideal for events, couples, families or groups looking for a special day.",
           "Chef, skipper and hostess let you focus on the experience, while the route remains shaped by weather, sea and guest comfort.",
         ],
         cta: "neel",

@@ -62,21 +62,21 @@ const TICKET_HERO_BY_BOAT = {
   motoscafo: {
     src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
       alt: {
-        it: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
-        en: "Cigala & Bertinetti 34 Offshore Open Bacio cruising",
-        es: "Cigala & Bertinetti 34 Offshore Open Bacio navegando",
-        fr: "Cigala & Bertinetti 34 Offshore Open Bacio en navigation",
-        de: "Cigala & Bertinetti 34 Offshore Open Bacio in Fahrt",
+        it: "Barca Egadi Sailing in navigazione",
+        en: "Barca Egadi Sailing cruising",
+        es: "Barca Egadi Sailing navegando",
+        fr: "Barca Egadi Sailing en navigation",
+        de: "Barca Egadi Sailing in Fahrt",
       },
   },
   boat: {
     src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
       alt: {
-        it: "Cigala & Bertinetti 34 Offshore Open Bacio in navigazione",
-        en: "Cigala & Bertinetti 34 Offshore Open Bacio cruising",
-        es: "Cigala & Bertinetti 34 Offshore Open Bacio navegando",
-        fr: "Cigala & Bertinetti 34 Offshore Open Bacio en navigation",
-        de: "Cigala & Bertinetti 34 Offshore Open Bacio in Fahrt",
+        it: "Barca Egadi Sailing in navigazione",
+        en: "Barca Egadi Sailing cruising",
+        es: "Barca Egadi Sailing navegando",
+        fr: "Barca Egadi Sailing en navigation",
+        de: "Barca Egadi Sailing in Fahrt",
       },
   },
 } as const;

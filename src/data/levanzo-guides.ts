@@ -857,14 +857,14 @@ export const levanzoGuides: LevanzoGuide[] = [
     shortTitle: "Tour in barca",
     metaTitle: "Tour in barca a Levanzo da Trapani: quale scegliere",
     metaDescription:
-      "Guida ai tour in barca a Levanzo da Trapani: 4 ore, 8 ore, privato, condiviso, gourmet in trimarano, snorkeling e rotta con Favignana.",
+      "Guida ai tour in barca a Levanzo da Trapani: 8 ore, privato, condiviso, gourmet in trimarano, snorkeling e rotta con Favignana.",
     heroImage: boatImage,
     heroAlt: "Tour in barca da Trapani verso Levanzo e le Isole Egadi",
     eyebrow: "Esperienze Egadi",
     intro:
       "Un tour in barca a Levanzo da Trapani ha senso quando vuoi vivere l'isola dal mare, senza organizzare aliscafi, coincidenze, taxi mare e camminate sotto il sole. La rotta migliore non è rigida: nasce da vento, mare e durata scelta.",
     quickAnswer:
-      "Scegli un tour di 4 ore se vuoi una mezza giornata agile, un tour di 8 ore se vuoi più soste e la possibilità di abbinare Favignana e Levanzo, una barca privata se vuoi ritmo su misura, il trimarano gourmet se cerchi comfort premium con chef a bordo.",
+      "Per vivere Levanzo dal mare scegli una formula da 8 ore, condivisa o privata: hai più tempo per soste, snorkeling e possibile abbinamento con Favignana. Il tour di 4 ore resta una mezza giornata agile intorno a Favignana e non prevede pit stop a Levanzo.",
     primaryKeyword: "tour Levanzo da Trapani",
     secondaryKeywords: [
       "tour in barca Levanzo",
@@ -874,16 +874,16 @@ export const levanzoGuides: LevanzoGuide[] = [
     ],
     quickFacts: [
       { label: "Partenza", value: "Trapani" },
-      { label: "Formati", value: "4 ore, 8 ore, privato" },
+      { label: "Formati", value: "8 ore, privato, gourmet" },
       { label: "Possibile abbinamento", value: "Favignana" },
       { label: "Scelta", value: "meteo e durata" },
     ],
     itemListTitle: "Quale esperienza scegliere",
     itemList: [
       {
-        name: "Tour privato 4 ore",
+        name: "Tour privato 4 ore Favignana",
         description:
-          "Per chi vuole una fascia compatta, con barca riservata e poche soste scelte bene.",
+          "Per chi vuole una fascia compatta con barca riservata: non prevede pit stop a Levanzo.",
       },
       {
         name: "Tour condiviso 8 ore",
@@ -920,15 +920,15 @@ export const levanzoGuides: LevanzoGuide[] = [
       {
         id: "durata",
         eyebrow: "Durata",
-        title: "4 ore, 8 ore o privato?",
+        title: "8 ore, privato o gourmet?",
         body: [
-          "La mezza giornata è perfetta se vuoi una parentesi in mare senza occupare tutta la giornata. La formula da 8 ore dà più margine: più soste, più calma e più possibilità di combinare Levanzo con Favignana.",
+          "La mezza giornata è perfetta se vuoi una parentesi in mare intorno a Favignana, ma non prevede Levanzo. Per Levanzo la formula da 8 ore dà più margine: più soste, più calma e più possibilità di combinare Levanzo con Favignana.",
           "Il privato conviene quando vuoi decidere il ritmo con lo skipper, viaggi in gruppo o hai esigenze particolari di orario, comfort o privacy.",
         ],
         cards: [
           {
-            title: "4 ore privato",
-            text: "Poche soste, ritmo agile e barca riservata.",
+            title: "4 ore privato Favignana",
+            text: "Poche soste, ritmo agile e barca riservata, senza pit stop a Levanzo.",
             tag: "Mezza giornata",
             image: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
           },
@@ -961,7 +961,7 @@ export const levanzoGuides: LevanzoGuide[] = [
       {
         question: "Quanto dura un tour in barca a Levanzo da Trapani?",
         answer:
-          "Dipende dalla formula scelta. Una mezza giornata è più agile, mentre 8 ore danno più tempo per soste, snorkeling e possibile combinazione con Favignana.",
+          "Per Levanzo considera la formula da 8 ore: dà più tempo per soste, snorkeling e possibile combinazione con Favignana. La 4 ore resta una rotta breve intorno a Favignana.",
       },
       {
         question: "Il tour a Levanzo include sempre Favignana?",

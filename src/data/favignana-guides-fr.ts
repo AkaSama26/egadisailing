@@ -405,7 +405,7 @@ export const favignanaGuidesFr: FavignanaGuide[] = [
     itemList: [
       { name: "Tour partagé", description: "Idéal pour réserver une ou plusieurs places sans privatiser le bateau." },
       { name: "Tour privé", description: "Plus flexible pour familles, couples ou groupes." },
-      { name: "Chef à bord", description: "Option premium sur Neel 47 avec déjeuner à bord." },
+      { name: "Chef à bord", description: "Option premium en trimaran au confort de catamaran avec déjeuner à bord." },
     ],
     sections: [
       {
@@ -413,7 +413,7 @@ export const favignanaGuidesFr: FavignanaGuide[] = [
         title: "Partage, privé ou premium",
         body: [
           "Le tour partagé convient aux voyageurs seuls, couples et petits groupes qui veulent une expérience complète sans louer tout le bateau.",
-          "Le tour privé permet d'adapter davantage le rythme. Le Neel 47 ajoute une dimension plus confortable et gastronomique, avec déjeuner à bord.",
+          "Le tour privé permet d'adapter davantage le rythme. Le trimaran ajoute une dimension plus confortable et gastronomique, avec déjeuner à bord.",
         ],
         cta: "compare",
       },
@@ -426,8 +426,8 @@ export const favignanaGuidesFr: FavignanaGuide[] = [
       },
     ],
     faqs: [
-      { question: "Peut-on réserver une seule place ?", answer: "Oui, sur les experiences partagees il est possible de réserver un billet individuel." },
-      { question: "Le déjeuner à bord est-il inclus ?", answer: "Cela dépend de l'expérience choisie. Le format gourmet avec chef à bord privilégie le Neel 47." },
+      { question: "Peut-on réserver une seule place ?", answer: "Oui, sur les expériences partagées il est possible de réserver un billet individuel." },
+      { question: "Le déjeuner à bord est-il inclus ?", answer: "Cela dépend de l'expérience choisie. Le format gourmet avec chef à bord privilégie le trimaran au confort de catamaran." },
     ],
     relatedSlugs: ["favignana-en-une-journee", "plus-belles-plages-criques-favignana", "snorkeling-a-favignana"],
   }),

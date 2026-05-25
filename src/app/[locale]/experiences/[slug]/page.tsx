@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import {
@@ -10,19 +9,14 @@ import {
   Check,
   Clock,
   Compass,
-  Luggage,
   ShieldCheck,
   Ship,
   Users,
 } from "lucide-react";
 import { ScrollSection } from "@/components/scroll-section";
-import {
-  ExperienceBookingCard,
-  ExperienceBookingDialogButton,
-  SmoothAnchorLink,
-} from "@/components/experience-detail-actions";
+import { ExperienceBookingDialogButton } from "@/components/experience-detail-actions";
 import { ExperiencePresenceNotice } from "@/components/experience-presence-badge";
-import { ExperienceBoatGallery } from "@/components/experience-boat-gallery";
+import { ExperienceImageCarousel } from "@/components/experience-image-carousel";
 import {
   getExperienceContent,
   getListedExperienceIds,
@@ -43,13 +37,37 @@ import {
   PUBLIC_CONTACT_LOCATION,
   PUBLIC_CONTACT_PHONE_TEXT,
 } from "@/lib/public-contact";
-import { liquidGlassButton } from "@/lib/ui/liquid-glass";
+import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
 import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 const FALLBACK_HERO_IMAGE =
   "/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp";
+const EGADI_BOAT_FRONT_HERO_IMAGE =
+  "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp";
+
+type CarouselGalleryItem = {
+  src: string;
+  alt: string;
+  caption?: string;
+};
+
+type PaymentBrand = {
+  id: string;
+  label: string;
+  src: string;
+};
+
+const PAYMENT_BRANDS: PaymentBrand[] = [
+  { id: "visa", label: "Visa", src: "/images/payment-icons/visa.svg" },
+  { id: "mastercard", label: "Mastercard", src: "/images/payment-icons/mastercard.svg" },
+  { id: "amex", label: "American Express", src: "/images/payment-icons/amex.svg" },
+  { id: "paypal", label: "PayPal", src: "/images/payment-icons/paypal.svg" },
+  { id: "klarna", label: "Klarna", src: "/images/payment-icons/klarna.svg" },
+  { id: "google-pay", label: "Google Pay", src: "/images/payment-icons/google-pay.svg" },
+  { id: "apple-pay", label: "Apple Pay", src: "/images/payment-icons/apple-pay.svg" },
+];
 
 function absoluteUrl(path: string): string {
   if (path.startsWith("http")) return path;
@@ -62,6 +80,171 @@ function jsonLd(data: unknown): string {
 
 function isFishingService(service: { id?: string }) {
   return service.id === "fishing-full-day";
+}
+
+function getEgadiBoatHeroAlt(locale: string) {
+  if (locale === "es") return "Vista frontal de la Barca Egadi Sailing";
+  if (locale === "fr") return "Vue frontale de la Barca Egadi Sailing";
+  if (locale === "de") return "Frontansicht der Barca Egadi Sailing";
+  if (locale === "en") return "Front view of Barca Egadi Sailing";
+  return "Vista frontale della Barca Egadi Sailing";
+}
+
+function getEgadiBoatRouteGallery(locale: string, isHalfDay: boolean): CarouselGalleryItem[] {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  const labels = {
+    calaRossa: isDe ? "Cala Rossa" : isFr ? "Cala Rossa" : isEs ? "Cala Rossa" : "Cala Rossa",
+    calaAzzurra: isDe ? "Cala Azzurra" : isFr ? "Cala Azzurra" : isEs ? "Cala Azzurra" : "Cala Azzurra",
+    bueMarino: isDe ? "Bue Marino" : isFr ? "Bue Marino" : isEs ? "Bue Marino" : "Bue Marino",
+  };
+
+  return [
+    {
+      src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
+      alt: isEn
+        ? "Swimming in the clear water of Cala Rossa during the Egadi boat tour"
+        : isEs
+          ? "Baño en el agua cristalina de Cala Rossa durante la excursión en barco"
+          : isFr
+            ? "Baignade dans l'eau cristalline de Cala Rossa pendant l'excursion en bateau"
+            : isDe
+              ? "Schwimmen im klaren Wasser von Cala Rossa während der Bootstour"
+              : "Nuoto nell'acqua cristallina di Cala Rossa durante il tour in barca",
+      caption: isEn ? "Swimming in Cala Rossa" : isEs ? "Baño en Cala Rossa" : isFr ? "Baignade à Cala Rossa" : isDe ? "Schwimmen in Cala Rossa" : "Nuoto a Cala Rossa",
+    },
+    {
+      src: "/images/experience-polaroids/barca-4-ore-cala-rossa.webp",
+      alt: isEn
+        ? "Boat tour stop near Cala Rossa in Favignana"
+        : isEs
+          ? "Parada en barco cerca de Cala Rossa en Favignana"
+          : isFr
+            ? "Arrêt en bateau près de Cala Rossa à Favignana"
+            : isDe
+              ? "Badestopp mit dem Boot nahe Cala Rossa auf Favignana"
+              : "Sosta in barca vicino Cala Rossa a Favignana",
+      caption: labels.calaRossa,
+    },
+    {
+      src: "/images/experience-polaroids/barca-8-ore-snorkeling.webp",
+      alt: isEn
+        ? isHalfDay
+          ? "Snorkelling during the Favignana boat tour"
+          : "Snorkelling during the Favignana and Levanzo boat tour"
+        : isEs
+          ? isHalfDay
+            ? "Snorkel durante la excursión en barco por Favignana"
+            : "Snorkel durante la excursión en barco Favignana y Levanzo"
+          : isFr
+            ? isHalfDay
+              ? "Snorkeling pendant l'excursion en bateau à Favignana"
+              : "Snorkeling pendant l'excursion en bateau Favignana et Levanzo"
+            : isDe
+              ? isHalfDay
+                ? "Schnorcheln während der Bootstour rund um Favignana"
+                : "Schnorcheln während der Bootstour Favignana und Levanzo"
+              : isHalfDay
+                ? "Snorkeling durante il tour in barca a Favignana"
+                : "Snorkeling durante l'escursione in barca Favignana e Levanzo",
+      caption: isEn ? "Snorkelling" : isEs ? "Snorkel" : isFr ? "Snorkeling" : isDe ? "Schnorcheln" : "Snorkeling",
+    },
+    {
+      src: "/images/experience-polaroids/barca-8-ore-tramonto.webp",
+      alt: isEn
+        ? "Return navigation at sunset after the Egadi Islands boat tour"
+        : isEs
+          ? "Regreso al atardecer después del tour en barco por las Egadi"
+          : isFr
+            ? "Retour au coucher du soleil après le tour en bateau aux Égades"
+            : isDe
+              ? "Rückfahrt bei Sonnenuntergang nach der Bootstour zu den Ägadischen Inseln"
+              : "Navigazione di rientro al tramonto dopo il tour in barca alle Egadi",
+      caption: isEn ? "Return at sunset" : isEs ? "Regreso al atardecer" : isFr ? "Retour au coucher du soleil" : isDe ? "Rückfahrt bei Sonnenuntergang" : "Rientro al tramonto",
+    },
+    {
+      src: "/images/islands/favignana/poi/cala-azzurra.webp",
+      alt: isEn
+        ? "Cala Azzurra in Favignana with turquoise water"
+        : isEs
+          ? "Cala Azzurra en Favignana con agua turquesa"
+          : isFr
+            ? "Cala Azzurra à Favignana avec eau turquoise"
+            : isDe
+              ? "Cala Azzurra auf Favignana mit türkisfarbenem Wasser"
+              : "Cala Azzurra a Favignana con acqua turchese",
+      caption: labels.calaAzzurra,
+    },
+    {
+      src: "/images/islands/favignana/poi/bue-marino.webp",
+      alt: isEn
+        ? "Bue Marino rocky coastline in Favignana"
+        : isEs
+          ? "Costa rocosa de Bue Marino en Favignana"
+          : isFr
+            ? "Côte rocheuse de Bue Marino à Favignana"
+            : isDe
+              ? "Felsige Küste von Bue Marino auf Favignana"
+              : "Costa rocciosa del Bue Marino a Favignana",
+      caption: labels.bueMarino,
+    },
+    {
+      src: "/images/islands/favignana/poi/cala-del-pozzo.webp",
+      alt: isEn
+        ? "Cala del Pozzo in Favignana"
+        : isEs
+          ? "Cala del Pozzo en Favignana"
+          : isFr
+            ? "Cala del Pozzo à Favignana"
+            : isDe
+              ? "Cala del Pozzo auf Favignana"
+              : "Cala del Pozzo a Favignana",
+      caption: "Cala del Pozzo",
+    },
+    {
+      src: "/images/islands/favignana/poi/cala-rossa.webp",
+      alt: isEn
+        ? "Cala Rossa in Favignana seen from the coast"
+        : isEs
+          ? "Cala Rossa en Favignana vista desde la costa"
+          : isFr
+            ? "Cala Rossa à Favignana vue depuis la côte"
+            : isDe
+              ? "Cala Rossa auf Favignana von der Küste aus gesehen"
+              : "Cala Rossa a Favignana vista dalla costa",
+      caption: labels.calaRossa,
+    },
+    {
+      src: "/images/islands/favignana/poi/punta-marsala.webp",
+      alt: isEn
+        ? "Punta Marsala in Favignana"
+        : isEs
+          ? "Punta Marsala en Favignana"
+          : isFr
+            ? "Punta Marsala à Favignana"
+            : isDe
+              ? "Punta Marsala auf Favignana"
+              : "Punta Marsala a Favignana",
+      caption: "Punta Marsala",
+    },
+  ];
+}
+
+function PaymentBrandMark({ brand }: { brand: PaymentBrand }) {
+  return (
+    <span className="inline-flex h-8 w-[4.35rem] items-center justify-center overflow-hidden rounded-[0.28rem] bg-white px-2 shadow-sm ring-1 ring-white/20">
+      <Image
+        src={brand.src}
+        alt={brand.label}
+        width={56}
+        height={22}
+        unoptimized
+        className="max-h-5 max-w-full object-contain"
+      />
+    </span>
+  );
 }
 
 function getFishingDetailCopy(locale: string) {
@@ -155,14 +338,14 @@ function getFishingSeoExpansionCopy(
         icon: Compass,
         title: isEs ? "Ruta y normativa" : isFr ? "Route et règles" : isDe ? "Route und Regeln" : isEn ? "Route and rules" : "Rotta e normativa",
         text: isEs
-          ? "La ruta se decide según mar, temporada y autorizaciones AMP/MASAF; no se pesca en zonas prohibidas."
+          ? "La ruta se decide según mar, temporada y autorizaciones AMP/MASAF: se pesca alrededor de las islas, en zonas permitidas, no dentro de las calas de baño."
           : isFr
-            ? "La route est décidée selon mer, saison et autorisations AMP/MASAF ; aucune pêche en zone interdite."
+            ? "La route est décidée selon mer, saison et autorisations AMP/MASAF : on pêche autour des îles, dans les zones autorisées, pas dans les criques de baignade."
             : isDe
-              ? "Die Route richtet sich nach Meer, Saison und AMP/MASAF-Genehmigungen; keine Fischerei in verbotenen Zonen."
+              ? "Die Route richtet sich nach Meer, Saison und AMP/MASAF-Genehmigungen: Geangelt wird rund um die Inseln in erlaubten Bereichen, nicht in Badebuchten."
               : isEn
-                ? "The route is chosen according to sea state, season and AMP/MASAF authorisations; no fishing in forbidden zones."
-                : "La rotta si decide in base a mare, stagione e autorizzazioni AMP/MASAF; niente pesca in zone vietate.",
+                ? "The route is chosen according to sea state, season and AMP/MASAF authorisations: fishing takes place around the islands, in permitted areas, not inside swimming coves."
+                : "La rotta si decide in base a mare, stagione e autorizzazioni AMP/MASAF: si pesca intorno alle isole, nelle aree consentite, non dentro le cale balneari.",
       },
       {
         icon: Users,
@@ -193,14 +376,14 @@ function getFishingSeoExpansionCopy(
     ],
     whatYouSeeTitle: isEs ? "Qué harás a bordo" : isFr ? "Ce que vous ferez à bord" : isDe ? "Was Sie an Bord machen" : isEn ? "What you will do on board" : "Cosa farai a bordo",
     whatYouSeeIntro: isEs
-      ? "Una jornada para aficionados, con técnica y cumplimiento normativo antes que promesas de captura."
+      ? "Una jornada para aficionados, con técnica, lectura del mar y cumplimiento normativo antes que promesas de captura."
       : isFr
-        ? "Une journée pour passionnés, avec technique et conformité avant toute promesse de prise."
+        ? "Une journée pour passionnés, avec technique, lecture de la mer et conformité avant toute promesse de prise."
         : isDe
-          ? "Ein Tag für Enthusiasten, mit Technik und Regelkonformität statt Fangversprechen."
+          ? "Ein Tag für Enthusiasten, mit Technik, Lesen des Meeres und Regelkonformität statt Fangversprechen."
           : isEn
-            ? "A day for enthusiasts, with technique and compliance before catch promises."
-            : "Una giornata per appassionati, con tecnica e compliance prima delle promesse di cattura.",
+            ? "A day for enthusiasts, with technique, sea reading and compliance before catch promises."
+            : "Una giornata per appassionati, con tecnica, lettura del mare e rispetto delle regole prima delle promesse di cattura.",
     whatYouSeeItems: [
       {
         title: isEs ? "Técnicas mixtas" : isFr ? "Techniques mixtes" : isDe ? "Gemischte Techniken" : isEn ? "Mixed techniques" : "Tecniche miste",
@@ -316,14 +499,14 @@ function getFishingSeoExpansionCopy(
       {
         question: isEs ? "¿Dónde se puede pescar en las Egadi?" : isFr ? "Où peut-on pêcher aux Égades ?" : isDe ? "Wo darf auf den Ägadischen Inseln geangelt werden?" : isEn ? "Where can we fish in the Egadi Islands?" : "Dove si può pescare alle Egadi?",
         answer: isEs
-          ? "Solo en zonas permitidas y con las autorizaciones necesarias. La ruta evita áreas prohibidas y sigue reglas AMP/MASAF."
+          ? "Solo en zonas permitidas alrededor de las islas y con las autorizaciones necesarias. No se pesca dentro de las calas de baño: el patrón elige el área según corriente, fondo, temporada y reglas AMP/MASAF."
           : isFr
-            ? "Uniquement dans les zones autorisées et avec les autorisations nécessaires. La route évite les zones interdites et respecte les règles AMP/MASAF."
+            ? "Uniquement dans les zones autorisées autour des îles et avec les autorisations nécessaires. On ne pêche pas dans les criques de baignade : le skipper choisit la zone selon courant, fond, saison et règles AMP/MASAF."
             : isDe
-              ? "Nur in erlaubten Zonen und mit den nötigen Genehmigungen. Die Route vermeidet verbotene Bereiche und folgt AMP/MASAF-Regeln."
+              ? "Nur in erlaubten Bereichen rund um die Inseln und mit den nötigen Genehmigungen. Nicht in Badebuchten: Der Skipper wählt das Gebiet nach Strömung, Grund, Saison und AMP/MASAF-Regeln."
               : isEn
-                ? "Only in permitted zones and with the required authorisations. The route avoids forbidden areas and follows AMP/MASAF rules."
-                : "Solo in zone consentite e con le autorizzazioni necessarie. La rotta evita le aree vietate e segue le regole AMP/MASAF.",
+                ? "Only in permitted areas around the islands and with the required authorisations. Fishing does not take place inside swimming coves: the skipper chooses the area according to current, seabed, season and AMP/MASAF rules."
+                : "Solo nelle aree consentite intorno alle isole e con le autorizzazioni necessarie. Non si pesca dentro le cale balneari: lo skipper sceglie la zona in base a corrente, fondale, stagione e regole AMP/MASAF.",
       },
       {
         question: isEs ? "¿Qué pasa si el mar no permite salir?" : isFr ? "Que se passe-t-il si la mer ne permet pas de sortir ?" : isDe ? "Was passiert, wenn das Meer die Ausfahrt nicht erlaubt?" : isEn ? "What happens if sea conditions are not suitable?" : "Cosa succede se il mare non permette l'uscita?",
@@ -743,17 +926,6 @@ function getFullDayBoatSeoExpansionCopy(
   };
 }
 
-function getItineraryHeading(locale: string, service: { id?: string; durationType: string }, fallback: string) {
-  if (service.durationType !== "FULL_DAY" || !isPriorityFullDayBoatService(service)) {
-    return fallback;
-  }
-  if (locale === "es") return "Itinerario y posibles paradas";
-  if (locale === "fr") return "Itinéraire et arrêts possibles";
-  if (locale === "de") return "Route und mögliche Stopps";
-  if (locale === "en") return "Itinerary and possible stops";
-  return "Itinerario e possibili tappe";
-}
-
 function getFishingEditorialCopy(locale: string) {
   const isEn = locale === "en";
   const isEs = locale === "es";
@@ -772,32 +944,37 @@ function getFishingEditorialCopy(locale: string) {
             : "Una giornata tecnica per chi ama davvero pescare",
     paragraphs: isEs
       ? [
-          "El charter de pesca en las Islas Egadi está pensado para aficionados que quieren una salida privada, equipo profesional y una tripulación capaz de leer mar, temporada y normativa.",
-          "La jornada combina pesca de fondo, curricán, drifting o catch and release según condiciones reales. No se prometen capturas: se promete una experiencia técnica, seria y respetuosa.",
+          "El charter de pesca en las Islas Egadi está pensado para aficionados que quieren una salida privada desde Trapani, equipo profesional y una tripulación capaz de leer mar, temporada y normativa.",
+          "No se pesca dentro de las calas de baño: la ruta se construye alrededor de Favignana, Levanzo y el archipiélago, en zonas permitidas y elegidas según corriente, fondo, viento y autorizaciones AMP/MASAF.",
+          "La jornada puede combinar pesca de fondo, curricán, drifting o catch and release según condiciones reales. No se prometen capturas: se promete una experiencia técnica, seria, segura y respetuosa.",
           "El pescado puede soltarse o conservarse solo cuando la ley, las tallas, los cupos y las autorizaciones lo permiten. La decisión final operativa queda siempre al patrón.",
         ]
       : isFr
         ? [
-            "Le charter de pêche aux îles Égades est conçu pour les passionnés qui veulent une sortie privée, du matériel professionnel et un équipage capable de lire la mer, la saison et la réglementation.",
-            "La journée combine pêche de fond, traîne, drifting ou catch and release selon les conditions réelles. Aucune prise n'est promise : l'expérience est technique, sérieuse et respectueuse.",
+            "Le charter de pêche aux îles Égades est conçu pour les passionnés qui veulent une sortie privée depuis Trapani, du matériel professionnel et un équipage capable de lire la mer, la saison et la réglementation.",
+            "On ne pêche pas dans les criques de baignade : la route se construit autour de Favignana, Levanzo et l'archipel, dans les zones autorisées choisies selon courant, fond, vent et autorisations AMP/MASAF.",
+            "La journée peut combiner pêche de fond, traîne, drifting ou catch and release selon les conditions réelles. Aucune prise n'est promise : l'expérience est technique, sérieuse, sûre et respectueuse.",
             "Le poisson peut être relâché ou gardé uniquement lorsque loi, tailles, quotas et autorisations le permettent. La décision opérationnelle finale appartient toujours au skipper.",
           ]
         : isDe
           ? [
-              "Der Angelcharter auf den Ägadischen Inseln ist für Enthusiasten gedacht, die eine private Ausfahrt, professionelle Ausrüstung und eine Crew suchen, die Meer, Saison und Regeln lesen kann.",
-              "Der Tag kombiniert Grundangeln, Schleppangeln, Drifting oder Catch and Release je nach echten Bedingungen. Es wird kein Fang versprochen: Versprochen wird ein technisches und respektvolles Erlebnis.",
+              "Der Angelcharter auf den Ägadischen Inseln ist für Enthusiasten gedacht, die eine private Ausfahrt ab Trapani, professionelle Ausrüstung und eine Crew suchen, die Meer, Saison und Regeln lesen kann.",
+              "Geangelt wird nicht in Badebuchten: Die Route entsteht rund um Favignana, Levanzo und den Archipel, in erlaubten Bereichen nach Strömung, Grund, Wind und AMP/MASAF-Genehmigungen.",
+              "Der Tag kann Grundangeln, Schleppangeln, Drifting oder Catch and Release je nach echten Bedingungen kombinieren. Es wird kein Fang versprochen: Versprochen wird ein technisches, sicheres und respektvolles Erlebnis.",
               "Fisch darf nur behalten oder freigelassen werden, wenn Gesetz, Mindestmaße, Quoten und Genehmigungen es erlauben. Die endgültige operative Entscheidung liegt immer beim Skipper.",
             ]
           : isEn
             ? [
-                "The Egadi fishing charter is designed for enthusiasts who want a private outing, professional gear and a crew able to read the sea, the season and the rules.",
-                "The day can combine bottom fishing, trolling, drifting or catch and release according to real conditions. No catch is promised: the promise is a technical, serious and respectful experience.",
+                "The Egadi fishing charter is designed for enthusiasts who want a private outing from Trapani, professional gear and a crew able to read the sea, the season and the rules.",
+                "Fishing does not happen inside swimming coves: the route is built around Favignana, Levanzo and the archipelago, in permitted areas chosen according to current, seabed, wind and AMP/MASAF authorisations.",
+                "The day can combine bottom fishing, trolling, drifting or catch and release according to real conditions. No catch is promised: the promise is a technical, serious, safe and respectful experience.",
                 "Fish can be released or kept only when law, sizes, quotas and authorisations allow it. The final operational decision always belongs to the skipper.",
               ]
             : [
-                "Il charter di pesca alle Isole Egadi è pensato per appassionati che vogliono un'uscita privata, attrezzatura professionale e una crew capace di leggere mare, stagione e normativa.",
-                "La giornata può combinare bolentino, traina, drifting o catch and release secondo condizioni reali. Non si promette la cattura: si promette un'esperienza tecnica, seria e rispettosa.",
-                "Il pesce può essere rilasciato o trattenuto solo quando legge, taglie, quote e autorizzazioni lo permettono. La decisione operativa finale resta sempre allo skipper.",
+                "Il charter pesca Egadi da Trapani è pensato per appassionati che vogliono un'uscita privata, attrezzatura professionale e una crew capace di leggere mare, stagione e normativa.",
+                "Non si pesca dentro le cale balneari: la rotta viene costruita intorno a Favignana, Levanzo e all'arcipelago, nelle aree consentite e scelte in base a corrente, fondale, vento e autorizzazioni AMP/MASAF.",
+                "La giornata può combinare bolentino, traina, drifting o catch and release secondo condizioni reali. Non si promette la cattura: si promette un'esperienza tecnica, seria, sicura e rispettosa.",
+                "Il pescato può essere rilasciato o trattenuto solo quando legge, taglie, quote e autorizzazioni lo permettono. La decisione operativa finale resta sempre allo skipper.",
               ],
   };
 }
@@ -1341,7 +1518,7 @@ function getSeoExpansionCopy(
       : isFullDay
         ? "Der ganze Tag lässt Raum für Favignana, Levanzo, Badestopps und entspannte Zeit vor Anker."
         : isHalfDay
-          ? "Der halbe Tag konzentriert sich auf die am besten geschützten Buchten zwischen Favignana und Levanzo."
+          ? "Der halbe Tag konzentriert sich auf die am besten geschützten Buchten, die ab Trapani bequem erreichbar sind, vor allem rund um Favignana."
           : "Die Crew plant die Route zwischen den schönsten und geschütztesten Buchten der Ägadischen Inseln.";
     const formulaText = isCharter
       ? "Privater Trimaran-Charter mit Skipper, Kabinen und Route Tag für Tag."
@@ -1429,7 +1606,7 @@ function getSeoExpansionCopy(
       : isFullDay
         ? "La journée complète laisse de la place pour Favignana, Levanzo, les baignades et du temps détendu au mouillage."
         : isHalfDay
-          ? "La demi-journée se concentre sur les criques les plus protégées entre Favignana et Levanzo."
+          ? "La demi-journée se concentre sur les criques les plus protégées et facilement accessibles depuis Trapani, surtout autour de Favignana."
           : "L'équipage planifie la route entre les baies les plus belles et protégées des Égades.";
     const formulaText = isCharter
       ? "Charter privé en trimaran avec skipper, cabines et route jour après jour."
@@ -1515,9 +1692,9 @@ function getSeoExpansionCopy(
     const routeText = isCharter
       ? "Favignana, Levanzo y Marettimo pueden combinarse en varios días, siempre según la meteorología."
       : isFullDay
-	        ? "El día completo deja espacio para Favignana, Levanzo, baños y tiempo relajado al fondeo."
+		        ? "El día completo deja espacio para Favignana, Levanzo, baños y tiempo relajado al fondeo."
         : isHalfDay
-          ? "El medio día se concentra en las calas más protegidas entre Favignana y Levanzo."
+          ? "El medio día se concentra en las calas más protegidas y cómodas desde Trapani, sobre todo alrededor de Favignana."
           : "La tripulación planifica la ruta entre las bahías más escénicas y protegidas de las Egadi.";
     const formulaText = isCharter
       ? "Charter privado en trimarán con patrón, camarotes y ruta día a día."
@@ -1609,8 +1786,8 @@ function getSeoExpansionCopy(
         : "La giornata intera lascia spazio a Favignana, Levanzo, soste bagno e tempo in rada senza fretta."
       : isHalfDay
         ? isEn
-          ? "The half day focuses on the best sheltered coves between Favignana and Levanzo."
-          : "La mezza giornata si concentra sulle cale più riparate tra Favignana e Levanzo."
+          ? "The half day focuses on the best sheltered coves comfortably reachable from Trapani, especially around Favignana."
+          : "La mezza giornata si concentra sulle cale più riparate raggiungibili comodamente da Trapani, soprattutto intorno a Favignana."
     : isEn
       ? "The crew plans the route between the most scenic and sheltered Egadi bays."
       : "La crew costruisce la rotta tra le baie più sceniche e riparate delle Egadi.";
@@ -1653,7 +1830,7 @@ function getSeoExpansionCopy(
           title: isEn ? "Life on board" : "Vita a bordo",
           text: isEn
             ? "Cabins, galley and shared spaces make the trimaran a small floating home."
-            : "Cabine, cucina e spazi comuni rendono il trimarano una piccola casa sul mare.",
+            : "Cabine, cucina e spazi comuni rendono il trimarano una piccola casa sul mare, con più spazio e respiro rispetto a una barca tradizionale.",
         },
       ]
     : isFullDay
@@ -1713,6 +1890,12 @@ function getSeoExpansionCopy(
             : "La cambusa non è inclusa nel pacchetto charter. Prima della partenza la crew può aiutarti a organizzare lista spesa, dispensa iniziale ed eventuali refill durante la rotta tra Favignana, Levanzo e Marettimo.",
         },
         {
+          question: isEn ? "Is it suitable if we are looking for a catamaran charter?" : "È adatto a chi cerca un charter in catamarano alle Egadi?",
+          answer: isEn
+            ? "Yes. The boat is technically a trimaran, but it answers the same need for multihull comfort: cabins, shared spaces, stability, skipper and a flexible route across the Egadi Islands."
+            : "Sì. Tecnicamente è un trimarano, ma risponde allo stesso bisogno di chi cerca un catamarano alle Egadi: cabine, spazi vivibili, stabilità, skipper e rotta flessibile tra Favignana, Levanzo e Marettimo.",
+        },
+        {
           question: isEn ? "Can we choose the route?" : "Possiamo scegliere la rotta?",
           answer: isEn
             ? "Yes. The itinerary is agreed with the skipper before departure and then adjusted day by day. This is important in the Egadi Islands because the best bay is not always the same: comfort, safety and sea clarity depend on the daily conditions."
@@ -1756,6 +1939,12 @@ function getSeoExpansionCopy(
             answer: isEn
               ? "The route is planned between Favignana and Levanzo according to sea and wind conditions. Check the itinerary on this page for more details about the usual stops."
               : "La rotta viene organizzata tra Favignana e Levanzo in base a mare e vento. Consulta l'itinerario in questa pagina per maggiori informazioni sulle soste previste.",
+          },
+          {
+            question: isEn ? "Is it like a catamaran day in the Egadi Islands?" : "È come una giornata in catamarano alle Egadi?",
+            answer: isEn
+              ? "It is a private day on a trimaran, so the experience is very close to the catamaran idea in terms of space, stability and relaxed onboard life, with the added focus on chef service and lunch prepared on board."
+              : "È una giornata privata su un trimarano: per spazio, stabilità e vita a bordo è molto vicina all'idea di catamarano alle Egadi, con in più chef locale, hostess e pranzo cucinato direttamente a bordo.",
           },
           {
             question: isEn ? "Is the menu fixed?" : "Il menu è fisso?",
@@ -1813,12 +2002,16 @@ function getSeoExpansionCopy(
             ? "The Egadi boat tour departs from Trapani. The usual meeting point is Via dei Gladioli 15, 91100 Trapani, unless the crew sends a different operational update before departure."
             : "Il tour in barca alle Egadi parte da Trapani. Il punto di incontro abituale è Via dei Gladioli 15, 91100 Trapani, salvo diversa comunicazione operativa inviata dalla crew prima della partenza.",
         },
-        {
-          question: isEn ? "Is the route always fixed?" : "La rotta è sempre la stessa?",
-          answer: isEn
-            ? "No. The skipper chooses the safest and most enjoyable route according to wind, sea, crowding and the time available. Favignana, Levanzo and the most scenic coves are evaluated with the real conditions of the day."
-            : "No. Lo skipper sceglie la rotta più sicura e piacevole in base a vento, mare, affollamento e tempo disponibile. Favignana, Levanzo e le cale più sceniche vengono valutate sulle condizioni reali della giornata.",
-        },
+	        {
+	          question: isEn ? "Is the route always fixed?" : "La rotta è sempre la stessa?",
+	          answer: isEn
+	            ? isHalfDay
+	              ? "No. The skipper chooses the safest and most enjoyable route according to wind, sea, crowding and the time available. On the 4-hour tour the route stays on coves comfortably reachable from Trapani, especially around Favignana."
+	              : "No. The skipper chooses the safest and most enjoyable route according to wind, sea, crowding and the time available. Favignana, Levanzo and the most scenic coves are evaluated with the real conditions of the day."
+	            : isHalfDay
+	              ? "No. Lo skipper sceglie la rotta più sicura e piacevole in base a vento, mare, affollamento e tempo disponibile. Nel tour di 4 ore la rotta resta sulle cale raggiungibili comodamente da Trapani, soprattutto intorno a Favignana."
+	              : "No. Lo skipper sceglie la rotta più sicura e piacevole in base a vento, mare, affollamento e tempo disponibile. Favignana, Levanzo e le cale più sceniche vengono valutate sulle condizioni reali della giornata.",
+	        },
         {
           question: isEn ? "Is this experience shared or private?" : "Questa esperienza è condivisa o privata?",
           answer: isEn
@@ -1827,10 +2020,10 @@ function getSeoExpansionCopy(
         },
         {
           question: isEn ? "Should I choose 4 hours or 8 hours?" : "Meglio scegliere 4 ore o 8 ore?",
-          answer: isHalfDay
-            ? isEn
-              ? "Choose 4 hours if you want a compact, clear schedule with sea, swimming and a smooth return. Choose 8 hours if you want more swim time, more route flexibility and a slower pace between Favignana and Levanzo."
-              : "Scegli 4 ore se vuoi una fascia compatta, orari chiari, mare, bagno e rientro morbido. Scegli 8 ore se vuoi più tempo in acqua, più flessibilità di rotta e un ritmo più lento tra Favignana e Levanzo."
+	          answer: isHalfDay
+	            ? isEn
+	              ? "Choose 4 hours if you want a compact, clear schedule with sea, swimming and a smooth return. Choose 8 hours if you want more swim time, more route flexibility and a slower full-day pace."
+	              : "Scegli 4 ore se vuoi una fascia compatta, orari chiari, mare, bagno e rientro morbido. Scegli 8 ore se vuoi più tempo in acqua, più flessibilità di rotta e un ritmo più lento di giornata intera."
             : isEn
               ? "The 8-hour tour is best if you want a full day, more swim stops and a slower rhythm. The 4-hour tour works better when you have limited time or prefer a focused half day."
               : "Il tour di 8 ore è ideale se vuoi una giornata completa, più soste bagno e ritmo lento. Il 4 ore funziona meglio quando hai poco tempo o preferisci una mezza giornata essenziale.",
@@ -1944,12 +2137,16 @@ function getEditorialExperienceCopy(
           ? "eine private 4-stündige Bootstour zu den Ägadischen Inseln, gedacht für Gäste, die klares Wasser, Badestopps und eine gut planbare Rückkehr wünschen"
           : "eine private Ganztages-Bootstour zu den Ägadischen Inseln, bei der das Boot nur für Ihre Gruppe reserviert ist und mehr Zeit für die Route bleibt";
 
-      return {
-        eyebrow: "Erlebnisguide",
-        title: `Warum ${title} wählen`,
-        paragraphs: [
-          `${title} ist ${boatTourFormat}. Die Abfahrt erfolgt ab Trapani, und die Route wird nach den besten Bedingungen des Tages zwischen Favignana und Levanzo geplant. Das ist auf den Ägadischen Inseln wichtig: Wind, Seegang und Besucheraufkommen können sich schnell ändern, deshalb sollte eine gute Bootstour keinem starren Plan folgen. Sie sollte die Buchten wählen, in denen das Wasser klarer, der Ankerplatz ruhiger und der Tag von Anfang bis Ende entspannter ist.`,
-          "Das Erlebnis ist auf das ausgerichtet, was Gäste bei einer Bootstour zu den Ägadischen Inseln meist suchen: türkisfarbenes Wasser, Badestopps, Schnorcheln, Küstenblicke und genügend Zeit, um das Meer ohne Eile zu genießen. Cala Rossa, Cala Azzurra, Bue Marino und die ruhigeren Ecken von Levanzo gehören zu den Orten, die der Skipper im Tagesverlauf bewertet. Die endgültige Wahl hängt aber immer von den realen Bedingungen auf See ab.",
+	      return {
+	        eyebrow: "Erlebnisguide",
+	        title: `Warum ${title} wählen`,
+	        paragraphs: [
+	          isHalfDay
+	            ? `${title} ist ${boatTourFormat}. Die Abfahrt erfolgt ab Trapani, und die Route wird nach den besten Bedingungen des Tages rund um die bequem erreichbaren Buchten geplant, vor allem auf Favignana. Das ist auf den Ägadischen Inseln wichtig: Wind, Seegang und Besucheraufkommen können sich schnell ändern, deshalb sollte eine gute Bootstour keinem starren Plan folgen.`
+	            : `${title} ist ${boatTourFormat}. Die Abfahrt erfolgt ab Trapani, und die Route wird nach den besten Bedingungen des Tages zwischen Favignana und Levanzo geplant. Das ist auf den Ägadischen Inseln wichtig: Wind, Seegang und Besucheraufkommen können sich schnell ändern, deshalb sollte eine gute Bootstour keinem starren Plan folgen. Sie sollte die Buchten wählen, in denen das Wasser klarer, der Ankerplatz ruhiger und der Tag von Anfang bis Ende entspannter ist.`,
+	          isHalfDay
+	            ? "Das Erlebnis ist auf das ausgerichtet, was Gäste bei einer kompakten Bootstour suchen: türkisfarbenes Wasser, Badestopps, Schnorcheln, Küstenblicke und eine klare Rückkehrzeit. Cala Rossa, Cala Azzurra, Bue Marino und die geschützteren Seiten von Favignana gehören zu den Bereichen, die der Skipper bewertet."
+	            : "Das Erlebnis ist auf das ausgerichtet, was Gäste bei einer Bootstour zu den Ägadischen Inseln meist suchen: türkisfarbenes Wasser, Badestopps, Schnorcheln, Küstenblicke und genügend Zeit, um das Meer ohne Eile zu genießen. Cala Rossa, Cala Azzurra, Bue Marino und die ruhigeren Ecken von Levanzo gehören zu den Orten, die der Skipper im Tagesverlauf bewertet. Die endgültige Wahl hängt aber immer von den realen Bedingungen auf See ab.",
           isSharedBoat
             ? "Das geteilte Format ist einfach und praktisch. Sie buchen Ihre Plätze, treffen die Crew in Trapani und teilen den Tag mit anderen Gästen, die dasselbe suchen: Meer, Baden und eine gut organisierte Route. Es ist eine gute Wahl, wenn Sie eine vollständige Egadi-Bootstour mit leichterem Budget und geselliger Stimmung an Bord wünschen."
             : isHalfDay
@@ -2015,7 +2212,9 @@ function getEditorialExperienceCopy(
             : isSharedBoat
               ? "La formule partagée est pratique : vous réservez votre place, rencontrez l'équipage à Trapani et partagez la route avec d'autres hôtes qui cherchent mer, baignade et sortie bien organisée."
               : "Dans les tours privés, la flexibilité est le point fort. Le bateau est réservé à votre groupe, le skipper peut donc ajuster arrêts, rythme et navigation sans équilibrer les attentes d'autres hôtes.",
-        "Cala Rossa, Cala Azzurra, Bue Marino et les coins tranquilles de Levanzo restent des repères importants, mais le meilleur arrêt dépend toujours du vent, de la mer et de l'affluence. C'est pourquoi la route garde une idée claire sans devenir un itinéraire rigide.",
+	        isHalfDay
+	          ? "Cala Rossa, Cala Azzurra, Bue Marino et les côtés les plus abrités de Favignana restent les repères de la sortie compacte. Le meilleur arrêt dépend toujours du vent, de la mer et de l'affluence, donc la route garde une idée claire sans devenir un itinéraire rigide."
+	          : "Cala Rossa, Cala Azzurra, Bue Marino et les coins tranquilles de Levanzo restent des repères importants, mais le meilleur arrêt dépend toujours du vent, de la mer et de l'affluence. C'est pourquoi la route garde une idée claire sans devenir un itinéraire rigide.",
       ],
     };
   }
@@ -2045,7 +2244,9 @@ function getEditorialExperienceCopy(
             : isSharedBoat
               ? "La fórmula compartida es práctica: reservas tu plaza, conoces a la tripulación en Trapani y compartes la ruta con otros huéspedes que buscan mar, baño y una salida bien organizada."
               : "En los tours privados, la flexibilidad es el punto fuerte. El barco queda reservado para tu grupo, así que el patrón puede ajustar paradas, ritmo y navegación sin equilibrar expectativas de otros huéspedes.",
-        "Cala Rossa, Cala Azzurra, Bue Marino y los rincones tranquilos de Levanzo son referencias importantes, pero la mejor parada depende siempre de viento, mar y afluencia. Por eso la ruta mantiene una idea clara sin convertirse en un itinerario rígido.",
+	        isHalfDay
+	          ? "Cala Rossa, Cala Azzurra, Bue Marino y los lados más protegidos de Favignana son las referencias de la salida compacta. La mejor parada depende siempre de viento, mar y afluencia, por eso la ruta mantiene una idea clara sin convertirse en un itinerario rígido."
+	          : "Cala Rossa, Cala Azzurra, Bue Marino y los rincones tranquilos de Levanzo son referencias importantes, pero la mejor parada depende siempre de viento, mar y afluencia. Por eso la ruta mantiene una idea clara sin convertirse en un itinerario rígido.",
       ],
     };
   }
@@ -2058,12 +2259,16 @@ function getEditorialExperienceCopy(
           ? "a private 4-hour boat tour in the Egadi Islands, designed for guests who want clear water, swim stops and an easy return schedule"
           : "a private full-day boat tour in the Egadi Islands, with the boat reserved for your group and more time to enjoy the route";
 
-      return {
-        eyebrow: "Experience guide",
-        title: `Why choose ${title}`,
-        paragraphs: [
-          `${title} is ${boatTourFormat}. The departure is from Trapani, and the route is planned around the best conditions of the day between Favignana and Levanzo. This is important in the Egadi Islands: wind, sea state and crowding can change quickly, so a good boat tour is not about forcing a fixed itinerary. It is about choosing the coves where the water is clearer, the anchorage is more comfortable and the day feels relaxed from start to finish.`,
-          "The experience is built around the things people usually hope to find when they search for a boat tour in the Egadi Islands: turquoise water, swim stops, snorkelling, views of the coast and enough time to enjoy the sea without feeling rushed. Cala Rossa, Cala Azzurra, Bue Marino and the quieter corners of Levanzo are the kind of places the skipper evaluates during the day, but the final choice always depends on the real sea conditions.",
+	      return {
+	        eyebrow: "Experience guide",
+	        title: `Why choose ${title}`,
+	        paragraphs: [
+	          isHalfDay
+	            ? `${title} is ${boatTourFormat}. The departure is from Trapani, and the route is planned around the best conditions of the day in the coves comfortably reachable in four hours, especially around Favignana. This is important in the Egadi Islands: wind, sea state and crowding can change quickly, so a good boat tour is not about forcing a fixed itinerary.`
+	            : `${title} is ${boatTourFormat}. The departure is from Trapani, and the route is planned around the best conditions of the day between Favignana and Levanzo. This is important in the Egadi Islands: wind, sea state and crowding can change quickly, so a good boat tour is not about forcing a fixed itinerary. It is about choosing the coves where the water is clearer, the anchorage is more comfortable and the day feels relaxed from start to finish.`,
+	          isHalfDay
+	            ? "The experience is built around the things people usually hope to find in a compact boat tour: turquoise water, swim stops, snorkelling, coastal views and a clean return schedule. Cala Rossa, Cala Azzurra, Bue Marino and the sheltered sides of Favignana are the kind of areas the skipper evaluates, but the final choice always depends on the real sea conditions."
+	            : "The experience is built around the things people usually hope to find when they search for a boat tour in the Egadi Islands: turquoise water, swim stops, snorkelling, views of the coast and enough time to enjoy the sea without feeling rushed. Cala Rossa, Cala Azzurra, Bue Marino and the quieter corners of Levanzo are the kind of places the skipper evaluates during the day, but the final choice always depends on the real sea conditions.",
           isSharedBoat
 	          ? "The shared format is simple and practical. You book your seats, meet the crew in Trapani and share the day with other guests who want the same kind of experience: sea, swimming and a well-organised route. It is a good option if you want a complete Egadi boat tour with a lighter budget and a sociable atmosphere on board."
             : isHalfDay
@@ -2106,9 +2311,9 @@ function getEditorialExperienceCopy(
   }
 
   const formatText = isCharter
-    ? "un charter privato di più giorni pensato per chi vuole dormire vicino alle isole e lasciare respirare la rotta"
+    ? "un charter privato di più giorni in trimarano, pensato per chi vuole dormire vicino alle isole e ritrovare il comfort di un catamarano alle Egadi"
     : isGourmet
-      ? "una giornata privata premium in trimarano, costruita intorno a comfort, tavola e tempo lento in rada"
+      ? "una giornata privata premium in trimarano, costruita intorno a comfort da catamarano, tavola e tempo lento in rada"
       : isSharedBoat
         ? "un tour condiviso di giornata intera per chi vuole vivere le Egadi con una formula semplice e accessibile"
         : isHalfDay
@@ -2122,12 +2327,16 @@ function getEditorialExperienceCopy(
         ? "un tour privato in barca alle Egadi di 4 ore, ideale per chi cerca acqua limpida, soste bagno e un rientro semplice da organizzare"
         : "un tour privato in barca alle Egadi di giornata intera, con la barca riservata al tuo gruppo e più tempo per godersi la rotta";
 
-    return {
-      eyebrow: "Guida all'esperienza",
-      title: `Perché scegliere ${title}`,
-      paragraphs: [
-        `${title} è ${boatTourFormat}. Si parte da Trapani e la rotta viene costruita sulle condizioni migliori della giornata tra Favignana e Levanzo. Alle Egadi questa cosa conta davvero: vento, mare e affollamento possono cambiare in fretta, quindi un buon tour non deve inseguire una lista rigida di tappe. Deve scegliere le cale dove l'acqua è più bella, l'ancoraggio è più comodo e la giornata scorre senza forzature.`,
-        "L'esperienza nasce per chi cerca un tour in barca alle Egadi fatto bene: acqua turchese, soste bagno, snorkeling, costa da vedere dal mare e tempi abbastanza morbidi per godersi il momento. Cala Rossa, Cala Azzurra, Bue Marino e i lati più tranquilli di Levanzo sono tra i luoghi che lo skipper valuta durante l'uscita, ma la scelta finale dipende sempre dal mare reale del giorno.",
+	      return {
+	        eyebrow: "Guida all'esperienza",
+	        title: `Perché scegliere ${title}`,
+	        paragraphs: [
+	        isHalfDay
+	          ? `${title} è ${boatTourFormat}. Si parte da Trapani e la rotta viene costruita sulle condizioni migliori della giornata nelle cale raggiungibili comodamente in quattro ore, soprattutto intorno a Favignana. Alle Egadi questa cosa conta davvero: vento, mare e affollamento possono cambiare in fretta, quindi un buon tour non deve inseguire una lista rigida di tappe.`
+	          : `${title} è ${boatTourFormat}. Si parte da Trapani e la rotta viene costruita sulle condizioni migliori della giornata tra Favignana e Levanzo. Alle Egadi questa cosa conta davvero: vento, mare e affollamento possono cambiare in fretta, quindi un buon tour non deve inseguire una lista rigida di tappe. Deve scegliere le cale dove l'acqua è più bella, l'ancoraggio è più comodo e la giornata scorre senza forzature.`,
+	        isHalfDay
+	          ? "L'esperienza nasce per chi cerca un tour in barca alle Egadi compatto: acqua turchese, soste bagno, snorkeling, costa da vedere dal mare e orari semplici. Cala Rossa, Cala Azzurra, Bue Marino e i lati più riparati di Favignana sono tra le zone che lo skipper valuta durante l'uscita, ma la scelta finale dipende sempre dal mare reale del giorno."
+	          : "L'esperienza nasce per chi cerca un tour in barca alle Egadi fatto bene: acqua turchese, soste bagno, snorkeling, costa da vedere dal mare e tempi abbastanza morbidi per godersi il momento. Cala Rossa, Cala Azzurra, Bue Marino e i lati più tranquilli di Levanzo sono tra i luoghi che lo skipper valuta durante l'uscita, ma la scelta finale dipende sempre dal mare reale del giorno.",
         isSharedBoat
           ? "La formula condivisa è semplice e pratica. Prenoti il tuo posto, incontri la crew a Trapani e condividi la giornata con altri ospiti che cercano la stessa cosa: mare, bagno e una rotta organizzata bene. È una buona soluzione se vuoi vivere una giornata completa alle Egadi con un prezzo più accessibile e un'atmosfera leggera a bordo."
           : isHalfDay
@@ -2146,15 +2355,928 @@ function getEditorialExperienceCopy(
       `${title} è ${formatText}. Si parte da Trapani e si entra nelle Isole Egadi per come sono davvero il giorno dell'uscita: luminose, variabili, esposte in alcuni tratti e sorprendentemente riparate in altri. Per questo non vendiamo una rotta rigida da cartolina. Raccontiamo un'esperienza di mare gestita con criterio, in cui lo skipper valuta vento, traffico, stato del mare e luce prima di scegliere il piano più comodo tra ${plannedIslandsIt}.`,
       `A bordo di ${boat}, il valore non è solo nella lista delle cale. Conta il modo in cui viene condotta la giornata: accoglienza ordinata, tempi chiari, soste bagno scelte con attenzione, navigazione rilassata e cura pratica del gruppo. Spesso si ricordano Cala Rossa, Cala Azzurra, Bue Marino o i lati più tranquilli di Levanzo, ma la differenza vera è sentirsi accompagnati da una crew che sa quando restare, quando spostarsi e quando una baia meno famosa può offrire un'esperienza migliore.`,
       isCharter
-        ? "Nel charter il ritmo diventa ancora più importante. Più giornate permettono alle isole di aprirsi lentamente: primo bagno dopo la partenza da Trapani, cena in rada quando il meteo lo consente, risvegli vicino all'acqua limpida e possibilità di adattare il giorno successivo senza forzare un programma fisso. Il trimarano offre una base comoda, con cabine, spazi comuni e abbastanza respiro per trasformare la barca in una piccola casa sul mare."
+        ? "Nel charter il ritmo diventa ancora più importante. Più giornate permettono alle isole di aprirsi lentamente: primo bagno dopo la partenza da Trapani, cena in rada quando il meteo lo consente, risvegli vicino all'acqua limpida e possibilità di adattare il giorno successivo senza forzare un programma fisso. Il trimarano offre una base comoda, con cabine, spazi comuni e abbastanza respiro per trasformare la barca in una piccola casa sul mare: per questo è una scelta naturale anche per chi sta valutando un noleggio catamarano alle Egadi con skipper."
         : isGourmet
-          ? "Nell'esperienza gourmet la barca diventa insieme rotta e tavola. Chef e crew coordinano i tempi per far sentire il pranzo come parte naturale della giornata: bagno prima dell'ancoraggio, servizio tranquillo a bordo, sapori locali e tempo sufficiente per tornare in acqua dopo il pasto. È una formula pensata per chi cerca privacy, comfort e un modo più curato di vivere le Egadi."
+          ? "Nell'esperienza gourmet la barca diventa insieme rotta e tavola. Chef e crew coordinano i tempi per far sentire il pranzo come parte naturale della giornata: bagno prima dell'ancoraggio, servizio tranquillo a bordo, sapori locali e tempo sufficiente per tornare in acqua dopo il pasto. È una formula pensata per chi cerca privacy, comfort e un modo più curato di vivere le Egadi, molto adatta anche a chi immagina una giornata in catamarano tra Favignana e Levanzo."
           : isPrivateBoat
             ? "Nei tour privati il vantaggio principale è la flessibilità. La barca è riservata al tuo gruppo, quindi lo skipper può modulare soste, ritmo e navigazione senza dover bilanciare aspettative diverse a bordo. Funziona bene per famiglie, coppie, gruppi di amici e per chi vuole sentire le Egadi in modo personale, senza trasformare l'uscita in un programma standard."
             : "Nel tour condiviso di giornata intera il punto forte è la semplicità. Prenoti i posti, incontri la crew a Trapani e vivi una giornata che tiene insieme gli elementi essenziali: acqua limpida, soste bagno, navigazione panoramica e un'atmosfera sociale ma ordinata. È una buona scelta se vuoi l'esperienza completa delle Egadi senza riservare tutta la barca.",
       "La rotta viene raccontata come flessibile perché le Egadi premiano l'esperienza più dell'improvvisazione. Una buona giornata in mare dipende da scelte piccole: dove ancorare con meno rollio, quale lato dell'isola è più limpido, quando una cala famosa è troppo affollata e quanto tempo restare in acqua senza trasformare il rientro in una corsa. La crew tiene insieme questi dettagli in modo naturale, ma dietro quella naturalezza ci sono pianificazione, conoscenza locale e attenzione continua al comfort.",
       "Questo conta soprattutto quando stai confrontando esperienze diverse prima di prenotare. Una formula privata offre più controllo su ritmo e privacy; una giornata condivisa mantiene l'esperienza più accessibile senza rinunciare ai momenti principali; il trimarano gourmet aggiunge servizio, tavola e spazio; il charter trasforma le isole in un viaggio lento. L'obiettivo di questa pagina è rendere chiare queste differenze, così la scelta della data diventa l'ultimo passo, non il momento in cui devi ancora capire cosa stai acquistando.",
       "La pagina è pensata anche per aiutarti a scegliere prima di prenotare. Le immagini mostrano la barca e il mood a bordo, l'itinerario spiega la struttura probabile dell'uscita e le FAQ rispondono alle domande pratiche che contano davvero prima di scegliere una data. Prezzi e disponibilità restano nel box di prenotazione, mentre qui trovi il contesto: cosa si vive, per chi è adatta l'esperienza, come lavora la crew e perché una rotta ben gestita alle Egadi può essere molto diversa da un semplice giro in barca.",
+    ],
+  };
+}
+
+function getExperienceIntroSectionCopy(
+  locale: string,
+  service: { id?: string; type: string; durationType: string },
+  durationText: string,
+  boatTitle?: string,
+) {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  const isFishing = isFishingService(service);
+  const isCharter = service.type === "CABIN_CHARTER";
+  const isPrivateBoat = service.type === "BOAT_EXCLUSIVE";
+  const isGourmet = service.type === "EXCLUSIVE_EXPERIENCE";
+  const isHalfDay =
+    service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
+  const boat =
+    boatTitle ??
+    (isDe
+      ? "das ausgewählte Boot"
+      : isFr
+        ? "le bateau sélectionné"
+        : isEs
+          ? "el barco seleccionado"
+          : isEn
+            ? "the selected boat"
+            : "la barca selezionata");
+
+  if (isDe) {
+    const title = isFishing
+      ? "Sportangeln auf den Ägadischen Inseln, mit einer Route nach Saison und Meer"
+      : isCharter
+        ? "Mehrere Tage auf den Ägadischen Inseln, ohne den Rhythmus zu erzwingen"
+        : isGourmet
+          ? "Die Ägadischen Inseln mit Raum, Komfort und Küche an Bord"
+          : isPrivateBoat
+            ? isHalfDay
+              ? "Die Ägadischen Inseln im privaten Boot, im passenden Halbtag"
+              : "Favignana und Levanzo im privaten Boot, mit Ihrem Rhythmus"
+            : "Favignana und Levanzo vom Meer aus, mit der richtigen Zeit";
+
+    return {
+      eyebrow: "Das Erlebnis",
+      title,
+	      intro: isFishing
+	        ? `Ein privater Angelcharter ab Trapani für alle, die ${durationText} auf dem Wasser verbringen möchten, mit Ausrüstung, Skipper und einem Plan, der nach Saison, Regeln, Wind und Meer gewählt wird.`
+	        : isHalfDay
+	          ? "Diese private 4-Stunden-Bootstour startet in Trapani und konzentriert sich auf die besten Buchten, die in einem halben Tag bequem erreichbar sind, vor allem rund um Favignana."
+	          : `Diese Bootstour startet in Trapani und bringt Sie nach Favignana und Levanzo: Navigation, Badestopps, Schnorcheln und Buchten, die der Skipper nach Wind und Meer auswählt.`,
+      paragraphs: [
+        isFishing
+          ? "Die Route wird nicht als starre Liste verkauft: Der Skipper bewertet Strömung, Tiefe, Wind und zulässige Bereiche, damit der Tag technisch sinnvoll und zugleich angenehm bleibt."
+          : `An Bord von ${boat} bleibt der Ablauf klar: Treffpunkt in Trapani, Einschiffung, Navigation zu den Ägadischen Inseln und genügend Zeit, um das Meer nicht nur vom Boot aus zu sehen, sondern wirklich zu erleben.`,
+	        isFishing
+	          ? "Geangelt wird rund um die Inseln in erlaubten Bereichen, nicht in Badebuchten. Die Route kann sich zwischen Favignana, Levanzo und den passendsten Seiten des Archipels bewegen, immer nach Regeln, Meer und Sicherheit."
+	          : isHalfDay
+	          ? "Wenn die Bedingungen passen, gehören Cala Rossa, Cala Azzurra, Bue Marino und geschützte Seiten von Favignana zu den möglichen Stopps. Die endgültige Wahl bleibt flexibel, damit Wasser, Sicherheit und Komfort stimmen."
+	          : "Wenn die Bedingungen passen, gehören Cala Rossa, Cala Azzurra und Bue Marino auf Favignana zu den möglichen Stopps. Auf Levanzo kommen oft Cala Fredda und Cala Minnola in Betracht. Die endgültige Wahl bleibt flexibel, damit Wasser, Sicherheit und Komfort stimmen.",
+        isFishing
+          ? `Die Ausfahrt dauert ${durationText} und ist für Gäste gedacht, die einen privaten, gut geführten Tag auf dem Meer suchen, nicht nur eine kurze Aktivität.`
+          : isCharter
+            ? `Der Charter dauert ${durationText} und passt zu Gästen, die Favignana, Levanzo und Marettimo über mehrere Tage erleben möchten, mit Nächten an Bord und mehr Freiheit bei der Route.`
+            : isPrivateBoat
+            ? `Das private Format dauert ${durationText}: Das Boot ist für Ihre Gruppe reserviert, daher kann der Skipper Tempo, Badestopps und Buchten persönlicher anpassen.`
+            : isGourmet
+              ? `Das Gourmet-Format dauert ${durationText}: Route, Badestopps und Mittagessen an Bord werden als ein ruhiger Premium-Tag geplant.`
+              : `Das gemeinsame Format dauert ${durationText}: Sie buchen Ihre Plätze und teilen die Tour mit anderen Gästen, behalten aber eine organisierte Route und echte Zeit im Wasser.`,
+      ],
+    };
+  }
+
+  if (isFr) {
+    const title = isFishing
+      ? "Pêche sportive aux Égades, avec une route choisie sur l'eau"
+      : isCharter
+        ? "Plusieurs jours aux Égades, sans courir"
+        : isGourmet
+          ? "Les Égades avec espace, cuisine et temps lent"
+          : isPrivateBoat
+            ? isHalfDay
+              ? "Les Égades en bateau privé, sur la bonne demi-journée"
+              : "Favignana et Levanzo en bateau privé, à votre rythme"
+            : "Favignana et Levanzo depuis la mer, avec le bon timing";
+
+    return {
+      eyebrow: "L'expérience",
+      title,
+	      intro: isFishing
+	        ? `Un charter de pêche privé au départ de Trapani, avec ${durationText} en mer, matériel, skipper et route définie selon saison, règles, vent et conditions réelles.`
+	        : isHalfDay
+	          ? "Cette excursion privée de 4 heures part de Trapani et se concentre sur les meilleures criques accessibles en demi-journée, surtout autour de Favignana."
+	          : `Cette excursion en bateau part de Trapani pour vivre Favignana et Levanzo avec navigation, baignades, snorkeling et criques choisies par le skipper selon vent et mer.`,
+      paragraphs: [
+        isFishing
+          ? "Le skipper lit courant, profondeur, vent et zones autorisées avant de choisir le plan le plus cohérent pour la journée."
+          : `À bord de ${boat}, le rythme reste simple : rendez-vous à Trapani, embarquement, navigation vers les Égades et temps réel pour profiter de l'eau.`,
+	        isFishing
+	          ? "La pêche se fait autour des îles dans les zones autorisées, pas dans les criques de baignade. La route peut évoluer entre Favignana, Levanzo et les secteurs les plus adaptés de l'archipel, toujours selon règles, mer et sécurité."
+	          : isHalfDay
+	          ? "Quand les conditions le permettent, Cala Rossa, Cala Azzurra, Bue Marino et les côtés abrités de Favignana font partie des zones évaluées. La route reste flexible pour préserver confort et sécurité."
+	          : "Quand les conditions le permettent, Cala Rossa, Cala Azzurra et Bue Marino à Favignana font partie des arrêts possibles. À Levanzo, Cala Fredda et Cala Minnola sont souvent évaluées. La route reste flexible pour préserver confort et sécurité.",
+        isFishing
+          ? `La sortie dure ${durationText} et s'adresse à ceux qui veulent une journée privée en mer, technique mais confortable.`
+          : isCharter
+            ? `Le charter dure ${durationText} et convient à ceux qui veulent vivre Favignana, Levanzo et Marettimo sur plusieurs jours, avec nuits à bord et plus de liberté dans la route.`
+            : isPrivateBoat
+            ? `Le format privé dure ${durationText}: le bateau est réservé à votre groupe et le skipper peut ajuster rythme, baignades et criques.`
+            : isGourmet
+              ? `Le format gourmet dure ${durationText}: route, baignades et déjeuner à bord sont coordonnés comme une journée premium.`
+              : `Le format partagé dure ${durationText}: vous réservez vos places et partagez une route organisée, avec du vrai temps dans l'eau.`,
+      ],
+    };
+  }
+
+  if (isEs) {
+    const title = isFishing
+      ? "Pesca deportiva en las Egadi, con ruta elegida en el mar"
+      : isCharter
+        ? "Varios días en las Egadi, sin correr"
+        : isGourmet
+          ? "Las Egadi con espacio, cocina y ritmo lento"
+          : isPrivateBoat
+            ? isHalfDay
+              ? "Las Egadi en barco privado, en la media jornada justa"
+              : "Favignana y Levanzo en barco privado, a tu ritmo"
+            : "Favignana y Levanzo desde el mar, con el tiempo justo";
+
+    return {
+      eyebrow: "La experiencia",
+      title,
+	      intro: isFishing
+	        ? `Un charter privado de pesca desde Trapani, con ${durationText} en el mar, equipo, patrón y ruta elegida según temporada, normativa, viento y condiciones reales.`
+	        : isHalfDay
+	          ? "Esta excursión privada de 4 horas sale de Trapani y se concentra en las mejores calas alcanzables en media jornada, sobre todo alrededor de Favignana."
+	          : `Esta excursión en barco sale de Trapani para vivir Favignana y Levanzo con navegación, baños, snorkel y calas elegidas por el patrón según viento y mar.`,
+      paragraphs: [
+        isFishing
+          ? "El patrón valora corriente, fondo, viento y zonas permitidas antes de elegir el plan más coherente para la jornada."
+          : `A bordo de ${boat}, el ritmo es claro: encuentro en Trapani, embarque, navegación hacia las Egadi y tiempo real para disfrutar del agua.`,
+	        isFishing
+	          ? "La pesca se realiza alrededor de las islas, en zonas permitidas, no dentro de las calas de baño. La ruta puede moverse entre Favignana, Levanzo y los sectores más adecuados del archipiélago, siempre según normativa, mar y seguridad."
+	          : isHalfDay
+	          ? "Cuando las condiciones lo permiten, Cala Rossa, Cala Azzurra, Bue Marino y los lados protegidos de Favignana pueden formar parte de la ruta. El itinerario se mantiene flexible para cuidar comodidad y seguridad."
+	          : "Cuando las condiciones lo permiten, Cala Rossa, Cala Azzurra y Bue Marino en Favignana pueden formar parte de la ruta. En Levanzo, Cala Fredda y Cala Minnola se valoran según el lado más protegido. El itinerario se mantiene flexible para cuidar comodidad y seguridad.",
+        isFishing
+          ? `La salida dura ${durationText} y está pensada para quien quiere una jornada privada en el mar, técnica pero cómoda.`
+          : isCharter
+            ? `El charter dura ${durationText} y encaja con quien quiere vivir Favignana, Levanzo y Marettimo durante varios días, con noches a bordo y más libertad de ruta.`
+            : isPrivateBoat
+            ? `El formato privado dura ${durationText}: el barco queda reservado para tu grupo y el patrón puede ajustar ritmo, baños y calas.`
+            : isGourmet
+              ? `El formato gourmet dura ${durationText}: ruta, baños y comida a bordo se coordinan como una jornada premium.`
+              : `El formato compartido dura ${durationText}: reservas tus plazas y compartes una ruta organizada, con tiempo real para bañarte.`,
+      ],
+    };
+  }
+
+  if (isEn) {
+    const title = isFishing
+      ? "Sport fishing in the Egadi Islands, with the route chosen at sea"
+      : isCharter
+        ? "Several days in the Egadi Islands, without rushing the route"
+        : isGourmet
+          ? "The Egadi Islands with space, food and an unhurried rhythm"
+          : isPrivateBoat
+            ? isHalfDay
+              ? "The Egadi Islands by private boat, in the right half day"
+              : "Favignana and Levanzo by private boat, at your own rhythm"
+            : "Favignana and Levanzo from the sea, with the right timing";
+
+    return {
+      eyebrow: "The experience",
+      title,
+	      intro: isFishing
+	        ? `A private fishing charter from Trapani, with ${durationText} at sea, equipment, skipper and a route chosen around season, rules, wind and real conditions.`
+	        : isHalfDay
+	          ? "This private 4-hour boat tour leaves from Trapani and focuses on the best coves reachable in a half day, especially around Favignana."
+	          : `This boat tour leaves from Trapani to experience Favignana and Levanzo in a clear way: navigation, swim stops, snorkelling and bays chosen by the skipper according to wind and sea.`,
+      paragraphs: [
+        isFishing
+          ? "The skipper reads current, depth, wind and permitted areas before choosing the most sensible plan for the day."
+          : `On board ${boat}, the rhythm stays easy to understand: meeting in Trapani, boarding, navigation towards the Egadi Islands and enough time to enjoy the water properly.`,
+	        isFishing
+	          ? "Fishing takes place around the islands in permitted areas, not inside swimming coves. The route can move between Favignana, Levanzo and the most suitable parts of the archipelago, always according to rules, sea conditions and safety."
+	          : isHalfDay
+	          ? "When conditions allow, Cala Rossa, Cala Azzurra, Bue Marino and the sheltered sides of Favignana may be part of the route. The itinerary stays flexible to protect comfort and safety."
+	          : "When conditions allow, Cala Rossa, Cala Azzurra and Bue Marino in Favignana may be part of the route. In Levanzo, Cala Fredda and Cala Minnola are often evaluated according to the most sheltered side. The itinerary stays flexible to protect comfort and safety.",
+        isFishing
+          ? `The trip lasts ${durationText} and is designed for guests who want a private, well-led day at sea.`
+          : isCharter
+            ? `The charter lasts ${durationText} and suits guests who want Favignana, Levanzo and Marettimo across several days, with nights on board and more freedom in the route.`
+            : isPrivateBoat
+            ? `The private format lasts ${durationText}: the boat is reserved for your group, so the skipper can adjust pace, swim stops and bays.`
+            : isGourmet
+              ? `The gourmet format lasts ${durationText}: route, swim stops and lunch on board are coordinated as one premium day.`
+              : `The shared format lasts ${durationText}: you book your seats and share an organised route, with real time in the water.`,
+      ],
+    };
+  }
+
+  const title = isFishing
+    ? "Pesca sportiva alle Egadi, con rotta scelta sul mare"
+    : isCharter
+      ? "Più giorni alle Egadi, senza correre"
+      : isGourmet
+        ? "Le Egadi con spazio, cucina e tempo lento"
+        : isPrivateBoat
+          ? isHalfDay
+            ? "Le Egadi in barca privata, nella mezza giornata giusta"
+            : "Favignana e Levanzo in barca privata, con ritmo tuo"
+          : "Favignana e Levanzo dal mare, con il tempo giusto";
+
+	  return {
+    eyebrow: "L'esperienza",
+    title,
+	    intro: isFishing
+	      ? `Una giornata privata di pesca sportiva con partenza da Trapani: ${durationText} in mare con attrezzatura, skipper e rotta scelta in base a stagione, regole, vento e condizioni reali.`
+	      : isHalfDay
+	        ? "Questo tour privato in barca di 4 ore parte da Trapani e si concentra sulle migliori cale raggiungibili in mezza giornata, soprattutto intorno a Favignana."
+	        : "Questa escursione in barca parte da Trapani e porta a vivere Favignana e Levanzo in una giornata completa: navigazione, soste bagno, snorkeling e baie scelte dallo skipper in base a vento e mare.",
+    paragraphs: [
+      isFishing
+        ? "La giornata viene costruita sul mare, non su una promessa rigida: lo skipper valuta corrente, fondale, vento e zone consentite prima di scegliere il piano più sensato per pescare con calma e sicurezza."
+        : `Si parte dal Porto di Trapani con check-in semplice e una giornata pensata per alternare navigazione, soste bagno e momenti in rada. A bordo di ${boat} il ritmo resta chiaro, con una crew che gestisce tempi e rotta senza trasformare l'uscita in una corsa tra tappe.`,
+	      isFishing
+	        ? "La pesca si svolge intorno alle isole, nelle aree consentite, non dentro le cale balneari. La rotta può muoversi tra Favignana, Levanzo e i tratti più adatti dell'arcipelago, sempre in base a regole, mare e sicurezza."
+	        : isHalfDay
+	        ? "Quando le condizioni lo permettono, lo skipper valuta Cala Rossa, Cala Azzurra, Bue Marino e i lati più riparati di Favignana. Non c'è una lista rigida da spuntare: si sceglie il punto migliore per acqua limpida, meno vento e una sosta davvero piacevole."
+	        : "Quando le condizioni lo permettono, lo skipper valuta Cala Rossa, Cala Azzurra e Bue Marino a Favignana, poi Cala Fredda e Cala Minnola a Levanzo. Non c'è una lista rigida da spuntare: si sceglie il lato migliore per acqua limpida, meno vento e una sosta davvero piacevole.",
+      isFishing
+        ? `L'uscita dura ${durationText} ed è adatta a chi vuole una giornata privata, tecnica ma comoda, con attrezzatura professionale e una gestione attenta dei tempi.`
+        : isCharter
+          ? `La formula charter dura ${durationText} ed è pensata per vivere Favignana, Levanzo e Marettimo con più respiro: notti a bordo, rade tranquille e una rotta che può cambiare giorno per giorno. È adatta anche a chi cerca un charter in catamarano alle Egadi, ma vuole la stabilità e gli spazi di un trimarano multiscafo.`
+          : isPrivateBoat
+	        ? isHalfDay
+	          ? `La formula privata dura ${durationText}: è il tour in barca alle Egadi giusto se vuoi spazio per il tuo gruppo, soste scelte bene e una rotta compatta costruita con lo skipper.`
+	          : `La formula privata dura ${durationText}: è il tour in barca alle Egadi giusto se vuoi spazio per il tuo gruppo, più libertà nelle soste e una rotta costruita con lo skipper. Per chi cerca un tour privato Favignana e Levanzo da Trapani, qui contano ritmo e privacy.`
+          : isGourmet
+            ? `La formula gourmet dura ${durationText}: un tour in trimarano alle Egadi con chef a bordo, pranzo curato e tempo lento in rada, pensato per chi vuole comfort e servizio oltre alla rotta. È una soluzione naturale per chi cerca una giornata in catamarano alle Egadi, ma desidera una cucina vera a bordo.`
+            : `La formula condivisa dura ${durationText}: è adatta se vuoi un tour in barca alle Egadi completo ma semplice da prenotare, un'escursione in barca Favignana e Levanzo con partenza da Trapani e tempo vero per bagno e snorkeling.`,
+    ],
+  };
+}
+
+function getDayProgramEditorialCopy(
+  locale: string,
+  service: { id?: string; type: string; durationType: string },
+  durationText: string,
+  boatTitle?: string,
+) {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  const isFishing = isFishingService(service);
+  const isCharter = service.type === "CABIN_CHARTER";
+  const isPrivateBoat = service.type === "BOAT_EXCLUSIVE";
+  const isGourmet = service.type === "EXCLUSIVE_EXPERIENCE";
+  const isHalfDay =
+    service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
+  const isFullDayBoatProgram =
+    (service.type === "BOAT_SHARED" || service.type === "BOAT_EXCLUSIVE") && !isHalfDay;
+  const boat =
+    boatTitle ??
+    (isDe
+      ? "das ausgewählte Boot"
+      : isFr
+        ? "le bateau sélectionné"
+        : isEs
+          ? "el barco seleccionado"
+          : isEn
+            ? "the selected boat"
+            : "la barca selezionata");
+
+  if (isDe) {
+    return {
+      paragraphs: [
+        {
+          lead: isFishing
+            ? "Der Angeltag startet in Trapani mit einem technischen Briefing und einem Plan, der nach Saison und Meer gewählt wird."
+            : isCharter
+              ? "Das Charterprogramm beginnt in Trapani und entwickelt sich Tag für Tag rund um die Ägadischen Inseln."
+              : isGourmet
+	                ? "Das Gourmet-Erlebnis startet in Trapani und verbindet Navigation, Badestopps und ein kuratiertes Mittagessen an Bord."
+	                : isPrivateBoat
+	                  ? isHalfDay
+	                    ? "Diese private 4-Stunden-Bootstour ab Trapani ist für Gruppen gedacht, die eine kompakte Route mit Badestopps rund um Favignana möchten."
+	                    : "Diese private Bootstour ab Trapani ist für Gruppen gedacht, die Favignana und Levanzo mit eigenem Rhythmus erleben möchten."
+                  : "Diese Bootstour Favignana und Levanzo ab Trapani ist für Gäste gedacht, die die Ägadischen Inseln an einem ganzen Tag erleben möchten.",
+          text: isFishing
+            ? `An Bord von ${boat} beginnt der Tag mit Ausrüstung, Sicherheitsbriefing und einer technischen Route rund um die Inseln. Der Skipper wählt erlaubte Angelbereiche nach Strömung, Grund, Wind und AMP/MASAF-Regeln.`
+            : `An Bord von ${boat} bleibt der Ablauf klar: Einschiffung, Ausfahrt aus dem Hafen von Trapani, Navigation zu den geschützten Seiten der Inseln und Stopps, die der Skipper nach Wind, Meer und Komfort auswählt.`,
+        },
+        isFishing
+          ? {
+              lead: "Die Route zielt nicht darauf, in Badebuchten zu angeln, sondern in erlaubten Angelbereichen rund um die Ägadischen Inseln.",
+              text: "Favignana, Levanzo und die geeigneten Seiten des Archipels werden nach Wetter, Strömung, Grund und Saison bewertet. So bleibt der Angelcharter ab Trapani technisch sinnvoll, sicher und regelkonform.",
+            }
+          : {
+              lead: "Favignana ist meist der erste große Teil der Route, mit möglichen Stopps bei Cala Rossa, Cala Azzurra und Bue Marino.",
+              text: "Diese Orte sind bekannt für klares Wasser, felsige Küste und Badestopps, aber die Reihenfolge bleibt flexibel. Wenn eine Bucht zu exponiert oder zu voll ist, wählt die Crew eine ruhigere Alternative.",
+            },
+        ...(isCharter
+          ? [
+              {
+                lead: "Ein Trimaran-Charter auf den Ägadischen Inseln bedeutet, Favignana, Levanzo und Marettimo mit Reisezeit statt Tagesausflug-Rhythmus zu erleben.",
+                text: "Die Route kann die bekannten Buchten von Favignana, die ruhigen Ankerplätze vor Levanzo und die wildere Küste von Marettimo verbinden, immer nach Wetter, Dauer und Komfort an Bord.",
+              },
+              {
+                lead: "Auf Anfrage kann die Route, wenn Wetter und gewählte Dauer passen, auch Richtung San Vito lo Capo erweitert werden.",
+                text: "Das ist eine hochwertige Erweiterung für Gäste, die einen privaten Trimaran-Charter ab Trapani mit den Ägadischen Inseln und einer der schönsten Küsten der westlichen Sizilien verbinden möchten.",
+              },
+            ]
+          : isGourmet
+          ? [
+              {
+                lead: "Bei Cala Rossa ist der wichtigste Stopp für das Mittagessen an Bord vorgesehen.",
+                text: "Der lokale Chef kocht direkt auf dem Trimaran: eine Cooking Experience mit regionalen Zutaten, Meerblick und ruhigem Timing vor der Weiterfahrt.",
+              },
+            ]
+          : isFullDayBoatProgram
+          ? [
+              {
+                lead: "Zur Mittagszeit ist ein Anlegen auf Favignana für die Mittagspause vorgesehen.",
+                text: "So können Sie die Insel kurz betreten und das Mittagessen frei organisieren, bevor die Navigation Richtung Levanzo weitergeht. Zeiten und Anlegestelle können je nach Hafenbetrieb und Wetter angepasst werden.",
+              },
+            ]
+          : []),
+        isFishing
+          ? {
+              lead: "Im zweiten Teil kann der Skipper Gebiet oder Technik ändern, wenn das Meer es nahelegt.",
+              text: "Grundangeln, Schleppangeln, Drifting oder Catch and Release werden nach echten Bedingungen gewählt. Ziel ist ein geführter Sportangeltag auf den Ägadischen Inseln, nicht ein touristischer Stopp in einer Bucht.",
+            }
+          : isHalfDay
+          ? {
+              lead: "Der zweite Teil bleibt kompakt und folgt den besten Bedingungen rund um Favignana.",
+              text: "Der Skipper kann eine weitere Bucht, einen Panoramabereich oder mehr Badezeit wählen, ohne die Rückkehr nach Trapani zu knapp werden zu lassen.",
+            }
+          : isCharter
+            ? {
+                lead: "Marettimo ist der natürlichste Grund, den Charter über mehrere Tage zu planen.",
+                text: "Mit mehr Nächten an Bord entsteht genug Raum für lange Überfahrten, ruhigere Morgenstunden, Buchten abseits des schnellen Tagesverkehrs und eine Route, die wirklich wie ein kleiner Segelurlaub wirkt.",
+              }
+          : {
+              lead: "Levanzo bringt einen langsameren und oft ruhigeren Teil des Tages.",
+              text: "Cala Fredda, Cala Minnola und die Küste nahe dem Faraglione werden nach den Bedingungen geprüft, damit Zeit zum Schwimmen, Schnorcheln und Entspannen vor Anker bleibt.",
+            },
+        {
+          lead: `Die geplante Dauer beträgt ${durationText}, mit Rückkehr nach Trapani ohne den Tag in eine Liste starrer Stopps zu verwandeln.`,
+          text: isHalfDay
+            ? "Das Halbtag-Format konzentriert sich auf wenige, gut gewählte Badestopps und eine saubere Rückkehrzeit."
+            : isCharter
+              ? "Das Ziel ist ein privater Charter mit klarer Planung und flexibler Route: Favignana, Levanzo, Marettimo und, auf Anfrage, San Vito lo Capo werden als echte Reise gedacht, nicht als starre Liste von Stopps."
+            : isFishing
+              ? "Das Ziel ist klar zu verstehen, was gebucht wird: ein Angelcharter auf den Ägadischen Inseln ab Trapani mit privatem RIB, professioneller Ausrüstung, flexibler Route und Techniken, die auf See nach AMP/MASAF-Regeln gewählt werden."
+            : "Das Ziel ist ein gut geführtes Erlebnis auf den Ägadischen Inseln: klare Zeiten, flexible Route, lokale Entscheidungen und genug Raum, um das Meer wirklich zu genießen.",
+        },
+      ],
+    };
+  }
+
+  if (isFr) {
+    return {
+      paragraphs: [
+        {
+          lead: isFishing
+            ? "La journée de pêche sportive part de Trapani avec briefing technique et route choisie selon saison, règles et mer."
+            : isCharter
+              ? "Le programme de charter commence à Trapani et se construit jour après jour autour des îles Égades."
+              : isGourmet
+	                ? "L'expérience gourmet part de Trapani et associe navigation, baignades et déjeuner soigné à bord."
+	                : isPrivateBoat
+	                  ? isHalfDay
+	                    ? "Cette excursion privée de 4 heures depuis Trapani permet de vivre une route compacte avec baignades autour de Favignana."
+	                    : "Cette excursion privée en bateau depuis Trapani permet de vivre Favignana et Levanzo avec un rythme plus personnel."
+                  : "Cette excursion en bateau Favignana et Levanzo depuis Trapani permet de vivre les Égades sur une journée complète.",
+          text: isFishing
+            ? `À bord de ${boat}, la journée commence avec matériel, briefing sécurité et route technique autour des îles. Le skipper choisit les zones de pêche autorisées selon courant, fond, vent et règles AMP/MASAF.`
+            : `À bord de ${boat}, la journée reste lisible : embarquement, sortie du port de Trapani, navigation vers les côtés les plus adaptés des îles et arrêts choisis par le skipper selon vent, mer et confort.`,
+        },
+        isFishing
+          ? {
+              lead: "La route ne vise pas à pêcher dans les criques de baignade, mais dans les zones autorisées autour des îles Égades.",
+              text: "Favignana, Levanzo et les secteurs les plus adaptés de l'archipel sont évalués selon météo, courant, fond et saison. Le charter de pêche depuis Trapani reste ainsi technique, sûr et conforme aux règles.",
+            }
+          : {
+              lead: "Favignana est souvent la première grande partie de la route, avec Cala Rossa, Cala Azzurra et Bue Marino parmi les arrêts possibles.",
+              text: "Ces criques sont recherchées pour l'eau claire, la côte rocheuse et le snorkeling, mais l'ordre n'est jamais forcé si une zone est exposée ou trop fréquentée.",
+            },
+        ...(isCharter
+          ? [
+              {
+                lead: "Un charter en trimaran aux Égades permet de vivre Favignana, Levanzo et Marettimo avec un vrai rythme de voyage.",
+                text: "La route peut relier les criques les plus connues de Favignana, les mouillages calmes de Levanzo et la côte plus sauvage de Marettimo, toujours selon météo, durée choisie et confort à bord.",
+              },
+              {
+                lead: "Sur demande, lorsque la météo et la durée le permettent, l'itinéraire peut aussi s'ouvrir vers San Vito lo Capo.",
+                text: "C'est une extension idéale pour ceux qui cherchent un charter privé en trimaran depuis Trapani, entre îles Égades, navigation lente et l'une des côtes les plus spectaculaires de Sicile occidentale.",
+              },
+            ]
+          : isGourmet
+          ? [
+              {
+                lead: "À Cala Rossa, l'arrêt principal est prévu pour le déjeuner à bord.",
+                text: "Le chef local cuisine directement sur le trimaran : une cooking experience avec ingrédients du territoire, service face à la mer et rythme détendu avant de reprendre la navigation.",
+              },
+            ]
+          : isFullDayBoatProgram
+          ? [
+              {
+                lead: "À l'heure du déjeuner, un accostage à Favignana est prévu pour la pause repas.",
+                text: "Vous pouvez ainsi descendre sur l'île et organiser librement votre déjeuner avant de reprendre la navigation vers Levanzo. L'horaire et le point d'accostage peuvent varier selon le port et la météo.",
+              },
+            ]
+          : []),
+        isFishing
+          ? {
+              lead: "La deuxième partie peut changer de zone ou de technique selon ce qui se passe en mer.",
+              text: "Pêche de fond, traîne, drifting ou catch and release sont choisis pendant la journée. L'objectif est une pêche sportive guidée aux Égades, pas un arrêt touristique dans une crique.",
+            }
+          : isHalfDay
+          ? {
+              lead: "La deuxième partie reste compacte et suit les meilleures conditions autour de Favignana.",
+              text: "Le skipper peut choisir une autre crique, un passage panoramique ou plus de temps de baignade, sans rendre le retour à Trapani trop serré.",
+            }
+          : isCharter
+            ? {
+                lead: "Marettimo donne tout son sens à un charter de plusieurs jours.",
+                text: "Avec plus de nuits à bord, on gagne le temps nécessaire pour des navigations plus longues, des matins calmes, des mouillages moins rapides et une route qui ressemble vraiment à une petite croisière privée.",
+              }
+          : {
+              lead: "L'exploration continue à Levanzo, plus lente et souvent plus calme.",
+              text: "Cala Fredda, Cala Minnola et la côte du Faraglione sont évaluées selon les conditions pour garder du temps de baignade et une vraie pause au mouillage.",
+            },
+        {
+          lead: `La durée prévue est de ${durationText}, avec retour à Trapani et une route flexible.`,
+          text: isHalfDay
+            ? "Le format demi-journée privilégie quelques arrêts bien choisis et un retour facile à organiser."
+            : isCharter
+              ? "L'objectif est un charter privé avec une route claire mais flexible : Favignana, Levanzo, Marettimo et, sur demande, San Vito lo Capo deviennent une vraie expérience de voyage en mer."
+            : isFishing
+              ? "Le but est de comprendre avant de réserver ce que vous allez vivre : un charter de pêche aux îles Égades depuis Trapani, semi-rigide privé, matériel professionnel, route flexible et techniques choisies en mer selon les règles AMP/MASAF."
+            : "Le but est de comprendre avant de réserver ce que l'on va vivre : mer, baignades, navigation panoramique et décisions locales prises au bon moment.",
+        },
+      ],
+    };
+  }
+
+  if (isEs) {
+    return {
+      paragraphs: [
+        {
+          lead: isFishing
+            ? "La jornada de pesca deportiva sale de Trapani con briefing técnico y ruta elegida según temporada, normativa y mar."
+            : isCharter
+              ? "El programa de charter empieza en Trapani y se construye día a día alrededor de las Islas Egadi."
+              : isGourmet
+	                ? "La experiencia gourmet sale de Trapani y combina navegación, baños y comida cuidada a bordo."
+	                : isPrivateBoat
+	                  ? isHalfDay
+	                    ? "Esta excursión privada de 4 horas desde Trapani permite vivir una ruta compacta con baños alrededor de Favignana."
+	                    : "Esta excursión privada en barco desde Trapani permite vivir Favignana y Levanzo con un ritmo más personal."
+                  : "Esta excursión en barco Favignana y Levanzo desde Trapani está pensada para vivir las Egadi en una jornada completa.",
+          text: isFishing
+            ? `A bordo de ${boat}, el día empieza con equipo, briefing de seguridad y ruta técnica alrededor de las islas. El patrón elige las zonas de pesca permitidas según corriente, fondo, viento y reglas AMP/MASAF.`
+            : `A bordo de ${boat}, el día es fácil de entender: embarque, salida del puerto de Trapani, navegación hacia los lados más protegidos de las islas y paradas elegidas por el patrón según viento, mar y comodidad.`,
+        },
+        isFishing
+          ? {
+              lead: "La ruta no busca pescar dentro de las calas de baño, sino en zonas permitidas alrededor de las Islas Egadi.",
+              text: "Favignana, Levanzo y los sectores más adecuados del archipiélago se valoran según meteorología, corriente, fondo y temporada. Así el charter de pesca desde Trapani se mantiene técnico, seguro y conforme a la normativa.",
+            }
+          : {
+              lead: "Favignana suele ser la primera gran parte de la ruta, con Cala Rossa, Cala Azzurra y Bue Marino entre las paradas posibles.",
+              text: "Son lugares buscados por el agua clara, la costa rocosa y el snorkel, pero el orden se mantiene flexible si una cala está expuesta o demasiado llena.",
+            },
+        ...(isCharter
+          ? [
+              {
+                lead: "Un charter en trimarán por las Egadi permite vivir Favignana, Levanzo y Marettimo con ritmo de viaje, no de excursión rápida.",
+                text: "La ruta puede unir las calas más conocidas de Favignana, los fondeos tranquilos de Levanzo y la costa más salvaje de Marettimo, siempre según meteorología, duración elegida y comodidad a bordo.",
+              },
+              {
+                lead: "Bajo petición, cuando la meteorología y la duración lo permiten, la ruta también puede abrirse hacia San Vito lo Capo.",
+                text: "Es una extensión ideal para quien busca un charter privado en trimarán desde Trapani, combinando Islas Egadi, navegación lenta y una de las bahías más escénicas de Sicilia occidental.",
+              },
+            ]
+          : isGourmet
+          ? [
+              {
+                lead: "En Cala Rossa está prevista la parada principal para la comida a bordo.",
+                text: "El chef local cocina directamente en el trimarán: una cooking experience con ingredientes del territorio, servicio frente al mar y tiempo tranquilo antes de seguir navegando.",
+              },
+            ]
+          : isFullDayBoatProgram
+          ? [
+              {
+                lead: "A la hora de comer está previsto atracar en Favignana para la pausa del almuerzo.",
+                text: "Así puedes bajar a la isla y organizar la comida libremente antes de continuar la navegación hacia Levanzo. El horario y el punto de atraque pueden adaptarse según puerto y meteorología.",
+              },
+            ]
+          : []),
+        isFishing
+          ? {
+              lead: "La segunda parte puede cambiar de zona o de técnica según lo que ocurra en el mar.",
+              text: "Pesca de fondo, curricán, drifting o catch and release se eligen durante la jornada. El objetivo es una pesca deportiva guiada en las Egadi, no una parada turística dentro de una cala.",
+            }
+          : isHalfDay
+          ? {
+              lead: "La segunda parte se mantiene compacta y sigue las mejores condiciones alrededor de Favignana.",
+              text: "El patrón puede elegir otra cala, un tramo panorámico o más tiempo de baño, sin apretar demasiado el regreso a Trapani.",
+            }
+          : isCharter
+            ? {
+                lead: "Marettimo es la razón más natural para elegir varios días de charter.",
+                text: "Con más noches a bordo hay tiempo para travesías largas, mañanas tranquilas, fondeos menos inmediatos y una ruta que se siente como una pequeña travesía privada.",
+              }
+          : {
+              lead: "La exploración continúa hacia Levanzo, normalmente con un ritmo más tranquilo.",
+              text: "Cala Fredda, Cala Minnola y la zona del Faraglione se valoran según las condiciones para conservar tiempo de baño y una pausa real al fondeo.",
+            },
+        {
+          lead: `La duración prevista es de ${durationText}, con regreso a Trapani y una ruta flexible.`,
+          text: isHalfDay
+            ? "El formato de medio día se centra en pocas paradas bien elegidas y un regreso sencillo de organizar."
+            : isCharter
+              ? "El objetivo es un charter privado con planificación clara y ruta flexible: Favignana, Levanzo, Marettimo y, bajo petición, San Vito lo Capo se viven como un verdadero viaje por mar."
+            : isFishing
+              ? "La idea es que sepas antes de reservar qué vas a vivir: un charter de pesca en las Islas Egadi desde Trapani, neumática privada, equipo profesional, ruta flexible y técnicas elegidas en el mar según reglas AMP/MASAF."
+            : "La idea es que sepas antes de reservar qué vas a vivir: mar, baños, navegación panorámica y decisiones locales tomadas en el momento justo.",
+        },
+      ],
+    };
+  }
+
+  if (isEn) {
+    return {
+      paragraphs: [
+        {
+          lead: isFishing
+            ? "The sport fishing day leaves from Trapani with a technical briefing and a route chosen around season, rules and sea conditions."
+            : isCharter
+              ? "The charter programme starts in Trapani and is shaped day by day around the Egadi Islands."
+              : isGourmet
+	                ? "The gourmet experience leaves from Trapani and combines navigation, swim stops and a curated lunch on board."
+	                : isPrivateBoat
+	                  ? isHalfDay
+	                    ? "This private 4-hour boat tour from Trapani is designed for a compact route with swim stops around Favignana."
+	                    : "This private boat tour from Trapani is designed to experience Favignana and Levanzo at a more personal rhythm."
+                  : "This Favignana and Levanzo boat tour from Trapani is designed to experience the Egadi Islands over a full day at sea.",
+          text: isFishing
+            ? `On board ${boat}, the day starts with gear, safety briefing and a technical route around the islands. The skipper chooses permitted fishing areas according to current, seabed, wind and AMP/MASAF rules.`
+            : `On board ${boat}, the day is easy to understand: boarding, departure from Trapani harbour, navigation towards the most comfortable sides of the islands and stops chosen by the skipper according to wind, sea and comfort.`,
+        },
+        isFishing
+          ? {
+              lead: "The route is not about fishing inside swimming coves, but in permitted fishing areas around the Egadi Islands.",
+              text: "Favignana, Levanzo and the most suitable parts of the archipelago are evaluated according to weather, current, seabed and season. This keeps the fishing charter from Trapani technical, safe and compliant.",
+            }
+          : {
+              lead: "Favignana is usually the first main part of the route, with Cala Rossa, Cala Azzurra and Bue Marino among the possible stops.",
+              text: "These coves are known for clear water, rocky coastline and snorkelling, but the order is not forced if a bay is exposed or too crowded.",
+            },
+        ...(isCharter
+          ? [
+              {
+                lead: "An Egadi trimaran charter is designed to experience Favignana, Levanzo and Marettimo with the rhythm of a journey rather than a fast day trip.",
+                text: "The route can connect the iconic coves of Favignana, the quieter anchorages of Levanzo and the wilder coastline of Marettimo, always according to weather, chosen duration and comfort on board.",
+              },
+              {
+                lead: "On request, when weather and charter length allow it, the route can also extend towards San Vito lo Capo.",
+                text: "It is a refined option for guests looking for a private trimaran charter from Trapani that combines the Egadi Islands, slow navigation and one of the most scenic coastlines in western Sicily.",
+              },
+            ]
+          : isGourmet
+          ? [
+              {
+                lead: "At Cala Rossa, the main stop is planned around lunch on board.",
+                text: "The local chef cooks directly on the trimaran: a cooking experience with local ingredients, sea-view service and relaxed timing before navigation continues.",
+              },
+            ]
+          : isFullDayBoatProgram
+          ? [
+              {
+                lead: "Around lunchtime, the programme includes docking on Favignana for the lunch break.",
+                text: "This gives you time to step onto the island and organise lunch independently before continuing towards Levanzo. Timing and docking point can adapt to harbour operations and weather conditions.",
+              },
+            ]
+          : []),
+        isFishing
+          ? {
+              lead: "The second part can change area or technique according to what happens at sea.",
+              text: "Bottom fishing, trolling, drifting or catch and release are chosen during the day. The goal is guided sport fishing in the Egadi Islands, not a tourist stop inside a cove.",
+            }
+          : isHalfDay
+          ? {
+              lead: "The second part stays compact and follows the best conditions around Favignana.",
+              text: "The skipper can choose another cove, a scenic coastal passage or more swim time, without making the return to Trapani too tight.",
+            }
+          : isCharter
+            ? {
+                lead: "Marettimo is the natural reason to choose a multi-day charter.",
+                text: "With more nights on board, there is room for longer passages, quieter mornings, less rushed anchorages and a route that feels like a proper private sea journey.",
+              }
+          : {
+              lead: "The experience continues towards Levanzo, often with a slower and quieter rhythm.",
+              text: "Cala Fredda, Cala Minnola and the coast near the Faraglione are evaluated according to the conditions, so there is real time for swimming and relaxing at anchor.",
+            },
+        {
+          lead: `The planned duration is ${durationText}, with return to Trapani and a flexible route.`,
+          text: isHalfDay
+            ? "The half-day format focuses on a few well-chosen swim stops and a simple return schedule."
+            : isCharter
+              ? "The goal is a private charter with clear planning and a flexible route: Favignana, Levanzo, Marettimo and, on request, San Vito lo Capo become a real journey by sea."
+            : isFishing
+              ? "The goal is to understand before booking what the day really includes: an Egadi Islands fishing charter from Trapani with private RIB, professional gear, flexible route and techniques chosen at sea under AMP/MASAF rules."
+            : "The goal is to understand before booking what the day actually feels like: sea, swim stops, scenic navigation and local decisions made at the right moment.",
+        },
+      ],
+    };
+  }
+
+  return {
+    paragraphs: [
+      {
+        lead: isFishing
+          ? "La giornata di pesca sportiva parte da Trapani con briefing tecnico, attrezzatura pronta e rotta scelta in base a stagione, regole e mare."
+          : isCharter
+            ? "Il programma del charter inizia a Trapani e si costruisce giorno per giorno intorno alle Isole Egadi."
+            : isGourmet
+	              ? "La Premium Experience parte da Trapani e unisce navigazione, soste bagno e pranzo curato a bordo."
+	              : isPrivateBoat
+	                ? isHalfDay
+	                  ? "Questo tour privato in barca di 4 ore da Trapani è pensato per una rotta compatta con soste bagno intorno a Favignana."
+	                  : "Questa escursione privata in barca da Trapani è pensata per vivere Favignana e Levanzo con un ritmo più personale."
+                : "Questa escursione in barca Favignana e Levanzo da Trapani è pensata per vivere le Egadi in una giornata completa, chiara e senza corse inutili.",
+        text: isFishing
+          ? `A bordo di ${boat} la giornata parte con attrezzatura, briefing sicurezza e rotta tecnica intorno alle isole. Lo skipper sceglie le aree di pesca consentite in base a corrente, fondale, vento e regole AMP/MASAF.`
+          : `A bordo di ${boat} la giornata ha una struttura semplice: incontro al porto, uscita da Trapani, navigazione verso i lati più adatti delle isole e soste decise dallo skipper in base a vento, mare, affollamento e qualità dell'acqua.`,
+      },
+      isFishing
+        ? {
+            lead: "La rotta non punta a pescare dentro le cale, ma nelle aree consentite intorno alle Isole Egadi.",
+            text: "Favignana, Levanzo e i tratti più adatti dell'arcipelago vengono valutati in base a meteo, corrente, fondale e stagione. In questo modo il charter pesca Egadi da Trapani resta tecnico, sicuro e conforme alla normativa.",
+          }
+        : {
+            lead: "Favignana è di solito la prima parte forte del tour in barca alle Egadi, con Cala Rossa, Cala Azzurra e Bue Marino tra le possibili tappe.",
+            text: "Sono luoghi cercati per acqua turchese, costa rocciosa, bagni e snorkeling, ma non vengono inseriti in modo rigido: se una cala è troppo esposta o troppo piena, la crew sceglie il punto più piacevole e sicuro della giornata.",
+          },
+      ...(isCharter
+        ? [
+            {
+              lead: "Il charter in trimarano alle Egadi è pensato per vivere Favignana, Levanzo e Marettimo con ritmo da viaggio, non da escursione veloce.",
+              text: "La rotta può unire le cale più iconiche di Favignana, le rade tranquille di Levanzo e la costa più selvaggia di Marettimo, sempre in base a meteo, durata scelta e comfort a bordo.",
+            },
+            {
+              lead: "Su richiesta, quando meteo e durata lo permettono, l'itinerario può aprirsi anche verso San Vito lo Capo.",
+              text: "È un'estensione ideale per chi cerca un charter privato in trimarano da Trapani che unisca Isole Egadi, navigazione lenta e una delle baie più scenografiche della Sicilia occidentale.",
+            },
+          ]
+        : isGourmet
+        ? [
+            {
+              lead: "A Cala Rossa è prevista la sosta principale per il pranzo a bordo.",
+              text: "Lo chef locale cucina direttamente sul trimarano: una cooking experience con ingredienti del territorio, servizio vista mare e tempi distesi prima di riprendere la navigazione.",
+            },
+          ]
+        : isFullDayBoatProgram
+        ? [
+            {
+              lead: "Per la pausa pranzo è previsto l'attracco a Favignana.",
+              text: "A metà giornata si entra in porto sull'isola, così puoi scendere e organizzare il pranzo libero prima di riprendere la navigazione verso Levanzo. Orario e punto di attracco possono adattarsi a traffico portuale, vento e condizioni del mare.",
+            },
+          ]
+        : []),
+      isFishing
+        ? {
+            lead: "La seconda parte può cambiare zona o tecnica in base a quello che succede in mare.",
+            text: "Bolentino, traina, drifting o catch and release vengono scelti durante la giornata: l'obiettivo è una pesca sportiva alle Egadi guidata, sicura e rispettosa delle regole, non una sosta turistica in una cala.",
+          }
+        : isHalfDay
+        ? {
+            lead: "La seconda parte resta compatta e segue le condizioni migliori intorno a Favignana.",
+            text: "Lo skipper può scegliere un'altra cala, un tratto panoramico o più tempo per il bagno, senza rendere troppo stretto il rientro a Trapani.",
+          }
+        : isCharter
+          ? {
+              lead: "Marettimo è il motivo più naturale per scegliere più giorni di charter.",
+              text: "Con più notti a bordo c'è spazio per traversate più lunghe, mattine lente, rade meno immediate e una rotta che diventa davvero una piccola crociera privata alle Egadi.",
+            }
+        : {
+            lead: "L'esplorazione continua verso Levanzo, dove Cala Fredda, Cala Minnola e il tratto del Faraglione offrono un ritmo più lento e raccolto.",
+            text: "Qui il programma punta a lasciare tempo vero in acqua e in rada, senza trasformare l'escursione in barca Favignana e Levanzo in una sequenza di nomi da spuntare.",
+          },
+      {
+        lead: `La durata prevista è ${durationText}, con rientro a Trapani e rotta sempre adattata alle condizioni reali del mare.`,
+        text: isHalfDay
+          ? "Nel formato mezza giornata il valore sta nella selezione: poche soste, scelte bene, con orari chiari e una navigazione facile da inserire nella giornata."
+          : isCharter
+            ? "L'obiettivo è un charter privato con pianificazione chiara e rotta flessibile: Favignana, Levanzo, Marettimo e, su richiesta, San Vito lo Capo diventano un vero viaggio via mare."
+          : isFishing
+            ? "L'obiettivo è farti capire prima di prenotare cosa vivrai davvero: un charter pesca Egadi da Trapani con gommone dedicato, attrezzatura professionale, rotta flessibile e tecniche scelte sul mare nel rispetto delle norme AMP/MASAF."
+          : "L'obiettivo è farti capire prima di prenotare cosa vivrai davvero: un tour Favignana e Levanzo da Trapani con navigazione panoramica, soste bagno, snorkeling e gestione locale del percorso.",
+      },
+    ],
+  };
+}
+
+function getExcursionSnapshotCopy(
+  locale: string,
+  service: { id?: string; type: string; durationType: string },
+  durationText: string,
+) {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  const isFishing = isFishingService(service);
+  const isCharter = service.type === "CABIN_CHARTER";
+  const isMorning = service.durationType === "HALF_DAY_MORNING";
+  const isAfternoon = service.durationType === "HALF_DAY_AFTERNOON";
+  const isHalfDay = isMorning || isAfternoon;
+  const isFullDay = service.durationType === "FULL_DAY";
+
+  if (isDe) {
+    return {
+      detailsEyebrow: "EGADISAILING",
+      detailsTitleStart: "Details",
+      detailsTitleAccent: "Ausflug",
+      includesEyebrow: "DER PERFEKTE AUSFLUG",
+      includesTitleStart: "Was ist",
+      includesTitleAccent: "inklusive?",
+      detailItems: [
+        "Treffpunkt: Via dei Gladioli 15, Hafen Trapani.",
+        isCharter
+          ? "Einschiffung und Route werden vor der Abfahrt mit der Crew bestätigt."
+          : isFishing
+            ? "Technisches Briefing und Ausrüstungscheck vor der Abfahrt."
+            : isFullDay
+              ? "Empfohlene Ankunft am Steg: 9:00 / 9:30."
+              : "Empfohlene Ankunft: 30 Minuten vor Abfahrt.",
+        isCharter
+          ? "Route über Favignana, Levanzo und Marettimo nach Wetter und Dauer."
+          : isFishing
+            ? "Angelplätze werden nach Saison, Regeln und Seegang gewählt."
+            : isMorning
+              ? "Abfahrt 9:00 - Rückkehr ca. 13:00."
+              : isAfternoon
+                ? "Abfahrt 14:00 - Rückkehr ca. 18:00."
+                : "Abfahrt 10:00 - Rückkehr bis ca. 18:00.",
+        `Dauer: ${durationText}.`,
+        isCharter
+          ? "Nächte vor Anker oder im Hafen werden nach Wetter und Verfügbarkeit geplant."
+          : isFishing
+            ? "Technik und Rhythmus werden vom Skipper während des Tages angepasst."
+            : isHalfDay
+              ? "Badestopps und Buchten werden nach dem geschütztesten Tagesfenster gewählt."
+              : "Mögliche Stopps zwischen Favignana und Levanzo, nach Wind, Meer und Andrang.",
+      ],
+    };
+  }
+
+  if (isFr) {
+    return {
+      detailsEyebrow: "EGADISAILING",
+      detailsTitleStart: "Détails",
+      detailsTitleAccent: "excursion",
+      includesEyebrow: "L'EXCURSION PARFAITE",
+      includesTitleStart: "Ce qui est",
+      includesTitleAccent: "inclus ?",
+      detailItems: [
+        "Point de départ : Via dei Gladioli 15, port de Trapani.",
+        isCharter
+          ? "Embarquement et route confirmés avec la crew avant le départ."
+          : isFishing
+            ? "Briefing technique et contrôle du matériel avant la sortie."
+            : isFullDay
+              ? "Arrivée conseillée au ponton : 9:00 / 9:30."
+              : "Arrivée conseillée : 30 minutes avant le départ.",
+        isCharter
+          ? "Route entre Favignana, Levanzo et Marettimo selon météo et durée."
+          : isFishing
+            ? "Zones de pêche choisies selon saison, règles et état de la mer."
+            : isMorning
+              ? "Départ 9:00 - retour vers 13:00."
+              : isAfternoon
+                ? "Départ 14:00 - retour vers 18:00."
+                : "Départ 10:00 - retour avant 18:00.",
+        `Durée : ${durationText}.`,
+        isCharter
+          ? "Nuits au mouillage ou au port organisées selon météo et disponibilité."
+          : isFishing
+            ? "Techniques et rythme adaptés par le skipper pendant la journée."
+            : isHalfDay
+              ? "Baignades et criques choisies dans la fenêtre la plus protégée."
+              : "Arrêts possibles entre Favignana et Levanzo, selon vent, mer et affluence.",
+      ],
+    };
+  }
+
+  if (isEs) {
+    return {
+      detailsEyebrow: "EGADISAILING",
+      detailsTitleStart: "Detalles",
+      detailsTitleAccent: "excursión",
+      includesEyebrow: "LA EXCURSIÓN PERFECTA",
+      includesTitleStart: "¿Qué",
+      includesTitleAccent: "incluye?",
+      detailItems: [
+        "Punto de salida: Via dei Gladioli 15, Puerto de Trapani.",
+        isCharter
+          ? "Embarque y ruta confirmados con la tripulación antes de salir."
+          : isFishing
+            ? "Briefing técnico y control del equipo antes de la salida."
+            : isFullDay
+              ? "Llegada recomendada al muelle: 9:00 / 9:30."
+              : "Llegada recomendada: 30 minutos antes de la salida.",
+        isCharter
+          ? "Ruta entre Favignana, Levanzo y Marettimo según meteo y duración."
+          : isFishing
+            ? "Zonas de pesca elegidas según temporada, normativa y mar."
+            : isMorning
+              ? "Salida 9:00 - regreso sobre las 13:00."
+              : isAfternoon
+                ? "Salida 14:00 - regreso sobre las 18:00."
+                : "Salida 10:00 - regreso antes de las 18:00.",
+        `Duración: ${durationText}.`,
+        isCharter
+          ? "Noches fondeados o en puerto según meteo y disponibilidad."
+          : isFishing
+            ? "Técnicas y ritmo adaptados por el patrón durante la jornada."
+            : isHalfDay
+              ? "Baños y calas elegidos en la franja más protegida."
+              : "Paradas posibles entre Favignana y Levanzo, según viento, mar y afluencia.",
+      ],
+    };
+  }
+
+  if (isEn) {
+    return {
+      detailsEyebrow: "EGADISAILING",
+      detailsTitleStart: "Excursion",
+      detailsTitleAccent: "details",
+      includesEyebrow: "THE PERFECT EXCURSION",
+      includesTitleStart: "What is",
+      includesTitleAccent: "included?",
+      detailItems: [
+        "Departure point: Via dei Gladioli 15, Trapani harbour.",
+        isCharter
+          ? "Boarding and route confirmed with the crew before departure."
+          : isFishing
+            ? "Technical briefing and gear check before departure."
+            : isFullDay
+              ? "Recommended arrival at the pier: 9:00 / 9:30."
+              : "Recommended arrival: 30 minutes before departure.",
+        isCharter
+          ? "Route across Favignana, Levanzo and Marettimo according to weather and duration."
+          : isFishing
+            ? "Fishing areas chosen according to season, rules and sea conditions."
+            : isMorning
+              ? "Departure 9:00 - return around 13:00."
+              : isAfternoon
+                ? "Departure 14:00 - return around 18:00."
+                : "Departure 10:00 - return by 18:00.",
+        `Duration: ${durationText}.`,
+        isCharter
+          ? "Nights at anchor or in harbour planned according to weather and availability."
+          : isFishing
+            ? "Techniques and rhythm adjusted by the skipper during the day."
+            : isHalfDay
+              ? "Swim stops and coves chosen within the most sheltered time window."
+              : "Possible stops between Favignana and Levanzo, according to wind, sea and crowds.",
+      ],
+    };
+  }
+
+  return {
+    detailsEyebrow: "EGADISAILING",
+    detailsTitleStart: "Dettagli",
+    detailsTitleAccent: "escursione",
+    includesEyebrow: "L'ESCURSIONE PERFETTA",
+    includesTitleStart: "Cosa",
+    includesTitleAccent: "include?",
+    detailItems: [
+      "Punto di partenza: Via dei Gladioli 15, Porto di Trapani.",
+      isCharter
+        ? "Imbarco e rotta vengono confermati con la crew prima della partenza."
+        : isFishing
+          ? "Briefing tecnico e controllo attrezzatura prima dell'uscita."
+          : isFullDay
+            ? "Arrivo consigliato al pontile: 9:00 / 9:30."
+            : "Arrivo consigliato: 30 minuti prima della partenza.",
+      isCharter
+        ? "Rotta tra Favignana, Levanzo e Marettimo secondo meteo e durata."
+        : isFishing
+          ? "Zone di pesca scelte in base a stagione, regole e condizioni del mare."
+          : isMorning
+            ? "Partenza ore 9:00 - rientro intorno alle 13:00."
+            : isAfternoon
+              ? "Partenza ore 14:00 - rientro intorno alle 18:00."
+              : "Partenza ore 10:00 - rientro entro le 18:00.",
+      `Durata: ${durationText}.`,
+      isCharter
+        ? "Notti in rada o in porto pianificate in base a meteo e disponibilità."
+        : isFishing
+          ? "Tecniche e ritmo vengono adattati dallo skipper durante la giornata."
+          : isHalfDay
+            ? "Soste bagno e cale scelte nella finestra più riparata della giornata."
+            : "Possibili soste tra Favignana e Levanzo, secondo vento, mare e affollamento.",
     ],
   };
 }
@@ -2375,87 +3497,6 @@ function getGourmetSampleMenus(locale: string) {
   ];
 }
 
-const heroFrameLayouts = [
-  "right-2 top-0 z-30 w-[25rem] rotate-2",
-  "left-0 top-[10.5rem] z-20 w-[22.5rem] -rotate-5",
-  "right-10 top-[23rem] z-10 w-[21.5rem] rotate-[4deg]",
-] as const;
-
-function SvgPhotoFrame({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className: string;
-}) {
-  return (
-    <figure className={`absolute drop-shadow-[0_28px_42px_rgba(0,0,0,0.35)] ${className}`}>
-      <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-white/8 p-3 backdrop-blur-sm">
-        <div className="relative h-full w-full overflow-hidden rounded-lg">
-          {children}
-        </div>
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 400 300"
-          preserveAspectRatio="none"
-          className="pointer-events-none absolute inset-0 h-full w-full"
-        >
-          <path
-            d="M18 18 C70 8 126 16 184 12 C250 8 312 10 382 18 L388 280 C316 290 256 285 194 289 C126 293 70 286 18 280 Z"
-            fill="none"
-            stroke="rgba(255,255,255,0.88)"
-            strokeWidth="12"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M28 28 C92 20 150 27 206 22 C268 17 320 20 372 28 L377 270 C314 279 252 274 196 278 C132 283 78 276 28 270 Z"
-            fill="none"
-            stroke="rgba(212,175,55,0.72)"
-            strokeWidth="3"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M35 47 L35 28 L56 28 M344 28 L371 28 L371 52 M371 248 L371 272 L345 272 M56 272 L29 272 L29 247"
-            fill="none"
-            stroke="rgba(212,175,55,0.9)"
-            strokeWidth="5"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-    </figure>
-  );
-}
-
-function HeroFramedGallery({
-  items,
-}: {
-  items: Array<{ caption: string; alt: string; src?: string }>;
-}) {
-  return (
-    <div className="relative h-[36rem] w-full">
-      {items.slice(0, 3).map((item, index) => {
-        if (!item.src) return null;
-
-        return (
-          <SvgPhotoFrame
-            key={item.src}
-            className={heroFrameLayouts[index] ?? heroFrameLayouts[0]}
-          >
-            <Image
-              src={item.src}
-              alt={item.alt}
-              fill
-              sizes="(max-width: 1200px) 360px, 420px"
-              className="object-cover"
-            />
-          </SvgPhotoFrame>
-        );
-      })}
-    </div>
-  );
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -2473,7 +3514,7 @@ export async function generateMetadata({
     description: content.seoDescription,
     path: `/experiences/${getExperiencePublicSlug(service.id, locale)}`,
     locale,
-    image: content.media[0]?.src,
+    image: service.boatId === "boat" ? EGADI_BOAT_FRONT_HERO_IMAGE : content.media[0]?.src,
     noIndex: !content.listed,
   });
 }
@@ -2507,6 +3548,7 @@ export default async function ExperienceDetailPage({
   const bookingServiceParam = getExperiencePublicSlug(service.id, locale);
   const bookingHref = localizedPath(locale, `/prenota?service=${bookingServiceParam}`);
   const recoveryHref = localizedStaticPath(locale, "/recupera-prenotazione");
+  const contactHref = localizedStaticPath(locale, "/contacts");
   const recoveryLabel =
     locale === "es"
       ? "Buscar reserva"
@@ -2517,17 +3559,71 @@ export default async function ExperienceDetailPage({
         : locale === "en"
           ? "Find booking"
       : "Recupera prenotazione";
+  const contactLabel =
+    locale === "es"
+      ? "Contáctanos"
+      : locale === "fr"
+        ? "Nous contacter"
+        : locale === "de"
+          ? "Kontakt"
+          : locale === "en"
+            ? "Contact us"
+            : "Contattaci";
+  const passengersLabel =
+    locale === "es"
+      ? "Pasajeros"
+      : locale === "fr"
+        ? "Passagers"
+        : locale === "de"
+          ? "Passagiere"
+          : locale === "en"
+            ? "Passengers"
+            : "Passeggeri";
+  const reviewScoreLabel =
+    locale === "es"
+      ? "4.9 de 5"
+      : locale === "fr"
+        ? "4,9 sur 5"
+        : locale === "de"
+          ? "4,9 von 5"
+          : locale === "en"
+            ? "4.9 out of 5"
+            : "4.9 su 5";
   const durationText = getServiceDurationLabel(service, locale);
-  const itineraryHeading = getItineraryHeading(locale, service, t("experience.itinerary"));
   const seoExpansion = getSeoExpansionCopy(locale, service, durationText, boatContent?.title);
+  const experienceIntro = getExperienceIntroSectionCopy(
+    locale,
+    service,
+    durationText,
+    boatContent?.title,
+  );
+  const excursionSnapshot = getExcursionSnapshotCopy(locale, service, durationText);
+  const dayProgram = getDayProgramEditorialCopy(locale, service, durationText, boatContent?.title);
   const priceUnit =
     service.type === "CABIN_CHARTER" || service.pricingUnit === "PER_PACKAGE"
       ? getPriceUnitLabel(service.pricingUnit, service.type, locale)
       : t("experience.perPerson");
   const heroMedia = content.media.find((item) => item.src) ?? content.media[0];
-  const heroImage = heroMedia?.src ?? FALLBACK_HERO_IMAGE;
-  const gallery = content.media.filter((item) => item.src);
+  const isEgadiBoatExperience = boatContent?.id === "boat";
+  const isHalfDayExperience =
+    service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
+  const heroImage = isEgadiBoatExperience
+    ? EGADI_BOAT_FRONT_HERO_IMAGE
+    : heroMedia?.src ?? FALLBACK_HERO_IMAGE;
+  const heroImageAlt = isEgadiBoatExperience
+    ? getEgadiBoatHeroAlt(locale)
+    : heroMedia?.alt ?? content.title;
+  const gallery = content.media.filter(
+    (item): item is (typeof content.media)[number] & { src: string } => Boolean(item.src),
+  );
   const boatGallery = boatContent?.gallery ?? [];
+  const isGourmetExperience = service.type === "EXCLUSIVE_EXPERIENCE";
+  const isCharterExperience = service.type === "CABIN_CHARTER";
+  const showcaseGallery = isEgadiBoatExperience
+    ? [...boatGallery, ...getEgadiBoatRouteGallery(locale, isHalfDayExperience)]
+    : isGourmetExperience || isCharterExperience
+      ? gallery
+    : [...gallery, ...boatGallery];
   const editorial = getEditorialExperienceCopy(locale, service, content.title, boatContent?.title);
   const gourmetMenuCopy = getGourmetMenuCopy(locale);
   const gourmetMenus = service.type === "EXCLUSIVE_EXPERIENCE" ? getGourmetSampleMenus(locale) : [];
@@ -2625,8 +3721,12 @@ export default async function ExperienceDetailPage({
     { "@type": "Place", name: "Trapani" },
     { "@type": "Place", name: "Isole Egadi" },
     { "@type": "Place", name: "Favignana" },
-    { "@type": "Place", name: "Levanzo" },
+    ...(isHalfDayExperience ? [] : [{ "@type": "Place", name: "Levanzo" }]),
   ];
+  const structuredImageUrls =
+    showcaseGallery.length > 0
+      ? showcaseGallery.map((item) => absoluteUrl(item.src))
+      : [absoluteUrl(heroImage)];
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -2666,10 +3766,7 @@ export default async function ExperienceDetailPage({
         areaServed,
         location: { "@id": meetingPointId },
         availableAtOrFrom: { "@id": meetingPointId },
-        image:
-          gallery.length + boatGallery.length > 0
-            ? [...gallery.map((item) => absoluteUrl(item.src!)), ...boatGallery.map((item) => absoluteUrl(item.src))]
-            : [absoluteUrl(heroImage)],
+        image: structuredImageUrls,
         itinerary: {
           "@type": "ItemList",
           itemListElement: itinerary.map((item, index) => ({
@@ -2759,488 +3856,506 @@ export default async function ExperienceDetailPage({
     bookNowLabel: copy.bookNow,
     infoItems: bookingInfoItems,
   };
+  const directBookingLabel =
+    locale === "es"
+      ? "Reserva directa Egadisailing"
+      : locale === "fr"
+        ? "Réservation directe Egadisailing"
+        : locale === "de"
+          ? "Direktbuchung Egadisailing"
+          : locale === "en"
+            ? "Direct Egadisailing booking"
+            : "Prenotazione diretta Egadisailing";
+  const programTitle =
+    locale === "es"
+      ? "PROGRAMA DEL DÍA"
+      : locale === "fr"
+        ? "PROGRAMME DE LA JOURNÉE"
+        : locale === "de"
+          ? "TAGESPROGRAMM"
+          : locale === "en"
+            ? "DAY PROGRAM"
+            : "PROGRAMMA DELLA GIORNATA";
+  const programTitleWords = programTitle.split(" ");
+  const galleryPreviousLabel =
+    locale === "es"
+      ? "Fotos anteriores"
+      : locale === "fr"
+        ? "Photos précédentes"
+        : locale === "de"
+          ? "Vorherige Fotos"
+          : locale === "en"
+            ? "Previous photos"
+            : "Foto precedenti";
+  const galleryNextLabel =
+    locale === "es"
+      ? "Fotos siguientes"
+      : locale === "fr"
+        ? "Photos suivantes"
+        : locale === "de"
+          ? "Weitere Fotos"
+          : locale === "en"
+            ? "Next photos"
+            : "Foto successive";
 
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-slate-900">
+    <div className="min-h-screen overflow-x-hidden bg-[#071934] text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }}
       />
 
-      <section className="relative isolate min-h-[560px] overflow-hidden bg-[#05182d] px-4 pb-16 pt-24 sm:min-h-[640px] sm:pb-20 sm:pt-28 md:px-8 lg:min-h-[720px] lg:px-12">
-        <Image
-          src={heroImage}
-          alt={heroMedia?.alt ?? content.title}
-          fill
-          preload
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,24,45,0.92)_0%,rgba(5,24,45,0.72)_42%,rgba(5,24,45,0.32)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#f7f2e8] via-[#f7f2e8]/70 to-transparent" />
+      <ExperiencePresenceNotice serviceId={service.id} locale={locale} />
 
-        <div className="relative z-10 mx-auto grid max-w-7xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_32rem] lg:gap-12">
-          <ScrollSection animation="fade-up" className="max-w-3xl">
+      <main className="bg-[linear-gradient(180deg,#071934_0%,#0a2a4a_38%,#0c3d5e_56%,#0a2a4a_78%,#071934_100%)] pb-32">
+        <section className="px-4 pb-0 pt-24 md:px-8 lg:px-12 lg:pt-28">
+          <div className="mx-auto max-w-6xl">
             <Link
               href={localizedStaticPath(locale, "/experiences")}
-              className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-white/75 transition hover:text-white sm:mb-8"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-white/80 transition hover:text-[var(--color-gold)]"
             >
               <ArrowLeft className="h-4 w-4" />
               {t("experience.allExperiences")}
             </Link>
 
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)] sm:text-sm sm:tracking-[0.22em]">
-              {copy.experienceLabel}
-            </p>
-            <h1 className="font-heading text-4xl font-bold leading-none text-white sm:text-5xl md:text-7xl">
-              {content.title}
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/78 sm:mt-6 sm:text-lg sm:leading-8 md:text-xl">
-              {content.detailDescription}
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-2 text-sm text-white sm:mt-8 sm:gap-3">
-              {boatContent && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 backdrop-blur">
-                  <Ship className="h-4 w-4 text-[var(--color-gold)]" />
-                  {boatContent.title}
-                </span>
-              )}
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 backdrop-blur">
-                <Clock className="h-4 w-4 text-[var(--color-gold)]" />
-                {durationText}
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 backdrop-blur">
-                <Users className="h-4 w-4 text-[var(--color-gold)]" />
-                {service.capacityMax}
-              </span>
-            </div>
-
-            <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row">
-              <ExperienceBookingDialogButton
-                {...bookingCardProps}
-                label={copy.bookNow}
-                className="w-full !bg-[var(--color-gold)] px-8 py-6 text-base font-semibold !text-white shadow-xl hover:!bg-[#b86504] hover:!text-white sm:w-auto"
-              />
-              <SmoothAnchorLink
-                targetId="itinerary"
-                className={`inline-flex w-full items-center justify-center rounded-lg px-8 py-3 text-base font-semibold text-white sm:w-auto ${liquidGlassButton}`}
-              >
-                {itineraryHeading}
-              </SmoothAnchorLink>
-              <Link
-                href={recoveryHref}
-                className={`inline-flex w-full items-center justify-center rounded-lg px-8 py-3 text-base font-semibold text-white sm:w-auto ${liquidGlassButton}`}
-              >
-                {recoveryLabel}
-              </Link>
-            </div>
-          </ScrollSection>
-
-          <ScrollSection animation="fade-left" delay={0.1} className="hidden lg:block">
-            <HeroFramedGallery items={gallery} />
-          </ScrollSection>
-        </div>
-      </section>
-      <ExperiencePresenceNotice serviceId={service.id} locale={locale} />
-
-      <main className="relative z-10 -mt-8 px-4 pb-20 sm:-mt-12 sm:pb-24 md:px-8 lg:px-12">
-        <div className="mx-auto grid min-w-0 max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-10">
-          <div className="order-2 min-w-0 space-y-12 sm:space-y-16 lg:order-1">
-            <ScrollSection animation="fade-up">
-              <section className="rounded-lg bg-white p-5 shadow-sm sm:p-6 md:p-8">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
-                  {editorial.eyebrow}
+            <div className="mt-6 text-center">
+              <ScrollSection animation="fade-up">
+                <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--color-gold)]">
+                  {copy.experienceLabel}
                 </p>
-                <h2 className="mt-3 max-w-3xl font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
-                  {editorial.title}
-                </h2>
-                <div className="mt-6 space-y-5 text-base leading-8 text-slate-700 sm:mt-8 sm:text-lg sm:leading-9">
-                  {editorial.paragraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
+                <h1 className="mx-auto mt-4 max-w-5xl font-heading text-5xl font-bold leading-[1.08] text-white [text-shadow:0_2px_0_rgba(217,119,6,0.45),0_12px_24px_rgba(0,0,0,0.45)] sm:text-6xl lg:text-7xl">
+                  {content.title}
+                </h1>
+
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-semibold text-white/85">
+                  <span className="inline-flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-[var(--color-gold)]" />
+                    {directBookingLabel}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Users className="h-4 w-4 text-[var(--color-gold)]" />
+                    <strong>{passengersLabel}</strong> {service.capacityMax} max
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-[var(--color-gold)]" />
+                    <strong>{t("experience.duration")}</strong> {durationText}
+                  </span>
+                  {boatContent && (
+                    <span className="inline-flex items-center gap-2">
+                      <Ship className="h-4 w-4 text-[var(--color-gold)]" />
+                      {boatContent.title}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm font-bold text-white">
+                  <span className="text-base font-black text-white" aria-label={reviewScoreLabel}>
+                    4.9
+                  </span>
+                  <span className="text-[var(--color-gold)]" aria-hidden="true">
+                    ★★★★★
+                  </span>
+                  <a
+                    href={PUBLIC_REVIEW_LINKS.google}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white underline decoration-white/35 underline-offset-4 transition hover:text-[var(--color-gold)] hover:decoration-[var(--color-gold)]"
+                  >
+                    Google
+                  </a>
+                  <span className="text-white/45" aria-hidden="true">
+                    /
+                  </span>
+                  <a
+                    href={PUBLIC_REVIEW_LINKS.tripadvisor}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white underline decoration-white/35 underline-offset-4 transition hover:text-[var(--color-gold)] hover:decoration-[var(--color-gold)]"
+                  >
+                    Tripadvisor
+                  </a>
+                </div>
+
+                <div className="mt-6 flex flex-wrap justify-center gap-2" aria-label="Metodi di pagamento accettati">
+                  {PAYMENT_BRANDS.map((brand) => (
+                    <PaymentBrandMark key={brand.id} brand={brand} />
                   ))}
                 </div>
-              </section>
-            </ScrollSection>
 
-            {boatGallery.length > 0 && (
-              <ScrollSection animation="fade-up">
-                <ExperienceBoatGallery
-                  eyebrow={
-                    locale === "es"
-                      ? "El barco"
-                      : locale === "fr"
-                        ? "Le bateau"
-                        : locale === "de"
-                          ? "Das Boot"
-                          : locale === "en"
-                            ? "The boat"
-                            : "La barca"
-                  }
-                  title={boatContent?.title ?? ""}
-                  description={boatContent?.description ?? ""}
-                  items={boatGallery}
-                />
+                <figure className="relative mt-10 overflow-hidden rounded-t-[1.75rem] bg-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.32)]">
+                  <div className="relative aspect-[16/10] sm:aspect-[16/8.7]">
+                    <Image
+                      src={heroImage}
+                      alt={heroImageAlt}
+                      fill
+                      preload
+                      sizes="(max-width: 1024px) 100vw, 860px"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#071934]/70 via-[#071934]/15 to-transparent" />
+                  </div>
+                </figure>
               </ScrollSection>
-            )}
-
-            <ScrollSection animation="fade-up">
-              <section className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)]">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
-                    {seoExpansion.practicalEyebrow}
-                  </p>
-                  <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
-                    {seoExpansion.practicalTitle}
-                  </h2>
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    {seoExpansion.practicalItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <article key={item.title} className="rounded-lg bg-white p-5 shadow-sm">
-                          <Icon className="h-5 w-5 text-[var(--color-gold)]" />
-                          <h3 className="mt-4 text-base font-semibold text-[var(--color-ocean)]">
-                            {item.title}
-                          </h3>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">
-                            {item.text}
-                          </p>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="rounded-lg bg-[var(--color-ocean)] p-6 text-white shadow-sm md:p-8">
-                  <h2 className="font-heading text-2xl font-bold sm:text-3xl">
-                    {seoExpansion.whatYouSeeTitle}
-                  </h2>
-                  <p className="mt-3 text-sm leading-6 text-white/72">
-                    {seoExpansion.whatYouSeeIntro}
-                  </p>
-                  <div className="mt-6 divide-y divide-white/12">
-                    {seoExpansion.whatYouSeeItems.map((item) => (
-                      <article key={item.title} className="py-4 first:pt-0 last:pb-0">
-                        <h3 className="text-base font-semibold text-white">
-                          {item.title}
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-white/70">
-                          {item.text}
-                        </p>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            </ScrollSection>
-
-            {gallery.length > 0 && (
-              <ScrollSection animation="fade-up">
-                <section className="min-w-0">
-                  <div className="mb-6 flex items-end justify-between gap-4">
-                    <h2 className="font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl">
-                      {copy.galleryTitle}
-                    </h2>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    {gallery.map((item) => (
-                      <figure key={item.src} className="overflow-hidden rounded-lg bg-white shadow-sm">
-                        <div className="relative aspect-[4/3]">
-                          <Image
-                            src={item.src!}
-                            alt={item.alt}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 33vw"
-                            className="object-cover"
-                          />
-                        </div>
-                        <figcaption className="px-4 py-3 text-sm font-medium text-slate-600">
-                          {item.caption}
-                        </figcaption>
-                      </figure>
-                    ))}
-                  </div>
-                </section>
-              </ScrollSection>
-            )}
-
-            <ScrollSection animation="fade-up">
-              <section id="itinerary" className="scroll-mt-28">
-                <h2 className="font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
-                  {itineraryHeading}
-                </h2>
-                <div className="mt-6 space-y-3 sm:mt-8 sm:space-y-4">
-                  {itinerary.map((item, index) => (
-                    <div
-                      key={`${item.time}-${item.text}`}
-                      className="grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:gap-4 sm:p-5 md:grid-cols-[7rem_minmax(0,1fr)] md:items-start"
-                    >
-                      <div className="flex items-center gap-3 md:block">
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-turquoise)]/12 text-sm font-bold text-[var(--color-ocean)]">
-                          {index + 1}
-                        </span>
-                        <p className="font-heading text-base font-bold text-[var(--color-ocean)] sm:text-lg md:mt-3">
-                          {item.time}
-                        </p>
-                      </div>
-                      <div>
-                        {item.title && (
-                          <h3 className="font-heading text-lg font-bold text-[var(--color-ocean)]">
-                            {item.title}
-                          </h3>
-                        )}
-                        {item.location && (
-                          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)]">
-                            {item.location}
-                          </p>
-                        )}
-                        <p
-                          className={`${item.title || item.location ? "mt-2 " : ""}text-sm leading-6 text-slate-600 sm:text-base sm:leading-7`}
-                        >
-                          {item.text}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </ScrollSection>
-
-            {gourmetMenus.length > 0 && (
-              <ScrollSection animation="fade-up">
-                <section id="sample-menus" className="scroll-mt-28">
-                  <div className="max-w-3xl">
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
-                      {gourmetMenuCopy.eyebrow}
-                    </p>
-                    <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
-                      {gourmetMenuCopy.title}
-                    </h2>
-                    <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-                      {gourmetMenuCopy.intro}
-                    </p>
-                  </div>
-
-                  <div className="mt-6 grid gap-4 lg:grid-cols-3">
-                    {gourmetMenus.map((menu, index) => (
-                      <article
-                        key={menu.title}
-                        className="flex h-full flex-col rounded-lg bg-white p-5 shadow-sm sm:p-6"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-gold)]">
-                              {`Menu ${index + 1}`}
-                            </p>
-                            <h3 className="mt-2 font-heading text-xl font-bold text-[var(--color-ocean)]">
-                              {menu.title}
-                            </h3>
-                          </div>
-                          {menu.badge ? (
-                            <span className="shrink-0 rounded-full bg-[var(--color-gold)]/12 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-gold)]">
-                              {menu.badge}
-                            </span>
-                          ) : null}
-                        </div>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">
-                          {menu.subtitle}
-                        </p>
-                        <ul className="mt-5 space-y-3">
-                          {menu.items.map((item) => (
-                            <li key={item} className="flex items-start gap-3 text-sm leading-6 text-slate-700">
-                              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-turquoise)]/12">
-                                <Check className="h-3.5 w-3.5 text-[var(--color-turquoise)]" />
-                              </span>
-                              <span>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </article>
-                    ))}
-                  </div>
-
-                  <p className="mt-5 rounded-lg border border-[var(--color-gold)]/25 bg-white/65 p-4 text-sm leading-6 text-slate-600">
-                    {gourmetMenuCopy.seasonalNote}
-                  </p>
-                </section>
-              </ScrollSection>
-            )}
-
-            <ScrollSection animation="fade-up">
-              <section className="grid gap-8 lg:grid-cols-2">
-                <div>
-                  <h2 className="font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl">
-                    {t("experience.includes")}
-                  </h2>
-                  <div className="mt-6 grid gap-3">
-                    {content.includes.map((item) => (
-                      <div key={item} className="flex items-start gap-3 rounded-lg bg-white p-4 shadow-sm">
-                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-turquoise)]/12">
-                          <Check className="h-4 w-4 text-[var(--color-turquoise)]" />
-                        </span>
-                        <span className="text-sm leading-6 text-slate-700">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl">
-                    {t("experience.bring")}
-                  </h2>
-                  <div className="mt-6 grid gap-3">
-                    {content.bringItems.map((item) => (
-                      <div key={item} className="flex items-start gap-3 rounded-lg bg-white p-4 shadow-sm">
-                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-gold)]/12">
-                          <Luggage className="h-4 w-4 text-[var(--color-gold)]" />
-                        </span>
-                        <span className="text-sm leading-6 text-slate-700">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            </ScrollSection>
-
-            <ScrollSection animation="fade-up">
-              <section id="faq" className="scroll-mt-28">
-                <h2 className="font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
-                  {seoExpansion.faqTitle}
-                </h2>
-                <div className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-lg bg-white shadow-sm sm:mt-8">
-                  {seoExpansion.faqs.map((faq, index) => (
-                    <details key={faq.question} className="group p-5 open:bg-[#f7f2e8]/45 sm:p-6" open={index === 0}>
-                      <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left text-base font-semibold text-[var(--color-ocean)]">
-                        <span>{faq.question}</span>
-                        <span className="mt-1 text-xl leading-none text-[var(--color-gold)] transition group-open:rotate-45">
-                          +
-                        </span>
-                      </summary>
-                      <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-                        {faq.answer}
-                      </p>
-                    </details>
-                  ))}
-                </div>
-              </section>
-            </ScrollSection>
-
+            </div>
           </div>
+        </section>
 
-          <aside className="hidden lg:order-2 lg:block lg:sticky lg:top-24 lg:self-start">
-            <ExperienceBookingCard {...bookingCardProps} />
-          </aside>
-        </div>
-
-        {relatedExperiences.length > 0 && (
-          <ScrollSection animation="fade-up" className="mx-auto mt-16 max-w-7xl">
-            <section id="related-experiences" className="scroll-mt-28">
-              <div className="max-w-3xl">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
-                  {locale === "es"
-                    ? "Más ideas"
-                    : locale === "fr"
-                      ? "Autres idées"
-                      : locale === "de"
-                        ? "Weitere Ideen"
-                        : locale === "en"
-                          ? "More ideas"
-                          : "Altre idee"}
+        <section id="details" className="scroll-mt-28 px-4 py-14 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-6xl">
+            <ScrollSection animation="fade-up">
+              <div className="mx-auto max-w-3xl text-center">
+                <p className="text-sm font-bold uppercase tracking-[0.28em] text-[var(--color-gold)]">
+                  {experienceIntro.eyebrow}
                 </p>
-                <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)] sm:text-3xl md:text-4xl">
-                  {locale === "es"
-                    ? "También puedes ver estas experiencias"
-                    : locale === "fr"
-                      ? "Vous pouvez aussi voir ces expériences"
-                      : locale === "de"
-                        ? "Diese Erlebnisse könnten auch passen"
-                        : locale === "en"
-                          ? "You may also want to view these experiences"
-                          : "Prova a visionare anche queste esperienze"}
+                <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl">
+                  {experienceIntro.title}
                 </h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-                  {locale === "es"
-                    ? "Compara formatos, barcos y horarios antes de elegir la mejor forma de vivir las Islas Egadi."
-                    : locale === "fr"
-                      ? "Comparez formats, bateaux et horaires avant de choisir la meilleure façon de vivre les îles Égades."
-                      : locale === "de"
-                        ? "Vergleichen Sie Formate, Boote und Zeiten, bevor Sie die passende Art wählen, die Ägadischen Inseln zu erleben."
-                        : locale === "en"
-                          ? "Compare formats, boats and timings before choosing the right way to experience the Egadi Islands."
-                          : "Confronta formule, barche e durata prima di scegliere il modo giusto per vivere le Isole Egadi."}
+                <div className="mx-auto mt-4 h-1 w-16 bg-[var(--color-gold)]" />
+                <p className="mt-5 text-base leading-8 text-white/75 sm:text-lg sm:leading-9">
+                  {experienceIntro.intro}
                 </p>
               </div>
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {relatedExperiences.map((item) => {
-                  const relatedImage = item.media.find((media) => media.src) ?? item.media[0];
-                  return (
-                    <Link
-                      key={item.serviceId}
-                      href={localizedPath(locale, `/experiences/${getExperiencePublicSlug(item.serviceId, locale)}`)}
-                      className="group overflow-hidden rounded-lg bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-2"
+
+              <div className="mx-auto mt-9 max-w-4xl space-y-5 text-base leading-8 text-white/78 sm:text-lg sm:leading-9">
+                {experienceIntro.paragraphs.map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            </ScrollSection>
+          </div>
+        </section>
+
+        <section id="included" className="scroll-mt-28 px-4 py-14 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-6xl">
+            <ScrollSection animation="fade-up">
+              <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.24em] text-[var(--color-gold)]">
+                    {excursionSnapshot.detailsEyebrow}
+                  </p>
+                  <h2 className="mt-5 font-heading text-4xl font-bold leading-tight text-white sm:text-5xl">
+                    {excursionSnapshot.detailsTitleStart}{" "}
+                    <em className="font-normal italic">
+                      {excursionSnapshot.detailsTitleAccent}
+                    </em>
+                  </h2>
+                  <div className="mt-8 h-px w-full bg-white/75" />
+                  <ul className="mt-7 space-y-4">
+                    {excursionSnapshot.detailItems.map((item) => (
+                      <li key={item} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-4 text-base leading-7 text-white">
+                        <Check className="mt-1 h-4 w-4 text-[var(--color-gold)]" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.24em] text-[var(--color-gold)]">
+                    {excursionSnapshot.includesEyebrow}
+                  </p>
+                  <h2 className="mt-5 font-heading text-4xl font-bold leading-tight text-white sm:text-5xl">
+                    {excursionSnapshot.includesTitleStart}{" "}
+                    <em className="font-normal italic">
+                      {excursionSnapshot.includesTitleAccent}
+                    </em>
+                  </h2>
+                  <div className="mt-8 h-px w-full bg-white/75" />
+                  <ul className="mt-7 space-y-4">
+                    {content.includes.map((item) => (
+                      <li key={item} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-4 text-base leading-7 text-white">
+                        <Check className="mt-1 h-4 w-4 text-[var(--color-gold)]" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </ScrollSection>
+          </div>
+        </section>
+
+        <ExperienceImageCarousel
+          title={copy.galleryTitle}
+          items={showcaseGallery}
+          previousLabel={galleryPreviousLabel}
+          nextLabel={galleryNextLabel}
+        />
+
+        <section id="itinerary" className="scroll-mt-28 px-4 py-16 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-6xl">
+            <ScrollSection animation="fade-up">
+              <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 sm:gap-8">
+                <span className="h-px bg-white/70" aria-hidden="true" />
+                <h2 className="text-center font-sans text-4xl font-black uppercase leading-tight text-white sm:text-5xl">
+                  {programTitleWords.map((word, index) => (
+                    <span key={`${word}-${index}`} className="block">
+                      {word}
+                    </span>
+                  ))}
+                </h2>
+                <span className="h-px bg-white/70" aria-hidden="true" />
+              </div>
+
+              <div className="mx-auto mt-8 max-w-5xl space-y-5 text-base leading-8 text-white sm:text-lg sm:leading-9">
+                {dayProgram.paragraphs.map((paragraph) => (
+                  <p key={paragraph.lead}>
+                    <strong>{paragraph.lead}</strong>{" "}
+                    <span className="text-white/90">{paragraph.text}</span>
+                  </p>
+                ))}
+              </div>
+            </ScrollSection>
+          </div>
+        </section>
+
+        {gourmetMenus.length > 0 && (
+          <section id="sample-menus" className="scroll-mt-28 px-4 py-12 md:px-8 lg:px-12">
+            <div className="mx-auto max-w-6xl">
+              <ScrollSection animation="fade-up">
+                <div className="max-w-3xl">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+                    {gourmetMenuCopy.eyebrow}
+                  </p>
+                  <h2 className="mt-3 font-heading text-2xl font-bold text-white sm:text-3xl md:text-4xl">
+                    {gourmetMenuCopy.title}
+                  </h2>
+                  <p className="mt-4 text-sm leading-6 text-white/70 sm:text-base sm:leading-7">
+                    {gourmetMenuCopy.intro}
+                  </p>
+                </div>
+
+                <div className="mt-8 grid gap-8 lg:grid-cols-3">
+                  {gourmetMenus.map((menu, index) => (
+                    <article
+                      key={menu.title}
+                      className="flex h-full flex-col border-t border-white/15 pt-5"
                     >
-                      <div className="relative aspect-[4/3] bg-slate-200">
-                        {relatedImage?.src && (
-                          <Image
-                            src={relatedImage.src}
-                            alt={relatedImage.alt}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 33vw"
-                            className="object-cover transition duration-500 group-hover:scale-105"
-                          />
-                        )}
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-gold)]">
+                            {`Menu ${index + 1}`}
+                          </p>
+                          <h3 className="mt-2 font-heading text-xl font-bold text-white">
+                            {menu.title}
+                          </h3>
+                        </div>
+                        {menu.badge ? (
+                          <span className="shrink-0 text-right text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-gold)]">
+                            {menu.badge}
+                          </span>
+                        ) : null}
                       </div>
-                      <div className="p-5">
-                        <h3 className="font-heading text-xl font-bold text-[var(--color-ocean)]">
-                          {item.title}
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-600">
-                          {item.subtitle}
-                        </p>
-                        <span className="mt-4 inline-flex text-sm font-bold text-[var(--color-gold)]">
-                          {locale === "es"
-                            ? "Ver experiencia"
-                            : locale === "fr"
-                              ? "Voir l'expérience"
-                              : locale === "de"
-                                ? "Erlebnis ansehen"
-                                : locale === "en"
-                                  ? "View experience"
-                                  : "Vedi esperienza"}
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
+                      <p className="mt-3 text-sm leading-6 text-white/70">
+                        {menu.subtitle}
+                      </p>
+                      <ul className="mt-5 space-y-3">
+                        {menu.items.map((item) => (
+                          <li key={item} className="flex items-start gap-3 text-sm leading-6 text-white/75">
+                            <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center">
+                              <Check className="h-3.5 w-3.5 text-[var(--color-turquoise)]" />
+                            </span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  ))}
+                </div>
+
+                <p className="mt-7 border-l-2 border-[var(--color-gold)] pl-4 text-sm leading-6 text-white/70">
+                  {gourmetMenuCopy.seasonalNote}
+                </p>
+              </ScrollSection>
+            </div>
+          </section>
+        )}
+
+        <section id="faq" className="scroll-mt-28 px-4 py-14 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-5xl">
+            <ScrollSection animation="fade-up">
+              <div className="mx-auto max-w-3xl text-center">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+                  {locale === "es"
+                    ? "Preguntas frecuentes"
+                    : locale === "fr"
+                      ? "Questions fréquentes"
+                      : locale === "de"
+                        ? "Häufige Fragen"
+                        : locale === "en"
+                          ? "FAQ"
+                          : "Domande frequenti"}
+                </p>
+                <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl">
+                  {seoExpansion.faqTitle}
+                </h2>
+              </div>
+
+              <div className="mx-auto mt-8 max-w-4xl divide-y divide-white/15 border-y border-white/15 sm:mt-10">
+                {seoExpansion.faqs.map((faq, index) => (
+                  <details key={faq.question} className="group py-5 sm:py-6" open={index === 0}>
+                    <summary className="grid cursor-pointer list-none grid-cols-[1fr_auto] items-start gap-5 text-left text-base font-semibold leading-7 text-white sm:text-lg">
+                      <span>{faq.question}</span>
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/20 text-xl leading-none text-[var(--color-gold)] transition group-open:rotate-45 group-hover:border-[var(--color-gold)]">
+                        +
+                      </span>
+                    </summary>
+                    <p className="mt-4 max-w-3xl text-sm leading-6 text-white/70 sm:text-base sm:leading-7">
+                      {faq.answer}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </ScrollSection>
+          </div>
+        </section>
+
+        {relatedExperiences.length > 0 && (
+          <ScrollSection animation="fade-up" className="px-4 py-14 md:px-8 lg:px-12">
+            <section id="related-experiences" className="scroll-mt-28">
+              <div className="mx-auto max-w-6xl">
+                <div className="max-w-3xl">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+                    {locale === "es"
+                      ? "Más ideas"
+                      : locale === "fr"
+                        ? "Autres idées"
+                        : locale === "de"
+                          ? "Weitere Ideen"
+                          : locale === "en"
+                            ? "More ideas"
+                            : "Altre idee"}
+                  </p>
+                  <h2 className="mt-3 font-heading text-2xl font-bold text-white sm:text-3xl md:text-4xl">
+                    {locale === "es"
+                      ? "También puedes ver estas experiencias"
+                      : locale === "fr"
+                        ? "Vous pouvez aussi voir ces expériences"
+                        : locale === "de"
+                          ? "Diese Erlebnisse könnten auch passen"
+                          : locale === "en"
+                            ? "You may also want to view these experiences"
+                            : "Prova a visionare anche queste esperienze"}
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-white/70 sm:text-base sm:leading-7">
+                    {locale === "es"
+                      ? "Compara formatos, barcos y horarios antes de elegir la mejor forma de vivir las Islas Egadi."
+                      : locale === "fr"
+                        ? "Comparez formats, bateaux et horaires avant de choisir la meilleure façon de vivre les îles Égades."
+                        : locale === "de"
+                          ? "Vergleichen Sie Formate, Boote und Zeiten, bevor Sie die passende Art wählen, die Ägadischen Inseln zu erleben."
+                          : locale === "en"
+                            ? "Compare formats, boats and timings before choosing the right way to experience the Egadi Islands."
+                            : "Confronta formule, barche e durata prima di scegliere il modo giusto per vivere le Isole Egadi."}
+                  </p>
+                </div>
+                <div className="mt-9 grid gap-8 md:grid-cols-3">
+                  {relatedExperiences.map((item) => {
+                    const relatedImage = item.media.find((media) => media.src) ?? item.media[0];
+                    return (
+                      <Link
+                        key={item.serviceId}
+                        href={localizedPath(locale, `/experiences/${getExperiencePublicSlug(item.serviceId, locale)}`)}
+                        className="group block border-t border-white/15 pt-5 transition focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-4 focus:ring-offset-[#071934]"
+                      >
+                        <div className="relative aspect-[4/3] overflow-hidden bg-white/10">
+                          {relatedImage?.src && (
+                            <Image
+                              src={relatedImage.src}
+                              alt={relatedImage.alt}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                              className="object-cover transition duration-500 group-hover:scale-[1.025]"
+                            />
+                          )}
+                        </div>
+                        <div className="mt-4">
+                          <h3 className="font-heading text-xl font-bold text-white transition group-hover:text-[var(--color-gold)]">
+                            {item.title}
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-white/70">
+                            {item.subtitle}
+                          </p>
+                          <span className="mt-4 inline-flex text-sm font-bold text-[var(--color-gold)]">
+                            {locale === "es"
+                              ? "Ver experiencia"
+                              : locale === "fr"
+                                ? "Voir l'expérience"
+                                : locale === "de"
+                                  ? "Erlebnis ansehen"
+                                  : locale === "en"
+                                    ? "View experience"
+                                    : "Vedi esperienza"}
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
             </section>
           </ScrollSection>
         )}
 
-        <ScrollSection animation="fade-up" className="mx-auto mt-16 max-w-7xl">
-          <section className="overflow-hidden rounded-lg bg-[var(--color-ocean)] px-6 py-10 text-center shadow-xl md:px-12">
-            <Anchor className="mx-auto h-8 w-8 text-[var(--color-gold)]" />
-            <h2 className="mt-4 font-heading text-3xl font-bold text-white">
-              {t("experience.bookNow")}
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-white/70">
-              {content.subtitle}
-            </p>
+        <ScrollSection animation="fade-up">
+          <section className="px-4 py-14 md:px-8 lg:px-12">
+            <div className="mx-auto max-w-3xl text-center">
+              <div>
+                <Anchor className="mx-auto h-8 w-8 text-[var(--color-gold)]" />
+                <h2 className="mt-4 font-heading text-3xl font-bold text-white">
+                  {t("experience.bookNow")}
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-white/70">
+                  {content.subtitle}
+                </p>
+              </div>
+              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                <ExperienceBookingDialogButton
+                  {...bookingCardProps}
+                  label={copy.bookNow}
+                  showIcon={false}
+                  className="!bg-[var(--color-gold)] px-10 py-6 text-base font-semibold !text-[#071934] hover:!bg-[#f2b84b] hover:!text-[#071934]"
+                />
+                <Link
+                  href={recoveryHref}
+                  className="inline-flex items-center justify-center border border-white/70 px-8 py-3 text-sm font-semibold text-white transition hover:border-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-[#071934]"
+                >
+                  {recoveryLabel}
+                </Link>
+              </div>
+            </div>
+          </section>
+        </ScrollSection>
+      </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-[180] border-t border-white/15 bg-[#071934]/95 shadow-[0_-24px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-8">
+          <div className="flex shrink-0 gap-2">
+            <Link
+              href={contactHref}
+              className="inline-flex min-h-12 flex-1 items-center justify-center border border-white/45 px-5 text-sm font-bold text-white transition hover:border-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-[#071934] sm:flex-none"
+            >
+              {contactLabel}
+            </Link>
             <ExperienceBookingDialogButton
               {...bookingCardProps}
               label={copy.bookNow}
               showIcon={false}
-              className="mt-8 !bg-white px-10 py-6 text-base font-semibold !text-[var(--color-ocean)] hover:!bg-white/90 hover:!text-[var(--color-ocean)]"
+              dialogMode="all"
+              className="min-h-12 flex-1 !bg-[var(--color-gold)] px-6 text-sm font-bold !text-[#071934] hover:!bg-[#f2b84b] hover:!text-[#071934] sm:flex-none"
             />
-            <Link
-              href={recoveryHref}
-              className={`ml-0 mt-3 inline-flex rounded-lg px-8 py-3 text-sm font-semibold text-white sm:ml-3 ${liquidGlassButton}`}
-            >
-              {recoveryLabel}
-            </Link>
-          </section>
-        </ScrollSection>
-      </main>
+          </div>
+
+          <div className="min-w-0 sm:text-right">
+            <p className="truncate font-heading text-sm font-bold text-white sm:text-base">
+              {content.title}
+            </p>
+            <p className="mt-0.5 text-xs font-semibold text-white/65">
+              {priceLabel} · {durationText}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

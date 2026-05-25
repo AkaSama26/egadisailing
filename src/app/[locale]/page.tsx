@@ -399,14 +399,14 @@ function heroCardImagesForPackage(packageKey: string, locale: string): Array<{ s
     "tour-barca-egadi-4-ore": {
       src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp",
       alt: isEs
-        ? "Cigala Bertinetti 34 Offshore Open para una excursión en barco de 4 horas a las Islas Egadi"
+        ? "Barca Egadi Sailing para una excursión en barco de 4 horas a las Islas Egadi"
         : isFr
-        ? "Cigala Bertinetti 34 Offshore Open pour une excursion en bateau de 4 heures aux îles Égades"
+        ? "Barca Egadi Sailing pour une excursion en bateau de 4 heures aux îles Égades"
         : isDe
-        ? "Cigala Bertinetti 34 Offshore Open für eine 4-Stunden-Bootstour zu den Ägadischen Inseln"
+        ? "Barca Egadi Sailing für eine 4-Stunden-Bootstour zu den Ägadischen Inseln"
         : isEn
-        ? "Cigala Bertinetti 34 Offshore Open for a 4-hour Egadi Islands boat tour"
-        : "Cigala Bertinetti 34 Offshore Open per escursione in barca 4 ore alle Egadi",
+        ? "Barca Egadi Sailing for a 4-hour Egadi Islands boat tour"
+        : "Barca Egadi Sailing per escursione in barca 4 ore alle Egadi",
     },
     "tour-barca-egadi-8-ore": {
       src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-drone.webp",
@@ -522,14 +522,14 @@ function buildExperienceChoiceRecommendations({
         ? "Favignana and Levanzo boat tour from Trapani"
         : "Tour in barca Favignana e Levanzo da Trapani",
       boatLabel: isEs
-        ? "Cigala & Bertinetti · plaza compartida"
+        ? "Barca Egadi Sailing · plaza compartida"
         : isFr
-        ? "Cigala & Bertinetti · place partagée"
+        ? "Barca Egadi Sailing · place partagée"
         : isDe
-        ? "Cigala & Bertinetti · geteiltes Ticket"
+        ? "Barca Egadi Sailing · geteiltes Ticket"
         : isEn
-        ? "Cigala & Bertinetti · shared seat"
-        : "Cigala & Bertinetti · posto condiviso",
+        ? "Barca Egadi Sailing · shared seat"
+        : "Barca Egadi Sailing · posto condiviso",
       reason: isEs
         ? "El día compartido más completo: más tiempo entre calas, snorkel y un ritmo relajado por las Islas Egadi."
         : isFr
@@ -552,14 +552,14 @@ function buildExperienceChoiceRecommendations({
         ? "4-hour Egadi Islands boat tour"
         : "Escursione in barca 4 ore alle Egadi",
       boatLabel: isEs
-        ? "Cigala & Bertinetti · barco privado ágil"
+        ? "Barca Egadi Sailing · barco privado ágil"
         : isFr
-        ? "Cigala & Bertinetti · bateau privé agile"
+        ? "Barca Egadi Sailing · bateau privé agile"
         : isDe
-        ? "Cigala & Bertinetti · agiles Privatboot"
+        ? "Barca Egadi Sailing · agiles Privatboot"
         : isEn
-        ? "Cigala & Bertinetti · private agile boat"
-        : "Cigala & Bertinetti · barca privata agile",
+        ? "Barca Egadi Sailing · private agile boat"
+        : "Barca Egadi Sailing · barca privata agile",
       reason: isEs
 	        ? "Medio día privado para tu grupo: ruta flexible, baños y la ligereza del barco abierto."
         : isFr
@@ -582,14 +582,14 @@ function buildExperienceChoiceRecommendations({
         ? "Private Egadi Islands 8-hour boat tour from Trapani"
         : "Tour privato alle Egadi 8 ore da Trapani",
       boatLabel: isEs
-        ? "Cigala & Bertinetti · barco privado ágil"
+        ? "Barca Egadi Sailing · barco privado ágil"
         : isFr
-        ? "Cigala & Bertinetti · bateau privé agile"
+        ? "Barca Egadi Sailing · bateau privé agile"
         : isDe
-        ? "Cigala & Bertinetti · agiles Privatboot"
+        ? "Barca Egadi Sailing · agiles Privatboot"
         : isEn
-        ? "Cigala & Bertinetti · private agile boat"
-        : "Cigala & Bertinetti · barca privata agile",
+        ? "Barca Egadi Sailing · private agile boat"
+        : "Barca Egadi Sailing · barca privata agile",
       reason: isEs
         ? "Un día completo privado: más calas, más tiempo en el agua y una ruta diseñada con el patrón."
         : isFr

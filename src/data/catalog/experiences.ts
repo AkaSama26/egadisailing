@@ -123,8 +123,8 @@ const gourmetItinerary = [
       en: "Favignana",
     },
     text: {
-      it: "Pranzo gourmet in rada. Cala Rossa, Favignana, Free municipal consortium of Trapani, Italy, 91023.",
-      en: "Gourmet lunch at anchor off Cala Rossa, Favignana.",
+      it: "Sosta in rada a Cala Rossa, Favignana, con bagno e preparazione del pranzo cucinato a bordo da uno chef locale.",
+      en: "Anchor stop in Cala Rossa, Favignana, with swimming and lunch cooked on board by a local chef.",
     },
   },
   {
@@ -134,8 +134,8 @@ const gourmetItinerary = [
       en: "Show cooking on board",
     },
     text: {
-      it: "Lo chef locale prepara il pranzo in rada a Cala Rossa, Favignana.",
-      en: "The local chef prepares lunch at anchor in Cala Rossa, Favignana.",
+      it: "Lo chef locale prepara il pranzo direttamente sul trimarano: una cooking experience a bordo, con ingredienti del territorio e servizio vista mare.",
+      en: "The local chef prepares lunch directly on the trimaran: an onboard cooking experience with local ingredients and sea-view service.",
     },
   },
   {
@@ -145,8 +145,8 @@ const gourmetItinerary = [
       en: "Sea-view lunch",
     },
     text: {
-      it: "Pranzo gourmet vista mare a Cala Rossa, Favignana.",
-      en: "Gourmet lunch with sea views in Cala Rossa, Favignana.",
+      it: "Pranzo gourmet vista mare durante la sosta a Cala Rossa, con tempi distesi per godersi la rada prima di riprendere la navigazione.",
+      en: "Sea-view gourmet lunch during the Cala Rossa stop, with relaxed timing before navigation resumes.",
     },
   },
   {
@@ -270,18 +270,25 @@ const fullDayBoatItinerary = [
   {
     time: "13:00",
     title: {
-      it: "Pausa in rada e pranzo libero",
-      en: "Anchorage break and free lunch",
-      es: "Pausa fondeados y comida libre",
-      fr: "Pause au mouillage et déjeuner libre",
-      de: "Ankerpause und freie Mittagspause",
+      it: "Attracco a Favignana e pranzo libero",
+      en: "Docking in Favignana and free lunch",
+      es: "Atraque en Favignana y comida libre",
+      fr: "Accostage à Favignana et déjeuner libre",
+      de: "Anlegen auf Favignana und freie Mittagspause",
+    },
+    location: {
+      it: "Favignana",
+      en: "Favignana",
+      es: "Favignana",
+      fr: "Favignana",
+      de: "Favignana",
     },
     text: {
-      it: "Tempo per relax, snorkeling e pranzo libero in rada. Eventuali servizi extra a bordo sono organizzati solo se concordati prima della partenza.",
-      en: "Time to relax, snorkel and enjoy lunch independently at anchor. Any extra on-board services are arranged only if agreed before departure.",
-      es: "Tiempo para relajarse, hacer snorkel y comer libremente fondeados. Los servicios extra a bordo se organizan solo si se acuerdan antes de la salida.",
-      fr: "Temps pour se détendre, faire du snorkeling et déjeuner librement au mouillage. Les services extra à bord sont organisés uniquement s'ils sont convenus avant le départ.",
-      de: "Zeit zum Entspannen, Schnorcheln und freien Mittagessen vor Anker. Zusätzliche Bordservices werden nur organisiert, wenn sie vor der Abfahrt vereinbart wurden.",
+      it: "Attracco al porto di Favignana per scendere sull'isola e organizzare il pranzo libero. Orario e punto di attracco possono adattarsi a traffico portuale, vento e condizioni del mare.",
+      en: "Docking at Favignana harbour so guests can step onto the island and organise lunch independently. Timing and docking point can adapt to harbour traffic, wind and sea conditions.",
+      es: "Atraque en el puerto de Favignana para bajar a la isla y organizar la comida libremente. El horario y el punto de atraque pueden adaptarse al tráfico portuario, viento y mar.",
+      fr: "Accostage au port de Favignana pour descendre sur l'île et organiser librement le déjeuner. L'horaire et le point d'accostage peuvent s'adapter au trafic portuaire, au vent et à la mer.",
+      de: "Anlegen im Hafen von Favignana, damit Gäste die Insel betreten und das Mittagessen frei organisieren können. Zeit und Anlegestelle können sich nach Hafenbetrieb, Wind und Meer richten.",
     },
   },
   {
@@ -369,21 +376,21 @@ const fishingItinerary = [
       de: "Hafen von Trapani",
     },
     text: {
-      it: "Imbarco, controllo attrezzatura, sicurezza e scelta delle tecniche in base a stagione, mare e autorizzazioni.",
-      en: "Boarding, gear check, safety briefing and choice of techniques according to season, sea state and authorisations.",
-      es: "Embarque, revisión del equipo, seguridad y elección de técnicas según temporada, mar y autorizaciones.",
-      fr: "Embarquement, vérification du matériel, sécurité et choix des techniques selon saison, mer et autorisations.",
-      de: "Einschiffung, Ausrüstungscheck, Sicherheit und Wahl der Techniken je nach Saison, Meer und Genehmigungen.",
+      it: "Imbarco, controllo attrezzatura e briefing sulle regole: la pesca sportiva viene pianificata intorno alle Isole Egadi, non dentro le cale balneari, in base a stagione, mare e autorizzazioni.",
+      en: "Boarding, gear check and rules briefing: sport fishing is planned around the Egadi Islands, not inside swimming coves, according to season, sea state and authorisations.",
+      es: "Embarque, revisión del equipo y briefing de reglas: la pesca deportiva se planifica alrededor de las Islas Egadi, no dentro de calas de baño, según temporada, mar y autorizaciones.",
+      fr: "Embarquement, vérification du matériel et briefing sur les règles : la pêche sportive se planifie autour des îles Égades, pas dans les criques de baignade, selon saison, mer et autorisations.",
+      de: "Einschiffung, Ausrüstungscheck und Regelbriefing: Sportangeln wird rund um die Ägadischen Inseln geplant, nicht in Badebuchten, je nach Saison, Meer und Genehmigungen.",
     },
   },
   {
     time: "09:30",
     title: {
-      it: "Rotta verso gli spot consentiti",
-      en: "Route to permitted spots",
-      es: "Ruta hacia zonas permitidas",
-      fr: "Route vers les zones autorisées",
-      de: "Route zu erlaubten Spots",
+      it: "Rotta nelle aree di pesca consentite",
+      en: "Route through permitted fishing areas",
+      es: "Ruta por zonas de pesca permitidas",
+      fr: "Route dans les zones de pêche autorisées",
+      de: "Route in erlaubten Angelgebieten",
     },
     location: {
       it: "Isole Egadi",
@@ -393,11 +400,11 @@ const fishingItinerary = [
       de: "Ägadische Inseln",
     },
     text: {
-      it: "Lo skipper valuta vento, correnti e regolamento AMP: si pesca solo dove e quando è consentito.",
-      en: "The skipper evaluates wind, currents and AMP rules: fishing only happens where and when it is allowed.",
-      es: "El patrón evalúa viento, corrientes y normativa AMP: se pesca solo donde y cuando está permitido.",
-      fr: "Le skipper évalue vent, courants et règles AMP : la pêche se pratique uniquement où et quand elle est autorisée.",
-      de: "Der Skipper prüft Wind, Strömung und AMP-Regeln: Geangelt wird nur dort und dann, wo es erlaubt ist.",
+      it: "Lo skipper valuta vento, correnti, fondali e regolamento AMP/MASAF per scegliere le zone di pesca sportiva intorno a Favignana, Levanzo e all'arcipelago, sempre dove l'attività è permessa.",
+      en: "The skipper evaluates wind, currents, seabed and AMP/MASAF rules to choose sport fishing areas around Favignana, Levanzo and the wider archipelago, always where the activity is allowed.",
+      es: "El patrón evalúa viento, corrientes, fondos y normativa AMP/MASAF para elegir zonas de pesca deportiva alrededor de Favignana, Levanzo y el archipiélago, siempre donde la actividad está permitida.",
+      fr: "Le skipper évalue vent, courants, fonds et règles AMP/MASAF pour choisir les zones de pêche sportive autour de Favignana, Levanzo et l'archipel, toujours là où l'activité est autorisée.",
+      de: "Der Skipper bewertet Wind, Strömung, Grund und AMP/MASAF-Regeln, um Sportangelbereiche rund um Favignana, Levanzo und den Archipel zu wählen, immer nur dort, wo die Aktivität erlaubt ist.",
     },
   },
   {
@@ -410,11 +417,11 @@ const fishingItinerary = [
       de: "Gemischte Techniken",
     },
     text: {
-      it: "Sessioni di bolentino, traina, drifting o catch and release secondo condizioni, specie presenti e decisione dello skipper.",
-      en: "Sessions of bottom fishing, trolling, drifting or catch and release according to conditions, target species and skipper decision.",
-      es: "Sesiones de pesca de fondo, curricán, drifting o catch and release según condiciones, especies y decisión del patrón.",
-      fr: "Sessions de pêche de fond, traîne, drifting ou catch and release selon conditions, espèces et décision du skipper.",
-      de: "Grundangeln, Schleppangeln, Drifting oder Catch and Release je nach Bedingungen, Fischarten und Entscheidung des Skippers.",
+      it: "Bolentino, traina, drifting o catch and release vengono impostati in base a fondale, corrente, specie presenti e decisione dello skipper.",
+      en: "Bottom fishing, trolling, drifting or catch and release are set according to seabed, current, target species and skipper decision.",
+      es: "Pesca de fondo, curricán, drifting o catch and release se preparan según fondo, corriente, especies presentes y decisión del patrón.",
+      fr: "Pêche de fond, traîne, drifting ou catch and release sont mis en place selon fond, courant, espèces présentes et décision du skipper.",
+      de: "Grundangeln, Schleppangeln, Drifting oder Catch and Release werden je nach Grund, Strömung, Fischarten und Entscheidung des Skippers eingesetzt.",
     },
   },
   {
@@ -444,11 +451,11 @@ const fishingItinerary = [
       de: "Zweite Session",
     },
     text: {
-      it: "Cambio spot o tecnica se serve. Il pescato può essere rilasciato o trattenuto solo entro limiti di legge, taglie e quote.",
-      en: "Spot or technique change if useful. Catches can be released or kept only within legal limits, sizes and quotas.",
-      es: "Cambio de zona o técnica si conviene. Las capturas pueden soltarse o conservarse solo dentro de límites legales, tallas y cupos.",
-      fr: "Changement de spot ou de technique si utile. Les prises peuvent être relâchées ou gardées uniquement dans les limites légales, tailles et quotas.",
-      de: "Spot- oder Technikwechsel bei Bedarf. Fänge können nur innerhalb gesetzlicher Limits, Mindestmaße und Quoten freigelassen oder behalten werden.",
+      it: "Se le condizioni cambiano si sposta la rotta o la tecnica, restando nelle aree autorizzate. Il pescato può essere rilasciato o trattenuto solo entro limiti di legge, taglie e quote.",
+      en: "If conditions change, the route or technique can change while staying within authorised areas. Catches can be released or kept only within legal limits, sizes and quotas.",
+      es: "Si cambian las condiciones, se ajusta la ruta o la técnica sin salir de las zonas autorizadas. Las capturas pueden soltarse o conservarse solo dentro de límites legales, tallas y cupos.",
+      fr: "Si les conditions changent, la route ou la technique peut évoluer tout en restant dans les zones autorisées. Les prises peuvent être relâchées ou gardées uniquement dans les limites légales, tailles et quotas.",
+      de: "Wenn sich die Bedingungen ändern, können Route oder Technik angepasst werden, immer innerhalb der genehmigten Bereiche. Fänge dürfen nur innerhalb gesetzlicher Limits, Mindestmaße und Quoten behalten oder freigelassen werden.",
     },
   },
   {
@@ -500,8 +507,8 @@ const halfDayMorningItinerary = [
       en: "First cove",
     },
     location: {
-      it: "Favignana o Levanzo",
-      en: "Favignana or Levanzo",
+      it: "Favignana",
+      en: "Favignana",
     },
     text: {
       it: "Bagno e snorkeling nelle acque più limpide raggiungibili in sicurezza in mezza giornata.",
@@ -515,8 +522,8 @@ const halfDayMorningItinerary = [
       en: "Second stop",
     },
     location: {
-      it: "Isole Egadi",
-      en: "Egadi Islands",
+      it: "Favignana",
+      en: "Favignana",
     },
     text: {
       it: "Seconda baia o navigazione panoramica, secondo vento, mare e tempi di rientro.",
@@ -563,8 +570,8 @@ const halfDayAfternoonItinerary = [
       en: "Anchorage swim",
     },
     location: {
-      it: "Favignana o Levanzo",
-      en: "Favignana or Levanzo",
+      it: "Favignana",
+      en: "Favignana",
     },
     text: {
       it: "Bagno, snorkeling e tempo in rada.",
@@ -720,6 +727,364 @@ const fishingBringItems = [
   },
 ];
 
+function createGourmetTrimaranMedia(
+  src: string,
+  caption: LocalizedString,
+  color = "#FFDAB9",
+): ExperienceCatalogMedia {
+  return {
+    caption,
+    alt: {
+      it: `${caption.it} durante l'esperienza chef a bordo in trimarano alle Egadi`,
+      en: `${caption.en} during the chef on board trimaran experience in the Egadi Islands`,
+    },
+    color,
+    src,
+  };
+}
+
+const GOURMET_TRIMARAN_DETAIL_MEDIA: ExperienceCatalogMedia[] = [
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-pasta-saltata.webp", {
+    it: "Pasta saltata a bordo",
+    en: "Pasta cooked on board",
+  }, "#DDA0DD"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/triamarano-logo.webp", {
+    it: "Logo trimarano",
+    en: "Trimaran logo",
+  }, "#C7D2FE"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-alici.webp", {
+    it: "Alici fresche",
+    en: "Fresh anchovies",
+  }, "#BAE6FD"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-aperitivo.webp", {
+    it: "Aperitivo in trimarano",
+    en: "Aperitivo on the trimaran",
+  }, "#FDE68A"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-banchina.webp", {
+    it: "Trimarano in banchina",
+    en: "Trimaran at the quay",
+  }, "#B2DFDB"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-bruschetta.webp", {
+    it: "Bruschetta a bordo",
+    en: "Bruschetta on board",
+  }, "#FED7AA"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-calice-primopiano-bere.webp", {
+    it: "Calice vista mare",
+    en: "Glass with sea view",
+  }, "#FBCFE8"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-chef-ingredienti.webp", {
+    it: "Chef e ingredienti",
+    en: "Chef and ingredients",
+  }, "#FFDAB9"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-chef.webp", {
+    it: "Chef a bordo",
+    en: "Chef on board",
+  }, "#FECACA"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-cooking-show.webp", {
+    it: "Cooking show",
+    en: "Cooking show",
+  }, "#FDE68A"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-ingredienti-alto.webp", {
+    it: "Ingredienti dall'alto",
+    en: "Ingredients from above",
+  }, "#BBF7D0"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-ingredienti.webp", {
+    it: "Ingredienti locali",
+    en: "Local ingredients",
+  }, "#A7F3D0"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-interno-tavolo.webp", {
+    it: "Tavolo interno",
+    en: "Interior table",
+  }, "#DDD6FE"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-levanzo-prendisole-calice.webp", {
+    it: "Prendisole a Levanzo",
+    en: "Sun deck in Levanzo",
+  }, "#C5CAE9"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-levanzo-relax.webp", {
+    it: "Relax a Levanzo",
+    en: "Relax in Levanzo",
+  }, "#BAE6FD"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-padella.webp", {
+    it: "Padella in cucina",
+    en: "Pan in the galley",
+  }, "#FDBA74"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-pasta-rete.webp", {
+    it: "Pasta in rete",
+    en: "Pasta on the net",
+  }, "#FDE68A"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-porto1.webp", {
+    it: "Trimarano in porto",
+    en: "Trimaran in harbour",
+  }, "#BFDBFE"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-prendisole-primopiano.webp", {
+    it: "Prendisole in primo piano",
+    en: "Sun deck close-up",
+  }, "#FBCFE8"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-prendisole.webp", {
+    it: "Prendisole trimarano",
+    en: "Trimaran sun deck",
+  }, "#C7D2FE"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-primopiano-levanzo.webp", {
+    it: "Trimarano a Levanzo",
+    en: "Trimaran in Levanzo",
+  }, "#BAE6FD"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-rada-brindisi.webp", {
+    it: "Brindisi in rada",
+    en: "Toast at anchor",
+  }, "#FDE68A"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-ragazzo.webp", {
+    it: "Vita a bordo",
+    en: "Life on board",
+  }, "#DDD6FE"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-relax-rete.webp", {
+    it: "Relax sulla rete",
+    en: "Relax on the net",
+  }, "#C4B5FD"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-relax-sole.webp", {
+    it: "Relax al sole",
+    en: "Relax in the sun",
+  }, "#FED7AA"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-sugo-triglie.webp", {
+    it: "Sugo di triglie",
+    en: "Red mullet sauce",
+  }, "#FCA5A5"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-wow-prendisole-levanzo.webp", {
+    it: "Prendisole vista Levanzo",
+    en: "Sun deck facing Levanzo",
+  }, "#BAE6FD"),
+  createGourmetTrimaranMedia("/images/home/traimarano-levanzo.webp", {
+    it: "Trimarano davanti a Levanzo",
+    en: "Trimaran off Levanzo",
+  }, "#A7F3D0"),
+  createGourmetTrimaranMedia("/images/home/trimarano-favignana.webp", {
+    it: "Trimarano a Favignana",
+    en: "Trimaran in Favignana",
+  }, "#93C5FD"),
+  createGourmetTrimaranMedia("/images/home/trimarano-porto.webp", {
+    it: "Trimarano al porto",
+    en: "Trimaran at the harbour",
+  }, "#BFDBFE"),
+  createGourmetTrimaranMedia("/images/home/trimarano-relax.webp", {
+    it: "Relax in trimarano",
+    en: "Trimaran relaxation",
+  }, "#C4B5FD"),
+  createGourmetTrimaranMedia("/images/home/trimarano-saline.webp", {
+    it: "Trimarano alle saline",
+    en: "Trimaran by the salt pans",
+  }, "#FDE68A"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/neel-47-.donna.webp", {
+    it: "Relax a bordo",
+    en: "Relax on board",
+  }, "#FBCFE8"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/neel-47-aperitivo.webp", {
+    it: "Aperitivo in trimarano",
+    en: "Trimaran aperitivo",
+  }, "#FED7AA"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/neel-47-relax.webp", {
+    it: "Relax in trimarano",
+    en: "Trimaran relaxation",
+  }, "#BAE6FD"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/neel-47-relax1.webp", {
+    it: "Relax sul trimarano",
+    en: "Relax on the trimaran",
+  }, "#C7D2FE"),
+];
+
+function createCharterTrimaranMedia(
+  src: string,
+  caption: LocalizedString,
+  color = "#BAE6FD",
+): ExperienceCatalogMedia {
+  return {
+    caption,
+    alt: {
+      it: `${caption.it} durante il charter in trimarano alle Isole Egadi`,
+      en: `${caption.en} during the Egadi Islands trimaran charter`,
+    },
+    color,
+    src,
+  };
+}
+
+const CHARTER_TRIMARAN_DETAIL_MEDIA: ExperienceCatalogMedia[] = [
+  createCharterTrimaranMedia("/images/home/trimarano-relax-drone.webp", {
+    it: "Trimarano visto dal drone",
+    en: "Trimaran from above",
+  }, "#B2DFDB"),
+  createCharterTrimaranMedia("/images/home/traimarano-levanzo.webp", {
+    it: "Trimarano davanti a Levanzo",
+    en: "Trimaran off Levanzo",
+  }, "#A7F3D0"),
+  createCharterTrimaranMedia("/images/home/trimarano-favignana.webp", {
+    it: "Trimarano a Favignana",
+    en: "Trimaran in Favignana",
+  }, "#93C5FD"),
+  createCharterTrimaranMedia("/images/home/trimarano-porto.webp", {
+    it: "Trimarano al porto",
+    en: "Trimaran at the harbour",
+  }, "#BFDBFE"),
+  createCharterTrimaranMedia("/images/home/trimarano-relax.webp", {
+    it: "Relax in trimarano",
+    en: "Trimaran relaxation",
+  }, "#C4B5FD"),
+  createCharterTrimaranMedia("/images/home/trimarano-saline.webp", {
+    it: "Trimarano alle saline",
+    en: "Trimaran by the salt pans",
+  }, "#FDE68A"),
+  createCharterTrimaranMedia("/images/boats/neel-47/interno-trimarano.webp", {
+    it: "Interno trimarano",
+    en: "Trimaran interior",
+  }, "#DDD6FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/cime-trimarano.webp", {
+    it: "Cime del trimarano",
+    en: "Trimaran lines",
+  }, "#CBD5E1"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-.donna.webp", {
+    it: "Relax a bordo",
+    en: "Relax on board",
+  }, "#FBCFE8"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-aperitivo.webp", {
+    it: "Aperitivo a bordo",
+    en: "Aperitivo on board",
+  }, "#FED7AA"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-bagno.webp", {
+    it: "Bagno a bordo",
+    en: "Bathroom on board",
+  }, "#BFDBFE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-cabina.webp", {
+    it: "Cabina trimarano",
+    en: "Trimaran cabin",
+  }, "#DDD6FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-cabina1.webp", {
+    it: "Cabina ospiti",
+    en: "Guest cabin",
+  }, "#C7D2FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-cabina2.webp", {
+    it: "Cabina doppia",
+    en: "Double cabin",
+  }, "#C4B5FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-cucina.webp", {
+    it: "Cucina a bordo",
+    en: "Galley on board",
+  }, "#FDE68A"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-cucina1.webp", {
+    it: "Dettaglio cucina",
+    en: "Galley detail",
+  }, "#FDBA74"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-esterni.webp", {
+    it: "Esterni trimarano",
+    en: "Trimaran exterior",
+  }, "#BAE6FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-favignana.webp", {
+    it: "Trimarano a Favignana",
+    en: "Trimaran in Favignana",
+  }, "#93C5FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-interno.webp", {
+    it: "Interni del trimarano",
+    en: "Trimaran interiors",
+  }, "#DDD6FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-navigazione.webp", {
+    it: "Navigazione alle Egadi",
+    en: "Sailing in the Egadi Islands",
+  }, "#BAE6FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-prendisole.webp", {
+    it: "Prendisole trimarano",
+    en: "Trimaran sun deck",
+  }, "#FBCFE8"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-relax.webp", {
+    it: "Relax sul trimarano",
+    en: "Relax on the trimaran",
+  }, "#C7D2FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-relax1.webp", {
+    it: "Zona relax",
+    en: "Relax area",
+  }, "#C4B5FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/neel-47-tavolo-a-bordo.webp", {
+    it: "Tavolo a bordo",
+    en: "Table on board",
+  }, "#FDE68A"),
+  createCharterTrimaranMedia("/images/boats/neel-47/triamarano-logo.webp", {
+    it: "Logo trimarano",
+    en: "Trimaran logo",
+  }, "#C7D2FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-banchina.webp", {
+    it: "Trimarano in banchina",
+    en: "Trimaran at the quay",
+  }, "#B2DFDB"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-calice-primopiano-bere.webp", {
+    it: "Calice vista mare",
+    en: "Glass with sea view",
+  }, "#FBCFE8"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-chef-ingredienti.webp", {
+    it: "Ingredienti a bordo",
+    en: "Ingredients on board",
+  }, "#FFDAB9"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-cucina.webp", {
+    it: "Cucina del trimarano",
+    en: "Trimaran galley",
+  }, "#FDBA74"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-ingredienti.webp", {
+    it: "Ingredienti locali",
+    en: "Local ingredients",
+  }, "#A7F3D0"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-levanzo-prendisole-calice.webp", {
+    it: "Prendisole a Levanzo",
+    en: "Sun deck in Levanzo",
+  }, "#C5CAE9"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-levanzo-relax.webp", {
+    it: "Relax a Levanzo",
+    en: "Relax in Levanzo",
+  }, "#BAE6FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-porto1.webp", {
+    it: "Trimarano in porto",
+    en: "Trimaran in harbour",
+  }, "#BFDBFE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-prendisole-primopiano.webp", {
+    it: "Prendisole in primo piano",
+    en: "Sun deck close-up",
+  }, "#FBCFE8"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-prendisole.webp", {
+    it: "Prendisole trimarano",
+    en: "Trimaran sun deck",
+  }, "#C7D2FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-primopiano-levanzo.webp", {
+    it: "Primo piano a Levanzo",
+    en: "Close-up in Levanzo",
+  }, "#BAE6FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-rada-brindisi.webp", {
+    it: "Brindisi in rada",
+    en: "Toast at anchor",
+  }, "#FDE68A"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-relax-rete.webp", {
+    it: "Relax sulla rete",
+    en: "Relax on the net",
+  }, "#C4B5FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-relax-sole.webp", {
+    it: "Relax al sole",
+    en: "Relax in the sun",
+  }, "#FED7AA"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-sanpietro.webp", {
+    it: "San Pietro a bordo",
+    en: "John Dory on board",
+  }, "#FDE68A"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-strumentazione.webp", {
+    it: "Strumentazione",
+    en: "Navigation instruments",
+  }, "#CBD5E1"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-sugo-triglie.webp", {
+    it: "Sugo di triglie",
+    en: "Red mullet sauce",
+  }, "#FCA5A5"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-vista-trapani.webp", {
+    it: "Vista su Trapani",
+    en: "View of Trapani",
+  }, "#BFDBFE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-wow-prendisole-levanzo.webp", {
+    it: "Prendisole vista Levanzo",
+    en: "Sun deck facing Levanzo",
+  }, "#BAE6FD"),
+];
+
 export const EXPERIENCE_CATALOG = {
   "exclusive-experience": {
     serviceId: "exclusive-experience",
@@ -730,11 +1095,11 @@ export const EXPERIENCE_CATALOG = {
       en: "Chef on board in an Egadi trimaran from Trapani",
     },
     subtitle: {
-      it: "Il trimarano tutto per te, con chef a bordo e comfort da catamarano tra Favignana e Levanzo.",
+      it: "Il trimarano tutto per te, con chef a bordo e comfort da catamarano tra Favignana e Levanzo: una giornata in catamarano alle Egadi reinterpretata in chiave multiscafo.",
       en: "The trimaran reserved for you, with an on-board chef and catamaran-style comfort between Favignana and Levanzo.",
     },
     detailDescription: {
-      it: "Una giornata privata sul trimarano con comfort da catamarano: skipper, hostess e chef coordinano ritmo, pranzo a bordo e soste bagno tra Favignana e Levanzo.",
+      it: "Una giornata privata sul trimarano con comfort da catamarano: skipper, hostess e chef coordinano ritmo, pranzo a bordo e soste bagno tra Favignana e Levanzo. È ideale per chi desidera un tour in catamarano alle Egadi, ma vuole una cooking experience curata su un trimarano con spazi ampi e servizio premium.",
       en: "A private day on the trimaran with catamaran-style comfort: skipper, hostess and chef coordinate the pace, lunch on board and swim stops between Favignana and Levanzo.",
     },
     seoTitle: {
@@ -742,38 +1107,10 @@ export const EXPERIENCE_CATALOG = {
       en: "Chef on Board in an Egadi Trimaran from Trapani",
     },
     seoDescription: {
-      it: "Chef a bordo alle Egadi in trimarano da Trapani: pranzo a bordo, skipper, hostess, Favignana e Levanzo, snorkeling e comfort da catamarano.",
+      it: "Chef a bordo alle Egadi in trimarano da Trapani: pranzo a bordo, Favignana e Levanzo, snorkeling e comfort da catamarano per una giornata alle Egadi.",
       en: "Chef on board in an Egadi trimaran from Trapani: lunch on board, skipper, hostess, Favignana and Levanzo, snorkelling and catamaran-style comfort.",
     },
-    media: [
-      {
-        caption: { it: "Chef a bordo", en: "Chef on board" },
-        alt: {
-          it: "Chef che cucina sul Trimarano alle Isole Egadi",
-          en: "Chef cooking on the Egadisailing trimaran in the Egadi Islands",
-        },
-        color: "#FFB6C1",
-        src: "/images/experience-polaroids/chef-a-bordo-cucina.webp",
-      },
-      {
-        caption: { it: "Aperitivo al tramonto", en: "Sunset aperitivo" },
-        alt: {
-          it: "Tavola in rada sul Trimarano con aperitivo al tramonto",
-          en: "Table at anchor on the Egadisailing trimaran with sunset aperitivo",
-        },
-        color: "#FFDAB9",
-        src: "/images/experience-polaroids/chef-a-bordo-rada.webp",
-      },
-      {
-        caption: { it: "Sapori locali", en: "Local flavours" },
-        alt: {
-          it: "Piatto di mare servito a bordo durante l'esperienza gourmet Egadisailing",
-          en: "Seafood dish served on board during the Egadisailing gourmet experience",
-        },
-        color: "#DDA0DD",
-        src: "/images/experience-polaroids/chef-a-bordo-dettaglio-piatto.webp",
-      },
-    ],
+    media: GOURMET_TRIMARAN_DETAIL_MEDIA,
     itinerary: gourmetItinerary,
     includes: [
       { it: "Trimarano in esclusiva", en: "Private trimaran" },
@@ -793,11 +1130,11 @@ export const EXPERIENCE_CATALOG = {
       en: "Egadi trimaran charter from Trapani",
     },
     subtitle: {
-      it: "Da 3 a 7 giornate sul trimarano, con le Egadi come casa galleggiante.",
+      it: "Da 3 a 7 giornate sul trimarano, con le Egadi come casa galleggiante e il comfort che molti immaginano quando pensano a un charter in catamarano alle Egadi.",
       en: "Three to seven days on the trimaran, with the Egadi Islands as your floating home.",
     },
     detailDescription: {
-      it: "Un charter flessibile per dormire a bordo, svegliarsi vicino alle baie e costruire la rotta giorno per giorno. Cambusa esclusa dal pacchetto, hostess extra su richiesta e refill/dispensa organizzabili con la crew.",
+      it: "Un charter flessibile per dormire a bordo, svegliarsi vicino alle baie e costruire la rotta giorno per giorno. È la soluzione per chi valuta un noleggio catamarano alle Egadi con skipper, ma preferisce spazi, stabilità e vita a bordo di un trimarano multiscafo. Cambusa esclusa dal pacchetto, hostess extra su richiesta e refill/dispensa organizzabili con la crew.",
       en: "A flexible charter for sleeping on board, waking up near the bays and shaping the route day by day. Provisioning is not included, a hostess is available as an extra and pantry top-ups can be arranged with the crew.",
     },
     seoTitle: {
@@ -805,65 +1142,37 @@ export const EXPERIENCE_CATALOG = {
       en: "Egadi Trimaran Charter from Trapani",
     },
     seoDescription: {
-      it: "Charter Egadi in trimarano da Trapani da 3 a 7 giorni: Favignana, Levanzo, Marettimo, skipper, cabine, pernottamento e rotta meteo.",
+      it: "Charter Egadi in trimarano da Trapani da 3 a 7 giorni: alternativa al catamarano con skipper alle Egadi, con Favignana, Levanzo e Marettimo.",
       en: "Egadi trimaran charter from Trapani for 3 to 7 days: Favignana, Levanzo, Marettimo, skipper, cabins, overnight stay and weather-aware route.",
     },
-    media: [
-      {
-        caption: { it: "Trimarano Egadi", en: "Egadi trimaran" },
-        alt: {
-          it: "Trimarano in navigazione tra le Isole Egadi",
-          en: "Egadisailing trimaran sailing through the Egadi Islands",
-        },
-        color: "#ADD8E6",
-        src: "/images/experience-polaroids/charter-trimarano-egadi.webp",
-      },
-      {
-        caption: { it: "Vita a bordo", en: "Life on board" },
-        alt: {
-          it: "Dettaglio di bordo durante un charter alle Egadi",
-          en: "On-board detail during an Egadi charter",
-        },
-        color: "#B2DFDB",
-        src: "/images/experience-polaroids/charter-cabina-bordo.webp",
-      },
-      {
-        caption: { it: "Rada tranquilla", en: "Quiet anchorage" },
-        alt: {
-          it: "Trimarano fermo in rada tranquilla durante un charter alle Isole Egadi",
-          en: "Trimaran anchored in a quiet bay during an Egadi Islands charter",
-        },
-        color: "#C5CAE9",
-        src: "/images/experience-polaroids/charter-rada-tranquilla.webp",
-      },
-    ],
+    media: CHARTER_TRIMARAN_DETAIL_MEDIA,
     itinerary: [
       {
         time: { it: "Giorno 1", en: "Day 1" },
         text: {
-          it: "Imbarco a Trapani, briefing cambusa e sicurezza, prima rada tra Favignana e Levanzo.",
-          en: "Boarding in Trapani, provisioning and safety briefing, first anchorage between Favignana and Levanzo.",
+          it: "Imbarco a Trapani, briefing cambusa e sicurezza, poi prima navigazione verso le Isole Egadi: la rotta viene costruita con la crew tra Favignana, Levanzo e la rada più adatta per la notte.",
+          en: "Boarding in Trapani, provisioning and safety briefing, then first navigation towards the Egadi Islands: the route is shaped with the crew between Favignana, Levanzo and the most suitable overnight anchorage.",
         },
       },
       {
         time: { it: "Giorno 2", en: "Day 2" },
         text: {
-          it: "Favignana: Cala Rossa, Bue Marino e soste bagno scelte secondo meteo e affollamento.",
-          en: "Favignana: Cala Rossa, Bue Marino and swim stops chosen according to weather and crowds.",
+          it: "Favignana: Cala Rossa, Bue Marino, baie riparate e soste bagno scelte secondo meteo, affollamento e qualità dell'acqua.",
+          en: "Favignana: Cala Rossa, Bue Marino, sheltered bays and swim stops chosen according to weather, crowds and water quality.",
         },
       },
       {
         time: { it: "Giorno 3", en: "Day 3" },
         text: {
-          it: "Levanzo, rada tranquilla e rientro morbido a Trapani se scegli il charter da 3 giornate.",
-          en: "Levanzo, a quiet anchorage and an easy return to Trapani if you choose the 3-day charter.",
+          it: "Levanzo: navigazione lenta, rada tranquilla, bagno sotto costa e rientro morbido a Trapani se scegli il charter da 3 giornate.",
+          en: "Levanzo: slow navigation, quiet anchorage, coastal swim stop and an easy return to Trapani if you choose the 3-day charter.",
         },
       },
       {
         time: { it: "Giorni 4-7", en: "Days 4-7" },
         text: {
-          it: "Estensione verso Marettimo, notti in rada e rotta modulata giorno per giorno con la crew.",
-          en: "Extension towards Marettimo, nights at anchor and a route shaped day by day with the crew.",
+          it: "Con più giorni si apre la rotta verso Marettimo, la parte più selvaggia dell'arcipelago, con notti in rada, tempi lenti e, su richiesta e con meteo favorevole, possibile estensione verso San Vito lo Capo.",
+          en: "With more days the route opens towards Marettimo, the wildest part of the archipelago, with nights at anchor, a slower pace and, on request with favourable weather, a possible extension towards San Vito lo Capo.",
         },
       },
     ],
@@ -911,16 +1220,16 @@ export const EXPERIENCE_CATALOG = {
     },
     media: [
       {
-        caption: { it: "Giornata intera", en: "Full day" },
+        caption: { it: "Barca Egadi Sailing", en: "Barca Egadi Sailing" },
         alt: {
-          it: "Gruppo a bordo durante escursione in barca Favignana e Levanzo da Trapani di 8 ore",
-          en: "Group on board during an 8-hour Favignana and Levanzo boat tour from Trapani",
-          es: "Grupo a bordo durante excursión en barco Favignana y Levanzo desde Trapani de 8 horas",
-          fr: "Groupe à bord pendant une excursion en bateau Favignana et Levanzo depuis Trapani de 8 heures",
-          de: "Gruppe an Bord während einer 8-stündigen Bootstour Favignana und Levanzo ab Trapani",
+          it: "Vista frontale della Barca Egadi Sailing per escursione in barca Favignana e Levanzo da Trapani",
+          en: "Front view of Barca Egadi Sailing for a Favignana and Levanzo boat tour from Trapani",
+          es: "Vista frontal de Barca Egadi Sailing para excursión en barco Favignana y Levanzo desde Trapani",
+          fr: "Vue frontale de Barca Egadi Sailing pour excursion en bateau Favignana et Levanzo depuis Trapani",
+          de: "Frontansicht der Barca Egadi Sailing für Bootstour Favignana und Levanzo ab Trapani",
         },
         color: "#A7F3D0",
-        src: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+        src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp",
       },
       {
         caption: { it: "Snorkeling", en: "Snorkelling" },
@@ -986,7 +1295,7 @@ export const EXPERIENCE_CATALOG = {
           en: "People diving into clear water during a short Egadi tour",
         },
         color: "#A7F3D0",
-        src: "/images/experience-polaroids/barca-4-ore-tuffo.webp",
+        src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
       },
       {
         caption: { it: "Cala Rossa", en: "Cala Rossa" },
@@ -1037,7 +1346,7 @@ export const EXPERIENCE_CATALOG = {
           en: "People diving into clear water during a short Egadi tour",
         },
         color: "#A7F3D0",
-        src: "/images/experience-polaroids/barca-4-ore-tuffo.webp",
+        src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
       },
       {
         caption: { it: "Cala Rossa", en: "Cala Rossa" },
@@ -1079,16 +1388,16 @@ export const EXPERIENCE_CATALOG = {
     },
     media: [
       {
-        caption: { it: "Barca privata", en: "Private boat" },
+        caption: { it: "Barca Egadi Sailing", en: "Barca Egadi Sailing" },
         alt: {
-          it: "Gruppo su barca privata per tour Favignana e Levanzo da Trapani di 8 ore",
-          en: "Group on a private boat for an 8-hour Favignana and Levanzo tour from Trapani",
-          es: "Grupo en barco privado para tour Favignana y Levanzo desde Trapani de 8 horas",
-          fr: "Groupe sur bateau privé pour tour Favignana et Levanzo depuis Trapani de 8 heures",
-          de: "Gruppe auf privatem Boot für eine 8-stündige Tour Favignana und Levanzo ab Trapani",
+          it: "Barca Egadi Sailing durante tour privato Favignana e Levanzo da Trapani",
+          en: "Barca Egadi Sailing during a private Favignana and Levanzo tour from Trapani",
+          es: "Barca Egadi Sailing durante tour privado Favignana y Levanzo desde Trapani",
+          fr: "Barca Egadi Sailing pendant un tour privé Favignana et Levanzo depuis Trapani",
+          de: "Barca Egadi Sailing während privater Bootstour Favignana und Levanzo ab Trapani",
         },
         color: "#A7F3D0",
-        src: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+        src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
       },
       {
         caption: { it: "Snorkeling", en: "Snorkelling" },
@@ -1160,7 +1469,7 @@ export const EXPERIENCE_CATALOG = {
           en: "Dive from a private boat into clear water in the Egadi Islands",
         },
         color: "#FECACA",
-        src: "/images/experience-polaroids/barca-4-ore-tuffo.webp",
+        src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
       },
       {
         caption: { it: "Cala Rossa", en: "Cala Rossa" },
@@ -1217,7 +1526,7 @@ export const EXPERIENCE_CATALOG = {
           en: "Dive from a private boat into clear water in the Egadi Islands",
         },
         color: "#FECACA",
-        src: "/images/experience-polaroids/barca-4-ore-tuffo.webp",
+        src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
       },
       {
         caption: { it: "Cala Rossa", en: "Cala Rossa" },
@@ -1245,18 +1554,18 @@ export const EXPERIENCE_CATALOG = {
       de: "Angelcharter Ägadische Inseln",
     },
     subtitle: {
-      it: "Giornata privata di pesca sportiva da Trapani su gommone dedicato, con attrezzatura professionale e tecniche miste.",
-      en: "Private sport fishing day from Trapani on a dedicated Fishing RIB, with professional gear and mixed techniques.",
-      es: "Jornada privada de pesca deportiva desde Trapani en neumática dedicada, con equipo profesional y técnicas mixtas.",
-      fr: "Journée privée de pêche sportive depuis Trapani sur semi-rigide dédié, avec matériel professionnel et techniques mixtes.",
-      de: "Privater Sportangeltag ab Trapani auf einem speziellen Angel-RIB, mit professioneller Ausrüstung und gemischten Techniken.",
+      it: "Giornata privata di pesca sportiva da Trapani su gommone dedicato, con attrezzatura professionale e rotta nelle aree consentite intorno alle Isole Egadi.",
+      en: "Private sport fishing day from Trapani on a dedicated Fishing RIB, with professional gear and a route through permitted areas around the Egadi Islands.",
+      es: "Jornada privada de pesca deportiva desde Trapani en neumática dedicada, con equipo profesional y ruta por zonas permitidas alrededor de las Islas Egadi.",
+      fr: "Journée privée de pêche sportive depuis Trapani sur semi-rigide dédié, avec matériel professionnel et route dans les zones autorisées autour des îles Égades.",
+      de: "Privater Sportangeltag ab Trapani auf einem speziellen Angel-RIB, mit professioneller Ausrüstung und Route in erlaubten Bereichen rund um die Ägadischen Inseln.",
     },
     detailDescription: {
-      it: "Una giornata da 8 ore per appassionati: bolentino, traina, drifting e catch and release vengono scelti dallo skipper in base a stagione, mare, specie presenti e regole AMP/MASAF. Il pescato può essere rilasciato o trattenuto solo entro limiti di legge, taglie, quote e autorizzazioni.",
-      en: "An 8-hour day for fishing enthusiasts: bottom fishing, trolling, drifting and catch and release are selected by the skipper according to season, sea state, target species and AMP/MASAF rules. Catches can be released or kept only within legal limits, sizes, quotas and authorisations.",
-      es: "Una jornada de 8 horas para aficionados: pesca de fondo, curricán, drifting y catch and release se eligen según temporada, mar, especies y normativa AMP/MASAF. Las capturas pueden soltarse o conservarse solo dentro de límites legales, tallas, cupos y autorizaciones.",
-      fr: "Une journée de 8 heures pour passionnés : pêche de fond, traîne, drifting et catch and release sont choisis selon saison, mer, espèces et règles AMP/MASAF. Les prises peuvent être relâchées ou gardées uniquement dans les limites légales, tailles, quotas et autorisations.",
-      de: "Ein 8-Stunden-Tag für Angelbegeisterte: Grundangeln, Schleppangeln, Drifting und Catch and Release werden je nach Saison, Meer, Fischarten und AMP/MASAF-Regeln gewählt. Fänge dürfen nur innerhalb gesetzlicher Limits, Mindestmaße, Quoten und Genehmigungen behalten oder freigelassen werden.",
+      it: "Una giornata da 8 ore per appassionati: non si pesca dentro le cale balneari, ma nelle zone consentite intorno alle Isole Egadi, scelte dallo skipper in base a stagione, correnti, fondali, specie presenti e regole AMP/MASAF. Bolentino, traina, drifting e catch and release vengono impostati sul mare; il pescato può essere rilasciato o trattenuto solo entro limiti di legge, taglie, quote e autorizzazioni.",
+      en: "An 8-hour day for fishing enthusiasts: fishing does not take place inside swimming coves, but in permitted areas around the Egadi Islands, chosen by the skipper according to season, currents, seabed, target species and AMP/MASAF rules. Bottom fishing, trolling, drifting and catch and release are set at sea; catches can be released or kept only within legal limits, sizes, quotas and authorisations.",
+      es: "Una jornada de 8 horas para aficionados: no se pesca dentro de las calas de baño, sino en zonas permitidas alrededor de las Islas Egadi, elegidas por el patrón según temporada, corrientes, fondos, especies y normativa AMP/MASAF. Pesca de fondo, curricán, drifting y catch and release se deciden en el mar; las capturas pueden soltarse o conservarse solo dentro de límites legales, tallas, cupos y autorizaciones.",
+      fr: "Une journée de 8 heures pour passionnés : on ne pêche pas dans les criques de baignade, mais dans les zones autorisées autour des îles Égades, choisies par le skipper selon saison, courants, fonds, espèces et règles AMP/MASAF. Pêche de fond, traîne, drifting et catch and release sont décidés en mer ; les prises peuvent être relâchées ou gardées uniquement dans les limites légales, tailles, quotas et autorisations.",
+      de: "Ein 8-Stunden-Tag für Angelbegeisterte: Geangelt wird nicht in Badebuchten, sondern in erlaubten Bereichen rund um die Ägadischen Inseln, die der Skipper je nach Saison, Strömung, Grund, Fischarten und AMP/MASAF-Regeln auswählt. Grundangeln, Schleppangeln, Drifting und Catch and Release werden auf See festgelegt; Fänge dürfen nur innerhalb gesetzlicher Limits, Mindestmaße, Quoten und Genehmigungen behalten oder freigelassen werden.",
     },
     seoTitle: {
       it: "Charter pesca Egadi da Trapani",
@@ -1266,11 +1575,11 @@ export const EXPERIENCE_CATALOG = {
       de: "Angelcharter Ägadische Inseln ab Trapani",
     },
     seoDescription: {
-      it: "Charter di pesca alle Isole Egadi da Trapani su gommone privato fino a 4 persone, con canne professionali, bolentino, traina, drifting e catch and release secondo normativa AMP.",
-      en: "Fishing charter in the Egadi Islands from Trapani on a private RIB for up to 4 guests, with professional rods, bottom fishing, trolling, drifting and catch and release according to AMP rules.",
-      es: "Charter de pesca en las Islas Egadi desde Trapani en neumática privada hasta 4 personas, con cañas profesionales, pesca de fondo, curricán, drifting y catch and release según normativa AMP.",
-      fr: "Charter de pêche aux îles Égades depuis Trapani sur semi-rigide privé jusqu'à 4 personnes, avec cannes professionnelles, pêche de fond, traîne, drifting et catch and release selon les règles AMP.",
-      de: "Angelcharter auf den Ägadischen Inseln ab Trapani auf privatem RIB bis 4 Personen, mit professionellen Ruten, Grundangeln, Schleppangeln, Drifting und Catch and Release nach AMP-Regeln.",
+      it: "Charter di pesca sportiva alle Isole Egadi da Trapani su gommone privato fino a 4 persone, con canne professionali, bolentino, traina, drifting e catch and release nelle aree consentite AMP/MASAF.",
+      en: "Sport fishing charter in the Egadi Islands from Trapani on a private RIB for up to 4 guests, with professional rods, bottom fishing, trolling, drifting and catch and release in AMP/MASAF permitted areas.",
+      es: "Charter de pesca deportiva en las Islas Egadi desde Trapani en neumática privada hasta 4 personas, con cañas profesionales, pesca de fondo, curricán, drifting y catch and release en zonas permitidas AMP/MASAF.",
+      fr: "Charter de pêche sportive aux îles Égades depuis Trapani sur semi-rigide privé jusqu'à 4 personnes, avec cannes professionnelles, pêche de fond, traîne, drifting et catch and release dans les zones autorisées AMP/MASAF.",
+      de: "Sportangelcharter auf den Ägadischen Inseln ab Trapani auf privatem RIB bis 4 Personen, mit professionellen Ruten, Grundangeln, Schleppangeln, Drifting und Catch and Release in AMP/MASAF-erlaubten Bereichen.",
     },
     media: [
       {
@@ -1311,21 +1620,21 @@ export const EXPERIENCE_CATALOG = {
       },
       {
         caption: {
-          it: "Spot consentiti",
-          en: "Permitted spots",
-          es: "Zonas permitidas",
-          fr: "Zones autorisées",
-          de: "Erlaubte Spots",
+          it: "Deck pesca",
+          en: "Fishing deck",
+          es: "Cubierta de pesca",
+          fr: "Pont de pêche",
+          de: "Angel-Deck",
         },
         alt: {
-          it: "Navigazione verso spot di pesca consentiti alle Isole Egadi",
-          en: "Navigation towards permitted fishing spots in the Egadi Islands",
-          es: "Navegación hacia zonas de pesca permitidas en las Islas Egadi",
-          fr: "Navigation vers les zones de pêche autorisées aux îles Égades",
-          de: "Fahrt zu erlaubten Angelspots auf den Ägadischen Inseln",
+          it: "Deck del gommone con spazio operativo per charter di pesca alle Egadi",
+          en: "Fishing RIB deck with working space for an Egadi fishing charter",
+          es: "Cubierta de la neumática con espacio operativo para charter de pesca en las Egadi",
+          fr: "Pont du semi-rigide avec espace de travail pour charter de pêche aux Égades",
+          de: "Deck des Angel-RIB mit Arbeitsbereich für Angelcharter auf den Egadi",
         },
         color: "#A7F3D0",
-        src: "/images/experience-polaroids/fishing-charter-navigation.webp",
+        src: "/images/boats/fishing-rib/fishing-rib-deck.webp",
       },
     ],
     itinerary: fishingItinerary,
@@ -1362,11 +1671,11 @@ const EXPERIENCE_HUB_8_HOUR_MEDIA = [
       de: "Egadi Boot",
     },
     alt: {
-      it: "Cigala Bertinetti in primo piano per tour in barca Favignana e Levanzo da Trapani",
-      en: "Cigala Bertinetti close-up for a Favignana and Levanzo boat tour from Trapani",
-      es: "Cigala Bertinetti en primer plano para tour en barco Favignana y Levanzo desde Trapani",
-      fr: "Cigala Bertinetti en premier plan pour tour en bateau Favignana et Levanzo depuis Trapani",
-      de: "Cigala Bertinetti in Nahaufnahme für Bootstour Favignana und Levanzo ab Trapani",
+      it: "Barca Egadi Sailing in primo piano per tour in barca Favignana e Levanzo da Trapani",
+      en: "Barca Egadi Sailing close-up for a Favignana and Levanzo boat tour from Trapani",
+      es: "Barca Egadi Sailing en primer plano para tour en barco Favignana y Levanzo desde Trapani",
+      fr: "Barca Egadi Sailing en premier plan pour tour en bateau Favignana et Levanzo depuis Trapani",
+      de: "Barca Egadi Sailing in Nahaufnahme für Bootstour Favignana und Levanzo ab Trapani",
     },
     color: "#A7F3D0",
     src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-primo-piano.webp",
@@ -1437,11 +1746,11 @@ const EXPERIENCE_HUB_4_HOUR_MEDIA = [
       de: "Privates Boot",
     },
     alt: {
-      it: "Barca privata Cigala Bertinetti per tour alle Isole Egadi di 4 ore",
-      en: "Private Cigala Bertinetti boat for a 4-hour Egadi Islands tour",
-      es: "Barco privado Cigala Bertinetti para tour de 4 horas por las Islas Egadi",
-      fr: "Bateau privé Cigala Bertinetti pour tour de 4 heures aux îles Égades",
-      de: "Privates Cigala Bertinetti Boot für 4-Stunden-Tour zu den Ägadischen Inseln",
+      it: "Barca Egadi Sailing privata per tour alle Isole Egadi di 4 ore",
+      en: "Private Barca Egadi Sailing for a 4-hour Egadi Islands tour",
+      es: "Barca Egadi Sailing privada para tour de 4 horas por las Islas Egadi",
+      fr: "Barca Egadi Sailing privée pour tour de 4 heures aux îles Égades",
+      de: "Private Barca Egadi Sailing für 4-Stunden-Tour zu den Ägadischen Inseln",
     },
     color: "#C7D2FE",
     src: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
@@ -1451,21 +1760,21 @@ const EXPERIENCE_HUB_4_HOUR_MEDIA = [
 const EXPERIENCE_HUB_GOURMET_MEDIA = [
   {
     caption: {
-      it: "Chef e ingredienti",
-      en: "Chef and ingredients",
-      es: "Chef e ingredientes",
-      fr: "Chef et ingrédients",
-      de: "Chef und Zutaten",
+      it: "Trimarano a Levanzo",
+      en: "Trimaran in Levanzo",
+      es: "Trimarán en Levanzo",
+      fr: "Trimaran à Levanzo",
+      de: "Trimaran vor Levanzo",
     },
     alt: {
-      it: "Chef a bordo con ingredienti freschi per esperienza gourmet in trimarano alle Egadi",
-      en: "Chef on board with fresh ingredients for a gourmet trimaran experience in the Egadi Islands",
-      es: "Chef a bordo con ingredientes frescos para experiencia gourmet en trimarán por las Egadi",
-      fr: "Chef à bord avec ingrédients frais pour expérience gourmet en trimaran aux Égades",
-      de: "Chef an Bord mit frischen Zutaten für Gourmet-Erlebnis im Trimaran auf den Egadi",
+      it: "Trimarano Egadisailing davanti a Levanzo durante esperienza chef a bordo",
+      en: "Egadisailing trimaran off Levanzo during the chef on board experience",
+      es: "Trimarán Egadisailing frente a Levanzo durante la experiencia chef a bordo",
+      fr: "Trimaran Egadisailing face à Levanzo pendant l'expérience chef à bord",
+      de: "Egadisailing Trimaran vor Levanzo während des Chef-an-Bord-Erlebnisses",
     },
     color: "#FFDAB9",
-    src: "/images/boats/neel-47/trimarano-chef-ingredienti.webp",
+    src: "/images/home/traimarano-levanzo.webp",
   },
   {
     caption: {
@@ -1572,7 +1881,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       en: "Chef on board in an Egadi trimaran",
     },
     subtitle: {
-      it: "Trimarano con comfort da catamarano, chef, skipper e hostess per pranzo a bordo, snorkeling e soste tra Favignana e Levanzo.",
+      it: "Trimarano con comfort da catamarano, chef, skipper e hostess per una giornata in catamarano alle Egadi reinterpretata tra Favignana e Levanzo.",
       en: "Trimaran with catamaran-style comfort, chef, skipper and hostess for lunch on board, snorkelling and stops between Favignana and Levanzo.",
     },
     seoTitle: {
@@ -1599,7 +1908,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       en: "Egadi trimaran charter from Trapani",
     },
     subtitle: {
-      it: "Da 3 a 7 giornate sul trimarano, con itinerario concordato tra Favignana, Levanzo e Marettimo in base alle tue preferenze.",
+      it: "Da 3 a 7 giornate sul trimarano, alternativa premium a un charter in catamarano alle Egadi, con itinerario tra Favignana, Levanzo e Marettimo.",
       en: "Three to seven days on the trimaran, with an itinerary agreed around Favignana, Levanzo and Marettimo according to your preferences.",
     },
     seoTitle: {
@@ -1607,7 +1916,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       en: "Egadi Trimaran Charter from Trapani",
     },
     seoDescription: {
-      it: "Charter in trimarano alle Isole Egadi da 3 a 7 giornate con skipper, pernottamento a bordo e rotta meteo-dipendente.",
+      it: "Charter in trimarano alle Isole Egadi da 3 a 7 giornate, ideale per chi cerca noleggio catamarano alle Egadi con skipper e comfort.",
       en: "Trimaran charter in the Egadi Islands for 3 to 7 days with skipper, overnight stay on board and weather-aware route.",
     },
     durationLabel: { it: "3-7 giornate", en: "3-7 days" },
@@ -1723,11 +2032,11 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       de: "Angelcharter Ägadische Inseln ab Trapani",
     },
     subtitle: {
-      it: "Giornata privata da 8 ore su Gommone Pesca, con canne professionali, tecniche miste e rotta conforme alle regole AMP.",
-      en: "Private 8-hour day on the Fishing RIB, with professional rods, mixed techniques and a route compliant with AMP rules.",
-      es: "Jornada privada de 8 horas en neumática de pesca, con cañas profesionales, técnicas mixtas y ruta conforme a la normativa AMP.",
-      fr: "Journée privée de 8 heures sur semi-rigide de pêche, avec cannes professionnelles, techniques mixtes et route conforme aux règles AMP.",
-      de: "Privater 8-Stunden-Tag auf dem Angel-RIB, mit professionellen Ruten, gemischten Techniken und Route nach AMP-Regeln.",
+      it: "Giornata privata da 8 ore su Gommone Pesca, con canne professionali, tecniche miste e rotta nelle aree di pesca consentite delle Egadi.",
+      en: "Private 8-hour day on the Fishing RIB, with professional rods, mixed techniques and a route through permitted fishing areas in the Egadi Islands.",
+      es: "Jornada privada de 8 horas en neumática de pesca, con cañas profesionales, técnicas mixtas y ruta por zonas de pesca permitidas en las Egadi.",
+      fr: "Journée privée de 8 heures sur semi-rigide de pêche, avec cannes professionnelles, techniques mixtes et route dans les zones de pêche autorisées des Égades.",
+      de: "Privater 8-Stunden-Tag auf dem Angel-RIB, mit professionellen Ruten, gemischten Techniken und Route in erlaubten Angelgebieten der Ägadischen Inseln.",
     },
     seoTitle: {
       it: "Charter di pesca alle Isole Egadi da Trapani",
@@ -1737,11 +2046,11 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       de: "Angelcharter Ägadische Inseln ab Trapani",
     },
     seoDescription: {
-      it: "Pacchetto privato di pesca sportiva alle Egadi da Trapani, 8 ore, fino a 4 persone, gommone dedicato e attrezzatura professionale.",
-      en: "Private sport fishing package in the Egadi Islands from Trapani, 8 hours, up to 4 guests, dedicated RIB and professional gear.",
-      es: "Paquete privado de pesca deportiva en las Islas Egadi desde Trapani, 8 horas, hasta 4 personas, neumática dedicada y equipo profesional.",
-      fr: "Forfait privé de pêche sportive aux îles Égades depuis Trapani, 8 heures, jusqu'à 4 personnes, semi-rigide dédié et matériel professionnel.",
-      de: "Privates Sportangel-Paket auf den Ägadischen Inseln ab Trapani, 8 Stunden, bis 4 Personen, spezielles RIB und professionelle Ausrüstung.",
+      it: "Pacchetto privato di pesca sportiva alle Egadi da Trapani, 8 ore, fino a 4 persone, gommone dedicato, attrezzatura professionale e rotta nelle aree consentite AMP/MASAF.",
+      en: "Private sport fishing package in the Egadi Islands from Trapani, 8 hours, up to 4 guests, dedicated RIB, professional gear and a route through AMP/MASAF permitted areas.",
+      es: "Paquete privado de pesca deportiva en las Islas Egadi desde Trapani, 8 horas, hasta 4 personas, neumática dedicada, equipo profesional y ruta por zonas permitidas AMP/MASAF.",
+      fr: "Forfait privé de pêche sportive aux îles Égades depuis Trapani, 8 heures, jusqu'à 4 personnes, semi-rigide dédié, matériel professionnel et route dans les zones autorisées AMP/MASAF.",
+      de: "Privates Sportangel-Paket auf den Ägadischen Inseln ab Trapani, 8 Stunden, bis 4 Personen, spezielles RIB, professionelle Ausrüstung und Route durch AMP/MASAF-erlaubte Bereiche.",
     },
     durationLabel: {
       it: "8 ore",
@@ -1966,7 +2275,7 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
       "Una experiencia gourmet privada en trimarán con comodidad de catamarán para descubrir las Islas Egadi con ritmo lento, comida a bordo y ruta entre Favignana y Levanzo.",
     seoTitle: "Chef a bordo en trimarán por las Islas Egadi desde Trapani",
     seoDescription:
-      "Experiencia gourmet privada en trimarán Neel 47 desde Trapani, con chef a bordo, patrón, azafata, comida siciliana y ruta entre Favignana y Levanzo.",
+      "Experiencia gourmet privada en trimarán con confort de catamarán desde Trapani, con chef a bordo, patrón, azafata, comida siciliana y ruta entre Favignana y Levanzo.",
     itinerary: [
       {
         time: "09:30",
@@ -2009,7 +2318,7 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
       },
     ],
     includes: [
-      "Neel 47 en privado",
+      "Trimarán en privado",
       "Patrón, chef y azafata",
       "Comida gourmet a bordo",
       "Vino trapanese, agua y refrescos",
@@ -2027,7 +2336,7 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
       "Un charter privado para vivir las Islas Egadi con más tiempo: noches al fondeo, camarotes, cocina y una ruta flexible diseñada con la tripulación.",
     seoTitle: "Charter Islas Egadi en trimarán desde Trapani",
     seoDescription:
-      "Charter privado en Neel 47 por las Islas Egadi, de 3 a 7 días, con patrón, camarotes, noches al fondeo y ruta por Favignana, Levanzo y Marettimo.",
+      "Charter privado en trimarán con confort de catamarán por las Islas Egadi, de 3 a 7 días, con patrón, camarotes, noches al fondeo y ruta por Favignana, Levanzo y Marettimo.",
     itinerary: [
       {
         time: "Día 1",
@@ -2221,7 +2530,7 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
       "Une expérience gourmet privée en trimaran avec confort de catamaran pour découvrir les îles Égades avec rythme lent, déjeuner à bord et route entre Favignana et Levanzo.",
     seoTitle: "Chef à bord aux îles Égades en trimaran depuis Trapani",
     seoDescription:
-      "Expérience gourmet privée en trimaran Neel 47 depuis Trapani, avec chef à bord, skipper, hôtesse, déjeuner sicilien et itinéraire entre Favignana et Levanzo.",
+      "Expérience gourmet privée en trimaran au confort de catamaran depuis Trapani, avec chef à bord, skipper, hôtesse, déjeuner sicilien et itinéraire entre Favignana et Levanzo.",
     itinerary: [
       { time: "09:30", title: "Accueil à bord", text: "Point de rencontre : Via dei Gladioli 15, 91100 Trapani." },
       {
@@ -2252,7 +2561,7 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
       { time: "18:00", title: "Retour à Trapani", text: "Navigation de retour avec apéritif et arrivée au port." },
     ],
     includes: [
-      "Neel 47 en privé",
+      "Trimaran en privé",
       "Skipper, chef et hôtesse",
       "Déjeuner gourmet à bord",
       "Vin de Trapani, eau et boissons fraîches",
@@ -2270,7 +2579,7 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
       "Un charter privé pour vivre les îles Égades avec plus de temps : nuits au mouillage, cabines, cuisine et route flexible conçue avec l'équipage.",
     seoTitle: "Charter aux îles Égades en trimaran depuis Trapani",
     seoDescription:
-      "Charter privé en Neel 47 aux îles Égades, de 3 à 7 jours, avec skipper, cabines, nuits au mouillage et route vers Favignana, Levanzo et Marettimo.",
+      "Charter privé en trimaran au confort de catamaran aux îles Égades, de 3 à 7 jours, avec skipper, cabines, nuits au mouillage et route vers Favignana, Levanzo et Marettimo.",
     itinerary: [
       { time: "Jour 1", title: "Embarquement à Trapani", text: "Briefing sécurité, organisation de l'avitaillement et premier mouillage entre Favignana et Levanzo." },
       { time: "Jour 2", title: "Favignana", text: "Cala Rossa, Bue Marino et arrêts baignade choisis selon mer, vent et affluence." },
@@ -2377,7 +2686,7 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
       "Ein privates Gourmet-Erlebnis auf dem Trimaran mit Katamaran-Komfort, um die Ägadischen Inseln mit ruhigem Rhythmus, Mittagessen an Bord und Route zwischen Favignana und Levanzo zu entdecken.",
     seoTitle: "Chef an Bord auf Trimaran zu den Ägadischen Inseln ab Trapani",
     seoDescription:
-      "Privates Gourmet-Erlebnis auf dem Neel 47 ab Trapani mit Chef an Bord, Skipper, Hostess, sizilianischem Mittagessen und Route zwischen Favignana und Levanzo.",
+      "Privates Gourmet-Erlebnis auf dem Trimaran mit Katamaran-Komfort ab Trapani, mit Chef an Bord, Skipper, Hostess, sizilianischem Mittagessen und Route zwischen Favignana und Levanzo.",
     itinerary: [
       { time: "09:30", title: "Willkommen an Bord", text: "Treffpunkt: Via dei Gladioli 15, 91100 Trapani." },
       {
@@ -2408,7 +2717,7 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
       { time: "18:00", title: "Rückkehr nach Trapani", text: "Rückfahrt mit Aperitif und Ankunft im Hafen." },
     ],
     includes: [
-      "Neel 47 privat",
+      "Privater Trimaran",
       "Skipper, Chefkoch und Hostess",
       "Gourmet-Mittagessen an Bord",
       "Wein aus Trapani, Wasser und Softdrinks",
@@ -2426,7 +2735,7 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
       "Ein privater Charter, um die Ägadischen Inseln mit mehr Zeit zu erleben: Nächte vor Anker, Kabinen, Bordküche und eine flexible Route mit der Crew.",
     seoTitle: "Trimaran-Charter Ägadische Inseln ab Trapani",
     seoDescription:
-      "Privater Neel 47 Charter auf den Ägadischen Inseln, 3 bis 7 Tage, mit Skipper, Kabinen, Nächten vor Anker und Route nach Favignana, Levanzo und Marettimo.",
+      "Privater Trimaran-Charter mit Katamaran-Komfort auf den Ägadischen Inseln, 3 bis 7 Tage, mit Skipper, Kabinen, Nächten vor Anker und Route nach Favignana, Levanzo und Marettimo.",
     itinerary: [
       { time: "Tag 1", title: "Einschiffung in Trapani", text: "Sicherheitsbriefing, Proviantorganisation und erster Ankerplatz zwischen Favignana und Levanzo." },
       { time: "Tag 2", title: "Favignana", text: "Cala Rossa, Bue Marino und Badestopps, gewählt nach Meer, Wind und Besucheraufkommen." },
@@ -2629,7 +2938,7 @@ const SPANISH_PACKAGE_OVERRIDES: Record<
       "Trimarán con comodidad de catamarán, chef, patrón y azafata para comida a bordo, snorkel y paradas entre Favignana y Levanzo.",
     seoTitle: "Chef a bordo en trimarán por las Islas Egadi",
     seoDescription:
-      "Día privado en trimarán Neel 47 con chef a bordo, patrón, azafata y ruta entre Favignana y Levanzo.",
+      "Día privado en trimarán con confort de catamarán, chef a bordo, patrón, azafata y ruta entre Favignana y Levanzo.",
     durationLabel: "8 horas",
     detailLabel: "Chef, patrón y azafata",
     priceUnitLabel: "por paquete",
@@ -2695,7 +3004,7 @@ const FRENCH_PACKAGE_OVERRIDES: Record<
       "Trimaran avec confort de catamaran, chef, skipper et hôtesse pour déjeuner à bord, snorkeling et arrêts entre Favignana et Levanzo.",
     seoTitle: "Chef à bord aux îles Égades en trimaran",
     seoDescription:
-      "Journée privée en trimaran Neel 47 avec chef à bord, skipper, hôtesse et itinéraire entre Favignana et Levanzo.",
+      "Journée privée en trimaran au confort de catamaran avec chef à bord, skipper, hôtesse et itinéraire entre Favignana et Levanzo.",
     durationLabel: "8 heures",
     detailLabel: "Chef, skipper et hôtesse",
     priceUnitLabel: "par forfait",
@@ -2761,7 +3070,7 @@ const GERMAN_PACKAGE_OVERRIDES: Record<
       "Trimaran mit Katamaran-Komfort, Chefkoch, Skipper und Hostess für Mittagessen an Bord, Schnorcheln und Stopps zwischen Favignana und Levanzo.",
     seoTitle: "Chef an Bord auf Trimaran zu den Ägadischen Inseln",
     seoDescription:
-      "Privater Tag auf dem Neel 47 Trimaran mit Chef an Bord, Skipper, Hostess und Route zwischen Favignana und Levanzo.",
+      "Privater Tag auf dem Trimaran mit Katamaran-Komfort, Chef an Bord, Skipper, Hostess und Route zwischen Favignana und Levanzo.",
     durationLabel: "8 Stunden",
     detailLabel: "Chefkoch, Skipper und Hostess",
     priceUnitLabel: "pro Paket",

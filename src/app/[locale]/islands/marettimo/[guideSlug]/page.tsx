@@ -915,7 +915,7 @@ const ctaCopyByLocale = {
       label: "Vedi il tour privato",
       image:
         "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
-      imageAlt: "Barca privata Cigala e Bertinetti alle Isole Egadi",
+      imageAlt: "Barca Egadi Sailing privata alle Isole Egadi",
       icon: Waves,
       routeNotePrefix: "Collegamento dalla guida",
     },
@@ -942,7 +942,7 @@ const ctaCopyByLocale = {
       label: "View the private tour",
       image:
         "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
-      imageAlt: "Private Cigala and Bertinetti boat in the Egadi Islands",
+      imageAlt: "Private Barca Egadi Sailing in the Egadi Islands",
       icon: Waves,
       routeNotePrefix: "Guide context",
     },
@@ -969,7 +969,7 @@ const ctaCopyByLocale = {
       label: "Ver el tour privado",
       image:
         "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
-      imageAlt: "Barco privado Cigala y Bertinetti en las Islas Egadi",
+      imageAlt: "Barca Egadi Sailing privada en las Islas Egadi",
       icon: Waves,
       routeNotePrefix: "Contexto de la guía",
     },
@@ -996,7 +996,7 @@ const ctaCopyByLocale = {
       label: "Voir le tour privé",
       image:
         "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
-      imageAlt: "Bateau privé Cigala et Bertinetti aux îles Égades",
+      imageAlt: "Barca Egadi Sailing privée aux îles Égades",
       icon: Waves,
       routeNotePrefix: "Contexte du guide",
     },
@@ -1023,7 +1023,7 @@ const ctaCopyByLocale = {
       label: "Private Tour ansehen",
       image:
         "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
-      imageAlt: "Privates Boot Cigala & Bertinetti auf den Ägadischen Inseln",
+      imageAlt: "Privates Boot Barca Egadi Sailing auf den Ägadischen Inseln",
       icon: Waves,
       routeNotePrefix: "Guide-Kontext",
     },
@@ -1110,7 +1110,7 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
             description:
               "Ein reserviertes Boot und eine flexible Route, immer nach Seebedingungen bestätigt.",
             href: "/experiences/boat-exclusive-full-day",
-            image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+            image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
             meta: "Privat",
           },
         ]
@@ -1129,7 +1129,7 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
             description:
               "Barco reservado y ruta flexible, siempre confirmada según condiciones del mar.",
             href: "/experiences/boat-exclusive-full-day",
-            image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+            image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
             meta: "Privado",
           },
         ]
@@ -1148,7 +1148,7 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
             description:
               "Un bateau réservé et une route flexible, toujours confirmée selon les conditions de mer.",
             href: "/experiences/boat-exclusive-full-day",
-            image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+            image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
             meta: "Privé",
           },
         ]
@@ -1167,7 +1167,7 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
             description:
               "A reserved boat and flexible route, always confirmed according to sea conditions.",
             href: "/experiences/boat-exclusive-full-day",
-            image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+            image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
             meta: "Private",
           },
         ]
@@ -1183,7 +1183,7 @@ function CompareCta({ guideTitle, locale }: { guideTitle: string; locale: GuideL
             title: "Tour Egadi 8 ore privato",
             description: "Barca riservata e rotta flessibile, confermata in base al mare.",
             href: "/experiences/boat-exclusive-full-day",
-            image: "/images/experience-polaroids/barca-8-ore-gruppo-bordo.webp",
+            image: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-bacio.webp",
             meta: "Privato",
           },
         ];

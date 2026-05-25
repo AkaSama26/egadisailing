@@ -212,6 +212,10 @@
   animation: whatsapp-button-ripple 2.6s ease-out infinite;
 }
 
+.whatsapp-help-bubble {
+  animation: whatsapp-bubble-attention 6.5s ease-in-out infinite;
+}
+
 @keyframes whatsapp-button-nudge {
   0%,
   62%,
@@ -236,6 +240,30 @@
   }
 }
 
+@keyframes whatsapp-bubble-attention {
+  0%,
+  58%,
+  100% {
+    transform: translateX(0);
+  }
+
+  7% {
+    transform: translateX(-4px);
+  }
+
+  14% {
+    transform: translateX(0);
+  }
+
+  21% {
+    transform: translateX(-2px);
+  }
+
+  28% {
+    transform: translateX(0);
+  }
+}
+
 @keyframes whatsapp-button-ripple {
   0%,
   48%,
@@ -256,7 +284,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .whatsapp-attention-button,
-  .whatsapp-attention-button::before {
+  .whatsapp-attention-button::before,
+  .whatsapp-help-bubble {
     animation: none;
   }
 }

@@ -217,7 +217,7 @@
     "itin3Time": "12:30",
     "itin3Text": "Mittagessen an Bord, vom Chefkoch zubereitet",
     "itin4Time": "14:00",
-    "itin4Text": "Weiterfahrt nach Levanzo",
+    "itin4Text": "Panoramafahrt entlang Favignana",
     "itin5Time": "15:30",
     "itin5Text": "Grotta del Genovese, Baden in kristallklarem Wasser",
     "itin6Time": "17:00",
@@ -233,7 +233,7 @@
   },
   "boats": {
     "title": "Boote für Touren zu den Ägadischen Inseln ab Trapani",
-    "subtitle": "Wählen Sie zwischen dem Neel 47 Trimaran und der Cigala & Bertinetti 34 Offshore Open.",
+    "subtitle": "Wählen Sie zwischen dem Trimaran mit Katamaran-Komfort und der Barca Egadi Sailing.",
     "length": "Länge",
     "year": "Baujahr",
     "guests": "Gäste",
@@ -408,9 +408,9 @@
         "description": "Inselroute mit Stopps in den schönsten Buchten."
       },
       "stop3": {
-        "name": "Levanzo",
-        "island": "Levanzo",
-        "description": "Baden und Schnorcheln in kristallklarem Wasser."
+        "name": "Geschützte Bucht",
+        "island": "Favignana",
+        "description": "Baden und Schnorcheln in einer vom Skipper nach Wind und Meer gewählten Bucht."
       },
       "stop4": {
         "name": "Rückfahrt",

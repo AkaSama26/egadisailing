@@ -24,6 +24,5 @@ Le immagini devono sembrare momenti reali a bordo, con luce naturale, persone no
 
 ## Barca 8 ore
 
-- `barca-8-ore-gruppo-bordo.webp` — gruppo a bordo durante una giornata intera, atmosfera rilassata e naturale.
 - `barca-8-ore-snorkeling.webp` — persona con maschera o pinne vicino alla barca, fondale visibile e acqua limpida.
 - `barca-8-ore-tramonto.webp` — aperitivo o rientro con luce dorata, bicchieri, gruppo a bordo e isole sullo sfondo.

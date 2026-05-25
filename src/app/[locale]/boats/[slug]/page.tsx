@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import {
+  Anchor,
   ArrowLeft,
   Bath,
   BedDouble,
@@ -10,29 +11,31 @@ import {
   DoorOpen,
   Gauge,
   HelpCircle,
-  Map,
+  Ship,
   Sofa,
   Users,
   UtensilsCrossed,
   type LucideIcon,
 } from "lucide-react";
-import { ExperienceBoatGallery } from "@/components/experience-boat-gallery";
+import { ExperienceImageCarousel } from "@/components/experience-image-carousel";
 import { ScrollSection } from "@/components/scroll-section";
 import { routing } from "@/i18n/routing";
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
-import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
+import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PHONE_TEXT } from "@/lib/public-contact";
 import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
 import { localizedStaticPath } from "@/lib/i18n/static-paths";
 import {
   getBoatContent,
   getBoatsPageContent,
-  getPublicBoatSlugs,
-  isPublicBoatId,
   resolveBoatIdFromSlug,
   type BoatSpecIcon,
   type ResolvedBoatContent,
 } from "@/data/catalog/boats";
+import { getExperienceContent, getExperiencePublicSlug } from "@/data/catalog/experiences";
+
+const DETAILED_BOAT_ID = "trimarano";
+const DETAILED_BOAT_SLUG = "catamarano-egadi-trimarano-da-trapani";
 
 const SPEC_ICONS: Record<BoatSpecIcon, LucideIcon> = {
   cabins: DoorOpen,
@@ -49,44 +52,113 @@ function copy(locale: string) {
   const isEs = locale === "es";
   const isFr = locale === "fr";
   const isDe = locale === "de";
+
   return {
     allBoats: isEs ? "Todos los barcos" : isFr ? "Tous les bateaux" : isDe ? "Alle Boote" : isEn ? "All boats" : "Tutte le barche",
-    specs: isEs ? "A bordo" : isFr ? "À bord" : isDe ? "An Bord" : isEn ? "On board" : "A bordo",
-    usageEyebrow: isEs ? "Uso ideal" : isFr ? "Usage idéal" : isDe ? "Ideale Nutzung" : isEn ? "Best use" : "Utilizzo",
-    usageTitle: isEs ? "Cuándo elegir este barco" : isFr ? "Quand choisir ce bateau" : isDe ? "Wann Sie dieses Boot wählen sollten" : isEn ? "When to choose this boat" : "Quando scegliere questa barca",
-    routesEyebrow: isEs ? "Rutas" : isFr ? "Routes" : isDe ? "Routen" : isEn ? "Routes" : "Rotte",
-    routesTitle: isEs ? "Cómo se mueve por las Egadi" : isFr ? "Comment il navigue aux Égades" : isDe ? "Wie es zwischen den Ägadischen Inseln navigiert" : isEn ? "How it moves through the Egadi" : "Come si muove tra le Egadi",
-    gallery: isEs ? "Galería del barco" : isFr ? "Galerie du bateau" : isDe ? "Bootsgalerie" : isEn ? "Boat gallery" : "Gallery della barca",
-    faqEyebrow: isEn ? "FAQ" : "FAQ",
-    faqTitle: isEs ? "Preguntas sobre este barco" : isFr ? "Questions sur ce bateau" : isDe ? "Fragen zu diesem Boot" : isEn ? "Questions about this boat" : "Domande su questa barca",
-    routeIntro: isEs
-      ? "La ruta no es una lista rígida: se adapta a la duración de la experiencia, al estado del mar y a las calas más cómodas del día."
+    directLabel: isEs ? "Catamarán / trimarán" : isFr ? "Catamaran / trimaran" : isDe ? "Katamaran / Trimaran" : isEn ? "Catamaran / trimaran" : "Catamarano / trimarano",
+    multihullLabel: isEs ? "Confort multicasco" : isFr ? "Confort multicoque" : isDe ? "Mehrrumpf-Komfort" : isEn ? "Multihull comfort" : "Comfort multiscafo",
+    skipperLabel: isEs ? "Con patrón" : isFr ? "Avec skipper" : isDe ? "Mit Skipper" : isEn ? "With skipper" : "Con skipper",
+    chefCharterLabel: isEs ? "Chef y charter" : isFr ? "Chef et charter" : isDe ? "Chef und Charter" : isEn ? "Chef and charter" : "Chef e charter",
+    introEyebrow: isEs ? "El multicasco" : isFr ? "Le multicoque" : isDe ? "Der Mehrrumpf" : isEn ? "The multihull" : "Il multiscafo",
+    introTitle: isEs
+      ? "Para quien busca catamarán en las Egadi, con la estabilidad de un trimarán"
       : isFr
-      ? "La route n'est jamais une liste rigide : elle s'adapte à la durée de l'expérience, à l'état de la mer et aux criques les plus confortables du jour."
-      : isDe
-      ? "Die Route ist keine starre Liste: Sie richtet sich nach der Dauer des Erlebnisses, den Seebedingungen und den angenehmsten Buchten des Tages."
-      : isEn
-      ? "The route is never treated as a rigid checklist: it is shaped around the experience length, sea conditions and the most comfortable coves of the day."
-      : "La rotta non viene trattata come una lista rigida: viene costruita in base alla durata dell'esperienza, al mare e alle cale più comode della giornata.",
-    useIntro: isEs
-      ? "Una forma rápida de entender si este es el barco adecuado antes de elegir la experiencia."
+        ? "Pour ceux qui cherchent un catamaran aux Égades, avec la stabilité d'un trimaran"
+        : isDe
+          ? "Für alle, die Katamaran-Komfort auf den Ägadischen Inseln suchen"
+          : isEn
+            ? "For guests looking for catamaran comfort in the Egadi Islands"
+            : "Per chi cerca un catamarano alle Egadi, con la stabilità di un trimarano",
+    introText: isEs
+      ? "No es un catamarán clásico: es un trimarán de tres cascos. Lo importante para el huésped es el resultado a bordo: espacio, estabilidad, zonas de sombra, cocina, cabinas y una forma lenta de vivir Favignana, Levanzo y Marettimo."
       : isFr
-      ? "Une façon rapide de comprendre si ce bateau est le bon choix avant de sélectionner l'expérience."
-      : isDe
-      ? "Eine schnelle Orientierung, ob dieses Boot zu Ihnen passt, bevor Sie das Erlebnis auswählen."
-      : isEn
-      ? "A quick way to understand whether this boat is the right fit before choosing the experience."
-      : "Un modo rapido per capire se questa è la barca giusta prima di scegliere l'esperienza.",
-    faqIntro: isEs
-      ? "Respuestas claras para quienes eligen el barco sin necesitar conocimientos técnicos de náutica."
+        ? "Ce n'est pas un catamaran classique : c'est un trimaran à trois coques. Ce qui compte à bord, c'est l'espace, la stabilité, les zones d'ombre, la cuisine, les cabines et une façon lente de vivre Favignana, Levanzo et Marettimo."
+        : isDe
+          ? "Das Boot ist kein klassischer Katamaran, sondern ein Trimaran mit drei Rümpfen. Entscheidend an Bord sind Raum, Stabilität, Schattenbereiche, Küche, Kabinen und eine langsamere Art, Favignana, Levanzo und Marettimo zu erleben."
+          : isEn
+            ? "This is not a classic catamaran: it is a three-hull trimaran. What matters on board is the result: space, stability, shaded areas, galley, cabins and a slower way to experience Favignana, Levanzo and Marettimo."
+            : "Non è un catamarano classico: è un trimarano a tre scafi. Per l'ospite conta il risultato a bordo: spazio, stabilità, zone d'ombra, cucina, cabine e un modo più lento di vivere Favignana, Levanzo e Marettimo.",
+    detailsEyebrow: isEs ? "Para quién" : isFr ? "Pour qui" : isDe ? "Für wen" : isEn ? "Best for" : "A chi è adatto",
+    detailsTitleStart: isEs ? "Cuándo elegir" : isFr ? "Quand choisir" : isDe ? "Wann wählen" : isEn ? "When to choose" : "Quando scegliere",
+    detailsTitleAccent: isEs ? "catamarán" : isFr ? "catamaran" : isDe ? "Katamaran-Komfort" : isEn ? "catamaran comfort" : "catamarano",
+    includesEyebrow: isEs ? "A bordo" : isFr ? "À bord" : isDe ? "An Bord" : isEn ? "On board" : "A bordo",
+    includesTitleStart: isEs ? "Qué" : isFr ? "Ce qu'il" : isDe ? "Was" : isEn ? "What it" : "Cosa",
+    includesTitleAccent: isEs ? "ofrece" : isFr ? "offre" : isDe ? "bietet" : isEn ? "offers" : "offre",
+    galleryTitle: isEs ? "Galería catamarán y trimarán" : isFr ? "Galerie catamaran et trimaran" : isDe ? "Katamaran- und Trimaran-Galerie" : isEn ? "Catamaran and trimaran gallery" : "Gallery catamarano e trimarano",
+    programTitle: isEs ? "CATAMARAN EGADI" : isFr ? "CATAMARAN EGADES" : isDe ? "KATAMARAN EGADI" : isEn ? "CATAMARAN EGADI" : "CATAMARANO EGADI",
+    specsEyebrow: isEs ? "Características" : isFr ? "Caractéristiques" : isDe ? "Daten" : isEn ? "Features" : "Caratteristiche",
+    specsTitle: isEs ? "Espacios, cabinas y comodidad real" : isFr ? "Espaces, cabines et vrai confort" : isDe ? "Raum, Kabinen und echter Komfort" : isEn ? "Spaces, cabins and real comfort" : "Spazi, cabine e comfort reale",
+    relatedEyebrow: isEs ? "Experiencias" : isFr ? "Expériences" : isDe ? "Erlebnisse" : isEn ? "Experiences" : "Esperienze",
+    relatedTitle: isEs ? "Cómo vivir el trimarán en las Egadi" : isFr ? "Comment vivre le trimaran aux Égades" : isDe ? "Wie Sie den Trimaran auf den Egadi erleben" : isEn ? "Ways to experience the Egadi trimaran" : "Come vivere il trimarano alle Egadi",
+    relatedText: isEs
+      ? "Elige una jornada privada con chef o un charter de varios días con ruta flexible por las Egadi."
       : isFr
-      ? "Des réponses claires pour choisir le bateau sans connaissances nautiques techniques."
-      : isDe
-      ? "Klare Antworten für Gäste, die ein Boot wählen möchten, ohne nautische Fachdetails kennen zu müssen."
-      : isEn
-      ? "Clear answers for guests who are choosing the boat without needing technical nautical knowledge."
-      : "Risposte chiare per chi sta scegliendo la barca senza dover conoscere dettagli nautici tecnici.",
+        ? "Choisissez une journée privée avec chef ou un charter de plusieurs jours avec route flexible aux Égades."
+        : isDe
+          ? "Wählen Sie einen privaten Tag mit Chefkoch oder einen mehrtägigen Charter mit flexibler Route."
+          : isEn
+            ? "Choose a private chef day or a multi-day charter with a flexible route across the Egadi Islands."
+            : "Scegli una giornata privata con chef a bordo oppure un charter di più giorni con rotta flessibile alle Egadi.",
+    viewExperience: isEs ? "Ver experiencia" : isFr ? "Voir l'expérience" : isDe ? "Erlebnis ansehen" : isEn ? "View experience" : "Vedi esperienza",
+    faqEyebrow: isEs ? "Preguntas frecuentes" : isFr ? "Questions fréquentes" : isDe ? "Häufige Fragen" : isEn ? "FAQ" : "Domande frequenti",
+    faqTitle: isEs ? "Catamarán, trimarán y charter: respuestas claras" : isFr ? "Catamaran, trimaran et charter : réponses claires" : isDe ? "Katamaran, Trimaran und Charter: klare Antworten" : isEn ? "Catamaran, trimaran and charter: clear answers" : "Catamarano, trimarano e charter: risposte chiare",
+    ctaTitle: isEs ? "Sube a bordo del trimarán" : isFr ? "Montez à bord du trimaran" : isDe ? "An Bord des Trimarans" : isEn ? "Step aboard the trimaran" : "Sali a bordo del trimarano",
+    ctaText: isEs
+      ? "Compara chef a bordo y charter antes de elegir la fórmula adecuada."
+      : isFr
+        ? "Comparez chef à bord et charter avant de choisir la bonne formule."
+        : isDe
+          ? "Vergleichen Sie Chef an Bord und Charter, bevor Sie das passende Format wählen."
+          : isEn
+            ? "Compare chef on board and charter before choosing the right format."
+            : "Confronta chef a bordo e charter prima di scegliere la formula più adatta.",
+    previousPhotos: isEs ? "Fotos anteriores" : isFr ? "Photos précédentes" : isDe ? "Vorherige Fotos" : isEn ? "Previous photos" : "Foto precedenti",
+    nextPhotos: isEs ? "Fotos siguientes" : isFr ? "Photos suivantes" : isDe ? "Weitere Fotos" : isEn ? "Next photos" : "Foto successive",
   };
+}
+
+function getProgramParagraphs(locale: string) {
+  const isEn = locale === "en";
+
+  if (isEn) {
+    return [
+      {
+        lead: "A premium alternative to a catamaran in the Egadi Islands.",
+        text: "The trimaran is the right boat when the goal is not simply moving between coves, but having space to live the day on board: lunch, shade, cabins, wide deck areas and a stable multihull feeling.",
+      },
+      {
+        lead: "Favignana and Levanzo for the chef experience.",
+        text: "On the private chef day, the route is shaped between Favignana and Levanzo, with sheltered anchorages for swimming, snorkelling and lunch prepared on board with local ingredients.",
+      },
+      {
+        lead: "Favignana, Levanzo and Marettimo for charter.",
+        text: "On multi-day programmes the itinerary opens up: nights at anchor, slower mornings, route changes according to weather and enough time to include Marettimo when conditions are right.",
+      },
+      {
+        lead: "With skipper, not bareboat.",
+        text: "The trimaran is organised with skipper and crew, so navigation, anchorages and timing are managed professionally while you enjoy the boat without technical decisions.",
+      },
+    ];
+  }
+
+  return [
+    {
+      lead: "Un'alternativa premium al catamarano alle Egadi.",
+      text: "Il trimarano è la barca giusta quando non vuoi solo spostarti tra le cale, ma vivere davvero il tempo a bordo: pranzo, ombra, cabine, ponte ampio e una sensazione di stabilità da multiscafo.",
+    },
+    {
+      lead: "Favignana e Levanzo per la giornata con chef.",
+      text: "Nell'esperienza chef a bordo la rotta viene costruita tra Favignana e Levanzo, con rade riparate per bagno, snorkeling e pranzo cucinato a bordo con ingredienti del territorio.",
+    },
+    {
+      lead: "Favignana, Levanzo e Marettimo per il charter.",
+      text: "Nei programmi di più giorni l'itinerario si apre: notti in rada, mattine lente, rotta aggiornata secondo meteo e tempo sufficiente per includere Marettimo quando le condizioni sono favorevoli.",
+    },
+    {
+      lead: "Con skipper, non bareboat.",
+      text: "Il trimarano viene organizzato con skipper e crew: navigazione, ancoraggi e tempi sono gestiti in modo professionale, così puoi goderti il comfort senza occuparti delle decisioni tecniche.",
+    },
+  ];
 }
 
 function jsonLd(data: unknown): string {
@@ -100,33 +172,25 @@ function absoluteUrl(path: string): string {
 
 function BoatSpecs({ boat }: { boat: ResolvedBoatContent }) {
   return (
-    <ul className="mt-5 grid gap-4 border-y border-slate-200 py-6 sm:grid-cols-2">
+    <div className="grid grid-cols-2 gap-x-6 gap-y-7 border-y border-white/15 py-7 sm:grid-cols-3 lg:grid-cols-5">
       {boat.specs.map((spec) => {
         const Icon = SPEC_ICONS[spec.icon];
         return (
-          <li key={spec.label} className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f7f2e8] text-[var(--color-gold)]">
-              <Icon className="h-5 w-5" />
-            </span>
-            <span>
-              <span className="block text-2xl font-bold leading-none text-[var(--color-ocean)]">
-                {spec.value}
-              </span>
-              <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                {spec.label}
-              </span>
-            </span>
-          </li>
+          <div key={spec.label} className="min-w-0">
+            <Icon className="h-5 w-5 text-[var(--color-gold)]" />
+            <p className="mt-3 text-3xl font-black leading-none text-white">{spec.value}</p>
+            <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-white/58">
+              {spec.label}
+            </p>
+          </div>
         );
       })}
-    </ul>
+    </div>
   );
 }
 
 export function generateStaticParams() {
-  return routing.locales.flatMap((locale) =>
-    getPublicBoatSlugs().map((slug) => ({ locale, slug })),
-  );
+  return routing.locales.map((locale) => ({ locale, slug: DETAILED_BOAT_SLUG }));
 }
 
 export async function generateMetadata({
@@ -136,7 +200,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   const boatId = resolveBoatIdFromSlug(slug);
-  const boat = isPublicBoatId(boatId) ? getBoatContent(boatId, locale) : null;
+  const boat = boatId === DETAILED_BOAT_ID ? getBoatContent(boatId, locale) : null;
   if (!boat) return { title: "Not Found" };
 
   return buildPageMetadata({
@@ -155,31 +219,62 @@ export default async function BoatDetailPage({
 }) {
   const { locale, slug } = await params;
   const boatId = resolveBoatIdFromSlug(slug);
-  const boat = isPublicBoatId(boatId) ? getBoatContent(boatId, locale) : null;
+  const maybeBoat = getBoatContent(boatId, locale);
+
+  if (boatId !== DETAILED_BOAT_ID) {
+    if (maybeBoat) permanentRedirect(localizedStaticPath(locale, "/boats"));
+    notFound();
+  }
+
+  const boat = maybeBoat;
   if (!boat) notFound();
   if (slug !== boat.slug) permanentRedirect(localizedPath(locale, `/boats/${boat.slug}`));
 
   const t = copy(locale);
+  const programParagraphs = getProgramParagraphs(locale);
+  const relatedExperiences = boat.serviceIds
+    .map((id) => getExperienceContent(id, locale))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = localizedAbsoluteUrl(base, locale, `/boats/${boat.slug}`);
-  const json = {
+  const inLanguage =
+    locale === "de"
+      ? "de-DE"
+      : locale === "fr"
+        ? "fr-FR"
+        : locale === "es"
+          ? "es-ES"
+          : locale === "en"
+            ? "en-US"
+            : "it-IT";
+  const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "BreadcrumbList",
+        inLanguage,
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Egadisailing", item: localizedAbsoluteUrl(base, locale, "/") },
           { "@type": "ListItem", position: 2, name: getBoatsPageContent(locale).seoTitle, item: localizedAbsoluteUrl(base, locale, "/boats") },
-          { "@type": "ListItem", position: 3, name: boat.title, item: pageUrl },
+          { "@type": "ListItem", position: 3, name: boat.seoTitle, item: pageUrl },
         ],
       },
       {
         "@type": ["Product", "Vehicle"],
         "@id": `${pageUrl}#boat`,
-        inLanguage: locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : locale === "en" ? "en-US" : "it-IT",
+        inLanguage,
         name: boat.seoTitle,
         description: `${boat.seoDescription} ${boat.detail.paragraphs.join(" ")}`,
         image: boat.gallery.map((item) => absoluteUrl(item.src)),
+        category: "Trimaran yacht charter",
+        additionalType: ["Trimaran", "Multihull", "Catamaran-style comfort"],
+        areaServed: [
+          { "@type": "Place", name: "Trapani" },
+          { "@type": "Place", name: "Isole Egadi" },
+          { "@type": "Place", name: "Favignana" },
+          { "@type": "Place", name: "Levanzo" },
+          { "@type": "Place", name: "Marettimo" },
+        ],
         brand: { "@type": "Brand", name: "Egadisailing" },
         provider: {
           "@type": "Organization",
@@ -187,6 +282,7 @@ export default async function BoatDetailPage({
           alternateName: "Egadi Sailing",
           url: base,
           email: PUBLIC_CONTACT_EMAIL,
+          telephone: PUBLIC_CONTACT_PHONE_TEXT,
           taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
           address: {
             "@type": "PostalAddress",
@@ -202,6 +298,7 @@ export default async function BoatDetailPage({
       {
         "@type": "FAQPage",
         "@id": `${pageUrl}#faq`,
+        inLanguage,
         mainEntityOfPage: pageUrl,
         mainEntity: boat.faqs.map((item) => ({
           "@type": "Question",
@@ -212,172 +309,316 @@ export default async function BoatDetailPage({
           },
         })),
       },
+      {
+        "@type": "ItemList",
+        "@id": `${pageUrl}#related-experiences`,
+        name: t.relatedTitle,
+        itemListElement: relatedExperiences.map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          url: localizedAbsoluteUrl(base, locale, `/experiences/${getExperiencePublicSlug(item.serviceId, locale)}`),
+          name: item.title,
+          description: item.seoDescription,
+        })),
+      },
     ],
   };
-  const heroImage = boat.imageSrc ?? boat.gallery[0]?.src ?? "/images/trimarano.webp";
-  const heroVideoType = boat.heroVideoSrc?.endsWith(".webm") ? "video/webm" : "video/mp4";
+  const heroImage = boat.imageSrc ?? boat.gallery[0]?.src ?? "/images/boats/neel-47/neel-47-hero.webp";
+  const programTitleWords = t.programTitle.split(" ");
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#f7f2e8] text-slate-900">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(json) }} />
+    <div className="min-h-screen overflow-x-hidden bg-[#071934] text-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
 
-      <section className="relative isolate overflow-hidden bg-[#061a2d] px-4 pb-20 pt-28 text-white md:px-8 lg:px-12">
-        {boat.heroVideoSrc ? (
-          <video
-            aria-hidden="true"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            poster={heroImage}
-            className="absolute inset-0 h-full w-full object-cover opacity-40"
-          >
-            <source src={boat.heroVideoSrc} type={heroVideoType} />
-          </video>
-        ) : (
-          <Image
-            src={heroImage}
-            alt={boat.imageAlt}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover opacity-40"
-          />
-        )}
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,26,45,0.96),rgba(6,26,45,0.78)_48%,rgba(6,26,45,0.38))]" />
-        <div className="relative z-10 mx-auto max-w-7xl">
-          <ScrollSection animation="fade-up">
+      <main className="bg-[linear-gradient(180deg,#071934_0%,#0a2a4a_38%,#0c3d5e_56%,#0a2a4a_78%,#071934_100%)] pb-24">
+        <section className="px-4 pb-0 pt-24 md:px-8 lg:px-12 lg:pt-28">
+          <div className="mx-auto max-w-6xl">
             <Link
               href={localizedStaticPath(locale, "/boats")}
-              className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-white/75 transition hover:text-white"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-white/80 transition hover:text-[var(--color-gold)]"
             >
               <ArrowLeft className="h-4 w-4" />
               {t.allBoats}
             </Link>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
-              {boat.eyebrow}
-            </p>
-            <h1 className="mt-4 max-w-4xl font-heading text-4xl font-bold leading-tight sm:text-5xl md:text-7xl">
-              {boat.title}
-            </h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-white/75 sm:text-lg sm:leading-8">
-              {boat.description}
-            </p>
-          </ScrollSection>
-        </div>
-      </section>
 
-      <main className="px-4 py-14 md:px-8 lg:px-12">
-        <div className="mx-auto max-w-7xl space-y-14">
-          <ScrollSection animation="fade-up">
-            <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8 lg:p-10">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
-                {boat.detail.eyebrow}
-              </p>
-              <h2 className="mt-3 max-w-4xl font-heading text-3xl font-bold leading-tight text-[var(--color-ocean)] md:text-4xl">
-                {boat.detail.title}
-              </h2>
-              <div className="mt-6 grid gap-5 text-base leading-8 text-slate-700 lg:grid-cols-3">
+            <div className="mt-6 text-center">
+              <ScrollSection animation="fade-up">
+                <p className="text-sm font-bold uppercase tracking-[0.22em] text-[var(--color-gold)]">
+                  {boat.detail.eyebrow}
+                </p>
+                <h1 className="mx-auto mt-4 max-w-5xl font-heading text-5xl font-bold leading-[1.08] text-white [text-shadow:0_2px_0_rgba(217,119,6,0.45),0_12px_24px_rgba(0,0,0,0.45)] sm:text-6xl lg:text-7xl">
+                  {boat.detail.title}
+                </h1>
+
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-semibold text-white/85">
+                  <span className="inline-flex items-center gap-2">
+                    <Ship className="h-4 w-4 text-[var(--color-gold)]" />
+                    {t.directLabel}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Anchor className="h-4 w-4 text-[var(--color-gold)]" />
+                    {t.multihullLabel}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Users className="h-4 w-4 text-[var(--color-gold)]" />
+                    {t.skipperLabel}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <UtensilsCrossed className="h-4 w-4 text-[var(--color-gold)]" />
+                    {t.chefCharterLabel}
+                  </span>
+                </div>
+
+                <figure className="relative mt-10 overflow-hidden rounded-t-[1.75rem] bg-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.32)]">
+                  <div className="relative aspect-[16/10] sm:aspect-[16/8.7]">
+                    <Image
+                      src={heroImage}
+                      alt={boat.imageAlt}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 860px"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#071934]/70 via-[#071934]/15 to-transparent" />
+                  </div>
+                </figure>
+              </ScrollSection>
+            </div>
+          </div>
+        </section>
+
+        <section id="details" className="scroll-mt-28 px-4 py-14 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-6xl">
+            <ScrollSection animation="fade-up">
+              <div className="mx-auto max-w-3xl text-center">
+                <p className="text-sm font-bold uppercase tracking-[0.28em] text-[var(--color-gold)]">
+                  {t.introEyebrow}
+                </p>
+                <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl">
+                  {t.introTitle}
+                </h2>
+                <div className="mx-auto mt-4 h-1 w-16 bg-[var(--color-gold)]" />
+                <p className="mt-5 text-base leading-8 text-white/75 sm:text-lg sm:leading-9">
+                  {t.introText}
+                </p>
+              </div>
+
+              <div className="mx-auto mt-9 max-w-4xl space-y-5 text-base leading-8 text-white/78 sm:text-lg sm:leading-9">
                 {boat.detail.paragraphs.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
               </div>
-            </section>
-          </ScrollSection>
-
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)] lg:items-start">
-            <ScrollSection animation="fade-up" className="min-w-0 lg:sticky lg:top-24 lg:self-start">
-              <ExperienceBoatGallery
-                title={t.gallery}
-                eyebrow={boat.eyebrow}
-                description={boat.description}
-                items={boat.gallery}
-              />
             </ScrollSection>
+          </div>
+        </section>
 
-            <div className="space-y-6">
-              <ScrollSection animation="fade-up">
-                <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
-                    {t.specs}
+        <section id="included" className="scroll-mt-28 px-4 py-14 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-6xl">
+            <ScrollSection animation="fade-up">
+              <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.24em] text-[var(--color-gold)]">
+                    {t.detailsEyebrow}
                   </p>
-                  <BoatSpecs boat={boat} />
-                </section>
-              </ScrollSection>
-
-              <ScrollSection animation="fade-up" delay={0.04}>
-                <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
-                    {t.usageEyebrow}
-                  </p>
-                  <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)]">
-                    {t.usageTitle}
+                  <h2 className="mt-5 font-heading text-4xl font-bold leading-tight text-white sm:text-5xl">
+                    {t.detailsTitleStart}{" "}
+                    <em className="font-normal italic">{t.detailsTitleAccent}</em>
                   </h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{t.useIntro}</p>
-                  <ul className="mt-6 divide-y divide-slate-200">
+                  <div className="mt-8 h-px w-full bg-white/75" />
+                  <ul className="mt-7 space-y-4">
                     {boat.idealFor.map((item) => (
-                      <li key={item} className="flex gap-3 py-4 first:pt-0 last:pb-0">
-                        <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-turquoise)]" />
-                        <p className="text-sm leading-6 text-slate-700">{item}</p>
+                      <li key={item} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-4 text-base leading-7 text-white">
+                        <Check className="mt-1 h-4 w-4 text-[var(--color-gold)]" />
+                        <span>{item}</span>
                       </li>
                     ))}
                   </ul>
-                </section>
-              </ScrollSection>
+                </div>
 
-              <ScrollSection animation="fade-up" delay={0.08}>
-                <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
-                    {t.routesEyebrow}
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.24em] text-[var(--color-gold)]">
+                    {t.includesEyebrow}
                   </p>
-                  <h2 className="mt-3 font-heading text-2xl font-bold text-[var(--color-ocean)]">
-                    {t.routesTitle}
+                  <h2 className="mt-5 font-heading text-4xl font-bold leading-tight text-white sm:text-5xl">
+                    {t.includesTitleStart}{" "}
+                    <em className="font-normal italic">{t.includesTitleAccent}</em>
                   </h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{t.routeIntro}</p>
-                  <ol className="mt-6 divide-y divide-slate-200">
-                    {boat.routes.map((item, index) => (
-                      <li key={item} className="flex gap-3 py-4 first:pt-0 last:pb-0">
-                        <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#f7f2e8] text-xs font-bold text-[var(--color-gold)]">
-                          {index + 1}
-                        </span>
-                        <div className="flex gap-3">
-                          <Map className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-gold)]" />
-                          <p className="text-sm leading-6 text-slate-700">{item}</p>
-                        </div>
+                  <div className="mt-8 h-px w-full bg-white/75" />
+                  <ul className="mt-7 space-y-4">
+                    {boat.routes.map((item) => (
+                      <li key={item} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-4 text-base leading-7 text-white">
+                        <Check className="mt-1 h-4 w-4 text-[var(--color-gold)]" />
+                        <span>{item}</span>
                       </li>
                     ))}
-                  </ol>
-                </section>
-              </ScrollSection>
-            </div>
-          </div>
-
-          <ScrollSection animation="fade-up">
-            <section className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
-                {t.faqEyebrow}
-              </p>
-              <div className="mt-3 max-w-3xl">
-                <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)]">
-                  {t.faqTitle}
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{t.faqIntro}</p>
+                  </ul>
+                </div>
               </div>
-              <div className="mt-8 grid gap-x-8 gap-y-0 lg:grid-cols-2">
-                {boat.faqs.map((item) => (
-                  <article key={item.question} className="flex gap-4 border-t border-slate-200 py-5">
-                    <HelpCircle className="mt-1 h-5 w-5 shrink-0 text-[var(--color-gold)]" />
-                    <div>
-                      <h3 className="font-semibold text-[var(--color-ocean)]">{item.question}</h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">{item.answer}</p>
-                    </div>
-                  </article>
+            </ScrollSection>
+          </div>
+        </section>
+
+        <ExperienceImageCarousel
+          title={t.galleryTitle}
+          items={boat.gallery}
+          previousLabel={t.previousPhotos}
+          nextLabel={t.nextPhotos}
+        />
+
+        <section id="program" className="scroll-mt-28 px-4 py-16 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-6xl">
+            <ScrollSection animation="fade-up">
+              <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 sm:gap-8">
+                <span className="h-px bg-white/70" aria-hidden="true" />
+                <h2 className="text-center font-sans text-4xl font-black uppercase leading-tight text-white sm:text-5xl">
+                  {programTitleWords.map((word, index) => (
+                    <span key={`${word}-${index}`} className="block">
+                      {word}
+                    </span>
+                  ))}
+                </h2>
+                <span className="h-px bg-white/70" aria-hidden="true" />
+              </div>
+
+              <div className="mx-auto mt-8 max-w-5xl space-y-5 text-base leading-8 text-white sm:text-lg sm:leading-9">
+                {programParagraphs.map((paragraph) => (
+                  <p key={paragraph.lead}>
+                    <strong>{paragraph.lead}</strong>{" "}
+                    <span className="text-white/90">{paragraph.text}</span>
+                  </p>
                 ))}
               </div>
-            </section>
-          </ScrollSection>
-        </div>
+            </ScrollSection>
+          </div>
+        </section>
+
+        <section id="features" className="scroll-mt-28 px-4 py-14 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-6xl">
+            <ScrollSection animation="fade-up">
+              <p className="text-sm font-bold uppercase tracking-[0.24em] text-[var(--color-gold)]">
+                {t.specsEyebrow}
+              </p>
+              <h2 className="mt-3 max-w-3xl font-heading text-3xl font-bold text-white sm:text-4xl">
+                {t.specsTitle}
+              </h2>
+              <div className="mt-8">
+                <BoatSpecs boat={boat} />
+              </div>
+            </ScrollSection>
+          </div>
+        </section>
+
+        {relatedExperiences.length > 0 && (
+          <section id="experiences" className="scroll-mt-28 px-4 py-14 md:px-8 lg:px-12">
+            <div className="mx-auto max-w-6xl">
+              <ScrollSection animation="fade-up">
+                <div className="max-w-3xl">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+                    {t.relatedEyebrow}
+                  </p>
+                  <h2 className="mt-3 font-heading text-2xl font-bold text-white sm:text-3xl md:text-4xl">
+                    {t.relatedTitle}
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-white/70 sm:text-base sm:leading-7">
+                    {t.relatedText}
+                  </p>
+                </div>
+
+                <div className="mt-9 grid gap-8 md:grid-cols-2">
+                  {relatedExperiences.map((item) => {
+                    const relatedImage = item.media.find((media) => media.src) ?? item.media[0];
+                    return (
+                      <Link
+                        key={item.serviceId}
+                        href={localizedPath(locale, `/experiences/${getExperiencePublicSlug(item.serviceId, locale)}`)}
+                        className="group block border-t border-white/15 pt-5 transition focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-4 focus:ring-offset-[#071934]"
+                      >
+                        <div className="relative aspect-[16/10] overflow-hidden bg-white/10">
+                          {relatedImage?.src && (
+                            <Image
+                              src={relatedImage.src}
+                              alt={relatedImage.alt}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                              className="object-cover transition duration-500 group-hover:scale-[1.025]"
+                            />
+                          )}
+                        </div>
+                        <div className="mt-4">
+                          <h3 className="font-heading text-xl font-bold text-white transition group-hover:text-[var(--color-gold)]">
+                            {item.title}
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-white/70">
+                            {item.subtitle}
+                          </p>
+                          <span className="mt-4 inline-flex text-sm font-bold text-[var(--color-gold)]">
+                            {t.viewExperience}
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </ScrollSection>
+            </div>
+          </section>
+        )}
+
+        <section id="faq" className="scroll-mt-28 px-4 py-14 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-5xl">
+            <ScrollSection animation="fade-up">
+              <div className="mx-auto max-w-3xl text-center">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+                  {t.faqEyebrow}
+                </p>
+                <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl">
+                  {t.faqTitle}
+                </h2>
+              </div>
+
+              <div className="mx-auto mt-8 max-w-4xl divide-y divide-white/15 border-y border-white/15 sm:mt-10">
+                {boat.faqs.map((faq, index) => (
+                  <details key={faq.question} className="group py-5 sm:py-6" open={index === 0}>
+                    <summary className="grid cursor-pointer list-none grid-cols-[1fr_auto] items-start gap-5 text-left text-base font-semibold leading-7 text-white sm:text-lg">
+                      <span>{faq.question}</span>
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/20 text-xl leading-none text-[var(--color-gold)] transition group-open:rotate-45 group-hover:border-[var(--color-gold)]">
+                        +
+                      </span>
+                    </summary>
+                    <p className="mt-4 max-w-3xl text-sm leading-6 text-white/70 sm:text-base sm:leading-7">
+                      {faq.answer}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </ScrollSection>
+          </div>
+        </section>
+
+        <ScrollSection animation="fade-up">
+          <section className="px-4 py-14 md:px-8 lg:px-12">
+            <div className="mx-auto max-w-3xl text-center">
+              <HelpCircle className="mx-auto h-8 w-8 text-[var(--color-gold)]" />
+              <h2 className="mt-4 font-heading text-3xl font-bold text-white">
+                {t.ctaTitle}
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-white/70">
+                {t.ctaText}
+              </p>
+              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                {relatedExperiences.map((item) => (
+                  <Link
+                    key={item.serviceId}
+                    href={localizedPath(locale, `/experiences/${getExperiencePublicSlug(item.serviceId, locale)}`)}
+                    className="inline-flex items-center justify-center bg-[var(--color-gold)] px-8 py-3 text-sm font-bold text-[#071934] transition hover:bg-[#f2b84b]"
+                  >
+                    {item.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        </ScrollSection>
       </main>
     </div>
   );

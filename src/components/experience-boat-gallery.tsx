@@ -16,11 +16,13 @@ interface ExperienceBoatGalleryProps {
   description: string;
   eyebrow: string;
   items: ExperienceBoatGalleryItem[];
+  variant?: "light" | "dark";
 }
 
 export function ExperienceBoatGallery({
   title,
   items,
+  variant = "light",
 }: ExperienceBoatGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -34,6 +36,7 @@ export function ExperienceBoatGallery({
   const selectedItem = items[selectedIndex] ?? items[0];
 
   if (!selectedItem) return null;
+  const isDark = variant === "dark";
 
   function scrollThumbnails(direction: -1 | 1) {
     scrollerRef.current?.scrollBy({
@@ -92,8 +95,13 @@ export function ExperienceBoatGallery({
 
   return (
     <section className="min-w-0" aria-label={title}>
-      <div className="overflow-hidden rounded-lg bg-white shadow-sm">
-        <div className="relative aspect-[16/10] bg-slate-100">
+      <div
+        className={cn(
+          "overflow-hidden rounded-lg shadow-sm",
+          isDark ? "border border-white/10 bg-white/10 shadow-black/20" : "bg-white",
+        )}
+      >
+        <div className={cn("relative aspect-[16/10]", isDark ? "bg-white/10" : "bg-slate-100")}>
           <Image
             key={selectedItem.src}
             src={selectedItem.src}
@@ -109,7 +117,12 @@ export function ExperienceBoatGallery({
             type="button"
             onClick={() => scrollThumbnails(-1)}
             aria-label="Foto precedenti"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-[var(--color-ocean)] shadow-sm transition hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-2"
+            className={cn(
+              "inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-2",
+              isDark
+                ? "border-white/15 bg-white/10 text-white focus:ring-offset-[#0a2a4a]"
+                : "border-slate-200 bg-white text-[var(--color-ocean)]",
+            )}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -135,7 +148,8 @@ export function ExperienceBoatGallery({
                     aria-label={item.caption}
                     aria-current={isSelected ? "true" : undefined}
                     className={cn(
-                      "relative h-16 w-24 shrink-0 overflow-hidden rounded-md border-2 bg-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)] focus-visible:ring-offset-2 sm:h-20 sm:w-32",
+                      "relative h-16 w-24 shrink-0 overflow-hidden rounded-md border-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)] focus-visible:ring-offset-2 sm:h-20 sm:w-32",
+                      isDark ? "bg-white/10 focus-visible:ring-offset-[#0a2a4a]" : "bg-slate-100",
                       isSelected
                         ? "border-[var(--color-gold)] opacity-100"
                         : "border-transparent opacity-72 hover:opacity-100",
@@ -152,7 +166,12 @@ export function ExperienceBoatGallery({
             type="button"
             onClick={() => scrollThumbnails(1)}
             aria-label="Foto successive"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-[var(--color-ocean)] shadow-sm transition hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-2"
+            className={cn(
+              "inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-2",
+              isDark
+                ? "border-white/15 bg-white/10 text-white focus:ring-offset-[#0a2a4a]"
+                : "border-slate-200 bg-white text-[var(--color-ocean)]",
+            )}
           >
             <ChevronRight className="h-5 w-5" />
           </button>

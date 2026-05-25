@@ -399,9 +399,9 @@ export const marettimoGuidesFr: MarettimoGuide[] = [
     ],
     itemListTitle: "Formats à comparer",
     itemList: [
-      { name: "Tour privé journée", description: "Pour voir grottes et baignades avec un rythme ajuste." },
+      { name: "Tour privé journée", description: "Pour voir grottes et baignades avec un rythme ajusté." },
       { name: "Charter 3-7 jours", description: "Pour vivre Marettimo comme une étape des Égades." },
-      { name: "Neel 47", description: "Pour plus de confort, d'espace et de stabilite." },
+      { name: "Trimaran", description: "Pour plus de confort de catamaran, d'espace et de stabilité." },
     ],
     sections: [
       {
@@ -409,7 +409,7 @@ export const marettimoGuidesFr: MarettimoGuide[] = [
         title: "Pourquoi Marettimo aime les programmes souples",
         body: [
           "La mer décide beaucoup : ordre des grottes, pauses de baignade, temps de navigation. Un charter absorbe mieux ces variables.",
-          "Le Neel 47 apporte espace, confort et une sensation plus premium pour les groupes qui veulent vivre la mer lentement.",
+          "Le trimaran apporte espace, confort de catamaran et une sensation plus premium pour les groupes qui veulent vivre la mer lentement.",
         ],
         cta: "charter",
       },

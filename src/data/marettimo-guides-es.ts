@@ -2,7 +2,6 @@ import type { MarettimoGuide, MarettimoGuideSlug } from "./marettimo-guides";
 
 const marettimoHero = "/images/islands/marettimo/hero.webp";
 const charterImage = "/images/experience-polaroids/charter-trimarano-egadi.webp";
-const boatImage = "/images/experience-polaroids/barca-8-ore-snorkeling.webp";
 
 function marettimoGuide(guide: MarettimoGuide): MarettimoGuide {
   return guide;
@@ -691,7 +690,7 @@ export const marettimoGuidesEs: MarettimoGuide[] = [
     shortTitle: "Barco y charter",
     metaTitle: "Excursión en barco a Marettimo y charter por las Islas Egadi",
     metaDescription:
-      "Cómo elegir una excursión en barco o charter a Marettimo: cuevas, Cala Bianca, Favignana, Levanzo, ruta flexible y experiencia premium en Neel 47.",
+      "Cómo elegir una excursión en barco o charter a Marettimo: cuevas, Cala Bianca, Favignana, Levanzo, ruta flexible y experiencia premium en trimarán con confort de catamarán.",
     heroImage: charterImage,
     heroAlt: "Trimarán navegando en charter por las Islas Egadi hacia Marettimo",
     eyebrow: "Charter Egadi",
@@ -703,13 +702,13 @@ export const marettimoGuidesEs: MarettimoGuide[] = [
     secondaryKeywords: [
       "excursión en barco Marettimo",
       "tour privado Marettimo",
-      "Neel 47 Egadi",
+      "catamarán Egadi",
       "cuevas Marettimo en barco",
     ],
     quickFacts: [
       { label: "Ideal para", value: "varios días" },
       { label: "Islas", value: "Favignana, Levanzo, Marettimo" },
-      { label: "Barco premium", value: "Neel 47" },
+      { label: "Barco premium", value: "Trimarán" },
     ],
     itemListTitle: "Qué permite el charter",
     itemList: [
@@ -741,10 +740,10 @@ export const marettimoGuidesEs: MarettimoGuide[] = [
       },
       {
         id: "neel",
-        eyebrow: "Neel 47",
+        eyebrow: "Trimarán premium",
         title: "El lado premium del charter",
         body: [
-          "El trimarán Neel 47 ofrece espacio, estabilidad, camarotes y zonas comunes amplias. Es una experiencia más lenta, cómoda y adecuada para varios días.",
+          "El trimarán ofrece espacio, estabilidad, camarotes y zonas comunes amplias, con una sensación cercana al catamarán. Es una experiencia más lenta, cómoda y adecuada para varios días.",
         ],
         cta: "private",
       },

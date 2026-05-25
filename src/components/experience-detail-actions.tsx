@@ -70,6 +70,14 @@ function addIsoDays(isoDate: string, days: number): string {
   return toIsoDay(date);
 }
 
+function inclusiveDaysBetween(startDate: string, endDate: string): number | null {
+  if (!startDate || !endDate) return null;
+  const start = new Date(`${startDate}T00:00:00.000Z`).getTime();
+  const end = new Date(`${endDate}T00:00:00.000Z`).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return null;
+  return Math.round((end - start) / (24 * 60 * 60 * 1000)) + 1;
+}
+
 function monthKey(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -120,44 +128,91 @@ function monthLabel(key: string, locale: string): string {
   ).format(date);
 }
 
+function formatIsoDateLabel(isoDate: string, locale: string): string {
+  const date = new Date(`${isoDate}T00:00:00.000Z`);
+  return new Intl.DateTimeFormat(
+    locale === "es"
+      ? "es-ES"
+      : locale === "fr"
+        ? "fr-FR"
+        : locale === "de"
+          ? "de-DE"
+          : locale === "en"
+            ? "en-US"
+            : "it-IT",
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    },
+  ).format(date);
+}
+
 function iconForInfo(icon: BookingInfoItem["icon"]) {
   if (icon === "users") return Users;
   if (icon === "ship") return Ship;
   return Clock;
 }
 
-function dayClass(day: CalendarDay | undefined, selected: boolean, loading: boolean): string {
+function dayClass({
+  day,
+  selected,
+  rangeSelected,
+  rangeStart,
+  rangeEnd,
+  loading,
+}: {
+  day: CalendarDay | undefined;
+  selected: boolean;
+  rangeSelected: boolean;
+  rangeStart: boolean;
+  rangeEnd: boolean;
+  loading: boolean;
+}): string {
   return cn(
     "flex aspect-square min-h-9 items-center justify-center rounded-md border text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] disabled:cursor-not-allowed sm:min-h-10 sm:text-sm",
     loading && "animate-pulse border-slate-200 bg-slate-100 text-slate-300",
     !loading && !day && "border-slate-200 bg-slate-50 text-slate-300",
     !selected &&
+      !rangeSelected &&
       day?.status === "available" &&
       "border-emerald-200 bg-white text-slate-900 hover:bg-emerald-50",
     !selected &&
+      !rangeSelected &&
       day?.status === "request" &&
       "border-amber-200 bg-amber-50 text-amber-950 hover:bg-amber-100",
     !selected &&
+      !rangeSelected &&
       day?.status === "unavailable" &&
       "border-slate-200 bg-slate-100 text-slate-400",
+    rangeSelected &&
+      !rangeStart &&
+      !rangeEnd &&
+      "border-sky-200 bg-sky-100 text-[var(--color-ocean)]",
     selected && "border-[var(--color-ocean)] bg-[var(--color-ocean)] text-white shadow-sm",
+    (rangeStart || rangeEnd) &&
+      "border-[var(--color-ocean)] bg-[var(--color-ocean)] text-white shadow-sm",
   );
 }
 
 function buildBookingHref({
   locale,
   bookingServiceParam,
-  charterDurationDays,
   selectedDate,
+  selectedEndDate,
+  selectedDurationDays,
 }: Pick<ExperienceBookingCardProps, "locale" | "bookingServiceParam" | "charterDurationDays"> & {
   selectedDate?: string;
+  selectedEndDate?: string;
+  selectedDurationDays?: number;
 }): string {
   const params = new URLSearchParams({ service: bookingServiceParam });
   if (selectedDate) {
     params.set("date", selectedDate);
-    if (charterDurationDays) {
-      params.set("durationDays", String(charterDurationDays));
-      params.set("endDate", addIsoDays(selectedDate, charterDurationDays - 1));
+    if (selectedDurationDays) {
+      params.set("durationDays", String(selectedDurationDays));
+      params.set("endDate", selectedEndDate ?? addIsoDays(selectedDate, selectedDurationDays - 1));
     }
   }
 
@@ -195,32 +250,37 @@ export function ExperienceBookingDialogButton({
   label,
   className,
   showIcon = true,
+  dialogMode = "mobile",
   ...cardProps
 }: ExperienceBookingCardProps & {
   label: string;
   className?: string;
   showIcon?: boolean;
+  dialogMode?: "mobile" | "all";
 }) {
   const bookingHref = buildBookingHref(cardProps);
+  const dialogAll = dialogMode === "all";
 
   return (
     <>
-      <Button
-        size="lg"
-        nativeButton={false}
-        className={cn("hidden lg:inline-flex", className)}
-        render={<Link href={bookingHref} />}
-      >
-        {showIcon && <CalendarDays className="h-5 w-5" />}
-        {label}
-      </Button>
+      {!dialogAll && (
+        <Button
+          size="lg"
+          nativeButton={false}
+          className={cn("hidden lg:inline-flex", className)}
+          render={<Link href={bookingHref} />}
+        >
+          {showIcon && <CalendarDays className="h-5 w-5" />}
+          {label}
+        </Button>
+      )}
 
       <Sheet>
         <SheetTrigger
           render={
             <Button
               size="lg"
-              className={cn("lg:hidden", className)}
+              className={cn(!dialogAll && "lg:hidden", className)}
             />
           }
         >
@@ -229,7 +289,10 @@ export function ExperienceBookingDialogButton({
         </SheetTrigger>
         <SheetContent
           side="bottom"
-          className="max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t border-white/70 bg-[#f7f2e8] p-3 pt-10 shadow-2xl sm:mx-auto sm:mb-4 sm:max-w-md sm:rounded-2xl sm:border sm:p-4 sm:pt-10 lg:hidden"
+          className={cn(
+            "max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t border-white/70 bg-[#f7f2e8] p-3 pt-10 shadow-2xl sm:mx-auto sm:mb-4 sm:max-w-md sm:rounded-2xl sm:border sm:p-4 sm:pt-10",
+            !dialogAll && "lg:hidden",
+          )}
         >
           <SheetTitle className="sr-only">{cardProps.title}</SheetTitle>
           <SheetDescription className="sr-only">{cardProps.text}</SheetDescription>
@@ -259,14 +322,64 @@ export function ExperienceBookingCard({
   const hydrated = useHydrated();
   const [visibleMonth, setVisibleMonth] = useState(() => monthKey());
   const [selectedDate, setSelectedDate] = useState("");
+  const [selectedEndDate, setSelectedEndDate] = useState("");
   const [days, setDays] = useState<Record<string, CalendarDay>>({});
+  const [selectedRangeDay, setSelectedRangeDay] = useState<CalendarDay | null>(null);
+  const [rangeQuoteLoading, setRangeQuoteLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const range = useMemo(() => (visibleMonth ? calendarRange(visibleMonth) : null), [visibleMonth]);
   const currentMonth = hydrated ? monthKey() : "";
-  const selectedDay = selectedDate ? days[selectedDate] : undefined;
+  const isCharter = Boolean(charterDurationDays);
+  const selectedDurationDays = isCharter
+    ? inclusiveDaysBetween(selectedDate, selectedEndDate)
+    : null;
+  const effectiveCalendarDurationDays =
+    isCharter && selectedDurationDays && selectedDurationDays >= 3 && selectedDurationDays <= 7
+      ? selectedDurationDays
+      : isCharter
+        ? 3
+        : undefined;
+  const selectedDay = selectedDate ? (selectedRangeDay ?? days[selectedDate]) : undefined;
+  const charterTooShort =
+    isCharter &&
+    Boolean(selectedDate && selectedEndDate) &&
+    (selectedDurationDays === null || selectedDurationDays < 3);
+  const charterTooLong = isCharter && selectedDurationDays !== null && selectedDurationDays > 7;
+  const charterRangeReady =
+    isCharter &&
+    Boolean(selectedDate && selectedEndDate) &&
+    selectedDurationDays !== null &&
+    selectedDurationDays >= 3 &&
+    selectedDurationDays <= 7;
+  const canBook =
+    !isCharter
+      ? Boolean(selectedDate)
+      : Boolean(charterRangeReady && selectedRangeDay?.selectable && !rangeQuoteLoading);
   const vatLabel = vatIncludedLabel(locale);
-  const displayedPriceLabel = selectedDay?.priceLabel ?? priceLabel;
+  const displayedPriceStatusLabel =
+    isCharter && selectedEndDate && (charterTooShort || charterTooLong)
+      ? locale === "es"
+        ? "Rango no válido"
+        : locale === "fr"
+          ? "Période non valide"
+          : locale === "de"
+            ? "Ungültiger Zeitraum"
+            : locale === "en"
+              ? "Invalid range"
+              : "Intervallo non valido"
+      : isCharter && charterRangeReady && rangeQuoteLoading
+      ? locale === "es"
+        ? "Calculando precio..."
+        : locale === "fr"
+          ? "Calcul du prix..."
+          : locale === "de"
+            ? "Preis wird berechnet..."
+            : locale === "en"
+              ? "Calculating price..."
+              : "Calcolo prezzo..."
+      : null;
+  const displayedPriceLabel = displayedPriceStatusLabel ?? selectedDay?.priceLabel ?? priceLabel;
   const displayedPriceHasVat = displayedPriceLabel.includes(vatLabel);
 
   useEffect(() => {
@@ -279,7 +392,9 @@ export function ExperienceBookingCard({
       end: range.end,
       locale,
     });
-    if (charterDurationDays) params.set("durationDays", String(charterDurationDays));
+    if (effectiveCalendarDurationDays) {
+      params.set("durationDays", String(effectiveCalendarDurationDays));
+    }
 
     queueMicrotask(() => {
       if (!controller.signal.aborted) {
@@ -318,12 +433,85 @@ export function ExperienceBookingCard({
       });
 
     return () => controller.abort();
-  }, [charterDurationDays, hydrated, locale, range, serviceId]);
+  }, [effectiveCalendarDurationDays, hydrated, locale, range, serviceId]);
+
+  useEffect(() => {
+    if (!isCharter || !selectedDate || !selectedDurationDays) {
+      queueMicrotask(() => {
+        setSelectedRangeDay(null);
+        setRangeQuoteLoading(false);
+      });
+      return;
+    }
+
+    if (selectedDurationDays < 3 || selectedDurationDays > 7) {
+      queueMicrotask(() => {
+        setSelectedRangeDay(null);
+        setRangeQuoteLoading(false);
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+    const params = new URLSearchParams({
+      serviceId,
+      start: selectedDate,
+      end: selectedDate,
+      locale,
+      durationDays: String(selectedDurationDays),
+    });
+
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) setRangeQuoteLoading(true);
+    });
+    fetch(`/api/booking-calendar?${params.toString()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("range");
+        const body = (await res.json()) as { data?: { days?: CalendarDay[] } };
+        setSelectedRangeDay(body.data?.days?.[0] ?? null);
+      })
+      .catch((err) => {
+        if ((err as Error).name !== "AbortError") {
+          setSelectedRangeDay(null);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setRangeQuoteLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [isCharter, locale, selectedDate, selectedDurationDays, serviceId]);
 
   const bookingHref = useMemo(
-    () => buildBookingHref({ bookingServiceParam, charterDurationDays, locale, selectedDate }),
-    [bookingServiceParam, charterDurationDays, locale, selectedDate],
+    () =>
+      buildBookingHref({
+        bookingServiceParam,
+        locale,
+        selectedDate,
+        selectedEndDate,
+        selectedDurationDays: isCharter ? selectedDurationDays ?? undefined : undefined,
+      }),
+    [bookingServiceParam, isCharter, locale, selectedDate, selectedDurationDays, selectedEndDate],
   );
+
+  function handleDaySelect(date: string) {
+    if (!isCharter) {
+      setSelectedDate(date);
+      return;
+    }
+
+    if (!selectedDate || selectedEndDate || date < selectedDate) {
+      setSelectedDate(date);
+      setSelectedEndDate("");
+      setSelectedRangeDay(null);
+      return;
+    }
+
+    setSelectedEndDate(date);
+  }
 
   return (
     <div className={cn("rounded-lg border border-white/70 bg-white p-4 shadow-xl sm:p-6", className)}>
@@ -335,7 +523,7 @@ export function ExperienceBookingCard({
       </p>
       <p className="mt-1 text-sm text-slate-500">
         {priceUnit}
-        {!displayedPriceHasVat && ` · ${vatLabel}`}
+        {!displayedPriceStatusLabel && !displayedPriceHasVat && ` · ${vatLabel}`}
       </p>
       <p className="mt-4 text-sm leading-6 text-slate-600 sm:mt-5">{text}</p>
 
@@ -424,8 +612,21 @@ export function ExperienceBookingCard({
                 }
 
                 const day = days[date];
-                const selectable = Boolean(day?.selectable);
-                const selected = selectedDate === date;
+                const isPast = date < toIsoDay(new Date());
+                const pickingCharterEnd = isCharter && Boolean(selectedDate) && !selectedEndDate;
+                const selectable = pickingCharterEnd
+                  ? !isPast
+                  : Boolean(day?.selectable);
+                const selected = selectedDate === date || selectedEndDate === date;
+                const rangeSelected = Boolean(
+                  isCharter &&
+                    selectedDate &&
+                    selectedEndDate &&
+                    date >= selectedDate &&
+                    date <= selectedEndDate,
+                );
+                const rangeStart = isCharter && selectedDate === date;
+                const rangeEnd = isCharter && selectedEndDate === date;
                 return (
                   <button
                     key={date}
@@ -433,8 +634,15 @@ export function ExperienceBookingCard({
                     disabled={!selectable}
                     aria-pressed={selected}
                     aria-label={`${date}, ${day?.reasonLabel ?? ""}`}
-                    onClick={() => setSelectedDate(date)}
-                    className={dayClass(day, selected, loading && !day)}
+                    onClick={() => handleDaySelect(date)}
+                    className={dayClass({
+                      day,
+                      selected,
+                      rangeSelected,
+                      rangeStart,
+                      rangeEnd,
+                      loading: loading && !day,
+                    })}
                   >
                     {Number(date.slice(8, 10))}
                   </button>
@@ -480,18 +688,119 @@ export function ExperienceBookingCard({
                     : "Non disponibile"}
           </span>
         </div>
-        {selectedDate && (
-          <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+        {isCharter && !selectedDate && (
+          <p className="mt-3 rounded-md bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-900">
             {locale === "es"
-              ? "Fecha seleccionada"
+              ? "Selecciona primero la salida y luego el regreso."
               : locale === "fr"
-                ? "Date sélectionnée"
+                ? "Sélectionnez d'abord le départ, puis le retour."
                 : locale === "de"
-                  ? "Ausgewähltes Datum"
+                  ? "Wählen Sie zuerst die Abfahrt und dann die Rückkehr."
                   : locale === "en"
-                    ? "Selected date"
-                    : "Data selezionata"}: {selectedDate}
+                    ? "Select the departure date first, then the return date."
+                    : "Seleziona prima la partenza, poi il ritorno."}
           </p>
+        )}
+        {selectedDate && (
+          <div className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">
+            {isCharter ? (
+              <div className="space-y-1">
+                <p>
+                  {locale === "es"
+                    ? "Salida"
+                    : locale === "fr"
+                      ? "Départ"
+                      : locale === "de"
+                        ? "Abfahrt"
+                        : locale === "en"
+                          ? "Departure"
+                          : "Partenza"}: {formatIsoDateLabel(selectedDate, locale)}
+                </p>
+                <p>
+                  {locale === "es"
+                    ? "Regreso"
+                    : locale === "fr"
+                      ? "Retour"
+                      : locale === "de"
+                        ? "Rückkehr"
+                        : locale === "en"
+                          ? "Return"
+                          : "Ritorno"}:{" "}
+                  {selectedEndDate
+                    ? formatIsoDateLabel(selectedEndDate, locale)
+                    : locale === "es"
+                      ? "selecciona una fecha"
+                      : locale === "fr"
+                        ? "sélectionnez une date"
+                        : locale === "de"
+                          ? "Datum auswählen"
+                          : locale === "en"
+                            ? "select a date"
+                            : "seleziona una data"}
+                </p>
+                {selectedDurationDays && selectedEndDate ? (
+                  <p>
+                    {selectedDurationDays}{" "}
+                    {locale === "es"
+                      ? "días seleccionados"
+                      : locale === "fr"
+                        ? "jours sélectionnés"
+                        : locale === "de"
+                          ? "Tage ausgewählt"
+                          : locale === "en"
+                            ? "selected days"
+                            : "giornate selezionate"}
+                  </p>
+                ) : null}
+                {charterTooShort && (
+                  <p className="text-amber-800">
+                    {locale === "es"
+                      ? "El charter requiere al menos 3 días."
+                      : locale === "fr"
+                        ? "Le charter nécessite au moins 3 jours."
+                        : locale === "de"
+                          ? "Der Charter erfordert mindestens 3 Tage."
+                          : locale === "en"
+                            ? "Charter requires at least 3 days."
+                            : "Il charter richiede almeno 3 giornate."}
+                  </p>
+                )}
+                {charterTooLong && (
+                  <p className="text-sky-800">
+                    {locale === "es"
+                      ? "Para más de 7 días, contacta con la tripulación."
+                      : locale === "fr"
+                        ? "Pour plus de 7 jours, contactez l'équipe."
+                        : locale === "de"
+                          ? "Für mehr als 7 Tage kontaktieren Sie bitte die Crew."
+                          : locale === "en"
+                            ? "For more than 7 days, contact the crew."
+                            : "Per più di 7 giornate contatta la crew."}
+                  </p>
+                )}
+                {charterRangeReady && selectedRangeDay && !selectedRangeDay.selectable && (
+                  <p className="text-red-700">
+                    {selectedRangeDay.reasonLabel ??
+                      (locale === "en"
+                        ? "Selected range is not available."
+                        : "Intervallo non disponibile.")}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p>
+                {locale === "es"
+                  ? "Fecha seleccionada"
+                  : locale === "fr"
+                    ? "Date sélectionnée"
+                    : locale === "de"
+                      ? "Ausgewähltes Datum"
+                      : locale === "en"
+                        ? "Selected date"
+                        : "Data selezionata"}: {selectedDate}
+              </p>
+            )}
+          </div>
         )}
         {error && <p className="mt-3 text-xs font-semibold text-red-700">{error}</p>}
       </div>
@@ -511,7 +820,7 @@ export function ExperienceBookingCard({
         })}
       </div>
 
-      {selectedDate ? (
+      {canBook ? (
         <Button
           size="lg"
           nativeButton={false}

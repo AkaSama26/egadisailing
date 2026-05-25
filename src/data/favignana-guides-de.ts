@@ -341,7 +341,7 @@ export const favignanaGuidesDe: FavignanaGuide[] = [
     intro:
       "Favignana und Levanzo liegen nah beieinander, fühlen sich aber sehr unterschiedlich an. Eine Bootstour ab Trapani kann beide Inseln verbinden, wenn Wetter, Dauer und Route es erlauben.",
     quickAnswer:
-      "Wählen Sie 4 Stunden für eine agile private Halbtagestour, 8 Stunden für mehr Stopps und mögliche Kombination Favignana/Levanzo, privat für maximale Flexibilität, den Neel 47 mit Chef an Bord für Premium-Komfort oder Charter für mehrere Tage.",
+      "Wählen Sie 4 Stunden für eine agile private Halbtagestour, 8 Stunden für mehr Stopps und mögliche Kombination Favignana/Levanzo, privat für maximale Flexibilität, den Trimaran mit Katamaran-Komfort und Chef an Bord für Premium-Komfort oder Charter für mehrere Tage.",
     primaryKeyword: "Bootstour Favignana Levanzo ab Trapani",
     secondaryKeywords: ["Bootstour Ägadische Inseln", "private Bootstour Trapani", "Schnorcheln Favignana", "Mittagessen an Bord"],
     quickFacts: [
@@ -354,12 +354,12 @@ export const favignanaGuidesDe: FavignanaGuide[] = [
       { name: "Private 4-Stunden-Tour", description: "Für einen kompakten Halbtag mit reserviertem Boot." },
       { name: "Geteilte 8-Stunden-Tour", description: "Für einzelne Plätze, Schnorcheln und einen entspannten ganzen Tag." },
       { name: "Private 8-Stunden-Tour", description: "Für Gruppen, Privatsphäre und flexible Route." },
-      { name: "Chef an Bord", description: "Für Komfort, Mittagessen an Bord und Premium-Rhythmus auf dem Neel 47." },
+      { name: "Chef an Bord", description: "Für Katamaran-Komfort, Mittagessen an Bord und Premium-Rhythmus auf dem Trimaran." },
       { name: "Charter", description: "Für mehrere Tage zwischen Favignana, Levanzo und Marettimo." },
     ],
     sections: [
       { id: "rhythmus", eyebrow: "Schnelle Wahl", title: "Die richtige Frage ist nicht welche Tour besser ist, sondern welchen Rhythmus Sie möchten", body: ["Eine kurze Tour passt bei wenig Zeit. Acht Stunden geben mehr Ruhe, mehr Badestopps und mehr Möglichkeiten, Favignana und Levanzo zu kombinieren.", "Privat bedeutet mehr Kontrolle über den Rhythmus; geteilt ist einfacher, wenn Sie allein, zu zweit oder in einer kleinen Gruppe reisen."], cta: "compare" },
-      { id: "premium", eyebrow: "Premium", title: "Wann der Neel 47 mit Chef an Bord passt", body: ["Das Gourmet-Erlebnis auf dem Neel 47 ist für Gäste gedacht, die Platz, Komfort und Mittagessen an Bord suchen. Es ist weniger eine schnelle Tour, sondern ein kuratierter Meerestag.", "Skipper, Chefkoch und Hostess lassen Sie sich auf die Erfahrung konzentrieren, während die Route nach Meer, Wetter und Komfort gewählt wird."], cta: "neel" },
+      { id: "premium", eyebrow: "Premium", title: "Wann der Trimaran mit Chef an Bord passt", body: ["Das Gourmet-Erlebnis auf dem Trimaran ist für Gäste gedacht, die Platz, Katamaran-Komfort und Mittagessen an Bord suchen. Es ist weniger eine schnelle Tour, sondern ein kuratierter Meerestag.", "Skipper, Chefkoch und Hostess lassen Sie sich auf die Erfahrung konzentrieren, während die Route nach Meer, Wetter und Komfort gewählt wird."], cta: "neel" },
     ],
     faqs: [
       { question: "Sind Favignana und Levanzo immer garantiert?", answer: "Nein. Die Route hängt von Wind, Meer und Sicherheit ab. Eine gute Crew passt den Plan an den Tag an." },

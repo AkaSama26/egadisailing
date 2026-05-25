@@ -2,7 +2,6 @@ import type { LevanzoGuide } from "./levanzo-guides";
 
 const levanzoHero = "/images/islands/levanzo/hero.webp";
 const boatImage = "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp";
-const neelImage = "/images/boats/neel-47/neel-47-favignana.webp";
 const snorkelingImage = "/images/experience-polaroids/barca-8-ore-snorkeling.webp";
 
 type GuideInput = Omit<LevanzoGuide, "eyebrow"> & { eyebrow?: string };
@@ -238,34 +237,34 @@ export const levanzoGuidesDe: LevanzoGuide[] = [
     shortTitle: "Bootstour",
     metaTitle: "Bootstour Levanzo ab Trapani: Optionen und Tipps",
     metaDescription:
-      "Bootstour nach Levanzo ab Trapani: 4 Stunden privat, 8 Stunden geteilt oder privat, Kombination mit Favignana und Premium-Erlebnis auf dem Neel 47.",
+      "Bootstour nach Levanzo ab Trapani: 8 Stunden geteilt oder privat, Kombination mit Favignana und Premium-Erlebnis auf dem Trimaran mit Katamaran-Komfort.",
     heroImage: boatImage,
     heroAlt: "Bootstour ab Trapani entlang der Küste von Levanzo",
     eyebrow: "Egadisailing-Erlebnisse",
     intro:
       "Eine Bootstour ist die bequemste Art, Levanzo als Meerestag zu erleben. Sie eignet sich für klare Buchten, Badestopps und eine mögliche Kombination mit Favignana.",
     quickAnswer:
-      "Wählen Sie 4 Stunden privat für einen kompakten Ausflug, 8 Stunden für mehr Badestopps und mögliche Kombination mit Favignana, privat für Flexibilität und den Neel 47, wenn Sie Komfort und Mittagessen an Bord suchen.",
+      "Für Levanzo wählen Sie das 8-Stunden-Format, geteilt oder privat: Es gibt mehr Zeit für Badestopps, Schnorcheln und eine mögliche Kombination mit Favignana. Die 4-Stunden-Tour bleibt eine kurze Route rund um Favignana und enthält keinen Stopp auf Levanzo.",
     primaryKeyword: "Bootstour Levanzo ab Trapani",
     secondaryKeywords: ["private Bootstour Trapani", "Favignana und Levanzo", "Schnorcheln Levanzo", "Ägadische Inseln"],
     quickFacts: [
-      { label: "Formate", value: "4 Stunden, 8 Stunden, privat" },
+      { label: "Formate", value: "8 Stunden, privat, Gourmet" },
       { label: "Kombination", value: "Favignana möglich" },
       { label: "Route", value: "nach Wetter" },
     ],
     itemListTitle: "Welche Erfahrung wählen",
     itemList: [
-      { name: "Private 4 Stunden", description: "Für eine kompakte Ausfahrt mit reserviertem Boot." },
+      { name: "Private 4 Stunden Favignana", description: "Für eine kompakte Ausfahrt mit reserviertem Boot, ohne Stopp auf Levanzo." },
       { name: "Geteilte 8 Stunden", description: "Für einen ganzen Tag mit mehr Zeit im Wasser." },
       { name: "Private 8 Stunden", description: "Für Gruppen, Familien und besondere Anlässe." },
-      { name: "Neel 47 Gourmet", description: "Für Chef an Bord, Komfort und Mittagessen auf dem Meer." },
+      { name: "Trimaran Gourmet", description: "Für Chef an Bord, Katamaran-Komfort und Mittagessen auf dem Meer." },
     ],
     sections: [
-      { id: "dauer", title: "4 Stunden, 8 Stunden oder privat?", body: ["Der Halbtag ist ideal, wenn Sie eine kompakte Meerespause möchten. Acht Stunden geben mehr Spielraum für Stopps, Schnorcheln und Kombinationen.", "Privat lohnt sich bei Gruppen, besonderen Zeiten oder dem Wunsch nach mehr Flexibilität."], cta: "compare" },
+      { id: "dauer", title: "8 Stunden, privat oder Gourmet?", body: ["Der Halbtag ist ideal für eine kompakte Meerespause rund um Favignana, enthält aber keinen Stopp auf Levanzo. Für Levanzo geben acht Stunden mehr Spielraum für Stopps, Schnorcheln und Kombinationen.", "Privat lohnt sich bei Gruppen, besonderen Zeiten oder dem Wunsch nach mehr Flexibilität."], cta: "compare" },
       { id: "kombination", title: "Warum Levanzo oft mit Favignana kombiniert wird", body: ["Favignana bietet berühmte Buchten und mehr Vielfalt; Levanzo bringt Stille, transparentes Wasser und ein kleines Dorf.", "Zusammen zeigen sie zwei Seiten der Ägadischen Inseln, solange die Seebedingungen passen."], cta: "neel" },
     ],
     faqs: [
-      { question: "Wie lange dauert eine Bootstour nach Levanzo?", answer: "Je nach Formel 4 oder 8 Stunden. Acht Stunden sind entspannter, wenn Favignana kombiniert werden soll." },
+      { question: "Wie lange dauert eine Bootstour nach Levanzo?", answer: "Für Levanzo ist das 8-Stunden-Format sinnvoll. Die 4-Stunden-Tour bleibt eine kurze Route rund um Favignana." },
       { question: "Ist die Grotta del Genovese enthalten?", answer: "Nein, die Höhle wird separat organisiert. Die Bootstour konzentriert sich auf Meer und Küste." },
     ],
     relatedSlugs: ["levanzo-an-einem-tag", "straende-buchten-levanzo", "schnorcheln-cala-minnola-calcara"],

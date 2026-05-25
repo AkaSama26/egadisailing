@@ -15,7 +15,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { ScrollSection } from "@/components/scroll-section";
-import { SvgPhotoFrame } from "@/components/svg-photo-frame";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
@@ -28,7 +27,6 @@ import {
   type ResolvedBoatContent,
 } from "@/data/catalog/boats";
 import { getExperiencePublicSlug } from "@/data/catalog/experiences";
-import { liquidGlassButton } from "@/lib/ui/liquid-glass";
 import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
 import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
@@ -59,7 +57,7 @@ export async function generateMetadata({
     description: copy.seoDescription,
     path: "/boats",
     locale,
-    image: "/videos/hero-poster.webp",
+    image: "/images/boats/neel-47/neel-47-hero.webp",
   });
 }
 
@@ -74,16 +72,23 @@ function servicesForBoat(boat: ResolvedBoatContent, services: ActiveService[]): 
     .map((serviceId) => ({ id: serviceId, boatId: boat.id }));
 }
 
+function hasBoatDetail(boat: ResolvedBoatContent): boolean {
+  return boat.id === "trimarano";
+}
+
 function BoatSpecs({ boat }: { boat: ResolvedBoatContent }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
       {boat.specs.map((spec) => {
         const Icon = SPEC_ICONS[spec.icon];
         return (
-          <div key={`${boat.id}-${spec.label}`} className="rounded-lg bg-white/80 p-4 shadow-sm">
+          <div
+            key={`${boat.id}-${spec.label}`}
+            className="rounded-lg border border-white/10 bg-white/10 p-4 text-white shadow-[0_18px_42px_rgba(3,10,24,0.14)] backdrop-blur"
+          >
             <Icon className="h-5 w-5 text-[var(--color-gold)]" />
-            <p className="mt-3 text-2xl font-bold text-[var(--color-ocean)]">{spec.value}</p>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <p className="mt-3 text-2xl font-bold">{spec.value}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/60">
               {spec.label}
             </p>
           </div>
@@ -110,13 +115,13 @@ function BoatHubSection({
 }) {
   const image = boat.imageSrc ?? boat.gallery[0]?.src ?? "/images/trimarano.webp";
   const discoverClassName =
-    "inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-ocean)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-ocean)]/90";
+    "inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-gold)] px-5 py-3 text-sm font-bold text-[#071934] transition hover:bg-[#ffd44f]";
 
   return (
-    <section className="px-4 py-14 sm:py-18 md:px-8 lg:px-12">
+    <section id={boat.slug} className="scroll-mt-24 px-4 py-14 sm:py-18 md:px-8 lg:px-12">
       <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-2 lg:gap-14">
         <ScrollSection animation={reverse ? "fade-right" : "fade-left"} className={reverse ? "lg:order-2" : undefined}>
-          <SvgPhotoFrame className="w-full" frameClassName="bg-white/95">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-white/15 bg-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.22)]">
             <Image
               src={image}
               alt={boat.imageAlt}
@@ -124,7 +129,7 @@ function BoatHubSection({
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover"
             />
-          </SvgPhotoFrame>
+          </div>
         </ScrollSection>
 
         <ScrollSection animation={reverse ? "fade-left" : "fade-right"} className={reverse ? "lg:order-1" : undefined}>
@@ -132,10 +137,10 @@ function BoatHubSection({
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-gold)]">
               {boat.eyebrow}
             </p>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-[var(--color-ocean)] sm:text-4xl md:text-5xl">
+            <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl md:text-5xl">
               {boat.title}
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/76 sm:text-lg sm:leading-8">
               {boat.description}
             </p>
 
@@ -145,9 +150,9 @@ function BoatHubSection({
 
             <div className="mt-6 grid gap-2">
               {boat.idealFor.map((item) => (
-                <div key={item} className="flex items-start gap-3 text-sm leading-6 text-slate-700">
-                  <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-turquoise)]/15">
-                    <Check className="h-3.5 w-3.5 text-[var(--color-turquoise)]" />
+                <div key={item} className="flex items-start gap-3 text-sm leading-6 text-white/78">
+                  <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10">
+                    <Check className="h-3.5 w-3.5 text-[var(--color-gold)]" />
                   </span>
                   {item}
                 </div>
@@ -155,32 +160,27 @@ function BoatHubSection({
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              {boat.externalUrl && (
-                <a
-                  href={boat.externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={discoverClassName}
-                >
+              {hasBoatDetail(boat) && (
+                <Link href={localizedPath(locale, `/boats/${boat.slug}`)} className={discoverClassName}>
                   {detailLabel}
                   <ArrowRight className="h-4 w-4" />
-                </a>
+                </Link>
               )}
               <Link
                 href={localizedStaticPath(locale, "/experiences")}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-[var(--color-ocean)] transition hover:bg-white"
+                className="inline-flex items-center justify-center rounded-lg border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:border-white/40 hover:bg-white/10"
               >
                 {experiencesLabel}
               </Link>
             </div>
 
             {services.length > 0 && (
-              <div className="mt-8 grid gap-2">
+              <div className="mt-8 border-y border-white/12 py-3">
                 {services.slice(0, 4).map((service) => (
                   <Link
                     key={service.id}
                     href={localizedPath(locale, `/experiences/${getExperiencePublicSlug(service.id, locale)}`)}
-                    className="flex items-center justify-between gap-4 rounded-lg bg-white px-4 py-3 text-sm font-semibold text-[var(--color-ocean)] shadow-sm transition hover:shadow-md"
+                    className="flex items-center justify-between gap-4 py-3 text-sm font-semibold text-white transition hover:text-[var(--color-gold)]"
                   >
                     {getPublicBoatServiceTitle(service.id, locale)}
                     <ArrowRight className="h-4 w-4 text-[var(--color-gold)]" />
@@ -222,54 +222,36 @@ export default async function BoatsPage({
     itemListElement: boats.map((boat, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: localizedAbsoluteUrl(siteBase, locale, `/boats/${boat.slug}`),
+      url: hasBoatDetail(boat)
+        ? localizedAbsoluteUrl(siteBase, locale, `/boats/${boat.slug}`)
+        : `${localizedAbsoluteUrl(siteBase, locale, "/boats")}#${boat.slug}`,
       name: boat.seoTitle,
       description: boat.seoDescription,
     })),
   };
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#f7f2e8] text-slate-900">
+    <div className="min-h-screen overflow-x-clip bg-[linear-gradient(180deg,#071934_0%,#0a2a4a_34%,#0c3d5e_54%,#0a2a4a_78%,#071934_100%)] text-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(json) }} />
 
-      <section className="relative isolate flex min-h-[100svh] items-center overflow-hidden bg-[#061a2d] px-4 py-24 text-white sm:py-28 md:px-8 lg:px-12">
-        <Image
-          src="/videos/hero-poster.webp"
-          alt={
-            locale === "es"
-              ? "Barcos Egadisailing en las Islas Egadi"
-              : locale === "fr"
-                ? "Bateaux Egadisailing aux îles Égades"
-                : locale === "de"
-                  ? "Egadisailing-Boote auf den Ägadischen Inseln"
-                : locale === "en"
-                  ? "Egadisailing boats in the Egadi Islands"
-                  : "Barche Egadisailing alle Isole Egadi"
-          }
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover opacity-45"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,26,45,0.96),rgba(6,26,45,0.8)_46%,rgba(6,26,45,0.36))]" />
-        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#061a2d]/70 to-transparent" />
+      <section className="relative isolate px-4 pb-14 pt-32 md:px-8 lg:px-12">
         <div className="relative z-10 mx-auto w-full max-w-7xl">
           <ScrollSection animation="fade-up">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-gold)] sm:text-sm">
               {copy.eyebrow}
             </p>
-            <h1 className="mt-4 max-w-5xl font-heading text-[2.65rem] font-bold leading-[0.98] text-white sm:text-6xl md:text-7xl lg:text-8xl">
+            <h1 className="mt-4 max-w-5xl font-heading text-[2.8rem] font-bold leading-[0.98] text-white sm:text-6xl md:text-7xl lg:text-8xl">
               {copy.title}
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/78 sm:mt-6 sm:text-lg sm:leading-8">
+            <p className="mt-6 max-w-3xl text-base leading-7 text-white/78 sm:text-lg sm:leading-8">
               {copy.subtitle}
             </p>
-            <div className="mt-8 grid max-w-3xl gap-3 sm:grid-cols-2">
+            <div className="mt-9 grid max-w-4xl gap-3 sm:grid-cols-2">
               {boats.map((boat) => (
                 <Link
                   key={boat.id}
-                  href={localizedPath(locale, `/boats/${boat.slug}`)}
-                  className={`group flex min-w-0 items-center justify-between gap-4 rounded-lg p-4 ${liquidGlassButton}`}
+                  href={hasBoatDetail(boat) ? localizedPath(locale, `/boats/${boat.slug}`) : `#${boat.slug}`}
+                  className="group flex min-w-0 items-center justify-between gap-4 rounded-lg border border-white/14 bg-white/10 p-4 shadow-[0_20px_55px_rgba(3,10,24,0.18)] backdrop-blur transition hover:border-white/25 hover:bg-white/[0.14]"
                 >
                   <span className="min-w-0">
                     <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)]">
@@ -286,16 +268,22 @@ export default async function BoatsPage({
       </section>
 
       <main>
-        <section className="px-4 py-14 md:px-8 lg:px-12">
-          <ScrollSection animation="fade-up" className="mx-auto max-w-4xl text-center">
-            <Ship className="mx-auto h-8 w-8 text-[var(--color-gold)]" />
-            <h2 className="mt-4 font-heading text-3xl font-bold text-[var(--color-ocean)] sm:text-4xl">
-              {copy.comparisonTitle}
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600">
-              {copy.comparisonText}
-            </p>
-          </ScrollSection>
+        <section className="px-4 py-10 md:px-8 lg:px-12">
+          <div className="mx-auto max-w-7xl border-y border-white/12 py-10">
+            <ScrollSection animation="fade-up" className="grid gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-white/10 text-[var(--color-gold)]">
+                <Ship className="h-6 w-6" />
+              </span>
+              <div>
+                <h2 className="font-heading text-3xl font-bold text-white sm:text-4xl">
+                  {copy.comparisonTitle}
+                </h2>
+                <p className="mt-4 max-w-3xl text-base leading-7 text-white/72">
+                  {copy.comparisonText}
+                </p>
+              </div>
+            </ScrollSection>
+          </div>
         </section>
 
         {boats.map((boat, index) => (
@@ -312,7 +300,7 @@ export default async function BoatsPage({
 
         <section className="px-4 py-16 md:px-8 lg:px-12">
           <ScrollSection animation="fade-up">
-            <div className="mx-auto max-w-5xl overflow-hidden rounded-lg bg-[var(--color-ocean)] p-6 text-white shadow-xl md:p-10">
+            <div className="mx-auto max-w-5xl overflow-hidden rounded-lg border border-white/15 bg-white/10 p-6 text-white shadow-[0_30px_80px_rgba(3,10,24,0.2)] backdrop-blur md:p-10">
               <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
                 <div>
                   <h2 className="font-heading text-3xl font-bold">{copy.chooserTitle}</h2>
@@ -322,7 +310,7 @@ export default async function BoatsPage({
                 </div>
                 <Link
                   href={localizedStaticPath(locale, "/experiences")}
-                  className="inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[var(--color-ocean)] transition hover:bg-white/90"
+                  className="inline-flex items-center justify-center rounded-lg bg-[var(--color-gold)] px-5 py-3 text-sm font-bold text-[#071934] transition hover:bg-[#ffd44f]"
                 >
                   {copy.experiencesCtaLabel}
                 </Link>

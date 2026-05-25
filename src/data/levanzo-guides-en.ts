@@ -706,14 +706,14 @@ export const levanzoGuidesEn: LevanzoGuide[] = [
     shortTitle: "Boat tour",
     metaTitle: "Levanzo boat tour from Trapani: which experience to choose",
     metaDescription:
-      "Guide to Levanzo boat tours from Trapani: 4-hour, 8-hour, private, shared, gourmet trimaran, snorkeling and routes with Favignana.",
+      "Guide to Levanzo boat tours from Trapani: 8-hour, private, shared, gourmet trimaran, snorkeling and routes with Favignana.",
     heroImage: boatImage,
     heroAlt: "Boat tour from Trapani towards Levanzo and the Egadi Islands",
     eyebrow: "Egadi experiences",
     intro:
       "A Levanzo boat tour from Trapani makes sense when you want to experience the island from the sea without organising ferries, water taxis and walks under the sun. The best route is not rigid: it comes from wind, sea and the duration you choose.",
     quickAnswer:
-      "Choose a 4-hour tour if you want an agile half day, an 8-hour tour if you want more stops and the possibility of combining Favignana and Levanzo, a private boat if you want a tailored pace, and the gourmet trimaran if you want premium comfort with a chef on board.",
+      "To experience Levanzo from the sea, choose an 8-hour shared or private format: there is more time for swim stops, snorkeling and a possible pairing with Favignana. The 4-hour tour remains a compact half day around Favignana and does not include a Levanzo pit stop.",
     primaryKeyword: "Levanzo boat tour from Trapani",
     secondaryKeywords: [
       "boat tour Levanzo",
@@ -723,16 +723,16 @@ export const levanzoGuidesEn: LevanzoGuide[] = [
     ],
     quickFacts: [
       { label: "Departure", value: "Trapani" },
-      { label: "Formats", value: "4 hours, 8 hours, private" },
+      { label: "Formats", value: "8 hours, private, gourmet" },
       { label: "Possible pairing", value: "Favignana" },
       { label: "Choice", value: "weather and duration" },
     ],
     itemListTitle: "Which experience to choose",
     itemList: [
       {
-        name: "Private 4-hour tour",
+        name: "Private 4-hour Favignana tour",
         description:
-          "For a compact slot, with a reserved boat and a few well-chosen stops.",
+          "For a compact slot with a reserved boat: it does not include a Levanzo pit stop.",
       },
       {
         name: "Shared 8-hour tour",
@@ -769,15 +769,15 @@ export const levanzoGuidesEn: LevanzoGuide[] = [
       {
         id: "durata",
         eyebrow: "Duration",
-        title: "4 hours, 8 hours or private?",
+        title: "8 hours, private or gourmet?",
         body: [
-          "A half day is perfect if you want a sea break without taking the whole day. The 8-hour format gives more margin: more stops, more calm and a better chance of combining Levanzo with Favignana.",
+          "A half day is perfect if you want a sea break around Favignana, but it does not include Levanzo. For Levanzo, the 8-hour format gives more margin: more stops, more calm and a better chance of combining Levanzo with Favignana.",
           "A private tour makes sense when you want to shape the pace with the skipper, travel as a group or have specific needs around timing, comfort or privacy.",
         ],
         cards: [
           {
-            title: "Private 4 hours",
-            text: "A few stops, agile rhythm and reserved boat.",
+            title: "Private 4 hours Favignana",
+            text: "A few stops, agile rhythm and reserved boat, without a Levanzo pit stop.",
             tag: "Half day",
             image: "/images/experience-polaroids/barca-4-ore-tour-egadi.webp",
           },
@@ -810,7 +810,7 @@ export const levanzoGuidesEn: LevanzoGuide[] = [
       {
         question: "How long does a Levanzo boat tour from Trapani last?",
         answer:
-          "It depends on the format. A half day is more agile, while 8 hours give more time for stops, snorkeling and a possible combination with Favignana.",
+          "For Levanzo, consider the 8-hour format: it gives more time for stops, snorkeling and a possible combination with Favignana. The 4-hour tour remains a short route around Favignana.",
       },
       {
         question: "Does a Levanzo tour always include Favignana?",

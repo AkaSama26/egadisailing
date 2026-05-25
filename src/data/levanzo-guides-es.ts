@@ -673,7 +673,7 @@ export const levanzoGuidesEs: LevanzoGuide[] = [
         eyebrow: "Formatos",
         title: "Compartido, privado o premium",
         body: [
-          "El tour compartido es ideal para reservar plazas individuales. El privado reserva un barco para tu grupo. La experiencia premium en Neel 47 añade espacio, comodidad y comida a bordo.",
+          "El tour compartido es ideal para reservar plazas individuales. El privado reserva un barco para tu grupo. La experiencia premium en trimarán añade espacio, comodidad de catamarán y comida a bordo.",
         ],
         cta: "compare",
       },

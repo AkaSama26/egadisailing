@@ -158,7 +158,7 @@
     "itin3Time": "12:30",
     "itin3Text": "Comida a bordo preparada por el chef",
     "itin4Time": "14:00",
-    "itin4Text": "Navegación hacia Levanzo",
+    "itin4Text": "Navegación panorámica por Favignana",
     "itin5Time": "15:30",
     "itin5Text": "Grotta del Genovese, baño en aguas cristalinas",
     "itin6Time": "17:00",
@@ -173,7 +173,7 @@
   },
   "boats": {
     "title": "Barcos para excursiones a las Islas Egadi desde Trapani",
-    "subtitle": "Elige entre el trimarán Neel 47 y la Cigala & Bertinetti 34 Offshore Open.",
+    "subtitle": "Elige entre el trimarán con confort de catamarán y la Barca Egadi Sailing.",
     "length": "Eslora",
     "year": "Año",
     "cabins": "Camarotes",
@@ -230,7 +230,7 @@
     "boatShared": {
       "stop1": { "name": "Salida", "description": "Encuentro en el puerto de Trapani y salida hacia las islas." },
       "stop2": { "name": "Favignana", "island": "Favignana", "description": "Vuelta por la isla con paradas en las calas más bonitas." },
-      "stop3": { "name": "Levanzo", "island": "Levanzo", "description": "Baño y snorkel en aguas cristalinas." },
+      "stop3": { "name": "Cala protegida", "island": "Favignana", "description": "Baño y snorkel en una cala elegida por el patrón según viento y mar." },
       "stop4": { "name": "Regreso", "description": "Regreso a Trapani a primera hora de la tarde." }
     },
     "boatExclusive": {

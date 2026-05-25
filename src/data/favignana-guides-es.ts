@@ -797,7 +797,7 @@ export const favignanaGuidesEs: FavignanaGuide[] = [
     intro:
       "Favignana y Levanzo son la combinación más buscada para una excursión en barco desde Trapani. En un día bien organizado se alternan navegación, calas, baños, snorkel y vistas de dos islas con carácter distinto.",
     quickAnswer:
-      "Una excursión en barco a Favignana y Levanzo desde Trapani es ideal si quieres ver más costa sin organizar ferries, alquileres y traslados. Puede ser compartida, privada o premium con comida a bordo en el Neel 47, según presupuesto y ritmo deseado.",
+      "Una excursión en barco a Favignana y Levanzo desde Trapani es ideal si quieres ver más costa sin organizar ferries, alquileres y traslados. Puede ser compartida, privada o premium con comida a bordo en trimarán con confort de catamarán, según presupuesto y ritmo deseado.",
     primaryKeyword: "excursión en barco Favignana Levanzo",
     secondaryKeywords: [
       "Favignana y Levanzo desde Trapani",
@@ -839,8 +839,8 @@ export const favignanaGuidesEs: FavignanaGuide[] = [
         eyebrow: "Elegir experiencia",
         title: "Compartida, privada o premium",
         body: [
-          "La opción compartida es adecuada para quien viaja solo, en pareja o con un grupo pequeño y quiere una experiencia accesible. El tour privado reserva la Cigala & Bertinetti para tu grupo.",
-          "La experiencia premium en Neel 47 añade espacio, trimarán, chef y comida a bordo: es una forma más lenta y cómoda de vivir las Egadi.",
+          "La opción compartida es adecuada para quien viaja solo, en pareja o con un grupo pequeño y quiere una experiencia accesible. El tour privado reserva la Barca Egadi Sailing para tu grupo.",
+          "La experiencia premium en trimarán añade espacio, confort de catamarán, chef y comida a bordo: es una forma más lenta y cómoda de vivir las Egadi.",
         ],
         cta: "compare",
       },
@@ -861,7 +861,7 @@ export const favignanaGuidesEs: FavignanaGuide[] = [
           "Cuatro horas sirven para una experiencia compacta y exclusiva. Ocho horas permiten más baños, más margen entre islas y un ritmo más relajado.",
         ],
         note:
-          "Para quien quiere comida a bordo y máximo confort, el Neel 47 tiene un posicionamiento más premium.",
+          "Para quien quiere comida a bordo y máximo confort, el trimarán tiene un posicionamiento más premium.",
         cta: "neel",
       },
     ],
@@ -879,7 +879,7 @@ export const favignanaGuidesEs: FavignanaGuide[] = [
       {
         question: "¿Qué diferencia hay entre tour privado y premium?",
         answer:
-          "El privado se centra en un barco ágil para tu grupo; el premium en Neel 47 prioriza espacio, comodidad y comida a bordo.",
+          "El privado se centra en un barco ágil para tu grupo; el premium en trimarán prioriza espacio, comodidad y comida a bordo.",
       },
     ],
     relatedSlugs: ["favignana-en-un-dia", "snorkel-en-favignana", "mejores-playas-calas-favignana"],

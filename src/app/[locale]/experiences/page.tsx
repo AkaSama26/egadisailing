@@ -138,11 +138,11 @@ function getHubCopy(locale: string) {
           route: "Salida desde Trapani hacia Favignana y Levanzo, con Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda y Cala Minnola según meteo.",
           includes: "Skipper, combustible, snorkel, agua, paradas de baño y asistencia.",
         },
-        "tour-barca-egadi-4-ore": {
-          formula: "Tour privado de medio día",
-          route: "Salida desde Trapani hacia una cala protegida entre Favignana o Levanzo, con ruta flexible según viento y mar.",
-          includes: "Barco privado, skipper, combustible, snorkel y paradas de baño.",
-        },
+	        "tour-barca-egadi-4-ore": {
+	          formula: "Tour privado de medio día",
+	          route: "Salida desde Trapani hacia una cala protegida alrededor de Favignana, con ruta flexible según viento y mar.",
+	          includes: "Barco privado, skipper, combustible, snorkel y paradas de baño.",
+	        },
         "esperienza-gourmet-trimarano": {
           formula: "Trimarán privado con chef",
           route: "Desde Trapani hacia Favignana y Levanzo, con almuerzo a bordo, paradas de baño y comodidad de catamarán.",
@@ -213,7 +213,7 @@ function getHubCopy(locale: string) {
         },
         "tour-barca-egadi-4-ore": {
           formula: "Tour privé demi-journée",
-          route: "Départ de Trapani vers une crique abritée entre Favignana ou Levanzo, avec route flexible selon vent et mer.",
+          route: "Départ de Trapani vers une crique abritée autour de Favignana, avec route flexible selon vent et mer.",
           includes: "Bateau privé, skipper, carburant, snorkeling et arrêts baignade.",
         },
         "esperienza-gourmet-trimarano": {
@@ -286,7 +286,7 @@ function getHubCopy(locale: string) {
         },
         "tour-barca-egadi-4-ore": {
           formula: "Private Halbtages-Bootstour",
-          route: "Abfahrt ab Trapani zu einer geschützten Bucht bei Favignana oder Levanzo, flexibel nach Wind und Meer.",
+          route: "Abfahrt ab Trapani zu einer geschützten Bucht rund um Favignana, flexibel nach Wind und Meer.",
           includes: "Privates Boot, Skipper, Treibstoff, Schnorcheln und Badestopps.",
         },
         "esperienza-gourmet-trimarano": {
@@ -357,11 +357,11 @@ function getHubCopy(locale: string) {
           route: "Departure from Trapani to Favignana and Levanzo, with Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda and Cala Minnola depending on weather.",
           includes: "Skipper, fuel, snorkelling, water, swim stops and assistance.",
         },
-        "tour-barca-egadi-4-ore": {
-          formula: "Private half-day boat tour",
-          route: "Departure from Trapani toward a sheltered cove around Favignana or Levanzo, flexible according to wind and sea.",
-          includes: "Private boat, skipper, fuel, snorkelling and swim stops.",
-        },
+	        "tour-barca-egadi-4-ore": {
+	          formula: "Private half-day boat tour",
+	          route: "Departure from Trapani toward a sheltered cove around Favignana, flexible according to wind and sea.",
+	          includes: "Private boat, skipper, fuel, snorkelling and swim stops.",
+	        },
         "esperienza-gourmet-trimarano": {
           formula: "Private trimaran with chef",
           route: "From Trapani to Favignana and Levanzo, with lunch on board, swim stops and catamaran-style comfort.",
@@ -429,11 +429,11 @@ function getHubCopy(locale: string) {
         route: "Partenza da Trapani verso Favignana e Levanzo, con Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda e Cala Minnola secondo meteo.",
         includes: "Skipper, carburante, snorkeling, acqua, soste bagno e assistenza.",
       },
-      "tour-barca-egadi-4-ore": {
-        formula: "Tour privato mezza giornata",
-        route: "Partenza da Trapani verso una cala riparata tra Favignana o Levanzo, con rotta flessibile secondo vento e mare.",
-        includes: "Barca privata, skipper, carburante, snorkeling e soste bagno.",
-      },
+	      "tour-barca-egadi-4-ore": {
+	        formula: "Tour privato mezza giornata",
+	        route: "Partenza da Trapani verso una cala riparata intorno a Favignana, con rotta flessibile secondo vento e mare.",
+	        includes: "Barca privata, skipper, carburante, snorkeling e soste bagno.",
+	      },
       "esperienza-gourmet-trimarano": {
         formula: "Trimarano privato con chef",
         route: "Da Trapani verso Favignana e Levanzo, con pranzo a bordo, soste bagno e comfort da catamarano.",
