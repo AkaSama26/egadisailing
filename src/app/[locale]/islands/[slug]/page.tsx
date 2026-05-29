@@ -24,6 +24,7 @@ import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { localizedPath } from "@/lib/i18n/paths";
 import { FavignanaPoiExplorer } from "./favignana-poi-explorer";
+import { getIslandGuideCopy } from "@/data/island-guides";
 
 const validSlugs = ["favignana", "levanzo", "marettimo"] as const;
 type IslandSlug = (typeof validSlugs)[number];
@@ -460,6 +461,7 @@ export default async function IslandDetailPage({
   }
 
   const t = await getTranslations("islands");
+  const guide = getIslandGuideCopy(slug, locale);
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}${localizedPath(locale, `/islands/${slug}`)}`;
   const json = {
@@ -476,13 +478,34 @@ export default async function IslandDetailPage({
       {
         "@type": "TouristDestination",
         name: t(`${slug}.name`),
-        description: t(`${slug}.description`),
+        description: guide.intro.join(" "),
         url: pageUrl,
         inLanguage: locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : locale === "en" ? "en-US" : "it-IT",
         containedInPlace: {
           "@type": "Place",
           name: locale === "de" ? "Ägadische Inseln" : locale === "en" ? "Egadi Islands" : locale === "es" ? "Islas Egadi" : locale === "fr" ? "Îles Égades" : "Isole Egadi",
         },
+      },
+      {
+        "@type": "ItemList",
+        name: guide.highlightsTitle,
+        itemListElement: guide.sections.map((section, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: section.title,
+          description: section.body.join(" "),
+        })),
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: guide.faqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+          },
+        })),
       },
     ],
   };
@@ -508,8 +531,11 @@ export default async function IslandDetailPage({
               {t("title")}
             </Link>
 
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-white/70">
+              {guide.eyebrow}
+            </p>
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-              {t(`${slug}.name`)}
+              {guide.h1}
             </h1>
           </ScrollSection>
         </div>
@@ -518,15 +544,35 @@ export default async function IslandDetailPage({
       <div className="max-w-4xl mx-auto px-6 md:px-12 lg:px-20 py-16 space-y-16">
         {/* Description */}
         <ScrollSection animation="fade-up">
-          <p className="text-lg leading-relaxed text-muted-foreground">
-            {t(`${slug}.description`)}
-          </p>
+          <div className="space-y-5 text-lg leading-relaxed text-muted-foreground">
+            {guide.intro.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
         </ScrollSection>
+
+        {/* Guide sections */}
+        <div className="grid gap-6">
+          {guide.sections.map((section) => (
+            <ScrollSection key={section.title} animation="fade-up">
+              <article className="rounded-xl bg-white/85 p-6 shadow-sm ring-1 ring-black/5">
+                <h2 className="font-heading text-2xl font-bold text-[var(--color-ocean)] mb-4">
+                  {section.title}
+                </h2>
+                <div className="space-y-4 text-muted-foreground leading-relaxed">
+                  {section.body.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              </article>
+            </ScrollSection>
+          ))}
+        </div>
 
         {/* Highlights */}
         <ScrollSection animation="fade-up">
           <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)] mb-8">
-            {locale === "es" ? "Puntos destacados" : locale === "fr" ? "Points forts" : locale === "de" ? "Highlights" : locale === "en" ? "Highlights" : "In evidenza"}
+            {guide.highlightsTitle}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {highlights.map((highlight, i) => (
@@ -541,6 +587,21 @@ export default async function IslandDetailPage({
                   {highlight}
                 </span>
               </div>
+            ))}
+          </div>
+        </ScrollSection>
+
+        {/* FAQ */}
+        <ScrollSection animation="fade-up">
+          <h2 className="font-heading text-3xl font-bold text-[var(--color-ocean)] mb-8">
+            {guide.faqTitle}
+          </h2>
+          <div className="space-y-4">
+            {guide.faqs.map((faq) => (
+              <article key={faq.question} className="rounded-xl bg-white/85 p-5 shadow-sm ring-1 ring-black/5">
+                <h3 className="font-heading text-xl font-bold text-[var(--color-ocean)]">{faq.question}</h3>
+                <p className="mt-3 text-muted-foreground leading-relaxed">{faq.answer}</p>
+              </article>
             ))}
           </div>
         </ScrollSection>
@@ -564,16 +625,28 @@ export default async function IslandDetailPage({
         <ScrollSection animation="fade-up">
           <div className="text-center py-10 px-6 rounded-2xl bg-gradient-to-br from-[#0ea5e9] via-[#0284c7] to-[#0369a1]">
             <h2 className="font-heading text-2xl md:text-3xl font-bold text-white mb-4">
-              {t("discoverExperiences")}
+              {guide.ctaTitle}
             </h2>
-            <Link href={localizedPath(locale, "/experiences")}>
-              <Button
-                size="lg"
-                className="bg-white text-[var(--color-ocean)] hover:bg-white/90 font-semibold text-lg px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
-              >
-                {t("discoverExperiences")}
-              </Button>
-            </Link>
+            <p className="mx-auto mb-6 max-w-2xl text-white/82">{guide.ctaText}</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Link href={localizedPath(locale, "/experiences")}>
+                <Button
+                  size="lg"
+                  className="bg-white text-[var(--color-ocean)] hover:bg-white/90 font-semibold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+                >
+                  {guide.primaryCtaLabel}
+                </Button>
+              </Link>
+              <Link href={localizedPath(locale, "/contacts")}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/70 bg-transparent text-white hover:bg-white/10 font-semibold text-lg px-8 py-6 rounded-full"
+                >
+                  {guide.secondaryCtaLabel}
+                </Button>
+              </Link>
+            </div>
           </div>
         </ScrollSection>
       </div>

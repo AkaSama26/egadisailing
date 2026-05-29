@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { Send } from "lucide-react";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
+import { trackEvent } from "@/lib/analytics/client";
 import { sendContactMessage, type ContactFormState } from "./actions";
 
 const initialState: ContactFormState = { status: "idle" };
@@ -14,10 +15,20 @@ export interface ContactFormProps {
 
 export function ContactForm({ turnstileSiteKey, locale }: ContactFormProps) {
   const [state, formAction, pending] = useActionState(sendContactMessage, initialState);
+  const trackedSentRef = useRef(false);
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
   const isDe = locale === "de";
+  useEffect(() => {
+    if (state.status !== "sent" || trackedSentRef.current) return;
+    trackedSentRef.current = true;
+    trackEvent("contact_submit", {
+      locale,
+      method: "contact_form",
+    });
+  }, [locale, state.status]);
+
   const copy = {
     sentTitle: isEs ? "Mensaje recibido" : isFr ? "Message reçu" : isDe ? "Nachricht erhalten" : isEn ? "Message received" : "Messaggio ricevuto",
     name: isEs ? "Nombre *" : isFr ? "Nom *" : isDe ? "Name *" : isEn ? "Name *" : "Nome *",

@@ -5,6 +5,7 @@ import { getLocale } from "next-intl/server";
 import { ServiceWorkerCleanup } from "@/components/service-worker-cleanup";
 import { env } from "@/lib/env";
 import { getSiteVerificationMetadata } from "@/lib/site-verification";
+import { buildGlobalSeoJsonLd, jsonLd } from "@/lib/seo/structured-data";
 import "vanilla-cookieconsent/dist/cookieconsent.css";
 import "./globals.css";
 
@@ -110,6 +111,7 @@ export default async function RootLayout({
   // dall'URL `/it/...` / `/en/...`). Default "it" se fuori dal pattern
   // (es. `/admin/*`, admin e' IT-only).
   const locale = await getLocale();
+  const globalSeoJsonLd = buildGlobalSeoJsonLd(locale);
   return (
     <html lang={locale} className={`${manrope.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
@@ -119,6 +121,10 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: serviceWorkerInlineCleanupScript }}
         />
         <ServiceWorkerCleanup />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd(globalSeoJsonLd) }}
+        />
         {children}
       </body>
     </html>

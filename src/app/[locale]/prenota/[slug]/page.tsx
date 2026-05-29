@@ -4,7 +4,10 @@ import { notFound } from "next/navigation";
 import { env } from "@/lib/env";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { OceanLayout } from "@/components/customer/ocean-layout";
-import { getExperienceContent } from "@/data/catalog/experiences";
+import {
+  getExperienceContent,
+  resolveExperienceServiceIdFromSlug,
+} from "@/data/catalog/experiences";
 import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
 // Round 11 SEO-M3: wizard di prenotazione non indexabile (no SEO value,
@@ -39,7 +42,8 @@ export default async function BookingPage({
 }) {
   const { locale, slug } = await params;
   const sp = await searchParams;
-  const service = await db.service.findUnique({ where: { id: slug } });
+  const serviceId = resolveExperienceServiceIdFromSlug(slug);
+  const service = await db.service.findUnique({ where: { id: serviceId } });
   if (!service || !service.active) notFound();
   const content = getExperienceContent(service.id, locale);
   const serviceTitle = content?.title ?? service.name;

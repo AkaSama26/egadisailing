@@ -103,6 +103,7 @@ export function TestimonialsColumn({
                       {typeof rating === "number" ? (
                         <span
                           className="flex items-center gap-0.5"
+                          role="img"
                           aria-label={ratingLabel(rating)}
                         >
                           {starsFor(rating).map((_, starIndex) => (

@@ -208,7 +208,7 @@ export function ExperienceChoiceDialog({
       return;
     }
     setHistory((current) => {
-      const previous = current.at(-1);
+      const previous = current.length > 0 ? current[current.length - 1] : undefined;
       if (previous) setStep(previous);
       return current.slice(0, -1);
     });

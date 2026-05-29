@@ -1,10 +1,9 @@
 "use client";
 
 import { Dialog } from "@base-ui/react/dialog";
-import { motion, useInView, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 
 export interface HomePhotoStackImage {
   src: string;
@@ -101,16 +100,59 @@ export function HomePhotoStack({
   enterFrom = "right",
   className = "",
 }: HomePhotoStackProps) {
-  const shouldReduceMotion = useReducedMotion();
   const stackRef = useRef<HTMLDivElement>(null);
-  const isStackInView = useInView(stackRef, { once: true, margin: "0px 0px -120px 0px" });
   const layouts = getLayouts(variant);
   const entryX = enterFrom === "left" ? "-34vw" : "34vw";
   const stackImages = images.slice(0, layouts.length);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isStackInView, setIsStackInView] = useState(false);
+  const [shouldReduceMotion, setShouldReduceMotion] = useState(false);
 
   const activeImage = selectedIndex === null ? null : stackImages[selectedIndex];
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotionPreference = () => {
+      const shouldReduce = mediaQuery.matches;
+      setShouldReduceMotion(shouldReduce);
+      if (shouldReduce) setIsStackInView(true);
+    };
+
+    const frameId = window.requestAnimationFrame(updateMotionPreference);
+    mediaQuery.addEventListener("change", updateMotionPreference);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      mediaQuery.removeEventListener("change", updateMotionPreference);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      const frameId = window.requestAnimationFrame(() => setIsStackInView(true));
+      return () => window.cancelAnimationFrame(frameId);
+    }
+
+    const stack = stackRef.current;
+    if (!stack) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      const frameId = window.requestAnimationFrame(() => setIsStackInView(true));
+      return () => window.cancelAnimationFrame(frameId);
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setIsStackInView(true);
+        observer.disconnect();
+      },
+      { rootMargin: "0px 0px -120px 0px", threshold: 0.1 },
+    );
+
+    observer.observe(stack);
+    return () => observer.disconnect();
+  }, [shouldReduceMotion]);
 
   function moveDialogImage(direction: -1 | 1) {
     setSelectedIndex((current) => {
@@ -153,55 +195,40 @@ export function HomePhotoStack({
           const hoverOffset = getHoverOffset(index);
           const zIndex = hoveredIndex === index ? 80 : layout.zIndex;
           const caption = getImageCaption(image);
-          const hiddenPose = {
-            opacity: 0,
-            x: entryX,
-            y: layout.fromY,
-            rotate: layout.rotate * 0.4,
-            scale: 0.88,
-            filter: "blur(12px)",
-          };
-          const visiblePose = {
-            opacity: 1,
-            x: 0,
-            y: 0,
-            rotate: layout.rotate,
-            scale: 1,
-            filter: "blur(0px)",
-          };
+          const cardStyle = {
+            left: layout.left,
+            top: layout.top,
+            width: layout.width,
+            zIndex,
+            "--stack-enter-x": entryX,
+            "--stack-enter-y": `${layout.fromY}px`,
+            "--stack-rotate": `${layout.rotate}deg`,
+            "--stack-hidden-rotate": `${layout.rotate * 0.4}deg`,
+            "--stack-delay": `${0.18 + index * 0.28}s`,
+          } as CSSProperties;
+          const buttonStyle = {
+            "--stack-hover-x": `${hoverOffset.x}px`,
+            "--stack-hover-y": `${hoverOffset.y}px`,
+            "--stack-hover-scale": String(hoverOffset.scale),
+          } as CSSProperties;
 
           return (
-            <motion.figure
+            <figure
               key={image.src}
-              className="absolute aspect-[0.86/1] overflow-visible will-change-transform"
-              style={{
-                left: layout.left,
-                top: layout.top,
-                width: layout.width,
-                zIndex,
-              }}
-              initial={shouldReduceMotion ? false : hiddenPose}
-              animate={shouldReduceMotion || isStackInView ? visiblePose : hiddenPose}
-              transition={{
-                duration: 1.55,
-                delay: 0.18 + index * 0.38,
-                ease: [0.18, 0.9, 0.22, 1],
-              }}
+              className={`home-photo-stack-card absolute aspect-[0.86/1] overflow-visible will-change-transform ${
+                isStackInView || shouldReduceMotion ? "is-visible" : ""
+              }`}
+              style={cardStyle}
             >
-              <motion.button
+              <button
                 type="button"
                 aria-label={`${labels.openImage}: ${image.alt}`}
                 onClick={() => setSelectedIndex(index)}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onFocus={() => setHoveredIndex(index)}
                 onBlur={() => setHoveredIndex(null)}
-                className="group relative flex h-full w-full cursor-zoom-in flex-col overflow-hidden rounded-md border border-white bg-[#f8f3e9] p-[4.7%] pb-[14.5%] text-left shadow-[0_32px_90px_rgba(0,0,0,0.3)] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071934]"
-                animate={{
-                  x: hoverOffset.x,
-                  y: hoverOffset.y,
-                  scale: hoverOffset.scale,
-                }}
-                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                style={buttonStyle}
+                className="home-photo-stack-button group relative flex h-full w-full cursor-zoom-in flex-col overflow-hidden rounded-md border border-white bg-[#f8f3e9] p-[4.7%] pb-[14.5%] text-left shadow-[0_32px_90px_rgba(0,0,0,0.3)] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-gold)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#071934]"
               >
                 <span className="relative block min-h-0 w-full flex-1 overflow-hidden rounded-[0.18rem] bg-[#d8e7ec]">
                   <Image
@@ -210,9 +237,10 @@ export function HomePhotoStack({
                     fill
                     sizes={
                       variant === "duo"
-                        ? "(min-width: 1024px) 40vw, (min-width: 640px) 54vw, 76vw"
-                        : "(min-width: 1024px) 28vw, (min-width: 640px) 46vw, 70vw"
+                        ? "(min-width: 1280px) 22vw, (min-width: 1024px) 28vw, (min-width: 640px) 34vw, 52vw"
+                        : "(min-width: 1280px) 16vw, (min-width: 1024px) 20vw, (min-width: 640px) 26vw, 42vw"
                     }
+                    quality={80}
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.035]"
                   />
                 </span>
@@ -222,8 +250,8 @@ export function HomePhotoStack({
                 >
                   {caption}
                 </span>
-              </motion.button>
-            </motion.figure>
+              </button>
+            </figure>
           );
         })}
       </div>

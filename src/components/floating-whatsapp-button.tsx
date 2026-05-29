@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CountryFlag } from "@/components/country-flag";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
+import { trackEvent } from "@/lib/analytics/client";
 import {
   getOrderedWhatsAppContacts,
   getWhatsAppLabel,
@@ -44,7 +45,7 @@ export function FloatingWhatsAppButton({ locale }: { locale: string }) {
   }, []);
 
   return (
-    <div ref={rootRef} className="fixed bottom-4 right-4 z-[60] flex max-w-[calc(100vw-2rem)] items-end gap-3">
+    <div ref={rootRef} className="egadi-floating-whatsapp fixed bottom-4 right-4 z-[60] flex max-w-[calc(100vw-2rem)] items-end gap-3">
       {open && (
         <div className="absolute bottom-14 right-0 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 text-slate-900 shadow-xl shadow-slate-900/20">
           {contacts.map((contact) => (
@@ -53,7 +54,14 @@ export function FloatingWhatsAppButton({ locale }: { locale: string }) {
               href={getWhatsAppUrl(contact, locale)}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                trackEvent("whatsapp_click", {
+                  locale,
+                  contact_key: contact.key,
+                  source: "floating_button",
+                });
+                setOpen(false);
+              }}
               className="flex items-center gap-3 px-4 py-3 text-sm font-semibold transition hover:bg-slate-50"
             >
               <CountryFlag code={contact.flagCode} className="h-4 w-6" />

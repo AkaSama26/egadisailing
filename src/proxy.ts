@@ -9,8 +9,6 @@ import {
 } from "./data/catalog/experiences";
 import {
   isLegacyServiceWorkerPath,
-  LEGACY_CACHE_RESET_COOKIE,
-  LEGACY_CACHE_RESET_VERSION,
   SERVICE_WORKER_TOMBSTONE_SCRIPT,
   serviceWorkerHeaders,
 } from "./lib/legacy-service-worker";
@@ -141,24 +139,6 @@ function createServiceWorkerTombstoneResponse() {
   });
 }
 
-function withLegacyCacheReset(req: NextRequest, response: NextResponse) {
-  if (req.cookies.get(LEGACY_CACHE_RESET_COOKIE)?.value === LEGACY_CACHE_RESET_VERSION) {
-    return response;
-  }
-
-  if (!response.headers.has("location")) {
-    response.cookies.set(LEGACY_CACHE_RESET_COOKIE, LEGACY_CACHE_RESET_VERSION, {
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-    });
-  }
-
-  return response;
-}
-
 function getDirectLocalizedRouteLocale(pathname: string): PublicLocale | null {
   if (/^\/it\/esperienze(?:\/.*)?\/?$/.test(pathname)) return "it";
   if (/^\/de\/(?:ueber-uns|boote(?:\/.*)?|erlebnisse(?:\/.*)?|inseln(?:\/.*)?|kontakt|buchen(?:\/.*)?|haeufige-fragen|datenschutz|agb|cookie-richtlinie|buchung-finden|b\/buchung)\/?$/.test(
@@ -173,23 +153,25 @@ function nextWithLocale(req: NextRequest, locale: PublicLocale) {
   const response = NextResponse.next({
     request: { headers },
   });
-  response.cookies.set("NEXT_LOCALE", locale, {
-    path: "/",
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  });
-  return withLegacyCacheReset(req, withCustomAlternates(req, response));
+  return withCustomAlternates(req, response);
 }
 
 /**
- * Middleware unificato:
+ * Proxy unificato:
  *  1. `/admin/*` (eccetto `/admin/login`): richiede JWT NextAuth con
  *     `token.role === "ADMIN"`, altrimenti redirect a `/admin/login`.
  *     Defense-in-depth oltre al check in `(dashboard)/layout.tsx` (Round 10 Sec-C2).
  *  2. Public paths: delegate a `next-intl` per i18n routing.
  */
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  if (pathname === "/") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/it";
+    url.search = "";
+    return NextResponse.redirect(url, 308);
+  }
 
   if (isLegacyServiceWorkerPath(pathname)) {
     return createServiceWorkerTombstoneResponse();
@@ -245,7 +227,7 @@ export default async function middleware(req: NextRequest) {
     return nextWithLocale(req, directLocalizedRouteLocale);
   }
 
-  return withLegacyCacheReset(req, withCustomAlternates(req, intlMiddleware(req)));
+  return withCustomAlternates(req, intlMiddleware(req));
 }
 
 export const config = {

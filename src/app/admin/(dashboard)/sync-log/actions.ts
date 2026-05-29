@@ -18,8 +18,16 @@ export const resolveAlertAction = withAdminAction(
   {
     schema: z.object({ id: z.string().min(1) }),
     revalidatePaths: ["/admin/sync-log", "/admin"],
+    rateLimitPerMin: 120,
   },
   async (input, ctx) => {
     await resolveManualAlert(input.id, ctx.userId);
   },
 );
+
+export async function resolveAlertFormAction(
+  _prevState: Awaited<ReturnType<typeof resolveAlertAction>> | null,
+  formData: FormData,
+) {
+  return resolveAlertAction({ id: formData.get("id") });
+}

@@ -18,7 +18,7 @@ Internet → Cloudflare (DNS + optional proxy + Turnstile)
      ├─ postgres container (no-port-expose, pgdata volume)
      └─ redis container (no-port-expose, AOF everysec, requirepass)
 
-     + backup sidecar (pg_dump cron 02:30 UTC → S3-compatible bucket)
+     + backup sidecar (pg_dump ogni 15 min → filesystem locale VPS, retention 3 giorni)
 ```
 
 **Note capacity**: app runtime usa `DATABASE_URL_POOLED` (via pgbouncer
@@ -35,7 +35,7 @@ prepared statements server-side). Migrations + advisory locks usano
 - Account Brevo sender verificato (SPF + DKIM DNS records)
 - Account Cloudflare Turnstile (sitekey + secret)
 - Opzionale: Sentry DSN, Bokun/Boataround credentials, Telegram bot
-- Bucket S3-compatible per backup (AWS S3, Backblaze B2, Wasabi)
+- Backup locale su VPS attivo; bucket S3-compatible opzionale come replica offsite
 
 ## Fase 1 — VPS setup
 
@@ -105,12 +105,14 @@ ADMIN_EMAIL=info@egadisailing.com
 # IMAP_USER=...
 # IMAP_PASSWORD=...
 
-# Backup S3 (obbligatorio per backup sidecar)
-BACKUP_S3_BUCKET=egadisailing-prod-backups
-BACKUP_S3_ENDPOINT=https://s3.eu-central-1.amazonaws.com
-BACKUP_S3_KEY=AKIA...
-BACKUP_S3_SECRET=...
-BACKUP_RETENTION_DAYS=30
+# Backup locale VPS (sidecar ogni 15 minuti, retention default 3 giorni)
+BACKUP_RETENTION_DAYS=3
+
+# Backup S3/B2 opzionale come replica offsite
+# BACKUP_S3_BUCKET=egadisailing-prod-backups
+# BACKUP_S3_ENDPOINT=https://s3.eu-central-1.amazonaws.com
+# BACKUP_S3_KEY=AKIA...
+# BACKUP_S3_SECRET=...
 EOF
 
 # Rivedi file .env prima di startup:
@@ -185,24 +187,29 @@ Per il rollout del Checkout hosted, segui anche
 ## Fase 6 — Backup sidecar
 
 Il container `backup` in `docker-compose.prod.yml` esegue `docker/backup.sh`
-automaticamente ogni giorno 02:30 UTC. Richiede env:
-- `BACKUP_S3_BUCKET`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_KEY`, `BACKUP_S3_SECRET`
-- `BACKUP_RETENTION_DAYS` (default 30)
+ogni 15 minuti. I dump restano sul filesystem della VPS in
+`./backups/postgres/` e vengono cancellati dopo `BACKUP_RETENTION_DAYS`
+(default 3). Se le variabili `BACKUP_S3_*` sono configurate, lo stesso dump
+viene anche caricato su bucket S3/B2 come replica offsite.
 
 Verifica:
 ```bash
-docker compose -f docker-compose.prod.yml logs backup | tail -20
-# Dopo un run atteso (o forza manuale):
+docker compose -f docker-compose.prod.yml ps backup postgres
+docker compose -f docker-compose.prod.yml exec backup crontab -l
+docker compose -f docker-compose.prod.yml logs backup | tail -40
+ls -lh backups/postgres
+
+# Forza manualmente un backup e controlla integrita' gzip.
 docker compose -f docker-compose.prod.yml exec backup /backup.sh
-# Lista oggetti in bucket:
-aws s3 ls s3://egadisailing-prod-backups/pgdump/egadisailing/
+LATEST=$(ls -t backups/postgres/pgdump-egadisailing-*.sql.gz | head -n 1)
+gzip -t "$LATEST"
 ```
 
 **Test restore drill consigliato mensilmente**:
 ```bash
-# Scarica dump + restore in DB staging separato per verifica integrita'.
-aws s3 cp s3://.../pgdump/egadisailing/TIMESTAMP.sql.gz ./restore.sql.gz
-gunzip -c restore.sql.gz | docker compose exec -T postgres psql -U egadisailing -d egadisailing_test
+# Ripristina un dump in DB staging separato per verifica integrita'.
+LATEST=$(ls -t backups/postgres/pgdump-egadisailing-*.sql.gz | head -n 1)
+gunzip -c "$LATEST" | docker compose exec -T postgres psql -U egadisailing -d egadisailing_test
 ```
 
 ## Rolling update (zero-downtime)

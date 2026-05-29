@@ -218,14 +218,14 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
       domain: "Google Analytics",
       description:
         locale === "fr"
-          ? "Mesure agrégée des visites et des performances du site."
+          ? "Mesure agrégée des visites, interactions, conversions et performances du site."
           : locale === "es"
-            ? "Medición agregada de visitas y rendimiento del sitio."
+            ? "Medición agregada de visitas, interacciones, conversiones y rendimiento del sitio."
             : locale === "de"
-              ? "Aggregierte Messung von Besuchen und Website-Leistung."
+              ? "Aggregierte Messung von Besuchen, Interaktionen, Conversions und Website-Leistung."
             : locale === "en"
-              ? "Aggregated measurement of visits and website performance."
-              : "Misurazione aggregata delle visite e delle performance del sito.",
+              ? "Aggregated measurement of visits, interactions, conversions and website performance."
+              : "Misurazione aggregata di visite, interazioni, conversioni e performance del sito.",
       expiration:
         locale === "fr" ? "jusqu'à 2 ans" : locale === "es" ? "hasta 2 años" : locale === "de" ? "bis zu 2 Jahre" : locale === "en" ? "up to 2 years" : "fino a 2 anni",
     });
@@ -553,7 +553,7 @@ export function CookieConsentBanner({ locale, services }: CookieConsentBannerPro
       aria-label={floatingLabel}
       title={floatingLabel}
       onClick={openPreferences}
-      className="fixed bottom-4 left-4 z-[60] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-[#071934] text-white shadow-lg shadow-slate-900/20 transition hover:bg-[#0c2d5e] focus:outline-none focus:ring-2 focus:ring-[#38bdf8] focus:ring-offset-2"
+      className="egadi-floating-cookie fixed bottom-4 left-4 z-[60] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-[#071934] text-white shadow-lg shadow-slate-900/20 transition hover:bg-[#0c2d5e] focus:outline-none focus:ring-2 focus:ring-[#38bdf8] focus:ring-offset-2"
     >
       <Cookie aria-hidden="true" className="h-5 w-5" />
     </button>

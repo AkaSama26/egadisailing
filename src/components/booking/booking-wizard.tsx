@@ -8,6 +8,7 @@ import { StripePaymentForm } from "./stripe-payment-form";
 import { CountryFlag, type FlagCode } from "@/components/country-flag";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import { CustomerWeatherCard } from "@/components/weather/customer-weather-card";
+import { centsToAnalyticsValue, trackEvent, trackEventOncePerSession } from "@/lib/analytics/client";
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
@@ -69,6 +70,12 @@ const CHECKOUT_STEPS_DE: typeof CHECKOUT_STEPS = [
   { key: "review", label: "Übersicht", icon: ReceiptText },
   { key: "payment", label: "Zahlung", icon: CreditCard },
 ];
+
+function checkoutStepNumber(step: Step): number {
+  if (step === "success") return CHECKOUT_STEPS.length + 1;
+  const index = CHECKOUT_STEPS.findIndex((item) => item.key === step);
+  return index >= 0 ? index + 1 : 0;
+}
 
 function clientIntlLocale(locale?: string | null): string {
   if (locale === "es") return "es-ES";
@@ -493,6 +500,17 @@ export function BookingWizard(props: Props) {
     (Boolean(fixedDurationDays) && Boolean(startDate)) ||
     (charterDurationDays !== null && charterDurationDays >= 3 && charterDurationDays <= 7);
 
+  const analyticsServiceParams = useMemo(
+    () => ({
+      locale: props.locale,
+      service_id: props.serviceId,
+      service_name: props.serviceName,
+      service_type: props.serviceType,
+      duration_type: props.durationType,
+    }),
+    [props.durationType, props.locale, props.serviceId, props.serviceName, props.serviceType],
+  );
+
   // R26-A1-C1 + R26-P2-CRITICA: restore in useEffect client-side per evitare
   // hydration mismatch. Dopo restore marca `hydrated=true` → save effect puo'
   // procedere senza sovrascrivere draft precedente con stati default.
@@ -567,6 +585,28 @@ export function BookingWizard(props: Props) {
     selectedPaymentSchedule,
     customer,
   ]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    trackEventOncePerSession(
+      "booking-start:" + props.serviceId,
+      "booking_start",
+      analyticsServiceParams,
+    );
+  }, [analyticsServiceParams, hydrated, props.serviceId]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    trackEventOncePerSession(
+      "booking-step:" + props.serviceId + ":" + step,
+      "booking_step",
+      {
+        ...analyticsServiceParams,
+        step,
+        step_number: checkoutStepNumber(step),
+      },
+    );
+  }, [analyticsServiceParams, hydrated, props.serviceId, step]);
 
   useEffect(() => {
     if (!startDate || (isCharter && !priceLookupDurationDays)) {
@@ -688,6 +728,26 @@ export function BookingWizard(props: Props) {
       }
       const body = await res.json();
       const payload = body.data ?? body; // tolleranza per envelope old/new
+      const checkoutAmountCents = Number(payload.amountCents ?? 0);
+      const checkoutTotalCents = Number(payload.totalCents ?? payload.amountCents ?? 0);
+      const checkoutGuestCount = occupiedSeats(passengers);
+      trackEvent("begin_checkout", {
+        ...analyticsServiceParams,
+        currency: "EUR",
+        value: centsToAnalyticsValue(checkoutAmountCents),
+        total_value: centsToAnalyticsValue(checkoutTotalCents),
+        payment_schedule: selectedPaymentSchedule,
+        guest_count: checkoutGuestCount,
+        items: [
+          {
+            item_id: props.serviceId,
+            item_name: props.serviceName,
+            item_category: props.serviceType,
+            quantity: Math.max(1, checkoutGuestCount),
+            price: centsToAnalyticsValue(checkoutTotalCents),
+          },
+        ],
+      });
       if (props.useStripeCheckout) {
         if (!payload.checkoutUrl || typeof payload.checkoutUrl !== "string") {
           throw new Error(copy.stripeCheckoutUnavailable);
@@ -919,6 +979,18 @@ export function BookingWizard(props: Props) {
           balanceCents={intent.balanceCents}
           onSuccess={() => {
             clearDraft(props.serviceId);
+            trackEventOncePerSession(
+              "payment-success:" + props.serviceId + ":" + intent.totalCents + ":" + intent.amountCents,
+              "payment_success",
+              {
+                ...analyticsServiceParams,
+                currency: "EUR",
+                value: centsToAnalyticsValue(intent.amountCents),
+                total_value: centsToAnalyticsValue(intent.totalCents),
+                payment_schedule: selectedPaymentSchedule,
+                guest_count: occupiedSeats(passengers),
+              },
+            );
             setStep("success");
           }}
           onRetryNeeded={() => {

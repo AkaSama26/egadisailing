@@ -32,6 +32,11 @@ function jsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
+function absoluteUrl(path: string): string {
+  const base = env.APP_URL.replace(/\/+$/, "");
+  return path.startsWith("http") ? path : base + (path.startsWith("/") ? path : `/${path}`);
+}
+
 function lowestDisplayPrice(
   serviceIds: string[],
   displayPrices: Map<string, DisplayPrice>,
@@ -639,15 +644,24 @@ export default async function ExperiencesPage({
         itemListElement: packages.map((item, index) => {
           const itemUrl = `${siteBase}/${locale}${item.primaryHref}`;
           const facts = hubCopy.facts[item.key as keyof typeof hubCopy.facts];
+          const structuredImages = item.media
+            .map((media) => media.src)
+            .filter((src): src is string => Boolean(src))
+            .slice(0, 3)
+            .map((src) => absoluteUrl(src));
           return {
             "@type": "ListItem",
             position: index + 1,
             url: itemUrl,
             item: {
-              "@type": ["Product", "TouristTrip"],
+              "@type": "TouristTrip",
               name: item.seoTitle,
               description: `${item.seoDescription} ${facts?.route ?? ""}`,
               url: itemUrl,
+              image:
+                structuredImages.length > 0
+                  ? structuredImages
+                  : [absoluteUrl("/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp")],
               duration: packageSchemaDuration(item.key),
               provider: { "@id": organizationId },
               areaServed: [

@@ -9,7 +9,7 @@ export function publicAsset(path: string): string {
 
 export const HERO_VIDEO_POSTER_SRC = publicAsset(`/videos/hero-poster.webp?v=${heroAssetVersion}`);
 export const HERO_VIDEO_SRC = publicAsset(`/videos/hero.mp4?v=${heroAssetVersion}`);
-export const BRAND_LOGO_SRC = publicAsset(`/images/brand/egadi-sailing-logo.svg?v=${brandAssetVersion}`);
+export const BRAND_LOGO_SRC = `/images/brand/egadi-sailing-logo-white.svg?v=${brandAssetVersion}`;
 export const BRAND_LOGO_EMAIL_WHITE_SRC = publicAsset(
   `/images/brand/egadi-sailing-logo-white.svg?v=${brandAssetVersion}`,
 );

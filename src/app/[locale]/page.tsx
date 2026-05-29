@@ -42,27 +42,27 @@ const CHOICE_RECOMMENDATION_SERVICE_IDS = {
 
 const HOME_SEO_COPY = {
   it: {
-    title: "Tour in barca Egadi da Trapani",
+    title: "Egadi Sailing | Tour in barca alle Egadi da Trapani",
     description:
       "Tour in barca alle Egadi da Trapani: Favignana e Levanzo, tour privati o condivisi, snorkeling, chef a bordo e charter in trimarano con comfort da catamarano.",
   },
   en: {
-    title: "Egadi Islands Boat Tours from Trapani",
+    title: "Egadi Sailing | Egadi Islands Boat Tours from Trapani",
     description:
       "Boat tours to the Egadi Islands from Trapani: Favignana and Levanzo, private or shared tours, snorkelling, chef on board and trimaran charters with catamaran-style comfort.",
   },
   es: {
-    title: "Excursiones en barco Islas Egadi desde Trapani",
+    title: "Egadi Sailing | Excursiones en barco Egadi desde Trapani",
     description:
       "Excursiones en barco a las Islas Egadi desde Trapani: Favignana y Levanzo, tours privados o compartidos, snorkel, chef a bordo y charter en trimarán con confort de catamarán.",
   },
   fr: {
-    title: "Excursions en bateau îles Égades depuis Trapani",
+    title: "Egadi Sailing | Excursions bateau aux Égades depuis Trapani",
     description:
       "Excursions en bateau aux îles Égades depuis Trapani : Favignana et Levanzo, tours privés ou partagés, snorkeling, chef à bord et charter en trimaran avec confort de catamaran.",
   },
   de: {
-    title: "Bootstouren Ägadische Inseln ab Trapani",
+    title: "Egadi Sailing | Bootstouren Ägadische Inseln ab Trapani",
     description:
       "Bootstouren zu den Ägadischen Inseln ab Trapani: Favignana und Levanzo, private oder geteilte Touren, Schnorcheln, Chef an Bord und Trimaran-Charter mit Katamaran-Komfort.",
   },
@@ -715,12 +715,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const seo = homeSeoCopy(locale);
-  return buildPageMetadata({
+  const metadata = buildPageMetadata({
     title: seo.title,
     description: seo.description,
     path: "/",
     locale,
   });
+  metadata.title = { absolute: seo.title };
+  return metadata;
 }
 
 export default async function HomePage({

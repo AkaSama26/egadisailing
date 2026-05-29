@@ -605,7 +605,7 @@ export default async function CookiePolicyPage({
                       <code>_ga</code>, <code>_ga_*</code>, <code>_gid</code>
                     </Td>
                     <Td>
-                      Misurazione aggregata delle visite e delle performance del sito, con
+                      Misurazione aggregata di visite, interazioni, conversioni e performance del sito, con
                       configurazione di anonimizzazione IP
                     </Td>
                     <Td>Fino a 2 anni</Td>

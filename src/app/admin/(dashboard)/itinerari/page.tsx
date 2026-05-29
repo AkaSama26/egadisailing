@@ -15,6 +15,7 @@ type Props = {
 export default async function ItinerariPage({ searchParams }: Props) {
   const sp = await searchParams;
   const services = await db.service.findMany({
+    where: { active: true },
     include: {
       boat: { select: { name: true } },
       itinerarySteps: { select: { id: true }, where: { active: true } },

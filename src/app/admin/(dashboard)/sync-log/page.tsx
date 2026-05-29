@@ -1,12 +1,11 @@
 import { db } from "@/lib/db";
 import { getQueue, ALL_QUEUE_NAMES } from "@/lib/queue";
 import { listPendingManualAlerts } from "@/lib/charter/manual-alerts";
-import { resolveAlertAction } from "./actions";
 import { formatItDay } from "@/lib/dates";
 import { TimeIso } from "@/components/ui/time-iso";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
-import { SubmitButton } from "@/components/admin/submit-button";
+import { ResolveAlertForm } from "@/components/admin/resolve-alert-form";
 import { PageHeader } from "@/components/admin/page-header";
 import {
   MANUAL_ALERT_ACTION_LABEL,
@@ -218,19 +217,7 @@ export default async function SyncLogPage() {
                   <span className="text-xs text-slate-500">
                     <TimeIso datetime={a.createdAt} />
                   </span>
-                  <form
-                    action={async () => {
-                      "use server";
-                      const res = await resolveAlertAction({ id: a.id });
-                      if (!res.ok) throw new Error(res.message);
-                    }}
-                  >
-                    <SubmitButton
-                      className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700"
-                    >
-                      Segna come fatto
-                    </SubmitButton>
-                  </form>
+                  <ResolveAlertForm alertId={a.id} />
                 </div>
               </li>
             ))}

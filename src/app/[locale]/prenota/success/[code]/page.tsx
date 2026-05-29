@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,6 +23,7 @@ import { getExperienceContent } from "@/data/catalog/experiences";
 import { getServiceDurationLabel } from "@/lib/services/display";
 import { OceanLayout } from "@/components/customer/ocean-layout";
 import { QrDownloadButton } from "@/components/qr-download-button";
+import { BookingSuccessAnalytics } from "@/components/analytics/booking-success-analytics";
 import { PUBLIC_CONTACT_LOCATION, getContactLocationLabel } from "@/lib/public-contact";
 import { localizedPath } from "@/lib/i18n/paths";
 
@@ -124,6 +126,11 @@ export default async function BookingSuccessPage({
     .toNumber();
   const totalCents = new Decimal(booking.totalPrice.toString()).mul(100).toNumber();
   const balanceCents = Math.max(0, totalCents - paidCents);
+  const analyticsTransactionId = crypto
+    .createHash("sha256")
+    .update(booking.id)
+    .digest("hex")
+    .slice(0, 16);
   const dateLabel = sameUtcDay(booking.startDate, booking.endDate)
     ? formatPublicDay(booking.startDate, locale)
     : `${formatPublicDay(booking.startDate, locale)} - ${formatPublicDay(booking.endDate, locale)}`;
@@ -136,6 +143,18 @@ export default async function BookingSuccessPage({
   return (
     <OceanLayout padding="sm" className="egadi-water-reflection overflow-hidden">
       <main className="relative z-10 mx-auto max-w-6xl space-y-4 pt-14 text-slate-950 sm:pt-16">
+        <BookingSuccessAnalytics
+          transactionId={analyticsTransactionId}
+          locale={locale}
+          serviceId={booking.service.id}
+          serviceName={content?.title ?? booking.service.name}
+          serviceType={booking.service.type}
+          status={booking.status}
+          guestCount={booking.numPeople}
+          totalCents={Math.round(totalCents)}
+          paidCents={Math.round(paidCents)}
+          paymentSchedule={booking.directBooking?.paymentSchedule ?? null}
+        />
         <section className="relative overflow-hidden rounded-2xl bg-white shadow-2xl before:absolute before:left-0 before:top-1/2 before:z-20 before:size-14 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:bg-[#071934] before:content-['']">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-6 p-6 sm:p-8 lg:p-10">

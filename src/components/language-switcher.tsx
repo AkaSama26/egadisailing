@@ -71,11 +71,13 @@ const localizedSegments: Record<string, Record<string, string>> = {
   ticket: { it: "ticket", en: "ticket", es: "billete", fr: "billet", de: "ticket" },
 };
 
-const segmentAliases = new Map(
-  Object.entries(localizedSegments).flatMap(([internal, byLocale]) =>
-    Object.values(byLocale).map((segment) => [segment, internal] as const),
-  ),
-);
+const segmentAliasEntries: Array<readonly [string, string]> = [];
+for (const [internal, byLocale] of Object.entries(localizedSegments)) {
+  for (const segment of Object.values(byLocale)) {
+    segmentAliasEntries.push([segment, internal] as const);
+  }
+}
+const segmentAliases = new Map(segmentAliasEntries);
 
 const experienceSlugsByService: Record<string, Record<string, string>> = {
   "exclusive-experience": {
@@ -129,12 +131,14 @@ const experienceSlugsByService: Record<string, Record<string, string>> = {
   },
 };
 
-const experienceSlugAliases = new Map(
-  Object.entries(experienceSlugsByService).flatMap(([serviceId, byLocale]) => [
-    [serviceId, serviceId] as const,
-    ...Object.values(byLocale).map((slug) => [slug, serviceId] as const),
-  ]),
-);
+const experienceSlugAliasEntries: Array<readonly [string, string]> = [];
+for (const [serviceId, byLocale] of Object.entries(experienceSlugsByService)) {
+  experienceSlugAliasEntries.push([serviceId, serviceId] as const);
+  for (const slug of Object.values(byLocale)) {
+    experienceSlugAliasEntries.push([slug, serviceId] as const);
+  }
+}
+const experienceSlugAliases = new Map(experienceSlugAliasEntries);
 
 function switchPathLocale(pathname: string, newLocale: string) {
   const segments = pathname.split("/").filter(Boolean);

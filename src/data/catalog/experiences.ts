@@ -1575,11 +1575,11 @@ export const EXPERIENCE_CATALOG = {
       de: "Angelcharter Ägadische Inseln ab Trapani",
     },
     seoDescription: {
-      it: "Charter di pesca sportiva alle Isole Egadi da Trapani su gommone privato fino a 4 persone, con canne professionali, bolentino, traina, drifting e catch and release nelle aree consentite AMP/MASAF.",
-      en: "Sport fishing charter in the Egadi Islands from Trapani on a private RIB for up to 4 guests, with professional rods, bottom fishing, trolling, drifting and catch and release in AMP/MASAF permitted areas.",
-      es: "Charter de pesca deportiva en las Islas Egadi desde Trapani en neumática privada hasta 4 personas, con cañas profesionales, pesca de fondo, curricán, drifting y catch and release en zonas permitidas AMP/MASAF.",
-      fr: "Charter de pêche sportive aux îles Égades depuis Trapani sur semi-rigide privé jusqu'à 4 personnes, avec cannes professionnelles, pêche de fond, traîne, drifting et catch and release dans les zones autorisées AMP/MASAF.",
-      de: "Sportangelcharter auf den Ägadischen Inseln ab Trapani auf privatem RIB bis 4 Personen, mit professionellen Ruten, Grundangeln, Schleppangeln, Drifting und Catch and Release in AMP/MASAF-erlaubten Bereichen.",
+      it: "Charter pesca Egadi da Trapani su gommone privato fino a 4 persone, con canne professionali, tecniche miste e rotta in aree consentite AMP/MASAF.",
+      en: "Egadi fishing charter from Trapani on a private RIB for up to 4 guests, with professional rods, mixed techniques and AMP/MASAF permitted routes.",
+      es: "Charter de pesca Egadi desde Trapani en neumática privada hasta 4 personas, con cañas profesionales, técnicas mixtas y zonas permitidas AMP/MASAF.",
+      fr: "Charter pêche Égades depuis Trapani sur semi-rigide privé jusqu'à 4 personnes, avec cannes professionnelles, techniques mixtes et zones AMP/MASAF.",
+      de: "Angelcharter Ägadische Inseln ab Trapani auf privatem RIB bis 4 Personen, mit Profi-Ruten, gemischten Techniken und AMP/MASAF-erlaubten Routen.",
     },
     media: [
       {
@@ -2046,11 +2046,11 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
       de: "Angelcharter Ägadische Inseln ab Trapani",
     },
     seoDescription: {
-      it: "Pacchetto privato di pesca sportiva alle Egadi da Trapani, 8 ore, fino a 4 persone, gommone dedicato, attrezzatura professionale e rotta nelle aree consentite AMP/MASAF.",
-      en: "Private sport fishing package in the Egadi Islands from Trapani, 8 hours, up to 4 guests, dedicated RIB, professional gear and a route through AMP/MASAF permitted areas.",
-      es: "Paquete privado de pesca deportiva en las Islas Egadi desde Trapani, 8 horas, hasta 4 personas, neumática dedicada, equipo profesional y ruta por zonas permitidas AMP/MASAF.",
-      fr: "Forfait privé de pêche sportive aux îles Égades depuis Trapani, 8 heures, jusqu'à 4 personnes, semi-rigide dédié, matériel professionnel et route dans les zones autorisées AMP/MASAF.",
-      de: "Privates Sportangel-Paket auf den Ägadischen Inseln ab Trapani, 8 Stunden, bis 4 Personen, spezielles RIB, professionelle Ausrüstung und Route durch AMP/MASAF-erlaubte Bereiche.",
+      it: "Pacchetto privato pesca Egadi da Trapani, 8 ore, fino a 4 persone, gommone dedicato, attrezzatura professionale e aree AMP/MASAF.",
+      en: "Private Egadi fishing package from Trapani, 8 hours, up to 4 guests, dedicated RIB, professional gear and AMP/MASAF permitted routes.",
+      es: "Paquete privado de pesca Egadi desde Trapani, 8 horas, hasta 4 personas, neumática dedicada, equipo profesional y zonas AMP/MASAF.",
+      fr: "Forfait privé pêche Égades depuis Trapani, 8 heures, jusqu'à 4 personnes, semi-rigide dédié, matériel professionnel et zones AMP/MASAF.",
+      de: "Privates Angelpaket Ägadische Inseln ab Trapani, 8 Stunden, bis 4 Personen, spezielles RIB, Profi-Ausrüstung und AMP/MASAF-Routen.",
     },
     durationLabel: {
       it: "8 ore",
@@ -2686,7 +2686,7 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
       "Ein privates Gourmet-Erlebnis auf dem Trimaran mit Katamaran-Komfort, um die Ägadischen Inseln mit ruhigem Rhythmus, Mittagessen an Bord und Route zwischen Favignana und Levanzo zu entdecken.",
     seoTitle: "Chef an Bord auf Trimaran zu den Ägadischen Inseln ab Trapani",
     seoDescription:
-      "Privates Gourmet-Erlebnis auf dem Trimaran mit Katamaran-Komfort ab Trapani, mit Chef an Bord, Skipper, Hostess, sizilianischem Mittagessen und Route zwischen Favignana und Levanzo.",
+      "Privates Gourmet-Erlebnis auf Trimaran ab Trapani, mit Chef an Bord, Skipper, Hostess, sizilianischem Mittagessen, Favignana und Levanzo.",
     itinerary: [
       { time: "09:30", title: "Willkommen an Bord", text: "Treffpunkt: Via dei Gladioli 15, 91100 Trapani." },
       {

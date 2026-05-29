@@ -2,11 +2,9 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { CookiePreferencesButton } from "@/components/cookie-preferences-button";
 import { CountryFlag } from "@/components/country-flag";
+import { SafeEmailLink } from "@/components/safe-email-link";
 import {
   PUBLIC_COMPANY_LEGAL,
-  PUBLIC_CONTACT_EMAIL,
-  getCompanyLegalLines,
-  getEmailHref,
   getOrderedWhatsAppContacts,
   getWhatsAppLabel,
   getWhatsAppUrl,
@@ -35,7 +33,6 @@ export function Footer() {
   const tFooter = useTranslations("footer");
   const tCommon = useTranslations("common");
   const whatsappContacts = getOrderedWhatsAppContacts(locale);
-  const companyLegalLines = getCompanyLegalLines();
 
   return (
     <footer className="bg-[var(--color-ocean)] text-white">
@@ -123,17 +120,25 @@ export function Footer() {
             </h3>
             <div className="mt-4 space-y-3 text-sm text-gray-300">
               <div className="space-y-1">
-                {companyLegalLines.map((line) => (
-                  <p key={line}>{line}</p>
-                ))}
+                <p>{PUBLIC_COMPANY_LEGAL.name}</p>
+                <p>{PUBLIC_COMPANY_LEGAL.legalAddress}</p>
+                <p>P.IVA: {PUBLIC_COMPANY_LEGAL.vatNumber}</p>
+                <p>
+                  PEC:{" "}
+                  <SafeEmailLink
+                    user="egadiSailing"
+                    domainParts={["pec", "it"]}
+                    className="transition-colors hover:text-white"
+                  />
+                </p>
+                <p>Codice Univoco: {PUBLIC_COMPANY_LEGAL.recipientCode}</p>
               </div>
               <p>
-                <a
-                  href={getEmailHref()}
+                <SafeEmailLink
+                  user="info"
+                  domainParts={["egadisailing", "com"]}
                   className="transition-colors hover:text-white"
-                >
-                  {PUBLIC_CONTACT_EMAIL}
-                </a>
+                />
               </p>
               <div className="space-y-2">
                 {whatsappContacts.map((contact) => (

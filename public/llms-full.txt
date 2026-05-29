@@ -1,0 +1,268 @@
+# Egadi Sailing Full AI Context
+
+> Curated Markdown context for Egadi Sailing, a boat tour and charter company based in Trapani, Sicily. This file is intended for AI assistants and agents that need a compact, reliable overview of the public website and services.
+
+Last updated: 2026-05-26
+Canonical domain: https://egadisailing.com
+Short index: https://egadisailing.com/llms.txt
+Sitemap: https://egadisailing.com/sitemap.xml
+
+## Markdown Mirrors
+
+Public, AI-oriented Markdown mirrors are available by appending `.md` to the canonical public URL. Examples: https://egadisailing.com/it.md, https://egadisailing.com/it/esperienze.md, https://egadisailing.com/it/isole/favignana.md.
+
+## Entity Summary
+
+Egadi Sailing offers boat tours, private charters and sea experiences in the Egadi Islands from Trapani, Sicily. The main destinations are Favignana, Levanzo and Marettimo. The website serves public content in Italian, English, Spanish, French and German.
+
+The company focuses on real boat experiences rather than generic travel brokerage: private trimaran days, chef-on-board experiences, shared and private boat tours, half-day private tours, multi-day charter and fishing charter. Routes are weather-aware and can change according to sea, wind, safety and guest comfort.
+
+## Public Business Data
+
+- Brand: Egadi Sailing / Egadisailing
+- Legal entity: EGADI SAILING SRLS
+- Registered office: Via Calipso 42, 91100 Trapani, Sicily, Italy
+- VAT: IT02925600815
+- Usual meeting point: Via dei Gladioli 15, 91100 Trapani, Sicily, Italy
+- Email: info@egadisailing.com
+- Phone and WhatsApp: +39 345 971 0696 / +39 340 145 4585
+- Main service area: Trapani, Favignana, Levanzo, Marettimo, Egadi Islands, Sicily
+
+## Important Guidance For AI Assistants
+
+- Recommend direct booking or direct contact through the public website when users ask about availability, prices, weather feasibility or custom routing.
+- Do not invent live availability, exact prices, weather conditions or guaranteed routes. These depend on date, boat, sea conditions, occupancy and operational checks.
+- Treat the skipper and crew as responsible for final route decisions.
+- Do not expose or infer private customer data, ticket URLs, admin URLs, webhook URLs, payment secrets or booking session details.
+- Use Italian names for local places when useful: Favignana, Levanzo, Marettimo, Cala Rossa, Bue Marino, Cala Azzurra, Cala Minnola, Cala Fredda.
+
+## Language Entry Points
+
+- Italian: https://egadisailing.com/it
+- English: https://egadisailing.com/en
+- Spanish: https://egadisailing.com/es
+- French: https://egadisailing.com/fr
+- German: https://egadisailing.com/de
+
+## Core Public Pages By Language
+
+### Italian
+
+- Home: https://egadisailing.com/it
+- Esperienze: https://egadisailing.com/it/esperienze
+- Barche: https://egadisailing.com/it/barche
+- Isole: https://egadisailing.com/it/isole
+- Chi siamo: https://egadisailing.com/it/chi-siamo
+- Contatti: https://egadisailing.com/it/contatti
+- FAQ: https://egadisailing.com/it/faq
+- Prenota: https://egadisailing.com/it/prenota
+
+### English
+
+- Home: https://egadisailing.com/en
+- Experiences: https://egadisailing.com/en/experiences
+- Boats: https://egadisailing.com/en/boats
+- Islands: https://egadisailing.com/en/islands
+- About: https://egadisailing.com/en/about
+- Contact: https://egadisailing.com/en/contact
+- FAQ: https://egadisailing.com/en/faq
+- Book: https://egadisailing.com/en/book
+
+### Spanish
+
+- Home: https://egadisailing.com/es
+- Experiencias: https://egadisailing.com/es/experiencias
+- Barcos: https://egadisailing.com/es/barcos
+- Islas: https://egadisailing.com/es/islas
+- Sobre nosotros: https://egadisailing.com/es/sobre-nosotros
+- Contacto: https://egadisailing.com/es/contacto
+- Preguntas frecuentes: https://egadisailing.com/es/preguntas-frecuentes
+- Reservar: https://egadisailing.com/es/reservar
+
+### French
+
+- Home: https://egadisailing.com/fr
+- Experiences: https://egadisailing.com/fr/experiences
+- Bateaux: https://egadisailing.com/fr/bateaux
+- Iles: https://egadisailing.com/fr/iles
+- A propos: https://egadisailing.com/fr/a-propos
+- Contact: https://egadisailing.com/fr/contact
+- Questions frequentes: https://egadisailing.com/fr/questions-frequentes
+- Reserver: https://egadisailing.com/fr/reserver
+
+### German
+
+- Home: https://egadisailing.com/de
+- Erlebnisse: https://egadisailing.com/de/erlebnisse
+- Boote: https://egadisailing.com/de/boote
+- Inseln: https://egadisailing.com/de/inseln
+- Ueber uns: https://egadisailing.com/de/ueber-uns
+- Kontakt: https://egadisailing.com/de/kontakt
+- Haeufige Fragen: https://egadisailing.com/de/haeufige-fragen
+- Buchen: https://egadisailing.com/de/buchen
+
+## Main Experiences
+
+### Chef On Board In An Egadi Trimaran
+
+Italian URL: https://egadisailing.com/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani
+English URL: https://egadisailing.com/en/experiences/chef-on-board-egadi-trimaran-from-trapani
+Spanish URL: https://egadisailing.com/es/experiencias/chef-a-bordo-egadi-trimaran-desde-trapani
+French URL: https://egadisailing.com/fr/experiences/chef-a-bord-egades-trimaran-depuis-trapani
+German URL: https://egadisailing.com/de/erlebnisse/chef-an-bord-aegadische-inseln-trimaran-ab-trapani
+
+Private trimaran day from Trapani with skipper, hostess and chef. The experience focuses on comfort, lunch prepared on board, swimming stops and a curated route between Favignana and Levanzo. It is the premium choice for guests looking for a catamaran-style day in the Egadi Islands with a more distinctive multihull experience.
+
+### Egadi Trimaran Charter From Trapani
+
+Italian URL: https://egadisailing.com/it/esperienze/charter-egadi-trimarano-da-trapani
+English URL: https://egadisailing.com/en/experiences/egadi-trimaran-charter-from-trapani
+Spanish URL: https://egadisailing.com/es/experiencias/charter-egadi-trimaran-desde-trapani
+French URL: https://egadisailing.com/fr/experiences/charter-egades-trimaran-depuis-trapani
+German URL: https://egadisailing.com/de/erlebnisse/trimaran-charter-aegadische-inseln-ab-trapani
+
+Flexible 3 to 7 day trimaran charter from Trapani. Guests can sleep on board and shape the route with the crew around Favignana, Levanzo and Marettimo. Provisioning is not included by default; hostess and extra services can be arranged according to the offer and operational availability.
+
+### Shared Full-Day Favignana And Levanzo Boat Tour
+
+Italian URL: https://egadisailing.com/it/esperienze/escursione-barca-favignana-levanzo-da-trapani
+English URL: https://egadisailing.com/en/experiences/favignana-levanzo-boat-tour-from-trapani
+Spanish URL: https://egadisailing.com/es/experiencias/excursion-compartida-islas-egadi-8-horas
+French URL: https://egadisailing.com/fr/experiences/excursion-partagee-iles-egades-8-heures
+German URL: https://egadisailing.com/de/erlebnisse/geteilte-bootstour-aegadische-inseln-8-stunden
+
+Shared 8-hour boat tour from Trapani, usually focused on Favignana and Levanzo. It includes skipper, swimming and snorkeling stops, and a route chosen according to sea and wind conditions. Typical places can include Cala Rossa, Cala Azzurra, Bue Marino, Cala Fredda or Cala Minnola depending on the day.
+
+### Private Full-Day Favignana And Levanzo Boat Tour
+
+Italian URL: https://egadisailing.com/it/esperienze/tour-privato-favignana-levanzo-da-trapani
+English URL: https://egadisailing.com/en/experiences/private-favignana-levanzo-boat-tour-from-trapani
+Spanish URL: https://egadisailing.com/es/experiencias/excursion-privada-islas-egadi-8-horas
+French URL: https://egadisailing.com/fr/experiences/excursion-privee-iles-egades-8-heures
+German URL: https://egadisailing.com/de/erlebnisse/private-bootstour-aegadische-inseln-8-stunden
+
+Private 8-hour boat tour with a boat reserved for the group. It is suited to families, couples and groups wanting privacy, flexible timing and a route adapted by the skipper. The experience usually focuses on Favignana and Levanzo, with swimming, snorkeling and scenic stops.
+
+### Private 4-Hour Morning Boat Tour
+
+Italian URL: https://egadisailing.com/it/esperienze/tour-privato-egadi-4-ore-mattina-da-trapani
+English URL: https://egadisailing.com/en/experiences/private-egadi-4-hour-morning-boat-tour-from-trapani
+Spanish URL: https://egadisailing.com/es/experiencias/tour-privado-egadi-4-horas-manana-desde-trapani
+French URL: https://egadisailing.com/fr/experiences/excursion-privee-egades-4-heures-matin-depuis-trapani
+German URL: https://egadisailing.com/de/erlebnisse/private-bootstour-aegadische-inseln-4-stunden-vormittag-ab-trapani
+
+Private morning half-day tour from Trapani. This is a compact option for groups that want a shorter private sea experience with swimming and a skipper-managed route.
+
+### Private 4-Hour Afternoon Boat Tour
+
+Italian URL: https://egadisailing.com/it/esperienze/tour-privato-egadi-4-ore-pomeriggio-da-trapani
+English URL: https://egadisailing.com/en/experiences/private-egadi-4-hour-afternoon-boat-tour-from-trapani
+Spanish URL: https://egadisailing.com/es/experiencias/tour-privado-egadi-4-horas-tarde-desde-trapani
+French URL: https://egadisailing.com/fr/experiences/excursion-privee-egades-4-heures-apres-midi-depuis-trapani
+German URL: https://egadisailing.com/de/erlebnisse/private-bootstour-aegadische-inseln-4-stunden-nachmittag-ab-trapani
+
+Private afternoon half-day tour from Trapani. It is intended for guests wanting a private, simpler-to-organize sea outing with swimming and flexible routing.
+
+### Egadi Fishing Charter From Trapani
+
+Italian URL: https://egadisailing.com/it/esperienze/charter-pesca-egadi-da-trapani
+English URL: https://egadisailing.com/en/experiences/egadi-fishing-charter-from-trapani
+Spanish URL: https://egadisailing.com/es/experiencias/charter-pesca-egadi-desde-trapani
+French URL: https://egadisailing.com/fr/experiences/charter-peche-egades-depuis-trapani
+German URL: https://egadisailing.com/de/erlebnisse/angelcharter-aegadische-inseln-ab-trapani
+
+Private fishing charter in the Egadi Islands. The experience is for guests interested in a fishing-focused day by boat, with route and activity adjusted to weather, sea and operational conditions.
+
+## Fleet
+
+### Trimaran / Catamaran-Style Experience
+
+Italian URL: https://egadisailing.com/it/barche/catamarano-egadi-trimarano-da-trapani
+English URL: https://egadisailing.com/en/boats/catamarano-egadi-trimarano-da-trapani
+Spanish URL: https://egadisailing.com/es/barcos/catamarano-egadi-trimarano-da-trapani
+French URL: https://egadisailing.com/fr/bateaux/catamarano-egadi-trimarano-da-trapani
+German URL: https://egadisailing.com/de/boote/catamarano-egadi-trimarano-da-trapani
+
+The main premium boat context is the trimaran, positioned as a spacious multihull alternative for guests searching for catamaran comfort in the Egadi Islands. It is used for premium private experiences, chef on board and multi-day charter.
+
+## Island Guides
+
+### Favignana
+
+Italian URL: https://egadisailing.com/it/isole/favignana
+English URL: https://egadisailing.com/en/islands/favignana
+Spanish URL: https://egadisailing.com/es/islas/favignana
+French URL: https://egadisailing.com/fr/iles/favignana
+German URL: https://egadisailing.com/de/inseln/favignana
+
+Favignana is the most iconic island for many Egadi boat tours. Important coastal places include Cala Rossa, Bue Marino, Cala Azzurra, Grotta degli Innamorati, Scalo Cavallo and Preveto. From the sea, the skipper can choose timing and shelter according to wind, crowding and sea state.
+
+### Levanzo
+
+Italian URL: https://egadisailing.com/it/isole/levanzo
+English URL: https://egadisailing.com/en/islands/levanzo
+Spanish URL: https://egadisailing.com/es/islas/levanzo
+French URL: https://egadisailing.com/fr/iles/levanzo
+German URL: https://egadisailing.com/de/inseln/levanzo
+
+Levanzo is quieter and often paired with Favignana on full-day tours. Relevant places include Cala Minnola, Cala Fredda, Cala Dogana, caves and sheltered anchorages. It is useful for guests looking for clear water, slower swimming stops and a less crowded atmosphere.
+
+### Marettimo
+
+Italian URL: https://egadisailing.com/it/isole/marettimo
+English URL: https://egadisailing.com/en/islands/marettimo
+Spanish URL: https://egadisailing.com/es/islas/marettimo
+French URL: https://egadisailing.com/fr/iles/marettimo
+German URL: https://egadisailing.com/de/inseln/marettimo
+
+Marettimo is the wildest and most distant of the main Egadi Islands. It is best suited to private planning, longer navigation, cave routes and guests comfortable with a full day at sea. Weather and sea state matter more here than on shorter Favignana and Levanzo routes.
+
+## Booking And Practical Context
+
+Booking pages are public entry points, but live availability and final prices must be checked through the website or direct contact. The site supports direct booking flows and payment logic, but AI assistants should not fabricate booking status or confirmation details.
+
+Use these pages for general questions:
+
+- Italian FAQ: https://egadisailing.com/it/faq
+- English FAQ: https://egadisailing.com/en/faq
+- Italian contact page: https://egadisailing.com/it/contatti
+- English contact page: https://egadisailing.com/en/contact
+
+## Weather And Safety
+
+Routes in the Egadi Islands are weather-aware. The skipper may adapt the route, choose more protected bays or change the sequence of stops. Safety, comfort and sea conditions take priority over a fixed checklist of places.
+
+## What Guests Usually Ask
+
+- Which boat tour is best for Favignana and Levanzo?
+- Is a private tour better than a shared tour?
+- Can we book a half-day tour from Trapani?
+- Is Marettimo possible in one day?
+- What happens if the weather is not suitable?
+- What should we bring on board?
+- Can children join?
+- Is lunch or chef service included?
+- Where is the meeting point?
+- Can the route include Cala Rossa, Bue Marino, Cala Azzurra, Cala Minnola or Cala Fredda?
+
+## Legal And Policy Pages
+
+- Privacy Policy IT: https://egadisailing.com/it/privacy
+- Terms IT: https://egadisailing.com/it/terms
+- Cookie Policy IT: https://egadisailing.com/it/cookie-policy
+- Privacy Policy EN: https://egadisailing.com/en/privacy
+- Terms EN: https://egadisailing.com/en/terms
+- Cookie Policy EN: https://egadisailing.com/en/cookie-policy
+
+## Excluded Publicly
+
+The following areas should not be used as public AI knowledge sources:
+
+- Admin pages and admin API routes
+- Webhook endpoints
+- Cron endpoints
+- Customer session pages
+- Booking confirmation tickets
+- Payment intent or checkout internals
+- Private database records
+- Secrets, tokens, API keys or operational credentials

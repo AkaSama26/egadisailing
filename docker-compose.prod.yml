@@ -71,6 +71,10 @@ services:
         APP_URL: ${APP_URL:?APP_URL required}
         APP_LOCALES_DEFAULT: ${APP_LOCALES_DEFAULT:-it}
         NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
+        NEXT_DEPLOYMENT_ID: ${NEXT_DEPLOYMENT_ID:-}
+        DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:-}
+        SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+        GIT_SHA: ${GIT_SHA:-}
         SERVER_ACTIONS_ALLOWED_ORIGINS: ${SERVER_ACTIONS_ALLOWED_ORIGINS:?required}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:?required}
         NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?required}
@@ -108,6 +112,9 @@ services:
       APP_URL: ${APP_URL:?APP_URL required}
       APP_LOCALES_DEFAULT: ${APP_LOCALES_DEFAULT:-it}
       NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
+      NEXT_DEPLOYMENT_ID: ${NEXT_DEPLOYMENT_ID:-}
+      DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:-}
+      GIT_SHA: ${GIT_SHA:-}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET required}
       AUTH_URL: ${AUTH_URL:-${NEXTAUTH_URL}}
       AUTH_SECRET: ${AUTH_SECRET:-${NEXTAUTH_SECRET}}
@@ -208,9 +215,9 @@ services:
     networks:
       - web
 
-  # pg_dump sidecar → offsite S3/B2 compatible bucket. Runs daily at 02:30.
-  # Configure via .env: BACKUP_S3_BUCKET, BACKUP_S3_ENDPOINT, BACKUP_S3_KEY,
-  # BACKUP_S3_SECRET, BACKUP_RETENTION_DAYS (default 30).
+  # pg_dump sidecar → local VPS backups every 15 minutes.
+  # Local retention defaults to 3 days. S3/B2 upload remains optional if the
+  # BACKUP_S3_* variables are configured.
   backup:
     image: alpine:3.20
     restart: unless-stopped
@@ -218,21 +225,24 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
-      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
-      BACKUP_S3_KEY: ${BACKUP_S3_KEY}
-      BACKUP_S3_SECRET: ${BACKUP_S3_SECRET}
-      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_DIR: /backups
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-3}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-}
+      BACKUP_S3_KEY: ${BACKUP_S3_KEY:-}
+      BACKUP_S3_SECRET: ${BACKUP_S3_SECRET:-}
     volumes:
       - ./docker/backup.sh:/backup.sh:ro
+      - ./backups/postgres:/backups
     command:
       - sh
       - -c
       - |
         apk add --no-cache postgresql-client aws-cli coreutils
-        crond -f -d 8 &
-        echo "30 2 * * * /backup.sh" | crontab -
-        crond -f
+        mkdir -p /backups
+        echo "*/15 * * * * /backup.sh >> /proc/1/fd/1 2>> /proc/1/fd/2" | crontab -
+        /backup.sh
+        exec crond -f -d 8
     depends_on:
       postgres:
         condition: service_healthy

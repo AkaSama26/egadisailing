@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   useCallback,
+  useMemo,
   useState,
   useEffect,
   useRef,
@@ -12,8 +13,9 @@ import {
 } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { HERO_VIDEO_SRC } from "@/lib/public-assets";
+
+const HERO_VIDEO_POSTER_IMAGE_SRC = "/videos/hero-poster.webp";
 
 export interface HeroExperienceCard {
   key: string;
@@ -152,6 +154,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
   const videoRef = useRef<HTMLVideoElement>(null);
   const cardsTrackRef = useRef<HTMLDivElement>(null);
   const carouselPositionRef = useRef(0);
+  const carouselResetPointRef = useRef(0);
   const cardsAutoplayPausedRef = useRef(false);
   const cardsAutoplayResumeTimeoutRef = useRef<number | null>(null);
   const cardsDragStartXRef = useRef(0);
@@ -196,7 +199,17 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     const effectiveType = connection.connection?.effectiveType ?? "";
     const slowConnection = effectiveType === "slow-2g" || effectiveType === "2g";
 
-    if (prefersReducedMotion || connection.connection?.saveData || slowConnection) return;
+    const canUseBackgroundVideo = window.matchMedia("(min-width: 768px)").matches;
+
+    if (
+      !canUseBackgroundVideo ||
+      prefersReducedMotion ||
+      connection.connection?.saveData ||
+      slowConnection
+    ) {
+      return;
+    }
+
     const timeout = globalThis.setTimeout(() => setShouldLoadVideo(true), 0);
     return () => globalThis.clearTimeout(timeout);
   }, []);
@@ -227,19 +240,37 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     }
   }, [shouldLoadVideo]);
 
-  const getLoopResetPoint = useCallback(
-    (track = cardsTrackRef.current) => {
-      if (!track) return 0;
-      const duplicateStart = track.children.item(experiences.length) as HTMLElement | null;
-      return duplicateStart?.offsetLeft ?? 0;
-    },
-    [experiences.length],
-  );
+  const carouselItems = useMemo(() => {
+    const items: Array<{
+      experience: HeroExperienceCard;
+      isDuplicate: boolean;
+      repeatIndex: number;
+    }> = [];
+    const repeatCount = experiences.length > 1 ? 2 : 1;
+
+    for (let repeatIndex = 0; repeatIndex < repeatCount; repeatIndex += 1) {
+      for (const experience of experiences) {
+        items.push({ experience, isDuplicate: repeatIndex > 0, repeatIndex });
+      }
+    }
+
+    return items;
+  }, [experiences]);
+
+  const updateCarouselResetPoint = useCallback((track = cardsTrackRef.current) => {
+    if (!track || experiences.length < 2) {
+      carouselResetPointRef.current = 0;
+      return;
+    }
+
+    const duplicateStart = track.children.item(experiences.length) as HTMLElement | null;
+    carouselResetPointRef.current = duplicateStart?.offsetLeft ?? 0;
+  }, [experiences.length]);
 
   const applyCarouselTransform = useCallback(() => {
     const track = cardsTrackRef.current;
     if (!track) return;
-    const resetPoint = getLoopResetPoint(track);
+    const resetPoint = carouselResetPointRef.current;
 
     if (resetPoint > 0) {
       while (carouselPositionRef.current >= resetPoint) {
@@ -251,11 +282,42 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     }
 
     track.style.transform = `translate3d(${-carouselPositionRef.current}px, 0, 0)`;
-  }, [getLoopResetPoint]);
+  }, []);
+
+  useEffect(() => {
+    const track = cardsTrackRef.current;
+    if (!track) return;
+
+    let frameId = window.requestAnimationFrame(() => updateCarouselResetPoint(track));
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => updateCarouselResetPoint(track));
+    };
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", scheduleUpdate, { passive: true });
+      return () => {
+        window.cancelAnimationFrame(frameId);
+        window.removeEventListener("resize", scheduleUpdate);
+      };
+    }
+
+    const resizeObserver = new ResizeObserver(scheduleUpdate);
+    resizeObserver.observe(track);
+    for (let index = 0; index < track.children.length; index += 1) {
+      resizeObserver.observe(track.children.item(index) as Element);
+    }
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      resizeObserver.disconnect();
+    };
+  }, [experiences.length, updateCarouselResetPoint]);
 
   useEffect(() => {
     const track = cardsTrackRef.current;
     if (!track || experiences.length < 2) return;
+    updateCarouselResetPoint(track);
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) return;
 
@@ -277,7 +339,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
 
     frameId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frameId);
-  }, [applyCarouselTransform, experiences.length]);
+  }, [applyCarouselTransform, experiences.length, updateCarouselResetPoint]);
 
   useEffect(() => {
     return () => {
@@ -398,6 +460,21 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
         className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_38%,rgba(14,165,233,0.24),transparent_42%),linear-gradient(180deg,#071934_0%,#0a2a4a_56%,#071934_100%)]"
       />
 
+      <Image
+        src={HERO_VIDEO_POSTER_IMAGE_SRC}
+        alt=""
+        aria-hidden="true"
+        fill
+        loading="eager"
+        sizes="100vw"
+        quality={80}
+        fetchPriority="high"
+        className={`absolute inset-0 z-0 h-full w-full scale-105 object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
+          videoReady ? "opacity-0" : "opacity-100"
+        }`}
+        style={{ filter: "blur(1px)" }}
+      />
+
       {/* ---- Background video (decorative) ---- */}
       {/* R19-A11y 1.1.1: aria-hidden + tabIndex=-1 perche' decorativo (muted
           loop). No captions richieste. */}
@@ -464,48 +541,38 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
               className="relative cursor-grab overflow-hidden pb-3 touch-pan-y active:cursor-grabbing"
             >
               <div ref={cardsTrackRef} className="flex w-max gap-4 will-change-transform">
-                {Array.from({ length: experiences.length > 1 ? 3 : 1 }).flatMap((_, repeatIndex) =>
-                  experiences.map((experience) => {
-                    const isDuplicate = repeatIndex > 0;
-                    const activeImage =
-                      hoveredExperienceKey === experience.key && experience.images.length > 1
-                        ? experience.images[hoverImageIndex % experience.images.length]
-                        : experience.images[0];
+                {carouselItems.map(({ experience, isDuplicate, repeatIndex }) => {
+                  const activeImage =
+                    hoveredExperienceKey === experience.key && experience.images.length > 1
+                      ? experience.images[hoverImageIndex % experience.images.length]
+                      : experience.images[0];
 
-                    return (
-                      <article
-                        key={`${repeatIndex}-${experience.key}`}
-                        data-hero-experience-card
-                        aria-hidden={isDuplicate ? true : undefined}
-                        onMouseEnter={() => showExperiencePreview(experience.key)}
-                        onMouseLeave={hideExperiencePreview}
-                        onFocus={() => showExperiencePreview(experience.key)}
-                        onBlur={(event) => {
-                          const nextTarget = event.relatedTarget;
-                          if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
-                            hideExperiencePreview();
-                          }
-                        }}
-                        className="hero-experience-card relative h-[370px] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-slate-950/35 lg:h-[400px]"
-                      >
-                        {experience.images.map((image, imageIndex) => (
-                          <Image
-                            key={image.src}
-                            src={image.src}
-                            alt={isDuplicate ? "" : image.alt}
-                            fill
-                            preload={
-                              !isDuplicate &&
-                              experience.key === experiences[0]?.key &&
-                              imageIndex === 0
-                            }
-                            sizes="(min-width: 1024px) 27vw, (min-width: 640px) 48vw, 82vw"
-                            className={cn(
-                              "object-cover transition-opacity duration-500",
-                              image.src === activeImage.src ? "opacity-100" : "opacity-0",
-                            )}
-                          />
-                        ))}
+                  return (
+                    <article
+                      key={`${repeatIndex}-${experience.key}`}
+                      data-hero-experience-card
+                      aria-hidden={isDuplicate ? true : undefined}
+                      onMouseEnter={() => showExperiencePreview(experience.key)}
+                      onMouseLeave={hideExperiencePreview}
+                      onFocus={() => showExperiencePreview(experience.key)}
+                      onBlur={(event) => {
+                        const nextTarget = event.relatedTarget;
+                        if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+                          hideExperiencePreview();
+                        }
+                      }}
+                      className="hero-experience-card relative h-[370px] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-slate-950/35 lg:h-[400px]"
+                    >
+                      <Image
+                        key={activeImage.src}
+                        src={activeImage.src}
+                        alt={isDuplicate ? "" : activeImage.alt}
+                        fill
+                        preload={!isDuplicate && experience.key === experiences[0]?.key}
+                        sizes="(min-width: 1024px) 22rem, (min-width: 640px) 22rem, 82vw"
+                        quality={80}
+                        className="object-cover transition-opacity duration-500"
+                      />
                         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,24,0.08)_0%,rgba(3,10,24,0.14)_45%,rgba(3,10,24,0.66)_100%)]" />
 
                         <div className="absolute left-3 right-3 top-3 flex flex-wrap gap-2">
@@ -546,10 +613,9 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                             {copy.book}
                           </Link>
                         </div>
-                      </article>
-                    );
-                  }),
-                )}
+                    </article>
+                  );
+                })}
               </div>
             </div>
           </div>

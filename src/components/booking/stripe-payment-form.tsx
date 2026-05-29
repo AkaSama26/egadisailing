@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { CreditCard, LockKeyhole, ShieldCheck } from "lucide-react";
+import { centsToAnalyticsValue, trackEvent } from "@/lib/analytics/client";
 
 let stripePromise: Promise<Stripe | null> | null = null;
 
@@ -133,6 +134,12 @@ function InnerForm({
     if (!stripe || !elements || !elementReady) return;
     setError(null);
     setProcessing(true);
+    trackEvent("payment_submit", {
+      locale,
+      currency: "EUR",
+      value: centsToAnalyticsValue(amountCents),
+      total_value: centsToAnalyticsValue(totalCents),
+    });
 
     const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
       elements,

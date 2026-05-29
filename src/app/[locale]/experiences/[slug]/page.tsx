@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { ScrollSection } from "@/components/scroll-section";
 import { ExperienceBookingDialogButton } from "@/components/experience-detail-actions";
+import { ExperienceDetailFloatingOffset } from "@/components/experience-detail-floating-offset";
 import { ExperiencePresenceNotice } from "@/components/experience-presence-badge";
 import { ExperienceImageCarousel } from "@/components/experience-image-carousel";
 import {
@@ -29,6 +30,12 @@ import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
 import { getExperienceItinerary } from "@/lib/experiences/itineraries";
 import { getDisplayPrice } from "@/lib/pricing/display";
+import {
+  EGADI_PRODUCT_BRAND,
+  buildDigitalServiceShippingDetails,
+  buildServiceProductCodes,
+  buildServiceReturnPolicy,
+} from "@/lib/seo/commerce-structured-data";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
 import {
@@ -3767,6 +3774,7 @@ export default async function ExperienceDetailPage({
         location: { "@id": meetingPointId },
         availableAtOrFrom: { "@id": meetingPointId },
         image: structuredImageUrls,
+        ...buildServiceProductCodes(service.id),
         itinerary: {
           "@type": "ItemList",
           itemListElement: itinerary.map((item, index) => ({
@@ -3793,18 +3801,24 @@ export default async function ExperienceDetailPage({
             addressCountry: "IT",
           },
         },
-        brand: {
-          "@type": "Brand",
-          name: "Egadisailing",
-        },
+        brand: EGADI_PRODUCT_BRAND,
         offers: {
           "@type": "Offer",
           url: bookingUrl,
           priceCurrency: "EUR",
           ...(displayPrice.amount ? { price: displayPrice.amount.toFixed(2) } : {}),
           availability: "https://schema.org/InStock",
+          seller: {
+            "@type": "Organization",
+            name: PUBLIC_COMPANY_LEGAL.name,
+            url: siteBase,
+          },
           areaServed,
           availableAtOrFrom: { "@id": meetingPointId },
+          shippingDetails: buildDigitalServiceShippingDetails(),
+          hasMerchantReturnPolicy: buildServiceReturnPolicy(
+            localizedAbsoluteUrl(siteBase, locale, "/terms"),
+          ),
         },
       },
       {
@@ -3905,6 +3919,7 @@ export default async function ExperienceDetailPage({
         dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }}
       />
 
+      <ExperienceDetailFloatingOffset />
       <ExperiencePresenceNotice serviceId={service.id} locale={locale} />
 
       <main className="bg-[linear-gradient(180deg,#071934_0%,#0a2a4a_38%,#0c3d5e_56%,#0a2a4a_78%,#071934_100%)] pb-32">

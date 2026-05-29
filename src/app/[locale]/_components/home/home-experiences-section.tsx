@@ -2,6 +2,7 @@
 
 import { ArrowRight, Check } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { localizedPath } from "@/lib/i18n/paths";
 import { HomePhotoStack, type HomePhotoStackImage } from "./home-photo-stack";
@@ -15,7 +16,7 @@ interface HomeExperiencesSectionProps {
 
 const TOUR_EGADI_VIDEO_POSTER = "/videos/home-tour-egadi-poster.webp";
 const TOUR_EGADI_VIDEO_SRC =
-  process.env.NEXT_PUBLIC_HOME_TOUR_EGADI_VIDEO_URL ?? "/videos/home-tour-egadi.webm";
+  process.env.NEXT_PUBLIC_HOME_TOUR_EGADI_VIDEO_URL ?? "/videos/home-tour-egadi.webm?v=20260525";
 
 function getVideoType(src: string) {
   const pathname = src.split("?")[0]?.toLowerCase() ?? "";
@@ -23,21 +24,31 @@ function getVideoType(src: string) {
 }
 
 function LazyTourEgadiVideo({ label }: { label: string }) {
+  const figureRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     const connection = navigator as Navigator & {
       connection?: { saveData?: boolean; effectiveType?: string };
     };
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const canUseInlineVideo = window.matchMedia("(min-width: 768px)").matches;
     const effectiveType = connection.connection?.effectiveType ?? "";
     const slowConnection = effectiveType === "slow-2g" || effectiveType === "2g";
 
-    if (prefersReducedMotion || connection.connection?.saveData || slowConnection) return;
+    if (
+      !canUseInlineVideo ||
+      prefersReducedMotion ||
+      connection.connection?.saveData ||
+      slowConnection
+    ) {
+      return;
+    }
 
-    const video = videoRef.current;
-    if (!video) return;
+    const figure = figureRef.current;
+    if (!figure) return;
 
     if (!("IntersectionObserver" in window)) {
       const timeout = globalThis.setTimeout(() => setShouldLoadVideo(true), 0);
@@ -50,10 +61,10 @@ function LazyTourEgadiVideo({ label }: { label: string }) {
         setShouldLoadVideo(true);
         observer.disconnect();
       },
-      { rootMargin: "420px" },
+      { rootMargin: "160px" },
     );
 
-    observer.observe(video);
+    observer.observe(figure);
     return () => observer.disconnect();
   }, []);
 
@@ -66,24 +77,36 @@ function LazyTourEgadiVideo({ label }: { label: string }) {
 
   return (
     <figure
+      ref={figureRef}
       role="img"
       aria-label={label}
       className="relative aspect-[4/3] min-h-[320px] overflow-hidden rounded-lg border border-white/10 bg-[#071934] md:min-h-[420px]"
     >
-      <video
-        ref={videoRef}
+      <Image
+        src={TOUR_EGADI_VIDEO_POSTER}
+        alt=""
         aria-hidden="true"
-        muted
-        loop
-        playsInline
-        preload={shouldLoadVideo ? "metadata" : "none"}
-        poster={TOUR_EGADI_VIDEO_POSTER}
-        className="h-full w-full object-cover"
-      >
-        {shouldLoadVideo && (
+        fill
+        sizes="(min-width: 1024px) 50vw, 100vw"
+        quality={80}
+        className={`object-cover transition-opacity duration-500 ${videoReady ? "opacity-0" : "opacity-100"}`}
+      />
+      {shouldLoadVideo && (
+        <video
+          ref={videoRef}
+          aria-hidden="true"
+          muted
+          loop
+          playsInline
+          preload="none"
+          onLoadedData={() => setVideoReady(true)}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+            videoReady ? "opacity-100" : "opacity-0"
+          }`}
+        >
           <source src={TOUR_EGADI_VIDEO_SRC} type={getVideoType(TOUR_EGADI_VIDEO_SRC)} />
-        )}
-      </video>
+        </video>
+      )}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,24,0.02)_0%,rgba(3,10,24,0.08)_62%,rgba(3,10,24,0.24)_100%)]" />
     </figure>
   );

@@ -105,7 +105,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Essenziali per navigazione, sessione admin/cliente, preferenze lingua, sicurezza, Stripe e Cloudflare Turnstile. Non possono essere disattivati.",
         analytics:
-          "Ci aiutano a capire come viene usato il sito e quali pagine funzionano meglio. Li attiviamo solo dopo consenso.",
+          "Ci aiutano a capire come viene usato il sito, quali pagine funzionano meglio e quali azioni portano a contatti o prenotazioni. Li attiviamo solo dopo consenso.",
         marketing:
           "Servono a misurare campagne e conversioni pubblicitarie. Li attiviamo solo dopo consenso.",
         more:
@@ -153,7 +153,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Essential for navigation, admin/customer sessions, language preferences, security, Stripe and Cloudflare Turnstile. They cannot be disabled.",
         analytics:
-          "They help us understand how the website is used and which pages work best. They are enabled only after consent.",
+          "They help us understand how the website is used, which pages work best and which actions lead to enquiries or bookings. They are enabled only after consent.",
         marketing:
           "They are used to measure advertising campaigns and conversions. They are enabled only after consent.",
         more:
@@ -201,7 +201,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Esenciales para navegación, sesiones de administrador/cliente, preferencias de idioma, seguridad, Stripe y Cloudflare Turnstile. No se pueden desactivar.",
         analytics:
-          "Nos ayudan a entender cómo se usa el sitio y qué páginas funcionan mejor. Solo se activan después del consentimiento.",
+          "Nos ayudan a entender cómo se usa el sitio, qué páginas funcionan mejor y qué acciones generan contactos o reservas. Solo se activan después del consentimiento.",
         marketing:
           "Sirven para medir campañas publicitarias y conversiones. Solo se activan después del consentimiento.",
         more:
@@ -249,7 +249,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Essentiels pour la navigation, les sessions administrateur/client, les préférences de langue, la sécurité, Stripe et Cloudflare Turnstile. Ils ne peuvent pas être désactivés.",
         analytics:
-          "Ils nous aident à comprendre l'utilisation du site et les pages qui fonctionnent le mieux. Ils sont activés uniquement après consentement.",
+          "Ils nous aident à comprendre l'utilisation du site, les pages qui fonctionnent le mieux et les actions menant à des demandes ou réservations. Ils sont activés uniquement après consentement.",
         marketing:
           "Ils servent à mesurer les campagnes publicitaires et les conversions. Ils sont activés uniquement après consentement.",
         more:
@@ -297,7 +297,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Erforderlich für Navigation, Admin-/Kundensessions, Spracheinstellungen, Sicherheit, Stripe und Cloudflare Turnstile. Sie können nicht deaktiviert werden.",
         analytics:
-          "Sie helfen uns zu verstehen, wie die Website genutzt wird und welche Seiten am besten funktionieren. Sie werden nur nach Einwilligung aktiviert.",
+          "Sie helfen uns zu verstehen, wie die Website genutzt wird, welche Seiten am besten funktionieren und welche Aktionen zu Anfragen oder Buchungen führen. Sie werden nur nach Einwilligung aktiviert.",
         marketing:
           "Sie dienen der Messung von Werbekampagnen und Conversions. Sie werden nur nach Einwilligung aktiviert.",
         more:

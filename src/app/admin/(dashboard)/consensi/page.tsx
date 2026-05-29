@@ -19,41 +19,46 @@ import {
 } from "@/lib/site-verification";
 
 const PAGE_SIZE = 50;
+const CONSENT_TYPES = ["booking", "cookie"] as const;
 const ACTIONS = ["FIRST_CONSENT", "UPDATE", "WITHDRAW"] as const;
+const ACTION_FILTERS = ["BOOKING_REQUIRED", ...ACTIONS] as const;
 const CATEGORIES = ["necessary", "analytics", "marketing"] as const;
+const CATEGORY_FILTERS = ["privacy_terms", ...CATEGORIES] as const;
 
 interface Props {
-  searchParams: Promise<{ action?: string; category?: string; page?: string }>;
+  searchParams: Promise<{ type?: string; action?: string; category?: string; page?: string }>;
 }
 
-interface ConsentEventRow {
+interface UnifiedConsentRow {
   id: string;
-  consentId: string;
-  action: string;
-  acceptType: string;
-  acceptedCategories: string[];
-  rejectedCategories: string[];
-  changedCategories: string[];
-  cookieRevision: number;
-  policyVersion: string;
-  configHash: string;
-  textHash: string;
-  locale: string;
-  sourcePath: string | null;
-  ipHash: string | null;
-  userAgent: string | null;
+  type: "booking" | "cookie";
   createdAt: Date;
+  action: string;
+  acceptedItems: string[];
+  rejectedItems: string[];
+  policyVersion: string;
+  cookieRevision: number | null;
+  primary: string;
+  secondary: string;
+  detailRows: Array<{ label: string; value: string }>;
+  bookingId: string | null;
 }
 
-function normalizeAction(value: string | undefined): (typeof ACTIONS)[number] | undefined {
-  return ACTIONS.includes(value as (typeof ACTIONS)[number])
-    ? (value as (typeof ACTIONS)[number])
+function normalizeType(value: string | undefined): (typeof CONSENT_TYPES)[number] | undefined {
+  return CONSENT_TYPES.includes(value as (typeof CONSENT_TYPES)[number])
+    ? (value as (typeof CONSENT_TYPES)[number])
     : undefined;
 }
 
-function normalizeCategory(value: string | undefined): (typeof CATEGORIES)[number] | undefined {
-  return CATEGORIES.includes(value as (typeof CATEGORIES)[number])
-    ? (value as (typeof CATEGORIES)[number])
+function normalizeAction(value: string | undefined): (typeof ACTION_FILTERS)[number] | undefined {
+  return ACTION_FILTERS.includes(value as (typeof ACTION_FILTERS)[number])
+    ? (value as (typeof ACTION_FILTERS)[number])
+    : undefined;
+}
+
+function normalizeCategory(value: string | undefined): (typeof CATEGORY_FILTERS)[number] | undefined {
+  return CATEGORY_FILTERS.includes(value as (typeof CATEGORY_FILTERS)[number])
+    ? (value as (typeof CATEGORY_FILTERS)[number])
     : undefined;
 }
 
@@ -65,8 +70,14 @@ function listLabel(values: string[]): string {
   return values.length > 0 ? values.join(", ") : "-";
 }
 
+function consentTypeLabel(type: string): string {
+  return type === "booking" ? "Prenotazione" : "Cookie/tracking";
+}
+
 function actionLabel(action: string): string {
   switch (action) {
+    case "BOOKING_REQUIRED":
+      return "Accettazione obbligatoria";
     case "FIRST_CONSENT":
       return "Primo consenso";
     case "UPDATE":
@@ -78,10 +89,28 @@ function actionLabel(action: string): string {
   }
 }
 
-const columns: AdminTableColumn<ConsentEventRow>[] = [
+function categoryLabel(category: string): string {
+  return category === "privacy_terms" ? "Privacy + termini" : category;
+}
+
+const columns: AdminTableColumn<UnifiedConsentRow>[] = [
   {
     label: "Quando",
     render: (event) => <TimeIso datetime={event.createdAt} />,
+  },
+  {
+    label: "Tipo",
+    render: (event) => (
+      <span
+        className={
+          event.type === "booking"
+            ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700"
+            : "rounded-full bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700"
+        }
+      >
+        {consentTypeLabel(event.type)}
+      </span>
+    ),
   },
   {
     label: "Azione",
@@ -92,18 +121,34 @@ const columns: AdminTableColumn<ConsentEventRow>[] = [
     ),
   },
   {
-    label: "Categorie accettate",
-    render: (event) => listLabel(event.acceptedCategories),
+    label: "Soggetto",
+    render: (event) => (
+      <div className="min-w-44">
+        {event.bookingId ? (
+          <Link href={`/admin/prenotazioni/${event.bookingId}`} className="font-semibold text-blue-700 hover:underline">
+            {event.primary}
+          </Link>
+        ) : (
+          <div className="font-mono text-xs text-slate-900">{event.primary}</div>
+        )}
+        <div className="text-xs text-slate-500">{event.secondary}</div>
+      </div>
+    ),
   },
   {
-    label: "Categorie rifiutate",
-    render: (event) => listLabel(event.rejectedCategories),
+    label: "Accettati",
+    render: (event) => listLabel(event.acceptedItems),
+  },
+  {
+    label: "Rifiutati",
+    render: (event) => listLabel(event.rejectedItems),
   },
   {
     label: "Versione",
     render: (event) => (
       <span className="font-mono text-xs">
-        v{event.policyVersion} · rev {event.cookieRevision}
+        v{event.policyVersion}
+        {event.cookieRevision == null ? "" : ` · rev ${event.cookieRevision}`}
       </span>
     ),
   },
@@ -113,15 +158,9 @@ const columns: AdminTableColumn<ConsentEventRow>[] = [
       <details className="max-w-md">
         <summary className="cursor-pointer text-blue-700 hover:underline">dettagli</summary>
         <dl className="mt-2 grid gap-1 text-xs text-slate-600">
-          <Detail label="Consent ID" value={event.consentId} />
-          <Detail label="Accept type" value={event.acceptType} />
-          <Detail label="Changed" value={listLabel(event.changedCategories)} />
-          <Detail label="Path" value={event.sourcePath ?? "-"} />
-          <Detail label="Locale" value={event.locale} />
-          <Detail label="IP hash" value={event.ipHash ?? "-"} />
-          <Detail label="Config hash" value={shortHash(event.configHash)} />
-          <Detail label="Text hash" value={shortHash(event.textHash)} />
-          <Detail label="UA" value={event.userAgent ?? "-"} />
+          {event.detailRows.map((detail) => (
+            <Detail key={detail.label} label={detail.label} value={detail.value} />
+          ))}
         </dl>
       </details>
     ),
@@ -132,31 +171,67 @@ export default async function ConsensiPage({ searchParams }: Props) {
   await syncCookieConsentPolicySnapshot();
 
   const sp = await searchParams;
+  const type = normalizeType(sp.type);
   const action = normalizeAction(sp.action);
   const category = normalizeCategory(sp.category);
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
   const skip = (page - 1) * PAGE_SIZE;
+  const queryLimit = skip + PAGE_SIZE;
 
-  const where: Prisma.CookieConsentEventWhereInput = {};
-  if (action) where.action = action;
-  if (category) where.acceptedCategories = { has: category };
+  const cookieWhere: Prisma.CookieConsentEventWhereInput = {};
+  if (action && action !== "BOOKING_REQUIRED") cookieWhere.action = action;
+  if (category && category !== "privacy_terms") cookieWhere.acceptedCategories = { has: category };
+
+  const includeBookingRows =
+    (!type || type === "booking") &&
+    (!action || action === "BOOKING_REQUIRED") &&
+    (!category || category === "privacy_terms");
+  const includeCookieRows =
+    (!type || type === "cookie") &&
+    (!action || action !== "BOOKING_REQUIRED") &&
+    (!category || category !== "privacy_terms");
 
   const [
-    events,
-    totalFiltered,
+    bookingConsentRecords,
+    bookingFilteredCount,
+    cookieEvents,
+    cookieFilteredCount,
+    totalBookingConsents,
     totalEvents,
     analyticsAccepted,
     marketingAccepted,
     withdrawals,
     snapshots,
   ] = await Promise.all([
-    db.cookieConsentEvent.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: PAGE_SIZE,
-      skip,
-    }),
-    db.cookieConsentEvent.count({ where }),
+    includeBookingRows
+      ? db.consentRecord.findMany({
+          orderBy: { acceptedAt: "desc" },
+          take: queryLimit,
+          include: {
+            booking: {
+              select: {
+                id: true,
+                confirmationCode: true,
+                status: true,
+                service: { select: { name: true } },
+              },
+            },
+            customer: {
+              select: { firstName: true, lastName: true, email: true },
+            },
+          },
+        })
+      : Promise.resolve([]),
+    includeBookingRows ? db.consentRecord.count() : Promise.resolve(0),
+    includeCookieRows
+      ? db.cookieConsentEvent.findMany({
+          where: cookieWhere,
+          orderBy: { createdAt: "desc" },
+          take: queryLimit,
+        })
+      : Promise.resolve([]),
+    includeCookieRows ? db.cookieConsentEvent.count({ where: cookieWhere }) : Promise.resolve(0),
+    db.consentRecord.count(),
     db.cookieConsentEvent.count(),
     db.cookieConsentEvent.count({ where: { acceptedCategories: { has: "analytics" } } }),
     db.cookieConsentEvent.count({ where: { acceptedCategories: { has: "marketing" } } }),
@@ -166,6 +241,69 @@ export default async function ConsensiPage({ searchParams }: Props) {
       take: 10,
     }),
   ]);
+
+  const bookingRows: UnifiedConsentRow[] = bookingConsentRecords.map((record) => {
+    const customerName = [record.customer?.firstName, record.customer?.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const acceptedItems = [
+      record.privacyAccepted ? "Privacy Policy" : null,
+      record.termsAccepted ? "Termini e condizioni" : null,
+    ].filter((item): item is string => Boolean(item));
+    const rejectedItems = [
+      record.privacyAccepted ? null : "Privacy Policy",
+      record.termsAccepted ? null : "Termini e condizioni",
+    ].filter((item): item is string => Boolean(item));
+
+    return {
+      id: `booking:${record.id}`,
+      type: "booking",
+      createdAt: record.acceptedAt,
+      action: "BOOKING_REQUIRED",
+      acceptedItems,
+      rejectedItems,
+      policyVersion: record.policyVersion,
+      cookieRevision: null,
+      primary: record.booking?.confirmationCode ?? "Prenotazione non collegata",
+      secondary: `${record.booking?.service.name ?? "Servizio non collegato"} · ${record.booking?.status ?? "-"} · ${customerName || "Cliente non collegato"}`,
+      detailRows: [
+        { label: "Record ID", value: record.id },
+        { label: "Email", value: record.customer?.email ?? "-" },
+        { label: "IP", value: record.ipAddress ?? "-" },
+        { label: "UA", value: record.userAgent ?? "-" },
+      ],
+      bookingId: record.booking?.id ?? null,
+    };
+  });
+
+  const cookieRows: UnifiedConsentRow[] = cookieEvents.map((event) => ({
+    id: `cookie:${event.id}`,
+    type: "cookie",
+    createdAt: event.createdAt,
+    action: event.action,
+    acceptedItems: event.acceptedCategories,
+    rejectedItems: event.rejectedCategories,
+    policyVersion: event.policyVersion,
+    cookieRevision: event.cookieRevision,
+    primary: event.consentId,
+    secondary: `${event.sourcePath ?? "-"} · ${event.locale}`,
+    detailRows: [
+      { label: "Event ID", value: event.id },
+      { label: "Accept type", value: event.acceptType },
+      { label: "Changed", value: listLabel(event.changedCategories) },
+      { label: "IP hash", value: event.ipHash ?? "-" },
+      { label: "Config hash", value: shortHash(event.configHash) },
+      { label: "Text hash", value: shortHash(event.textHash) },
+      { label: "UA", value: event.userAgent ?? "-" },
+    ],
+    bookingId: null,
+  }));
+
+  const rows = [...bookingRows, ...cookieRows]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(skip, skip + PAGE_SIZE);
+  const totalFiltered = bookingFilteredCount + cookieFilteredCount;
 
   const currentSnapshot = getCookieConsentPolicySnapshotData();
   const trackingServices = getCookieConsentPublicServices();
@@ -182,23 +320,23 @@ export default async function ConsensiPage({ searchParams }: Props) {
             className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50"
           >
             <Download className="size-4" />
-            Esporta CSV
+            Esporta cookie CSV
           </Link>
         }
       />
 
       <div className="grid gap-4 md:grid-cols-4">
-        <KpiCard label="Eventi registrati" value={String(totalEvents)} icon={FileClock} />
+        <KpiCard label="Consensi prenotazione" value={String(totalBookingConsents)} icon={ShieldCheck} />
+        <KpiCard label="Eventi cookie" value={String(totalEvents)} icon={FileClock} hint={`${withdrawals} revoche`} />
         <KpiCard label="Opt-in analytics" value={String(analyticsAccepted)} icon={Cookie} />
         <KpiCard label="Opt-in marketing" value={String(marketingAccepted)} icon={Cookie} />
-        <KpiCard label="Revoche" value={String(withdrawals)} icon={ShieldCheck} />
       </div>
 
       <AdminCard>
         <div className="grid gap-3 text-sm md:grid-cols-4">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Policy corrente
+              Policy cookie corrente
             </div>
             <div className="mt-1 font-mono">
               v{currentSnapshot.policyVersion} · rev {currentSnapshot.revision}
@@ -295,10 +433,21 @@ export default async function ConsensiPage({ searchParams }: Props) {
       <AdminCard>
         <form className="flex flex-wrap items-end gap-3">
           <label className="grid gap-1 text-sm">
+            <span className="text-xs font-medium text-slate-500">Tipo</span>
+            <select name="type" defaultValue={type ?? ""} className="rounded border px-3 py-2">
+              <option value="">Tutti</option>
+              {CONSENT_TYPES.map((option) => (
+                <option key={option} value={option}>
+                  {consentTypeLabel(option)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm">
             <span className="text-xs font-medium text-slate-500">Azione</span>
             <select name="action" defaultValue={action ?? ""} className="rounded border px-3 py-2">
               <option value="">Tutte</option>
-              {ACTIONS.map((option) => (
+              {ACTION_FILTERS.map((option) => (
                 <option key={option} value={option}>
                   {actionLabel(option)}
                 </option>
@@ -309,9 +458,9 @@ export default async function ConsensiPage({ searchParams }: Props) {
             <span className="text-xs font-medium text-slate-500">Categoria accettata</span>
             <select name="category" defaultValue={category ?? ""} className="rounded border px-3 py-2">
               <option value="">Tutte</option>
-              {CATEGORIES.map((option) => (
+              {CATEGORY_FILTERS.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {categoryLabel(option)}
                 </option>
               ))}
             </select>
@@ -319,7 +468,7 @@ export default async function ConsensiPage({ searchParams }: Props) {
           <SubmitButton className="rounded bg-slate-900 px-4 py-2 text-sm text-white">
             Filtra
           </SubmitButton>
-          {(action || category) && (
+          {(type || action || category) && (
             <Link href="/admin/consensi" className="pb-2 text-sm text-slate-500">
               reset
             </Link>
@@ -328,27 +477,27 @@ export default async function ConsensiPage({ searchParams }: Props) {
       </AdminCard>
 
       <AdminCard padding="none" className="overflow-x-auto">
-        <AdminTable<ConsentEventRow>
-          caption="Registro eventi consenso cookie"
+        <AdminTable<UnifiedConsentRow>
+          caption="Registro consensi prenotazione e cookie"
           columns={columns}
-          rows={events}
-          emptyMessage="Nessun consenso cookie registrato."
+          rows={rows}
+          emptyMessage="Nessun consenso registrato per i filtri selezionati."
           rowKey={(event) => event.id}
         />
       </AdminCard>
 
       <div className="flex items-center justify-between text-sm text-slate-600">
         <span>
-          Pagina {page} di {totalPages} · {totalFiltered} eventi filtrati
+          Pagina {page} di {totalPages} · {totalFiltered} consensi filtrati
         </span>
         <div className="flex gap-2">
           {page > 1 && (
-            <Link href={buildPageHref(page - 1, action, category)} className="rounded border px-3 py-1">
+            <Link href={buildPageHref(page - 1, type, action, category)} className="rounded border px-3 py-1">
               Precedente
             </Link>
           )}
           {page < totalPages && (
-            <Link href={buildPageHref(page + 1, action, category)} className="rounded border px-3 py-1">
+            <Link href={buildPageHref(page + 1, type, action, category)} className="rounded border px-3 py-1">
               Successiva
             </Link>
           )}
@@ -401,11 +550,13 @@ function Detail({ label, value }: { label: string; value: string }) {
 
 function buildPageHref(
   page: number,
+  type: string | undefined,
   action: string | undefined,
   category: string | undefined,
 ): string {
   const params = new URLSearchParams();
   params.set("page", String(page));
+  if (type) params.set("type", type);
   if (action) params.set("action", action);
   if (category) params.set("category", category);
   return `/admin/consensi?${params.toString()}`;

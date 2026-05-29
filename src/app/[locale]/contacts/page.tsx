@@ -3,10 +3,16 @@ import { CountryFlag } from "@/components/country-flag";
 import { ScrollSection } from "@/components/scroll-section";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { env } from "@/lib/env";
+import { localizedPath } from "@/lib/i18n/paths";
+import { jsonLd } from "@/lib/seo/structured-data";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
+import { TrackedWhatsAppLink } from "@/components/analytics/tracked-whatsapp-link";
 import {
+  PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
   PUBLIC_CONTACT_LOCATION,
+  PUBLIC_CONTACT_PHONE_TEXT,
   getContactLocationLabel,
   getEmailHref,
   getOrderedWhatsAppContacts,
@@ -19,6 +25,57 @@ import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 import { ContactForm } from "./contact-form";
 import { cn } from "@/lib/utils";
 import { liquidGlassButton } from "@/lib/ui/liquid-glass";
+
+function getContactLocalSeoCopy(locale: string) {
+  if (locale === "es") {
+    return {
+      heading: "Punto de encuentro Egadisailing en Trapani",
+      paragraphs: [
+        "Egadisailing opera desde Trapani, en Via dei Gladioli 15, cerca del Puerto de Trapani y de los embarques hacia las Islas Egadi. Desde aquí organizamos excursiones en barco a Favignana y Levanzo, tours privados, charter en trimarán, experiencias con chef a bordo y pesca deportiva.",
+        "Antes de la salida confirmamos por WhatsApp o email el muelle, la hora de encuentro, el nombre del barco y cualquier indicación útil sobre aparcamiento, equipaje, meteo y ruta prevista. Para grupos, familias o charter de varios días recomendamos escribir con antelación para elegir la fórmula correcta.",
+      ],
+      facts: ["Via dei Gladioli 15, 91100 Trapani", "Salida cerca del Puerto de Trapani", "Asistencia en italiano e inglés"],
+    };
+  }
+  if (locale === "fr") {
+    return {
+      heading: "Point de rendez-vous Egadisailing à Trapani",
+      paragraphs: [
+        "Egadisailing opère depuis Trapani, Via dei Gladioli 15, près du port de Trapani et des départs vers les îles Égades. C'est le point de référence pour les excursions en bateau vers Favignana et Levanzo, les tours privés, le charter en trimaran, les expériences avec chef à bord et la pêche sportive.",
+        "Avant le départ, nous confirmons par WhatsApp ou email le quai, l'heure de rendez-vous, le nom du bateau et les indications utiles sur stationnement, bagages, météo et itinéraire prévu. Pour groupes, familles ou charter sur plusieurs jours, mieux vaut nous contacter à l'avance.",
+      ],
+      facts: ["Via dei Gladioli 15, 91100 Trapani", "Départ près du port de Trapani", "Assistance en italien et anglais"],
+    };
+  }
+  if (locale === "de") {
+    return {
+      heading: "Egadisailing Treffpunkt in Trapani",
+      paragraphs: [
+        "Egadisailing startet in Trapani, Via dei Gladioli 15, nahe dem Hafen von Trapani und den Verbindungen zu den Ägadischen Inseln. Von hier organisieren wir Bootstouren nach Favignana und Levanzo, private Touren, Trimaran-Charter, Erlebnisse mit Chef an Bord und Sportangeln.",
+        "Vor der Abfahrt bestätigen wir per WhatsApp oder E-Mail den Steg, die Treffzeit, den Bootsnamen sowie Hinweise zu Parken, Gepäck, Wetter und geplanter Route. Für Gruppen, Familien oder mehrtägige Charter empfehlen wir eine frühzeitige Anfrage.",
+      ],
+      facts: ["Via dei Gladioli 15, 91100 Trapani", "Abfahrt nahe dem Hafen von Trapani", "Betreuung auf Italienisch und Englisch"],
+    };
+  }
+  if (locale === "en") {
+    return {
+      heading: "Egadisailing meeting point in Trapani",
+      paragraphs: [
+        "Egadisailing operates from Trapani, at Via dei Gladioli 15, close to the Port of Trapani and the routes to the Egadi Islands. This is the reference point for boat tours to Favignana and Levanzo, private tours, trimaran charters, chef-on-board experiences and sport fishing.",
+        "Before departure we confirm by WhatsApp or email the pier, meeting time, boat name and useful notes about parking, luggage, weather and the planned route. For groups, families or multi-day charters, contacting us early helps us recommend the right formula.",
+      ],
+      facts: ["Via dei Gladioli 15, 91100 Trapani, Italy", "Departure near the Port of Trapani", "Support in Italian and English"],
+    };
+  }
+  return {
+    heading: "Punto di incontro Egadisailing a Trapani",
+    paragraphs: [
+      "Egadisailing opera da Trapani, in Via dei Gladioli 15, vicino al Porto di Trapani e agli imbarchi verso le Isole Egadi. Da qui organizziamo tour in barca a Favignana e Levanzo, esperienze private, charter in trimarano, giornate con chef a bordo e charter pesca sportiva.",
+      "Prima della partenza confermiamo via WhatsApp o email molo, orario di incontro, nome della barca e indicazioni utili su parcheggio, bagagli, meteo e rotta prevista. Per gruppi, famiglie o charter di più giorni è meglio scriverci in anticipo, così possiamo consigliare la formula più adatta.",
+    ],
+    facts: ["Via dei Gladioli 15, 91100 Trapani", "Partenza vicino al Porto di Trapani", "Assistenza in italiano e inglese"],
+  };
+}
 
 const reviewLinks = [
   { href: PUBLIC_REVIEW_LINKS.google, label: "Google Reviews" },
@@ -71,6 +128,42 @@ export default async function ContactsPage({
   const isFr = locale === "fr";
   const isDe = locale === "de";
   const whatsappContacts = getOrderedWhatsAppContacts(locale);
+  const localSeoCopy = getContactLocalSeoCopy(locale);
+  const siteBase = env.APP_URL.replace(/\/$/, "");
+  const pageUrl = `${siteBase}${localizedPath(locale, "/contacts")}`;
+  const contactJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Egadisailing", item: `${siteBase}/${locale}` },
+          { "@type": "ListItem", position: 2, name: "Contact", item: pageUrl },
+        ],
+      },
+      {
+        "@type": "ContactPage",
+        name: localSeoCopy.heading,
+        url: pageUrl,
+        mainEntity: {
+          "@type": "TravelAgency",
+          name: "Egadisailing",
+          legalName: PUBLIC_COMPANY_LEGAL.name,
+          email: PUBLIC_CONTACT_EMAIL,
+          telephone: PUBLIC_CONTACT_PHONE_TEXT,
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "Via dei Gladioli 15",
+            postalCode: "91100",
+            addressLocality: "Trapani",
+            addressRegion: "TP",
+            addressCountry: "IT",
+          },
+          hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
+        },
+      },
+    ],
+  };
   const copy = {
     title: isEs
       ? "Reserva o solicita información para tu excursión en barco a las Islas Egadi"
@@ -103,6 +196,10 @@ export default async function ContactsPage({
         background: "linear-gradient(180deg, #071934 0%, #0a2a4a 30%, #0c3d5e 50%, #0a2a4a 80%, #071934 100%)",
       }}
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(contactJsonLd) }}
+      />
       {/* ── Hero ── */}
       <section className="pt-36 pb-16 px-4 md:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto">
@@ -177,17 +274,20 @@ export default async function ContactsPage({
                 <div className="space-y-4">
                   <div className="grid gap-3 sm:grid-cols-2">
                     {whatsappContacts.map((contact) => (
-                      <a
+                      <TrackedWhatsAppLink
                         key={contact.key}
                         href={getWhatsAppUrl(contact, locale)}
                         target="_blank"
                         rel="noopener noreferrer"
+                        locale={locale}
+                        contactKey={contact.key}
+                        source="contact_page"
                         className="flex items-center justify-center gap-3 w-full py-4 rounded-full bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold text-base transition-colors shadow-lg"
                       >
                         <WhatsAppIcon className="h-5 w-5" />
                         <CountryFlag code={contact.flagCode} className="h-4 w-6" />
                         <span>{getWhatsAppLabel(contact, locale)}</span>
-                      </a>
+                      </TrackedWhatsAppLink>
                     ))}
                   </div>
 
@@ -244,6 +344,31 @@ export default async function ContactsPage({
             </ScrollSection>
           </div>
         </div>
+      </section>
+
+      <section className="px-4 pb-28 md:px-8 lg:px-12">
+        <ScrollSection animation="fade-up">
+          <div className="mx-auto max-w-7xl border-y border-white/10 py-10 text-white">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.45fr)]">
+              <div>
+                <h2 className="font-heading text-3xl font-bold md:text-4xl">{localSeoCopy.heading}</h2>
+                <div className="mt-5 space-y-4 text-base leading-7 text-white/68">
+                  {localSeoCopy.paragraphs.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+              <dl className="grid gap-4 text-sm text-white/72">
+                {localSeoCopy.facts.map((fact) => (
+                  <div key={fact} className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
+                    <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-gold)]">Egadisailing</dt>
+                    <dd className="mt-2 font-medium text-white">{fact}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </ScrollSection>
       </section>
     </div>
   );

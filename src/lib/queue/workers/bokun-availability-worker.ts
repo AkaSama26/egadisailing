@@ -98,10 +98,15 @@ export function startBokunAvailabilityWorker() {
       for (const service of services) {
         let spots: number;
         if (isBoatServiceType(service.type)) {
-          spots = await computeBoatServiceAvailableSpots({
+          const availableSpots = await computeBoatServiceAvailableSpots({
             service,
             date: parseIsoDay(data.date),
           });
+          // Bokun closeouts sono binari: aperto/chiuso. Per i tour condivisi
+          // non possiamo decrementare parzialmente i posti via API standard;
+          // se il sito ha gia' venduto posti, chiudiamo Bokun per evitare
+          // overbooking cross-channel.
+          spots = service.type === "BOAT_SHARED" && availableSpots < service.capacityMax ? 0 : availableSpots;
         } else {
           const pricingUnit: PricingUnit = effectivePricingUnit(service);
           const openCapacity =

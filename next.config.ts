@@ -14,9 +14,21 @@ const allowedOrigins = (process.env.SERVER_ACTIONS_ALLOWED_ORIGINS ?? "")
   .map((s) => s.trim())
   .filter(Boolean);
 
+const deploymentId =
+  process.env.NEXT_DEPLOYMENT_ID ||
+  process.env.DEPLOYMENT_VERSION ||
+  process.env.SENTRY_RELEASE ||
+  process.env.GIT_SHA ||
+  undefined;
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  deploymentId,
   poweredByHeader: false,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    qualities: [25, 40, 50, 60, 75, 80],
+  },
   experimental: {
     serverActions: {
       allowedOrigins: allowedOrigins.length > 0 ? allowedOrigins : undefined,
@@ -207,9 +219,34 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/it.md", destination: "/api/markdown-mirror/it" },
+        { source: "/en.md", destination: "/api/markdown-mirror/en" },
+        { source: "/es.md", destination: "/api/markdown-mirror/es" },
+        { source: "/fr.md", destination: "/api/markdown-mirror/fr" },
+        { source: "/de.md", destination: "/api/markdown-mirror/de" },
+        { source: "/it/:path*\.md", destination: "/api/markdown-mirror/it/:path*" },
+        { source: "/en/:path*\.md", destination: "/api/markdown-mirror/en/:path*" },
+        { source: "/es/:path*\.md", destination: "/api/markdown-mirror/es/:path*" },
+        { source: "/fr/:path*\.md", destination: "/api/markdown-mirror/fr/:path*" },
+        { source: "/de/:path*\.md", destination: "/api/markdown-mirror/de/:path*" },
+      ],
+    };
+  },
   // Security headers defense-in-depth. HSTS resta al reverse proxy/edge per
   // evitare header duplicati sulla risposta pubblica.
   async headers() {
+    const llmsHeaders = [
+      { key: "Content-Type", value: "text/plain; charset=utf-8" },
+      {
+        key: "Cache-Control",
+        value: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+      },
+      { key: "X-Robots-Tag", value: "noindex, follow" },
+    ];
+
     const serviceWorkerHeaders = [
       { key: "Content-Type", value: "application/javascript; charset=utf-8" },
       { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
@@ -222,6 +259,14 @@ const nextConfig: NextConfig = {
     ];
 
     return [
+      {
+        source: "/llms.txt",
+        headers: llmsHeaders,
+      },
+      {
+        source: "/llms-full.txt",
+        headers: llmsHeaders,
+      },
       {
         source: "/sw.js",
         headers: serviceWorkerHeaders,
@@ -247,7 +292,16 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=86400, s-maxage=31536000",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
         ],
       },
