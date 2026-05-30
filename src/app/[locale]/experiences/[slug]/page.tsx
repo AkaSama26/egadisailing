@@ -3513,7 +3513,7 @@ export async function generateMetadata({
   const serviceId = resolveExperienceServiceIdFromSlug(slug);
   if (!isPublicBookingServiceEnabled(serviceId)) return { title: "Not Found" };
   const service = await db.service.findUnique({ where: { id: serviceId } });
-  if (!service) return { title: "Not Found" };
+  if (!service || !service.active) return { title: "Not Found" };
   const content = getExperienceContent(service.id, locale);
   if (!content) return { title: "Not Found" };
   return buildPageMetadata({
@@ -3522,7 +3522,6 @@ export async function generateMetadata({
     path: `/experiences/${getExperiencePublicSlug(service.id, locale)}`,
     locale,
     image: service.boatId === "boat" ? EGADI_BOAT_FRONT_HERO_IMAGE : content.media[0]?.src,
-    noIndex: !content.listed,
   });
 }
 
