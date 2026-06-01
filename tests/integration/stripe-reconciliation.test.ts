@@ -49,6 +49,18 @@ vi.mock("@/lib/queue", () => ({
   ],
 }));
 
+const TEST_STRIPE_SECRET = "sk_test_ci_reconciliation";
+
+vi.mock("@/lib/env", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/env")>("@/lib/env");
+  return {
+    env: {
+      ...actual.env,
+      STRIPE_SECRET_KEY: TEST_STRIPE_SECRET,
+    },
+  };
+});
+
 // Mock Stripe SDK — controlled events.list responses per test.
 const eventsListMock = vi.fn();
 vi.mock("@/lib/stripe/server", () => ({
