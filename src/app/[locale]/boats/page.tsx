@@ -113,7 +113,7 @@ function BoatHubSection({
   experiencesLabel: string;
   reverse: boolean;
 }) {
-  const image = boat.imageSrc ?? boat.gallery[0]?.src ?? "/images/trimarano.webp";
+  const image = boat.imageSrc ?? boat.gallery[0]?.src ?? "/images/home/traimarano-levanzo.webp";
   const discoverClassName =
     "inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-gold)] px-5 py-3 text-sm font-bold text-[#071934] transition hover:bg-[#ffd44f]";
 

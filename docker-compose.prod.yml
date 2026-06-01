@@ -174,6 +174,8 @@ services:
       IMAP_PORT: ${IMAP_PORT:-993}
       IMAP_USER: ${IMAP_USER}
       IMAP_PASSWORD: ${IMAP_PASSWORD}
+    volumes:
+      - next_cache:/app/.next/cache
     depends_on:
       postgres:
         condition: service_healthy
@@ -254,6 +256,7 @@ volumes:
   redis_data:
   caddy_data:
   caddy_config:
+  next_cache:
 
 networks:
   internal:

@@ -205,10 +205,10 @@ export default function LoginPage() {
         />
         <div className="relative z-10 p-12 text-center">
           <Image
-            src="/images/trimarano.webp"
+            src="/images/home/traimarano-levanzo.webp"
             alt="Trimarano"
-            width={2752}
-            height={1536}
+            width={1800}
+            height={1800}
             className="w-full max-w-lg h-auto drop-shadow-[0_20px_60px_rgba(14,165,233,0.3)]"
           />
           <p className="text-white/40 text-sm mt-8 tracking-wider">

@@ -165,21 +165,36 @@ function PackageImage({
 
   if (images.length === 0) return null;
 
+  const activeImageIndex = activeIndex % images.length;
+  const visibleImageIndexes =
+    images.length > 1
+      ? [activeImageIndex, (activeImageIndex + 1) % images.length]
+      : [activeImageIndex];
+
   return (
     <figure className={`relative overflow-hidden rounded-lg border border-white/10 ${className}`}>
-      {images.map((image, index) => (
-        <Image
-          key={image.src}
-          src={image.src}
-          alt={`${experience.title} - ${image.caption}`}
-          fill
-          sizes={priority ? "(min-width: 1024px) 54vw, 96vw" : "(min-width: 1024px) 45vw, 96vw"}
-          preload={priority && index === 0}
-          className={`object-cover transition-opacity duration-700 ${
-            index === activeIndex % images.length ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      ))}
+      {visibleImageIndexes.map((imageIndex) => {
+        const image = images[imageIndex];
+        if (!image) return null;
+
+        const isActive = imageIndex === activeImageIndex;
+
+        return (
+          <Image
+            key={`${image.src}-${imageIndex}`}
+            src={image.src}
+            alt={isActive ? `${experience.title} - ${image.caption}` : ""}
+            aria-hidden={isActive ? undefined : true}
+            fill
+            sizes={priority ? "(min-width: 1024px) 54vw, 96vw" : "(min-width: 1024px) 45vw, 96vw"}
+            loading="eager"
+            unoptimized
+            className={`object-cover transition-opacity duration-700 ${
+              isActive ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        );
+      })}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,24,0.02)_0%,rgba(3,10,24,0.16)_54%,rgba(3,10,24,0.58)_100%)]" />
     </figure>
   );

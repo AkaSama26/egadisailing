@@ -30,7 +30,7 @@ export function CountryFlag({
       <img
         src={flagSrc(code)}
         alt=""
-        loading="lazy"
+        loading="eager"
         className="h-full w-full object-cover"
       />
     </span>

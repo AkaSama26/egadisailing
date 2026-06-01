@@ -21,6 +21,9 @@ interface ExperienceImageCarouselProps {
   closeLabel?: string;
 }
 
+const GALLERY_CARD_SIZES = "(max-width: 640px) 210px, (max-width: 1024px) 230px, 240px";
+const GALLERY_DIALOG_SIZES = "(max-width: 1024px) 100vw, 1120px";
+
 export function ExperienceImageCarousel({
   title,
   items,
@@ -135,7 +138,7 @@ export function ExperienceImageCarousel({
 
   return (
     <>
-      <section id="gallery" className="scroll-mt-28 px-4 py-12 md:px-8 lg:px-12">
+      <section id="gallery" className="relative scroll-mt-28 px-4 py-12 md:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl">
           <h2 className="sr-only">{title}</h2>
 
@@ -163,7 +166,9 @@ export function ExperienceImageCarousel({
                       src={item.src}
                       alt={item.alt}
                       fill
-                      sizes="(max-width: 640px) 78vw, (max-width: 1024px) 36vw, 240px"
+                      sizes={GALLERY_CARD_SIZES}
+                      loading="eager"
+                      unoptimized
                       className="object-cover transition duration-500 group-hover:scale-[1.035]"
                     />
                     <span className="pointer-events-none absolute inset-0 bg-black/0 transition group-hover:bg-black/10" />
@@ -173,6 +178,27 @@ export function ExperienceImageCarousel({
               ))}
             </div>
           </div>
+
+          {selectedIndex === null && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-0 top-0 h-px w-px overflow-hidden opacity-0"
+            >
+              {slides.map((item, index) => (
+                <span key={`${item.src}-dialog-warm-${index}`} className="relative block h-px w-px">
+                  <Image
+                    src={item.src}
+                    alt=""
+                    fill
+                    sizes={GALLERY_DIALOG_SIZES}
+                    loading="eager"
+                    unoptimized
+                    className="object-contain"
+                  />
+                </span>
+              ))}
+            </div>
+          )}
 
           {slides.length > 1 && (
             <div className="mt-9 flex flex-wrap items-center justify-center gap-x-3 gap-y-4">
@@ -256,7 +282,9 @@ export function ExperienceImageCarousel({
                   src={selectedImage.src}
                   alt={selectedImage.alt}
                   fill
-                  sizes="100vw"
+                  sizes={GALLERY_DIALOG_SIZES}
+                  loading="eager"
+                  unoptimized
                   className="object-contain"
                 />
               )}

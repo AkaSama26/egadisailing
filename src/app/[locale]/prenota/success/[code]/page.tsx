@@ -348,7 +348,7 @@ export default async function BookingSuccessPage({
                     height="100%"
                     style={{ border: 0, minHeight: "100%" }}
                     allowFullScreen
-                    loading="lazy"
+                    loading="eager"
                     referrerPolicy="no-referrer-when-downgrade"
                     title={copy.mapTitle}
                     className="h-full w-full"

@@ -108,6 +108,8 @@ export function ExperienceBoatGallery({
             alt={selectedItem.alt}
             fill
             sizes="(max-width: 1024px) 100vw, 760px"
+            loading="eager"
+            unoptimized
             className="object-contain"
           />
         </div>
@@ -155,7 +157,7 @@ export function ExperienceBoatGallery({
                         : "border-transparent opacity-72 hover:opacity-100",
                     )}
                   >
-                    <Image src={item.src} alt="" fill sizes="128px" className="object-cover" />
+                    <Image src={item.src} alt="" fill sizes="128px" loading="eager" unoptimized className="object-cover" />
                   </button>
                 );
               })}

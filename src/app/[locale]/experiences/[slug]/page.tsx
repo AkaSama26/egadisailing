@@ -50,7 +50,7 @@ import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
 import { localizedStaticPath } from "@/lib/i18n/static-paths";
 
 const FALLBACK_HERO_IMAGE =
-  "/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp";
+  "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp";
 const EGADI_BOAT_FRONT_HERO_IMAGE =
   "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp";
 

@@ -320,7 +320,7 @@ export default async function ContactsPage({
                     height="100%"
                     style={{ border: 0, minHeight: "100%" }}
                     allowFullScreen
-                    loading="lazy"
+                    loading="eager"
                     referrerPolicy="no-referrer-when-downgrade"
                     title={copy.address}
                     className="w-full h-full"

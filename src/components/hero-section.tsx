@@ -16,6 +16,7 @@ import { CalendarDays } from "lucide-react";
 import { HERO_VIDEO_SRC } from "@/lib/public-assets";
 
 const HERO_VIDEO_POSTER_IMAGE_SRC = "/videos/hero-poster.webp";
+const HERO_VIDEO_DELAY_MS = 4500;
 
 export interface HeroExperienceCard {
   key: string;
@@ -210,8 +211,26 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
       return;
     }
 
-    const timeout = globalThis.setTimeout(() => setShouldLoadVideo(true), 0);
-    return () => globalThis.clearTimeout(timeout);
+    let hasRequestedVideo = false;
+    const requestVideo = () => {
+      if (hasRequestedVideo) return;
+      hasRequestedVideo = true;
+      setShouldLoadVideo(true);
+    };
+
+    const timeout = globalThis.setTimeout(requestVideo, HERO_VIDEO_DELAY_MS);
+    const interactionEvents = ["pointerdown", "keydown", "scroll"] as const;
+
+    for (const eventName of interactionEvents) {
+      window.addEventListener(eventName, requestVideo, { once: true, passive: true });
+    }
+
+    return () => {
+      globalThis.clearTimeout(timeout);
+      for (const eventName of interactionEvents) {
+        window.removeEventListener(eventName, requestVideo);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -486,7 +505,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
         muted
         loop
         playsInline
-        preload={shouldLoadVideo ? "auto" : "none"}
+        preload="none"
         onCanPlay={() => setVideoReady(true)}
         className={`absolute inset-0 z-0 h-full w-full scale-105 object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
           videoReady ? "opacity-100" : "opacity-0"

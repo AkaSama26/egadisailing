@@ -26,7 +26,8 @@ const nextConfig: NextConfig = {
   deploymentId,
   poweredByHeader: false,
   images: {
-    formats: ["image/avif", "image/webp"],
+    // Self-hosted image optimization: WebP avoids cold AVIF transcode latency.
+    formats: ["image/webp"],
     qualities: [25, 40, 50, 60, 75, 80],
   },
   experimental: {

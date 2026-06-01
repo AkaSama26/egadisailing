@@ -470,7 +470,7 @@ export async function generateMetadata({
     description: t("subtitle"),
     path: "/experiences",
     locale,
-    image: "/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp",
+    image: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
   });
 }
 
@@ -661,7 +661,7 @@ export default async function ExperiencesPage({
               image:
                 structuredImages.length > 0
                   ? structuredImages
-                  : [absoluteUrl("/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp")],
+                  : [absoluteUrl("/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp")],
               duration: packageSchemaDuration(item.key),
               provider: { "@id": organizationId },
               areaServed: [

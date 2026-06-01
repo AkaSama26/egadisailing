@@ -152,6 +152,8 @@ services:
       IMAP_USER: ${IMAP_USER:-}
       IMAP_PASSWORD: ${IMAP_PASSWORD:-}
       IMAP_TLS: ${IMAP_TLS:-true}
+    volumes:
+      - next_cache:/app/.next/cache
     depends_on:
       postgres:
         condition: service_healthy
@@ -214,6 +216,8 @@ volumes:
     name: egadisailing_pgdata
   redis_data:
     name: egadisailing_redis_data
+  next_cache:
+    name: egadisailing_next_cache
 
 networks:
   internal:

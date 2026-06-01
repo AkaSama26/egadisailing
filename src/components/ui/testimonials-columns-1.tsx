@@ -87,7 +87,7 @@ export function TestimonialsColumn({
                       src={image}
                       alt={profileAlt(name)}
                       className="h-10 w-10 rounded-full object-cover"
-                      loading="lazy"
+                      loading="eager"
                       referrerPolicy="no-referrer"
                     />
                   ) : (

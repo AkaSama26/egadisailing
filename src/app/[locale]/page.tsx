@@ -487,7 +487,7 @@ function recommendationImages(serviceId: string, locale: string, fallbackAlt: st
     ? images
     : [
         {
-          src: "/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp",
+          src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
           alt: fallbackAlt,
         },
       ];
@@ -792,7 +792,7 @@ export default async function HomePage({
           ? images
           : [
               {
-                src: "/images/egadisailing-experience/02-isole-egadi-come-non-le-hai-mai-viste.webp",
+                src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
                 alt: heroCopy.title,
               },
             ];
