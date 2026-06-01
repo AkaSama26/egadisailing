@@ -367,6 +367,11 @@ export async function importBokunBooking(
           startDate: startDate.toISOString().slice(0, 10),
           numPeople: booking.numPeople ?? 1,
           totalPrice: `€${totalPriceStr}`,
+          paymentType: booking.paymentStatus
+            ? `Canale esterno (${booking.paymentStatus})`
+            : "Canale esterno",
+          paidAmount: "Gestito da BOKUN",
+          balanceAmount: "Verificare su BOKUN",
         },
         bookingId: result.booking.id.startsWith("BOKUN-CONFLICT-") ? undefined : result.booking.id,
         emailIdempotencyKey: `new-booking-bokun:${booking.id}`,

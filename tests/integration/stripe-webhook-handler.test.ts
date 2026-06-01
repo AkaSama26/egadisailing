@@ -327,10 +327,19 @@ describe("handleStripeEvent — integration", () => {
     });
     expect(confirmationEmail?.subject).toContain(booking.confirmationCode);
 
-    // Notification admin dispatched (NEW_BOOKING_DIRECT).
+    // Notification admin dispatched (NEW_BOOKING_DIRECT) con riepilogo pagamento.
     expect(dispatchNotification).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "NEW_BOOKING_DIRECT",
+        bookingId: booking.id,
+        customerId: booking.customerId,
+        payload: expect.objectContaining({
+          confirmationCode: booking.confirmationCode,
+          totalPrice: expect.any(String),
+          paymentType: "Totale",
+          paidAmount: expect.any(String),
+          balanceAmount: expect.any(String),
+        }),
       }),
     );
 

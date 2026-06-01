@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import type Stripe from "stripe";
 import { confirmDirectBookingAfterPayment } from "@/lib/booking/confirm";
 import { bookingConfirmationTemplate } from "@/lib/email/templates/booking-confirmation";
@@ -144,9 +145,25 @@ async function notifyNewBooking(bookingId: string, source: string): Promise<void
     include: {
       service: { select: { name: true } },
       customer: { select: { firstName: true, lastName: true } },
+      payments: {
+        where: { status: "SUCCEEDED", type: { in: ["DEPOSIT", "BALANCE", "FULL"] } },
+        select: { amount: true, type: true, createdAt: true },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
   if (!booking) return;
+
+  const paidAmount = booking.payments.reduce(
+    (sum, payment) => sum.plus(payment.amount.toString()),
+    new Decimal(0),
+  );
+  const balanceAmount = Decimal.max(
+    0,
+    new Decimal(booking.totalPrice.toString()).minus(paidAmount),
+  );
+  const latestPayment = booking.payments.at(-1);
+
   await dispatchNotification({
     type: "NEW_BOOKING_DIRECT",
     channels: defaultNotificationChannels(),
@@ -158,8 +175,26 @@ async function notifyNewBooking(bookingId: string, source: string): Promise<void
       startDate: booking.startDate.toISOString().slice(0, 10),
       numPeople: booking.numPeople,
       totalPrice: formatEur(booking.totalPrice),
+      paymentType: adminPaymentTypeLabel(latestPayment?.type),
+      paidAmount: formatEur(paidAmount),
+      balanceAmount: formatEur(balanceAmount),
     },
+    bookingId: booking.id,
+    customerId: booking.customerId,
   });
+}
+
+function adminPaymentTypeLabel(paymentType: string | undefined): string {
+  switch (paymentType) {
+    case "DEPOSIT":
+      return "Acconto";
+    case "FULL":
+      return "Totale";
+    case "BALANCE":
+      return "Saldo";
+    default:
+      return "Da verificare";
+  }
 }
 
 async function sendConfirmationEmail(bookingId: string, paidCents: number): Promise<void> {
