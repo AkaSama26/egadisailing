@@ -122,6 +122,26 @@ afterEach(() => {
   stripeServerMocks.refundsList.mockReset();
 });
 
+async function waitForAssertion(assertion: () => void, timeoutMs = 2_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  let lastError: unknown;
+
+  while (Date.now() < deadline) {
+    try {
+      assertion();
+      return;
+    } catch (err) {
+      lastError = err;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+  assertion();
+}
+
 function makeEvent<T extends string>(
   type: T,
   obj: unknown,
@@ -296,6 +316,8 @@ describe("handleStripeEvent — integration", () => {
       },
     });
 
+    vi.mocked(dispatchNotification).mockClear();
+
     await handleStripeEvent(event);
 
     // Booking PENDING → CONFIRMED.
@@ -328,20 +350,22 @@ describe("handleStripeEvent — integration", () => {
     expect(confirmationEmail?.subject).toContain(booking.confirmationCode);
 
     // Notification admin dispatched (NEW_BOOKING_DIRECT) con riepilogo pagamento.
-    expect(dispatchNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "NEW_BOOKING_DIRECT",
-        bookingId: booking.id,
-        customerId: booking.customerId,
-        payload: expect.objectContaining({
-          confirmationCode: booking.confirmationCode,
-          totalPrice: expect.any(String),
-          paymentType: "Totale",
-          paidAmount: expect.any(String),
-          balanceAmount: expect.any(String),
+    await waitForAssertion(() => {
+      expect(dispatchNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "NEW_BOOKING_DIRECT",
+          bookingId: booking.id,
+          customerId: booking.customerId,
+          payload: expect.objectContaining({
+            confirmationCode: booking.confirmationCode,
+            totalPrice: expect.any(String),
+            paymentType: "Totale",
+            paidAmount: expect.any(String),
+            balanceAmount: expect.any(String),
+          }),
         }),
-      }),
-    );
+      );
+    });
 
     // ProcessedStripeEvent marker inserito post-success.
     const marker = await db.processedStripeEvent.findUnique({
