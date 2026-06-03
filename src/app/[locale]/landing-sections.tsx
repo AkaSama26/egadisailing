@@ -1,7 +1,6 @@
 "use client";
 
 import { useLocale } from "next-intl";
-import Script from "next/script";
 import { motion } from "framer-motion";
 import { ScrollSection } from "@/components/scroll-section";
 import {
@@ -52,7 +51,6 @@ const featuredPackageOrder: Record<string, number> = {
 
 const googleReviewsUrl = PUBLIC_REVIEW_LINKS.google;
 const tripadvisorReviewsUrl = PUBLIC_REVIEW_LINKS.tripadvisor;
-const tripadvisorHistoricReviewsUrl = PUBLIC_REVIEW_LINKS.tripadvisorHistoric;
 
 const googleReviews: TestimonialColumnItem[] = [
   {
@@ -129,15 +127,10 @@ const googleReviews: TestimonialColumnItem[] = [
   },
 ];
 
-const TRIPADVISOR_EXCELLENT_WIDGET = {
-  uniqueId: "710",
-  locationId: "4465624",
-} as const;
-
 const tripadvisorReviews: TestimonialColumnItem[] = [
   {
     name: "Veronica C",
-    role: "Tripadvisor · set 2025",
+    role: "Tripadvisor · storico · set 2025",
     rating: 5,
     text: "Abbiamo passato una giornata semplicemente indimenticabile con Niko e Ale. A bordo di un trimarano moderno, spazioso e super confortevole.",
   },
@@ -187,165 +180,6 @@ function getReviewColumns() {
     mixedReviews.filter((_, index) => index % 3 === 1),
     mixedReviews.filter((_, index) => index % 3 === 2),
   ];
-}
-
-function tripadvisorWidgetLang(locale: string) {
-  if (locale === "en") return "en";
-  if (locale === "es") return "es";
-  if (locale === "fr") return "fr";
-  if (locale === "de") return "de";
-  return "it";
-}
-
-function tripadvisorWidgetCopy(locale: string) {
-  if (locale === "es") {
-    return {
-      eyebrow: "Tripadvisor",
-      title: "Dos perfiles, historial disponible desde 2015",
-      text: "El perfil principal abre las reseñas de Egadi Sailing en Tripadvisor, incluido el historial disponible desde 2015. También mantenemos el otro perfil para que puedas comparar Google y ambos canales Tripadvisor.",
-      primary: "Ver perfil principal",
-      secondary: "Ver otro perfil",
-      badgeCurrent: "Perfil principal",
-      badgeSince: "Desde 2015",
-      badgeOfficial: "Widget oficial",
-      widgetTitle: "Valoración Tripadvisor",
-    };
-  }
-  if (locale === "fr") {
-    return {
-      eyebrow: "Tripadvisor",
-      title: "Deux profils, historique disponible depuis 2015",
-      text: "Le profil principal ouvre les avis Egadi Sailing sur Tripadvisor, avec l'historique disponible depuis 2015. L'autre profil reste accessible pour comparer Google et les deux canaux Tripadvisor.",
-      primary: "Voir le profil principal",
-      secondary: "Voir l'autre profil",
-      badgeCurrent: "Profil principal",
-      badgeSince: "Depuis 2015",
-      badgeOfficial: "Widget officiel",
-      widgetTitle: "Note Tripadvisor",
-    };
-  }
-  if (locale === "de") {
-    return {
-      eyebrow: "Tripadvisor",
-      title: "Zwei Profile, Bewertungen seit 2015 verfügbar",
-      text: "Das Hauptprofil führt zu den Egadi-Sailing-Bewertungen auf Tripadvisor, einschließlich der seit 2015 verfügbaren Historie. Das weitere Profil bleibt sichtbar, damit Google und beide Tripadvisor-Kanäle vergleichbar sind.",
-      primary: "Hauptprofil ansehen",
-      secondary: "Weiteres Profil ansehen",
-      badgeCurrent: "Hauptprofil",
-      badgeSince: "Seit 2015",
-      badgeOfficial: "Offizielles Widget",
-      widgetTitle: "Tripadvisor-Bewertung",
-    };
-  }
-  if (locale === "en") {
-    return {
-      eyebrow: "Tripadvisor",
-      title: "Two profiles, review history available from 2015",
-      text: "The main profile opens Egadi Sailing reviews on Tripadvisor, including the available review history from 2015 onward. The other profile remains linked so guests can compare Google and both Tripadvisor channels.",
-      primary: "View main profile",
-      secondary: "View other profile",
-      badgeCurrent: "Main profile",
-      badgeSince: "From 2015",
-      badgeOfficial: "Official widget",
-      widgetTitle: "Tripadvisor rating",
-    };
-  }
-  return {
-    eyebrow: "Tripadvisor",
-    title: "Due profili, storico disponibile dal 2015",
-    text: "Il profilo principale apre le recensioni Egadi Sailing su Tripadvisor, con lo storico disponibile dal 2015. Manteniamo visibile anche l'altro profilo, così puoi confrontare Google ed entrambi i canali Tripadvisor.",
-    primary: "Vedi profilo principale",
-    secondary: "Vedi altro profilo",
-    badgeCurrent: "Profilo principale",
-    badgeSince: "Dal 2015",
-    badgeOfficial: "Widget ufficiale",
-    widgetTitle: "Valutazione Tripadvisor",
-  };
-}
-
-function TripadvisorExcellentWidget({ locale }: { locale: string }) {
-  const copy = tripadvisorWidgetCopy(locale);
-  const widgetLang = tripadvisorWidgetLang(locale);
-  const scriptSrc = `https://www.jscache.com/wejs?wtype=excellent&uniq=${TRIPADVISOR_EXCELLENT_WIDGET.uniqueId}&locationId=${TRIPADVISOR_EXCELLENT_WIDGET.locationId}&lang=${widgetLang}&display_version=2`;
-
-  return (
-    <div className="mx-auto mt-10 grid max-w-5xl gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
-      <div className="rounded-lg border border-white/10 bg-white/[0.055] p-6 text-left shadow-lg shadow-black/10 backdrop-blur">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-gold)]">
-          {copy.eyebrow}
-        </p>
-        <h3 className="mt-2 text-2xl font-bold leading-tight text-white">
-          {copy.title}
-        </h3>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/68">
-          {copy.text}
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {[copy.badgeCurrent, copy.badgeSince, copy.badgeOfficial].map((item) => (
-            <span
-              key={item}
-              className="rounded-full border border-white/12 bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-white/75"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <a
-            href={tripadvisorReviewsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--color-gold)] px-5 py-2.5 text-sm font-bold text-[#071934] transition hover:bg-[#f2b84b]"
-          >
-            {copy.primary}
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </a>
-          <a
-            href={tripadvisorHistoricReviewsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-sm font-bold text-white/82 transition hover:border-[var(--color-gold)] hover:text-[var(--color-gold)]"
-          >
-            {copy.secondary}
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </a>
-        </div>
-      </div>
-
-      <div className="rounded-lg border border-white/10 bg-white p-5 text-center text-slate-900 shadow-xl shadow-black/15">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-          {copy.widgetTitle}
-        </p>
-        <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-4 py-5">
-          <div id="TA_excellent710" className="TA_excellent">
-            <ul id="mGQpUAjTXNC" className="TA_links d2RLi5z">
-              <li id="A8AID9Lp0AvB" className="VHO3HCVb9d8y">
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={tripadvisorReviewsUrl}
-                >
-                  <img
-                    src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_horizontal_secondary_registered.svg"
-                    alt="Tripadvisor"
-                    className="mx-auto h-10 w-auto max-w-full"
-                    id="CDSWIDEXCLOGO"
-                    loading="lazy"
-                  />
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <Script
-          id={`tripadvisor-excellent-${widgetLang}`}
-          src={scriptSrc}
-          strategy="lazyOnload"
-          data-loadtrk=""
-        />
-      </div>
-    </div>
-  );
 }
 
 function getMaxCapacity(services: SerializedService[], serviceIds: string[]) {
@@ -521,14 +355,14 @@ export function LandingSections({ services }: LandingSectionsProps) {
     ? "Real guest experiences between Favignana, Levanzo, snorkelling, chef on board, charter and trimaran days from Trapani."
     : "Esperienze reali tra Favignana, Levanzo, snorkeling, chef a bordo, charter e giornate in trimarano con partenza da Trapani.";
   const reviewTrustItems = isEs
-    ? ["Google y dos perfiles Tripadvisor", "Tour Favignana y Levanzo", "Experiencias privadas y gourmet"]
+    ? ["Google y Tripadvisor", "Tour Favignana y Levanzo", "Experiencias privadas y gourmet"]
     : isFr
-    ? ["Google et deux profils Tripadvisor", "Tour Favignana et Levanzo", "Expériences privées et gourmet"]
+    ? ["Google et Tripadvisor", "Tour Favignana et Levanzo", "Expériences privées et gourmet"]
     : isDe
-    ? ["Google und zwei Tripadvisor-Profile", "Tour Favignana und Levanzo", "Private und Gourmet-Erlebnisse"]
+    ? ["Google und Tripadvisor", "Tour Favignana und Levanzo", "Private und Gourmet-Erlebnisse"]
     : isEn
-    ? ["Google and two Tripadvisor profiles", "Favignana and Levanzo tours", "Private and gourmet experiences"]
-    : ["Google e due profili Tripadvisor", "Tour Favignana e Levanzo", "Esperienze private e gourmet"];
+    ? ["Google and Tripadvisor", "Favignana and Levanzo tours", "Private and gourmet experiences"]
+    : ["Google e Tripadvisor", "Tour Favignana e Levanzo", "Esperienze private e gourmet"];
   const idealForTitle = isEs ? "Ideal para" : isFr ? "Idéal pour" : isDe ? "Ideal für" : isEn ? "Best for" : "Ideale per";
   const routeTitle = isEs ? "Ruta / etapas principales" : isFr ? "Route / étapes principales" : isDe ? "Route / wichtigste Stopps" : isEn ? "Route / main stops" : "Rotta / tappe principali";
   const capacityLabelFor = (serviceIds: string[], noun: string) => {
@@ -1289,8 +1123,6 @@ export function LandingSections({ services }: LandingSectionsProps) {
               </div>
             </div>
           </ScrollSection>
-
-          <TripadvisorExcellentWidget locale={locale} />
 
           <div className="mx-auto mt-10 flex max-h-[660px] justify-center gap-6 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)]">
             <TestimonialsColumn testimonials={reviewColumns[0]} locale={locale} duration={22} />
