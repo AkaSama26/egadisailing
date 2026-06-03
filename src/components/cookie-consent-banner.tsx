@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Cookie } from "lucide-react";
 import type { CookieConsentConfig } from "vanilla-cookieconsent";
 import {
@@ -48,6 +49,8 @@ declare global {
     __egadiGoogleConsentDefaultSet?: boolean;
     __egadiGtagLoadedIds?: Record<string, true>;
     __egadiMetaPixelLoadedIds?: Record<string, true>;
+    __egadiMetaPixelConsentGranted?: Record<string, true>;
+    __egadiMetaPixelLastPageViewKey?: string;
     __egadiBingUetLoadedIds?: Record<string, true>;
     uetq?: unknown[] | BingUetQueue;
     UET?: BingUetConstructor;
@@ -123,8 +126,16 @@ function disableGoogleMarketing() {
   });
 }
 
+function trackMetaPixelPageView() {
+  const key = `${window.location.pathname}${window.location.search}`;
+  if (window.__egadiMetaPixelLastPageViewKey === key) return;
+  window.__egadiMetaPixelLastPageViewKey = key;
+  window.fbq?.("track", "PageView");
+}
+
 function enableMetaPixel(consent: CookieConsentApi, pixelId: string) {
   window.__egadiMetaPixelLoadedIds = window.__egadiMetaPixelLoadedIds ?? {};
+  window.__egadiMetaPixelConsentGranted = window.__egadiMetaPixelConsentGranted ?? {};
   if (!window.fbq) {
     const fbq: FbqFunction = (...args: unknown[]) => {
       if (fbq.callMethod) {
@@ -141,16 +152,26 @@ function enableMetaPixel(consent: CookieConsentApi, pixelId: string) {
     window._fbq = fbq;
   }
 
+  window.__egadiMetaPixelConsentGranted[pixelId] = true;
+  window.fbq?.("consent", "grant");
+
   if (!window.__egadiMetaPixelLoadedIds[pixelId]) {
     window.__egadiMetaPixelLoadedIds[pixelId] = true;
     void consent.loadScript("https://connect.facebook.net/en_US/fbevents.js").then(() => {
       window.fbq?.("init", pixelId);
-      window.fbq?.("track", "PageView");
+      trackMetaPixelPageView();
     });
     return;
   }
 
-  window.fbq?.("track", "PageView");
+  trackMetaPixelPageView();
+}
+
+function disableMetaPixel(pixelId: string) {
+  if (window.__egadiMetaPixelConsentGranted) {
+    delete window.__egadiMetaPixelConsentGranted[pixelId];
+  }
+  window.fbq?.("consent", "revoke");
 }
 
 function enableBingUet(consent: CookieConsentApi, tagId: string) {
@@ -382,6 +403,9 @@ function buildConfig(
         onAccept: () => {
           enableMetaPixel(consent, metaPixelId);
         },
+        onReject: () => {
+          disableMetaPixel(metaPixelId);
+        },
         cookies: [{ name: "_fbp" }, { name: "_fbc" }],
       };
     }
@@ -483,6 +507,7 @@ function buildConfig(
 }
 
 export function CookieConsentBanner({ locale, services }: CookieConsentBannerProps) {
+  const pathname = usePathname();
   const normalizedLocale = normalizeCookieConsentLocale(locale);
   const { bingUetTagId, gaMeasurementId, googleAdsId, metaPixelId } = services;
   const floatingLabel =
@@ -493,6 +518,13 @@ export function CookieConsentBanner({ locale, services }: CookieConsentBannerPro
       : normalizedLocale === "en"
       ? "Cookie preferences"
       : "Preferenze cookie";
+
+  useEffect(() => {
+    if (!metaPixelId) return;
+    if (!window.__egadiMetaPixelConsentGranted?.[metaPixelId]) return;
+    if (!window.__egadiMetaPixelLoadedIds?.[metaPixelId]) return;
+    trackMetaPixelPageView();
+  }, [pathname, metaPixelId]);
 
   useEffect(() => {
     let cancelled = false;

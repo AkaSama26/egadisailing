@@ -895,7 +895,7 @@ export default async function HomePage({
         taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
         priceRange: "€€€",
         image: `${siteBase}/og-default.jpg`,
-        sameAs: [PUBLIC_REVIEW_LINKS.google, PUBLIC_REVIEW_LINKS.tripadvisor],
+        sameAs: [PUBLIC_REVIEW_LINKS.google, ...PUBLIC_REVIEW_LINKS.tripadvisorProfiles],
         hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
         address: boardingAddress,
         location: {

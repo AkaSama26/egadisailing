@@ -75,7 +75,7 @@ export function buildGlobalSeoJsonLd(locale: string) {
         vatID: PUBLIC_COMPANY_LEGAL.vatNumber,
         address,
         areaServed,
-        sameAs: [PUBLIC_REVIEW_LINKS.tripadvisor],
+        sameAs: PUBLIC_REVIEW_LINKS.tripadvisorProfiles,
         contactPoint: [
           {
             "@type": "ContactPoint",
