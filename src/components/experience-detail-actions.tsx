@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, Ship, Users } from "lucide-react";
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock, Ship, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -42,6 +42,7 @@ interface ExperienceBookingCardProps {
   priceUnit: string;
   bookNowLabel: string;
   infoItems: BookingInfoItem[];
+  includedItems?: string[];
 }
 
 const weekDays = {
@@ -155,6 +156,29 @@ function iconForInfo(icon: BookingInfoItem["icon"]) {
   return Clock;
 }
 
+function includedBadgeLabel(locale: string, hasConditionalItems: boolean) {
+  if (!hasConditionalItems) return "ALL INCLUSIVE";
+  if (locale === "es") return "Incluido en el precio";
+  if (locale === "fr") return "Inclus dans le prix";
+  if (locale === "de") return "Im Preis enthalten";
+  if (locale === "en") return "Included in the price";
+  return "Incluso nel prezzo";
+}
+
+function includedHeading(locale: string) {
+  if (locale === "es") return "Qué incluye";
+  if (locale === "fr") return "Ce qui est inclus";
+  if (locale === "de") return "Was inklusive ist";
+  if (locale === "en") return "What's included";
+  return "Cosa c'è incluso";
+}
+
+function isConditionalIncludedItem(item: string) {
+  return /esclus|not included|extra|request|richiesta|su richiesta|sur demande|auf Anfrage|bajo petición|exclu|excluido/i.test(
+    item,
+  );
+}
+
 function dayClass({
   day,
   selected,
@@ -189,7 +213,7 @@ function dayClass({
     rangeSelected &&
       !rangeStart &&
       !rangeEnd &&
-      "border-sky-200 bg-sky-100 text-[var(--color-ocean)]",
+      "border-[var(--color-ocean)] bg-[var(--color-ocean)] text-white shadow-sm",
     selected && "border-[var(--color-ocean)] bg-[var(--color-ocean)] text-white shadow-sm",
     (rangeStart || rangeEnd) &&
       "border-[var(--color-ocean)] bg-[var(--color-ocean)] text-white shadow-sm",
@@ -290,7 +314,7 @@ export function ExperienceBookingDialogButton({
         <SheetContent
           side="bottom"
           className={cn(
-            "max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t border-white/70 bg-[#f7f2e8] p-3 pt-10 shadow-2xl sm:mx-auto sm:mb-4 sm:max-w-md sm:rounded-2xl sm:border sm:p-4 sm:pt-10",
+            "max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t border-white/70 bg-[#f7f2e8] p-3 pt-10 shadow-2xl sm:mx-auto sm:mb-4 sm:w-[min(calc(100vw-2rem),68rem)] sm:max-w-none sm:rounded-2xl sm:border sm:p-4 sm:pt-10 lg:max-h-[88dvh] lg:p-5 lg:pt-10",
             !dialogAll && "lg:hidden",
           )}
         >
@@ -317,6 +341,7 @@ export function ExperienceBookingCard({
   priceUnit,
   bookNowLabel,
   infoItems,
+  includedItems,
   className,
 }: ExperienceBookingCardProps & { className?: string }) {
   const hydrated = useHydrated();
@@ -381,6 +406,13 @@ export function ExperienceBookingCard({
       : null;
   const displayedPriceLabel = displayedPriceStatusLabel ?? selectedDay?.priceLabel ?? priceLabel;
   const displayedPriceHasVat = displayedPriceLabel.includes(vatLabel);
+  const includedPreviewItems = useMemo(
+    () => (includedItems ?? []).filter((item) => !isConditionalIncludedItem(item)).slice(0, 4),
+    [includedItems],
+  );
+  const hasConditionalIncludedItems = Boolean(
+    includedItems?.some((item) => isConditionalIncludedItem(item)),
+  );
 
   useEffect(() => {
     if (!hydrated || !range) return;
@@ -514,20 +546,41 @@ export function ExperienceBookingCard({
   }
 
   return (
-    <div className={cn("rounded-lg border border-white/70 bg-white p-4 shadow-xl sm:p-6", className)}>
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)] sm:text-sm sm:tracking-[0.18em]">
+    <div className={cn("rounded-lg border border-white/70 bg-white p-4 shadow-xl sm:p-6 lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(25rem,1.08fr)] lg:items-start lg:gap-x-6 lg:gap-y-4", className)}>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-gold)] sm:text-sm sm:tracking-[0.18em] lg:col-start-1">
         {title}
       </p>
-      <p className="mt-3 text-2xl font-bold text-[var(--color-ocean)] sm:mt-4 sm:text-3xl">
+      {includedPreviewItems.length > 0 && (
+        <div className="mt-4 rounded-lg border border-[var(--color-gold)]/35 bg-[#fff8ea] p-3 lg:col-start-1">
+          <div className="flex items-center justify-between gap-3">
+            <span className="rounded-full bg-[var(--color-ocean)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white">
+              {includedBadgeLabel(locale, hasConditionalIncludedItems)}
+            </span>
+            <span className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-gold)]">
+              {includedHeading(locale)}
+            </span>
+          </div>
+          <ul className="mt-3 grid gap-2 text-xs font-semibold leading-5 text-slate-700 sm:grid-cols-2">
+            {includedPreviewItems.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <Check className="mt-0.5 size-3.5 shrink-0 text-[var(--color-gold)]" aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <p className="mt-3 text-2xl font-bold text-[var(--color-ocean)] sm:mt-4 sm:text-3xl lg:col-start-1">
         {displayedPriceLabel}
       </p>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 lg:col-start-1">
         {priceUnit}
         {!displayedPriceStatusLabel && !displayedPriceHasVat && ` · ${vatLabel}`}
       </p>
-      <p className="mt-4 text-sm leading-6 text-slate-600 sm:mt-5">{text}</p>
+      <p className="mt-4 text-sm leading-6 text-slate-600 sm:mt-5 lg:col-start-1">{text}</p>
 
-      <div className="mt-5 rounded-lg border border-slate-200 bg-[#f7f2e8]/45 p-2 sm:mt-6 sm:p-3">
+      <div className="mt-5 rounded-lg border border-slate-200 bg-[#f7f2e8]/45 p-2 sm:mt-6 sm:p-3 lg:col-start-2 lg:row-span-8 lg:row-start-1 lg:mt-0">
         <div className="mb-3 flex items-center justify-between gap-2 sm:gap-3">
           <button
             type="button"
@@ -805,7 +858,7 @@ export function ExperienceBookingCard({
         {error && <p className="mt-3 text-xs font-semibold text-red-700">{error}</p>}
       </div>
 
-      <div className="mt-5 space-y-3 border-y border-slate-200 py-4 text-sm sm:mt-6 sm:py-5">
+      <div className="mt-5 space-y-3 border-y border-slate-200 py-4 text-sm sm:mt-6 sm:py-5 lg:col-start-1">
         {infoItems.map((item) => {
           const Icon = iconForInfo(item.icon);
           return (
@@ -824,7 +877,7 @@ export function ExperienceBookingCard({
         <Button
           size="lg"
           nativeButton={false}
-          className="mt-6 w-full !bg-[var(--color-gold)] py-6 text-base font-semibold !text-white hover:!bg-[#b86504] hover:!text-white"
+          className="mt-6 w-full !bg-[var(--color-gold)] py-6 text-base font-semibold !text-white hover:!bg-[#b86504] hover:!text-white lg:col-start-1"
           render={<a href={bookingHref} />}
         >
           <CalendarDays className="h-5 w-5" />
@@ -834,7 +887,7 @@ export function ExperienceBookingCard({
         <Button
           size="lg"
           disabled
-          className="mt-6 w-full !bg-[var(--color-gold)] py-6 text-base font-semibold !text-white hover:!bg-[#b86504] hover:!text-white disabled:opacity-45"
+          className="mt-6 w-full !bg-[var(--color-gold)] py-6 text-base font-semibold !text-white hover:!bg-[#b86504] hover:!text-white disabled:opacity-45 lg:col-start-1"
         >
           <CalendarDays className="h-5 w-5" />
           {bookNowLabel}

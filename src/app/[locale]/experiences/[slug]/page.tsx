@@ -3868,6 +3868,7 @@ export default async function ExperienceDetailPage({
     priceUnit,
     bookNowLabel: copy.bookNow,
     infoItems: bookingInfoItems,
+    includedItems: content.includes,
   };
   const directBookingLabel =
     locale === "es"
