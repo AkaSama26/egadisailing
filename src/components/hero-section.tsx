@@ -416,8 +416,15 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     resumeCardsAutoplay();
   }
 
+  function isInteractiveCardTarget(target: EventTarget | null) {
+    return target instanceof Element
+      ? Boolean(target.closest("a,button,input,select,textarea,summary,[role=button]"))
+      : false;
+  }
+
   function startCardsDrag(event: PointerEvent<HTMLDivElement>) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (isInteractiveCardTarget(event.target)) return;
     holdCardsAutoplay();
     cardsDragStartXRef.current = event.clientX;
     cardsDragStartPositionRef.current = carouselPositionRef.current;
