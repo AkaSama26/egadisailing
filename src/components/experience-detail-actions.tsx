@@ -314,7 +314,7 @@ export function ExperienceBookingDialogButton({
         <SheetContent
           side="bottom"
           className={cn(
-            "max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t border-white/70 bg-[#f7f2e8] p-3 pt-10 shadow-2xl sm:mx-auto sm:mb-4 sm:w-[min(calc(100vw-2rem),68rem)] sm:max-w-none sm:rounded-2xl sm:border sm:p-4 sm:pt-10 lg:max-h-[88dvh] lg:p-5 lg:pt-10",
+            "max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t border-white/70 bg-[#f7f2e8] p-3 pt-10 shadow-2xl sm:!left-1/2 sm:!right-auto sm:!top-1/2 sm:!bottom-auto sm:w-[min(calc(100vw-2rem),68rem)] sm:max-w-none sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:rounded-2xl sm:border sm:p-4 sm:pt-10 lg:max-h-[88dvh] lg:p-5 lg:pt-10",
             !dialogAll && "lg:hidden",
           )}
         >
