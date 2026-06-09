@@ -280,6 +280,91 @@ export const BOAT_CATALOG = {
         caption: { it: "Favignana", en: "Favignana" },
       },
       {
+        src: "/images/boats/neel-47/trimarano-ancorato.webp",
+        alt: {
+          it: "Trimarano all'ancora con pozzetto aperto e ospiti a bordo",
+          en: "Trimaran at anchor with an open cockpit and guests on board",
+          es: "Trimarán fondeado con bañera abierta y huéspedes a bordo",
+          fr: "Trimaran au mouillage avec cockpit ouvert et invités à bord",
+          de: "Trimaran vor Anker mit offenem Cockpit und Gästen an Bord",
+        },
+        caption: {
+          it: "All'ancora",
+          en: "At anchor",
+          es: "Fondeado",
+          fr: "Au mouillage",
+          de: "Vor Anker",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-fuori.webp",
+        alt: {
+          it: "Trimarano in rada vicino alla costa con i fari sullo sfondo",
+          en: "Trimaran at anchor near the coast with lighthouses in the background",
+          es: "Trimarán fondeado cerca de la costa con faros al fondo",
+          fr: "Trimaran au mouillage près de la côte avec des phares en arrière-plan",
+          de: "Trimaran vor Anker nahe der Küste mit Leuchttürmen im Hintergrund",
+        },
+        caption: {
+          it: "Vista esterna",
+          en: "Exterior view",
+          es: "Vista exterior",
+          fr: "Vue extérieure",
+          de: "Außenansicht",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-navigazione-drone.webp",
+        alt: {
+          it: "Trimarano visto dall'alto con vela rossa in navigazione",
+          en: "Trimaran seen from above sailing with a red sail",
+          es: "Trimarán visto desde arriba navegando con vela roja",
+          fr: "Trimaran vu d'en haut en navigation avec une voile rouge",
+          de: "Trimaran von oben beim Segeln mit rotem Segel",
+        },
+        caption: {
+          it: "Vista drone",
+          en: "Drone view",
+          es: "Vista dron",
+          fr: "Vue drone",
+          de: "Drohnenansicht",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-navigazione-drone2.webp",
+        alt: {
+          it: "Trimarano in navigazione visto dal drone con gennaker rosso",
+          en: "Trimaran sailing with a red gennaker seen from a drone",
+          es: "Trimarán navegando con gennaker rojo visto desde dron",
+          fr: "Trimaran en navigation avec gennaker rouge vu par drone",
+          de: "Trimaran mit rotem Gennaker aus Drohnenperspektive",
+        },
+        caption: {
+          it: "Vela rossa",
+          en: "Red sail",
+          es: "Vela roja",
+          fr: "Voile rouge",
+          de: "Rotes Segel",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-navigazione-drone3.webp",
+        alt: {
+          it: "Vista aerea del trimarano in navigazione a vela",
+          en: "Aerial view of the trimaran sailing",
+          es: "Vista aérea del trimarán navegando a vela",
+          fr: "Vue aérienne du trimaran en navigation à voile",
+          de: "Luftaufnahme des Trimarans unter Segel",
+        },
+        caption: {
+          it: "Navigazione dall'alto",
+          en: "Sailing from above",
+          es: "Navegación desde arriba",
+          fr: "Navigation vue d'en haut",
+          de: "Segeln von oben",
+        },
+      },
+      {
         src: "/images/boats/neel-47/neel-47-vela-grandangolare.webp",
         alt: {
           it: "Trimarano con vela e vista grandangolare",
@@ -312,6 +397,40 @@ export const BOAT_CATALOG = {
         caption: { it: "Prendisole", en: "Sun deck" },
       },
       {
+        src: "/images/boats/neel-47/trimarano-prendisole-wide.webp",
+        alt: {
+          it: "Ospiti sul prendisole del trimarano durante un aperitivo vista mare",
+          en: "Guests on the trimaran sun deck during an aperitif with sea view",
+          es: "Huéspedes en el solárium del trimarán durante un aperitivo con vistas al mar",
+          fr: "Invités sur le bain de soleil du trimaran pendant un apéritif vue mer",
+          de: "Gäste auf dem Sonnendeck des Trimarans bei einem Aperitif mit Meerblick",
+        },
+        caption: {
+          it: "Prendisole panoramico",
+          en: "Panoramic sun deck",
+          es: "Solárium panorámico",
+          fr: "Bain de soleil panoramique",
+          de: "Panorama-Sonnendeck",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-relax2.webp",
+        alt: {
+          it: "Ospiti in relax sulla rete del trimarano al tramonto",
+          en: "Guests relaxing on the trimaran net at sunset",
+          es: "Huéspedes relajándose en la red del trimarán al atardecer",
+          fr: "Invités en détente sur le filet du trimaran au coucher du soleil",
+          de: "Gäste entspannen auf dem Netz des Trimarans bei Sonnenuntergang",
+        },
+        caption: {
+          it: "Relax al tramonto",
+          en: "Sunset relaxation",
+          es: "Relax al atardecer",
+          fr: "Relax au coucher du soleil",
+          de: "Entspannung bei Sonnenuntergang",
+        },
+      },
+      {
         src: "/images/boats/neel-47/neel-47-ragazzo.webp",
         alt: {
           it: "Ospite sul ponte del Trimarano durante la navigazione",
@@ -342,6 +461,40 @@ export const BOAT_CATALOG = {
           en: "Guests seated in the interior saloon of the Trimarano",
         },
         caption: { it: "Comfort interno", en: "Interior comfort" },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-salotto.webp",
+        alt: {
+          it: "Salone del trimarano aperto sul pozzetto e sul mare",
+          en: "Trimaran saloon opening onto the cockpit and the sea",
+          es: "Salón del trimarán abierto hacia la bañera y el mar",
+          fr: "Salon du trimaran ouvert sur le cockpit et la mer",
+          de: "Salon des Trimarans mit offenem Übergang zum Cockpit und Meer",
+        },
+        caption: {
+          it: "Salone vista mare",
+          en: "Sea-view saloon",
+          es: "Salón con vistas al mar",
+          fr: "Salon vue mer",
+          de: "Salon mit Meerblick",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-salotto2.webp",
+        alt: {
+          it: "Divano del salone interno del trimarano con vista sul mare",
+          en: "Interior saloon sofa on the trimaran with sea view",
+          es: "Sofá del salón interior del trimarán con vistas al mar",
+          fr: "Canapé du salon intérieur du trimaran avec vue sur la mer",
+          de: "Sofa in der Innenlounge des Trimarans mit Meerblick",
+        },
+        caption: {
+          it: "Salotto interno",
+          en: "Interior lounge",
+          es: "Salón interior",
+          fr: "Salon intérieur",
+          de: "Innenlounge",
+        },
       },
       {
         src: "/images/boats/neel-47/neel-47-interno.webp",
@@ -384,6 +537,40 @@ export const BOAT_CATALOG = {
         caption: { it: "Cucina e servizio", en: "Galley and service" },
       },
       {
+        src: "/images/boats/neel-47/trimarano-cucina3.webp",
+        alt: {
+          it: "Cucina del trimarano con piano di lavoro e vista mare",
+          en: "Trimaran galley with worktop and sea view",
+          es: "Cocina del trimarán con encimera y vistas al mar",
+          fr: "Cuisine du trimaran avec plan de travail et vue mer",
+          de: "Bordküche des Trimarans mit Arbeitsfläche und Meerblick",
+        },
+        caption: {
+          it: "Cucina vista mare",
+          en: "Sea-view galley",
+          es: "Cocina con vistas al mar",
+          fr: "Cuisine vue mer",
+          de: "Bordküche mit Meerblick",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-cucina-copy.webp",
+        alt: {
+          it: "Cucina e salone del trimarano con pozzetto aperto sul mare",
+          en: "Trimaran galley and saloon with the cockpit open to the sea",
+          es: "Cocina y salón del trimarán con la bañera abierta al mar",
+          fr: "Cuisine et salon du trimaran avec cockpit ouvert sur la mer",
+          de: "Bordküche und Salon des Trimarans mit offenem Cockpit zum Meer",
+        },
+        caption: {
+          it: "Cucina e salone",
+          en: "Galley and saloon",
+          es: "Cocina y salón",
+          fr: "Cuisine et salon",
+          de: "Bordküche und Salon",
+        },
+      },
+      {
         src: "/images/boats/neel-47/neel-47-aperitivo.webp",
         alt: {
           it: "Aperitivo con vino e prodotti locali servito sul Trimarano",
@@ -424,12 +611,80 @@ export const BOAT_CATALOG = {
         caption: { it: "Seconda cabina", en: "Second cabin" },
       },
       {
+        src: "/images/boats/neel-47/trimarano-camera1.webp",
+        alt: {
+          it: "Cabina matrimoniale del trimarano con vista sul mare",
+          en: "Trimaran double cabin with sea view",
+          es: "Cabina doble del trimarán con vistas al mar",
+          fr: "Cabine double du trimaran avec vue sur la mer",
+          de: "Doppelkabine des Trimarans mit Meerblick",
+        },
+        caption: {
+          it: "Cabina vista mare",
+          en: "Sea-view cabin",
+          es: "Cabina con vistas al mar",
+          fr: "Cabine vue mer",
+          de: "Kabine mit Meerblick",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-camera2.webp",
+        alt: {
+          it: "Cabina matrimoniale del trimarano collegata al salone",
+          en: "Trimaran double cabin connected to the saloon",
+          es: "Cabina doble del trimarán conectada con el salón",
+          fr: "Cabine double du trimaran reliée au salon",
+          de: "Doppelkabine des Trimarans mit Verbindung zum Salon",
+        },
+        caption: {
+          it: "Cabina e salone",
+          en: "Cabin and saloon",
+          es: "Cabina y salón",
+          fr: "Cabine et salon",
+          de: "Kabine und Salon",
+        },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-camera3.webp",
+        alt: {
+          it: "Cabina del trimarano con finestra panoramica sul mare",
+          en: "Trimaran cabin with a panoramic sea-facing window",
+          es: "Cabina del trimarán con ventana panorámica al mar",
+          fr: "Cabine du trimaran avec fenêtre panoramique sur la mer",
+          de: "Kabine des Trimarans mit Panoramafenster zum Meer",
+        },
+        caption: {
+          it: "Cabina panoramica",
+          en: "Panoramic cabin",
+          es: "Cabina panorámica",
+          fr: "Cabine panoramique",
+          de: "Panoramakabine",
+        },
+      },
+      {
         src: "/images/boats/neel-47/neel-47-bagno.webp",
         alt: {
           it: "Bagno con doccia del Trimarano",
           en: "Bathroom with shower of the Trimarano",
         },
         caption: { it: "Bagno", en: "Bathroom" },
+      },
+      {
+        src: "/images/boats/neel-47/trimarano-pianta.webp",
+        alt: {
+          it: "Pianta del layout interno del trimarano con cabine e spazi comuni",
+          en: "Trimaran interior layout plan with cabins and shared spaces",
+          es: "Plano del layout interior del trimarán con cabinas y espacios comunes",
+          fr: "Plan de l'aménagement intérieur du trimaran avec cabines et espaces communs",
+          de: "Plan der Innenaufteilung des Trimarans mit Kabinen und Gemeinschaftsbereichen",
+        },
+        caption: {
+          it: "Layout degli spazi",
+          en: "Space layout",
+          es: "Distribución de los espacios",
+          fr: "Plan des espaces",
+          de: "Raumaufteilung",
+        },
       },
     ],
     idealFor: [

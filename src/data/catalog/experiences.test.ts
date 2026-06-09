@@ -169,6 +169,55 @@ describe("fishing charter catalog", () => {
     expect(italianPackages[2]?.title).toBe("Chef a bordo alle Egadi in trimarano");
   });
 
+  it("localizes new trimaran gallery captions and alt text beyond English", () => {
+    const boatSaloonSrc = "/images/boats/neel-47/trimarano-salotto.webp";
+    const charterCabinSrc = "/images/boats/neel-47/trimarano-camera3.webp";
+
+    expect(
+      getBoatContent("trimarano", "es")?.gallery.find((item) => item.src === boatSaloonSrc),
+    ).toMatchObject({
+      caption: "Salón con vistas al mar",
+      alt: "Salón del trimarán abierto hacia la bañera y el mar",
+    });
+    expect(
+      getBoatContent("trimarano", "fr")?.gallery.find((item) => item.src === boatSaloonSrc),
+    ).toMatchObject({
+      caption: "Salon vue mer",
+      alt: "Salon du trimaran ouvert sur le cockpit et la mer",
+    });
+    expect(
+      getBoatContent("trimarano", "de")?.gallery.find((item) => item.src === boatSaloonSrc),
+    ).toMatchObject({
+      caption: "Salon mit Meerblick",
+      alt: "Salon des Trimarans mit offenem Übergang zum Cockpit und Meer",
+    });
+
+    expect(
+      getExperienceContent("exclusive-experience", "es")?.media.find(
+        (item) => item.src === boatSaloonSrc,
+      ),
+    ).toMatchObject({
+      caption: "Salón con vistas al mar",
+      alt: "Salón con vistas al mar durante la experiencia chef a bordo en trimarán por las Islas Egadi",
+    });
+    expect(
+      getExperienceContent("cabin-charter", "fr")?.media.find(
+        (item) => item.src === charterCabinSrc,
+      ),
+    ).toMatchObject({
+      caption: "Cabine panoramique",
+      alt: "Cabine panoramique pendant le charter en trimaran aux îles Égades",
+    });
+    expect(
+      getExperienceContent("cabin-charter", "de")?.media.find(
+        (item) => item.src === charterCabinSrc,
+      ),
+    ).toMatchObject({
+      caption: "Panoramakabine",
+      alt: "Panoramakabine während des Trimaran-Charters auf den Ägadischen Inseln",
+    });
+  });
+
   it("localizes fishing charter slugs from any known slug", () => {
     expect(localizedPathWithoutLocale("it", "/experiences/egadi-fishing-charter")).toBe(
       "/esperienze/charter-pesca-egadi-da-trapani",
