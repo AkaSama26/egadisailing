@@ -655,7 +655,8 @@ export function BookingWizard(props: Props) {
     return () => controller.abort();
   }, [isCharter, priceLookupDurationDays, props.locale, props.serviceId, startDate]);
 
-  async function createIntent() {
+  async function createIntent(paymentScheduleOverride = selectedPaymentSchedule) {
+    const paymentSchedule = paymentScheduleOverride;
     setError(null);
     if (!consentPrivacy || !consentTerms) {
       setError(copy.acceptPolicies);
@@ -682,9 +683,9 @@ export function BookingWizard(props: Props) {
           durationDays: isCharter ? effectiveDurationDays : undefined,
           passengers,
           customer,
-          paymentSchedule: selectedPaymentSchedule,
+          paymentSchedule,
           depositPercentage:
-            selectedPaymentSchedule === "DEPOSIT_BALANCE"
+            paymentSchedule === "DEPOSIT_BALANCE"
               ? props.defaultDepositPercentage ?? 30
               : undefined,
           turnstileToken: turnstileToken ?? undefined,
@@ -736,7 +737,7 @@ export function BookingWizard(props: Props) {
         currency: "EUR",
         value: centsToAnalyticsValue(checkoutAmountCents),
         total_value: centsToAnalyticsValue(checkoutTotalCents),
-        payment_schedule: selectedPaymentSchedule,
+        payment_schedule: paymentSchedule,
         guest_count: checkoutGuestCount,
         items: [
           {
@@ -960,7 +961,10 @@ export function BookingWizard(props: Props) {
           selectedPrice={selectedPrice}
           paymentSchedule={selectedPaymentSchedule}
           depositPercentage={props.defaultDepositPercentage ?? 30}
-          onPaymentScheduleChange={setSelectedPaymentSchedule}
+          onPaymentScheduleChange={(schedule, submit) => {
+            setSelectedPaymentSchedule(schedule);
+            if (submit) void createIntent(schedule);
+          }}
           loading={loading}
           onBack={() => setStep("customer")}
           onConfirm={() => void createIntent()}
@@ -1946,6 +1950,17 @@ function DateStep({
   const currentMonth = new Date().toISOString().slice(0, 7);
   const canGoPrevious = visibleMonth > currentMonth;
   const selectedDay = value ? calendarDays[value] : undefined;
+  function canContinueWithSelection(nextStartDate: string, nextEndDate = endValue) {
+    if (!nextStartDate) return false;
+    if (!isCharter) return true;
+    if (fixedDurationDays) return true;
+    const nextDuration = inclusiveDaysBetween(nextStartDate, nextEndDate);
+    return nextDuration !== null && nextDuration >= 3 && nextDuration <= 7;
+  }
+
+  function maybeAdvanceAfterSelection(nextStartDate: string, nextEndDate = endValue) {
+    if (canContinueWithSelection(nextStartDate, nextEndDate)) onNext();
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -2105,6 +2120,7 @@ function DateStep({
                     onPriceChange(null);
                   }
                   if (outOfMonth) setVisibleMonth(monthKeyFromIso(date));
+                  maybeAdvanceAfterSelection(date);
                 }}
                 aria-pressed={selected || rangeSelected}
                 aria-label={`${calendarDayAriaLabel(date, day, locale)}${
@@ -2259,7 +2275,11 @@ function DateStep({
               required
               aria-required="true"
               value={endValue}
-              onChange={(e) => onEndChange(e.target.value)}
+              onChange={(e) => {
+                const nextEndDate = e.target.value;
+                onEndChange(nextEndDate);
+                maybeAdvanceAfterSelection(value, nextEndDate);
+              }}
               className="min-w-0 flex-1 px-4 py-3 rounded-lg border border-gray-300"
               min={endMin}
             />
@@ -2525,7 +2545,7 @@ function ReviewStep({
   selectedPrice: SelectedPrice | null;
   paymentSchedule: CheckoutPaymentSchedule;
   depositPercentage: number;
-  onPaymentScheduleChange: (schedule: CheckoutPaymentSchedule) => void;
+  onPaymentScheduleChange: (schedule: CheckoutPaymentSchedule, submit?: boolean) => void;
   loading: boolean;
   onBack: () => void;
   onConfirm: () => void;
@@ -2566,6 +2586,9 @@ function ReviewStep({
     seats !== totalGuests ? `${copy.seatsUsed}: ${seats}` : null,
     Math.abs(paidUnits - seats) > 0.001 ? `${copy.paidUnits}: ${paidUnitsLabel}` : null,
   ].filter(Boolean);
+  function selectPaymentSchedule(schedule: CheckoutPaymentSchedule) {
+    onPaymentScheduleChange(schedule, Boolean(payment && !loading));
+  }
 
   return (
     <form
@@ -2614,7 +2637,8 @@ function ReviewStep({
                   )
                 : copy.calculating
             }
-            onChange={() => onPaymentScheduleChange("DEPOSIT_BALANCE")}
+            onChange={() => selectPaymentSchedule("DEPOSIT_BALANCE")}
+            disabled={loading}
           />
           <PaymentChoiceCard
             checked={paymentSchedule === "FULL"}
@@ -2625,7 +2649,8 @@ function ReviewStep({
                 ? appendClientVatIncluded(formatClientCents(payment.totalCents, locale), locale)
                 : copy.calculating
             }
-            onChange={() => onPaymentScheduleChange("FULL")}
+            onChange={() => selectPaymentSchedule("FULL")}
+            disabled={loading}
           />
         </div>
         {paymentSchedule === "DEPOSIT_BALANCE" && (
@@ -2762,6 +2787,7 @@ function PaymentChoiceCard({
   description,
   amount,
   onChange,
+  disabled = false,
 }: {
   checked: boolean;
   title: string;
@@ -2769,11 +2795,16 @@ function PaymentChoiceCard({
   description: string;
   amount: string;
   onChange: () => void;
+  disabled?: boolean;
 }) {
   return (
     <label
+      onClick={() => {
+        if (checked && !disabled) onChange();
+      }}
       className={cnStep(
-        "flex min-w-0 cursor-pointer items-start gap-3 rounded-lg border bg-white p-4 transition",
+        "flex min-w-0 items-start gap-3 rounded-lg border bg-white p-4 transition",
+        disabled ? "cursor-wait opacity-70" : "cursor-pointer",
         checked ? "border-sky-500 ring-2 ring-sky-100" : "border-slate-200 hover:border-sky-200",
       )}
     >
@@ -2781,7 +2812,10 @@ function PaymentChoiceCard({
         type="radio"
         name="checkout-payment-schedule"
         checked={checked}
-        onChange={onChange}
+        onChange={() => {
+          if (!disabled) onChange();
+        }}
+        disabled={disabled}
         className="mt-1 size-4 shrink-0"
       />
       <span className="min-w-0 flex-1">
