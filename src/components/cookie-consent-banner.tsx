@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
 import { Cookie } from "lucide-react";
 import type { CookieConsentConfig } from "vanilla-cookieconsent";
+import { pushConsentUpdate, type TrackingConsentState } from "@/lib/analytics/client";
 import {
   COOKIE_CONSENT_COOKIE_NAME,
   COOKIE_CONSENT_REVISION,
@@ -25,177 +25,64 @@ type ConsentSection = {
     body: Array<Record<string, string>>;
   };
 };
-type FbqFunction = ((...args: unknown[]) => void) & {
-  callMethod?: (...args: unknown[]) => void;
-  queue?: unknown[][];
-  loaded?: boolean;
-  version?: string;
-};
-type BingUetQueue = {
-  push: (...args: unknown[]) => number | void;
-};
-type BingUetConstructor = new (options: {
-  ti: string;
-  q?: unknown[];
-  enableAutoSpaTracking?: boolean;
-}) => BingUetQueue;
 
-declare global {
-  interface Window {
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
-    fbq?: FbqFunction;
-    _fbq?: FbqFunction;
-    __egadiGoogleConsentDefaultSet?: boolean;
-    __egadiGtagLoadedIds?: Record<string, true>;
-    __egadiMetaPixelLoadedIds?: Record<string, true>;
-    __egadiMetaPixelConsentGranted?: Record<string, true>;
-    __egadiMetaPixelLastPageViewKey?: string;
-    __egadiBingUetLoadedIds?: Record<string, true>;
-    uetq?: unknown[] | BingUetQueue;
-    UET?: BingUetConstructor;
-  }
-}
+type CookieConsentPreferences = {
+  acceptedCategories: string[];
+  acceptedServices?: Record<string, string[] | undefined>;
+};
 
 interface CookieConsentBannerProps {
   locale: string;
   services: CookieConsentPublicServices;
 }
 
-function ensureGtagBase() {
-  window.dataLayer = window.dataLayer ?? [];
-  window.gtag =
-    window.gtag ??
-    function gtag(...args: unknown[]) {
-      window.dataLayer?.push(args);
-    };
+function isConsentServiceAccepted(
+  prefs: CookieConsentPreferences,
+  category: string,
+  service: string,
+): boolean {
+  if (!prefs.acceptedCategories.includes(category)) return false;
+  const acceptedServices = prefs.acceptedServices?.[category];
+  return Array.isArray(acceptedServices) ? acceptedServices.includes(service) : true;
 }
 
-function updateGoogleConsent(values: Record<string, "granted" | "denied">) {
-  ensureGtagBase();
-  window.gtag?.("consent", "update", values);
+function trackingConsentFromPreferences(
+  prefs: CookieConsentPreferences,
+  services: CookieConsentPublicServices,
+): {
+  state: TrackingConsentState;
+  analyticsGranted: boolean;
+  marketingGranted: boolean;
+} {
+  const analyticsGranted = Boolean(
+    services.gaMeasurementId && isConsentServiceAccepted(prefs, "analytics", "ga4"),
+  );
+  const marketingGranted = Boolean(
+    (services.googleAdsId && isConsentServiceAccepted(prefs, "marketing", "googleAds")) ||
+      (services.metaPixelId && isConsentServiceAccepted(prefs, "marketing", "metaPixel")) ||
+      (services.bingUetTagId && isConsentServiceAccepted(prefs, "marketing", "bingUet")),
+  );
+
+  return {
+    analyticsGranted,
+    marketingGranted,
+    state: {
+      analytics_storage: analyticsGranted ? "granted" : "denied",
+      ad_storage: marketingGranted ? "granted" : "denied",
+      ad_user_data: marketingGranted ? "granted" : "denied",
+      ad_personalization: marketingGranted ? "granted" : "denied",
+    },
+  };
 }
 
-function setGoogleConsentDefault() {
-  if (window.__egadiGoogleConsentDefaultSet) return;
-  window.__egadiGoogleConsentDefaultSet = true;
-  ensureGtagBase();
-  window.gtag?.("consent", "default", {
-    analytics_storage: "denied",
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    ad_personalization: "denied",
-    wait_for_update: 500,
-  });
-}
-
-function enableGtag(
+function syncTrackingConsentFromPreferences(
   consent: CookieConsentApi,
-  id: string,
-  config: Record<string, unknown>,
-  consentUpdate: Record<string, "granted" | "denied">,
+  services: CookieConsentPublicServices,
+  source: string,
 ) {
-  updateGoogleConsent(consentUpdate);
-  window.__egadiGtagLoadedIds = window.__egadiGtagLoadedIds ?? {};
-
-  if (!window.__egadiGtagLoadedIds[id]) {
-    window.__egadiGtagLoadedIds[id] = true;
-    void consent
-      .loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`)
-      .then(() => {
-        window.gtag?.("js", new Date());
-        window.gtag?.("config", id, config);
-      });
-    return;
-  }
-
-  window.gtag?.("config", id, config);
-}
-
-function disableGoogleAnalytics() {
-  updateGoogleConsent({
-    analytics_storage: "denied",
-  });
-}
-
-function disableGoogleMarketing() {
-  updateGoogleConsent({
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    ad_personalization: "denied",
-  });
-}
-
-function trackMetaPixelPageView() {
-  const key = `${window.location.pathname}${window.location.search}`;
-  if (window.__egadiMetaPixelLastPageViewKey === key) return;
-  window.__egadiMetaPixelLastPageViewKey = key;
-  window.fbq?.("track", "PageView");
-}
-
-function enableMetaPixel(consent: CookieConsentApi, pixelId: string) {
-  window.__egadiMetaPixelLoadedIds = window.__egadiMetaPixelLoadedIds ?? {};
-  window.__egadiMetaPixelConsentGranted = window.__egadiMetaPixelConsentGranted ?? {};
-  if (!window.fbq) {
-    const fbq: FbqFunction = (...args: unknown[]) => {
-      if (fbq.callMethod) {
-        fbq.callMethod(...args);
-        return;
-      }
-      fbq.queue = fbq.queue ?? [];
-      fbq.queue.push(args);
-    };
-    fbq.queue = [];
-    fbq.loaded = true;
-    fbq.version = "2.0";
-    window.fbq = fbq;
-    window._fbq = fbq;
-  }
-
-  window.__egadiMetaPixelConsentGranted[pixelId] = true;
-  window.fbq?.("consent", "grant");
-
-  if (!window.__egadiMetaPixelLoadedIds[pixelId]) {
-    window.__egadiMetaPixelLoadedIds[pixelId] = true;
-    void consent.loadScript("https://connect.facebook.net/en_US/fbevents.js").then(() => {
-      window.fbq?.("init", pixelId);
-      trackMetaPixelPageView();
-    });
-    return;
-  }
-
-  trackMetaPixelPageView();
-}
-
-function disableMetaPixel(pixelId: string) {
-  if (window.__egadiMetaPixelConsentGranted) {
-    delete window.__egadiMetaPixelConsentGranted[pixelId];
-  }
-  window.fbq?.("consent", "revoke");
-}
-
-function enableBingUet(consent: CookieConsentApi, tagId: string) {
-  window.__egadiBingUetLoadedIds = window.__egadiBingUetLoadedIds ?? {};
-  window.uetq = window.uetq ?? [];
-
-  if (!window.__egadiBingUetLoadedIds[tagId]) {
-    window.__egadiBingUetLoadedIds[tagId] = true;
-    const queued = Array.isArray(window.uetq) ? window.uetq : [];
-    void consent.loadScript("https://bat.bing.com/bat.js").then(() => {
-      if (!window.UET) return;
-      window.uetq = new window.UET({
-        ti: tagId,
-        q: queued,
-        enableAutoSpaTracking: true,
-      });
-      window.uetq.push("pageLoad");
-    });
-    return;
-  }
-
-  if (!Array.isArray(window.uetq)) {
-    window.uetq.push("pageLoad");
-  }
+  const prefs = consent.getUserPreferences() as CookieConsentPreferences;
+  const { state, analyticsGranted, marketingGranted } = trackingConsentFromPreferences(prefs, services);
+  pushConsentUpdate(state, { analyticsGranted, marketingGranted, source });
 }
 
 function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPublicServices) {
@@ -211,9 +98,9 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
             ? "Guarda las preferencias de cookies elegidas por el usuario."
             : locale === "de"
               ? "Speichert die vom Benutzer gewählten Cookie-Einstellungen."
-            : locale === "en"
-              ? "Stores the user's cookie preferences."
-              : "Memorizza le preferenze cookie espresse dall'utente.",
+              : locale === "en"
+                ? "Stores the user's cookie preferences."
+                : "Memorizza le preferenze cookie espresse dall'utente.",
       expiration: locale === "fr" ? "6 mois" : locale === "es" ? "6 meses" : locale === "de" ? "6 Monate" : locale === "en" ? "6 months" : "6 mesi",
     },
     {
@@ -226,9 +113,9 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
             ? "Guarda el idioma seleccionado."
             : locale === "de"
               ? "Speichert die ausgewählte Sprache."
-            : locale === "en"
-              ? "Stores the selected language."
-              : "Memorizza la lingua selezionata.",
+              : locale === "en"
+                ? "Stores the selected language."
+                : "Memorizza la lingua selezionata.",
       expiration: locale === "fr" ? "1 an" : locale === "es" ? "1 año" : locale === "de" ? "1 Jahr" : locale === "en" ? "1 year" : "1 anno",
     },
   ];
@@ -236,7 +123,7 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
   if (services.gaMeasurementId) {
     rows.push({
       name: "_ga, _ga_*",
-      domain: "Google Analytics",
+      domain: "Google Analytics 4 via Google Tag Manager",
       description:
         locale === "fr"
           ? "Mesure agrégée des visites, interactions, conversions et performances du site."
@@ -244,9 +131,9 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
             ? "Medición agregada de visitas, interacciones, conversiones y rendimiento del sitio."
             : locale === "de"
               ? "Aggregierte Messung von Besuchen, Interaktionen, Conversions und Website-Leistung."
-            : locale === "en"
-              ? "Aggregated measurement of visits, interactions, conversions and website performance."
-              : "Misurazione aggregata di visite, interazioni, conversioni e performance del sito.",
+              : locale === "en"
+                ? "Aggregated measurement of visits, interactions, conversions and website performance."
+                : "Misurazione aggregata di visite, interazioni, conversioni e performance del sito.",
       expiration:
         locale === "fr" ? "jusqu'à 2 ans" : locale === "es" ? "hasta 2 años" : locale === "de" ? "bis zu 2 Jahre" : locale === "en" ? "up to 2 years" : "fino a 2 anni",
     });
@@ -255,7 +142,7 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
   if (services.googleAdsId) {
     rows.push({
       name: "_gcl_*",
-      domain: "Google Ads",
+      domain: "Google Ads via Google Tag Manager",
       description:
         locale === "fr"
           ? "Mesure des conversions publicitaires."
@@ -263,9 +150,9 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
             ? "Medición de conversiones publicitarias."
             : locale === "de"
               ? "Messung von Werbe-Conversions."
-            : locale === "en"
-              ? "Advertising conversion measurement."
-              : "Misurazione delle conversioni pubblicitarie.",
+              : locale === "en"
+                ? "Advertising conversion measurement."
+                : "Misurazione delle conversioni pubblicitarie.",
       expiration:
         locale === "fr" ? "jusqu'à 90 jours" : locale === "es" ? "hasta 90 días" : locale === "de" ? "bis zu 90 Tage" : locale === "en" ? "up to 90 days" : "fino a 90 giorni",
     });
@@ -274,7 +161,7 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
   if (services.metaPixelId) {
     rows.push({
       name: "_fbp",
-      domain: "Meta",
+      domain: "Meta via Google Tag Manager",
       description:
         locale === "fr"
           ? "Mesure des conversions et des campagnes Meta."
@@ -282,9 +169,9 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
             ? "Medición de conversiones y campañas Meta."
             : locale === "de"
               ? "Messung von Meta-Kampagnen und Conversions."
-            : locale === "en"
-              ? "Meta campaign and conversion measurement."
-              : "Misurazione delle conversioni e campagne Meta.",
+              : locale === "en"
+                ? "Meta campaign and conversion measurement."
+                : "Misurazione delle conversioni e campagne Meta.",
       expiration:
         locale === "fr" ? "jusqu'à 3 mois" : locale === "es" ? "hasta 3 meses" : locale === "de" ? "bis zu 3 Monate" : locale === "en" ? "up to 3 months" : "fino a 3 mesi",
     });
@@ -293,7 +180,7 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
   if (services.bingUetTagId) {
     rows.push({
       name: "_uetsid, _uetvid, _uetmsclkid",
-      domain: "Microsoft Advertising / Bing",
+      domain: "Microsoft Advertising / Bing via Google Tag Manager",
       description:
         locale === "fr"
           ? "Mesure des conversions et des campagnes Microsoft Advertising."
@@ -301,9 +188,9 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
             ? "Medición de conversiones y campañas Microsoft Advertising."
             : locale === "de"
               ? "Messung von Microsoft Advertising Kampagnen und Conversions."
-            : locale === "en"
-              ? "Microsoft Advertising campaign and conversion measurement."
-              : "Misurazione conversioni e campagne Microsoft Advertising.",
+              : locale === "en"
+                ? "Microsoft Advertising campaign and conversion measurement."
+                : "Misurazione conversioni e campagne Microsoft Advertising.",
       expiration:
         locale === "fr" ? "jusqu'à 13 mois" : locale === "es" ? "hasta 13 meses" : locale === "de" ? "bis zu 13 Monate" : locale === "en" ? "up to 13 months" : "fino a 13 mesi",
     });
@@ -336,9 +223,9 @@ function buildConfig(
             ? "Cookies técnicas"
             : locale === "de"
               ? "Unbedingt erforderliche Cookies"
-            : locale === "en"
-              ? "Strictly necessary cookies"
-              : "Cookie tecnici",
+              : locale === "en"
+                ? "Strictly necessary cookies"
+                : "Cookie tecnici",
       description: t.preferencesModal.sections.necessary,
       linkedCategory: "necessary",
       cookieTable: buildCookieTable(locale, services),
@@ -346,7 +233,6 @@ function buildConfig(
   ];
 
   if (services.gaMeasurementId) {
-    const gaMeasurementId = services.gaMeasurementId;
     categories.analytics = {
       autoClear: {
         cookies: [{ name: /^_ga/ }, { name: "_gid" }, { name: "_gat" }],
@@ -354,15 +240,6 @@ function buildConfig(
       services: {
         ga4: {
           label: t.preferencesModal.services.ga4,
-          onAccept: () => {
-            enableGtag(
-              consent,
-              gaMeasurementId,
-              { anonymize_ip: true },
-              { analytics_storage: "granted" },
-            );
-          },
-          onReject: disableGoogleAnalytics,
           cookies: [{ name: /^_ga/ }, { name: "_gid" }, { name: "_gat" }],
         },
       },
@@ -377,45 +254,20 @@ function buildConfig(
   if (services.googleAdsId || services.metaPixelId || services.bingUetTagId) {
     const marketingServices: NonNullable<CookieConsentConfig["categories"][string]["services"]> = {};
     if (services.googleAdsId) {
-      const googleAdsId = services.googleAdsId;
       marketingServices.googleAds = {
         label: t.preferencesModal.services.googleAds,
-        onAccept: () => {
-          enableGtag(
-            consent,
-            googleAdsId,
-            {},
-            {
-              ad_storage: "granted",
-              ad_user_data: "granted",
-              ad_personalization: "granted",
-            },
-          );
-        },
-        onReject: disableGoogleMarketing,
         cookies: [{ name: /^_gcl_/ }, { name: "_gcl_au" }],
       };
     }
     if (services.metaPixelId) {
-      const metaPixelId = services.metaPixelId;
       marketingServices.metaPixel = {
         label: t.preferencesModal.services.metaPixel,
-        onAccept: () => {
-          enableMetaPixel(consent, metaPixelId);
-        },
-        onReject: () => {
-          disableMetaPixel(metaPixelId);
-        },
         cookies: [{ name: "_fbp" }, { name: "_fbc" }],
       };
     }
     if (services.bingUetTagId) {
-      const bingUetTagId = services.bingUetTagId;
       marketingServices.bingUet = {
         label: t.preferencesModal.services.bingUet,
-        onAccept: () => {
-          enableBingUet(consent, bingUetTagId);
-        },
         cookies: [{ name: /^_uet/ }, { name: "_uetmsclkid" }],
       };
     }
@@ -440,9 +292,9 @@ function buildConfig(
             ? "Marketing y conversiones"
             : locale === "de"
               ? "Marketing und Conversions"
-            : locale === "en"
-              ? "Marketing and conversions"
-              : "Marketing e conversioni",
+              : locale === "en"
+                ? "Marketing and conversions"
+                : "Marketing e conversioni",
       description: t.preferencesModal.sections.marketing,
       linkedCategory: "marketing",
     });
@@ -459,7 +311,7 @@ function buildConfig(
     autoShow: true,
     hideFromBots: true,
     disablePageInteraction: false,
-    manageScriptTags: true,
+    manageScriptTags: false,
     autoClearCookies: true,
     cookie: {
       name: COOKIE_CONSENT_COOKIE_NAME,
@@ -479,8 +331,15 @@ function buildConfig(
       },
     },
     categories,
-    onFirstConsent: () => logConsent("FIRST_CONSENT"),
+    onFirstConsent: () => {
+      syncTrackingConsentFromPreferences(consent, services, "first_consent");
+      logConsent("FIRST_CONSENT");
+    },
+    onConsent: () => {
+      syncTrackingConsentFromPreferences(consent, services, "saved_consent");
+    },
     onChange: ({ changedCategories }) => {
+      syncTrackingConsentFromPreferences(consent, services, "consent_change");
       const prefs = consent.getUserPreferences();
       const hasOptional = prefs.acceptedCategories.some((category) => category !== "necessary");
       logConsent(hasOptional ? "UPDATE" : "WITHDRAW", changedCategories);
@@ -507,34 +366,24 @@ function buildConfig(
 }
 
 export function CookieConsentBanner({ locale, services }: CookieConsentBannerProps) {
-  const pathname = usePathname();
   const normalizedLocale = normalizeCookieConsentLocale(locale);
   const { bingUetTagId, gaMeasurementId, googleAdsId, metaPixelId } = services;
   const floatingLabel =
     normalizedLocale === "fr"
       ? "Préférences cookies"
       : normalizedLocale === "es"
-      ? "Preferencias de cookies"
-      : normalizedLocale === "en"
-      ? "Cookie preferences"
-      : "Preferenze cookie";
-
-  useEffect(() => {
-    if (!metaPixelId) return;
-    if (!window.__egadiMetaPixelConsentGranted?.[metaPixelId]) return;
-    if (!window.__egadiMetaPixelLoadedIds?.[metaPixelId]) return;
-    trackMetaPixelPageView();
-  }, [pathname, metaPixelId]);
+        ? "Preferencias de cookies"
+        : normalizedLocale === "de"
+          ? "Cookie-Einstellungen"
+          : normalizedLocale === "en"
+            ? "Cookie preferences"
+            : "Preferenze cookie";
 
   useEffect(() => {
     let cancelled = false;
     const configuredServices = { bingUetTagId, gaMeasurementId, googleAdsId, metaPixelId };
 
     async function init() {
-      if (gaMeasurementId || googleAdsId) {
-        setGoogleConsentDefault();
-      }
-
       const consent = await import("vanilla-cookieconsent");
       if (cancelled) return;
 
@@ -584,6 +433,7 @@ export function CookieConsentBanner({ locale, services }: CookieConsentBannerPro
       type="button"
       aria-label={floatingLabel}
       title={floatingLabel}
+      data-analytics-ignore="true"
       onClick={openPreferences}
       className="egadi-floating-cookie fixed bottom-4 left-4 z-[60] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-[#071934] text-white shadow-lg shadow-slate-900/20 transition hover:bg-[#0c2d5e] focus:outline-none focus:ring-2 focus:ring-[#38bdf8] focus:ring-offset-2"
     >

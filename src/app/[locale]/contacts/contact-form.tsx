@@ -27,6 +27,10 @@ export function ContactForm({ turnstileSiteKey, locale }: ContactFormProps) {
       locale,
       method: "contact_form",
     });
+    trackEvent("generate_lead", {
+      locale,
+      method: "contact_form",
+    });
   }, [locale, state.status]);
 
   const copy = {

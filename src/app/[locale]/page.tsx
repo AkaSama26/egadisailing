@@ -22,7 +22,7 @@ import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
   PUBLIC_CONTACT_LOCATION,
-  PUBLIC_CONTACT_PHONE_TEXT,
+  PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
   WHATSAPP_CONTACTS,
 } from "@/lib/public-contact";
 import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
@@ -862,8 +862,8 @@ export default async function HomePage({
       {
         "@type": "WebSite",
         "@id": `${siteBase}/#website`,
-        name: "Egadisailing",
-        alternateName: "Egadi Sailing",
+        name: "Egadi Sailing",
+        alternateName: "Egadisailing",
         url: siteBase,
         inLanguage: locale,
         publisher: { "@id": `${siteBase}/#organization` },
@@ -891,7 +891,7 @@ export default async function HomePage({
         description: seo.description,
         url: siteBase,
         email: PUBLIC_CONTACT_EMAIL,
-        telephone: PUBLIC_CONTACT_PHONE_TEXT,
+        telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
         taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
         priceRange: "€€€",
         image: `${siteBase}/og-default.jpg`,

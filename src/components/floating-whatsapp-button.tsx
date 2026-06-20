@@ -54,6 +54,7 @@ export function FloatingWhatsAppButton({ locale }: { locale: string }) {
               href={getWhatsAppUrl(contact, locale)}
               target="_blank"
               rel="noopener noreferrer"
+              data-analytics-ignore="true"
               onClick={() => {
                 trackEvent("whatsapp_click", {
                   locale,

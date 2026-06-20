@@ -434,15 +434,38 @@ export default async function DashboardHome() {
 }
 
 const GA4_EVENT_LABELS: Record<string, string> = {
-  whatsapp_click: "Click WhatsApp",
-  contact_submit: "Contatti inviati",
+  page_view: "Page view",
+  book_now_click: "Click Prenota ora",
+  cta_click: "Click CTA",
+  nav_click: "Click navigazione",
+  language_change: "Cambio lingua",
+  view_item_list: "Lista vista",
+  select_item: "Item selezionato",
+  view_item: "Item visto",
+  scroll_depth: "Scroll depth",
+  section_view: "Sezione vista",
   booking_start: "Booking avviati",
-  booking_step: "Step booking",
+  booking_step_view: "Step booking visti",
+  booking_step_complete: "Step booking completati",
+  date_selected: "Date selezionate",
+  guest_count_selected: "Ospiti selezionati",
+  payment_option_selected: "Opzione pagamento",
   begin_checkout: "Checkout avviati",
+  add_payment_info: "Metodo pagamento",
   payment_submit: "Pagamento inviato",
   payment_success: "Pagamenti riusciti",
   booking_confirmed: "Prenotazioni confermate",
   purchase: "Purchase GA4",
+  whatsapp_click: "Click WhatsApp",
+  phone_click: "Click telefono",
+  email_click: "Click email",
+  maps_click: "Click mappe",
+  contact_submit: "Contatti inviati",
+  generate_lead: "Lead generati",
+  form_error: "Errori form",
+  booking_error: "Errori booking",
+  payment_error: "Errori pagamento",
+  availability_unavailable: "Date non disponibili",
 };
 
 function Ga4AnalyticsCard({ analytics }: { analytics: Ga4DashboardSummary }) {
@@ -519,6 +542,8 @@ function Ga4AnalyticsCard({ analytics }: { analytics: Ga4DashboardSummary }) {
             rows={[
               ["WhatsApp", formatNumber(eventCount(analytics.trackedEvents30d, "whatsapp_click"))],
               ["Form contatti", formatNumber(eventCount(analytics.trackedEvents30d, "contact_submit"))],
+              ["Prenota ora", formatNumber(eventCount(analytics.trackedEvents30d, "book_now_click"))],
+              ["Lead", formatNumber(eventCount(analytics.trackedEvents30d, "generate_lead"))],
               ["Checkout", formatNumber(eventCount(analytics.trackedEvents30d, "begin_checkout"))],
             ]}
           />

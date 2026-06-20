@@ -340,15 +340,12 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self' https://tagassistant.google.com" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "geolocation=(), microphone=(), camera=()" },
-          // R22-A3-MEDIA-1: Cross-Origin-Opener-Policy isola Stripe/Turnstile
-          // popup dal contesto principale → mitigazione side-channel Spectre
-          // + clickjacking cross-origin window. `same-origin-allow-popups`
-          // necessario per Stripe 3DS popup (pagina hosted in iframe cross-
-          // origin → `same-origin` strict rompe la sessione).
-          { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          // COOP non viene impostato sulle pagine pubbliche: Tag Assistant
+          // deve mantenere il collegamento cross-origin con la finestra di debug.
+          // Le aree admin sotto hanno un override strict dedicato.
           // X-Permitted-Cross-Domain-Policies: blocca Adobe Flash / PDF
           // reader legacy da leggere crossdomain.xml (header legacy ma
           // obbligatorio in pen-test corporate).
@@ -377,7 +374,7 @@ const nextConfig: NextConfig = {
           { key: "Pragma", value: "no-cache" },
           // R22-P2-MEDIA-4: admin non ha popup Stripe 3DS, quindi
           // `same-origin` strict (no `-allow-popups`) riduce surface Spectre
-          // side-channel. Override globale che usa `same-origin-allow-popups`.
+          // side-channel. Le pagine pubbliche non impostano COOP per compatibilita Tag Assistant.
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
         ],
       },

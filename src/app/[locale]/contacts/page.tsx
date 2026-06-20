@@ -12,7 +12,7 @@ import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
   PUBLIC_CONTACT_LOCATION,
-  PUBLIC_CONTACT_PHONE_TEXT,
+  PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
   getContactLocationLabel,
   getEmailHref,
   getOrderedWhatsAppContacts,
@@ -137,7 +137,7 @@ export default async function ContactsPage({
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Egadisailing", item: `${siteBase}/${locale}` },
+          { "@type": "ListItem", position: 1, name: "Egadi Sailing", item: `${siteBase}/${locale}` },
           { "@type": "ListItem", position: 2, name: "Contact", item: pageUrl },
         ],
       },
@@ -147,10 +147,10 @@ export default async function ContactsPage({
         url: pageUrl,
         mainEntity: {
           "@type": "TravelAgency",
-          name: "Egadisailing",
+          name: "Egadi Sailing",
           legalName: PUBLIC_COMPANY_LEGAL.name,
           email: PUBLIC_CONTACT_EMAIL,
-          telephone: PUBLIC_CONTACT_PHONE_TEXT,
+          telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
           address: {
             "@type": "PostalAddress",
             streetAddress: "Via dei Gladioli 15",

@@ -42,7 +42,7 @@ import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
   PUBLIC_CONTACT_LOCATION,
-  PUBLIC_CONTACT_PHONE_TEXT,
+  PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
 } from "@/lib/public-contact";
 import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
@@ -3743,7 +3743,7 @@ export default async function ExperienceDetailPage({
           {
             "@type": "ListItem",
             position: 1,
-            name: "Egadisailing",
+            name: "Egadi Sailing",
             item: localizedAbsoluteUrl(siteBase, locale, "/"),
           },
           {
@@ -3785,11 +3785,12 @@ export default async function ExperienceDetailPage({
         },
         provider: {
           "@type": "Organization",
-          name: PUBLIC_COMPANY_LEGAL.name,
-          alternateName: "Egadi Sailing",
+          name: "Egadi Sailing",
+          legalName: PUBLIC_COMPANY_LEGAL.name,
+          alternateName: "Egadisailing",
           url: siteBase,
           email: PUBLIC_CONTACT_EMAIL,
-          telephone: PUBLIC_CONTACT_PHONE_TEXT,
+          telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
           taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
           address: {
             "@type": "PostalAddress",

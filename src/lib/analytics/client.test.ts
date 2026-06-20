@@ -1,95 +1,121 @@
-import { describe, expect, test } from "vitest";
-import { mapMetaPixelEvent } from "./client";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
-describe("Meta Pixel event mapping", () => {
-  test("maps checkout start to InitiateCheckout", () => {
-    expect(
-      mapMetaPixelEvent("begin_checkout", {
-        locale: "it",
-        service_id: "boat-private-full-day",
-        service_name: "Tour privato Favignana e Levanzo",
-        service_type: "BOAT_PRIVATE",
-        currency: "EUR",
-        value: 120,
-        guest_count: 4,
-        payment_schedule: "DEPOSIT_BALANCE",
-      }),
-    ).toEqual({
-      eventName: "InitiateCheckout",
-      parameters: {
-        content_type: "product",
-        content_ids: ["boat-private-full-day"],
-        contents: [{ id: "boat-private-full-day", quantity: 4 }],
-        content_name: "Tour privato Favignana e Levanzo",
-        content_category: "BOAT_PRIVATE",
-        num_items: 4,
-        value: 120,
-        currency: "EUR",
-        locale: "it",
-        payment_schedule: "DEPOSIT_BALANCE",
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.resetModules();
+});
+
+describe("analytics dataLayer client", () => {
+  test("does not push analytics events before consent", async () => {
+    const dataLayer: unknown[] = [];
+    vi.stubGlobal("window", {
+      dataLayer,
+      __egadiTrackingConsentState: {
+        analytics_storage: "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
       },
     });
+    const { trackEvent } = await import("./client");
+
+    expect(trackEvent("booking_step_view", { booking_step: "people" })).toBe(false);
+    expect(dataLayer).toEqual([]);
   });
 
-  test("maps purchase with event id for Meta deduplication", () => {
-    expect(
-      mapMetaPixelEvent("purchase", {
-        transaction_id: "booking_123",
-        service_id: "trimaran-gourmet",
-        service_name: "Trimarano gourmet",
-        service_type: "TRIMARAN",
-        currency: "EUR",
-        value: 450,
-        guest_count: 8,
-        booking_status: "CONFIRMED",
-      }),
-    ).toEqual({
-      eventName: "Purchase",
-      eventId: "booking_123",
-      parameters: {
-        content_type: "product",
-        content_ids: ["trimaran-gourmet"],
-        contents: [{ id: "trimaran-gourmet", quantity: 8 }],
-        content_name: "Trimarano gourmet",
-        content_category: "TRIMARAN",
-        num_items: 8,
-        value: 450,
-        currency: "EUR",
-        order_id: "booking_123",
-        booking_status: "CONFIRMED",
+  test("pushes cleaned events to dataLayer after analytics consent", async () => {
+    const dataLayer: unknown[] = [];
+    vi.stubGlobal("window", {
+      dataLayer,
+      __egadiTrackingConsentState: {
+        analytics_storage: "granted",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
       },
     });
+    const { trackEvent } = await import("./client");
+
+    expect(
+      trackEvent("booking_step_view", {
+        booking_step: "people",
+        email: "guest@example.com",
+        cta_text: "Prenota ora",
+        note: "private note",
+      }),
+    ).toBe(true);
+    expect(dataLayer).toEqual([
+      {
+        event: "booking_step_view",
+        booking_step: "people",
+        cta_text: "Prenota ora",
+      },
+    ]);
   });
 
-  test("maps contact actions to lead and contact standards", () => {
-    expect(mapMetaPixelEvent("contact_submit", { locale: "en", method: "contact_form" }))
-      .toEqual({
-        eventName: "Lead",
-        parameters: {
-          content_name: "contact_form",
-          locale: "en",
-          method: "contact_form",
+  test("keeps ISO dates while still redacting phone-like strings", async () => {
+    const dataLayer: unknown[] = [];
+    vi.stubGlobal("window", {
+      dataLayer,
+      __egadiTrackingConsentState: {
+        analytics_storage: "granted",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+      },
+    });
+    const { trackEvent } = await import("./client");
+
+    expect(
+      trackEvent("date_selected", {
+        selected_date: "2026-07-15",
+        phone: "+39 333 123 4567",
+        cta_text: "+39 333 123 4567",
+      }),
+    ).toBe(true);
+    expect(dataLayer).toEqual([
+      {
+        event: "date_selected",
+        selected_date: "2026-07-15",
+        cta_text: "[redacted]",
+      },
+    ]);
+  });
+
+  test("pushes Consent Mode command and consent event", async () => {
+    const dataLayer: unknown[] = [];
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal("window", { dataLayer, dispatchEvent });
+    const { pushConsentUpdate } = await import("./client");
+
+    expect(
+      pushConsentUpdate(
+        {
+          analytics_storage: "granted",
+          ad_storage: "granted",
+          ad_user_data: "granted",
+          ad_personalization: "granted",
         },
-      });
+        { analyticsGranted: true, marketingGranted: true, source: "test" },
+      ),
+    ).toBe(true);
 
-    expect(
-      mapMetaPixelEvent("whatsapp_click", {
-        locale: "it",
-        contact_key: "italy",
-        source: "floating_button",
-      }),
-    ).toEqual({
-      eventName: "Contact",
-      parameters: {
-        content_name: "whatsapp",
-        locale: "it",
-        contact_key: "italy",
-        source: "floating_button",
+    expect(dataLayer[0]).toEqual([
+      "consent",
+      "update",
+      {
+        analytics_storage: "granted",
+        ad_storage: "granted",
+        ad_user_data: "granted",
+        ad_personalization: "granted",
       },
+    ]);
+    expect(dataLayer[1]).toMatchObject({
+      event: "egadi_consent_update",
+      analytics_storage: "granted",
+      ad_storage: "granted",
+      source: "test",
     });
-  });
-
-  test("ignores custom GA-only events", () => {
-    expect(mapMetaPixelEvent("booking_step", { step: "people" })).toBeNull();
+    expect(dispatchEvent).toHaveBeenCalledOnce();
   });
 });

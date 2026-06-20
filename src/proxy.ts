@@ -169,7 +169,6 @@ export default async function proxy(req: NextRequest) {
   if (pathname === "/") {
     const url = req.nextUrl.clone();
     url.pathname = "/it";
-    url.search = "";
     return NextResponse.redirect(url, 308);
   }
 

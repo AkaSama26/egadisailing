@@ -84,6 +84,9 @@ export const PUBLIC_CONTACT_PHONE_TEXT = WHATSAPP_CONTACTS.map(
   (contact) => contact.phoneDisplay,
 ).join(" / ");
 
+export const PUBLIC_CONTACT_PRIMARY_PHONE_TEXT = "+39 345 971 0696" as const;
+export const PUBLIC_CONTACT_PRIMARY_PHONE_E164 = "393459710696" as const;
+
 export function getContactLocationLabel(locale?: string | null): string {
   if (locale === "fr") return PUBLIC_CONTACT_LOCATION.labelFr;
   if (locale === "es") return PUBLIC_CONTACT_LOCATION.labelEs;

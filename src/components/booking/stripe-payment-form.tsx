@@ -134,6 +134,12 @@ function InnerForm({
     if (!stripe || !elements || !elementReady) return;
     setError(null);
     setProcessing(true);
+    trackEvent("add_payment_info", {
+      locale,
+      currency: "EUR",
+      value: centsToAnalyticsValue(amountCents),
+      total_value: centsToAnalyticsValue(totalCents),
+    });
     trackEvent("payment_submit", {
       locale,
       currency: "EUR",
@@ -152,6 +158,11 @@ function InnerForm({
     });
 
     if (stripeError) {
+      trackEvent("payment_error", {
+        locale,
+        error_code: stripeError.code ?? "stripe_error",
+        payment_error_type: stripeError.type ?? "unknown",
+      });
       setError(stripeError.message ?? copy.paymentError);
       // R15-UX-1: se l'errore e' terminale, il clientSecret non e' piu' usabile.
       // Esponiamo "Usa un altro metodo" che resetta il wizard per ricreare PI.

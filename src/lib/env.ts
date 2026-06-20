@@ -58,6 +58,7 @@ const envSchema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   APP_LOCALES_DEFAULT: z.string().default("it"),
   NEXT_PUBLIC_ASSET_CDN_URL: optionalUrl(),
+  NEXT_PUBLIC_GTM_ID: optionalString(),
   NEXT_PUBLIC_GA_MEASUREMENT_ID: optionalString(),
   NEXT_PUBLIC_GOOGLE_ADS_ID: optionalString(),
   NEXT_PUBLIC_META_PIXEL_ID: optionalString(),

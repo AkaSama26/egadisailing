@@ -1,252 +1,237 @@
 "use client";
 
-type AnalyticsPrimitive = string | number | boolean;
-export type AnalyticsEventParams = Record<
-  string,
+export type AnalyticsPrimitive = string | number | boolean;
+export type AnalyticsParamValue =
   | AnalyticsPrimitive
   | AnalyticsPrimitive[]
   | Record<string, unknown>
   | Array<Record<string, unknown>>
   | null
-  | undefined
->;
+  | undefined;
+export type AnalyticsEventParams = Record<string, AnalyticsParamValue>;
+
+export type ConsentValue = "granted" | "denied";
+export type TrackingConsentState = {
+  analytics_storage: ConsentValue;
+  ad_storage: ConsentValue;
+  ad_user_data: ConsentValue;
+  ad_personalization: ConsentValue;
+};
+
+export type DataLayerEvent = {
+  event: string;
+  [key: string]: unknown;
+};
+
+export type TrackEventOptions = {
+  consent?: "analytics" | "marketing" | "none";
+};
 
 declare global {
   interface Window {
-    gtag?: (...args: unknown[]) => void;
-    __egadiGtagLoadedIds?: Record<string, true>;
+    dataLayer?: unknown[];
+    __egadiTrackingConsentState?: TrackingConsentState;
+    __egadiLastPageViewKey?: string;
   }
 }
 
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 const SESSION_KEY_PREFIX = "egadi:analytics:event:";
+const REDACTED_VALUE = "[redacted]";
+const DATE_VALUE_KEYS = new Set([
+  "selected_date",
+  "start_date",
+  "end_date",
+  "booking_date",
+]);
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const SENSITIVE_KEYS = new Set([
+  "email",
+  "mail",
+  "e_mail",
+  "phone",
+  "tel",
+  "telephone",
+  "mobile",
+  "first_name",
+  "firstname",
+  "last_name",
+  "lastname",
+  "full_name",
+  "fullname",
+  "customer_name",
+  "customer_email",
+  "customer_phone",
+  "message",
+  "note",
+  "notes",
+  "customer_notes",
+  "confirmation_code",
+  "confirmationcode",
+  "ticket_code",
+  "ticketcode",
+  "client_secret",
+  "clientsecret",
+  "payment_intent_client_secret",
+]);
+const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+const LONG_DIGIT_PATTERN = /\+?\d[\d\s().-]{6,}\d/;
 
-type MetaPixelEventName =
-  | "AddPaymentInfo"
-  | "Contact"
-  | "InitiateCheckout"
-  | "Lead"
-  | "Purchase"
-  | "ViewContent";
-
-export interface MetaPixelEventPayload {
-  eventName: MetaPixelEventName;
-  parameters: Record<string, unknown>;
-  eventId?: string;
+export function deniedTrackingConsentState(): TrackingConsentState {
+  return {
+    analytics_storage: "denied",
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+  };
 }
 
-type MetaPixelWindow = Window & {
-  fbq?: (...args: unknown[]) => void;
-  __egadiMetaPixelLoadedIds?: Record<string, true>;
-  __egadiMetaPixelConsentGranted?: Record<string, true>;
-};
-
-function canTrackAnalytics(): boolean {
-  if (typeof window === "undefined") return false;
-  if (!GA_MEASUREMENT_ID) return false;
-  return Boolean(window.gtag && window.__egadiGtagLoadedIds?.[GA_MEASUREMENT_ID]);
+function normalizeKey(key: string): string {
+  return key.replace(/[\s-]/g, "_").toLowerCase();
 }
 
-function canTrackMetaPixel(): boolean {
-  if (typeof window === "undefined") return false;
-  if (!META_PIXEL_ID) return false;
-  const metaWindow = window as MetaPixelWindow;
-  return Boolean(
-    metaWindow.fbq &&
-      metaWindow.__egadiMetaPixelLoadedIds?.[META_PIXEL_ID] &&
-      metaWindow.__egadiMetaPixelConsentGranted?.[META_PIXEL_ID],
-  );
+function isSensitiveKey(key: string): boolean {
+  return SENSITIVE_KEYS.has(normalizeKey(key));
 }
 
-function cleanParams(params: Record<string, unknown> = {}): Record<string, unknown> {
+function cleanString(value: string, key?: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (key && DATE_VALUE_KEYS.has(normalizeKey(key)) && ISO_DATE_PATTERN.test(trimmed)) return trimmed;
+  if (EMAIL_PATTERN.test(trimmed) || LONG_DIGIT_PATTERN.test(trimmed)) return REDACTED_VALUE;
+  return trimmed.length > 500 ? `${trimmed.slice(0, 500)}...` : trimmed;
+}
+
+function cleanValue(value: unknown, depth = 0, key?: string): unknown {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value === "string") return cleanString(value, key);
+  if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+  if (typeof value === "boolean") return value;
+  if (Array.isArray(value)) {
+    const cleaned = value
+      .map((entry) => cleanValue(entry, depth + 1, key))
+      .filter((entry) => entry !== undefined);
+    return cleaned.length ? cleaned : undefined;
+  }
+  if (typeof value === "object") {
+    if (depth > 4) return undefined;
+    const cleaned: Record<string, unknown> = {};
+    for (const [entryKey, entry] of Object.entries(value as Record<string, unknown>)) {
+      if (isSensitiveKey(entryKey)) continue;
+      const cleanedEntry = cleanValue(entry, depth + 1, entryKey);
+      if (cleanedEntry !== undefined) cleaned[entryKey] = cleanedEntry;
+    }
+    return Object.keys(cleaned).length ? cleaned : undefined;
+  }
+  return undefined;
+}
+
+export function cleanAnalyticsParams(
+  params: AnalyticsEventParams | Record<string, unknown> = {},
+): Record<string, unknown> {
   const cleaned: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === null || value === "") continue;
-    cleaned[key] = value;
+    if (isSensitiveKey(key)) continue;
+    const cleanedValue = cleanValue(value, 0, key);
+    if (cleanedValue !== undefined) cleaned[key] = cleanedValue;
   }
   return cleaned;
 }
 
-function stringParam(params: Record<string, unknown>, key: string): string | undefined {
-  const value = params[key];
-  return typeof value === "string" && value.trim() ? value : undefined;
+export function setTrackingConsentState(state: TrackingConsentState): void {
+  if (typeof window === "undefined") return;
+  window.__egadiTrackingConsentState = { ...state };
 }
 
-function numberParam(params: Record<string, unknown>, key: string): number | undefined {
-  const value = params[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+export function getTrackingConsentState(): TrackingConsentState {
+  if (typeof window === "undefined") return deniedTrackingConsentState();
+  return window.__egadiTrackingConsentState ?? deniedTrackingConsentState();
 }
 
-function firstItem(params: Record<string, unknown>): Record<string, unknown> | undefined {
-  const items = params.items;
-  if (!Array.isArray(items)) return undefined;
-  const [item] = items;
-  return item && typeof item === "object" && !Array.isArray(item)
-    ? (item as Record<string, unknown>)
-    : undefined;
+export function isTrackingConsentGranted(type: "analytics" | "marketing" = "analytics"): boolean {
+  const consent = getTrackingConsentState();
+  if (type === "analytics") return consent.analytics_storage === "granted";
+  return (
+    consent.ad_storage === "granted" &&
+    consent.ad_user_data === "granted" &&
+    consent.ad_personalization === "granted"
+  );
 }
 
-function buildMetaContentParams(params: Record<string, unknown>): Record<string, unknown> {
-  const item = firstItem(params);
-  const serviceId =
-    stringParam(params, "service_id") ??
-    (item ? stringParam(item, "item_id") : undefined);
-  const serviceName =
-    stringParam(params, "service_name") ??
-    (item ? stringParam(item, "item_name") : undefined);
-  const serviceType =
-    stringParam(params, "service_type") ??
-    (item ? stringParam(item, "item_category") : undefined);
-  const guestCount =
-    numberParam(params, "guest_count") ??
-    (item ? numberParam(item, "quantity") : undefined);
-  const result: Record<string, unknown> = {
-    content_type: "product",
-  };
-
-  if (serviceId) {
-    result.content_ids = [serviceId];
-    result.contents = [
-      {
-        id: serviceId,
-        quantity: guestCount ? Math.max(1, Math.round(guestCount)) : 1,
-      },
-    ];
-  }
-  if (serviceName) result.content_name = serviceName;
-  if (serviceType) result.content_category = serviceType;
-  if (guestCount) result.num_items = Math.max(1, Math.round(guestCount));
-
-  return result;
-}
-
-function buildMetaValueParams(params: Record<string, unknown>): Record<string, unknown> {
-  const value = numberParam(params, "value") ?? numberParam(params, "total_value");
-  if (value === undefined) return {};
-  return {
-    value,
-    currency: stringParam(params, "currency") ?? "EUR",
-  };
-}
-
-function metaPayload(
-  eventName: MetaPixelEventName,
-  parameters: Record<string, unknown>,
-  eventId?: string,
-): MetaPixelEventPayload {
-  const payload: MetaPixelEventPayload = {
-    eventName,
-    parameters: cleanParams(parameters),
-  };
-  if (eventId) payload.eventId = eventId;
-  return payload;
-}
-
-export function mapMetaPixelEvent(
-  name: string,
-  params: AnalyticsEventParams | Record<string, unknown> = {},
-): MetaPixelEventPayload | null {
-  const cleaned = cleanParams(params);
-  const contentParams = buildMetaContentParams(cleaned);
-  const valueParams = buildMetaValueParams(cleaned);
-
-  if (name === "booking_start") {
-    return metaPayload("ViewContent", {
-      ...contentParams,
-      locale: stringParam(cleaned, "locale"),
-    });
-  }
-
-  if (name === "begin_checkout") {
-    return metaPayload("InitiateCheckout", {
-      ...contentParams,
-      ...valueParams,
-      locale: stringParam(cleaned, "locale"),
-      payment_schedule: stringParam(cleaned, "payment_schedule"),
-    });
-  }
-
-  if (name === "payment_submit") {
-    return metaPayload("AddPaymentInfo", {
-      ...valueParams,
-      locale: stringParam(cleaned, "locale"),
-    });
-  }
-
-  if (name === "contact_submit") {
-    return metaPayload("Lead", {
-      content_name: "contact_form",
-      locale: stringParam(cleaned, "locale"),
-      method: stringParam(cleaned, "method"),
-    });
-  }
-
-  if (name === "whatsapp_click") {
-    return metaPayload("Contact", {
-      content_name: "whatsapp",
-      locale: stringParam(cleaned, "locale"),
-      contact_key: stringParam(cleaned, "contact_key"),
-      source: stringParam(cleaned, "source"),
-    });
-  }
-
-  if (name === "purchase") {
-    const transactionId =
-      stringParam(cleaned, "transaction_id") ?? stringParam(cleaned, "order_id");
-    return metaPayload(
-      "Purchase",
-      {
-        ...contentParams,
-        ...valueParams,
-        locale: stringParam(cleaned, "locale"),
-        order_id: transactionId,
-        payment_schedule: stringParam(cleaned, "payment_schedule"),
-        booking_status: stringParam(cleaned, "booking_status"),
-      },
-      transactionId,
-    );
-  }
-
-  return null;
-}
-
-function trackMetaPixelEvent(name: string, params: Record<string, unknown>): boolean {
-  if (!canTrackMetaPixel()) return false;
-  const event = mapMetaPixelEvent(name, params);
-  if (!event) return false;
-
-  const metaWindow = window as MetaPixelWindow;
-  if (event.eventId) {
-    metaWindow.fbq?.("track", event.eventName, event.parameters, {
-      eventID: event.eventId,
-    });
-  } else {
-    metaWindow.fbq?.("track", event.eventName, event.parameters);
-  }
+export function pushDataLayerEvent(event: DataLayerEvent): boolean {
+  if (typeof window === "undefined") return false;
+  window.dataLayer = window.dataLayer ?? [];
+  window.dataLayer.push(event);
   return true;
 }
 
-export function trackEvent(name: string, params: AnalyticsEventParams = {}): boolean {
-  const cleaned = cleanParams(params);
-  let tracked = false;
+export function pushDataLayerCommand(command: unknown[]): boolean {
+  if (typeof window === "undefined") return false;
+  window.dataLayer = window.dataLayer ?? [];
+  window.dataLayer.push(command);
+  return true;
+}
 
-  if (canTrackAnalytics()) {
-    window.gtag?.("event", name, cleaned);
-    tracked = true;
+export function pushConsentUpdate(
+  state: TrackingConsentState,
+  detail: { analyticsGranted?: boolean; marketingGranted?: boolean; source?: string } = {},
+): boolean {
+  setTrackingConsentState(state);
+  const consentCommandPushed = pushDataLayerCommand(["consent", "update", {
+    analytics_storage: state.analytics_storage,
+    ad_storage: state.ad_storage,
+    ad_user_data: state.ad_user_data,
+    ad_personalization: state.ad_personalization,
+  }]);
+  const pushed = pushDataLayerEvent({
+    event: "egadi_consent_update",
+    analytics_storage: state.analytics_storage,
+    ad_storage: state.ad_storage,
+    ad_user_data: state.ad_user_data,
+    ad_personalization: state.ad_personalization,
+    analytics_granted: detail.analyticsGranted ?? state.analytics_storage === "granted",
+    marketing_granted:
+      detail.marketingGranted ??
+      (state.ad_storage === "granted" &&
+        state.ad_user_data === "granted" &&
+        state.ad_personalization === "granted"),
+    source: detail.source,
+  });
+
+  if (pushed) {
+    window.dispatchEvent(
+      new CustomEvent("egadi:tracking-consent-updated", {
+        detail: {
+          state,
+          analyticsGranted: detail.analyticsGranted ?? state.analytics_storage === "granted",
+          marketingGranted:
+            detail.marketingGranted ??
+            (state.ad_storage === "granted" &&
+              state.ad_user_data === "granted" &&
+              state.ad_personalization === "granted"),
+        },
+      }),
+    );
   }
 
-  if (trackMetaPixelEvent(name, cleaned)) {
-    tracked = true;
-  }
+  return consentCommandPushed || pushed;
+}
 
-  return tracked;
+export function trackEvent(
+  name: string,
+  params: AnalyticsEventParams | Record<string, unknown> = {},
+  options: TrackEventOptions = {},
+): boolean {
+  const consent = options.consent ?? "analytics";
+  if (consent === "analytics" && !isTrackingConsentGranted("analytics")) return false;
+  if (consent === "marketing" && !isTrackingConsentGranted("marketing")) return false;
+  return pushDataLayerEvent({ event: name, ...cleanAnalyticsParams(params) });
 }
 
 export function trackEventOncePerSession(
   key: string,
   name: string,
-  params: AnalyticsEventParams = {},
+  params: AnalyticsEventParams | Record<string, unknown> = {},
+  options: TrackEventOptions = {},
 ): boolean {
   if (typeof window === "undefined") return false;
   const storageKey = SESSION_KEY_PREFIX + key;
@@ -256,7 +241,7 @@ export function trackEventOncePerSession(
     // Session storage can be disabled; tracking may still proceed once.
   }
 
-  const tracked = trackEvent(name, params);
+  const tracked = trackEvent(name, params, options);
   if (!tracked) return false;
 
   try {

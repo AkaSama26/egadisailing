@@ -65,11 +65,11 @@
 		# necessario — reversibile solo dopo 6 mesi).
 		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 		X-Content-Type-Options nosniff
-		X-Frame-Options SAMEORIGIN
+		Content-Security-Policy "frame-ancestors 'self' https://tagassistant.google.com"
 		Referrer-Policy strict-origin-when-cross-origin
 		Permissions-Policy "geolocation=(), microphone=(), camera=()"
-		# R22 COOP: Stripe popup 3DS richiede allow-popups.
-		Cross-Origin-Opener-Policy same-origin-allow-popups
+		# COOP non viene impostato sulle pagine pubbliche: Tag Assistant
+		# deve mantenere il collegamento cross-origin con la finestra di debug.
 		X-Permitted-Cross-Domain-Policies none
 		# Remove Server header
 		-Server

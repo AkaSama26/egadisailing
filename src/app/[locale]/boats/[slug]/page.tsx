@@ -22,7 +22,11 @@ import { ScrollSection } from "@/components/scroll-section";
 import { routing } from "@/i18n/routing";
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
-import { PUBLIC_COMPANY_LEGAL, PUBLIC_CONTACT_EMAIL, PUBLIC_CONTACT_PHONE_TEXT } from "@/lib/public-contact";
+import {
+  PUBLIC_COMPANY_LEGAL,
+  PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
+} from "@/lib/public-contact";
 import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
 import { localizedStaticPath } from "@/lib/i18n/static-paths";
 import {
@@ -320,7 +324,7 @@ export default async function BoatDetailPage({
         "@type": "BreadcrumbList",
         inLanguage,
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Egadisailing", item: localizedAbsoluteUrl(base, locale, "/") },
+          { "@type": "ListItem", position: 1, name: "Egadi Sailing", item: localizedAbsoluteUrl(base, locale, "/") },
           { "@type": "ListItem", position: 2, name: getBoatsPageContent(locale).seoTitle, item: localizedAbsoluteUrl(base, locale, "/boats") },
           { "@type": "ListItem", position: 3, name: boat.seoTitle, item: pageUrl },
         ],
@@ -341,14 +345,15 @@ export default async function BoatDetailPage({
           { "@type": "Place", name: "Levanzo" },
           { "@type": "Place", name: "Marettimo" },
         ],
-        brand: { "@type": "Brand", name: "Egadisailing" },
+        brand: { "@type": "Brand", name: "Egadi Sailing" },
         provider: {
           "@type": "Organization",
-          name: PUBLIC_COMPANY_LEGAL.name,
-          alternateName: "Egadi Sailing",
+          name: "Egadi Sailing",
+          legalName: PUBLIC_COMPANY_LEGAL.name,
+          alternateName: "Egadisailing",
           url: base,
           email: PUBLIC_CONTACT_EMAIL,
-          telephone: PUBLIC_CONTACT_PHONE_TEXT,
+          telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
           taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
           address: {
             "@type": "PostalAddress",

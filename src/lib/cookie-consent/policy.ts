@@ -1,7 +1,7 @@
 export const COOKIE_CONSENT_COOKIE_NAME = "egadi_cookie_consent" as const;
-export const COOKIE_CONSENT_POLICY_VERSION = "1.4" as const;
-export const COOKIE_CONSENT_REVISION = 7 as const;
-export const COOKIE_CONSENT_EFFECTIVE_DATE = "3 giugno 2026" as const;
+export const COOKIE_CONSENT_POLICY_VERSION = "1.6" as const;
+export const COOKIE_CONSENT_REVISION = 9 as const;
+export const COOKIE_CONSENT_EFFECTIVE_DATE = "20 giugno 2026" as const;
 
 export const COOKIE_CONSENT_CATEGORIES = {
   necessary: {
@@ -84,7 +84,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
     consentModal: {
       title: "Preferenze privacy",
       description:
-        "Usiamo cookie tecnici necessari. Con il tuo consenso possiamo usare anche strumenti analitici o marketing per migliorare il sito e misurare le campagne. Puoi modificare la scelta in ogni momento.",
+        "Usiamo cookie tecnici necessari. Google Tag Manager può essere caricato in modalità Consent Mode con storage negato; con il tuo consenso attiviamo cookie e tag analitici o marketing gestiti dal container. Puoi modificare la scelta in ogni momento.",
       acceptAllBtn: "Accetta tutto",
       acceptNecessaryBtn: "Solo necessari",
       showPreferencesBtn: "Personalizza",
@@ -105,9 +105,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Essenziali per navigazione, sessione admin/cliente, preferenze lingua, sicurezza, Stripe e Cloudflare Turnstile. Non possono essere disattivati.",
         analytics:
-          "Ci aiutano a capire come viene usato il sito, quali pagine funzionano meglio e quali azioni portano a contatti o prenotazioni. Li attiviamo solo dopo consenso.",
+          "Ci aiutano a capire come viene usato il sito. Google Tag Manager può essere presente con storage negato; cookie e misurazione completa di GA4 partono solo dopo consenso.",
         marketing:
-          "Servono a misurare campagne e conversioni pubblicitarie. Li attiviamo solo dopo consenso.",
+          "Servono a misurare campagne e conversioni pubblicitarie. Cookie, storage pubblicitario e personalizzazione partono solo dopo consenso.",
         more:
           'Per dettagli su cookie, fornitori, durata e diritti consulta la <a href="/it/cookie-policy">Cookie Policy</a>.',
       },
@@ -132,7 +132,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
     consentModal: {
       title: "Privacy preferences",
       description:
-        "We use necessary technical cookies. With your consent, we may also use analytics or marketing tools to improve the website and measure campaigns. You can change your choice at any time.",
+        "We use necessary technical cookies. Google Tag Manager may load in Consent Mode with storage denied; with your consent we enable analytics or marketing cookies and tags managed by the container. You can change your choice at any time.",
       acceptAllBtn: "Accept all",
       acceptNecessaryBtn: "Necessary only",
       showPreferencesBtn: "Customize",
@@ -153,9 +153,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Essential for navigation, admin/customer sessions, language preferences, security, Stripe and Cloudflare Turnstile. They cannot be disabled.",
         analytics:
-          "They help us understand how the website is used, which pages work best and which actions lead to enquiries or bookings. They are enabled only after consent.",
+          "They help us understand how the website is used. Google Tag Manager may be present with storage denied; GA4 cookies and full measurement start only after consent.",
         marketing:
-          "They are used to measure advertising campaigns and conversions. They are enabled only after consent.",
+          "They are used to measure advertising campaigns and conversions. Advertising cookies, storage and personalization start only after consent.",
         more:
           'For details about cookies, providers, duration and rights, see the <a href="/en/cookie-policy">Cookie Policy</a>.',
       },
@@ -180,7 +180,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
     consentModal: {
       title: "Preferencias de privacidad",
       description:
-        "Usamos cookies técnicas necesarias. Con tu consentimiento, también podemos usar herramientas analíticas o de marketing para mejorar el sitio y medir campañas. Puedes cambiar tu elección en cualquier momento.",
+        "Usamos cookies técnicas necesarias. Google Tag Manager puede cargarse con Consent Mode y almacenamiento denegado; con tu consentimiento activamos cookies y etiquetas analíticas o de marketing gestionadas por el contenedor. Puedes cambiar tu elección en cualquier momento.",
       acceptAllBtn: "Aceptar todo",
       acceptNecessaryBtn: "Solo necesarias",
       showPreferencesBtn: "Personalizar",
@@ -201,9 +201,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Esenciales para navegación, sesiones de administrador/cliente, preferencias de idioma, seguridad, Stripe y Cloudflare Turnstile. No se pueden desactivar.",
         analytics:
-          "Nos ayudan a entender cómo se usa el sitio, qué páginas funcionan mejor y qué acciones generan contactos o reservas. Solo se activan después del consentimiento.",
+          "Nos ayudan a entender cómo se usa el sitio. Google Tag Manager puede estar presente con almacenamiento denegado; las cookies y la medición completa de GA4 empiezan solo tras tu consentimiento.",
         marketing:
-          "Sirven para medir campañas publicitarias y conversiones. Solo se activan después del consentimiento.",
+          "Sirven para medir campañas publicitarias y conversiones. Cookies, almacenamiento publicitario y personalización empiezan solo tras tu consentimiento.",
         more:
           'Para más detalles sobre cookies, proveedores, duración y derechos, consulta la <a href="/es/politica-de-cookies">Política de cookies</a>.',
       },
@@ -228,7 +228,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
     consentModal: {
       title: "Préférences de confidentialité",
       description:
-        "Nous utilisons des cookies techniques nécessaires. Avec votre consentement, nous pouvons aussi utiliser des outils analytiques ou marketing pour améliorer le site et mesurer les campagnes. Vous pouvez modifier votre choix à tout moment.",
+        "Nous utilisons des cookies techniques nécessaires. Google Tag Manager peut se charger avec Consent Mode et stockage refusé ; avec votre consentement nous activons les cookies et tags analytiques ou marketing gérés par le conteneur. Vous pouvez modifier votre choix à tout moment.",
       acceptAllBtn: "Tout accepter",
       acceptNecessaryBtn: "Nécessaires uniquement",
       showPreferencesBtn: "Personnaliser",
@@ -249,9 +249,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Essentiels pour la navigation, les sessions administrateur/client, les préférences de langue, la sécurité, Stripe et Cloudflare Turnstile. Ils ne peuvent pas être désactivés.",
         analytics:
-          "Ils nous aident à comprendre l'utilisation du site, les pages qui fonctionnent le mieux et les actions menant à des demandes ou réservations. Ils sont activés uniquement après consentement.",
+          "Ils nous aident à comprendre l'utilisation du site. Google Tag Manager peut être présent avec stockage refusé ; cookies et mesure complète GA4 commencent uniquement après consentement.",
         marketing:
-          "Ils servent à mesurer les campagnes publicitaires et les conversions. Ils sont activés uniquement après consentement.",
+          "Ils servent à mesurer les campagnes publicitaires et les conversions. Cookies, stockage publicitaire et personnalisation commencent uniquement après consentement.",
         more:
           'Pour les détails sur les cookies, les fournisseurs, la durée et vos droits, consultez la <a href="/fr/politique-de-cookies">Politique de cookies</a>.',
       },
@@ -276,7 +276,7 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
     consentModal: {
       title: "Datenschutz-Einstellungen",
       description:
-        "Wir verwenden notwendige technische Cookies. Mit Ihrer Einwilligung können wir außerdem Analyse- oder Marketing-Tools nutzen, um die Website zu verbessern und Kampagnen zu messen. Sie können Ihre Auswahl jederzeit ändern.",
+        "Wir verwenden notwendige technische Cookies. Google Tag Manager kann mit Consent Mode und verweigertem Speicher geladen werden; mit Ihrer Einwilligung aktivieren wir Analyse- oder Marketing-Cookies und Tags aus dem Container. Sie können Ihre Auswahl jederzeit ändern.",
       acceptAllBtn: "Alle akzeptieren",
       acceptNecessaryBtn: "Nur notwendige",
       showPreferencesBtn: "Anpassen",
@@ -297,9 +297,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
         necessary:
           "Erforderlich für Navigation, Admin-/Kundensessions, Spracheinstellungen, Sicherheit, Stripe und Cloudflare Turnstile. Sie können nicht deaktiviert werden.",
         analytics:
-          "Sie helfen uns zu verstehen, wie die Website genutzt wird, welche Seiten am besten funktionieren und welche Aktionen zu Anfragen oder Buchungen führen. Sie werden nur nach Einwilligung aktiviert.",
+          "Sie helfen uns zu verstehen, wie die Website genutzt wird. Google Tag Manager kann mit verweigertem Speicher vorhanden sein; GA4-Cookies und vollständige Messung starten nur nach Einwilligung.",
         marketing:
-          "Sie dienen der Messung von Werbekampagnen und Conversions. Sie werden nur nach Einwilligung aktiviert.",
+          "Sie dienen der Messung von Werbekampagnen und Conversions. Werbe-Cookies, Speicher und Personalisierung starten nur nach Einwilligung.",
         more:
           'Details zu Cookies, Anbietern, Dauer und Rechten finden Sie in der <a href="/de/cookie-richtlinie">Cookie-Richtlinie</a>.',
       },

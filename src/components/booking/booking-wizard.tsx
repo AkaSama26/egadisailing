@@ -511,6 +511,16 @@ export function BookingWizard(props: Props) {
     [props.durationType, props.locale, props.serviceId, props.serviceName, props.serviceType],
   );
 
+  function trackBookingStepComplete(completedStep: Step, extra: Record<string, unknown> = {}) {
+    trackEvent("booking_step_complete", {
+      ...analyticsServiceParams,
+      booking_step: completedStep,
+      step: completedStep,
+      step_number: checkoutStepNumber(completedStep),
+      ...extra,
+    });
+  }
+
   // R26-A1-C1 + R26-P2-CRITICA: restore in useEffect client-side per evitare
   // hydration mismatch. Dopo restore marca `hydrated=true` → save effect puo'
   // procedere senza sovrascrivere draft precedente con stati default.
@@ -599,9 +609,10 @@ export function BookingWizard(props: Props) {
     if (!hydrated) return;
     trackEventOncePerSession(
       "booking-step:" + props.serviceId + ":" + step,
-      "booking_step",
+      "booking_step_view",
       {
         ...analyticsServiceParams,
+        booking_step: step,
         step,
         step_number: checkoutStepNumber(step),
       },
@@ -659,15 +670,26 @@ export function BookingWizard(props: Props) {
     const paymentSchedule = paymentScheduleOverride;
     setError(null);
     if (!consentPrivacy || !consentTerms) {
+      trackEvent("form_error", {
+        ...analyticsServiceParams,
+        booking_step: "review",
+        error_code: "privacy_terms_missing",
+      });
       setError(copy.acceptPolicies);
       return;
     }
     // In prod il server richiede Turnstile token (enforce). In dev passa senza.
     if (props.turnstileSiteKey && !turnstileToken) {
+      trackEvent("form_error", {
+        ...analyticsServiceParams,
+        booking_step: "review",
+        error_code: "captcha_missing",
+      });
       setError(copy.completeCaptcha);
       return;
     }
     setLoading(true);
+    trackBookingStepComplete("review", { payment_schedule: paymentSchedule });
     try {
       const res = await fetch(props.useStripeCheckout ? "/api/checkout-session" : "/api/payment-intent", {
         method: "POST",
@@ -712,6 +734,12 @@ export function BookingWizard(props: Props) {
           );
         }
         if (res.status === 409) {
+          trackEvent("availability_unavailable", {
+            ...analyticsServiceParams,
+            booking_step: "review",
+            error_code: "dates_no_longer_available",
+            status_code: res.status,
+          });
           throw new Error(
             `${copy.datesNoLongerAvailable}${idSuffix}`,
           );
@@ -765,6 +793,11 @@ export function BookingWizard(props: Props) {
       });
       setStep("payment");
     } catch (err) {
+      trackEvent("booking_error", {
+        ...analyticsServiceParams,
+        booking_step: "review",
+        error_code: err instanceof Error ? "booking_create_failed" : "unknown",
+      });
       setError((err as Error).message);
     } finally {
       setLoading(false);
@@ -805,6 +838,10 @@ export function BookingWizard(props: Props) {
           // feature disabled → legacy flow, avanza normalmente; il controllo
           // vero avverra' al createPendingDirectBooking.
           setOverrideCheck({ status: "idle" });
+          trackBookingStepComplete("people", {
+            guest_count: occupiedSeats(passengers),
+            total_guests: totalGuestCountFromBreakdown(passengers),
+          });
           setStep("customer");
           return;
         }
@@ -819,6 +856,10 @@ export function BookingWizard(props: Props) {
       // wizard non mostra nulla di diverso; la conferma "in attesa" arriva via
       // email dopo createPendingDirectBooking (Task 3.3).
       setOverrideCheck({ status: "idle" });
+      trackBookingStepComplete("people", {
+        guest_count: occupiedSeats(passengers),
+        total_guests: totalGuestCountFromBreakdown(passengers),
+      });
       setStep("customer");
     } catch (err) {
       setOverrideCheck({
@@ -873,14 +914,40 @@ export function BookingWizard(props: Props) {
             fixedDurationDays={fixedDurationDays}
             onChange={(value) => {
               setStartDate(value);
+              if (value) {
+                trackEvent("date_selected", {
+                  ...analyticsServiceParams,
+                  booking_step: "date",
+                  selected_date: value,
+                  duration_days: fixedDurationDays ?? effectiveDurationDays,
+                });
+              }
               if (value && fixedDurationDays) {
                 setEndDate(addIsoDays(value, fixedDurationDays - 1));
               } else if (endDate && value && endDate < addIsoDays(value, 2)) {
                 setEndDate("");
               }
             }}
-            onEndChange={setEndDate}
-            onNext={() => setStep("people")}
+            onEndChange={(value) => {
+              setEndDate(value);
+              if (value) {
+                trackEvent("date_selected", {
+                  ...analyticsServiceParams,
+                  booking_step: "date",
+                  selected_date: startDate,
+                  end_date: value,
+                  duration_days: inclusiveDaysBetween(startDate, value) ?? effectiveDurationDays,
+                });
+              }
+            }}
+            onNext={() => {
+              trackBookingStepComplete("date", {
+                selected_date: startDate,
+                end_date: endDate || undefined,
+                duration_days: effectiveDurationDays,
+              });
+              setStep("people");
+            }}
             canContinue={Boolean(startDate) && canContinueFromDate}
             onPriceChange={setSelectedPrice}
           />
@@ -896,7 +963,15 @@ export function BookingWizard(props: Props) {
             value={passengers}
             passengerCategories={passengerCategories}
             selectedPrice={selectedPrice}
-            onChange={setPassengers}
+            onChange={(nextPassengers) => {
+              setPassengers(nextPassengers);
+              trackEvent("guest_count_selected", {
+                ...analyticsServiceParams,
+                booking_step: "people",
+                guest_count: occupiedSeats(nextPassengers),
+                total_guests: totalGuestCountFromBreakdown(nextPassengers),
+              });
+            }}
             onBack={() => setStep("date")}
             onNext={() => void handleContinueFromPax()}
             checking={overrideCheck.status === "checking"}
@@ -927,7 +1002,10 @@ export function BookingWizard(props: Props) {
           value={customer}
           onChange={setCustomer}
           onBack={() => setStep("people")}
-          onNext={() => setStep("review")}
+          onNext={() => {
+            trackBookingStepComplete("customer");
+            setStep("review");
+          }}
           loading={loading}
           turnstileSiteKey={props.turnstileSiteKey}
           turnstileResetKey={turnstileResetKey}
@@ -963,6 +1041,11 @@ export function BookingWizard(props: Props) {
           depositPercentage={props.defaultDepositPercentage ?? 30}
           onPaymentScheduleChange={(schedule, submit) => {
             setSelectedPaymentSchedule(schedule);
+            trackEvent("payment_option_selected", {
+              ...analyticsServiceParams,
+              booking_step: "review",
+              payment_schedule: schedule,
+            });
             if (submit) void createIntent(schedule);
           }}
           loading={loading}

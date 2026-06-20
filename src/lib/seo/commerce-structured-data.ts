@@ -1,6 +1,6 @@
 export const EGADI_PRODUCT_BRAND = {
   "@type": "Brand",
-  name: "Egadisailing",
+  name: "Egadi Sailing",
 } as const;
 
 export function buildServiceProductCodes(value: string) {

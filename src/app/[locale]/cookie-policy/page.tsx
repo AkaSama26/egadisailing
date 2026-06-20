@@ -65,14 +65,14 @@ export async function generateMetadata({
   return buildPageMetadata({
     title: isEs ? "Política de cookies" : isFr ? "Politique de cookies" : isDe ? "Cookie-Richtlinie" : isEn ? "Cookie Policy" : "Cookie Policy",
     description: isEs
-      ? "Política de cookies Egadisailing: cookies técnicos, consentimiento, sesiones, pagos Stripe, Cloudflare, Google Maps y rastreadores opcionales solo tras consentimiento."
+      ? "Política de cookies Egadisailing: cookies técnicos, consentimiento, sesiones, pagos Stripe, Cloudflare, Google Maps y rastreadores opcionales con cookies solo tras consentimiento."
       : isFr
-      ? "Politique de cookies Egadisailing : cookies techniques, consentement, sessions, paiements Stripe, Cloudflare, Google Maps et traceurs optionnels uniquement après consentement."
+      ? "Politique de cookies Egadisailing : cookies techniques, consentement, sessions, paiements Stripe, Cloudflare, Google Maps et traceurs optionnels avec cookies uniquement après consentement."
       : isDe
-      ? "Egadisailing Cookie-Richtlinie: technische Cookies, Einwilligung, Sitzungen, Stripe-Zahlungen, Cloudflare, Google Maps und optionale Tracker nur nach Zustimmung."
+      ? "Egadisailing Cookie-Richtlinie: technische Cookies, Einwilligung, Sitzungen, Stripe-Zahlungen, Cloudflare, Google Maps und optionale Tracker mit Cookies nur nach Zustimmung."
       : isEn
       ? "Egadisailing Cookie Policy: technical cookies, consent choices, booking sessions, Stripe payments, Cloudflare, Google Maps and optional trackers."
-      : "Cookie Policy Egadisailing: cookie tecnici, consenso, sessioni, pagamenti Stripe, Cloudflare, Google Maps e tracker opzionali solo dopo consenso.",
+      : "Cookie Policy Egadisailing: cookie tecnici, consenso, sessioni, pagamenti Stripe, Cloudflare, Google Maps e tracker opzionali con cookie solo dopo consenso.",
     path: "/cookie-policy",
     locale,
   });
@@ -98,7 +98,7 @@ function GermanCookiePolicyPage() {
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-white/75 md:text-lg">
             Technische Cookies, Sitzungen, Einwilligung, Local Storage, Zahlungen,
-            Anti-Bot-Schutz, Karten, externe Dienste und optionale Werkzeuge, die nur nach Einwilligung geladen werden.
+            Anti-Bot-Schutz, Karten, externe Dienste, Google Tag Manager im Consent Mode und optionale Cookies/Speicher, die nur nach Einwilligung aktiviert werden.
           </p>
           <p className="mt-4 text-sm text-white/55">
             Gültig ab {COOKIE_CONSENT_EFFECTIVE_DATE}
@@ -117,9 +117,7 @@ function GermanCookiePolicyPage() {
             </p>
             <p className={paragraphClass}>
               Egadisailing nutzt notwendige technische Cookies für Navigation, Sprache, Sicherheit,
-              Sitzungen, Buchungsabruf, Zahlungen und Anti-Bot-Schutz. Analyse-, Marketing- oder
-              Kampagnenmesswerkzeuge werden nur geladen, wenn eine Einwilligung erforderlich ist und
-              erteilt wurde.
+              Sitzungen, Buchungsabruf, Zahlungen und Anti-Bot-Schutz. Google Tag Manager kann mit Consent Mode und verweigertem Speicher geladen werden. Analyse- und Marketing-Cookies, Speicher und vollständige Messung starten nur, wenn eine Einwilligung erforderlich ist und erteilt wurde.
             </p>
           </section>
 
@@ -155,8 +153,8 @@ function GermanCookiePolicyPage() {
             <h2 className={headingClass}>Analyse- und Marketing-Werkzeuge</h2>
             <p className={paragraphClass}>
               {hasOptionalServices
-                ? "Konfigurierte optionale Werkzeuge werden nur nach Ihrer Einwilligung geladen. Sie können Ihre Wahl im Cookie-Präferenzbereich ändern."
-                : "Derzeit sind keine optionalen Werkzeuge aktiv. Wenn sie künftig hinzugefügt werden, werden sie nur nach Ihrer Einwilligung geladen, sofern erforderlich."}
+                ? "Google Tag Manager kann mit verweigertem Speicher geladen werden; optionale Cookies, Speicher und vollständige Messung starten nur nach Ihrer Einwilligung. Sie können Ihre Wahl im Cookie-Präferenzbereich ändern."
+                : "Derzeit sind keine optionalen Werkzeuge aktiv. Wenn sie künftig hinzugefügt werden, starten optionale Cookies und Speicher nur nach Ihrer Einwilligung, sofern erforderlich."}
             </p>
           </section>
 
@@ -199,7 +197,7 @@ function FrenchCookiePolicyPage() {
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-white/75 md:text-lg">
             Cookies techniques, sessions, consentement, local storage, paiements,
-            anti-bot, cartes, services externes et outils optionnels chargés uniquement après consentement.
+            anti-bot, cartes, services externes, Google Tag Manager en Consent Mode et cookies/stockage optionnels activés uniquement après consentement.
           </p>
           <p className="mt-4 text-sm text-white/55">
             En vigueur depuis le {COOKIE_CONSENT_EFFECTIVE_DATE}
@@ -219,7 +217,7 @@ function FrenchCookiePolicyPage() {
             <p className={paragraphClass}>
               Egadisailing utilise des cookies techniques nécessaires à navigation, langue,
               sécurité, sessions, récupération de réservation, paiements et protection anti-bot.
-              Les outils analytiques, marketing ou mesure de campagnes sont chargés seulement
+              Google Tag Manager peut se charger avec Consent Mode et stockage refusé. Cookies, stockage et mesure complète commencent seulement
               après votre consentement lorsque nécessaire.
             </p>
           </section>
@@ -256,8 +254,8 @@ function FrenchCookiePolicyPage() {
             <h2 className={headingClass}>Outils analytiques et marketing</h2>
             <p className={paragraphClass}>
               {hasOptionalServices
-                ? "Les outils optionnels configurés sont chargés uniquement après votre consentement. Vous pouvez changer d'avis depuis le panneau de préférences cookies."
-                : "Aucun outil optionnel n'est actuellement actif. S'ils sont ajoutés à l'avenir, ils seront chargés seulement après votre consentement lorsque nécessaire."}
+                ? "Google Tag Manager peut se charger avec stockage refusé ; les cookies optionnels, le stockage et la mesure complète commencent uniquement après votre consentement. Vous pouvez changer d'avis depuis le panneau de préférences cookies."
+                : "Aucun outil optionnel n'est actuellement actif. S'ils sont ajoutés à l'avenir, les cookies et le stockage optionnels commenceront seulement après votre consentement lorsque nécessaire."}
             </p>
           </section>
 
@@ -300,7 +298,7 @@ function SpanishCookiePolicyPage() {
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-white/75 md:text-lg">
 	            Cookies técnicas, sesiones, consentimiento, local storage, pagos, anti-bot,
-            mapas, servicios externos y herramientas opcionales cargadas solo tras consentimiento.
+            mapas, servicios externos, Google Tag Manager en Consent Mode y cookies/almacenamiento opcionales activados solo tras consentimiento.
           </p>
           <p className="mt-4 text-sm text-white/55">
             En vigor desde el {COOKIE_CONSENT_EFFECTIVE_DATE}
@@ -319,8 +317,7 @@ function SpanishCookiePolicyPage() {
             </p>
             <p className={paragraphClass}>
 	              Egadisailing usa cookies técnicas necesarias para navegación, idioma, seguridad,
-              sesiones, recuperación de reserva, pagos y protección anti-bot. Herramientas
-              analíticas, marketing o medición de campañas se cargan solo tras tu consentimiento.
+              sesiones, recuperación de reserva, pagos y protección anti-bot. Google Tag Manager puede cargarse con Consent Mode y almacenamiento denegado. Cookies, almacenamiento y medición completa empiezan solo tras tu consentimiento.
             </p>
           </section>
 
@@ -366,8 +363,8 @@ function SpanishCookiePolicyPage() {
             <h2 className={headingClass}>Herramientas analíticas y marketing</h2>
             <p className={paragraphClass}>
               {hasOptionalServices
-                ? "Las herramientas opcionales configuradas se cargan solo después de tu consentimiento. Puedes cambiar de idea desde el panel de preferencias cookie."
-                : "Actualmente no hay herramientas opcionales activas. Si se añaden en el futuro, se cargarán solo después de tu consentimiento cuando sea necesario."}
+                ? "Google Tag Manager puede cargarse con almacenamiento denegado; las cookies opcionales, el almacenamiento y la medición completa empiezan solo tras tu consentimiento. Puedes cambiar de idea desde el panel de preferencias cookie."
+                : "Actualmente no hay herramientas opcionales activas. Si se añaden en el futuro, las cookies y el almacenamiento opcionales empezarán solo tras tu consentimiento cuando sea necesario."}
             </p>
           </section>
 
@@ -425,7 +422,7 @@ export default async function CookiePolicyPage({
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-white/75 md:text-lg">
             Cookie tecnici, sessioni, consenso, local storage, pagamenti, anti-bot,
-            mappe, servizi esterni e strumenti opzionali caricati solo dopo consenso.
+            mappe, servizi esterni, Google Tag Manager in Consent Mode e cookie/storage opzionali attivati solo dopo consenso.
           </p>
           <p className="mt-4 text-sm text-white/55">
             In vigore dal {COOKIE_CONSENT_EFFECTIVE_DATE}
@@ -444,8 +441,7 @@ export default async function CookiePolicyPage({
             </p>
             <p className={paragraphClass}>
               Egadisailing usa cookie tecnici necessari per navigazione, lingua, sicurezza,
-              sessioni, recupero prenotazione, pagamenti e protezione anti-bot. Eventuali
-              strumenti analitici, marketing o misurazione campagne vengono caricati solo
+              sessioni, recupero prenotazione, pagamenti e protezione anti-bot. Google Tag Manager può caricarsi con Consent Mode e storage negato. Cookie, storage e misurazione completa partono solo
               dopo il tuo consenso.
             </p>
           </section>
@@ -596,11 +592,15 @@ export default async function CookiePolicyPage({
             <h2 className={headingClass}>
               {optionalSectionNumber}. Cookie opzionali solo dopo consenso
             </h2>
+            <p className={paragraphClass}>
+              Google Tag Manager può essere presente in pagina con Consent Mode e storage negato e orchestrare GA4, Google Ads, Meta Pixel e Bing UET dal container.
+              Cookie opzionali, storage e misurazione completa partono solo dopo il tuo consenso.
+            </p>
             {hasOptionalServices ? (
               <LegalTable headers={["Fornitore", "Cookie indicativi", "Finalità", "Durata"]}>
                 {services.gaMeasurementId && (
                   <tr>
-                    <Td>Google Analytics 4</Td>
+                    <Td>Google Analytics 4 via Google Tag Manager</Td>
                     <Td>
                       <code>_ga</code>, <code>_ga_*</code>, <code>_gid</code>
                     </Td>
@@ -613,7 +613,7 @@ export default async function CookiePolicyPage({
                 )}
                 {services.googleAdsId && (
                   <tr>
-                    <Td>Google Ads</Td>
+                    <Td>Google Ads via Google Tag Manager</Td>
                     <Td>
                       <code>_gcl_*</code>, <code>_gcl_au</code>
                     </Td>
@@ -623,7 +623,7 @@ export default async function CookiePolicyPage({
                 )}
                 {services.metaPixelId && (
                   <tr>
-                    <Td>Meta Pixel</Td>
+                    <Td>Meta Pixel via Google Tag Manager</Td>
                     <Td>
                       <code>_fbp</code>, <code>_fbc</code>
                     </Td>
@@ -633,7 +633,7 @@ export default async function CookiePolicyPage({
                 )}
                 {services.bingUetTagId && (
                   <tr>
-                    <Td>Microsoft Advertising / Bing UET</Td>
+                    <Td>Microsoft Advertising / Bing UET via Google Tag Manager</Td>
                     <Td>
                       <code>_uetsid</code>, <code>_uetvid</code>,{" "}
                       <code>_uetmsclkid</code>
@@ -646,7 +646,7 @@ export default async function CookiePolicyPage({
             ) : (
               <p className={paragraphClass}>
                 Al momento non sono configurati cookie analitici o marketing. Se verranno
-                attivati in futuro strumenti come Google Analytics 4, Google Ads, Meta
+                attivati in futuro strumenti gestiti da Google Tag Manager, come Google Analytics 4, Google Ads, Meta
                 Pixel o servizi Bing/Microsoft Advertising, compariranno nel pannello
                 preferenze e resteranno bloccati finché non avrai espresso consenso.
               </p>
@@ -803,9 +803,9 @@ export default async function CookiePolicyPage({
                 </Td>
               </tr>
               <tr>
-                <Td>Google, Meta e Microsoft Advertising</Td>
+                <Td>Google Tag Manager, Google, Meta e Microsoft Advertising</Td>
                 <Td>
-                  Verifiche dominio e, solo dopo consenso, misurazione campagne,
+                  Verifiche dominio, Google Tag Manager con Consent Mode e storage negato e, solo dopo consenso, misurazione campagne,
                   conversioni e remarketing se configurati
                 </Td>
                 <Td>

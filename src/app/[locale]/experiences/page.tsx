@@ -15,7 +15,7 @@ import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
   PUBLIC_CONTACT_LOCATION,
-  PUBLIC_CONTACT_PHONE_TEXT,
+  PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
 } from "@/lib/public-contact";
 
 type ServiceSummary = {
@@ -545,11 +545,12 @@ export default async function ExperiencesPage({
       {
         "@type": ["Organization", "LocalBusiness", "TravelAgency"],
         "@id": organizationId,
-        name: PUBLIC_COMPANY_LEGAL.name,
+        name: "Egadi Sailing",
+        legalName: PUBLIC_COMPANY_LEGAL.name,
         alternateName: "Egadisailing",
         url: siteBase,
         email: PUBLIC_CONTACT_EMAIL,
-        telephone: PUBLIC_CONTACT_PHONE_TEXT,
+        telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
         taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
         address: {
           "@type": "PostalAddress",
@@ -597,7 +598,7 @@ export default async function ExperiencesPage({
           {
             "@type": "ListItem",
             position: 1,
-            name: "Egadisailing",
+            name: "Egadi Sailing",
             item: localizedAbsoluteUrl(siteBase, locale, "/"),
           },
           {

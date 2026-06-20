@@ -10,6 +10,31 @@ import {
   type CookieConsentPublicServices,
 } from "./policy";
 
+type StoredCookieConsent = {
+  categories?: unknown;
+  services?: unknown;
+  revision?: unknown;
+  consentId?: unknown;
+  consentTimestamp?: unknown;
+  lastConsentTimestamp?: unknown;
+};
+
+export type StoredTrackingConsentState = {
+  analytics_storage: "granted" | "denied";
+  ad_storage: "granted" | "denied";
+  ad_user_data: "granted" | "denied";
+  ad_personalization: "granted" | "denied";
+};
+
+export type StoredGoogleConsentState = StoredTrackingConsentState;
+
+const DENIED_TRACKING_CONSENT_STATE: StoredTrackingConsentState = {
+  analytics_storage: "denied",
+  ad_storage: "denied",
+  ad_user_data: "denied",
+  ad_personalization: "denied",
+};
+
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value);
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
@@ -21,6 +46,100 @@ function stableStringify(value: unknown): string {
 
 function sha256(value: unknown): string {
   return crypto.createHash("sha256").update(stableStringify(value)).digest("hex");
+}
+
+
+function deniedTrackingConsentState(): StoredTrackingConsentState {
+  return { ...DENIED_TRACKING_CONSENT_STATE };
+}
+
+function parseStoredCookieConsent(cookieValue: string | undefined): StoredCookieConsent | null {
+  if (!cookieValue) return null;
+
+  const candidates = [cookieValue];
+  try {
+    const decoded = decodeURIComponent(cookieValue);
+    if (decoded !== cookieValue) candidates.push(decoded);
+  } catch {
+    // Keep the raw value as the only candidate.
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as StoredCookieConsent;
+      }
+    } catch {
+      // Try the next candidate.
+    }
+  }
+
+  return null;
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+}
+
+function serviceAccepted(
+  consent: StoredCookieConsent,
+  category: "analytics" | "marketing",
+  service: "ga4" | "googleAds" | "metaPixel" | "bingUet",
+): boolean {
+  if (!stringArray(consent.categories).includes(category)) return false;
+
+  const services =
+    consent.services && typeof consent.services === "object" && !Array.isArray(consent.services)
+      ? (consent.services as Record<string, unknown>)
+      : {};
+  const acceptedServices = services[category];
+
+  return Array.isArray(acceptedServices)
+    ? acceptedServices.some((entry) => entry === service)
+    : true;
+}
+
+function hasValidStoredCookieConsent(consent: StoredCookieConsent | null): consent is StoredCookieConsent {
+  if (!consent) return false;
+  return (
+    consent.revision === COOKIE_CONSENT_REVISION &&
+    typeof consent.consentId === "string" &&
+    typeof consent.consentTimestamp === "string" &&
+    typeof consent.lastConsentTimestamp === "string" &&
+    Array.isArray(consent.categories)
+  );
+}
+
+export function getStoredTrackingConsentState(
+  cookieValue: string | undefined,
+  services: CookieConsentPublicServices,
+): StoredTrackingConsentState {
+  const consent = parseStoredCookieConsent(cookieValue);
+  if (!hasValidStoredCookieConsent(consent)) return deniedTrackingConsentState();
+
+  const analyticsGranted = Boolean(
+    services.gaMeasurementId && serviceAccepted(consent, "analytics", "ga4"),
+  );
+  const marketingGranted = Boolean(
+    (services.googleAdsId && serviceAccepted(consent, "marketing", "googleAds")) ||
+      (services.metaPixelId && serviceAccepted(consent, "marketing", "metaPixel")) ||
+      (services.bingUetTagId && serviceAccepted(consent, "marketing", "bingUet")),
+  );
+
+  return {
+    analytics_storage: analyticsGranted ? "granted" : "denied",
+    ad_storage: marketingGranted ? "granted" : "denied",
+    ad_user_data: marketingGranted ? "granted" : "denied",
+    ad_personalization: marketingGranted ? "granted" : "denied",
+  };
+}
+
+export function getStoredGoogleConsentState(
+  cookieValue: string | undefined,
+  services: CookieConsentPublicServices,
+): StoredTrackingConsentState {
+  return getStoredTrackingConsentState(cookieValue, services);
 }
 
 export function getCookieConsentPublicServices(): CookieConsentPublicServices {

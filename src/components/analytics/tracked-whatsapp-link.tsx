@@ -21,6 +21,7 @@ export function TrackedWhatsAppLink({
   return (
     <a
       {...props}
+      data-analytics-ignore="true"
       onClick={(event) => {
         trackEvent("whatsapp_click", {
           locale,

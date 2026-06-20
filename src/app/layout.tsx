@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { cookies } from "next/headers";
 import Script from "next/script";
+import { GoogleTagManager } from "@next/third-parties/google";
 import { Inter, Caveat, Manrope } from "next/font/google";
 import { getLocale } from "next-intl/server";
+import { AnalyticsInteractionTracker } from "@/components/analytics/analytics-interaction-tracker";
+import { GtmConsentBootstrap } from "@/components/analytics/gtm-consent-bootstrap";
+import { GtmPageViewTracker } from "@/components/analytics/gtm-page-view-tracker";
 import { ServiceWorkerCleanup } from "@/components/service-worker-cleanup";
 import { env } from "@/lib/env";
+import { COOKIE_CONSENT_COOKIE_NAME } from "@/lib/cookie-consent/policy";
+import { getCookieConsentPublicServices, getStoredTrackingConsentState } from "@/lib/cookie-consent/server";
 import { getSiteVerificationMetadata } from "@/lib/site-verification";
 import { buildGlobalSeoJsonLd, jsonLd } from "@/lib/seo/structured-data";
 import "vanilla-cookieconsent/dist/cookieconsent.css";
@@ -111,10 +119,33 @@ export default async function RootLayout({
   // dall'URL `/it/...` / `/en/...`). Default "it" se fuori dal pattern
   // (es. `/admin/*`, admin e' IT-only).
   const locale = await getLocale();
+  const cookieStore = await cookies();
+  const publicTrackingServices = getCookieConsentPublicServices();
+  const initialTrackingConsent = getStoredTrackingConsentState(
+    cookieStore.get(COOKIE_CONSENT_COOKIE_NAME)?.value,
+    publicTrackingServices,
+  );
   const globalSeoJsonLd = buildGlobalSeoJsonLd(locale);
   return (
     <html lang={locale} className={`${manrope.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
+      <GtmConsentBootstrap initialConsent={initialTrackingConsent} />
+      {env.NEXT_PUBLIC_GTM_ID ? <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM_ID} /> : null}
       <body className="min-h-full flex flex-col font-sans">
+        {env.NEXT_PUBLIC_GTM_ID ? (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(env.NEXT_PUBLIC_GTM_ID)}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+              title="Google Tag Manager"
+            />
+          </noscript>
+        ) : null}
+        <Suspense fallback={null}>
+          <GtmPageViewTracker />
+          <AnalyticsInteractionTracker />
+        </Suspense>
         <Script
           id="egadisailing-service-worker-inline-cleanup"
           strategy="beforeInteractive"
