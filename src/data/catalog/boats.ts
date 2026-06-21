@@ -98,6 +98,8 @@ export interface ResolvedBoatsPageContent {
   fallbackImageNote: string;
 }
 
+const BOAT_DETAIL_PAGE_IDS = new Set(["trimarano"]);
+
 const BOATS_PAGE_COPY = {
   seoTitle: {
     it: "Catamarano Egadi, trimarano e barche da Trapani",
@@ -1933,6 +1935,18 @@ export function getPublicBoatIds(): string[] {
 export function getPublicBoatSlugs(): string[] {
   return Object.values(BOAT_CATALOG)
     .filter((entry) => entry.listed !== false)
+    .sort((a, b) => a.order - b.order)
+    .map((entry) => entry.slug);
+}
+
+export function hasPublicBoatDetailPage(boatId: string): boolean {
+  const entry = getBoatCatalogEntry(boatId);
+  return Boolean(entry && entry.listed !== false && BOAT_DETAIL_PAGE_IDS.has(entry.id));
+}
+
+export function getPublicBoatDetailSlugs(): string[] {
+  return Object.values(BOAT_CATALOG)
+    .filter((entry) => entry.listed !== false && BOAT_DETAIL_PAGE_IDS.has(entry.id))
     .sort((a, b) => a.order - b.order)
     .map((entry) => entry.slug);
 }

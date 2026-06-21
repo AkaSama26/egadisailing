@@ -6,14 +6,14 @@ import {
   getExperiencePublicSlug,
   getListedExperienceIds,
 } from "@/data/catalog/experiences";
-import { getPublicBoatSlugs } from "@/data/catalog/boats";
+import { getPublicBoatDetailSlugs } from "@/data/catalog/boats";
 import { env } from "@/lib/env";
 import { localizedAbsoluteUrl, localizedPathWithoutLocale } from "@/lib/i18n/paths";
 
 export const dynamic = "force-dynamic";
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
-type SitemapEntryOptions = Pick<SitemapEntry, "changeFrequency" | "priority" | "lastModified">;
+type SitemapEntryOptions = Pick<SitemapEntry, "lastModified">;
 type LocalizedPaths = Record<(typeof routing.locales)[number], string>;
 
 function localizedUrl(baseUrl: string, locale: string, path: string): string {
@@ -74,8 +74,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/islands/levanzo",
     "/islands/marettimo",
   ];
-  const lowPriorityPages = new Set(["/privacy", "/terms", "/cookie-policy"]);
-
   const listedExperienceIds = Array.from(
     new Set([...getListedExperienceIds(), ...getExperiencePackageServiceIds()]),
   );
@@ -110,21 +108,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       sameLocalizedPath(page),
       {
         lastModified: now,
-        changeFrequency: lowPriorityPages.has(page) ? "monthly" : "weekly",
-        priority: page === "" ? 1 : lowPriorityPages.has(page) ? 0.3 : 0.8,
       },
     );
   }
 
-  for (const slug of getPublicBoatSlugs()) {
+  for (const slug of getPublicBoatDetailSlugs()) {
     addLocalizedEntries(
       entries,
       baseUrl,
       sameLocalizedPath(`/boats/${slug}`),
       {
         lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.75,
       },
     );
   }
@@ -142,8 +136,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
       {
         lastModified: serviceLastModifiedById.get(serviceId) ?? now,
-        changeFrequency: "weekly",
-        priority: 0.8,
       },
     );
   }

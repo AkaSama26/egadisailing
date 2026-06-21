@@ -23,6 +23,7 @@ import {
   getBoatsPageContent,
   getPublicBoatIds,
   getPublicBoatServiceTitle,
+  hasPublicBoatDetailPage,
   type BoatSpecIcon,
   type ResolvedBoatContent,
 } from "@/data/catalog/boats";
@@ -73,7 +74,7 @@ function servicesForBoat(boat: ResolvedBoatContent, services: ActiveService[]): 
 }
 
 function hasBoatDetail(boat: ResolvedBoatContent): boolean {
-  return boat.id === "trimarano";
+  return hasPublicBoatDetailPage(boat.id);
 }
 
 function BoatSpecs({ boat }: { boat: ResolvedBoatContent }) {
