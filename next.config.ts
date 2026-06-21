@@ -21,10 +21,16 @@ const deploymentId =
   process.env.GIT_SHA ||
   undefined;
 
+const projectRoot = process.cwd();
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: projectRoot,
   deploymentId,
   poweredByHeader: false,
+  turbopack: {
+    root: projectRoot,
+  },
   images: {
     // Self-hosted image optimization: WebP avoids cold AVIF transcode latency.
     formats: ["image/webp"],

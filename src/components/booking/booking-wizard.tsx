@@ -144,6 +144,14 @@ function bookingSuccessPath(locale: string, confirmationCode: string): string {
   return `/${locale}/prenota/success/${code}`;
 }
 
+function contactPath(locale: string): string {
+  if (locale === "en") return "/en/contact";
+  if (locale === "es") return "/es/contacto";
+  if (locale === "fr") return "/fr/contact";
+  if (locale === "de") return "/de/kontakt";
+  return "/it/contatti";
+}
+
 function addIsoDays(isoDate: string, days: number): string {
   const date = new Date(`${isoDate}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() + days);
@@ -488,12 +496,16 @@ export function BookingWizard(props: Props) {
   const fixedDurationDays = props.fixedDurationDays;
   const passengerCategories = DEFAULT_PASSENGER_FARE_CATEGORIES;
   const charterDurationDays = isCharter ? inclusiveDaysBetween(startDate, endDate) : null;
+  const selectedCharterDurationDays = fixedDurationDays ?? charterDurationDays ?? undefined;
   const effectiveDurationDays = isCharter
-    ? fixedDurationDays ?? charterDurationDays ?? durationDays
+    ? selectedCharterDurationDays ?? durationDays
     : durationDays;
   const priceLookupDurationDays =
-    isCharter && effectiveDurationDays >= 3 && effectiveDurationDays <= 7
-      ? effectiveDurationDays
+    isCharter &&
+    selectedCharterDurationDays !== undefined &&
+    selectedCharterDurationDays >= 3 &&
+    selectedCharterDurationDays <= 7
+      ? selectedCharterDurationDays
       : undefined;
   const canContinueFromDate =
     !isCharter ||
@@ -874,17 +886,17 @@ export function BookingWizard(props: Props) {
   }
 
   return (
-    <div className="max-w-full overflow-hidden rounded-lg bg-white shadow-2xl">
-      <div className="border-b border-slate-200 bg-slate-50 px-5 py-5 sm:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+    <div className="max-w-full overflow-hidden rounded-lg border border-white/20 bg-white shadow-2xl shadow-black/20">
+      <div className="border-b border-white/10 bg-[linear-gradient(135deg,#071934_0%,#0c3d5e_100%)] px-5 py-6 text-white sm:px-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-100">
           {copy.directCheckout}
         </p>
         <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-2xl font-heading font-bold text-slate-950">
+            <h3 className="font-heading text-2xl font-bold text-white md:text-3xl">
               {props.serviceName}
             </h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/72">
               {copy.headerSubtitle}
             </p>
           </div>
@@ -897,7 +909,7 @@ export function BookingWizard(props: Props) {
         <div
           role="alert"
           aria-live="assertive"
-          className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm"
+          className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
         >
           {error}
         </div>
@@ -949,6 +961,7 @@ export function BookingWizard(props: Props) {
               setStep("people");
             }}
             canContinue={Boolean(startDate) && canContinueFromDate}
+            selectedPrice={selectedPrice}
             onPriceChange={setSelectedPrice}
           />
         </>
@@ -1130,7 +1143,7 @@ function StepIndicator({ step, locale }: { step: Step; locale: string }) {
 
   return (
     <ol
-      className="flex w-full items-center gap-1 text-xs font-semibold text-slate-500 sm:grid sm:w-auto sm:min-w-[360px] sm:grid-cols-5"
+      className="flex w-full items-center gap-1 text-xs font-semibold text-white/62 sm:grid sm:w-auto sm:min-w-[420px] sm:grid-cols-5"
       aria-label={
         locale === "es"
           ? "Estado del checkout"
@@ -1151,10 +1164,10 @@ function StepIndicator({ step, locale }: { step: Step; locale: string }) {
           <li
             key={item.key}
             className={cnStep(
-              "flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 transition sm:h-auto sm:px-2 sm:py-2",
-              active ? "flex-[1.8] sm:flex-auto" : "size-9 shrink-0 px-0 sm:h-auto sm:w-auto sm:shrink sm:flex-auto sm:px-2",
-              active && "bg-sky-100 text-sky-900",
-              complete && "bg-emerald-50 text-emerald-700",
+              "flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 transition sm:h-auto sm:px-2 sm:py-2.5",
+              active ? "flex-[1.8] sm:flex-auto" : "size-10 shrink-0 px-0 sm:h-auto sm:w-auto sm:shrink sm:flex-auto sm:px-2",
+              active && "bg-white text-slate-950 shadow-lg shadow-black/15",
+              complete && "bg-emerald-400/95 text-emerald-950",
             )}
             aria-current={active ? "step" : undefined}
           >
@@ -1340,11 +1353,25 @@ function getDateStepCopy(locale: string) {
       selectedDate: "Date sélectionnée",
       selected: "Sélectionnée",
       selectedDuration: "Durée sélectionnée",
+      summaryTitle: "Votre sélection",
+      charterSummaryTitle: "Période charter",
+      start: "Départ",
+      end: "Retour",
+      duration: "Durée",
+      estimatedPrice: "Total estimé",
+      calculatingPrice: "Calcul en cours",
+      priceUnavailable: "Prix non disponible pour cette sélection",
+      selectStartDate: "Sélectionnez le départ",
+      selectEndDate: "Sélectionnez le retour",
+      customQuote: "Devis sur mesure",
+      rangeUnavailable: "Non réservable",
+      unavailableHelp: "Contactez l'équipe pour trouver une solution ensemble.",
+      contactTeam: "Contacter l'équipe",
       days: "jours",
       until: "jusqu'au",
       to: "Au",
       charterTooShort: "Le charter nécessite au moins 3 jours.",
-      charterTooLong: "Pour les charters de plus de 7 jours, contactez l'équipe pour un devis dédié.",
+      charterTooLong: "Pour 8 jours ou plus, contactez l'équipe pour un devis sur mesure.",
       next: "Suivant",
     };
   }
@@ -1365,11 +1392,25 @@ function getDateStepCopy(locale: string) {
       selectedDate: "Fecha seleccionada",
       selected: "Seleccionada",
       selectedDuration: "Duración seleccionada",
+      summaryTitle: "Tu selección",
+      charterSummaryTitle: "Periodo charter",
+      start: "Salida",
+      end: "Regreso",
+      duration: "Duración",
+      estimatedPrice: "Total estimado",
+      calculatingPrice: "Calculando",
+      priceUnavailable: "Precio no disponible para esta selección",
+      selectStartDate: "Selecciona la salida",
+      selectEndDate: "Selecciona el regreso",
+      customQuote: "Presupuesto a medida",
+      rangeUnavailable: "No reservable",
+      unavailableHelp: "Contacta con el equipo para encontrar una solución juntos.",
+      contactTeam: "Contactar con el equipo",
       days: "días",
       until: "hasta el",
       to: "A",
       charterTooShort: "El charter requiere al menos 3 días.",
-      charterTooLong: "Para charters de más de 7 días, contacta con el equipo para un presupuesto dedicado.",
+      charterTooLong: "Para 8 días o más, contacta con el equipo para un presupuesto a medida.",
       next: "Siguiente",
     };
   }
@@ -1390,11 +1431,25 @@ function getDateStepCopy(locale: string) {
       selectedDate: "Ausgewähltes Datum",
       selected: "Ausgewählt",
       selectedDuration: "Ausgewählte Dauer",
+      summaryTitle: "Ihre Auswahl",
+      charterSummaryTitle: "Charter-Zeitraum",
+      start: "Start",
+      end: "Rückkehr",
+      duration: "Dauer",
+      estimatedPrice: "Geschätzter Gesamtbetrag",
+      calculatingPrice: "Berechnung läuft",
+      priceUnavailable: "Preis für diese Auswahl nicht verfügbar",
+      selectStartDate: "Start wählen",
+      selectEndDate: "Rückkehr wählen",
+      customQuote: "Individuelles Angebot",
+      rangeUnavailable: "Nicht buchbar",
+      unavailableHelp: "Kontaktieren Sie das Team, damit wir gemeinsam eine Lösung finden.",
+      contactTeam: "Team kontaktieren",
       days: "Tage",
       until: "bis",
       to: "Bis",
       charterTooShort: "Der Charter erfordert mindestens 3 Tage.",
-      charterTooLong: "Für Charter über 7 Tage kontaktieren Sie bitte das Team für ein individuelles Angebot.",
+      charterTooLong: "Für 8 Tage oder mehr kontaktieren Sie bitte das Team für ein individuelles Angebot.",
       next: "Weiter",
     };
   }
@@ -1415,11 +1470,25 @@ function getDateStepCopy(locale: string) {
       selectedDate: "Selected date",
       selected: "Selected",
       selectedDuration: "Selected duration",
+      summaryTitle: "Your selection",
+      charterSummaryTitle: "Charter period",
+      start: "Departure",
+      end: "Return",
+      duration: "Duration",
+      estimatedPrice: "Estimated total",
+      calculatingPrice: "Calculating",
+      priceUnavailable: "Price unavailable for this selection",
+      selectStartDate: "Select departure",
+      selectEndDate: "Select return",
+      customQuote: "Tailored quote",
+      rangeUnavailable: "Not bookable",
+      unavailableHelp: "Contact the team so we can find a solution together.",
+      contactTeam: "Contact the team",
       days: "days",
       until: "until",
       to: "To",
       charterTooShort: "Charter requires at least 3 days.",
-      charterTooLong: "For charters longer than 7 days, contact the crew for a dedicated quote.",
+      charterTooLong: "For 8 days or more, contact the team for a tailored quote.",
       next: "Next",
     };
   }
@@ -1439,12 +1508,26 @@ function getDateStepCopy(locale: string) {
     selectedDate: "Data selezionata",
     selected: "Selezionata",
     selectedDuration: "Durata selezionata",
+    summaryTitle: "La tua selezione",
+    charterSummaryTitle: "Periodo charter",
+    start: "Partenza",
+    end: "Rientro",
+    duration: "Durata",
+    estimatedPrice: "Totale stimato",
+    calculatingPrice: "Calcolo in corso",
+    priceUnavailable: "Prezzo non disponibile per questa selezione",
+    selectStartDate: "Seleziona la partenza",
+    selectEndDate: "Seleziona il rientro",
+    customQuote: "Quotazione su misura",
+    rangeUnavailable: "Non prenotabile",
+    unavailableHelp: "Contatta il team per trovare una soluzione insieme.",
+    contactTeam: "Contatta il team",
     days: "giornate",
     until: "fino al",
     to: "A",
     charterTooShort: "Il charter richiede almeno 3 giornate.",
     charterTooLong:
-      "Per charter più lunghi di 7 giornate contatta la crew per un preventivo dedicato.",
+      "Per 8 giornate o più contatta il team per una quotazione su misura.",
     next: "Avanti",
   };
 }
@@ -1901,7 +1984,6 @@ function calendarDayAriaLabel(
               : "caricamento disponibilità"
     }`;
   }
-  const price = day.priceLabel ? `, ${day.priceLabel}` : "";
   return `${formatted}, ${
     day.reasonLabel ??
     (isEs
@@ -1911,9 +1993,9 @@ function calendarDayAriaLabel(
         : isDe
           ? "nicht verfügbar"
           : isEn
-            ? "unavailable"
+          ? "unavailable"
             : "non disponibile")
-  }${price}`;
+  }`;
 }
 
 function calendarDayClass({
@@ -1930,7 +2012,7 @@ function calendarDayClass({
   loading: boolean;
 }): string {
   return cnStep(
-    "relative flex aspect-square min-h-11 flex-col items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed sm:min-h-[76px] sm:items-stretch sm:justify-start sm:gap-1 sm:p-1.5 sm:text-left",
+    "relative flex aspect-square min-h-10 flex-col items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed sm:min-h-14 sm:items-stretch sm:justify-start sm:p-1.5 sm:text-left",
     (selected || rangeSelected) &&
       "border-sky-700 bg-sky-700 text-white shadow-sm ring-2 ring-sky-200 hover:bg-sky-800",
     !selected && !rangeSelected && !status && "border-slate-200 bg-white text-slate-400",
@@ -1973,16 +2055,6 @@ function calendarDayDotClass({
   );
 }
 
-function calendarStatusBadgeClass(status?: CalendarApiDay["status"]): string {
-  return cnStep(
-    "rounded-full px-2.5 py-1 text-xs font-bold",
-    status === "available" && "bg-emerald-100 text-emerald-800",
-    status === "request" && "bg-amber-100 text-amber-800",
-    status === "unavailable" && "bg-slate-200 text-slate-600",
-    !status && "bg-slate-100 text-slate-600",
-  );
-}
-
 function DateStep({
   locale,
   serviceId,
@@ -1994,6 +2066,7 @@ function DateStep({
   onEndChange,
   onNext,
   canContinue,
+  selectedPrice,
   onPriceChange,
 }: {
   locale: string;
@@ -2006,9 +2079,10 @@ function DateStep({
   onEndChange: (v: string) => void;
   onNext: () => void;
   canContinue: boolean;
+  selectedPrice: SelectedPrice | null;
   onPriceChange: (price: SelectedPrice | null) => void;
 }) {
-  const copy = getDateStepCopy(locale);
+  const copy = useMemo(() => getDateStepCopy(locale), [locale]);
   const [visibleMonth, setVisibleMonth] = useState(() =>
     monthKeyFromIso(value || new Date().toISOString().slice(0, 10)),
   );
@@ -2018,13 +2092,21 @@ function DateStep({
   const [weatherSummary, setWeatherSummary] = useState<PublicWeatherSummary | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState(false);
+  const [rangeQuoteDay, setRangeQuoteDay] = useState<CalendarApiDay | null>(null);
+  const [rangeQuoteLoading, setRangeQuoteLoading] = useState(false);
   const charterDurationDays = isCharter ? inclusiveDaysBetween(value, endValue) : null;
+  const charterHasRange = isCharter && Boolean(value && endValue);
   const charterIsTooShort =
     isCharter &&
     Boolean(value && endValue) &&
     (charterDurationDays === null || charterDurationDays < 3);
   const charterIsTooLong = isCharter && charterDurationDays !== null && charterDurationDays > 7;
-  const endMin = value ? addIsoDays(value, 2) : new Date().toISOString().slice(0, 10);
+  const charterHasValidRange =
+    isCharter &&
+    Boolean(value && endValue) &&
+    charterDurationDays !== null &&
+    charterDurationDays >= 3 &&
+    charterDurationDays <= 7;
   const fixedEndDate =
     isCharter && fixedDurationDays && value ? addIsoDays(value, fixedDurationDays - 1) : "";
   const selectedRangeEnd =
@@ -2033,16 +2115,51 @@ function DateStep({
   const currentMonth = new Date().toISOString().slice(0, 7);
   const canGoPrevious = visibleMonth > currentMonth;
   const selectedDay = value ? calendarDays[value] : undefined;
-  function canContinueWithSelection(nextStartDate: string, nextEndDate = endValue) {
-    if (!nextStartDate) return false;
-    if (!isCharter) return true;
-    if (fixedDurationDays) return true;
-    const nextDuration = inclusiveDaysBetween(nextStartDate, nextEndDate);
-    return nextDuration !== null && nextDuration >= 3 && nextDuration <= 7;
+  const effectiveSelectedDay = isCharter && !fixedDurationDays ? rangeQuoteDay : selectedDay;
+  const rangeBlocksContinue =
+    isCharter &&
+    !fixedDurationDays &&
+    charterHasValidRange &&
+    (rangeQuoteLoading || !effectiveSelectedDay || effectiveSelectedDay.selectable === false);
+  const canSubmit = canContinue && !rangeBlocksContinue;
+  const selectedPriceLabel =
+    effectiveSelectedDay?.priceLabel ??
+    (selectedPrice ? formatClientEurWithVat(selectedPrice.amount, locale) : null);
+  const selectedUnavailable =
+    (isCharter &&
+      charterHasRange &&
+      charterHasValidRange &&
+      effectiveSelectedDay?.selectable === false) ||
+    (!isCharter && Boolean(value) && selectedDay?.selectable === false);
+  const contactHref = contactPath(locale);
+
+  function resetDynamicRangeQuote() {
+    if (!isCharter || fixedDurationDays) return;
+    setRangeQuoteDay(null);
+    setRangeQuoteLoading(false);
+    onPriceChange(null);
   }
 
-  function maybeAdvanceAfterSelection(nextStartDate: string, nextEndDate = endValue) {
-    if (canContinueWithSelection(nextStartDate, nextEndDate)) onNext();
+  function selectCalendarDate(date: string) {
+    if (!isCharter) {
+      onChange(date);
+      return;
+    }
+
+    if (fixedDurationDays) {
+      onChange(date);
+      onEndChange(addIsoDays(date, fixedDurationDays - 1));
+      return;
+    }
+
+    resetDynamicRangeQuote();
+    if (!value || endValue || date < value) {
+      onChange(date);
+      onEndChange("");
+      return;
+    }
+
+    onEndChange(date);
   }
 
   useEffect(() => {
@@ -2085,9 +2202,19 @@ function DateStep({
       });
 
     return () => controller.abort();
-  }, [fixedDurationDays, isCharter, locale, range.end, range.start, serviceId]);
+  }, [
+    copy.calendarLoadError,
+    copy.calendarUnavailable,
+    fixedDurationDays,
+    isCharter,
+    locale,
+    range.end,
+    range.start,
+    serviceId,
+  ]);
 
   useEffect(() => {
+    if (isCharter && !fixedDurationDays) return;
     const day = value ? calendarDays[value] : null;
     if (day?.priceAmount != null && day.pricingUnit) {
       onPriceChange({
@@ -2098,20 +2225,93 @@ function DateStep({
     } else {
       onPriceChange(null);
     }
-  }, [calendarDays, onPriceChange, value]);
+  }, [calendarDays, fixedDurationDays, isCharter, onPriceChange, value]);
+
+  useEffect(() => {
+    if (!isCharter || fixedDurationDays) return;
+    if (!value || !charterHasValidRange || !charterDurationDays) {
+      queueMicrotask(() => {
+        setRangeQuoteDay(null);
+        setRangeQuoteLoading(false);
+        onPriceChange(null);
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+    const params = new URLSearchParams({
+      serviceId,
+      start: value,
+      end: value,
+      locale,
+      durationDays: String(charterDurationDays),
+    });
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) {
+        setRangeQuoteLoading(true);
+      }
+    });
+
+    fetch(`/api/booking-calendar?${params.toString()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(copy.calendarUnavailable);
+        const body = (await res.json()) as { data?: { days?: CalendarApiDay[] } };
+        const day = body.data?.days?.find((item) => item.date === value) ?? null;
+        setRangeQuoteDay(day);
+        if (day?.priceAmount != null && day.pricingUnit && day.selectable) {
+          onPriceChange({
+            amount: day.priceAmount,
+            pricingUnit: day.pricingUnit,
+            passengerCategoryPrices: day.passengerCategoryPrices ?? null,
+          });
+        } else {
+          onPriceChange(null);
+        }
+      })
+      .catch((err) => {
+        if ((err as Error).name !== "AbortError") {
+          setRangeQuoteDay(null);
+          onPriceChange(null);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setRangeQuoteLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [
+    charterDurationDays,
+    charterHasValidRange,
+    copy.calendarUnavailable,
+    fixedDurationDays,
+    isCharter,
+    locale,
+    onPriceChange,
+    serviceId,
+    value,
+  ]);
 
   useEffect(() => {
     if (!value) {
-      setWeatherSummary(null);
-      setWeatherLoading(false);
-      setWeatherError(false);
+      queueMicrotask(() => {
+        setWeatherSummary(null);
+        setWeatherLoading(false);
+        setWeatherError(false);
+      });
       return;
     }
 
     const controller = new AbortController();
     const params = new URLSearchParams({ date: value, locale });
-    setWeatherLoading(true);
-    setWeatherError(false);
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) {
+        setWeatherLoading(true);
+        setWeatherError(false);
+      }
+    });
 
     fetch(`/api/weather?${params.toString()}`, {
       cache: "no-store",
@@ -2135,258 +2335,278 @@ function DateStep({
     return () => controller.abort();
   }, [locale, value]);
 
+  const displayedEndDate = fixedEndDate || endValue;
+  const weatherTitle =
+    locale === "es"
+      ? "Meteo estimada"
+      : locale === "fr"
+        ? "Météo estimée"
+        : locale === "de"
+          ? "Geschätztes Wetter"
+        : locale === "en"
+          ? "Estimated weather"
+          : "Meteo stimato";
+  const weatherLoadingLabel =
+    locale === "es"
+      ? "Cargando previsión meteorológica..."
+      : locale === "fr"
+        ? "Chargement des prévisions météo..."
+        : locale === "en"
+          ? "Loading weather forecast..."
+          : "Carico previsione meteo...";
+  const weatherUnavailableLabel =
+    locale === "es"
+      ? "La previsión meteorológica no está disponible ahora."
+      : locale === "fr"
+        ? "Les prévisions météo ne sont pas disponibles pour le moment."
+        : locale === "en"
+          ? "Weather forecast is not available right now."
+          : "Previsione meteo non disponibile in questo momento.";
+
   return (
     <form
-      className="space-y-4"
+      className="space-y-5"
       onSubmit={(event) => {
         event.preventDefault();
-        if (canContinue) onNext();
+        if (canSubmit) onNext();
       }}
     >
-      <h2 className="text-2xl font-bold leading-tight">{copy.title}</h2>
-      <fieldset className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:bg-slate-50 sm:p-4">
-        <legend className="sr-only">{copy.calendarLegend}</legend>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => setVisibleMonth((month) => shiftMonth(month, -1))}
-            disabled={!canGoPrevious}
-            className="inline-flex size-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 disabled:opacity-40"
-            aria-label={copy.previousMonth}
-          >
-            <ChevronLeft className="size-4" aria-hidden="true" />
-          </button>
-          <p className="min-w-0 text-center text-base font-bold capitalize text-slate-950">
-            {monthLabel(visibleMonth, locale)}
-          </p>
-          <button
-            type="button"
-            onClick={() => setVisibleMonth((month) => shiftMonth(month, 1))}
-            className="inline-flex size-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700"
-            aria-label={copy.nextMonth}
-          >
-            <ChevronRight className="size-4" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-7 gap-0.5 text-center text-[11px] font-bold uppercase text-slate-500 sm:gap-1">
-          {copy.weekdays.map((day) => (
-            <div key={day} className="py-1">
-              {day}
-            </div>
-          ))}
-        </div>
-        <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-1">
-          {range.days.map((date) => {
-            const day = calendarDays[date];
-            const outOfMonth = monthKeyFromIso(date) !== visibleMonth;
-            const selected = value === date;
-            const rangeSelected = Boolean(
-              value && selectedRangeEnd && date >= value && date <= selectedRangeEnd,
-            );
-            const includedInSelectedRange = rangeSelected && !selected;
-            const selectable = Boolean(day?.selectable);
-            return (
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(20rem,0.95fr)] lg:items-start">
+        <div className="space-y-4">
+          <h2 className="font-heading text-2xl font-bold leading-tight text-slate-950 md:text-3xl">
+            {copy.title}
+          </h2>
+          <fieldset className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+            <legend className="sr-only">{copy.calendarLegend}</legend>
+            <div className="mb-3 flex items-center justify-between gap-3">
               <button
-                key={date}
                 type="button"
-                disabled={!selectable}
-                onClick={() => {
-                  onChange(date);
-                  if (day?.priceAmount != null && day.pricingUnit) {
-                    onPriceChange({
-                      amount: day.priceAmount,
-                      pricingUnit: day.pricingUnit,
-                      passengerCategoryPrices: day.passengerCategoryPrices ?? null,
-                    });
-                  } else {
-                    onPriceChange(null);
-                  }
-                  if (outOfMonth) setVisibleMonth(monthKeyFromIso(date));
-                  maybeAdvanceAfterSelection(date);
-                }}
-                aria-pressed={selected || rangeSelected}
-                aria-label={`${calendarDayAriaLabel(date, day, locale)}${
-                  includedInSelectedRange ? copy.includedInSelectedRange : ""
-                }`}
-                className={calendarDayClass({
-                  selected,
-                  rangeSelected,
-                  outOfMonth,
-                  status: day?.status,
-                  loading: calendarLoading && !day,
-                })}
+                onClick={() => setVisibleMonth((month) => shiftMonth(month, -1))}
+                disabled={!canGoPrevious}
+                className="inline-flex size-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 disabled:opacity-40"
+                aria-label={copy.previousMonth}
               >
-                <span className="block w-full shrink-0 text-center text-sm font-bold leading-none sm:text-left">
-                  {Number(date.slice(8, 10))}
-                </span>
-                <span className="mt-1 hidden min-h-4 w-full max-w-full truncate text-center text-[11px] font-semibold leading-tight tabular-nums sm:mt-0 sm:block sm:text-left">
-                  {includedInSelectedRange
-                    ? locale === "es"
-                      ? "Incluido"
-                      : locale === "fr"
-                        ? "Inclus"
-                      : locale === "en"
-                      ? "Included"
-                      : "Incluso"
-                    : day?.priceLabel ?? (calendarLoading ? "..." : "")}
-                </span>
-                <span className="mt-0.5 hidden min-h-4 w-full max-w-full truncate text-center text-[10px] leading-tight sm:block sm:text-left">
-                  {includedInSelectedRange
-                    ? locale === "es"
-                      ? "Intervalo seleccionado"
-                      : locale === "fr"
-                        ? "Période sélectionnée"
-                      : locale === "en"
-                      ? "Selected range"
-                      : "Intervallo selezionato"
-                    : day?.reasonLabel ?? ""}
-                </span>
-                <span
-                  className={calendarDayDotClass({
-                    selected,
-                    rangeSelected,
-                    status: day?.status,
-                    loading: calendarLoading && !day,
-                  })}
-                  aria-hidden="true"
-                />
+                <ChevronLeft className="size-4" aria-hidden="true" />
               </button>
-            );
-          })}
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
-            {copy.available}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-amber-500" aria-hidden="true" />
-            {copy.onRequest}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="size-2 rounded-full bg-slate-300" aria-hidden="true" />
-            {copy.unavailable}
-          </span>
-        </div>
-        {calendarError && (
-          <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {calendarError}
-          </p>
-        )}
-      </fieldset>
-      {value && (
-        <div className="space-y-3">
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">
-                  {copy.selectedDate}
-                </p>
-                <p className="mt-1 font-bold">{formatIsoDateLabel(value, locale)}</p>
-                {selectedDay?.priceHint && (
-                  <p className="mt-1 text-xs leading-5 text-emerald-800">
-                    {selectedDay.priceHint}
-                  </p>
-                )}
-              </div>
-              <span className={calendarStatusBadgeClass(selectedDay?.status)}>
-                {selectedDay?.reasonLabel ?? copy.selected}
+              <p className="min-w-0 text-center text-base font-bold capitalize text-slate-950">
+                {monthLabel(visibleMonth, locale)}
+              </p>
+              <button
+                type="button"
+                onClick={() => setVisibleMonth((month) => shiftMonth(month, 1))}
+                className="inline-flex size-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700"
+                aria-label={copy.nextMonth}
+              >
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-bold uppercase text-slate-500 sm:gap-1">
+              {copy.weekdays.map((day) => (
+                <div key={day} className="py-1">
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-1">
+              {range.days.map((date) => {
+                const day = calendarDays[date];
+                const outOfMonth = monthKeyFromIso(date) !== visibleMonth;
+                const selected = value === date || (Boolean(displayedEndDate) && displayedEndDate === date);
+                const rangeSelected = Boolean(
+                  value && selectedRangeEnd && date >= value && date <= selectedRangeEnd,
+                );
+                const includedInSelectedRange = rangeSelected && !selected;
+                const selectable = Boolean(day?.selectable);
+                return (
+                  <button
+                    key={date}
+                    type="button"
+                    disabled={!selectable}
+                    onClick={() => {
+                      selectCalendarDate(date);
+                      if (!isCharter && day?.priceAmount != null && day.pricingUnit) {
+                        onPriceChange({
+                          amount: day.priceAmount,
+                          pricingUnit: day.pricingUnit,
+                          passengerCategoryPrices: day.passengerCategoryPrices ?? null,
+                        });
+                      } else if (!isCharter) {
+                        onPriceChange(null);
+                      }
+                      if (outOfMonth) setVisibleMonth(monthKeyFromIso(date));
+                    }}
+                    aria-pressed={selected || rangeSelected}
+                    aria-label={`${calendarDayAriaLabel(date, day, locale)}${
+                      includedInSelectedRange ? copy.includedInSelectedRange : ""
+                    }`}
+                    className={calendarDayClass({
+                      selected,
+                      rangeSelected,
+                      outOfMonth,
+                      status: day?.status,
+                      loading: calendarLoading && !day,
+                    })}
+                  >
+                    <span className="block w-full shrink-0 text-center text-sm font-bold leading-none sm:text-left">
+                      {Number(date.slice(8, 10))}
+                    </span>
+                    <span className="mt-1 hidden min-h-4 w-full max-w-full truncate text-center text-[10px] font-semibold leading-tight tabular-nums sm:block sm:text-left">
+                      {includedInSelectedRange
+                          ? locale === "es"
+                            ? "Incluido"
+                            : locale === "fr"
+                              ? "Inclus"
+                              : locale === "en"
+                                ? "Included"
+                                : "Incluso"
+                        : day?.reasonLabel ?? (calendarLoading ? "..." : "")}
+                    </span>
+                    <span
+                      className={calendarDayDotClass({
+                        selected,
+                        rangeSelected,
+                        status: day?.status,
+                        loading: calendarLoading && !day,
+                      })}
+                      aria-hidden="true"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
+              <span className="inline-flex items-center gap-1">
+                <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                {copy.available}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="size-2 rounded-full bg-amber-500" aria-hidden="true" />
+                {copy.onRequest}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="size-2 rounded-full bg-slate-300" aria-hidden="true" />
+                {copy.unavailable}
               </span>
             </div>
-            {selectedDay?.priceLabel && (
-              <p className="mt-3 border-t border-emerald-200 pt-2 font-bold tabular-nums">
-                {selectedDay.priceLabel}
+            {calendarError && (
+              <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                {calendarError}
               </p>
             )}
-          </div>
-          {weatherLoading ? (
-            <div className="rounded-lg border border-sky-100 bg-sky-50/80 p-3 text-sm text-sky-900">
-              {locale === "es"
-                ? "Cargando previsión meteorológica..."
-                : locale === "fr"
-                  ? "Chargement des prévisions météo..."
-                  : locale === "en"
-                    ? "Loading weather forecast..."
-                    : "Carico previsione meteo..."}
-            </div>
-          ) : weatherSummary ? (
-            <CustomerWeatherCard
-              summary={weatherSummary}
-              locale={locale}
-              title={
-                locale === "es"
-                  ? "Previsión para la fecha seleccionada"
-                  : locale === "fr"
-                    ? "Prévisions pour la date sélectionnée"
-                    : locale === "en"
-                      ? "Forecast for selected date"
-                      : "Meteo per la data selezionata"
-              }
-            />
-          ) : weatherError ? (
-            <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-              {locale === "es"
-                ? "La previsión meteorológica no está disponible ahora."
-                : locale === "fr"
-                  ? "Les prévisions météo ne sont pas disponibles pour le moment."
-                : locale === "en"
-                ? "Weather forecast is not available right now."
-                : "Previsione meteo non disponibile in questo momento."}
-            </p>
-          ) : null}
+          </fieldset>
         </div>
-      )}
-      {isCharter && fixedDurationDays && (
-        <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900">
-          {copy.selectedDuration}: {fixedDurationDays} {copy.days}
-          {fixedEndDate ? `, ${copy.until} ${formatIsoDateLabel(fixedEndDate, locale)}` : ""}.
-        </p>
-      )}
-      {isCharter && !fixedDurationDays && (
-        <>
-          <div className="flex items-center gap-3">
-            <label
-              htmlFor="wizard-end-date"
-              className="w-8 shrink-0 text-right text-sm font-medium text-gray-600"
-            >
-              {copy.to}
-            </label>
-            <input
-              id="wizard-end-date"
-              type="date"
-              required
-              aria-required="true"
-              value={endValue}
-              onChange={(e) => {
-                const nextEndDate = e.target.value;
-                onEndChange(nextEndDate);
-                maybeAdvanceAfterSelection(value, nextEndDate);
-              }}
-              className="min-w-0 flex-1 px-4 py-3 rounded-lg border border-gray-300"
-              min={endMin}
-            />
-          </div>
+
+        <aside className="rounded-lg border border-slate-200 bg-slate-50 p-4 shadow-sm lg:sticky lg:top-24">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-sky-700">
+            {isCharter ? copy.charterSummaryTitle : copy.summaryTitle}
+          </p>
+
+          {isCharter ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="rounded-lg border border-white bg-white px-3 py-3">
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+                  {copy.start}
+                </p>
+                <p className="mt-1 font-bold text-slate-950">
+                  {value ? formatIsoDateLabel(value, locale) : copy.selectStartDate}
+                </p>
+              </div>
+              <div className="rounded-lg border border-white bg-white px-3 py-3">
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+                  {copy.end}
+                </p>
+                <p className="mt-1 font-bold text-slate-950">
+                  {displayedEndDate ? formatIsoDateLabel(displayedEndDate, locale) : copy.selectEndDate}
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          <dl className="mt-5 grid gap-3">
+            {!isCharter && (
+              <div className="rounded-lg border border-white bg-white px-3 py-3">
+                <dt className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+                  {copy.selectedDate}
+                </dt>
+                <dd className="mt-1 font-bold text-slate-950">
+                  {value ? formatIsoDateLabel(value, locale) : copy.selectStartDate}
+                </dd>
+              </div>
+            )}
+            <div className="rounded-lg border border-white bg-white px-3 py-3">
+              <dt className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+                {copy.estimatedPrice}
+              </dt>
+              <dd className="mt-1 font-bold tabular-nums text-slate-950">
+                {charterIsTooLong
+                  ? copy.customQuote
+                  : rangeQuoteLoading
+                  ? copy.calculatingPrice
+                  : selectedPriceLabel ?? (value ? copy.priceUnavailable : "-")}
+              </dd>
+            </div>
+          </dl>
+
           {charterIsTooShort && (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
               {copy.charterTooShort}
             </p>
           )}
           {charterIsTooLong && (
-            <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm font-medium text-sky-800">
-              {copy.charterTooLong}
-            </p>
+            <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 px-3 py-3 text-sm text-sky-900">
+              <p className="font-semibold leading-5">{copy.charterTooLong}</p>
+              <a
+                href={contactHref}
+                className="mt-3 inline-flex rounded-full bg-white px-3 py-1.5 text-xs font-black text-sky-900 shadow-sm ring-1 ring-sky-200 hover:bg-sky-100"
+              >
+                {copy.contactTeam}
+              </a>
+            </div>
           )}
-        </>
-      )}
-      <button
-        type="submit"
-        disabled={!canContinue}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
-      >
-        {copy.next}
-        <ChevronRight className="size-4" aria-hidden="true" />
-      </button>
+          {selectedUnavailable && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-800">
+              <p className="font-black">{copy.rangeUnavailable}</p>
+              <p className="mt-1 leading-5">{copy.unavailableHelp}</p>
+              <a
+                href={contactHref}
+                className="mt-3 inline-flex rounded-full bg-white px-3 py-1.5 text-xs font-black text-red-800 shadow-sm ring-1 ring-red-200 hover:bg-red-100"
+              >
+                {copy.contactTeam}
+              </a>
+            </div>
+          )}
+
+          {value && (
+            <div className="mt-4">
+              {weatherLoading ? (
+                <div className="rounded-lg border border-sky-100 bg-sky-50/80 p-3 text-sm text-sky-900">
+                  {weatherLoadingLabel}
+                </div>
+              ) : weatherSummary ? (
+                <CustomerWeatherCard
+                  summary={weatherSummary}
+                  locale={locale}
+                  title={weatherTitle}
+                />
+              ) : weatherError ? (
+                <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+                  {weatherUnavailableLabel}
+                </p>
+              ) : null}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] px-5 py-4 text-base font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {copy.next}
+            <ChevronRight className="size-4" aria-hidden="true" />
+          </button>
+        </aside>
+      </div>
     </form>
   );
 }
@@ -2435,14 +2655,14 @@ function PeopleStep({
 
   return (
     <form
-      className="space-y-4"
+      className="space-y-5"
       onSubmit={(event) => {
         event.preventDefault();
         if (canSubmit) onNext();
       }}
     >
-      <h2 className="text-2xl font-bold">{copy.title}</h2>
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+      <h2 className="font-heading text-3xl font-bold text-slate-950 md:text-4xl">{copy.title}</h2>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-3">
         {passengerCategories.map((rule) => {
           const field = PASSENGER_CATEGORY_FIELD[rule.category];
           return (
@@ -2469,7 +2689,7 @@ function PeopleStep({
       </div>
       <div
         className={cnStep(
-          "grid grid-cols-2 gap-3 rounded-lg border p-3 text-sm sm:grid-cols-3",
+          "grid grid-cols-2 gap-3 rounded-lg border p-4 text-sm sm:grid-cols-3",
           capacityExceeded ? "border-red-200 bg-red-50 text-red-800" : "border-slate-200 bg-slate-50 text-slate-700",
         )}
       >
@@ -2506,7 +2726,7 @@ function PeopleStep({
             type="button"
             onClick={onBack}
             disabled={checking}
-            className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 py-3 font-semibold disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-4 font-semibold disabled:opacity-50"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             {copy.back}
@@ -2515,7 +2735,7 @@ function PeopleStep({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] py-3 font-bold text-white disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-4 font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
         >
           {checking ? copy.checking : copy.next}
           {!checking && <ChevronRight className="size-4" aria-hidden="true" />}
@@ -2547,13 +2767,13 @@ function PassengerCounter({
   incrementText?: string;
 }) {
   return (
-    <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-3">
-      <div className="mb-3 flex min-w-0 items-center gap-2">
-        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-100">
+      <div className="mb-4 flex min-w-0 items-center gap-3">
+        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-800">
           {icon}
         </span>
         <div className="min-w-0">
-          <label htmlFor={id} className="block text-sm font-bold text-slate-950">
+          <label htmlFor={id} className="block text-base font-bold text-slate-950">
             {label}
           </label>
           <p className="text-xs leading-4 text-slate-500">{hint}</p>
@@ -2564,7 +2784,7 @@ function PassengerCounter({
           type="button"
           onClick={() => onChange(value - 1)}
           disabled={value <= min}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-300 font-bold disabled:opacity-40 sm:size-11"
+          className="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xl font-bold disabled:opacity-40"
           aria-label={`${decrementText} ${label}`}
         >
           -
@@ -2579,12 +2799,12 @@ function PassengerCounter({
             const digits = event.target.value.replace(/\D/g, "");
             onChange(digits ? Number.parseInt(digits, 10) : 0);
           }}
-          className="h-10 w-0 min-w-0 flex-1 rounded-md border border-slate-300 text-center font-bold tabular-nums sm:h-11"
+          className="h-12 w-0 min-w-0 flex-1 rounded-md border border-slate-300 text-center text-lg font-bold tabular-nums"
         />
         <button
           type="button"
           onClick={() => onChange(value + 1)}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-300 font-bold sm:size-11"
+          className="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xl font-bold"
           aria-label={`${incrementText} ${label}`}
         >
           +
@@ -2685,13 +2905,13 @@ function ReviewStep({
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">
           {copy.eyebrow}
         </p>
-        <h2 className="mt-1 text-2xl font-bold">{copy.title}</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <h2 className="mt-1 font-heading text-3xl font-bold text-slate-950 md:text-4xl">{copy.title}</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
           {copy.subtitle}
         </p>
       </div>
 
-      <fieldset className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4">
+      <fieldset className="rounded-lg border border-slate-200 bg-slate-50 p-4 sm:p-5">
         <legend className="text-sm font-bold uppercase tracking-[0.12em] text-slate-500">
           {copy.paymentQuestion}
         </legend>
@@ -2743,7 +2963,7 @@ function ReviewStep({
         )}
       </fieldset>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
+      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-sky-700">
@@ -2845,7 +3065,7 @@ function ReviewStep({
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-3 text-center font-semibold disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-4 text-center font-semibold disabled:opacity-50"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           {copy.editDetails}
@@ -2853,7 +3073,7 @@ function ReviewStep({
         <button
           type="submit"
           disabled={!payment || loading}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 text-center font-bold text-white disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-4 text-center font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
         >
           {loading ? copy.creatingPayment : copy.confirmAndPay}
           {!loading && <CreditCard className="size-4" aria-hidden="true" />}
@@ -2886,7 +3106,7 @@ function PaymentChoiceCard({
         if (checked && !disabled) onChange();
       }}
       className={cnStep(
-        "flex min-w-0 items-start gap-3 rounded-lg border bg-white p-4 transition",
+        "flex min-w-0 items-start gap-3 rounded-lg border bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-lg",
         disabled ? "cursor-wait opacity-70" : "cursor-pointer",
         checked ? "border-sky-500 ring-2 ring-sky-100" : "border-slate-200 hover:border-sky-200",
       )}
@@ -3189,7 +3409,7 @@ function PhoneNumberField({
       <label htmlFor="wizard-phone" className="block text-sm font-medium mb-1">
         {label}
       </label>
-      <div className="grid grid-cols-[minmax(7.25rem,8.5rem)_minmax(0,1fr)] rounded-lg border border-gray-300 bg-white focus-within:ring-2 focus-within:ring-[var(--color-gold)]/45">
+      <div className="grid grid-cols-[minmax(7.25rem,8.5rem)_minmax(0,1fr)] rounded-lg border border-gray-300 bg-white focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100">
         <PhoneCountrySelect
           locale={locale}
           country={country}
@@ -3203,7 +3423,7 @@ function PhoneNumberField({
           autoComplete="tel-national"
           inputMode="tel"
           placeholder={locale === "es" ? "612 345 678" : locale === "fr" ? "6 12 34 56 78" : locale === "de" ? "1512 3456789" : locale === "en" ? "7123 456789" : "333 123 4567"}
-          className="min-w-0 px-4 py-3 outline-none"
+          className="min-w-0 px-4 py-4 text-base outline-none"
           value={nationalNumber}
           onChange={(event) => handleNumberChange(event.target.value)}
         />
@@ -3252,13 +3472,13 @@ function CustomerStep({
   );
   return (
     <form
-      className="space-y-4"
+      className="space-y-5"
       onSubmit={(event) => {
         event.preventDefault();
         if (valid && !loading && consentPrivacy && consentTerms) onNext();
       }}
     >
-      <h2 className="text-2xl font-bold">{copy.title}</h2>
+      <h2 className="font-heading text-3xl font-bold text-slate-950 md:text-4xl">{copy.title}</h2>
       {/* R19 WCAG 3.3.2 label visibility: placeholder-as-label era
            non-conforme (scompare al focus, screen reader incerto su quale
            campo). Ora label esplicita + aria-required. EAA 2025 blocker
@@ -3274,7 +3494,7 @@ function CustomerStep({
           required
           aria-required="true"
           autoComplete="email"
-          className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3"
+          className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-4 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
           value={value.email}
           onChange={(e) => onChange({ ...value, email: e.target.value })}
         />
@@ -3290,7 +3510,7 @@ function CustomerStep({
             required
             aria-required="true"
             autoComplete="given-name"
-            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3"
+            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-4 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
             value={value.firstName}
             onChange={(e) => onChange({ ...value, firstName: e.target.value })}
           />
@@ -3305,7 +3525,7 @@ function CustomerStep({
             required
             aria-required="true"
             autoComplete="family-name"
-            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3"
+            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-4 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
             value={value.lastName}
             onChange={(e) => onChange({ ...value, lastName: e.target.value })}
           />
@@ -3330,13 +3550,13 @@ function CustomerStep({
         </div>
       )}
 
-      <div className="space-y-2 text-sm border-t pt-4">
-        <label className="flex items-start gap-2 cursor-pointer">
+      <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+        <label className="flex cursor-pointer items-start gap-3">
           <input
             type="checkbox"
             checked={consentPrivacy}
             onChange={(e) => onConsentPrivacyChange(e.target.checked)}
-            className="mt-1 size-4 shrink-0"
+            className="mt-1 size-5 shrink-0"
             required
           />
           <span className="min-w-0 leading-6">
@@ -3366,12 +3586,12 @@ function CustomerStep({
             . *
           </span>
         </label>
-        <label className="flex items-start gap-2 cursor-pointer">
+        <label className="flex cursor-pointer items-start gap-3">
           <input
             type="checkbox"
             checked={consentTerms}
             onChange={(e) => onConsentTermsChange(e.target.checked)}
-            className="mt-1 size-4 shrink-0"
+            className="mt-1 size-5 shrink-0"
             required
           />
           <span className="min-w-0 leading-6">
@@ -3402,7 +3622,7 @@ function CustomerStep({
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-3 text-center font-semibold disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-4 text-center font-semibold disabled:opacity-50"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
           {copy.back}
@@ -3410,7 +3630,7 @@ function CustomerStep({
         <button
           type="submit"
           disabled={!valid || loading || !consentPrivacy || !consentTerms}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 text-center font-bold text-white disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-4 text-center font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
         >
           {loading ? copy.wait : copy.continueToPayment}
           {!loading && <CreditCard className="size-4" aria-hidden="true" />}

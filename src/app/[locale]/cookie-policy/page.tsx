@@ -67,7 +67,7 @@ export async function generateMetadata({
     description: isEs
       ? "Política de cookies Egadisailing: cookies técnicos, consentimiento, sesiones, pagos Stripe, Cloudflare, Google Maps y rastreadores opcionales con cookies solo tras consentimiento."
       : isFr
-      ? "Politique de cookies Egadisailing : cookies techniques, consentement, sessions, paiements Stripe, Cloudflare, Google Maps et traceurs optionnels avec cookies uniquement après consentement."
+      ? "Politique de cookies Egadisailing : cookies techniques, consentement, sessions, paiements Stripe, Cloudflare, Google Maps et options après accord."
       : isDe
       ? "Egadisailing Cookie-Richtlinie: technische Cookies, Einwilligung, Sitzungen, Stripe-Zahlungen, Cloudflare, Google Maps und optionale Tracker mit Cookies nur nach Zustimmung."
       : isEn

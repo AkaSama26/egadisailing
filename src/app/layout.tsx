@@ -128,9 +128,9 @@ export default async function RootLayout({
   const globalSeoJsonLd = buildGlobalSeoJsonLd(locale);
   return (
     <html lang={locale} className={`${manrope.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
-      <GtmConsentBootstrap initialConsent={initialTrackingConsent} />
-      {env.NEXT_PUBLIC_GTM_ID ? <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM_ID} /> : null}
       <body className="min-h-full flex flex-col font-sans">
+        <GtmConsentBootstrap initialConsent={initialTrackingConsent} />
+        {env.NEXT_PUBLIC_GTM_ID ? <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM_ID} /> : null}
         {env.NEXT_PUBLIC_GTM_ID ? (
           <noscript>
             <iframe

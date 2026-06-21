@@ -23,6 +23,80 @@ const SITE_DESCRIPTION: Record<string, string> = {
   de: "Egadisailing organisiert Bootstouren zu den Ägadischen Inseln ab Trapani: Favignana, Levanzo, Marettimo, private Charter, Trimaran, Chef an Bord und Angeltouren.",
 };
 
+const SERVICE_CATALOG: Record<string, Array<{ name: string; serviceType: string }>> = {
+  it: [
+    { name: "Tour in barca Favignana e Levanzo", serviceType: "Boat tour" },
+    { name: "Charter privato alle Isole Egadi", serviceType: "Private boat charter" },
+    { name: "Esperienza chef a bordo in trimarano", serviceType: "Gourmet sailing experience" },
+    { name: "Charter pesca sportiva alle Egadi", serviceType: "Fishing charter" },
+  ],
+  en: [
+    { name: "Favignana and Levanzo boat tour", serviceType: "Boat tour" },
+    { name: "Private charter in the Egadi Islands", serviceType: "Private boat charter" },
+    { name: "Chef on board trimaran experience", serviceType: "Gourmet sailing experience" },
+    { name: "Egadi sport fishing charter", serviceType: "Fishing charter" },
+  ],
+  es: [
+    { name: "Excursión en barco a Favignana y Levanzo", serviceType: "Boat tour" },
+    { name: "Charter privado en las Islas Egadi", serviceType: "Private boat charter" },
+    { name: "Experiencia con chef a bordo en trimarán", serviceType: "Gourmet sailing experience" },
+    { name: "Charter de pesca deportiva en las Egadi", serviceType: "Fishing charter" },
+  ],
+  fr: [
+    { name: "Excursion en bateau à Favignana et Levanzo", serviceType: "Boat tour" },
+    { name: "Charter privé aux îles Égades", serviceType: "Private boat charter" },
+    { name: "Expérience chef à bord en trimaran", serviceType: "Gourmet sailing experience" },
+    { name: "Charter de pêche sportive aux Égades", serviceType: "Fishing charter" },
+  ],
+  de: [
+    { name: "Bootstour Favignana und Levanzo", serviceType: "Boat tour" },
+    { name: "Private Charter auf den Ägadischen Inseln", serviceType: "Private boat charter" },
+    { name: "Chef-an-Bord-Erlebnis im Trimaran", serviceType: "Gourmet sailing experience" },
+    { name: "Sportangel-Charter auf den Egadi", serviceType: "Fishing charter" },
+  ],
+};
+
+const KNOWS_ABOUT: Record<string, string[]> = {
+  it: [
+    "Tour in barca alle Isole Egadi",
+    "Escursioni Favignana e Levanzo",
+    "Charter in trimarano da Trapani",
+    "Pesca sportiva alle Egadi",
+  ],
+  en: [
+    "Egadi Islands boat tours",
+    "Favignana and Levanzo excursions",
+    "Trimaran charter from Trapani",
+    "Sport fishing in the Egadi Islands",
+  ],
+  es: [
+    "Excursiones en barco a las Islas Egadi",
+    "Excursiones a Favignana y Levanzo",
+    "Charter en trimarán desde Trapani",
+    "Pesca deportiva en las Egadi",
+  ],
+  fr: [
+    "Excursions en bateau aux îles Égades",
+    "Excursions à Favignana et Levanzo",
+    "Charter en trimaran depuis Trapani",
+    "Pêche sportive aux Égades",
+  ],
+  de: [
+    "Bootstouren zu den Ägadischen Inseln",
+    "Ausflüge nach Favignana und Levanzo",
+    "Trimaran-Charter ab Trapani",
+    "Sportangeln auf den Egadi",
+  ],
+};
+
+const OFFER_CATALOG_NAME: Record<string, string> = {
+  it: "Esperienze Egadisailing",
+  en: "Egadisailing experiences",
+  es: "Experiencias Egadisailing",
+  fr: "Expériences Egadisailing",
+  de: "Egadisailing Erlebnisse",
+};
+
 function absoluteUrl(path: string): string {
   const base = env.APP_URL.replace(/\/+$/, "");
   return path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
@@ -39,6 +113,8 @@ export function buildGlobalSeoJsonLd(locale: string) {
   const organizationId = `${base}/#organization`;
   const localBusinessId = `${base}/#localbusiness`;
   const websiteId = `${base}/#website`;
+  const serviceCatalog = SERVICE_CATALOG[locale] ?? SERVICE_CATALOG.it;
+  const knowsAbout = KNOWS_ABOUT[locale] ?? KNOWS_ABOUT.it;
 
   const address = {
     "@type": "PostalAddress",
@@ -57,6 +133,20 @@ export function buildGlobalSeoJsonLd(locale: string) {
     "Marettimo",
     "Sicilia occidentale",
   ].map((name) => ({ "@type": "Place", name }));
+  const offerCatalog = {
+    "@type": "OfferCatalog",
+    name: OFFER_CATALOG_NAME[locale] ?? OFFER_CATALOG_NAME.it,
+    itemListElement: serviceCatalog.map((service) => ({
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: service.name,
+        serviceType: service.serviceType,
+        areaServed,
+        provider: { "@id": organizationId },
+      },
+    })),
+  };
 
   return {
     "@context": "https://schema.org",
@@ -76,6 +166,8 @@ export function buildGlobalSeoJsonLd(locale: string) {
         alternateName: "Egadisailing",
         address,
         areaServed,
+        knowsAbout,
+        hasOfferCatalog: offerCatalog,
         sameAs: PUBLIC_REVIEW_LINKS.tripadvisorProfiles,
         contactPoint: [
           {
@@ -100,6 +192,9 @@ export function buildGlobalSeoJsonLd(locale: string) {
         telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
         address,
         areaServed,
+        knowsAbout,
+        hasOfferCatalog: offerCatalog,
+        sameAs: PUBLIC_REVIEW_LINKS.tripadvisorProfiles,
         priceRange: "€€-€€€",
         parentOrganization: { "@id": organizationId },
         hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
@@ -112,6 +207,7 @@ export function buildGlobalSeoJsonLd(locale: string) {
         url: base,
         inLanguage: language,
         publisher: { "@id": organizationId },
+        about: { "@id": localBusinessId },
       },
     ],
   };

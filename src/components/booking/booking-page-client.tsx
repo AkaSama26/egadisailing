@@ -2,10 +2,14 @@
 
 import { useMemo, useState } from "react";
 import {
-  CalendarDays,
+  ArrowLeft,
+  Check,
+  CheckCircle2,
   ChevronRight,
   Clock3,
   CreditCard,
+  Ship,
+  type LucideIcon,
   Users,
 } from "lucide-react";
 import { BookingWizard } from "@/components/booking/booking-wizard";
@@ -17,6 +21,12 @@ export interface BookingServiceOption {
   id: string;
   title: string;
   subtitle: string;
+  detailDescription: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  includes: string[];
+  notIncluded: string[];
+  locations: string[];
   boatId: string;
   boatTitle: string;
   boatImageSrc?: string;
@@ -53,15 +63,22 @@ interface ExperienceOption {
   key: string;
   title: string;
   subtitle: string;
+  detailDescription: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  includes: string[];
+  notIncluded: string[];
+  locations: string[];
   services: BookingServiceOption[];
 }
 
-const CHARTER_DURATION_DAYS = [3, 4, 5, 6, 7] as const;
 const BOOKING_BOAT_ORDER: Record<string, number> = {
   trimarano: 10,
   boat: 20,
   "fishing-rib": 30,
 };
+const IMAGE_CARD_TEXT_SHADOW = "[text-shadow:0_2px_14px_rgba(0,0,0,0.88)]";
+const IMAGE_CARD_SUBTEXT_SHADOW = "[text-shadow:0_1px_10px_rgba(0,0,0,0.82)]";
 
 function bookingBoatTitle(boatId: string, fallback: string, locale: string): string {
   if (boatId !== "boat") return fallback;
@@ -138,30 +155,6 @@ function bookingBoatImageAlt(
     return "Barca in navigazione alle Isole Egadi";
   }
   return fallback ?? bookingBoatTitle(boatId, boatId, locale);
-}
-
-function paymentLabel(service: BookingServiceOption, locale: string): string {
-  if (service.defaultPaymentSchedule === "DEPOSIT_BALANCE") {
-    const pct = service.defaultDepositPercentage ?? 30;
-    return locale === "es"
-      ? `${pct}% de depósito hoy, saldo en destino`
-      : locale === "fr"
-        ? `${pct}% d'acompte aujourd'hui, solde sur place`
-        : locale === "de"
-          ? `${pct}% Anzahlung heute, Restzahlung vor Ort`
-      : locale === "en"
-      ? `${pct}% deposit today, balance on site`
-      : `Acconto ${pct}% oggi, saldo solo in loco`;
-  }
-  return locale === "es"
-    ? "Pago completo en checkout"
-    : locale === "fr"
-      ? "Paiement complet au checkout"
-    : locale === "de"
-      ? "Vollständige Zahlung im Checkout"
-    : locale === "en"
-      ? "Full payment at checkout"
-      : "Pagamento completo al checkout";
 }
 
 function experienceKey(service: BookingServiceOption): string {
@@ -245,8 +238,236 @@ function sortServicesForDuration(a: BookingServiceOption, b: BookingServiceOptio
 
 function nextStepAfterExperience(services: BookingServiceOption[]): SelectionStep {
   if (services.length > 1) return "duration";
-  if (services[0]?.serviceType === "CABIN_CHARTER") return "duration";
   return "booking";
+}
+
+interface BookingInfoContent {
+  eyebrow: string;
+  title: string;
+  description: string;
+  includes: string[];
+  notIncluded: string[];
+  locations: string[];
+  priceLabel?: string;
+  durationLabel?: string;
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
+}
+
+function fallbackLocations(locale: string) {
+  if (locale === "es") return ["Favignana", "Levanzo", "Cala Rossa", "Cala Azzurra"];
+  if (locale === "fr") return ["Favignana", "Levanzo", "Cala Rossa", "Cala Azzurra"];
+  if (locale === "de") return ["Favignana", "Levanzo", "Cala Rossa", "Cala Azzurra"];
+  return ["Favignana", "Levanzo", "Cala Rossa", "Cala Azzurra"];
+}
+
+function fallbackIncludes(locale: string) {
+  if (locale === "es") return ["Skipper", "Combustible de la ruta", "Paradas de baño", "Asistencia antes de salir"];
+  if (locale === "fr") return ["Skipper", "Carburant de la route", "Arrêts baignade", "Assistance avant départ"];
+  if (locale === "de") return ["Skipper", "Kraftstoff der Route", "Badestopps", "Support vor Abfahrt"];
+  if (locale === "en") return ["Skipper", "Fuel for the route", "Swim stops", "Pre-departure support"];
+  return ["Skipper", "Carburante rotta", "Soste bagno", "Assistenza prima della partenza"];
+}
+
+function fallbackNotIncluded(locale: string) {
+  if (locale === "es") return ["Toallas", "Protector solar", "Extras no indicados"];
+  if (locale === "fr") return ["Serviettes", "Crème solaire", "Extras non indiqués"];
+  if (locale === "de") return ["Handtücher", "Sonnencreme", "Nicht genannte Extras"];
+  if (locale === "en") return ["Towels", "Sunscreen", "Extras not listed"];
+  return ["Teli mare", "Crema solare", "Extra non indicati"];
+}
+
+function limitedItems(items: string[], fallback: string[], limit = 4) {
+  const values = uniqueStrings(items);
+  return (values.length > 0 ? values : fallback).slice(0, limit);
+}
+
+function locationsFromServices(services: BookingServiceOption[], locale: string) {
+  return limitedItems(
+    services.flatMap((service) => service.locations),
+    fallbackLocations(locale),
+    5,
+  );
+}
+
+function trimaranLocations(locale: string) {
+  if (locale === "en") return ["Favignana", "Levanzo", "San Vito Lo Capo", "Marettimo", "Aeolian Islands"];
+  if (locale === "es") return ["Favignana", "Levanzo", "San Vito Lo Capo", "Marettimo", "Islas Eolias"];
+  if (locale === "fr") return ["Favignana", "Levanzo", "San Vito Lo Capo", "Marettimo", "Îles Éoliennes"];
+  if (locale === "de") return ["Favignana", "Levanzo", "San Vito Lo Capo", "Marettimo", "Äolische Inseln"];
+  return ["Favignana", "Levanzo", "San Vito Lo Capo", "Marettimo", "Isole Eolie"];
+}
+
+function boatIncludes(locale: string) {
+  if (locale === "en") {
+    return [
+      "Visit to the most iconic coves of Favignana and Levanzo",
+      "Skipper",
+      "Fuel for the planned route",
+      "Weather-aware swim stops",
+    ];
+  }
+  if (locale === "es") {
+    return [
+      "Visita a las calas más icónicas de Favignana y Levanzo",
+      "Patrón",
+      "Combustible de la ruta prevista",
+      "Paradas de baño según el tiempo",
+    ];
+  }
+  if (locale === "fr") {
+    return [
+      "Visite des criques les plus iconiques de Favignana et Levanzo",
+      "Skipper",
+      "Carburant pour la route prévue",
+      "Arrêts baignade selon la météo",
+    ];
+  }
+  if (locale === "de") {
+    return [
+      "Besuch der ikonischsten Buchten von Favignana und Levanzo",
+      "Skipper",
+      "Kraftstoff für die geplante Route",
+      "Wetterabhängige Badestopps",
+    ];
+  }
+  return [
+    "Visita alle calette piu iconiche di Favignana e Levanzo",
+    "Skipper",
+    "Carburante per la rotta prevista",
+    "Soste bagno meteo-dipendenti",
+  ];
+}
+
+function boatNotIncluded(locale: string) {
+  if (locale === "en") return ["Lunch", "Towels", "Sunscreen"];
+  if (locale === "es") return ["Almuerzo", "Toallas", "Protector solar"];
+  if (locale === "fr") return ["Déjeuner", "Serviettes", "Crème solaire"];
+  if (locale === "de") return ["Mittagessen", "Handtücher", "Sonnencreme"];
+  return ["Pranzo", "Teli mare", "Crema solare"];
+}
+
+function charterNotIncluded(locale: string, items: string[] = []) {
+  const required =
+    locale === "en"
+      ? ["Galley provisioning", "Mooring fees at the islands"]
+      : locale === "es"
+        ? ["Despensa de a bordo", "Tasas de amarre en las islas"]
+        : locale === "fr"
+          ? ["Avitaillement de bord", "Frais d'amarrage dans les îles"]
+          : locale === "de"
+            ? ["Bordproviant", "Liegegebühren an den Inseln"]
+            : ["Cambusa", "Pedaggi per gli ormeggi alle isole"];
+  return limitedItems([...required, ...items], required, 4);
+}
+
+function fishingIncludes(locale: string) {
+  if (locale === "en") return ["Lunch", "Skipper", "Professional fishing gear", "Fuel for the planned route"];
+  if (locale === "es") return ["Almuerzo", "Patrón", "Equipo profesional de pesca", "Combustible de la ruta prevista"];
+  if (locale === "fr") return ["Déjeuner", "Skipper", "Matériel de pêche professionnel", "Carburant pour la route prévue"];
+  if (locale === "de") return ["Mittagessen", "Skipper", "Professionelle Angelausrüstung", "Kraftstoff für die geplante Route"];
+  return ["Pranzo", "Skipper", "Attrezzatura pesca professionale", "Carburante per la rotta prevista"];
+}
+
+function fishingLocations(locale: string) {
+  if (locale === "en") return ["Egadi Islands fishing spots"];
+  if (locale === "es") return ["Puntos de pesca de las Islas Egadi"];
+  if (locale === "fr") return ["Points de pêche des îles Égades"];
+  if (locale === "de") return ["Angelplätze der Ägadischen Inseln"];
+  return ["Punti di pesca Isole Egadi"];
+}
+
+function applyBoatInfoOverrides(
+  boatId: string | undefined,
+  info: BookingInfoContent,
+  locale: string,
+): BookingInfoContent {
+  if (boatId === "trimarano") {
+    return {
+      ...info,
+      locations: trimaranLocations(locale),
+    };
+  }
+  if (boatId === "boat") {
+    return {
+      ...info,
+      includes: boatIncludes(locale),
+      notIncluded: boatNotIncluded(locale),
+      locations: ["Favignana", "Levanzo"],
+    };
+  }
+  if (boatId === "fishing-rib") {
+    return {
+      ...info,
+      includes: fishingIncludes(locale),
+      locations: fishingLocations(locale),
+    };
+  }
+  return info;
+}
+
+function bookingBoatInfo(
+  boat: { id: string; title: string; subtitle: string } | undefined,
+  services: BookingServiceOption[],
+  copy: ReturnType<typeof getBookingPageCopy>,
+  locale: string,
+): BookingInfoContent {
+  return applyBoatInfoOverrides(boat?.id ?? services[0]?.boatId, {
+    eyebrow: copy.quickOverview,
+    title: boat?.title ?? copy.chooseBoatTitle,
+    description: boat?.subtitle ?? copy.chooseBoatSubtitle,
+    includes: limitedItems(services.flatMap((service) => service.includes), fallbackIncludes(locale)),
+    notIncluded: fallbackNotIncluded(locale),
+    locations: locationsFromServices(services, locale),
+  }, locale);
+}
+
+function bookingExperienceInfo(
+  option: ExperienceOption | undefined,
+  copy: ReturnType<typeof getBookingPageCopy>,
+  locale: string,
+): BookingInfoContent {
+  const primaryService = option?.services[0];
+  const notIncludedSource = option?.notIncluded ?? primaryService?.notIncluded ?? [];
+  const isCharter = primaryService?.serviceType === "CABIN_CHARTER";
+  return applyBoatInfoOverrides(primaryService?.boatId, {
+    eyebrow: copy.quickOverview,
+    title: option?.title ?? copy.chooseExperienceTitle,
+    description:
+      option?.detailDescription ||
+      option?.subtitle ||
+      (primaryService ? primaryService.detailDescription || primaryService.subtitle : copy.chooseExperienceSubtitle),
+    includes: limitedItems(option?.includes ?? primaryService?.includes ?? [], fallbackIncludes(locale)),
+    notIncluded: isCharter
+      ? charterNotIncluded(locale, notIncludedSource)
+      : limitedItems(notIncludedSource, fallbackNotIncluded(locale)),
+    locations: limitedItems(option?.locations ?? primaryService?.locations ?? [], fallbackLocations(locale), 5),
+    priceLabel: primaryService?.priceLabel,
+    durationLabel: primaryService?.durationLabel,
+  }, locale);
+}
+
+function bookingServiceInfo(
+  service: BookingServiceOption | undefined,
+  copy: ReturnType<typeof getBookingPageCopy>,
+  locale: string,
+): BookingInfoContent {
+  const notIncludedSource = service?.notIncluded ?? [];
+  const isCharter = service?.serviceType === "CABIN_CHARTER";
+  return applyBoatInfoOverrides(service?.boatId, {
+    eyebrow: copy.quickOverview,
+    title: service?.title ?? copy.chooseDurationTitle,
+    description: service?.detailDescription || service?.subtitle || copy.chooseDurationSubtitle,
+    includes: limitedItems(service?.includes ?? [], fallbackIncludes(locale)),
+    notIncluded: isCharter
+      ? charterNotIncluded(locale, notIncludedSource)
+      : limitedItems(notIncludedSource, fallbackNotIncluded(locale)),
+    locations: limitedItems(service?.locations ?? [], fallbackLocations(locale), 5),
+    priceLabel: service?.priceLabel,
+    durationLabel: service?.durationLabel,
+  }, locale);
 }
 
 export function BookingPageClient({
@@ -322,7 +543,6 @@ export function BookingPageClient({
     resolvedInitialExperienceKey,
   );
   const [selectedServiceId, setSelectedServiceId] = useState(resolvedInitialService?.id ?? "");
-  const [selectedCharterDays, setSelectedCharterDays] = useState(initialDurationDays ?? 3);
 
   const boats = useMemo(() => {
     const map = new Map<
@@ -374,6 +594,12 @@ export function BookingPageClient({
           key,
           title: experienceTitle(service, locale),
           subtitle: service.subtitle,
+          detailDescription: service.detailDescription || service.subtitle,
+          imageSrc: service.imageSrc,
+          imageAlt: service.imageAlt,
+          includes: service.includes,
+          notIncluded: service.notIncluded,
+          locations: service.locations,
           services: [service],
         });
       }
@@ -400,11 +626,14 @@ export function BookingPageClient({
     Boolean(selectedExperience && nextStepAfterExperience(selectedExperience.services) === "duration");
   const selectedDurationLabel = selectedService
     ? selectedService.serviceType === "CABIN_CHARTER"
-      ? `${selectedCharterDays} ${locale === "es" ? "días" : locale === "fr" ? "jours" : locale === "de" ? "Tage" : locale === "en" ? "days" : "giornate"}`
+      ? selectedService.durationLabel
       : `${durationOptionLabel(selectedService, locale)} · ${durationDetail(selectedService, locale)}`
     : "";
-  const fixedDurationDays =
-    selectedService?.serviceType === "CABIN_CHARTER" ? selectedCharterDays : undefined;
+  const selectedBoat = boats.find((boat) => boat.id === selectedBoatId);
+  const boatInfo = bookingBoatInfo(selectedBoat, selectedBoatServices, copy, locale);
+  const experienceInfo = bookingExperienceInfo(selectedExperience, copy, locale);
+  const serviceInfo = bookingServiceInfo(selectedService, copy, locale);
+  const durationInfo = selectedService ? serviceInfo : experienceInfo;
 
   function chooseBoat(boatId: string) {
     setSelectedBoatId(boatId);
@@ -457,15 +686,15 @@ export function BookingPageClient({
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-3 py-24 sm:px-4 lg:px-8">
-      <div className="mx-auto max-w-3xl text-center text-white">
+    <div className="mx-auto max-w-7xl px-3 py-10 sm:px-4 md:py-14 lg:px-8">
+      <div className="mx-auto max-w-4xl text-center text-white">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">
           {copy.eyebrow}
         </p>
-        <h1 className="mt-3 text-4xl font-heading font-bold md:text-6xl">
+        <h1 className="mx-auto mt-3 max-w-4xl font-heading text-4xl font-bold leading-[0.98] md:text-6xl">
           {copy.title}
         </h1>
-        <p className="mt-5 max-w-2xl text-base leading-7 text-white/78 md:text-lg">
+        <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-white/78 md:text-lg">
           {copy.subtitle}
         </p>
       </div>
@@ -478,22 +707,25 @@ export function BookingPageClient({
 
       <section className="mt-8" aria-labelledby="booking-wizard-title">
         {selectionStep === "boat" && (
-          <SelectionCard
+          <SelectionSplitLayout
             stepLabel={`${copy.step} 1`}
             title={copy.chooseBoatTitle}
             subtitle={copy.chooseBoatSubtitle}
-            backLabel={copy.back}
+            panel={<BookingInfoPanel copy={copy} info={boatInfo} />}
+            canContinue={Boolean(selectedBoatId)}
+            onContinue={() => setSelectionStep("experience")}
+            continueLabel={copy.continue}
           >
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4">
               {boats.map((boat) => (
                 <button
                   key={boat.id}
                   type="button"
                   onClick={() => chooseBoat(boat.id)}
                   className={cn(
-                    "group relative min-h-[220px] overflow-hidden rounded-lg border p-0 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl",
+                    "group relative aspect-video overflow-hidden rounded-lg border p-0 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]",
                     selectedBoatId === boat.id
-                      ? "border-sky-300 ring-2 ring-sky-300"
+                      ? "border-[var(--color-gold)] ring-2 ring-[var(--color-gold)]"
                       : "border-white/30 hover:border-white/75",
                   )}
                   style={{ backgroundImage: `url(${boat.imageSrc})` }}
@@ -506,148 +738,172 @@ export function BookingPageClient({
                     role="img"
                     aria-label={boat.imageAlt}
                   />
-                  <span className="absolute inset-0 bg-gradient-to-t from-slate-950/92 via-slate-950/52 to-slate-950/10" />
-                  <span className="relative z-10 flex h-full min-h-[220px] flex-col justify-between p-5 text-white">
+                  <span className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/48 to-slate-950/8" />
+                  <span className="relative z-10 flex h-full flex-col justify-between p-4 text-white sm:p-5">
                     <span className="flex items-start justify-between gap-3">
                       <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
                         {boat.serviceCount} {copy.bookableOptions}
                       </span>
+                      <span
+                        className={cn(
+                          "flex size-9 shrink-0 items-center justify-center rounded-full border border-white/35 bg-white/15 backdrop-blur",
+                          selectedBoatId === boat.id && "border-[var(--color-gold)] bg-[var(--color-gold)] text-[#06233a]",
+                        )}
+                        aria-hidden="true"
+                      >
+                        {selectedBoatId === boat.id ? (
+                          <Check className="size-5" />
+                        ) : (
+                          <Ship className="size-5" />
+                        )}
+                      </span>
                     </span>
                     <span>
-                      <span className="block text-2xl font-heading font-bold leading-tight">
+                      <span className={cn("block font-heading text-2xl font-bold leading-tight md:text-3xl", IMAGE_CARD_TEXT_SHADOW)}>
                         {boat.title}
                       </span>
-                      <span className="mt-2 block text-sm leading-6 text-white/82">
+                      <span className={cn("mt-2 line-clamp-2 block text-sm leading-6 text-white/84", IMAGE_CARD_SUBTEXT_SHADOW)}>
                         {boat.subtitle}
+                      </span>
+                      <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--color-gold)] px-4 py-2 text-sm font-black text-[#06233a]">
+                        {selectedBoatId === boat.id ? copy.selected : copy.select}
+                        <ChevronRight className="size-4" aria-hidden="true" />
                       </span>
                     </span>
                   </span>
                 </button>
               ))}
             </div>
-            <SelectionActions
-              canContinue={Boolean(selectedBoatId)}
-              onContinue={() => setSelectionStep("experience")}
-              label={copy.continue}
-            />
-          </SelectionCard>
+          </SelectionSplitLayout>
         )}
 
         {selectionStep === "experience" && (
-          <SelectionCard
+          <SelectionSplitLayout
             stepLabel={`${copy.step} 2`}
             title={copy.chooseExperienceTitle}
             subtitle={`${copy.availableFor} ${selectedBoatTitle || copy.selectedBoat}.`}
             onBack={() => resetToStep("boat")}
             backLabel={copy.back}
+            panel={<BookingInfoPanel copy={copy} info={experienceInfo} />}
+            canContinue={Boolean(selectedExperience)}
+            onContinue={continueFromExperience}
+            continueLabel={copy.continue}
           >
-            <div className="grid gap-3 md:grid-cols-2">
-              {experienceOptions.map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  onClick={() => chooseExperience(option)}
-                  className={cn(
-                    "rounded-lg border p-4 text-left transition",
-                    selectedExperienceKey === option.key
-                      ? "border-sky-500 bg-sky-50"
-                      : "border-slate-200 bg-white hover:border-sky-200 hover:bg-slate-50",
-                  )}
-                  aria-pressed={selectedExperienceKey === option.key}
-                >
-                  <span className="flex items-start justify-between gap-3">
-                    <span>
-                      <span className="block text-base font-bold text-slate-950">
-                        {option.title}
+            <div className="grid gap-4">
+              {experienceOptions.map((option) => {
+                const primaryService = option.services[0];
+                const requiresDuration = nextStepAfterExperience(option.services) === "duration";
+                const imageSrc =
+                  option.imageSrc ?? (primaryService ? bookingBoatImageSrc(primaryService) : undefined);
+                const imageAlt = option.imageAlt ?? primaryService?.boatImageAlt ?? option.title;
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => chooseExperience(option)}
+                    className={cn(
+                      "group relative aspect-video overflow-hidden rounded-lg border p-0 text-left transition hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
+                      selectedExperienceKey === option.key
+                        ? "border-sky-300 ring-2 ring-sky-300"
+                        : "border-white/30 hover:border-white/75",
+                    )}
+                    aria-pressed={selectedExperienceKey === option.key}
+                  >
+                    {imageSrc && (
+                      <span
+                        className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105"
+                        style={{ backgroundImage: `url(${imageSrc})` }}
+                        role="img"
+                        aria-label={imageAlt}
+                      />
+                    )}
+                    <span className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/10" />
+                    <span className="relative z-10 flex h-full flex-col justify-between gap-4 p-4 text-white sm:p-5">
+                      <span className="flex justify-end">
+                        <span
+                          className={cn(
+                            "flex size-9 shrink-0 items-center justify-center rounded-full border",
+                            selectedExperienceKey === option.key
+                              ? "border-[var(--color-gold)] bg-[var(--color-gold)] text-[#06233a]"
+                              : "border-white/35 bg-white/15 text-white backdrop-blur",
+                          )}
+                          aria-hidden="true"
+                        >
+                          {selectedExperienceKey === option.key ? (
+                            <Check className="size-5" />
+                          ) : (
+                            <ChevronRight className="size-5" />
+                          )}
+                        </span>
                       </span>
-                      <span className="mt-1 line-clamp-2 block text-sm text-slate-600">
-                        {option.subtitle}
+
+                      <span>
+                        <span className={cn("block font-heading text-2xl font-bold leading-tight md:text-3xl", IMAGE_CARD_TEXT_SHADOW)}>
+                          {option.title}
+                        </span>
+                        <span className="mt-3 flex flex-wrap gap-2">
+                          {primaryService && (
+                            <>
+                              <InteractivePill icon={Clock3}>
+                                {requiresDuration ? copy.durationToChoose : primaryService.durationLabel}
+                              </InteractivePill>
+                              <InteractivePill icon={Users}>
+                                {copy.upTo} {primaryService.capacityMax} {copy.people}
+                              </InteractivePill>
+                              <InteractivePill icon={CreditCard}>
+                                {primaryService.priceLabel}
+                              </InteractivePill>
+                            </>
+                          )}
+                        </span>
                       </span>
                     </span>
-                  </span>
-                  {nextStepAfterExperience(option.services) === "duration" && (
-                    <span className="mt-4 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      {copy.durationToChoose}
-                    </span>
-                  )}
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
-            <SelectionActions
-              canContinue={Boolean(selectedExperience)}
-              onContinue={continueFromExperience}
-              label={copy.continue}
-            />
-          </SelectionCard>
+          </SelectionSplitLayout>
         )}
 
         {selectionStep === "duration" && selectedExperience && (
-          <SelectionCard
+          <SelectionSplitLayout
             stepLabel={`${copy.step} 3`}
             title={copy.chooseDurationTitle}
             subtitle={copy.chooseDurationSubtitle}
             onBack={() => resetToStep("experience")}
             backLabel={copy.back}
+            panel={<BookingInfoPanel copy={copy} info={durationInfo} />}
+            canContinue={Boolean(selectedServiceId)}
+            onContinue={() => setSelectionStep("booking")}
+            continueLabel={copy.continue}
           >
-            {selectedExperience.services[0]?.serviceType === "CABIN_CHARTER" ? (
-              <div className="grid gap-3 sm:grid-cols-5">
-                {CHARTER_DURATION_DAYS.map((days) => (
-                  <button
-                    key={days}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCharterDays(days);
-                      setSelectedServiceId(selectedExperience.services[0].id);
-                    }}
-                    className={cn(
-                      "rounded-lg border p-4 text-center transition",
-                      selectedCharterDays === days
-                        ? "border-sky-500 bg-sky-50"
-                        : "border-slate-200 bg-white hover:border-sky-200 hover:bg-slate-50",
-                    )}
-                    aria-pressed={selectedCharterDays === days}
-                  >
-                    <span className="block text-lg font-bold text-slate-950">{days}</span>
-                    <span className="text-sm text-slate-600">
-                      {locale === "es" ? "días" : locale === "fr" ? "jours" : locale === "de" ? "Tage" : locale === "en" ? "days" : "giornate"}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="grid gap-3 md:grid-cols-3">
-                {selectedExperience.services.map((service) => (
-                  <button
-                    key={service.id}
-                    type="button"
-                    onClick={() => setSelectedServiceId(service.id)}
-                    className={cn(
-                      "rounded-lg border p-4 text-left transition",
-                      selectedServiceId === service.id
-                        ? "border-sky-500 bg-sky-50"
-                        : "border-slate-200 bg-white hover:border-sky-200 hover:bg-slate-50",
-                    )}
-                    aria-pressed={selectedServiceId === service.id}
-                  >
-                    <span className="block text-base font-bold text-slate-950">
-                      {durationOptionLabel(service, locale)}
-                    </span>
-                    <span className="mt-1 block text-sm text-slate-600">
-                      {durationDetail(service, locale)}
-                    </span>
-                    <span className="mt-4 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      {service.priceLabel} {service.priceUnitLabel} · {vatIncludedLabel(locale)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-            <SelectionActions
-              canContinue={Boolean(selectedServiceId)}
-              onContinue={() => setSelectionStep("booking")}
-              label={copy.continue}
-            />
-          </SelectionCard>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {selectedExperience.services.map((service) => (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => setSelectedServiceId(service.id)}
+                  className={cn(
+                    "aspect-video rounded-lg border p-5 text-left transition hover:-translate-y-0.5 hover:shadow-lg",
+                    selectedServiceId === service.id
+                      ? "border-sky-500 bg-sky-50"
+                      : "border-slate-200 bg-white hover:border-sky-200 hover:bg-slate-50",
+                  )}
+                  aria-pressed={selectedServiceId === service.id}
+                >
+                  <span className="block font-heading text-2xl font-bold leading-tight text-slate-950">
+                    {durationOptionLabel(service, locale)}
+                  </span>
+                  <span className="mt-2 block text-sm text-slate-600">
+                    {durationDetail(service, locale)}
+                  </span>
+                  <span className="mt-5 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                    {service.priceLabel} {service.priceUnitLabel} · {vatIncludedLabel(locale)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </SelectionSplitLayout>
         )}
 
         {selectionStep === "booking" && selectedService && (
@@ -664,7 +920,7 @@ export function BookingPageClient({
               </div>
               <button
                 type="button"
-                onClick={() => resetToStep("boat")}
+                onClick={() => resetToStep("experience")}
                 className={cn(
                   "rounded-full px-4 py-2 text-sm font-semibold text-white",
                   liquidGlassButton,
@@ -674,27 +930,12 @@ export function BookingPageClient({
               </button>
             </div>
 
-            <div className="mb-4 grid gap-3 md:grid-cols-3">
-              <InfoTile icon={Clock3} label={copy.duration} value={selectedDurationLabel} />
-              <InfoTile
-                icon={Users}
-                label={copy.capacity}
-                value={`${copy.upTo} ${selectedService.capacityMax} ${copy.people}`}
-              />
-              <InfoTile
-                icon={CreditCard}
-                label={copy.checkout}
-                value={paymentLabel(selectedService, locale)}
-              />
-            </div>
-
             <h2 id="booking-wizard-title" className="sr-only">
               {copy.bookingWizard} {selectedService.title}
             </h2>
             <BookingWizard
               key={[
                 selectedService.id,
-                fixedDurationDays ?? "open",
                 initialStartDate ?? "no-date",
                 initialEndDate ?? "no-end",
                 initialDurationDays ?? "no-days",
@@ -713,8 +954,7 @@ export function BookingPageClient({
               useStripeCheckout={useStripeCheckout}
               initialStartDate={initialStartDate}
               initialEndDate={initialEndDate}
-              initialDurationDays={fixedDurationDays ?? initialDurationDays}
-              fixedDurationDays={fixedDurationDays}
+              initialDurationDays={initialDurationDays}
             />
           </>
         )}
@@ -770,7 +1010,20 @@ function StepProgress({
   const currentIndex = steps.findIndex((step) => step.key === currentStep);
 
   return (
-    <div className="mx-auto mt-8 grid max-w-3xl grid-cols-4 gap-1 rounded-full bg-white/10 p-1 text-[11px] font-semibold text-white/70 sm:text-xs">
+    <div
+      className="mx-auto mt-8 grid w-full max-w-5xl gap-2 rounded-lg border border-white/12 bg-white/[0.08] p-2 text-[11px] font-semibold text-white/72 shadow-2xl shadow-black/10 backdrop-blur sm:grid-cols-4 sm:text-xs"
+      aria-label={
+        locale === "es"
+          ? "Progreso de reserva"
+          : locale === "fr"
+            ? "Progression de réservation"
+            : locale === "de"
+              ? "Buchungsfortschritt"
+              : locale === "en"
+                ? "Booking progress"
+                : "Avanzamento prenotazione"
+      }
+    >
       {steps.map((step, index) => {
         const skipped = step.key === "duration" && !hasDurationStep && currentStep === "booking";
         const active = step.key === currentStep;
@@ -779,13 +1032,31 @@ function StepProgress({
           <div
             key={step.key}
             className={cn(
-              "rounded-full px-2 py-2 text-center",
-              active && "bg-white text-slate-950",
-              complete && "bg-white/80 text-slate-800",
+              "flex min-h-12 items-center gap-3 rounded-lg px-3 py-2 text-left transition",
+              active && "bg-white text-slate-950 shadow-lg shadow-black/10",
+              complete && "bg-emerald-100 text-emerald-900",
+              skipped && "opacity-45",
             )}
+            aria-current={active ? "step" : undefined}
           >
-            <span className="hidden sm:inline">{step.label}</span>
-            <span className="sm:hidden">{active ? step.shortLabel : index + 1}</span>
+            <span
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-full border",
+                active && "border-slate-900 bg-slate-950 text-white",
+                complete && "border-emerald-600 bg-emerald-600 text-white",
+                !active && !complete && "border-white/20 bg-white/10 text-white/75",
+              )}
+            >
+              {complete ? (
+                <CheckCircle2 className="size-4" aria-hidden="true" />
+              ) : (
+                <span className="tabular-nums">{index + 1}</span>
+              )}
+            </span>
+            <span className="min-w-0">
+              <span className="hidden truncate sm:block">{step.label}</span>
+              <span className="block truncate sm:hidden">{active ? step.shortLabel : step.shortLabel}</span>
+            </span>
           </div>
         );
       })}
@@ -793,13 +1064,17 @@ function StepProgress({
   );
 }
 
-function SelectionCard({
+function SelectionSplitLayout({
   stepLabel,
   title,
   subtitle,
   onBack,
   backLabel = "Indietro",
   children,
+  panel,
+  canContinue,
+  onContinue,
+  continueLabel,
 }: {
   stepLabel: string;
   title: string;
@@ -807,35 +1082,122 @@ function SelectionCard({
   onBack?: () => void;
   backLabel?: string;
   children: React.ReactNode;
+  panel: React.ReactNode;
+  canContinue: boolean;
+  onContinue: () => void;
+  continueLabel?: string;
 }) {
   return (
-    <div className="max-w-full overflow-hidden rounded-lg bg-white shadow-2xl">
-      <div className="border-b border-slate-200 bg-slate-50 px-5 py-5 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)] lg:items-start">
+      <div className="rounded-lg border border-white/16 bg-white p-4 shadow-2xl shadow-black/20 sm:p-6">
+        <div className="mb-5 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-start sm:justify-between">
+          <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
               {stepLabel}
             </p>
             <h2
               id="booking-wizard-title"
-              className="mt-1 text-2xl font-heading font-bold text-slate-950"
+              className="mt-1 font-heading text-2xl font-bold text-slate-950 md:text-3xl"
             >
               {title}
             </h2>
-            <p className="mt-1 text-sm leading-6 text-slate-600">{subtitle}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{subtitle}</p>
           </div>
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="self-start rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white"
+              className="inline-flex self-start items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
             >
+              <ArrowLeft className="size-4" aria-hidden="true" />
               {backLabel}
             </button>
           )}
         </div>
+        {children}
       </div>
-      <div className="p-4 sm:p-8">{children}</div>
+      <div className="lg:sticky lg:top-24">
+        {panel}
+        <SelectionActions
+          canContinue={canContinue}
+          onContinue={onContinue}
+          label={continueLabel}
+        />
+      </div>
+    </div>
+  );
+}
+
+function BookingInfoPanel({
+  copy,
+  info,
+}: {
+  copy: ReturnType<typeof getBookingPageCopy>;
+  info: BookingInfoContent;
+}) {
+  return (
+    <aside className="rounded-lg border border-white/16 bg-white p-5 text-slate-950 shadow-2xl shadow-black/20 md:p-6">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-700">
+        {info.eyebrow}
+      </p>
+      <h3 className="mt-2 font-heading text-2xl font-bold leading-tight md:text-3xl">
+        {info.title}
+      </h3>
+      <p className="mt-3 text-sm leading-6 text-slate-600">
+        {info.description}
+      </p>
+      {(info.durationLabel || info.priceLabel) && (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {info.durationLabel && (
+            <span className="rounded-full bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-800">
+              {info.durationLabel}
+            </span>
+          )}
+          {info.priceLabel && (
+            <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">
+              {info.priceLabel}
+            </span>
+          )}
+        </div>
+      )}
+
+      <InfoPanelList title={copy.includedTitle} items={info.includes} tone="include" />
+      <InfoPanelList title={copy.notIncludedTitle} items={info.notIncluded} tone="exclude" />
+      <InfoPanelList title={copy.locationsTitle} items={info.locations} tone="location" />
+    </aside>
+  );
+}
+
+function InfoPanelList({
+  title,
+  items,
+  tone,
+}: {
+  title: string;
+  items: string[];
+  tone: "include" | "exclude" | "location";
+}) {
+  const iconClass =
+    tone === "include"
+      ? "bg-emerald-100 text-emerald-700"
+      : tone === "exclude"
+        ? "bg-slate-100 text-slate-500"
+        : "bg-sky-100 text-sky-700";
+  return (
+    <div className="mt-6">
+      <h4 className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+        {title}
+      </h4>
+      <ul className="mt-3 grid gap-2">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
+            <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
+              {tone === "exclude" ? "-" : <Check className="size-3.5" aria-hidden="true" />}
+            </span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -850,12 +1212,12 @@ function SelectionActions({
   label?: string;
 }) {
   return (
-    <div className="mt-5 border-t border-slate-200 pt-5">
+    <div className="mt-4">
       <button
         type="button"
         onClick={onContinue}
         disabled={!canContinue}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] px-5 py-3 font-bold text-white disabled:opacity-50"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] px-6 py-4 text-base font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {label}
         <ChevronRight className="size-4" aria-hidden="true" />
@@ -864,25 +1226,18 @@ function SelectionActions({
   );
 }
 
-function InfoTile({
+function InteractivePill({
   icon: Icon,
-  label,
-  value,
+  children,
 }: {
-  icon: typeof CalendarDays;
-  label: string;
-  value: string;
+  icon: LucideIcon;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-white/15 bg-white/10 p-4 text-white">
-      <div className="mb-2 flex items-center gap-2">
-        <Icon className="size-5 shrink-0 text-sky-100" aria-hidden="true" />
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sky-100">
-          {label}
-        </p>
-      </div>
-      <p className="mt-1 font-bold">{value}</p>
-    </div>
+    <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold leading-5 text-slate-700 shadow-sm transition group-hover:border-sky-200 group-hover:bg-sky-50">
+      <Icon className="size-4 shrink-0 text-sky-700" aria-hidden="true" />
+      <span className="min-w-0">{children}</span>
+    </span>
   );
 }
 
@@ -893,12 +1248,19 @@ function getBookingPageCopy(locale: string) {
       title: "Bootstouren zu den Ägadischen Inseln online buchen",
       subtitle:
         "Wählen Sie Boot, Erlebnis, Dauer und ein verfügbares Datum mit aktuellem Preis. Der Checkout erstellt eine direkte Buchung im zentralen Egadisailing-Kalender.",
+      guidedLabel: "Geführte Buchung",
+      guideItems: ["Boot oder Erlebnis wählen", "Datum und Gäste hinzufügen", "Sicher bezahlen"],
       emptyTitle: "Keine aktiven Erlebnisse",
       emptyText: "Derzeit sind keine Services online buchbar.",
       chooseBoatTitle: "Wählen Sie, was Sie erleben möchten",
       chooseBoatSubtitle: "Die Bilder helfen bei der Auswahl zwischen Trimaran-Komfort, Bootstouren und Angelcharter.",
+      quickOverview: "Kurz erklärt",
+      includedTitle: "Inklusive",
+      notIncludedTitle: "Nicht inklusive / mitbringen",
+      locationsTitle: "Mögliche Orte",
       bookableOptions: "buchbare Optionen",
       chooseExperienceTitle: "Wählen Sie das Erlebnis",
+      chooseExperienceSubtitle: "Wählen Sie ein Erlebnis, um Details, Route und Leistungen zu sehen.",
       availableFor: "Verfügbare Erlebnisse für",
       selectedBoat: "das ausgewählte Boot",
       durationToChoose: "Dauer auswählen",
@@ -908,6 +1270,8 @@ function getBookingPageCopy(locale: string) {
       step: "Schritt",
       continue: "Weiter",
       back: "Zurück",
+      select: "Auswählen",
+      selected: "Ausgewählt",
       selectedPath: "Ausgewählter Weg",
       changeSelection: "Auswahl ändern",
       duration: "Dauer",
@@ -925,12 +1289,19 @@ function getBookingPageCopy(locale: string) {
       title: "Réserver des excursions en bateau aux îles Égades en ligne",
       subtitle:
         "Choisissez le bateau, l'expérience, la durée et une date disponible avec un prix à jour. Le checkout crée une réservation directe dans le calendrier central d'Egadisailing.",
+      guidedLabel: "Réservation guidée",
+      guideItems: ["Choisir bateau ou expérience", "Ajouter date et invités", "Payer en sécurité"],
       emptyTitle: "Aucune expérience active",
       emptyText: "Aucun service n'est actuellement disponible à la réservation en ligne.",
       chooseBoatTitle: "Choisissez ce que vous voulez vivre",
       chooseBoatSubtitle: "Les images aident à distinguer le confort du trimaran, les sorties bateau et le charter pêche.",
+      quickOverview: "En bref",
+      includedTitle: "Inclus",
+      notIncludedTitle: "Non inclus / à prévoir",
+      locationsTitle: "Lieux possibles",
       bookableOptions: "options réservables",
       chooseExperienceTitle: "Choisissez l'expérience",
+      chooseExperienceSubtitle: "Choisissez une expérience pour voir les détails, la route et les services.",
       availableFor: "Expériences disponibles pour",
       selectedBoat: "le bateau sélectionné",
       durationToChoose: "Durée à choisir",
@@ -940,6 +1311,8 @@ function getBookingPageCopy(locale: string) {
       step: "Étape",
       continue: "Continuer",
       back: "Retour",
+      select: "Choisir",
+      selected: "Sélectionné",
       selectedPath: "Parcours sélectionné",
       changeSelection: "Modifier la sélection",
       duration: "Durée",
@@ -957,12 +1330,19 @@ function getBookingPageCopy(locale: string) {
       title: "Reserva excursiones en barco por las Islas Egadi online",
       subtitle:
         "Elige barco, experiencia, duración y fecha disponible con precio actualizado. El checkout crea una reserva directa en el calendario central de Egadisailing.",
+      guidedLabel: "Reserva guiada",
+      guideItems: ["Elegir barco o experiencia", "Añadir fecha y huéspedes", "Pagar con seguridad"],
       emptyTitle: "No hay experiencias activas",
       emptyText: "En este momento no hay servicios disponibles para reservar online.",
       chooseBoatTitle: "Elige lo que quieres vivir",
       chooseBoatSubtitle: "Las imágenes ayudan a distinguir entre confort en trimarán, tours en barco y charter de pesca.",
+      quickOverview: "Resumen rápido",
+      includedTitle: "Incluido",
+      notIncludedTitle: "No incluido / qué llevar",
+      locationsTitle: "Lugares posibles",
       bookableOptions: "opciones reservables",
       chooseExperienceTitle: "Elige la experiencia",
+      chooseExperienceSubtitle: "Elige una experiencia para ver detalles, ruta y servicios.",
       availableFor: "Experiencias disponibles para",
       selectedBoat: "el barco seleccionado",
       durationToChoose: "Duración por elegir",
@@ -972,6 +1352,8 @@ function getBookingPageCopy(locale: string) {
       step: "Paso",
       continue: "Continuar",
       back: "Atrás",
+      select: "Elegir",
+      selected: "Seleccionado",
       selectedPath: "Ruta seleccionada",
       changeSelection: "Cambiar selección",
       duration: "Duración",
@@ -989,12 +1371,19 @@ function getBookingPageCopy(locale: string) {
       title: "Book Egadi Islands boat tours online",
       subtitle:
         "Choose the boat, experience, duration and available date with updated pricing. Checkout creates a direct booking on the central Egadisailing calendar.",
+      guidedLabel: "Guided booking",
+      guideItems: ["Choose boat or experience", "Add date and guests", "Pay securely"],
       emptyTitle: "No active experiences",
       emptyText: "There are currently no services available to book online.",
       chooseBoatTitle: "Choose what you want to experience",
       chooseBoatSubtitle: "The images help you choose between trimaran comfort, boat tours and fishing charter.",
+      quickOverview: "Quick overview",
+      includedTitle: "Included",
+      notIncludedTitle: "Not included / bring",
+      locationsTitle: "Possible locations",
       bookableOptions: "bookable options",
       chooseExperienceTitle: "Choose the experience",
+      chooseExperienceSubtitle: "Choose an experience to see details, route and services.",
       availableFor: "Experiences available for",
       selectedBoat: "the selected boat",
       durationToChoose: "Duration to choose",
@@ -1004,6 +1393,8 @@ function getBookingPageCopy(locale: string) {
       step: "Step",
       continue: "Continue",
       back: "Back",
+      select: "Select",
+      selected: "Selected",
       selectedPath: "Selected path",
       changeSelection: "Change selection",
       duration: "Duration",
@@ -1020,12 +1411,19 @@ function getBookingPageCopy(locale: string) {
     title: "Prenota escursioni in barca alle Isole Egadi online",
     subtitle:
       "Scegli mezzo, esperienza, durata e data disponibile con prezzo aggiornato. Il checkout crea una prenotazione diretta sul calendario centrale Egadisailing.",
+    guidedLabel: "Prenotazione guidata",
+    guideItems: ["Scegli mezzo o esperienza", "Aggiungi data e ospiti", "Paga in sicurezza"],
     emptyTitle: "Nessuna esperienza attiva",
     emptyText: "Al momento non ci sono servizi prenotabili online.",
     chooseBoatTitle: "Scegli cosa vuoi vivere",
     chooseBoatSubtitle: "Le immagini aiutano a distinguere comfort in trimarano, tour in barca e charter pesca.",
+    quickOverview: "Spiegazione veloce",
+    includedTitle: "Cosa e' incluso",
+    notIncludedTitle: "Cosa non e' incluso / da portare",
+    locationsTitle: "Location visitabili",
     bookableOptions: "opzioni prenotabili",
     chooseExperienceTitle: "Scegli l'esperienza",
+    chooseExperienceSubtitle: "Scegli un'esperienza per vedere dettagli, rotta e servizi inclusi.",
     availableFor: "Esperienze disponibili per",
     selectedBoat: "il mezzo selezionato",
     durationToChoose: "Durata da scegliere",
@@ -1035,6 +1433,8 @@ function getBookingPageCopy(locale: string) {
     step: "Passo",
     continue: "Continua",
     back: "Indietro",
+    select: "Scegli",
+    selected: "Selezionato",
     selectedPath: "Percorso selezionato",
     changeSelection: "Cambia selezione",
     duration: "Durata",

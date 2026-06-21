@@ -13,10 +13,11 @@ import {
 } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays } from "lucide-react";
-import { HERO_VIDEO_SRC } from "@/lib/public-assets";
-
-const HERO_VIDEO_POSTER_IMAGE_SRC = "/videos/hero-poster.webp";
-const HERO_VIDEO_DELAY_MS = 4500;
+import {
+  HERO_VIDEO_MOBILE_SRC,
+  HERO_VIDEO_POSTER_SRC,
+  HERO_VIDEO_SRC,
+} from "@/lib/public-assets";
 
 export interface HeroExperienceCard {
   key: string;
@@ -163,7 +164,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
   const isDraggingCardsRef = useRef(false);
   const hasDraggedCardsRef = useRef(false);
   const suppressCardClickRef = useRef(false);
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [videoSource, setVideoSource] = useState<string | null>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [hoveredExperienceKey, setHoveredExperienceKey] = useState<string | null>(null);
   const [hoverImageIndex, setHoverImageIndex] = useState(0);
@@ -200,10 +201,9 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     const effectiveType = connection.connection?.effectiveType ?? "";
     const slowConnection = effectiveType === "slow-2g" || effectiveType === "2g";
 
-    const canUseBackgroundVideo = window.matchMedia("(min-width: 768px)").matches;
+    const desktopVideo = window.matchMedia("(min-width: 768px)").matches;
 
     if (
-      !canUseBackgroundVideo ||
       prefersReducedMotion ||
       connection.connection?.saveData ||
       slowConnection
@@ -215,10 +215,14 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     const requestVideo = () => {
       if (hasRequestedVideo) return;
       hasRequestedVideo = true;
-      setShouldLoadVideo(true);
+      setVideoSource(desktopVideo ? HERO_VIDEO_SRC : HERO_VIDEO_MOBILE_SRC);
     };
 
-    const timeout = globalThis.setTimeout(requestVideo, HERO_VIDEO_DELAY_MS);
+    if (document.readyState === "complete") {
+      requestVideo();
+    } else {
+      window.addEventListener("load", requestVideo, { once: true });
+    }
     const interactionEvents = ["pointerdown", "keydown", "scroll"] as const;
 
     for (const eventName of interactionEvents) {
@@ -226,7 +230,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     }
 
     return () => {
-      globalThis.clearTimeout(timeout);
+      window.removeEventListener("load", requestVideo);
       for (const eventName of interactionEvents) {
         window.removeEventListener(eventName, requestVideo);
       }
@@ -234,7 +238,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
   }, []);
 
   useEffect(() => {
-    if (!shouldLoadVideo) return;
+    if (!videoSource) return;
     const video = videoRef.current;
     if (!video) return;
 
@@ -257,7 +261,7 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     } else {
       video.addEventListener("loadeddata", playVideo, { once: true });
     }
-  }, [shouldLoadVideo]);
+  }, [videoSource]);
 
   const carouselItems = useMemo(() => {
     const items: Array<{
@@ -476,177 +480,189 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     event.stopPropagation();
   }
 
-  return (
-    <section
-      aria-labelledby="home-hero-title"
-      className="egadi-water-reflection relative w-full min-h-[860px] overflow-hidden bg-[#071934] select-none md:min-h-[820px]"
-    >
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_38%,rgba(14,165,233,0.24),transparent_42%),linear-gradient(180deg,#071934_0%,#0a2a4a_56%,#071934_100%)]"
-      />
-
-      <Image
-        src={HERO_VIDEO_POSTER_IMAGE_SRC}
-        alt=""
-        aria-hidden="true"
-        fill
-        loading="eager"
-        sizes="100vw"
-        quality={80}
-        fetchPriority="high"
-        className={`absolute inset-0 z-0 h-full w-full scale-105 object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
-          videoReady ? "opacity-0" : "opacity-100"
-        }`}
-        style={{ filter: "blur(1px)" }}
-      />
-
-      {/* ---- Background video (decorative) ---- */}
-      {/* R19-A11y 1.1.1: aria-hidden + tabIndex=-1 perche' decorativo (muted
-          loop). No captions richieste. */}
-      <video
-        ref={videoRef}
-        aria-hidden="true"
-        tabIndex={-1}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="none"
-        onCanPlay={() => setVideoReady(true)}
-        className={`absolute inset-0 z-0 h-full w-full scale-105 object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
-          videoReady ? "opacity-100" : "opacity-0"
-        }`}
-        style={{ filter: "blur(1px)" }}
+  const experienceCardsCarousel =
+    experiences.length > 0 ? (
+      <section
+        aria-labelledby="home-hero-experiences-title"
+        className="relative overflow-hidden bg-[#071934] px-2 py-14 text-white md:px-4 md:py-16 lg:px-6"
       >
-        {shouldLoadVideo && <source src={HERO_VIDEO_SRC} type="video/mp4" />}
-      </video>
-
-      {/* ---- Subtle overlay — bottom darkens to blend with next section ---- */}
-      <div className="absolute inset-0 z-[1]" style={{
-        background: "linear-gradient(to bottom, rgba(7,25,52,0.4) 0%, transparent 30%, transparent 60%, rgba(7,25,52,0.85) 90%, #071934 100%)"
-      }} />
-
-      {/* ---- Hero content ---- */}
-      <div className="relative z-40 flex min-h-[860px] w-full flex-col justify-center px-4 pb-20 pt-28 md:min-h-[820px] md:px-8 lg:px-12">
-        <div className="max-w-6xl">
-          <h1
-            id="home-hero-title"
-            className="max-w-5xl font-heading text-4xl font-extrabold leading-[0.98] text-white drop-shadow-lg sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+        <div className="mx-auto w-full max-w-[1500px]">
+          <h2 id="home-hero-experiences-title" className="sr-only">
+            {copy.cardsLabel}
+          </h2>
+          <div
+            role="region"
+            aria-labelledby="home-hero-experiences-title"
+            onFocus={() => {
+              holdCardsAutoplay();
+            }}
+            onBlur={(event) => {
+              const nextTarget = event.relatedTarget;
+              if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+                resumeCardsAutoplay();
+              }
+            }}
+            onPointerDown={startCardsDrag}
+            onPointerMove={moveCardsDrag}
+            onPointerUp={endCardsDrag}
+            onPointerCancel={cancelCardsDrag}
+            onClickCapture={preventDraggedCardClick}
+            className="relative cursor-grab overflow-hidden pb-3 touch-pan-y active:cursor-grabbing"
           >
-            {t("seoTitle")}
-          </h1>
+            <div ref={cardsTrackRef} className="flex w-max gap-4 will-change-transform">
+              {carouselItems.map(({ experience, isDuplicate, repeatIndex }) => {
+                const activeImage =
+                  hoveredExperienceKey === experience.key && experience.images.length > 1
+                    ? experience.images[hoverImageIndex % experience.images.length]
+                    : experience.images[0];
 
-          <p className="mt-5 max-w-3xl text-lg font-medium leading-relaxed text-white drop-shadow-md sm:text-xl md:text-2xl">
-            {t("seoSubtitle")}
-          </p>
-        </div>
+                return (
+                  <article
+                    key={`${repeatIndex}-${experience.key}`}
+                    data-hero-experience-card
+                    aria-hidden={isDuplicate ? true : undefined}
+                    onMouseEnter={() => showExperiencePreview(experience.key)}
+                    onMouseLeave={hideExperiencePreview}
+                    onFocus={() => showExperiencePreview(experience.key)}
+                    onBlur={(event) => {
+                      const nextTarget = event.relatedTarget;
+                      if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+                        hideExperiencePreview();
+                      }
+                    }}
+                    className="hero-experience-card relative h-[370px] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-slate-950/35 lg:h-[400px]"
+                  >
+                    <Image
+                      key={activeImage.src}
+                      src={activeImage.src}
+                      alt={isDuplicate ? "" : activeImage.alt}
+                      fill
+                      preload={!isDuplicate && experience.key === experiences[0]?.key}
+                      sizes="(min-width: 1024px) 22rem, (min-width: 640px) 22rem, 82vw"
+                      quality={80}
+                      className="object-cover transition-opacity duration-500"
+                    />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,24,0.08)_0%,rgba(3,10,24,0.14)_45%,rgba(3,10,24,0.66)_100%)]" />
 
-        {experiences.length > 0 && (
-          <div className="mt-8 w-full max-w-[1120px] md:mt-10">
-            <h2 id="home-hero-experiences-title" className="sr-only">
-              {copy.cardsLabel}
-            </h2>
-            <div
-              role="region"
-              aria-labelledby="home-hero-experiences-title"
-              onFocus={() => {
-                holdCardsAutoplay();
-              }}
-              onBlur={(event) => {
-                const nextTarget = event.relatedTarget;
-                if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
-                  resumeCardsAutoplay();
-                }
-              }}
-              onPointerDown={startCardsDrag}
-              onPointerMove={moveCardsDrag}
-              onPointerUp={endCardsDrag}
-              onPointerCancel={cancelCardsDrag}
-              onClickCapture={preventDraggedCardClick}
-              className="relative cursor-grab overflow-hidden pb-3 touch-pan-y active:cursor-grabbing"
-            >
-              <div ref={cardsTrackRef} className="flex w-max gap-4 will-change-transform">
-                {carouselItems.map(({ experience, isDuplicate, repeatIndex }) => {
-                  const activeImage =
-                    hoveredExperienceKey === experience.key && experience.images.length > 1
-                      ? experience.images[hoverImageIndex % experience.images.length]
-                      : experience.images[0];
+                    <div className="absolute left-3 right-3 top-3 flex flex-wrap gap-2">
+                      {experience.pills.map((pill) => (
+                        <span
+                          key={pill}
+                          className="rounded-full border border-white/45 bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md [text-shadow:0_2px_8px_rgba(0,0,0,0.85)]"
+                        >
+                          {pill}
+                        </span>
+                      ))}
+                    </div>
 
-                  return (
-                    <article
-                      key={`${repeatIndex}-${experience.key}`}
-                      data-hero-experience-card
-                      aria-hidden={isDuplicate ? true : undefined}
-                      onMouseEnter={() => showExperiencePreview(experience.key)}
-                      onMouseLeave={hideExperiencePreview}
-                      onFocus={() => showExperiencePreview(experience.key)}
-                      onBlur={(event) => {
-                        const nextTarget = event.relatedTarget;
-                        if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
-                          hideExperiencePreview();
-                        }
-                      }}
-                      className="hero-experience-card relative h-[370px] shrink-0 overflow-hidden rounded-lg border border-white/15 bg-slate-950/35 lg:h-[400px]"
-                    >
-                      <Image
-                        key={activeImage.src}
-                        src={activeImage.src}
-                        alt={isDuplicate ? "" : activeImage.alt}
-                        fill
-                        preload={!isDuplicate && experience.key === experiences[0]?.key}
-                        sizes="(min-width: 1024px) 22rem, (min-width: 640px) 22rem, 82vw"
-                        quality={80}
-                        className="object-cover transition-opacity duration-500"
-                      />
-                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,24,0.08)_0%,rgba(3,10,24,0.14)_45%,rgba(3,10,24,0.66)_100%)]" />
-
-                        <div className="absolute left-3 right-3 top-3 flex flex-wrap gap-2">
-                          {experience.pills.map((pill) => (
-                            <span
-                              key={pill}
-                              className="rounded-full border border-white/45 bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_8px_22px_rgba(0,0,0,0.24)] backdrop-blur-md [text-shadow:0_2px_8px_rgba(0,0,0,0.85)]"
-                            >
-                              {pill}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                          {isDuplicate ? (
-                            <p className="text-xl font-bold leading-tight [text-shadow:0_3px_18px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
-                              {experience.title}
-                            </p>
-                          ) : (
-                            <h3 className="text-xl font-bold leading-tight [text-shadow:0_3px_18px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
-                              {experience.title}
-                            </h3>
-                          )}
-                          <p className="mt-2 h-12 overflow-hidden text-sm font-medium leading-6 text-white [text-shadow:0_3px_16px_rgba(0,0,0,0.96),0_1px_3px_rgba(0,0,0,0.96)]">
-                            {experience.subtitle}
-                          </p>
-                          {experience.priceLabel && (
-                            <p className="mt-3 text-sm font-extrabold uppercase tracking-[0.08em] text-[var(--color-gold)] [text-shadow:0_3px_16px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
-                              {experience.priceLabel}
-                            </p>
-                          )}
-                          <Link
-                            href={experience.bookingHref}
-                            tabIndex={isDuplicate ? -1 : undefined}
-                            className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--color-gold)] px-4 text-sm font-bold text-[#06233a] transition hover:bg-[#f2b84b]"
-                          >
-                            <CalendarDays className="size-4" aria-hidden="true" />
-                            {copy.book}
-                          </Link>
-                        </div>
-                    </article>
-                  );
-                })}
-              </div>
+                    <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+                      {isDuplicate ? (
+                        <p className="text-xl font-bold leading-tight [text-shadow:0_3px_18px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
+                          {experience.title}
+                        </p>
+                      ) : (
+                        <h3 className="text-xl font-bold leading-tight [text-shadow:0_3px_18px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
+                          {experience.title}
+                        </h3>
+                      )}
+                      <p className="mt-2 h-12 overflow-hidden text-sm font-medium leading-6 text-white [text-shadow:0_3px_16px_rgba(0,0,0,0.96),0_1px_3px_rgba(0,0,0,0.96)]">
+                        {experience.subtitle}
+                      </p>
+                      {experience.priceLabel && (
+                        <p className="mt-3 text-sm font-extrabold uppercase tracking-[0.08em] text-[var(--color-gold)] [text-shadow:0_3px_16px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
+                          {experience.priceLabel}
+                        </p>
+                      )}
+                      <Link
+                        href={experience.bookingHref}
+                        tabIndex={isDuplicate ? -1 : undefined}
+                        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--color-gold)] px-4 text-sm font-bold text-[#06233a] transition hover:bg-[#f2b84b]"
+                      >
+                        <CalendarDays className="size-4" aria-hidden="true" />
+                        {copy.book}
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </div>
-        )}
-      </div>
-    </section>
+        </div>
+      </section>
+    ) : null;
+
+  return (
+    <>
+      <section
+        aria-labelledby="home-hero-title"
+        className="relative w-full min-h-[100svh] overflow-hidden bg-[#071934] select-none"
+      >
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_38%,rgba(14,165,233,0.24),transparent_42%),linear-gradient(180deg,#071934_0%,#0a2a4a_56%,#071934_100%)]"
+        />
+
+        <Image
+          src={HERO_VIDEO_POSTER_SRC}
+          alt=""
+          aria-hidden="true"
+          fill
+          loading="eager"
+          sizes="100vw"
+          quality={80}
+          fetchPriority="high"
+          className={`absolute inset-0 z-0 h-full w-full object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
+            videoReady ? "opacity-0" : "opacity-100"
+          }`}
+        />
+
+        {/* ---- Background video (decorative) ---- */}
+        {/* R19-A11y 1.1.1: aria-hidden + tabIndex=-1 perche' decorativo (muted
+          loop). No captions richieste. */}
+        <video
+          ref={videoRef}
+          aria-hidden="true"
+          tabIndex={-1}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="none"
+          poster={HERO_VIDEO_POSTER_SRC}
+          onCanPlay={() => setVideoReady(true)}
+          className={`absolute inset-0 z-0 h-full w-full object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
+            videoReady ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          {videoSource && <source src={videoSource} type="video/mp4" />}
+        </video>
+
+        {/* ---- Subtle overlay — bottom darkens to blend with next section ---- */}
+        <div className="absolute inset-0 z-[1]" style={{
+          background: "linear-gradient(to bottom, rgba(7,25,52,0.32) 0%, transparent 42%, transparent 100%)"
+        }} />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-[-1px] z-[2] h-32 bg-gradient-to-b from-transparent via-[#071934]/40 to-[#071934] backdrop-blur-[1px] md:h-40"
+        />
+
+        {/* ---- Hero content ---- */}
+        <div className="relative z-40 flex min-h-[100svh] w-full flex-col justify-center px-4 pb-24 pt-28 md:px-8 lg:px-12">
+          <div className="max-w-6xl md:-translate-y-16 lg:-translate-y-24">
+            <h1
+              id="home-hero-title"
+              className="max-w-5xl font-heading text-6xl font-extrabold leading-[0.92] text-white [text-shadow:0_4px_24px_rgba(0,0,0,0.72),0_1px_3px_rgba(0,0,0,0.92)] sm:text-7xl md:text-7xl lg:text-8xl xl:text-8xl"
+            >
+              {t("seoTitle")}
+            </h1>
+
+            <p className="mt-6 max-w-3xl text-2xl font-medium leading-9 text-white [text-shadow:0_3px_18px_rgba(0,0,0,0.7),0_1px_2px_rgba(0,0,0,0.9)] sm:text-3xl sm:leading-10 md:text-3xl">
+              {t("seoSubtitle")}
+            </p>
+          </div>
+        </div>
+      </section>
+      {experienceCardsCarousel}
+    </>
   );
 }

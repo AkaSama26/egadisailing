@@ -21,6 +21,16 @@ function experienceKeyForOption(service: BookingServiceOption): string {
   return `${service.boatId}:${service.id}`;
 }
 
+function uniqueDefined(values: Array<string | undefined | null>): string[] {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => value?.trim())
+        .filter((value): value is string => Boolean(value)),
+    ),
+  );
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -97,10 +107,17 @@ export default async function BookingIndexPage({
     .map((service) => {
       const content = getExperienceContent(service.id, locale);
       const boat = getBoatContent(service.boatId, locale);
+      const primaryMedia = content?.media.find((media) => media.src);
       return {
         id: service.id,
         title: content?.title ?? service.name,
         subtitle: content?.subtitle ?? "",
+        detailDescription: content?.detailDescription ?? content?.subtitle ?? "",
+        imageSrc: primaryMedia?.src,
+        imageAlt: primaryMedia?.alt,
+        includes: content?.includes ?? [],
+        notIncluded: content?.bringItems ?? [],
+        locations: uniqueDefined(content?.itinerary.map((item) => item.location) ?? []),
         boatId: service.boatId,
         boatTitle: boat?.title ?? service.boat.name,
         boatImageSrc: boat?.imageSrc ?? boat?.gallery[0]?.src,

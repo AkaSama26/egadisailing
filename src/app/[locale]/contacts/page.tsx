@@ -131,6 +131,7 @@ export default async function ContactsPage({
   const localSeoCopy = getContactLocalSeoCopy(locale);
   const siteBase = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${siteBase}${localizedPath(locale, "/contacts")}`;
+  const localBusinessId = `${siteBase}/#localbusiness`;
   const contactJsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -146,9 +147,12 @@ export default async function ContactsPage({
         name: localSeoCopy.heading,
         url: pageUrl,
         mainEntity: {
-          "@type": "TravelAgency",
+          "@type": ["LocalBusiness", "TravelAgency"],
+          "@id": localBusinessId,
           name: "Egadi Sailing",
           legalName: PUBLIC_COMPANY_LEGAL.name,
+          alternateName: "Egadisailing",
+          url: siteBase,
           email: PUBLIC_CONTACT_EMAIL,
           telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
           address: {
@@ -159,6 +163,11 @@ export default async function ContactsPage({
             addressRegion: "TP",
             addressCountry: "IT",
           },
+          areaServed: ["Trapani", "Isole Egadi", "Favignana", "Levanzo", "Marettimo"].map(
+            (name) => ({ "@type": "Place", name }),
+          ),
+          priceRange: "€€-€€€",
+          sameAs: PUBLIC_REVIEW_LINKS.tripadvisorProfiles,
           hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
         },
       },

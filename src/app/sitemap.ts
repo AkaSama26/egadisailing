@@ -116,7 +116,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
   }
 
-  for (const slug of getPublicBoatSlugs().filter((boatSlug) => boatSlug === "catamarano-egadi-trimarano-da-trapani")) {
+  for (const slug of getPublicBoatSlugs()) {
     addLocalizedEntries(
       entries,
       baseUrl,

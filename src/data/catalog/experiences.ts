@@ -968,6 +968,54 @@ const GOURMET_TRIMARAN_DETAIL_MEDIA: ExperienceCatalogMedia[] = [
     fr: "Cuisine et salon",
     de: "Bordküche und Salon",
   }, "#FDBA74"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8064_1.webp", {
+    it: "Dettagli aperitivo",
+    en: "Aperitif details",
+  }, "#FED7AA"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8080_1.webp", {
+    it: "Brindisi vista mare",
+    en: "Sea-view toast",
+  }, "#FDE68A"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8090.webp", {
+    it: "Cucina a bordo",
+    en: "Cooking on board",
+  }, "#FDBA74"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8092.webp", {
+    it: "Preparazione in cucina",
+    en: "Galley preparation",
+  }, "#DDD6FE"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8344_1.webp", {
+    it: "Tavola con prodotti locali",
+    en: "Table with local products",
+  }, "#FDE68A"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8428.webp", {
+    it: "Aperitivo sul tavolo",
+    en: "Aperitif on the table",
+  }, "#FED7AA"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8435_1.webp", {
+    it: "Vino e sapori siciliani",
+    en: "Wine and Sicilian flavours",
+  }, "#FBCFE8"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8516.webp", {
+    it: "Crudo di mare",
+    en: "Seafood close-up",
+  }, "#BAE6FD"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8520.webp", {
+    it: "Calice e mare",
+    en: "Glass and sea",
+  }, "#FDE68A"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8525.webp", {
+    it: "Cena in pozzetto",
+    en: "Dinner in the cockpit",
+  }, "#DDD6FE"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8548.webp", {
+    it: "Serata a bordo",
+    en: "Evening on board",
+  }, "#C7D2FE"),
+  createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8563.webp", {
+    it: "Pasta di mare",
+    en: "Seafood pasta",
+  }, "#FDBA74"),
 ];
 
 function createCharterTrimaranMedia(
@@ -1271,6 +1319,86 @@ const CHARTER_TRIMARAN_DETAIL_MEDIA: ExperienceCatalogMedia[] = [
     fr: "Plan des espaces",
     de: "Raumaufteilung",
   }, "#E5E7EB"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_49A7777.webp", {
+    it: "Tramonto a bordo",
+    en: "Sunset on board",
+  }, "#FED7AA"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_49A7816.webp", {
+    it: "Ponte al tramonto",
+    en: "Sunset deck",
+  }, "#FBCFE8"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8002.webp", {
+    it: "Relax a prua",
+    en: "Relax on the bow",
+  }, "#C4B5FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8022.webp", {
+    it: "Navigazione con skipper",
+    en: "Sailing with skipper",
+  }, "#BAE6FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8028.webp", {
+    it: "Vita sul ponte",
+    en: "Deck life",
+  }, "#DDD6FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8033.webp", {
+    it: "Luce dorata in coperta",
+    en: "Golden light on deck",
+  }, "#FDE68A"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8046.webp", {
+    it: "Prendisole al tramonto",
+    en: "Sunset sundeck",
+  }, "#FED7AA"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8107.webp", {
+    it: "Prua in rada",
+    en: "Bow at anchor",
+  }, "#93C5FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8121.webp", {
+    it: "Prendisole panoramico",
+    en: "Panoramic sundeck",
+  }, "#FBCFE8"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8156.webp", {
+    it: "Ponte vista costa",
+    en: "Deck with coastal view",
+  }, "#A7F3D0"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8214.webp", {
+    it: "Bagno in rada",
+    en: "Swim stop at anchor",
+  }, "#BAE6FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8263.webp", {
+    it: "Relax sulla rete",
+    en: "Relax on the net",
+  }, "#C4B5FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8278.webp", {
+    it: "Relax di coppia",
+    en: "Couple relaxation",
+  }, "#DDD6FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8298_2.webp", {
+    it: "Momenti in coperta",
+    en: "Moments on deck",
+  }, "#C7D2FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8364.webp", {
+    it: "Tramonto elegante",
+    en: "Elegant sunset",
+  }, "#FED7AA"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8388.webp", {
+    it: "Orizzonte dal ponte",
+    en: "Horizon from the deck",
+  }, "#BAE6FD"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8462.webp", {
+    it: "Silhouette al tramonto",
+    en: "Sunset silhouette",
+  }, "#FCA5A5"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8475.webp", {
+    it: "Relax serale",
+    en: "Evening relaxation",
+  }, "#DDD6FE"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8525.webp", {
+    it: "Cena in pozzetto",
+    en: "Dinner in the cockpit",
+  }, "#FDE68A"),
+  createCharterTrimaranMedia("/images/boats/neel-47/_V6B8548.webp", {
+    it: "Serata a bordo",
+    en: "Evening on board",
+  }, "#C7D2FE"),
 ];
 
 export const EXPERIENCE_CATALOG = {

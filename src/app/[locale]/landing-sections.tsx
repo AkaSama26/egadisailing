@@ -4,7 +4,7 @@ import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { ScrollSection } from "@/components/scroll-section";
 import {
-  TestimonialsColumn,
+  TestimonialsRow,
   type TestimonialColumnItem,
 } from "@/components/ui/testimonials-columns-1";
 import Link from "next/link";
@@ -160,7 +160,7 @@ const tripadvisorReviews: TestimonialColumnItem[] = [
   },
 ];
 
-function getReviewColumns() {
+function getReviewItems() {
   const mixedReviews = [
     googleReviews[0],
     tripadvisorReviews[0],
@@ -175,11 +175,7 @@ function getReviewColumns() {
     ...googleReviews.slice(5),
   ].filter((review): review is TestimonialColumnItem => Boolean(review));
 
-  return [
-    mixedReviews.filter((_, index) => index % 3 === 0),
-    mixedReviews.filter((_, index) => index % 3 === 1),
-    mixedReviews.filter((_, index) => index % 3 === 2),
-  ];
+  return mixedReviews;
 }
 
 function getMaxCapacity(services: SerializedService[], serviceIds: string[]) {
@@ -299,7 +295,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
   const isFr = locale === "fr";
   const isDe = locale === "de";
   const maxPax = (serviceIds: string[]) => getMaxCapacity(services, serviceIds);
-  const reviewColumns = getReviewColumns();
+  const reviewItems = getReviewItems();
   const finalCtaTitle = isEs
     ? "Reserva tu excursión en barco a las Islas Egadi desde Trapani"
     : isFr
@@ -493,6 +489,26 @@ export function LandingSections({ services }: LandingSectionsProps) {
           src: "/images/boats/neel-47/trimarano-sugo-finito.webp",
         },
         {
+          caption: isEs ? "Mesa gourmet" : isFr ? "Table gourmet" : isDe ? "Gourmet-Tafel" : isEn ? "Gourmet table" : "Tavola gourmet",
+          color: "#FDE68A",
+          src: "/images/boats/neel-47/_V6B8344_1.webp",
+        },
+        {
+          caption: isEs ? "Aperitivo a bordo" : isFr ? "Apéritif à bord" : isDe ? "Aperitif an Bord" : isEn ? "Aperitif on board" : "Aperitivo a bordo",
+          color: "#FED7AA",
+          src: "/images/boats/neel-47/_V6B8428.webp",
+        },
+        {
+          caption: isEs ? "Marisco fresco" : isFr ? "Fruits de mer frais" : isDe ? "Frische Meeresfrüchte" : isEn ? "Fresh seafood" : "Crudo di mare",
+          color: "#BAE6FD",
+          src: "/images/boats/neel-47/_V6B8516.webp",
+        },
+        {
+          caption: isEs ? "Cena en cubierta" : isFr ? "Dîner sur le pont" : isDe ? "Dinner an Deck" : isEn ? "Dinner on deck" : "Cena in coperta",
+          color: "#C7D2FE",
+          src: "/images/boats/neel-47/_V6B8548.webp",
+        },
+        {
           caption: isEs ? "Levanzo en lujo" : isFr ? "Levanzo en luxe" : isDe ? "Levanzo im Luxus" : isEn ? "Levanzo in luxury" : "Levanzo nel lusso",
           color: "#C4B5FD",
           src: "/images/boats/neel-47/trimarano-wow-prendisole-levanzo.webp",
@@ -656,6 +672,31 @@ export function LandingSections({ services }: LandingSectionsProps) {
           caption: isEs ? "Relax al sol" : isFr ? "Relax au soleil" : isDe ? "Relax in der Sonne" : isEn ? "Relax in the sun" : "Relax al sole",
           color: "#FDE68A",
           src: "/images/boats/neel-47/trimarano-relax-sole.webp",
+        },
+        {
+          caption: isEs ? "Atardecer a bordo" : isFr ? "Coucher de soleil à bord" : isDe ? "Sonnenuntergang an Bord" : isEn ? "Sunset on board" : "Tramonto a bordo",
+          color: "#FED7AA",
+          src: "/images/boats/neel-47/_49A7777.webp",
+        },
+        {
+          caption: isEs ? "Relax en la red" : isFr ? "Relax sur le filet" : isDe ? "Relax auf dem Netz" : isEn ? "Relax on the net" : "Relax sulla rete",
+          color: "#C4B5FD",
+          src: "/images/boats/neel-47/_V6B8263.webp",
+        },
+        {
+          caption: isEs ? "Vida en cubierta" : isFr ? "Vie sur le pont" : isDe ? "Leben an Deck" : isEn ? "Deck life" : "Vita in coperta",
+          color: "#DDD6FE",
+          src: "/images/boats/neel-47/_V6B8278.webp",
+        },
+        {
+          caption: isEs ? "Horizonte Egadi" : isFr ? "Horizon Égades" : isDe ? "Egadi-Horizont" : isEn ? "Egadi horizon" : "Orizzonte Egadi",
+          color: "#BAE6FD",
+          src: "/images/boats/neel-47/_V6B8388.webp",
+        },
+        {
+          caption: isEs ? "Relax al atardecer" : isFr ? "Relax au coucher du soleil" : isDe ? "Relax bei Sonnenuntergang" : isEn ? "Sunset relaxation" : "Relax al tramonto",
+          color: "#FCA5A5",
+          src: "/images/boats/neel-47/_V6B8475.webp",
         },
       ],
     },
@@ -1047,9 +1088,69 @@ export function LandingSections({ services }: LandingSectionsProps) {
         : "Relax in trimarano a Levanzo",
     },
   ];
+  const reviewsSection = (
+    <section
+      aria-labelledby="home-reviews-title"
+      className="relative px-4 py-24 md:px-8 md:py-28 lg:px-12"
+      style={{
+        background: "linear-gradient(180deg, #071934 0%, #0a2a4a 50%, #071934 100%)",
+      }}
+    >
+      <div className="relative z-10 mx-auto max-w-7xl">
+        <ScrollSection animation="fade-up">
+          <div className="mb-14 text-center md:mb-16">
+            <RevealTitle id="home-reviews-title" text={reviewTitle} compact />
+            <p className="mx-auto mt-6 max-w-3xl text-lg text-white/70">
+              {reviewSubtitle}
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {reviewTrustItems.map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-white/12 bg-white/[0.045] px-4 py-2 text-sm font-semibold text-white/72"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-4">
+              <a
+                href={googleReviewsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] transition hover:text-[#f2b84b]"
+              >
+                {isEs ? "Leer en Google" : isFr ? "Lire sur Google" : isDe ? "Auf Google lesen" : isEn ? "Read on Google" : "Leggi su Google"}{" "}
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              </a>
+              <a
+                href={tripadvisorReviewsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] transition hover:text-[#f2b84b]"
+              >
+                {isEs ? "Leer en Tripadvisor" : isFr ? "Lire sur Tripadvisor" : isDe ? "Auf Tripadvisor lesen" : isEn ? "Read on Tripadvisor" : "Leggi su Tripadvisor"}{" "}
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+          </div>
+        </ScrollSection>
+
+        <div className="-mx-4 overflow-hidden md:-mx-8 lg:-mx-12 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+          <TestimonialsRow
+            testimonials={reviewItems}
+            locale={locale}
+            duration={48}
+          />
+        </div>
+      </div>
+    </section>
+  );
 
   return (
     <div className="overflow-x-clip">
+      {reviewsSection}
+
       {/* ============================================================ */}
       {/*  Section 1: Le Nostre Esperienze                             */}
       {/*  Background blends from hero video sea color to teal         */}
@@ -1073,74 +1174,6 @@ export function LandingSections({ services }: LandingSectionsProps) {
       {/*  Section 4: Itinerario tour in barca alle Egadi              */}
       {/* ============================================================ */}
       <HomeItinerarySection locale={locale} />
-
-      {/* ============================================================ */}
-      {/*  Section 5: Fatti convincere — Recensioni Google             */}
-      {/* ============================================================ */}
-      <section
-        aria-labelledby="home-reviews-title"
-        className="relative py-32 px-4 md:px-8 lg:px-12"
-        style={{
-          background: "linear-gradient(180deg, #071934 0%, #0a2a4a 50%, #071934 100%)",
-        }}
-      >
-        <div className="relative z-10 max-w-7xl mx-auto">
-          <ScrollSection animation="fade-up">
-            <div className="text-center mb-20">
-              <RevealTitle id="home-reviews-title" text={reviewTitle} compact />
-              <p className="text-white/70 text-lg mt-6">
-                {reviewSubtitle}
-              </p>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                {reviewTrustItems.map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-full border border-white/12 bg-white/[0.045] px-4 py-2 text-sm font-semibold text-white/72"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-4">
-                <a
-                  href={googleReviewsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] transition hover:text-[#f2b84b]"
-                >
-	                  {isEs ? "Leer en Google" : isFr ? "Lire sur Google" : isDe ? "Auf Google lesen" : isEn ? "Read on Google" : "Leggi su Google"}{" "}
-	                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                </a>
-                <a
-                  href={tripadvisorReviewsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)] transition hover:text-[#f2b84b]"
-                >
-	                  {isEs ? "Leer en Tripadvisor" : isFr ? "Lire sur Tripadvisor" : isDe ? "Auf Tripadvisor lesen" : isEn ? "Read on Tripadvisor" : "Leggi su Tripadvisor"}{" "}
-	                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                </a>
-              </div>
-            </div>
-          </ScrollSection>
-
-          <div className="mx-auto mt-10 flex max-h-[660px] justify-center gap-6 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)]">
-            <TestimonialsColumn testimonials={reviewColumns[0]} locale={locale} duration={22} />
-            <TestimonialsColumn
-              testimonials={reviewColumns[1]}
-              locale={locale}
-              className="hidden md:block"
-              duration={26}
-            />
-            <TestimonialsColumn
-              testimonials={reviewColumns[2]}
-              locale={locale}
-              className="hidden lg:block"
-              duration={24}
-            />
-          </div>
-        </div>
-      </section>
 
       {/* ============================================================ */}
       {/*  Section 6: CTA Finale con pennellata SVG                   */}
