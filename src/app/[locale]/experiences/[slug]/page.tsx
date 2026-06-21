@@ -41,7 +41,9 @@ import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/displ
 import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_GEO,
   PUBLIC_CONTACT_LOCATION,
+  PUBLIC_CONTACT_POSTAL_ADDRESS,
   PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
 } from "@/lib/public-contact";
 import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
@@ -3713,14 +3715,8 @@ export default async function ExperienceDetailPage({
     "@type": "Place",
     "@id": meetingPointId,
     name: meetingPointName,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Via dei Gladioli 15",
-      postalCode: "91100",
-      addressLocality: "Trapani",
-      addressRegion: "Sicilia",
-      addressCountry: "IT",
-    },
+    address: PUBLIC_CONTACT_POSTAL_ADDRESS,
+    geo: PUBLIC_CONTACT_GEO,
     hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
   };
   const areaServed = [
@@ -3792,14 +3788,7 @@ export default async function ExperienceDetailPage({
           email: PUBLIC_CONTACT_EMAIL,
           telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
           taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: "Via Calipso 42",
-            postalCode: "91100",
-            addressLocality: "Trapani",
-            addressRegion: "Sicilia",
-            addressCountry: "IT",
-          },
+          address: PUBLIC_CONTACT_POSTAL_ADDRESS,
         },
         brand: EGADI_PRODUCT_BRAND,
         offers: {

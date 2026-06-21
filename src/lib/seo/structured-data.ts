@@ -2,7 +2,10 @@ import { env } from "@/lib/env";
 import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_GEO,
   PUBLIC_CONTACT_LOCATION,
+  PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
+  PUBLIC_CONTACT_POSTAL_ADDRESS,
   PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
 } from "@/lib/public-contact";
 import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
@@ -116,14 +119,7 @@ export function buildGlobalSeoJsonLd(locale: string) {
   const serviceCatalog = SERVICE_CATALOG[locale] ?? SERVICE_CATALOG.it;
   const knowsAbout = KNOWS_ABOUT[locale] ?? KNOWS_ABOUT.it;
 
-  const address = {
-    "@type": "PostalAddress",
-    streetAddress: "Via dei Gladioli 15",
-    postalCode: "91100",
-    addressLocality: "Trapani",
-    addressRegion: "TP",
-    addressCountry: "IT",
-  };
+  const address = PUBLIC_CONTACT_POSTAL_ADDRESS;
 
   const areaServed = [
     "Trapani",
@@ -165,6 +161,8 @@ export function buildGlobalSeoJsonLd(locale: string) {
         vatID: PUBLIC_COMPANY_LEGAL.vatNumber,
         alternateName: "Egadisailing",
         address,
+        geo: PUBLIC_CONTACT_GEO,
+        openingHoursSpecification: PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
         areaServed,
         knowsAbout,
         hasOfferCatalog: offerCatalog,
@@ -191,6 +189,8 @@ export function buildGlobalSeoJsonLd(locale: string) {
         email: PUBLIC_CONTACT_EMAIL,
         telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
         address,
+        geo: PUBLIC_CONTACT_GEO,
+        openingHoursSpecification: PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
         areaServed,
         knowsAbout,
         hasOfferCatalog: offerCatalog,

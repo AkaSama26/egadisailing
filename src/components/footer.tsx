@@ -5,7 +5,10 @@ import { CountryFlag } from "@/components/country-flag";
 import { SafeEmailLink } from "@/components/safe-email-link";
 import {
   PUBLIC_COMPANY_LEGAL,
+  getContactLocationLabel,
+  getMeetingPointHeading,
   getOrderedWhatsAppContacts,
+  getRegisteredOfficeHeading,
   getWhatsAppLabel,
   getWhatsAppUrl,
 } from "@/lib/public-contact";
@@ -121,7 +124,12 @@ export function Footer() {
             <div className="mt-4 space-y-3 text-sm text-gray-300">
               <div className="space-y-1">
                 <p>{PUBLIC_COMPANY_LEGAL.name}</p>
-                <p>{PUBLIC_COMPANY_LEGAL.legalAddress}</p>
+                <p>
+                  {getMeetingPointHeading(locale)}: {getContactLocationLabel(locale)}
+                </p>
+                <p>
+                  {getRegisteredOfficeHeading(locale)}: {PUBLIC_COMPANY_LEGAL.legalAddress}
+                </p>
                 <p>P.IVA: {PUBLIC_COMPANY_LEGAL.vatNumber}</p>
                 <p>
                   PEC:{" "}

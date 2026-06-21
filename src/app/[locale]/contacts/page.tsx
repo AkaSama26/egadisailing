@@ -11,7 +11,10 @@ import { TrackedWhatsAppLink } from "@/components/analytics/tracked-whatsapp-lin
 import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_GEO,
   PUBLIC_CONTACT_LOCATION,
+  PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
+  PUBLIC_CONTACT_POSTAL_ADDRESS,
   PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
   getContactLocationLabel,
   getEmailHref,
@@ -155,14 +158,9 @@ export default async function ContactsPage({
           url: siteBase,
           email: PUBLIC_CONTACT_EMAIL,
           telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: "Via dei Gladioli 15",
-            postalCode: "91100",
-            addressLocality: "Trapani",
-            addressRegion: "TP",
-            addressCountry: "IT",
-          },
+          address: PUBLIC_CONTACT_POSTAL_ADDRESS,
+          geo: PUBLIC_CONTACT_GEO,
+          openingHoursSpecification: PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
           areaServed: ["Trapani", "Isole Egadi", "Favignana", "Levanzo", "Marettimo"].map(
             (name) => ({ "@type": "Place", name }),
           ),

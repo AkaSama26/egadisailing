@@ -21,7 +21,10 @@ import { getDisplayPriceMap, type DisplayPrice } from "@/lib/pricing/display";
 import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_GEO,
   PUBLIC_CONTACT_LOCATION,
+  PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
+  PUBLIC_CONTACT_POSTAL_ADDRESS,
   PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
   WHATSAPP_CONTACTS,
 } from "@/lib/public-contact";
@@ -824,14 +827,7 @@ export default async function HomePage({
   const pageUrl = `${siteBase}${localizedPath(locale, "/")}`;
   const seo = homeSeoCopy(locale);
   const areaServed = ["Isole Egadi", "Favignana", "Levanzo", "Marettimo", "Trapani"];
-  const boardingAddress = {
-    "@type": "PostalAddress",
-    streetAddress: "Via dei Gladioli 15",
-    postalCode: "91100",
-    addressLocality: "Trapani",
-    addressRegion: "Sicilia",
-    addressCountry: "IT",
-  };
+  const boardingAddress = PUBLIC_CONTACT_POSTAL_ADDRESS;
   const homepageOffers = Object.values(choiceRecommendations).map((recommendation) => {
     const serviceId = CHOICE_RECOMMENDATION_SERVICE_IDS[recommendation.key];
     const price = lowestDisplayPrice([serviceId], displayPrices);
@@ -898,10 +894,13 @@ export default async function HomePage({
         sameAs: [PUBLIC_REVIEW_LINKS.google, ...PUBLIC_REVIEW_LINKS.tripadvisorProfiles],
         hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
         address: boardingAddress,
+        geo: PUBLIC_CONTACT_GEO,
+        openingHoursSpecification: PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
         location: {
           "@type": "Place",
           name: departurePropertyValue(locale),
           address: boardingAddress,
+          geo: PUBLIC_CONTACT_GEO,
           hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
         },
         contactPoint: WHATSAPP_CONTACTS.map((contact) => ({

@@ -34,6 +34,38 @@ export const PUBLIC_CONTACT_LOCATION = {
     "https://www.google.com/maps?q=Via%20dei%20Gladioli%2015%2C%2091100%20Trapani%2C%20Italia&output=embed",
 } as const;
 
+export const PUBLIC_CONTACT_POSTAL_ADDRESS = {
+  "@type": "PostalAddress",
+  streetAddress: "Via dei Gladioli 15",
+  postalCode: "91100",
+  addressLocality: "Trapani",
+  addressRegion: "TP",
+  addressCountry: "IT",
+} as const;
+
+export const PUBLIC_CONTACT_GEO = {
+  "@type": "GeoCoordinates",
+  latitude: 38.01541,
+  longitude: 12.49932,
+} as const;
+
+export const PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION = [
+  {
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ],
+    opens: "00:00",
+    closes: "23:59",
+  },
+] as const;
+
 export type WhatsAppContact = {
   key: "it" | "en";
   flagCode: "IT" | "GB";
@@ -91,6 +123,20 @@ export function getContactLocationLabel(locale?: string | null): string {
   if (locale === "fr") return PUBLIC_CONTACT_LOCATION.labelFr;
   if (locale === "es") return PUBLIC_CONTACT_LOCATION.labelEs;
   return locale === "en" ? PUBLIC_CONTACT_LOCATION.labelEn : PUBLIC_CONTACT_LOCATION.labelIt;
+}
+
+export function getMeetingPointHeading(locale?: string | null): string {
+  if (locale === "fr") return "Point de rendez-vous";
+  if (locale === "es") return "Punto de encuentro";
+  if (locale === "de") return "Treffpunkt";
+  return locale === "en" ? "Meeting point" : "Punto di incontro";
+}
+
+export function getRegisteredOfficeHeading(locale?: string | null): string {
+  if (locale === "fr") return "Siège social";
+  if (locale === "es") return "Domicilio social";
+  if (locale === "de") return "Sitz";
+  return locale === "en" ? "Registered office" : "Sede legale";
 }
 
 export function getCompanyLegalLines(): string[] {

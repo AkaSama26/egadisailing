@@ -14,7 +14,10 @@ import { getDisplayPriceMap, type DisplayPrice } from "@/lib/pricing/display";
 import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_GEO,
   PUBLIC_CONTACT_LOCATION,
+  PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
+  PUBLIC_CONTACT_POSTAL_ADDRESS,
   PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
 } from "@/lib/public-contact";
 
@@ -552,14 +555,9 @@ export default async function ExperiencesPage({
         email: PUBLIC_CONTACT_EMAIL,
         telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
         taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: "Via Calipso 42",
-          postalCode: "91100",
-          addressLocality: "Trapani",
-          addressRegion: "Sicilia",
-          addressCountry: "IT",
-        },
+        address: PUBLIC_CONTACT_POSTAL_ADDRESS,
+        geo: PUBLIC_CONTACT_GEO,
+        openingHoursSpecification: PUBLIC_CONTACT_OPENING_HOURS_SPECIFICATION,
         areaServed: [
           { "@type": "Place", name: "Trapani" },
           { "@type": "Place", name: "Isole Egadi" },
@@ -581,14 +579,8 @@ export default async function ExperiencesPage({
                 : locale === "en"
                   ? "Trapani harbour - Egadisailing meeting point"
                   : "Porto di Trapani - punto di incontro Egadisailing",
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: "Via dei Gladioli 15",
-          postalCode: "91100",
-          addressLocality: "Trapani",
-          addressRegion: "Sicilia",
-          addressCountry: "IT",
-        },
+        address: PUBLIC_CONTACT_POSTAL_ADDRESS,
+        geo: PUBLIC_CONTACT_GEO,
         hasMap: PUBLIC_CONTACT_LOCATION.mapEmbedUrl,
       },
       {

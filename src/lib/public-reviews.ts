@@ -4,12 +4,9 @@ const GOOGLE_REVIEW_URL =
 const TRIPADVISOR_PRIMARY_REVIEW_URL =
   "https://www.tripadvisor.it/Attraction_Review-g494955-d4465624-Reviews-Egadi_Sailing-Trapani_Province_of_Trapani_Sicily.html";
 
-const TRIPADVISOR_HISTORIC_REVIEW_URL =
-  "https://www.tripadvisor.it/Attraction_Review-g494955-d33194161-Reviews-Egadi_Sailing-Trapani_Province_of_Trapani_Sicily.html";
 
 export const PUBLIC_REVIEW_LINKS = {
   google: GOOGLE_REVIEW_URL,
   tripadvisor: TRIPADVISOR_PRIMARY_REVIEW_URL,
-  tripadvisorHistoric: TRIPADVISOR_HISTORIC_REVIEW_URL,
-  tripadvisorProfiles: [TRIPADVISOR_PRIMARY_REVIEW_URL, TRIPADVISOR_HISTORIC_REVIEW_URL],
+  tripadvisorProfiles: [TRIPADVISOR_PRIMARY_REVIEW_URL],
 } as const;

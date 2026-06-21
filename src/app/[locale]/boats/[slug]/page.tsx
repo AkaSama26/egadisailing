@@ -25,6 +25,7 @@ import { buildPageMetadata } from "@/lib/seo/metadata";
 import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
+  PUBLIC_CONTACT_POSTAL_ADDRESS,
   PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
 } from "@/lib/public-contact";
 import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
@@ -355,14 +356,7 @@ export default async function BoatDetailPage({
           email: PUBLIC_CONTACT_EMAIL,
           telephone: PUBLIC_CONTACT_PRIMARY_PHONE_TEXT,
           taxID: PUBLIC_COMPANY_LEGAL.vatNumber,
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: "Via Calipso 42",
-            postalCode: "91100",
-            addressLocality: "Trapani",
-            addressRegion: "Sicilia",
-            addressCountry: "IT",
-          },
+          address: PUBLIC_CONTACT_POSTAL_ADDRESS,
         },
         ...(boat.externalUrl ? { sameAs: boat.externalUrl } : {}),
       },
