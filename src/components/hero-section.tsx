@@ -243,10 +243,11 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
     if (!video) return;
 
     const playVideo = () => {
+      if (video.readyState >= 2) setVideoReady(true);
       video.play().catch(() => {
         // Retry after user interaction
         const handleInteraction = () => {
-          video.play();
+          void video.play().then(() => setVideoReady(true));
           document.removeEventListener("click", handleInteraction);
           document.removeEventListener("scroll", handleInteraction);
         };
@@ -627,7 +628,9 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
           playsInline
           preload="none"
           poster={HERO_VIDEO_POSTER_SRC}
+          onLoadedData={() => setVideoReady(true)}
           onCanPlay={() => setVideoReady(true)}
+          onPlaying={() => setVideoReady(true)}
           className={`absolute inset-0 z-0 h-full w-full object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
             videoReady ? "opacity-100" : "opacity-0"
           }`}
