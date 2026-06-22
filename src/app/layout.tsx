@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cookies } from "next/headers";
 import Script from "next/script";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { Inter, Caveat, Manrope } from "next/font/google";
@@ -10,8 +9,7 @@ import { GtmConsentBootstrap } from "@/components/analytics/gtm-consent-bootstra
 import { GtmPageViewTracker } from "@/components/analytics/gtm-page-view-tracker";
 import { ServiceWorkerCleanup } from "@/components/service-worker-cleanup";
 import { env } from "@/lib/env";
-import { COOKIE_CONSENT_COOKIE_NAME } from "@/lib/cookie-consent/policy";
-import { getCookieConsentPublicServices, getStoredTrackingConsentState } from "@/lib/cookie-consent/server";
+import { getCookieConsentPublicServices } from "@/lib/cookie-consent/server";
 import { getSiteVerificationMetadata } from "@/lib/site-verification";
 import { buildGlobalSeoJsonLd, jsonLd } from "@/lib/seo/structured-data";
 import "vanilla-cookieconsent/dist/cookieconsent.css";
@@ -119,17 +117,12 @@ export default async function RootLayout({
   // dall'URL `/it/...` / `/en/...`). Default "it" se fuori dal pattern
   // (es. `/admin/*`, admin e' IT-only).
   const locale = await getLocale();
-  const cookieStore = await cookies();
   const publicTrackingServices = getCookieConsentPublicServices();
-  const initialTrackingConsent = getStoredTrackingConsentState(
-    cookieStore.get(COOKIE_CONSENT_COOKIE_NAME)?.value,
-    publicTrackingServices,
-  );
   const globalSeoJsonLd = buildGlobalSeoJsonLd(locale);
   return (
     <html lang={locale} className={`${manrope.variable} ${inter.variable} ${caveat.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        <GtmConsentBootstrap initialConsent={initialTrackingConsent} />
+        <GtmConsentBootstrap services={publicTrackingServices} />
         {env.NEXT_PUBLIC_GTM_ID ? <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM_ID} /> : null}
         {env.NEXT_PUBLIC_GTM_ID ? (
           <noscript>
