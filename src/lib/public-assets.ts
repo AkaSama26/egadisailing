@@ -7,9 +7,11 @@ export function publicAsset(path: string): string {
   return assetCdnUrl ? `${assetCdnUrl}${normalizedPath}` : normalizedPath;
 }
 
-export const HERO_VIDEO_POSTER_SRC = publicAsset("/videos/hero2-poster.webp");
-export const HERO_VIDEO_SRC = publicAsset(`/videos/hero2-desktop.mp4?v=${heroAssetVersion}`);
-export const HERO_VIDEO_MOBILE_SRC = publicAsset(`/videos/hero2-mobile.mp4?v=${heroAssetVersion}`);
+// Hero media is served from the app origin because cdn.egadisailing.com may not have
+// freshly deployed video assets yet, and cached CDN 404s hide both poster and video.
+export const HERO_VIDEO_POSTER_SRC = "/videos/hero2-poster.webp";
+export const HERO_VIDEO_SRC = `/videos/hero2-desktop.mp4?v=${heroAssetVersion}`;
+export const HERO_VIDEO_MOBILE_SRC = `/videos/hero2-mobile.mp4?v=${heroAssetVersion}`;
 export const BRAND_LOGO_SRC = `/images/brand/egadi-sailing-logo-white.svg?v=${brandAssetVersion}`;
 export const BRAND_LOGO_EMAIL_WHITE_SRC = publicAsset(
   `/images/brand/egadi-sailing-logo-white.svg?v=${brandAssetVersion}`,
