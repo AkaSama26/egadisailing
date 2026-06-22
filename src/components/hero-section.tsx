@@ -537,7 +537,6 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                       src={activeImage.src}
                       alt={isDuplicate ? "" : activeImage.alt}
                       fill
-                      preload={!isDuplicate && experience.key === experiences[0]?.key}
                       sizes="(min-width: 1024px) 22rem, (min-width: 640px) 22rem, 82vw"
                       quality={80}
                       className="object-cover transition-opacity duration-500"
@@ -607,10 +606,9 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
           alt=""
           aria-hidden="true"
           fill
-          loading="eager"
+          preload
           sizes="100vw"
           quality={80}
-          fetchPriority="high"
           className={`absolute inset-0 z-0 h-full w-full object-cover object-[72%_center] transition-opacity duration-700 md:object-center ${
             videoReady ? "opacity-0" : "opacity-100"
           }`}

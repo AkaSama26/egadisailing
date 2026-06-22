@@ -187,8 +187,6 @@ function PackageImage({
             aria-hidden={isActive ? undefined : true}
             fill
             sizes={priority ? "(min-width: 1024px) 54vw, 96vw" : "(min-width: 1024px) 45vw, 96vw"}
-            loading="eager"
-            unoptimized
             className={`object-cover transition-opacity duration-700 ${
               isActive ? "opacity-100" : "opacity-0"
             }`}
