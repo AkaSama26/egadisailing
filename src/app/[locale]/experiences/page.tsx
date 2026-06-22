@@ -885,7 +885,7 @@ export default async function ExperiencesPage({
         ],
       },
       {
-        "@type": "CollectionPage",
+        "@type": ["CollectionPage", "WebPage"],
         "@id": pageUrl,
         url: pageUrl,
         name: t("title"),

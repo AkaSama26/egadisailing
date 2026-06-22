@@ -325,23 +325,41 @@ export default async function BoatsPage({
   });
   const siteBase = env.APP_URL.replace(/\/$/, "");
   const topics = boatPageTopics(locale);
+  const pageUrl = localizedAbsoluteUrl(siteBase, locale, "/boats");
+  const itemListId = `${pageUrl}#boat-list`;
+  const language =
+    locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : locale === "en" ? "en-US" : "it-IT";
   const json = {
     "@context": "https://schema.org",
-    "@type": "ItemList",
-    inLanguage: locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : locale === "en" ? "en-US" : "it-IT",
-    name: copy.seoTitle,
-    description: copy.seoDescription,
-    about: topics.about,
-    keywords: topics.keywords,
-    itemListElement: boats.map((boat, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      url: hasBoatDetail(boat)
-        ? localizedAbsoluteUrl(siteBase, locale, `/boats/${boat.slug}`)
-        : `${localizedAbsoluteUrl(siteBase, locale, "/boats")}#${boat.slug}`,
-      name: boat.seoTitle,
-      description: boat.seoDescription,
-    })),
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": pageUrl,
+        url: pageUrl,
+        inLanguage: language,
+        name: copy.seoTitle,
+        description: copy.seoDescription,
+        about: topics.about,
+        keywords: topics.keywords,
+        mainEntity: { "@id": itemListId },
+      },
+      {
+        "@type": "ItemList",
+        "@id": itemListId,
+        inLanguage: language,
+        name: copy.seoTitle,
+        description: copy.seoDescription,
+        itemListElement: boats.map((boat, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          url: hasBoatDetail(boat)
+            ? localizedAbsoluteUrl(siteBase, locale, `/boats/${boat.slug}`)
+            : `${pageUrl}#${boat.slug}`,
+          name: boat.seoTitle,
+          description: boat.seoDescription,
+        })),
+      },
+    ],
   };
 
   return (
