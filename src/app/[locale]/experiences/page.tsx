@@ -100,7 +100,7 @@ function getHubCopy(locale: string) {
   if (locale === "es") {
     return {
       intro:
-        "Elige tu tour en barco por las Islas Egadi desde Trapani comparando duración, precio, capacidad, fórmula y ruta. Desde Via dei Gladioli 15, cerca del Puerto de Trapani, puedes reservar excursiones compartidas de 8 horas a Favignana y Levanzo, tours privados de 4 horas, charter en trimarán, chef a bordo o pesca deportiva. Las rutas posibles incluyen Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda y Cala Minnola, siempre según meteo, viento y seguridad. Cada paquete indica incluidos, snorkel, patrón, combustible y política de cancelación o reembolso por mal tiempo.",
+        "Compara paseos en barco desde Trapani a las Islas Egadi antes de elegir la fórmula adecuada: excursión compartida, tour privado, medio día de 4 horas, día completo a Favignana y Levanzo, charter en trimarán, chef a bordo o pesca deportiva. Desde Via dei Gladioli 15, cerca del Puerto de Trapani, las rutas se planifican según Favignana, Levanzo y las mejores condiciones del mar. Las paradas posibles incluyen Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda y Cala Minnola. Cada paquete indica duración, precio, capacidad, incluidos, snorkel, patrón, combustible y política de cancelación o reembolso por mal tiempo.",
       labels: {
         duration: "Duración",
         price: "Precio",
@@ -136,8 +136,8 @@ function getHubCopy(locale: string) {
           answer: "La ruta puede cambiar por seguridad. Si Egadisailing cancela porque el mar no permite realizar la experiencia de forma segura, puedes elegir cambio de fecha gratuito o reembolso completo.",
         },
         {
-          question: "¿Qué tour elegir para Favignana y Levanzo?",
-          answer: "Para la búsqueda Favignana y Levanzo desde Trapani, la opción más completa es la excursión de 8 horas. Para eventos, familias o privacidad, elige privado, chef a bordo o charter.",
+          question: "¿Qué paseo en barco desde Trapani elegir para Favignana y Levanzo?",
+          answer: "Para Favignana y Levanzo desde Trapani, el paseo en barco más completo es la excursión de 8 horas. Elige el tour compartido para una jornada accesible, el tour privado para tu grupo o el trimarán si buscas más confort y servicio.",
         },
       ],
       facts: {
@@ -610,24 +610,44 @@ export default async function ExperiencesPage({
         inLanguage: inLanguage(locale),
         provider: { "@id": organizationId },
         mainEntity: { "@id": itemListId },
-        about: [
-          "Egadi Islands boat tours from Trapani",
-          "Boat tour Egadi Islands",
-          "Egadi boat tour",
-          "Favignana",
-          "Levanzo",
-          "Snorkelling",
-          "Private boat tour",
-          "Shared boat tour",
-          "Charter",
-        ],
-        keywords: [
-          "egadi islands boat tour",
-          "boat tour egadi islands",
-          "egadi boat tour",
-          "favignana and levanzo boat tour",
-          "boat tours from trapani"
-        ],
+        about: locale === "es"
+          ? [
+              "Paseos en barco desde Trapani",
+              "Paseo en barco Trapani",
+              "Excursiones en barco Islas Egadi",
+              "Favignana",
+              "Levanzo",
+              "Snorkel",
+              "Tour privado en barco",
+              "Tour compartido en barco",
+              "Charter",
+            ]
+          : [
+              "Egadi Islands boat tours from Trapani",
+              "Boat tour Egadi Islands",
+              "Egadi boat tour",
+              "Favignana",
+              "Levanzo",
+              "Snorkelling",
+              "Private boat tour",
+              "Shared boat tour",
+              "Charter",
+            ],
+        keywords: locale === "es"
+          ? [
+              "paseo en barco trapani",
+              "paseos en barco desde trapani",
+              "excursiones en barco islas egadi",
+              "favignana y levanzo en barco",
+              "tour en barco trapani"
+            ]
+          : [
+              "egadi islands boat tour",
+              "boat tour egadi islands",
+              "egadi boat tour",
+              "favignana and levanzo boat tour",
+              "boat tours from trapani"
+            ],
       },
       {
         "@type": "ItemList",

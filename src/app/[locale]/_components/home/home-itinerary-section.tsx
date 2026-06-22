@@ -122,7 +122,7 @@ function itineraryCopy(locale: string) {
   return {
     eyebrow: isEs ? "Itinerario Egadi" : isFr ? "Itinéraire Égades" : isDe ? "Egadi Route" : isEn ? "Egadi itinerary" : "Itinerario Egadi",
     title: isEs
-      ? "Tour en barco Favignana y Levanzo desde Trapani: ruta, calas y fórmulas"
+      ? "Paseo en barco desde Trapani a Favignana y Levanzo: ruta, calas y fórmulas"
       : isFr
       ? "Tour en bateau Favignana et Levanzo depuis Trapani : route, criques et formules"
       : isDe
@@ -131,7 +131,7 @@ function itineraryCopy(locale: string) {
       ? "Favignana and Levanzo boat tour from Trapani: route, coves and formats"
       : "Tour in barca Favignana e Levanzo da Trapani: itinerario, cale e formule",
     intro: isEs
-      ? "Una guía rápida para elegir el tour en barco por las Islas Egadi: salida desde el Porto di Trapani, Favignana y Levanzo, Cala Rossa, Cala Azzurra, Bue Marino, paradas de baño, snorkeling, almuerzo a bordo y opciones entre tour compartido, tour privado o charter."
+      ? "Una guía rápida para elegir tu paseo en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, Cala Rossa, Cala Azzurra, Bue Marino, paradas de baño, snorkel, almuerzo a bordo y opciones entre tour compartido, tour privado o charter."
       : isFr
       ? "Un guide rapide pour choisir votre tour en bateau aux îles Égades : départ du Porto di Trapani, Favignana et Levanzo, Cala Rossa, Cala Azzurra, Bue Marino, baignades, snorkeling, déjeuner à bord et choix entre tour partagé, tour privé ou charter."
       : isDe
@@ -150,7 +150,7 @@ function itineraryCopy(locale: string) {
       : "Trimarano a Favignana durante un tour in barca Favignana e Levanzo da Trapani",
     overviewHref: localizedPath(locale, "/experiences"),
     overviewCta: isEs
-      ? "Comparar todos los tours en barco Egadi"
+      ? "Comparar todos los paseos en barco desde Trapani"
       : isFr
       ? "Comparer tous les tours en bateau aux Égades"
       : isDe
