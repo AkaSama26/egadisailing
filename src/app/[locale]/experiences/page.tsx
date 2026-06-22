@@ -319,7 +319,7 @@ function getHubCopy(locale: string) {
   if (locale === "en") {
     return {
       intro:
-        "Choose your Egadi Islands boat tour from Trapani by comparing duration, price, capacity, format and route. From Via dei Gladioli 15, near Trapani harbour, you can book shared 8-hour tours to Favignana and Levanzo, private 4-hour tours, trimaran charters, chef on board or sport fishing. Possible stops include Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda and Cala Minnola, always according to weather, wind and safety. Each package shows inclusions, snorkelling, skipper, fuel and the cancellation or refund policy for unsafe sea conditions.",
+        "Compare Egadi Islands boat tours from Trapani before choosing the right format: shared boat tour, private boat tour, 4-hour half day, 8-hour Favignana and Levanzo tour, trimaran charter, chef on board or sport fishing. From Via dei Gladioli 15, near Trapani harbour, routes are planned around Favignana, Levanzo and the best sea conditions of the day. Possible stops include Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda and Cala Minnola. Each package shows duration, price, capacity, inclusions, snorkelling, skipper, fuel and the cancellation or refund policy for unsafe sea conditions.",
       labels: {
         duration: "Duration",
         price: "Price",
@@ -355,8 +355,8 @@ function getHubCopy(locale: string) {
           answer: "The route can change for safety. If Egadisailing cancels because the sea is unsafe, you can choose a free date change or a full refund.",
         },
         {
-          question: "Which tour should I choose for Favignana and Levanzo?",
-          answer: "For Favignana and Levanzo from Trapani, the most complete option is the 8-hour tour. For events, families or privacy, choose private, chef on board or charter.",
+          question: "Which Egadi Islands boat tour should I choose for Favignana and Levanzo?",
+          answer: "For Favignana and Levanzo from Trapani, the most complete boat tour is the 8-hour format. Choose the shared tour for an accessible full day, the private tour for your group, or the trimaran experiences for more comfort and service.",
         },
       ],
       facts: {
@@ -611,13 +611,22 @@ export default async function ExperiencesPage({
         provider: { "@id": organizationId },
         mainEntity: { "@id": itemListId },
         about: [
-          "Egadi boat tours from Trapani",
+          "Egadi Islands boat tours from Trapani",
+          "Boat tour Egadi Islands",
+          "Egadi boat tour",
           "Favignana",
           "Levanzo",
           "Snorkelling",
           "Private boat tour",
           "Shared boat tour",
           "Charter",
+        ],
+        keywords: [
+          "egadi islands boat tour",
+          "boat tour egadi islands",
+          "egadi boat tour",
+          "favignana and levanzo boat tour",
+          "boat tours from trapani"
         ],
       },
       {

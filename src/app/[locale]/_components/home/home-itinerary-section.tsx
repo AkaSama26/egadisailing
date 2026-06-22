@@ -148,6 +148,16 @@ function itineraryCopy(locale: string) {
       : isEn
       ? "Trimaran in Favignana during a Favignana and Levanzo boat tour from Trapani"
       : "Trimarano a Favignana durante un tour in barca Favignana e Levanzo da Trapani",
+    overviewHref: localizedPath(locale, "/experiences"),
+    overviewCta: isEs
+      ? "Comparar todos los tours en barco Egadi"
+      : isFr
+      ? "Comparer tous les tours en bateau aux Égades"
+      : isDe
+      ? "Alle Egadi-Bootstouren vergleichen"
+      : isEn
+      ? "Compare all Egadi Islands boat tours"
+      : "Confronta tutti i tour in barca alle Egadi",
     points,
   };
 }
@@ -201,9 +211,18 @@ export function HomeItinerarySection({ locale }: HomeItinerarySectionProps) {
                 {copy.title}
               </h2>
             </div>
-            <p className="max-w-3xl text-base font-medium leading-8 text-white/76 md:text-lg lg:justify-self-end">
-              {copy.intro}
-            </p>
+            <div className="max-w-3xl lg:justify-self-end">
+              <p className="text-base font-medium leading-8 text-white/76 md:text-lg">
+                {copy.intro}
+              </p>
+              <Link
+                href={copy.overviewHref}
+                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white transition-all hover:gap-3 hover:text-[var(--color-gold)]"
+              >
+                {copy.overviewCta}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
           </div>
         </ScrollSection>
 
