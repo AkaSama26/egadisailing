@@ -23,6 +23,7 @@ import {
 import { env } from "@/lib/env";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { localizedPath } from "@/lib/i18n/paths";
+import { localizedExperiencePath } from "@/lib/i18n/public-experience-paths";
 import { FavignanaPoiExplorer } from "./favignana-poi-explorer";
 import { getIslandGuideCopy } from "@/data/island-guides";
 
@@ -102,6 +103,12 @@ function localize(value: Record<string, string>, locale: string) {
 
 function jsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+function islandPrimaryExperienceHref(locale: string, slug: IslandSlug) {
+  return slug === "marettimo"
+    ? localizedExperiencePath(locale, "cabin-charter")
+    : localizedExperiencePath(locale, "boat-shared-full-day");
 }
 
 const favignanaHeroStats = [
@@ -462,6 +469,7 @@ export default async function IslandDetailPage({
 
   const t = await getTranslations("islands");
   const guide = getIslandGuideCopy(slug, locale);
+  const primaryExperienceHref = islandPrimaryExperienceHref(locale, slug);
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}${localizedPath(locale, `/islands/${slug}`)}`;
   const json = {
@@ -629,7 +637,7 @@ export default async function IslandDetailPage({
             </h2>
             <p className="mx-auto mb-6 max-w-2xl text-white/82">{guide.ctaText}</p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link href={localizedPath(locale, "/experiences")}>
+              <Link href={primaryExperienceHref}>
                 <Button
                   size="lg"
                   className="bg-white text-[var(--color-ocean)] hover:bg-white/90 font-semibold text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
@@ -657,6 +665,8 @@ export default async function IslandDetailPage({
 function FavignanaDetailPage({ locale }: { locale: string }) {
   const base = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${base}${localizedPath(locale, "/islands/favignana")}`;
+  const favignanaSharedTourHref = localizedExperiencePath(locale, "boat-shared-full-day");
+  const favignanaPrivateTourHref = localizedExperiencePath(locale, "boat-exclusive-full-day");
   const json = buildFavignanaJsonLd(base, locale, pageUrl);
 
   return (
@@ -706,7 +716,7 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link href={localizedPath(locale, "/experiences")} className="w-full sm:w-auto">
+              <Link href={favignanaSharedTourHref} className="w-full sm:w-auto">
                 <Button className="h-11 w-full rounded-md bg-[var(--color-gold)] px-5 text-sm font-bold text-[#071934] shadow-[0_16px_36px_rgba(0,0,0,0.22)] hover:bg-[#f0c35a] sm:w-auto">
                   Vedi tour per Favignana
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -1049,7 +1059,7 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
                     al lato dell&apos;isola che quel giorno offre il mare migliore.
                   </p>
                 </div>
-                <Link href={localizedPath(locale, "/experiences")} className="mt-7 inline-flex">
+                <Link href={favignanaPrivateTourHref} className="mt-7 inline-flex">
                   <Button className="h-11 rounded-md bg-white px-5 text-sm font-bold text-[#092337] hover:bg-[#f4e7c6]">
                     Scopri le esperienze
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -1105,7 +1115,7 @@ function FavignanaDetailPage({ locale }: { locale: string }) {
                   e più possibilità di vedere l&apos;isola nel suo lato migliore.
                 </p>
               </div>
-              <Link href={localizedPath(locale, "/experiences")}>
+              <Link href={favignanaSharedTourHref}>
                 <Button className="h-12 rounded-md bg-[var(--color-gold)] px-6 text-base font-bold text-[#071934] hover:bg-[#f0c35a]">
                   Vedi i tour
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />

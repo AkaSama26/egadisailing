@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
 import { localizedPath } from "@/lib/i18n/paths";
+import { localizedExperiencePath } from "@/lib/i18n/public-experience-paths";
 
 interface HomeItinerarySectionProps {
   locale: string;
@@ -45,7 +46,7 @@ function itineraryCopy(locale: string) {
         : isEn
         ? "The boat tour to Favignana and Levanzo departs from Via dei Gladioli 15, with clear check-in, a local skipper and a route shaped by sea and wind."
         : "Il tour in barca a Favignana e Levanzo parte da Via dei Gladioli 15, con check-in chiaro, skipper locale e rotta scelta secondo mare e vento.",
-      href: localizedPath(locale, "/experiences/boat-shared-full-day"),
+      href: localizedExperiencePath(locale, "boat-shared-full-day"),
       cta: isEs ? "Ver tour 8 horas" : isFr ? "Voir le tour 8 heures" : isDe ? "8-Stunden-Tour ansehen" : isEn ? "View 8-hour tour" : "Vedi tour 8 ore",
     },
     {
@@ -68,7 +69,7 @@ function itineraryCopy(locale: string) {
         : isEn
         ? "Favignana's most searched sea stops: turquoise water, tuff rock, caves, clear seabeds and time to swim when the conditions allow."
         : "Le tappe più cercate di Favignana dal mare: acqua turchese, roccia di tufo, grotte, fondali chiari e tempo per il bagno quando le condizioni lo permettono.",
-      href: localizedPath(locale, "/experiences/boat-exclusive-full-day"),
+      href: localizedExperiencePath(locale, "boat-exclusive-full-day"),
       cta: isEs ? "Ver tour privado" : isFr ? "Voir tour privé" : isDe ? "Private Tour ansehen" : isEn ? "View private tour" : "Vedi tour privato",
     },
     {
@@ -91,7 +92,7 @@ function itineraryCopy(locale: string) {
         : isEn
         ? "The experience is not only a route: masks, swim stops, aperitivo, lunch on board and, in the premium format, a chef on a trimaran with catamaran-style comfort."
         : "L'esperienza non è solo una rotta: maschere, soste bagno, aperitivo, pranzo a bordo e, nella formula premium, chef in trimarano con comfort da catamarano.",
-      href: localizedPath(locale, "/experiences/exclusive-experience"),
+      href: localizedExperiencePath(locale, "exclusive-experience"),
       cta: isEs ? "Ver experiencia chef" : isFr ? "Voir expérience chef" : isDe ? "Chef-Erlebnis ansehen" : isEn ? "View chef experience" : "Vedi esperienza chef",
     },
     {
@@ -114,7 +115,7 @@ function itineraryCopy(locale: string) {
         : isEn
         ? "Choose a full-day shared excursion, a private 4 or 8-hour tour or a trimaran charter to experience Favignana, Levanzo and Marettimo with more time."
         : "Scegli un'escursione condivisa giornaliera, un tour privato da 4 o 8 ore o un charter in trimarano per vivere Favignana, Levanzo e Marettimo con più tempo.",
-      href: localizedPath(locale, "/experiences/charter"),
+      href: localizedExperiencePath(locale, "cabin-charter"),
       cta: isEs ? "Ver charter Egadi" : isFr ? "Voir charter Égades" : isDe ? "Egadi-Charter ansehen" : isEn ? "View Egadi charter" : "Vedi charter Egadi",
     },
   ];
@@ -126,7 +127,7 @@ function itineraryCopy(locale: string) {
       : isFr
       ? "Tour en bateau Favignana et Levanzo depuis Trapani : route, criques et formules"
       : isDe
-      ? "Bootstour Favignana und Levanzo ab Trapani: Route, Buchten und Formate"
+      ? "Bootstour ab Trapani nach Favignana und Levanzo: Route, Buchten und Formate"
       : isEn
       ? "Favignana and Levanzo boat tour from Trapani: route, coves and formats"
       : "Tour in barca Favignana e Levanzo da Trapani: itinerario, cale e formule",
@@ -135,7 +136,7 @@ function itineraryCopy(locale: string) {
       : isFr
       ? "Un guide rapide pour choisir votre tour en bateau aux îles Égades : départ du Porto di Trapani, Favignana et Levanzo, Cala Rossa, Cala Azzurra, Bue Marino, baignades, snorkeling, déjeuner à bord et choix entre tour partagé, tour privé ou charter."
       : isDe
-      ? "Eine schnelle Orientierung für Ihre Bootstour zu den Ägadischen Inseln: Abfahrt vom Porto di Trapani, Favignana und Levanzo, Cala Rossa, Cala Azzurra, Bue Marino, Badestopps, Schnorcheln, Mittagessen an Bord und Wahl zwischen geteilter Tour, privater Tour oder Charter."
+      ? "Eine schnelle Orientierung für Ihre Bootstour ab Trapani zu den Ägadischen Inseln: Favignana und Levanzo, Cala Rossa, Cala Azzurra, Bue Marino, Badestopps, Schnorcheln, Mittagessen an Bord und Wahl zwischen geteilter Tour, privater Tour oder Charter."
       : isEn
       ? "A quick guide to choosing your Egadi Islands boat tour: departure from Trapani harbour, Favignana and Levanzo, Cala Rossa, Cala Azzurra, Bue Marino, swim stops, snorkelling, lunch on board and the choice between shared tour, private tour or charter."
       : "Una guida rapida per scegliere il tour in barca alle Isole Egadi: partenza dal Porto di Trapani, Favignana e Levanzo, Cala Rossa, Cala Azzurra, Bue Marino, soste bagno, snorkeling, pranzo a bordo e scelta tra tour condiviso, tour privato o charter.",
@@ -154,7 +155,7 @@ function itineraryCopy(locale: string) {
       : isFr
       ? "Comparer tous les tours en bateau aux Égades"
       : isDe
-      ? "Alle Egadi-Bootstouren vergleichen"
+      ? "Alle Bootstouren ab Trapani vergleichen"
       : isEn
       ? "Compare all Egadi Islands boat tours"
       : "Confronta tutti i tour in barca alle Egadi",

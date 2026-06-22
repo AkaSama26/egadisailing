@@ -73,6 +73,116 @@ function servicesForBoat(boat: ResolvedBoatContent, services: ActiveService[]): 
     .map((serviceId) => ({ id: serviceId, boatId: boat.id }));
 }
 
+function boatPageTopics(locale: string) {
+  if (locale === "en") {
+    return {
+      about: [
+        "Egadi boats",
+        "Egadi catamaran-style trimaran",
+        "Boats from Trapani",
+        "Favignana",
+        "Levanzo",
+        "Private boat tour",
+        "Shared boat tour",
+        "Yacht charter",
+      ],
+      keywords: [
+        "egadi boats",
+        "egadi catamaran",
+        "egadi boating",
+        "boats from trapani",
+        "catamaran-style trimaran egadi",
+      ],
+    };
+  }
+
+  if (locale === "de") {
+    return {
+      about: [
+        "Boote auf den Egadi",
+        "Katamaran-Komfort",
+        "Trimaran ab Trapani",
+        "Favignana",
+        "Levanzo",
+        "Private Bootstour",
+        "Geteilte Bootstour",
+        "Charter",
+      ],
+      keywords: [
+        "boote egadi",
+        "katamaran egadi",
+        "trimaran egadi",
+        "bootstour ab trapani",
+        "charter egadi",
+      ],
+    };
+  }
+
+  if (locale === "es") {
+    return {
+      about: [
+        "Barcos Egadi",
+        "Trimarán con confort de catamarán",
+        "Barcos desde Trapani",
+        "Favignana",
+        "Levanzo",
+        "Tour privado en barco",
+        "Tour compartido en barco",
+        "Charter",
+      ],
+      keywords: [
+        "barcos egadi",
+        "catamarán egadi",
+        "trimarán egadi",
+        "barcos desde trapani",
+        "charter egadi",
+      ],
+    };
+  }
+
+  if (locale === "fr") {
+    return {
+      about: [
+        "Bateaux Égades",
+        "Trimaran au confort de catamaran",
+        "Bateaux depuis Trapani",
+        "Favignana",
+        "Levanzo",
+        "Tour privé en bateau",
+        "Tour partagé en bateau",
+        "Charter",
+      ],
+      keywords: [
+        "bateaux égades",
+        "catamaran égades",
+        "trimaran égades",
+        "bateaux depuis trapani",
+        "charter égades",
+      ],
+    };
+  }
+
+  return {
+    about: [
+      "Catamarani Egadi",
+      "Trimarano con comfort da catamarano",
+      "Barche da Trapani",
+      "Favignana",
+      "Levanzo",
+      "Tour privato in barca",
+      "Tour condiviso in barca",
+      "Charter Egadi",
+    ],
+    keywords: [
+      "catamarani egadi",
+      "egadi boats",
+      "egadi catamarani",
+      "noleggio catamarano egadi",
+      "barche da trapani",
+    ],
+  };
+}
+
 function hasBoatDetail(boat: ResolvedBoatContent): boolean {
   return hasPublicBoatDetailPage(boat.id);
 }
@@ -214,12 +324,15 @@ export default async function BoatsPage({
     select: { id: true, boatId: true },
   });
   const siteBase = env.APP_URL.replace(/\/$/, "");
+  const topics = boatPageTopics(locale);
   const json = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     inLanguage: locale === "de" ? "de-DE" : locale === "fr" ? "fr-FR" : locale === "es" ? "es-ES" : locale === "en" ? "en-US" : "it-IT",
     name: copy.seoTitle,
     description: copy.seoDescription,
+    about: topics.about,
+    keywords: topics.keywords,
     itemListElement: boats.map((boat, index) => ({
       "@type": "ListItem",
       position: index + 1,

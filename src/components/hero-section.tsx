@@ -569,9 +569,9 @@ export function HeroSection({ experiences }: { experiences: HeroExperienceCard[]
                         {experience.subtitle}
                       </p>
                       {experience.priceLabel && (
-                        <p className="mt-3 text-sm font-extrabold uppercase tracking-[0.08em] text-[var(--color-gold)] [text-shadow:0_3px_16px_rgba(0,0,0,0.95),0_1px_3px_rgba(0,0,0,0.95)]">
+                        <small className="mt-3 block text-xs font-semibold leading-5 text-white/80 [text-shadow:0_2px_12px_rgba(0,0,0,0.92),0_1px_2px_rgba(0,0,0,0.92)]">
                           {experience.priceLabel}
-                        </p>
+                        </small>
                       )}
                       <Link
                         href={experience.bookingHref}

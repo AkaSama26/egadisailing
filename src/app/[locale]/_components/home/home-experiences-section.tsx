@@ -4,7 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { localizedPath } from "@/lib/i18n/paths";
+import { localizedExperiencePath } from "@/lib/i18n/public-experience-paths";
 import { HomePhotoStack, type HomePhotoStackImage } from "./home-photo-stack";
 
 type SectionMediaItem = HomePhotoStackImage;
@@ -517,7 +517,7 @@ export function HomeExperiencesSection({
               {topBlock.text}
             </p>
             <Link
-              href={localizedPath(locale, "/experiences/exclusive-experience")}
+              href={localizedExperiencePath(locale, "exclusive-experience")}
               className="mt-8 inline-flex items-center gap-2 text-base font-semibold text-white transition-all hover:gap-3"
             >
               {isEs
@@ -561,7 +561,7 @@ export function HomeExperiencesSection({
               {bottomBlock.text}
             </p>
             <Link
-              href={localizedPath(locale, "/experiences/boat-shared-full-day")}
+              href={localizedExperiencePath(locale, "boat-shared-full-day")}
               className="mt-8 inline-flex items-center gap-2 text-base font-semibold text-white transition-all hover:gap-3"
             >
               {isEs ? "Tour Favignana y Levanzo" : isFr ? "Tour Favignana et Levanzo" : isDe ? "Tour Favignana und Levanzo" : isEn ? "Favignana and Levanzo tour" : "Tour Favignana e Levanzo"}
@@ -587,7 +587,7 @@ export function HomeExperiencesSection({
               ))}
             </div>
             <Link
-              href={localizedPath(locale, "/experiences/boat-shared-full-day")}
+              href={localizedExperiencePath(locale, "boat-shared-full-day")}
               className="mt-8 inline-flex items-center gap-2 text-base font-semibold text-white transition-all hover:gap-3"
             >
               {favignanaLevanzoBlock.cta}

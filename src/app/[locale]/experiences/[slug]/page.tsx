@@ -91,6 +91,280 @@ function isFishingService(service: { id?: string }) {
   return service.id === "fishing-full-day";
 }
 
+type ExperienceSchemaCategory = "boatTour" | "charter" | "fishing" | "gourmet";
+
+type ExperienceSchemaTopics = {
+  about: string[];
+  keywords: string[];
+};
+
+const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
+  it: {
+    boatTour: {
+      about: ["Tour in barca alle Egadi da Trapani", "Escursione Favignana e Levanzo", "Egadi navigazione", "Snorkeling alle Egadi"],
+      keywords: ["tour in barca egadi", "escursioni egadi da trapani", "favignana levanzo in barca", "egadi navigazione"],
+    },
+    charter: {
+      about: ["Charter Egadi in trimarano", "Yacht charter alle Egadi", "Noleggio catamarano Egadi con skipper", "Favignana, Levanzo e Marettimo in charter"],
+      keywords: ["charter egadi", "yacht charter egadi", "noleggio catamarano egadi", "charter in catamarano egadi", "trimarano egadi"],
+    },
+    fishing: {
+      about: ["Charter pesca Egadi da Trapani", "Pesca sportiva alle Egadi", "Uscita privata di pesca con skipper"],
+      keywords: ["charter pesca egadi", "pesca sportiva egadi", "charter pesca trapani", "egadi fishing charter"],
+    },
+    gourmet: {
+      about: ["Chef a bordo alle Egadi", "Esperienza gourmet in trimarano", "Tour privato alle Egadi con pranzo"],
+      keywords: ["chef a bordo egadi", "esperienza gourmet egadi", "trimarano egadi chef", "tour privato egadi pranzo"],
+    },
+  },
+  en: {
+    boatTour: {
+      about: ["Egadi Islands boat tours from Trapani", "Egadi Islands boat trip", "Favignana and Levanzo boat tour", "Snorkelling in the Egadi Islands"],
+      keywords: ["egadi islands boat tours", "egadi islands boat trip", "boat trips from trapani", "favignana levanzo boat tour"],
+    },
+    charter: {
+      about: ["Aegadian Islands yacht charter", "Private trimaran charter from Trapani", "Egadi catamaran-style charter", "Favignana, Levanzo and Marettimo yacht charter"],
+      keywords: ["yacht charter aegadian islands", "egadi yacht charter", "egadi catamaran charter", "trapani trimaran charter", "private charter egadi islands"],
+    },
+    fishing: {
+      about: ["Egadi fishing charter from Trapani", "Private sport fishing trip", "Fishing RIB with skipper"],
+      keywords: ["egadi fishing charter", "fishing charter trapani", "sport fishing egadi", "private fishing trip egadi"],
+    },
+    gourmet: {
+      about: ["Chef on board in the Egadi Islands", "Private gourmet trimaran experience", "Egadi private boat tour with lunch"],
+      keywords: ["chef on board egadi", "egadi gourmet boat tour", "private trimaran experience egadi", "egadi boat tour with lunch"],
+    },
+  },
+  es: {
+    boatTour: {
+      about: ["Paseo en barco Trapani Egadi", "Excursion en barco Favignana y Levanzo", "Snorkel en las Islas Egadi"],
+      keywords: ["paseo en barco trapani", "excursion en barco egadi", "favignana levanzo en barco", "snorkel egadi"],
+    },
+    charter: {
+      about: ["Charter Islas Egadi en trimaran", "Yacht charter Islas Egadi", "Catamaran Egadi con patron"],
+      keywords: ["charter islas egadi", "yacht charter egadi", "catamaran egadi", "trimaran trapani"],
+    },
+    fishing: {
+      about: ["Charter de pesca Egadi", "Pesca deportiva en las Egadi", "Salida privada de pesca desde Trapani"],
+      keywords: ["charter pesca egadi", "pesca deportiva egadi", "pesca trapani", "fishing charter egadi"],
+    },
+    gourmet: {
+      about: ["Chef a bordo en las Egadi", "Experiencia gourmet en trimaran", "Tour privado con comida"],
+      keywords: ["chef a bordo egadi", "experiencia gourmet egadi", "trimaran egadi comida", "tour privado egadi"],
+    },
+  },
+  fr: {
+    boatTour: {
+      about: ["Excursion bateau Egades depuis Trapani", "Tour bateau Favignana et Levanzo", "Snorkeling aux iles Egades"],
+      keywords: ["excursion bateau egades", "excursion bateau trapani", "favignana levanzo bateau", "snorkeling egades"],
+    },
+    charter: {
+      about: ["Charter aux iles Egades en trimaran", "Yacht charter aux Egades", "Catamaran Egades avec skipper"],
+      keywords: ["charter iles egades", "yacht charter egades", "catamaran egades", "trimaran trapani"],
+    },
+    fishing: {
+      about: ["Charter peche Egades", "Peche sportive aux Egades", "Sortie privee de peche depuis Trapani"],
+      keywords: ["charter peche egades", "peche sportive egades", "peche trapani", "fishing charter egadi"],
+    },
+    gourmet: {
+      about: ["Chef a bord aux Egades", "Experience gourmet en trimaran", "Tour prive avec dejeuner"],
+      keywords: ["chef a bord egades", "experience gourmet egades", "trimaran egades dejeuner", "tour prive egades"],
+    },
+  },
+  de: {
+    boatTour: {
+      about: ["Bootstour ab Trapani zu den Egadi", "Bootstour Favignana und Levanzo", "Schnorcheln auf den Egadi"],
+      keywords: ["bootstour trapani", "bootstour aegadische inseln", "favignana levanzo bootstour", "schnorcheln egadi"],
+    },
+    charter: {
+      about: ["Trimaran-Charter zu den Egadi", "Yachtcharter Aegadische Inseln", "Katamaran-Komfort mit Skipper"],
+      keywords: ["charter egadi", "yachtcharter aegadische inseln", "katamaran egadi", "trimaran trapani"],
+    },
+    fishing: {
+      about: ["Angelcharter Egadi ab Trapani", "Sportangeln auf den Egadi", "Private Angeltour mit Skipper"],
+      keywords: ["angelcharter egadi", "sportangeln egadi", "angeln trapani", "fishing charter egadi"],
+    },
+    gourmet: {
+      about: ["Chef an Bord auf den Egadi", "Gourmet-Erlebnis im Trimaran", "Private Bootstour mit Mittagessen"],
+      keywords: ["chef an bord egadi", "gourmet bootstour egadi", "trimaran egadi mittagessen", "private bootstour egadi"],
+    },
+  },
+} as const satisfies Record<string, Record<ExperienceSchemaCategory, ExperienceSchemaTopics>>;
+
+function experienceDetailSchemaTopics(locale: string, service: { id?: string; type: string }) {
+  const category: ExperienceSchemaCategory = isFishingService(service)
+    ? "fishing"
+    : service.type === "CABIN_CHARTER"
+      ? "charter"
+      : service.type === "EXCLUSIVE_EXPERIENCE"
+        ? "gourmet"
+        : "boatTour";
+
+  const topicsByLocale =
+    EXPERIENCE_DETAIL_SCHEMA_TOPICS[locale as keyof typeof EXPERIENCE_DETAIL_SCHEMA_TOPICS] ??
+    EXPERIENCE_DETAIL_SCHEMA_TOPICS.it;
+
+  return topicsByLocale[category];
+}
+
+const RELATED_EXPERIENCE_IDS_BY_SERVICE: Record<string, string[]> = {
+  "boat-shared-full-day": ["boat-exclusive-full-day", "boat-exclusive-afternoon", "cabin-charter"],
+  "boat-exclusive-full-day": ["boat-shared-full-day", "boat-exclusive-afternoon", "exclusive-experience"],
+  "boat-exclusive-morning": ["boat-exclusive-afternoon", "boat-exclusive-full-day", "boat-shared-full-day"],
+  "boat-exclusive-afternoon": ["boat-exclusive-morning", "boat-exclusive-full-day", "boat-shared-full-day"],
+  "cabin-charter": ["exclusive-experience", "boat-exclusive-full-day", "fishing-full-day"],
+  "exclusive-experience": ["cabin-charter", "boat-exclusive-full-day", "boat-shared-full-day"],
+  "fishing-full-day": ["cabin-charter", "boat-exclusive-full-day", "boat-shared-full-day"],
+};
+
+function getRelatedExperienceIds(serviceId: string) {
+  const prioritized = RELATED_EXPERIENCE_IDS_BY_SERVICE[serviceId] ?? [];
+  const fallback = getListedExperienceIds();
+  return Array.from(new Set([...prioritized, ...fallback]))
+    .filter((id) => id !== serviceId && isPublicBookingServiceEnabled(id))
+    .slice(0, 3);
+}
+
+type RelatedIslandSlug = "favignana" | "levanzo" | "marettimo";
+
+type RelatedIslandCopy = {
+  eyebrow: string;
+  title: string;
+  intro: string;
+  ctaLabel: string;
+  islands: Record<RelatedIslandSlug, { name: string; description: string }>;
+};
+
+const RELATED_ISLAND_COPY = {
+  it: {
+    eyebrow: "Isole collegate",
+    title: "Approfondisci le isole di questa rotta",
+    intro:
+      "Prima di scegliere il tour, puoi leggere le guide delle isole più legate a questa esperienza: aiutano a capire cale, ritmo di navigazione e differenze tra le tappe.",
+    ctaLabel: "Leggi la guida",
+    islands: {
+      favignana: {
+        name: "Favignana",
+        description: "Cala Rossa, Bue Marino, Cala Azzurra e le cave di tufo: la tappa più cercata per chi parte da Trapani verso le Egadi.",
+      },
+      levanzo: {
+        name: "Levanzo",
+        description: "Più piccola e silenziosa, ideale per bagni lenti, Cala Fredda, Cala Minnola e una navigazione meno affollata.",
+      },
+      marettimo: {
+        name: "Marettimo",
+        description: "La più selvaggia e distante, perfetta da valutare quando l'esperienza diventa charter di più giorni.",
+      },
+    },
+  },
+  en: {
+    eyebrow: "Related islands",
+    title: "Explore the islands connected to this route",
+    intro:
+      "Before choosing the tour, read the island guides linked to this experience: they explain coves, navigation rhythm and the difference between each stop.",
+    ctaLabel: "Read guide",
+    islands: {
+      favignana: {
+        name: "Favignana",
+        description: "Cala Rossa, Bue Marino, Cala Azzurra and tuff quarries: the most searched island for boat tours from Trapani.",
+      },
+      levanzo: {
+        name: "Levanzo",
+        description: "Smaller and quieter, ideal for slow swims, Cala Fredda, Cala Minnola and a less crowded pace.",
+      },
+      marettimo: {
+        name: "Marettimo",
+        description: "The wildest and most remote island, worth considering when the experience becomes a multi-day charter.",
+      },
+    },
+  },
+  es: {
+    eyebrow: "Islas relacionadas",
+    title: "Explora las islas conectadas con esta ruta",
+    intro:
+      "Antes de elegir el tour, lee las guías de las islas más ligadas a esta experiencia: ayudan a entender calas, ritmo de navegación y diferencias entre paradas.",
+    ctaLabel: "Leer guía",
+    islands: {
+      favignana: {
+        name: "Favignana",
+        description: "Cala Rossa, Bue Marino, Cala Azzurra y canteras de toba: la isla más buscada para excursiones desde Trapani.",
+      },
+      levanzo: {
+        name: "Levanzo",
+        description: "Más pequeña y tranquila, ideal para baños lentos, Cala Fredda, Cala Minnola y un ritmo menos concurrido.",
+      },
+      marettimo: {
+        name: "Marettimo",
+        description: "La isla más salvaje y lejana, especialmente interesante cuando la experiencia se convierte en charter de varios días.",
+      },
+    },
+  },
+  fr: {
+    eyebrow: "Îles liées",
+    title: "Explorer les îles reliées à cette route",
+    intro:
+      "Avant de choisir l'excursion, lisez les guides des îles liées à cette expérience : ils expliquent criques, rythme de navigation et différences entre les étapes.",
+    ctaLabel: "Lire le guide",
+    islands: {
+      favignana: {
+        name: "Favignana",
+        description: "Cala Rossa, Bue Marino, Cala Azzurra et carrières de tuf : l'île la plus recherchée pour les excursions depuis Trapani.",
+      },
+      levanzo: {
+        name: "Levanzo",
+        description: "Plus petite et plus calme, idéale pour les baignades lentes, Cala Fredda, Cala Minnola et un rythme moins fréquenté.",
+      },
+      marettimo: {
+        name: "Marettimo",
+        description: "L'île la plus sauvage et éloignée, à envisager quand l'expérience devient un charter de plusieurs jours.",
+      },
+    },
+  },
+  de: {
+    eyebrow: "Verbundene Inseln",
+    title: "Die Inseln dieser Route besser verstehen",
+    intro:
+      "Vor der Buchung helfen die Inselguides, Buchten, Reiserhythmus und Unterschiede zwischen den Stopps besser einzuschätzen.",
+    ctaLabel: "Guide lesen",
+    islands: {
+      favignana: {
+        name: "Favignana",
+        description: "Cala Rossa, Bue Marino, Cala Azzurra und Tuffsteinbrüche: die meistgesuchte Insel für Bootstouren ab Trapani.",
+      },
+      levanzo: {
+        name: "Levanzo",
+        description: "Kleiner und ruhiger, ideal für langsame Badestopps, Cala Fredda, Cala Minnola und weniger Gedränge.",
+      },
+      marettimo: {
+        name: "Marettimo",
+        description: "Die wildeste und entfernteste Insel, besonders relevant, wenn aus der Tour ein mehrtägiger Charter wird.",
+      },
+    },
+  },
+} as const satisfies Record<string, RelatedIslandCopy>;
+
+function getRelatedIslandSlugs(service: { id?: string; type: string; durationType?: string }): RelatedIslandSlug[] {
+  if (service.type === "CABIN_CHARTER") return ["favignana", "levanzo", "marettimo"];
+  if (service.id === "fishing-full-day") return ["favignana", "levanzo"];
+  if (service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON") {
+    return ["favignana"];
+  }
+  return ["favignana", "levanzo"];
+}
+
+function getRelatedIslandSection(locale: string, service: { id?: string; type: string; durationType?: string }) {
+  const copy = RELATED_ISLAND_COPY[locale as keyof typeof RELATED_ISLAND_COPY] ?? RELATED_ISLAND_COPY.it;
+  return {
+    ...copy,
+    links: getRelatedIslandSlugs(service).map((slug) => ({
+      slug,
+      name: copy.islands[slug].name,
+      description: copy.islands[slug].description,
+      href: localizedPath(locale, `/islands/${slug}`),
+    })),
+  };
+}
+
 function getEgadiBoatHeroAlt(locale: string) {
   if (locale === "es") return "Vista frontal de la Barca Egadi Sailing";
   if (locale === "fr") return "Vue frontale de la Barca Egadi Sailing";
@@ -3546,6 +3820,8 @@ export default async function ExperienceDetailPage({
   if (slug !== canonicalSlug) permanentRedirect(localizedPath(locale, `/experiences/${canonicalSlug}`));
 
   const boatContent = getBoatContent(service.boatId, locale);
+  const boatDetailHref =
+    boatContent?.id === "trimarano" ? localizedPath(locale, `/boats/${boatContent.slug}`) : null;
   const [displayPrice, itinerary] = await Promise.all([
     getDisplayPrice(service.id, 2026, locale),
     getExperienceItinerary(service.id, locale, content.itinerary),
@@ -3635,11 +3911,10 @@ export default async function ExperienceDetailPage({
   const editorial = getEditorialExperienceCopy(locale, service, content.title, boatContent?.title);
   const gourmetMenuCopy = getGourmetMenuCopy(locale);
   const gourmetMenus = service.type === "EXCLUSIVE_EXPERIENCE" ? getGourmetSampleMenus(locale) : [];
-  const relatedExperiences = getListedExperienceIds()
-    .filter((id) => id !== service.id)
+  const relatedExperiences = getRelatedExperienceIds(service.id)
     .map((id) => getExperienceContent(id, locale))
-    .filter((item): item is NonNullable<typeof item> => Boolean(item))
-    .slice(0, 3);
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const relatedIslandSection = getRelatedIslandSection(locale, service);
   const priceLabel = displayPrice.amount
     ? `${t("experience.from")} ${formatEur(displayPrice.amount, locale)}`
     : displayPrice.label;
@@ -3668,6 +3943,7 @@ export default async function ExperienceDetailPage({
   const siteBase = env.APP_URL.replace(/\/$/, "");
   const pageUrl = localizedAbsoluteUrl(siteBase, locale, pagePath);
   const bookingUrl = `${siteBase}${bookingHref}`;
+  const boatDetailUrl = boatDetailHref ? `${siteBase}${boatDetailHref}` : null;
   const schemaDuration =
     service.type === "CABIN_CHARTER"
       ? "P3D"
@@ -3729,6 +4005,7 @@ export default async function ExperienceDetailPage({
     showcaseGallery.length > 0
       ? showcaseGallery.map((item) => absoluteUrl(item.src))
       : [absoluteUrl(heroImage)];
+  const schemaTopics = experienceDetailSchemaTopics(locale, service);
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -3758,9 +4035,25 @@ export default async function ExperienceDetailPage({
       },
       meetingPoint,
       {
+        "@type": "WebPage",
+        "@id": `${pageUrl}#webpage`,
+        url: pageUrl,
+        inLanguage,
+        name: content.seoTitle,
+        description: content.seoDescription,
+        mainEntity: { "@id": `${pageUrl}#experience` },
+        about: [
+          { "@id": `${pageUrl}#experience` },
+          ...(boatDetailUrl ? [{ "@id": `${boatDetailUrl}#boat` }] : []),
+          ...schemaTopics.about.map((name) => ({ "@type": "Thing", name })),
+        ],
+        keywords: schemaTopics.keywords.join(", "),
+      },
+      {
         "@type": ["Product", "TouristTrip"],
         "@id": `${pageUrl}#experience`,
         inLanguage,
+        mainEntityOfPage: { "@id": `${pageUrl}#webpage` },
         name: content.seoTitle,
         description: `${content.seoDescription} ${editorial.paragraphs[0]}`,
         duration: schemaDuration,
@@ -3768,6 +4061,7 @@ export default async function ExperienceDetailPage({
         areaServed,
         location: { "@id": meetingPointId },
         availableAtOrFrom: { "@id": meetingPointId },
+        ...(boatDetailUrl ? { isRelatedTo: { "@id": `${boatDetailUrl}#boat` } } : {}),
         image: structuredImageUrls,
         ...buildServiceProductCodes(service.id),
         itinerary: {
@@ -3842,6 +4136,18 @@ export default async function ExperienceDetailPage({
           url: localizedAbsoluteUrl(siteBase, locale, `/experiences/${getExperiencePublicSlug(item.serviceId, locale)}`),
           name: item.title,
           description: item.seoDescription,
+        })),
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${pageUrl}#related-islands`,
+        name: relatedIslandSection.title,
+        itemListElement: relatedIslandSection.links.map((island, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          url: `${siteBase}${island.href}`,
+          name: island.name,
+          description: island.description,
         })),
       },
     ],
@@ -3948,7 +4254,16 @@ export default async function ExperienceDetailPage({
                   {boatContent && (
                     <span className="inline-flex items-center gap-2">
                       <Ship className="h-4 w-4 text-[var(--color-gold)]" />
-                      {boatContent.title}
+                      {boatDetailHref ? (
+                        <Link
+                          href={boatDetailHref}
+                          className="underline decoration-white/35 underline-offset-4 transition hover:text-[var(--color-gold)] hover:decoration-[var(--color-gold)]"
+                        >
+                          {boatContent.title}
+                        </Link>
+                      ) : (
+                        boatContent.title
+                      )}
                     </span>
                   )}
                 </div>
@@ -4296,6 +4611,48 @@ export default async function ExperienceDetailPage({
                       </Link>
                     );
                   })}
+                </div>
+              </div>
+            </section>
+          </ScrollSection>
+        )}
+
+        {relatedIslandSection.links.length > 0 && (
+          <ScrollSection animation="fade-up" className="px-4 py-14 md:px-8 lg:px-12">
+            <section id="related-islands" className="scroll-mt-28">
+              <div className="mx-auto max-w-6xl border-y border-white/12 py-9">
+                <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-gold)]">
+                      <Compass className="h-4 w-4" aria-hidden="true" />
+                      {relatedIslandSection.eyebrow}
+                    </p>
+                    <h2 className="mt-3 font-heading text-2xl font-bold text-white sm:text-3xl md:text-4xl">
+                      {relatedIslandSection.title}
+                    </h2>
+                    <p className="mt-3 text-sm leading-6 text-white/70 sm:text-base sm:leading-7">
+                      {relatedIslandSection.intro}
+                    </p>
+                  </div>
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {relatedIslandSection.links.map((island) => (
+                      <Link
+                        key={island.slug}
+                        href={island.href}
+                        className="group border-t border-white/15 pt-4 transition focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-4 focus:ring-offset-[#071934]"
+                      >
+                        <h3 className="font-heading text-xl font-bold text-white transition group-hover:text-[var(--color-gold)]">
+                          {island.name}
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-white/65">
+                          {island.description}
+                        </p>
+                        <span className="mt-4 inline-flex text-sm font-bold text-[var(--color-gold)]">
+                          {relatedIslandSection.ctaLabel}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
             </section>

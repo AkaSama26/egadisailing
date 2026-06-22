@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Check, ExternalLink } from "lucide-react";
 import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { localizedPath } from "@/lib/i18n/paths";
+import { localizedExperiencePath } from "@/lib/i18n/public-experience-paths";
 import { HomeExperiencesSection } from "./_components/home/home-experiences-section";
 import {
   HomePackagesSection,
@@ -455,7 +456,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
             : "Favignana e Levanzo, con baie scelte in base a mare, vento e luce della giornata.",
         },
       ],
-      href: localizedPath(locale, "/experiences/exclusive-experience"),
+      href: localizedExperiencePath(locale, "exclusive-experience"),
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
@@ -600,7 +601,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
             : "Favignana, Levanzo e Marettimo entrano nel programma secondo durata e meteo.",
         },
       ],
-      href: localizedPath(locale, "/experiences/charter"),
+      href: localizedExperiencePath(locale, "cabin-charter"),
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
@@ -775,7 +776,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
 	            : "Favignana, scegliendo la cala migliore raggiungibile in sicurezza in 4 ore.",
 	        },
       ],
-      href: localizedPath(locale, "/experiences/boat-exclusive-afternoon"),
+      href: localizedExperiencePath(locale, "boat-exclusive-afternoon"),
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
@@ -870,7 +871,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
             : "Giornata tra Favignana e Levanzo, con scalo a Favignana per pranzo, bagno, snorkeling e rientro morbido verso Trapani.",
         },
       ],
-      href: localizedPath(locale, "/experiences/boat-shared-full-day"),
+      href: localizedExperiencePath(locale, "boat-shared-full-day"),
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {
@@ -975,7 +976,7 @@ export function LandingSections({ services }: LandingSectionsProps) {
             : "Pescato rilasciato o trattenuto solo entro limiti di legge, taglie, quote, autorizzazioni e decisione dello skipper.",
         },
       ],
-      href: localizedPath(locale, "/experiences/charter-pesca-egadi"),
+      href: localizedExperiencePath(locale, "fishing-full-day"),
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {

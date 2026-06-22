@@ -241,6 +241,88 @@ function absoluteUrl(path: string): string {
   return `${env.APP_URL.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+const BOAT_DETAIL_SCHEMA_TOPICS = {
+  it: {
+    about: [
+      "Noleggio catamarano Egadi",
+      "Catamarano Egadi con skipper",
+      "Trimarano da Trapani",
+      "Charter Egadi in trimarano",
+      "Favignana, Levanzo e Marettimo in multiscafo",
+    ],
+    keywords: [
+      "noleggio catamarano egadi",
+      "catamarano egadi",
+      "catamarano trapani",
+      "egadi catamarano",
+      "charter egadi",
+      "trimarano egadi",
+    ],
+  },
+  en: {
+    about: [
+      "Egadi catamaran-style trimaran",
+      "Egadi boats with skipper",
+      "Aegadian Islands yacht charter",
+      "Trapani trimaran charter",
+      "Favignana, Levanzo and Marettimo by multihull",
+    ],
+    keywords: [
+      "egadi catamaran",
+      "egadi boats",
+      "yacht charter aegadian islands",
+      "trapani trimaran charter",
+      "egadi multihull charter",
+    ],
+  },
+  es: {
+    about: [
+      "Catamaran en las Islas Egadi",
+      "Trimaran desde Trapani con patron",
+      "Charter Islas Egadi en trimaran",
+      "Favignana, Levanzo y Marettimo en multicasco",
+    ],
+    keywords: [
+      "catamaran egadi",
+      "trimaran trapani",
+      "charter islas egadi",
+      "barco con patron egadi",
+    ],
+  },
+  fr: {
+    about: [
+      "Catamaran aux iles Egades",
+      "Trimaran depuis Trapani avec skipper",
+      "Charter aux iles Egades en trimaran",
+      "Favignana, Levanzo et Marettimo en multicoque",
+    ],
+    keywords: [
+      "catamaran egades",
+      "trimaran trapani",
+      "charter iles egades",
+      "bateau avec skipper egades",
+    ],
+  },
+  de: {
+    about: [
+      "Katamaran-Komfort auf den Egadi",
+      "Trimaran ab Trapani mit Skipper",
+      "Charter zu den Egadi im Trimaran",
+      "Favignana, Levanzo und Marettimo im Mehrrumpfboot",
+    ],
+    keywords: [
+      "katamaran egadi",
+      "trimaran trapani",
+      "charter egadi",
+      "boot mit skipper egadi",
+    ],
+  },
+} as const;
+
+function boatDetailSchemaTopics(locale: string) {
+  return BOAT_DETAIL_SCHEMA_TOPICS[locale as keyof typeof BOAT_DETAIL_SCHEMA_TOPICS] ?? BOAT_DETAIL_SCHEMA_TOPICS.it;
+}
+
 function BoatSpecs({ boat }: { boat: ResolvedBoatContent }) {
   return (
     <div className="grid grid-cols-2 gap-x-6 gap-y-7 border-y border-white/15 py-7 sm:grid-cols-3 lg:grid-cols-5">
@@ -318,6 +400,7 @@ export default async function BoatDetailPage({
           : locale === "en"
             ? "en-US"
             : "it-IT";
+  const schemaTopics = boatDetailSchemaTopics(locale);
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -331,9 +414,24 @@ export default async function BoatDetailPage({
         ],
       },
       {
+        "@type": "WebPage",
+        "@id": `${pageUrl}#webpage`,
+        url: pageUrl,
+        inLanguage,
+        name: boat.seoTitle,
+        description: boat.seoDescription,
+        mainEntity: { "@id": `${pageUrl}#boat` },
+        about: [
+          { "@id": `${pageUrl}#boat` },
+          ...schemaTopics.about.map((name) => ({ "@type": "Thing", name })),
+        ],
+        keywords: schemaTopics.keywords.join(", "),
+      },
+      {
         "@type": ["Product", "Vehicle"],
         "@id": `${pageUrl}#boat`,
         inLanguage,
+        mainEntityOfPage: { "@id": `${pageUrl}#webpage` },
         name: boat.seoTitle,
         description: `${boat.seoDescription} ${boat.detail.paragraphs.join(" ")}`,
         image: boat.gallery.map((item) => absoluteUrl(item.src)),

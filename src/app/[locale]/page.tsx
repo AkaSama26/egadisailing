@@ -65,14 +65,97 @@ const HOME_SEO_COPY = {
       "Excursions en bateau aux îles Égades depuis Trapani : Favignana et Levanzo, tours privés ou partagés, snorkeling, chef à bord et charter en trimaran avec confort de catamaran.",
   },
   de: {
-    title: "Egadi Sailing | Bootstouren Ägadische Inseln ab Trapani",
+    title: "Egadi Sailing | Bootstouren ab Trapani zu den Egadi",
     description:
-      "Bootstouren zu den Ägadischen Inseln ab Trapani: Favignana und Levanzo, private oder geteilte Touren, Schnorcheln, Chef an Bord und Trimaran-Charter mit Katamaran-Komfort.",
+      "Bootstouren ab Trapani nach Favignana und Levanzo: geteilte oder private Touren, Schnorcheln, Chef an Bord und Trimaran-Charter zu den Ägadischen Inseln.",
   },
 } as const;
 
 function homeSeoCopy(locale: string) {
   return HOME_SEO_COPY[locale as keyof typeof HOME_SEO_COPY] ?? HOME_SEO_COPY.it;
+}
+
+const HOME_SCHEMA_TOPICS = {
+  it: {
+    about: [
+      "Tour in barca alle Egadi da Trapani",
+      "Noleggio catamarano Egadi",
+      "Charter Egadi in trimarano",
+      "Favignana e Levanzo in barca",
+      "Egadi navigazione",
+    ],
+    keywords: [
+      "tour in barca egadi",
+      "escursioni egadi da trapani",
+      "noleggio catamarano egadi",
+      "charter egadi",
+      "favignana e levanzo in barca",
+      "egadi navigazione",
+    ],
+  },
+  en: {
+    about: [
+      "Egadi Islands boat tours from Trapani",
+      "Egadi boats",
+      "Aegadian Islands yacht charter",
+      "Egadi Islands boat trip",
+      "Favignana and Levanzo boat tours",
+    ],
+    keywords: [
+      "egadi islands boat tours",
+      "egadi boats",
+      "egadi islands boat trip",
+      "yacht charter aegadian islands",
+      "boat trips from trapani",
+      "favignana and levanzo boat tour",
+    ],
+  },
+  es: {
+    about: [
+      "Paseos en barco desde Trapani a las Egadi",
+      "Excursiones en barco a Favignana y Levanzo",
+      "Charter en trimaran en las Islas Egadi",
+      "Snorkel en las Islas Egadi",
+    ],
+    keywords: [
+      "paseo en barco trapani",
+      "excursion en barco egadi",
+      "favignana levanzo en barco",
+      "charter islas egadi",
+    ],
+  },
+  fr: {
+    about: [
+      "Excursions bateau aux Egades depuis Trapani",
+      "Tours en bateau a Favignana et Levanzo",
+      "Charter en trimaran aux iles Egades",
+      "Snorkeling aux iles Egades",
+    ],
+    keywords: [
+      "excursion bateau egades",
+      "excursion bateau trapani",
+      "favignana levanzo bateau",
+      "charter iles egades",
+    ],
+  },
+  de: {
+    about: [
+      "Bootstouren ab Trapani zu den Egadi",
+      "Bootstour Favignana und Levanzo",
+      "Trimaran-Charter zu den Aegadischen Inseln",
+      "Schnorcheln auf den Egadi",
+    ],
+    keywords: [
+      "bootstour trapani",
+      "bootstour aegadische inseln",
+      "favignana levanzo bootstour",
+      "trimaran charter egadi",
+    ],
+  },
+} as const;
+
+function homeSchemaTopics(locale: string) {
+  return HOME_SCHEMA_TOPICS[locale as keyof typeof HOME_SCHEMA_TOPICS] ?? HOME_SCHEMA_TOPICS.it;
 }
 
 function bookingExperienceKey(service: { id: string; type: string; boat: { id: string } }): string {
@@ -325,7 +408,7 @@ function heroCardCopy(
         : "Trimarano privato, pranzo e crew dedicata.",
     },
     "charter-egadi": {
-      title: isEs ? "Charter Islas Egadi en trimarán" : isFr ? "Charter aux îles Égades en trimaran" : isDe ? "Charter Ägadische Inseln im Trimaran" : isEn ? "Egadi trimaran charter" : "Charter Egadi in trimarano",
+      title: isEs ? "Charter Islas Egadi en trimarán" : isFr ? "Charter aux îles Égades en trimaran" : isDe ? "Charter Ägadische Inseln im Trimaran" : isEn ? "Aegadian Islands yacht charter" : "Charter Egadi in trimarano",
       subtitle: isEs
         ? "3-7 días entre Favignana, Levanzo y Marettimo, con confort de catamarán."
         : isFr
@@ -444,7 +527,7 @@ function heroCardImagesForPackage(packageKey: string, locale: string): Array<{ s
         : isDe
         ? "Egadi Charter im Trimaran mit Entspannung im Netz am Meer"
         : isEn
-        ? "Egadi trimaran charter with relaxing on the net at sea"
+        ? "Aegadian Islands yacht charter with relaxing on the trimaran net at sea"
         : "Charter Egadi in trimarano con relax sulla rete in mare",
     },
   };
@@ -635,7 +718,7 @@ function buildExperienceChoiceRecommendations({
     },
     charter: {
       emoji: "🛏️",
-      title: isEs ? "Charter Islas Egadi en trimarán" : isFr ? "Charter aux îles Égades en trimaran" : isDe ? "Charter Ägadische Inseln im Trimaran" : isEn ? "Egadi trimaran charter" : "Charter Egadi in trimarano",
+      title: isEs ? "Charter Islas Egadi en trimarán" : isFr ? "Charter aux îles Égades en trimaran" : isDe ? "Charter Ägadische Inseln im Trimaran" : isEn ? "Aegadian Islands yacht charter" : "Charter Egadi in trimarano",
       boatLabel: isEs
 	        ? "Trimarán · confort de catamarán y ruta a medida"
         : isFr
@@ -826,6 +909,7 @@ export default async function HomePage({
   const siteBase = env.APP_URL.replace(/\/$/, "");
   const pageUrl = `${siteBase}${localizedPath(locale, "/")}`;
   const seo = homeSeoCopy(locale);
+  const schemaTopics = homeSchemaTopics(locale);
   const areaServed = ["Isole Egadi", "Favignana", "Levanzo", "Marettimo", "Trapani"];
   const boardingAddress = PUBLIC_CONTACT_POSTAL_ADDRESS;
   const homepageOffers = Object.values(choiceRecommendations).map((recommendation) => {
@@ -871,7 +955,11 @@ export default async function HomePage({
         name: seo.title,
         description: seo.description,
         isPartOf: { "@id": `${siteBase}/#website` },
-        about: { "@id": `${siteBase}/#organization` },
+        about: [
+          { "@id": `${siteBase}/#organization` },
+          ...schemaTopics.about.map((name) => ({ "@type": "Thing", name })),
+        ],
+        keywords: schemaTopics.keywords.join(", "),
         inLanguage: locale,
         primaryImageOfPage: {
           "@type": "ImageObject",
@@ -911,13 +999,7 @@ export default async function HomePage({
           areaServed: "IT",
         })),
         areaServed,
-        knowsAbout: [
-          "Boat tours in the Egadi Islands",
-          "Favignana and Levanzo boat tours from Trapani",
-          "Private boat charter",
-          "Sailing experiences in Sicily",
-          "Chef on board boat experiences",
-        ],
+        knowsAbout: schemaTopics.about,
         makesOffer: homepageOffers,
       },
       {

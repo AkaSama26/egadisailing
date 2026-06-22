@@ -4,7 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ScrollSection } from "@/components/scroll-section";
-import { localizedPath } from "@/lib/i18n/paths";
+import { localizedExperiencePath } from "@/lib/i18n/public-experience-paths";
 
 interface HomeGourmetSectionProps {
   locale: string;
@@ -215,7 +215,7 @@ export function HomeGourmetSection({ locale }: HomeGourmetSectionProps) {
             </div>
 
             <Link
-              href={localizedPath(locale, "/experiences/exclusive-experience")}
+              href={localizedExperiencePath(locale, "exclusive-experience")}
               className="mt-10 inline-flex items-center gap-2 text-base font-semibold text-[var(--color-gold)] transition-all hover:gap-3 hover:text-white"
             >
               {copy.cta}

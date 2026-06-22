@@ -1443,23 +1443,23 @@ export const EXPERIENCE_CATALOG = {
     listed: true,
     title: {
       it: "Charter Egadi in trimarano da Trapani",
-      en: "Egadi trimaran charter from Trapani",
+      en: "Aegadian Islands yacht charter from Trapani",
     },
     subtitle: {
       it: "Da 3 a 7 giornate sul trimarano, con le Egadi come casa galleggiante e il comfort che molti immaginano quando pensano a un charter in catamarano alle Egadi.",
-      en: "Three to seven days on the trimaran, with the Egadi Islands as your floating home.",
+      en: "Three to seven days on a private trimaran, a yacht charter style trip around Favignana, Levanzo and Marettimo.",
     },
     detailDescription: {
       it: "Un charter flessibile per dormire a bordo, svegliarsi vicino alle baie e costruire la rotta giorno per giorno. È la soluzione per chi valuta un noleggio catamarano alle Egadi con skipper, ma preferisce spazi, stabilità e vita a bordo di un trimarano multiscafo. Cambusa esclusa dal pacchetto, hostess extra su richiesta e refill/dispensa organizzabili con la crew.",
-      en: "A flexible charter for sleeping on board, waking up near the bays and shaping the route day by day. Provisioning is not included, a hostess is available as an extra and pantry top-ups can be arranged with the crew.",
+      en: "A flexible private yacht charter in the Aegadian Islands for sleeping on board, waking up near the bays and shaping the route day by day. Provisioning is not included, a hostess is available as an extra and pantry top-ups can be arranged with the crew.",
     },
     seoTitle: {
-      it: "Charter Egadi in trimarano da Trapani",
-      en: "Egadi Trimaran Charter from Trapani",
+      it: "Charter Egadi e yacht charter in trimarano da Trapani",
+      en: "Yacht Charter Aegadian Islands from Trapani",
     },
     seoDescription: {
-      it: "Charter Egadi in trimarano da Trapani da 3 a 7 giorni: alternativa al catamarano con skipper alle Egadi, con Favignana, Levanzo e Marettimo.",
-      en: "Egadi trimaran charter from Trapani for 3 to 7 days: Favignana, Levanzo, Marettimo, skipper, cabins, overnight stay and weather-aware route.",
+      it: "Charter Egadi in trimarano da Trapani da 3 a 7 giorni: yacht charter con skipper alle Egadi, Favignana, Levanzo e Marettimo.",
+      en: "Private yacht charter in the Aegadian Islands from Trapani for 3 to 7 days: Favignana, Levanzo, Marettimo, skipper, cabins and overnight stays.",
     },
     media: CHARTER_TRIMARAN_DETAIL_MEDIA,
     itinerary: [
@@ -2221,19 +2221,19 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     serviceIds: ["cabin-charter"],
     title: {
       it: "Charter Egadi in trimarano da Trapani",
-      en: "Egadi trimaran charter from Trapani",
+      en: "Aegadian Islands yacht charter from Trapani",
     },
     subtitle: {
       it: "Da 3 a 7 giornate sul trimarano, alternativa premium a un charter in catamarano alle Egadi, con itinerario tra Favignana, Levanzo e Marettimo.",
-      en: "Three to seven days on the trimaran, with an itinerary agreed around Favignana, Levanzo and Marettimo according to your preferences.",
+      en: "Three to seven days on a private trimaran, a yacht charter style itinerary around Favignana, Levanzo and Marettimo.",
     },
     seoTitle: {
-      it: "Charter Egadi in trimarano da Trapani",
-      en: "Egadi Trimaran Charter from Trapani",
+      it: "Charter Egadi e yacht charter in trimarano da Trapani",
+      en: "Yacht Charter Aegadian Islands from Trapani",
     },
     seoDescription: {
-      it: "Charter in trimarano alle Isole Egadi da 3 a 7 giornate, ideale per chi cerca noleggio catamarano alle Egadi con skipper e comfort.",
-      en: "Trimaran charter in the Egadi Islands for 3 to 7 days with skipper, overnight stay on board and weather-aware route.",
+      it: "Charter Egadi in trimarano da 3 a 7 giornate, ideale per chi cerca yacht charter o noleggio catamarano alle Egadi con skipper.",
+      en: "Private yacht charter in the Aegadian Islands for 3 to 7 days with skipper, overnight stays on board and weather-aware route.",
     },
     durationLabel: { it: "3-7 giornate", en: "3-7 days" },
     detailLabel: { it: "Itinerario su misura", en: "Tailored itinerary" },

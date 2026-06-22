@@ -16,6 +16,8 @@ type SitemapEntry = MetadataRoute.Sitemap[number];
 type SitemapEntryOptions = Pick<SitemapEntry, "lastModified">;
 type LocalizedPaths = Record<(typeof routing.locales)[number], string>;
 
+const CATALOG_CONTENT_LAST_MODIFIED = new Date("2026-06-22T00:00:00.000Z");
+
 function localizedUrl(baseUrl: string, locale: string, path: string): string {
   return localizedAbsoluteUrl(baseUrl, locale, path);
 }
@@ -57,7 +59,6 @@ function addLocalizedEntries(
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = env.APP_URL.replace(/\/$/, "");
-  const now = new Date();
   const pages = [
     "",
     "/experiences",
@@ -78,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     new Set([...getListedExperienceIds(), ...getExperiencePackageServiceIds()]),
   );
   let serviceLastModifiedById = new Map(
-    listedExperienceIds.map((id) => [id, now] as const),
+    listedExperienceIds.map((id) => [id, CATALOG_CONTENT_LAST_MODIFIED] as const),
   );
 
   try {
@@ -90,7 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     serviceLastModifiedById = new Map(
       listedExperienceIds.map((id) => [
         id,
-        services.find((service) => service.id === id)?.updatedAt ?? now,
+        services.find((service) => service.id === id)?.updatedAt ?? CATALOG_CONTENT_LAST_MODIFIED,
       ] as const),
     );
   } catch (err) {
@@ -107,7 +108,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       baseUrl,
       sameLocalizedPath(page),
       {
-        lastModified: now,
+        lastModified: CATALOG_CONTENT_LAST_MODIFIED,
       },
     );
   }
@@ -118,7 +119,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       baseUrl,
       sameLocalizedPath(`/boats/${slug}`),
       {
-        lastModified: now,
+        lastModified: CATALOG_CONTENT_LAST_MODIFIED,
       },
     );
   }
@@ -135,7 +136,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         de: localizedPathWithoutLocale("de", `/experiences/${getExperiencePublicSlug(serviceId, "de")}`),
       },
       {
-        lastModified: serviceLastModifiedById.get(serviceId) ?? now,
+        lastModified: serviceLastModifiedById.get(serviceId) ?? CATALOG_CONTENT_LAST_MODIFIED,
       },
     );
   }
