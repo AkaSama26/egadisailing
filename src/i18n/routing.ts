@@ -12,6 +12,11 @@ import { defineRouting } from "next-intl/routing";
 export const routing = defineRouting({
   locales: ["it", "en", "es", "fr", "de"],
   defaultLocale: "it",
+  // All public URLs are explicitly locale-prefixed (e.g. /it, /en).
+  // Relying on the pathname avoids setting NEXT_LOCALE on every public page,
+  // which keeps marketing HTML eligible for shared CDN caching.
+  localeDetection: false,
+  localeCookie: false,
   // Metadata pages and sitemap already publish canonical hreflang links.
   // Keeping next-intl automatic HTTP Link headers enabled can expose redirecting
   // x-default URLs for localized routes behind the production proxy.

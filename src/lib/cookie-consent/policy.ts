@@ -1,7 +1,7 @@
 export const COOKIE_CONSENT_COOKIE_NAME = "egadi_cookie_consent" as const;
-export const COOKIE_CONSENT_POLICY_VERSION = "1.6" as const;
+export const COOKIE_CONSENT_POLICY_VERSION = "1.7" as const;
 export const COOKIE_CONSENT_REVISION = 9 as const;
-export const COOKIE_CONSENT_EFFECTIVE_DATE = "20 giugno 2026" as const;
+export const COOKIE_CONSENT_EFFECTIVE_DATE = "23 giugno 2026" as const;
 
 export const COOKIE_CONSENT_CATEGORIES = {
   necessary: {
@@ -101,9 +101,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
       serviceCounterLabel: "servizio|servizi",
       sections: {
         intro:
-          "Puoi scegliere per finalità. I cookie tecnici restano attivi per sicurezza, sessione, lingua, pagamenti e protezione anti-bot.",
+          "Puoi scegliere per finalità. I cookie tecnici restano attivi per sicurezza, sessione, pagamenti e protezione anti-bot.",
         necessary:
-          "Essenziali per navigazione, sessione admin/cliente, preferenze lingua, sicurezza, Stripe e Cloudflare Turnstile. Non possono essere disattivati.",
+          "Essenziali per navigazione, sessione admin/cliente, sicurezza, Stripe e Cloudflare Turnstile. Non possono essere disattivati.",
         analytics:
           "Ci aiutano a capire come viene usato il sito. Google Tag Manager può essere presente con storage negato; cookie e misurazione completa di GA4 partono solo dopo consenso.",
         marketing:
@@ -149,9 +149,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
       serviceCounterLabel: "service|services",
       sections: {
         intro:
-          "You can choose by purpose. Necessary cookies remain active for security, sessions, language, payments and bot protection.",
+          "You can choose by purpose. Necessary cookies remain active for security, sessions, payments and bot protection.",
         necessary:
-          "Essential for navigation, admin/customer sessions, language preferences, security, Stripe and Cloudflare Turnstile. They cannot be disabled.",
+          "Essential for navigation, admin/customer sessions, security, Stripe and Cloudflare Turnstile. They cannot be disabled.",
         analytics:
           "They help us understand how the website is used. Google Tag Manager may be present with storage denied; GA4 cookies and full measurement start only after consent.",
         marketing:
@@ -197,9 +197,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
       serviceCounterLabel: "servicio|servicios",
       sections: {
         intro:
-          "Puedes elegir por finalidad. Las cookies necesarias permanecen activas para seguridad, sesiones, idioma, pagos y protección antibot.",
+          "Puedes elegir por finalidad. Las cookies necesarias permanecen activas para seguridad, sesiones, pagos y protección antibot.",
         necessary:
-          "Esenciales para navegación, sesiones de administrador/cliente, preferencias de idioma, seguridad, Stripe y Cloudflare Turnstile. No se pueden desactivar.",
+          "Esenciales para navegación, sesiones de administrador/cliente, seguridad, Stripe y Cloudflare Turnstile. No se pueden desactivar.",
         analytics:
           "Nos ayudan a entender cómo se usa el sitio. Google Tag Manager puede estar presente con almacenamiento denegado; las cookies y la medición completa de GA4 empiezan solo tras tu consentimiento.",
         marketing:
@@ -245,9 +245,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
       serviceCounterLabel: "service|services",
       sections: {
         intro:
-          "Vous pouvez choisir par finalité. Les cookies nécessaires restent actifs pour la sécurité, les sessions, la langue, les paiements et la protection anti-bot.",
+          "Vous pouvez choisir par finalité. Les cookies nécessaires restent actifs pour la sécurité, les sessions, les paiements et la protection anti-bot.",
         necessary:
-          "Essentiels pour la navigation, les sessions administrateur/client, les préférences de langue, la sécurité, Stripe et Cloudflare Turnstile. Ils ne peuvent pas être désactivés.",
+          "Essentiels pour la navigation, les sessions administrateur/client, la sécurité, Stripe et Cloudflare Turnstile. Ils ne peuvent pas être désactivés.",
         analytics:
           "Ils nous aident à comprendre l'utilisation du site. Google Tag Manager peut être présent avec stockage refusé ; cookies et mesure complète GA4 commencent uniquement après consentement.",
         marketing:
@@ -293,9 +293,9 @@ export const COOKIE_CONSENT_TRANSLATIONS = {
       serviceCounterLabel: "Dienst|Dienste",
       sections: {
         intro:
-          "Sie können nach Zweck wählen. Notwendige Cookies bleiben für Sicherheit, Sessions, Sprache, Zahlungen und Bot-Schutz aktiv.",
+          "Sie können nach Zweck wählen. Notwendige Cookies bleiben für Sicherheit, Sessions, Zahlungen und Bot-Schutz aktiv.",
         necessary:
-          "Erforderlich für Navigation, Admin-/Kundensessions, Spracheinstellungen, Sicherheit, Stripe und Cloudflare Turnstile. Sie können nicht deaktiviert werden.",
+          "Erforderlich für Navigation, Admin-/Kundensessions, Sicherheit, Stripe und Cloudflare Turnstile. Sie können nicht deaktiviert werden.",
         analytics:
           "Sie helfen uns zu verstehen, wie die Website genutzt wird. Google Tag Manager kann mit verweigertem Speicher vorhanden sein; GA4-Cookies und vollständige Messung starten nur nach Einwilligung.",
         marketing:

@@ -3,11 +3,10 @@ import { rootBodyClassName, rootHtmlClassName, RootRuntime } from "@/app/_compon
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "Admin | Egadisailing",
   robots: { index: false, follow: false },
 };
 
-export default function AdminLayout({
+export default function RedirectRootLayout({
   children,
 }: {
   children: React.ReactNode;

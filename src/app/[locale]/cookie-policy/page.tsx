@@ -116,7 +116,7 @@ function GermanCookiePolicyPage() {
               technische Kennungen verwenden.
             </p>
             <p className={paragraphClass}>
-              Egadisailing nutzt notwendige technische Cookies für Navigation, Sprache, Sicherheit,
+              Egadisailing nutzt notwendige technische Cookies für Navigation, Sicherheit,
               Sitzungen, Buchungsabruf, Zahlungen und Anti-Bot-Schutz. Google Tag Manager kann mit Consent Mode und verweigertem Speicher geladen werden. Analyse- und Marketing-Cookies, Speicher und vollständige Messung starten nur, wenn eine Einwilligung erforderlich ist und erteilt wurde.
             </p>
           </section>
@@ -126,7 +126,6 @@ function GermanCookiePolicyPage() {
             <h2 className={headingClass}>2. Technische und notwendige Cookies</h2>
             <LegalTable headers={["Name", "Anbieter", "Zweck", "Dauer"]}>
               <tr><Td><code>{COOKIE_CONSENT_COOKIE_NAME}</code></Td><Td>Egadisailing</Td><Td>Speichert die vom Nutzer geäußerten Cookie-Präferenzen</Td><Td>6 Monate</Td></tr>
-              <tr><Td><code>NEXT_LOCALE</code></Td><Td>Egadisailing</Td><Td>Speichert die ausgewählte Sprache</Td><Td>1 Jahr</Td></tr>
               <tr><Td><code>egadi-booking-session</code></Td><Td>Egadisailing</Td><Td>Sitzung des Kundenbereichs zum Abruf der Buchung</Td><Td>7 Tage</Td></tr>
               <tr><Td><code>authjs.session-token</code></Td><Td>Auth.js / Egadisailing</Td><Td>Sichere Sitzung des Adminbereichs</Td><Td>Bis zu 8 Stunden</Td></tr>
               <tr><Td><code>__stripe_mid</code>, <code>__stripe_sid</code>, <code>m</code></Td><Td>Stripe</Td><Td>Zahlungen, Betrugsprävention und Checkout-Sicherheit</Td><Td>Variabel nach Stripe-Richtlinie</Td></tr>
@@ -215,7 +214,7 @@ function FrenchCookiePolicyPage() {
               temporaires ou identifiants techniques.
             </p>
             <p className={paragraphClass}>
-              Egadisailing utilise des cookies techniques nécessaires à navigation, langue,
+              Egadisailing utilise des cookies techniques nécessaires à navigation,
               sécurité, sessions, récupération de réservation, paiements et protection anti-bot.
               Google Tag Manager peut se charger avec Consent Mode et stockage refusé. Cookies, stockage et mesure complète commencent seulement
               après votre consentement lorsque nécessaire.
@@ -227,7 +226,6 @@ function FrenchCookiePolicyPage() {
             <h2 className={headingClass}>2. Cookies techniques et nécessaires</h2>
             <LegalTable headers={["Nom", "Fournisseur", "Finalité", "Durée"]}>
               <tr><Td><code>{COOKIE_CONSENT_COOKIE_NAME}</code></Td><Td>Egadisailing</Td><Td>Enregistre les préférences cookies exprimées par l'utilisateur</Td><Td>6 mois</Td></tr>
-              <tr><Td><code>NEXT_LOCALE</code></Td><Td>Egadisailing</Td><Td>Enregistre la langue sélectionnée</Td><Td>1 an</Td></tr>
               <tr><Td><code>egadi-booking-session</code></Td><Td>Egadisailing</Td><Td>Session de l'espace client pour consulter la réservation</Td><Td>7 jours</Td></tr>
               <tr><Td><code>authjs.session-token</code></Td><Td>Auth.js / Egadisailing</Td><Td>Session sécurisée de l'espace administrateur</Td><Td>Jusqu'à 8 heures</Td></tr>
               <tr><Td><code>__stripe_mid</code>, <code>__stripe_sid</code>, <code>m</code></Td><Td>Stripe</Td><Td>Paiements, prévention fraude et sécurité checkout</Td><Td>Variable selon politique Stripe</Td></tr>
@@ -316,7 +314,7 @@ function SpanishCookiePolicyPage() {
               para guardar preferencias temporales o identificadores técnicos.
             </p>
             <p className={paragraphClass}>
-	              Egadisailing usa cookies técnicas necesarias para navegación, idioma, seguridad,
+	              Egadisailing usa cookies técnicas necesarias para navegación, seguridad,
               sesiones, recuperación de reserva, pagos y protección anti-bot. Google Tag Manager puede cargarse con Consent Mode y almacenamiento denegado. Cookies, almacenamiento y medición completa empiezan solo tras tu consentimiento.
             </p>
           </section>
@@ -326,7 +324,6 @@ function SpanishCookiePolicyPage() {
 	            <h2 className={headingClass}>2. Cookies técnicas y necesarias</h2>
             <LegalTable headers={["Nombre", "Proveedor", "Finalidad", "Duración"]}>
               <tr><Td><code>{COOKIE_CONSENT_COOKIE_NAME}</code></Td><Td>Egadisailing</Td><Td>Guarda las preferencias de cookies expresadas por el usuario</Td><Td>6 meses</Td></tr>
-              <tr><Td><code>NEXT_LOCALE</code></Td><Td>Egadisailing</Td><Td>Guarda el idioma seleccionado</Td><Td>1 año</Td></tr>
               <tr><Td><code>egadi-booking-session</code></Td><Td>Egadisailing</Td><Td>Sesión del área cliente para consultar la reserva</Td><Td>7 días</Td></tr>
               <tr><Td><code>authjs.session-token</code></Td><Td>Auth.js / Egadisailing</Td><Td>Sesión segura del área administrativa</Td><Td>Hasta 8 horas</Td></tr>
               <tr><Td><code>__stripe_mid</code>, <code>__stripe_sid</code>, <code>m</code></Td><Td>Stripe</Td><Td>Pagos, prevención de fraude y seguridad del checkout</Td><Td>Variable según política Stripe</Td></tr>
@@ -440,7 +437,7 @@ export default async function CookiePolicyPage({
               salvare preferenze temporanee o identificativi tecnici.
             </p>
             <p className={paragraphClass}>
-              Egadisailing usa cookie tecnici necessari per navigazione, lingua, sicurezza,
+              Egadisailing usa cookie tecnici necessari per navigazione, sicurezza,
               sessioni, recupero prenotazione, pagamenti e protezione anti-bot. Google Tag Manager può caricarsi con Consent Mode e storage negato. Cookie, storage e misurazione completa partono solo
               dopo il tuo consenso.
             </p>
@@ -462,14 +459,6 @@ export default async function CookiePolicyPage({
                 <Td>Egadisailing</Td>
                 <Td>Memorizza le preferenze cookie espresse dall&apos;utente</Td>
                 <Td>6 mesi</Td>
-              </tr>
-              <tr>
-                <Td>
-                  <code>NEXT_LOCALE</code>
-                </Td>
-                <Td>Egadisailing</Td>
-                <Td>Memorizza la lingua selezionata</Td>
-                <Td>1 anno</Td>
               </tr>
               <tr>
                 <Td>
@@ -862,7 +851,7 @@ export default async function CookiePolicyPage({
             <p className={paragraphClass}>
               Puoi cancellare o bloccare cookie, local storage e session storage anche
               dalle impostazioni del browser. Il blocco dei cookie tecnici può impedire il
-              corretto funzionamento di lingua, login, recupero prenotazione, checkout e
+              corretto funzionamento di login, recupero prenotazione, checkout e
               preferenze privacy.
             </p>
           </section>

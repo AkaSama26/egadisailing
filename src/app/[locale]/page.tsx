@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { db } from "@/lib/db";
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";

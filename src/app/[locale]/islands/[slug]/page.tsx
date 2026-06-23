@@ -21,6 +21,7 @@ import {
   Waves,
 } from "lucide-react";
 import { env } from "@/lib/env";
+import { routing } from "@/i18n/routing";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { localizedPath } from "@/lib/i18n/paths";
 import { localizedExperiencePath } from "@/lib/i18n/public-experience-paths";
@@ -29,6 +30,12 @@ import { getIslandGuideCopy } from "@/data/island-guides";
 
 const validSlugs = ["favignana", "levanzo", "marettimo"] as const;
 type IslandSlug = (typeof validSlugs)[number];
+
+export function generateStaticParams() {
+  return routing.locales.flatMap((locale) =>
+    validSlugs.map((slug) => ({ locale, slug })),
+  );
+}
 
 function isIslandSlug(slug: string): slug is IslandSlug {
   return validSlugs.some((validSlug) => validSlug === slug);

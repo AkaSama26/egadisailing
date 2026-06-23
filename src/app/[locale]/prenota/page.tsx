@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import type { Metadata } from "next";
 import { BookingPageClient, type BookingServiceOption } from "@/components/booking/booking-page-client";
 import { OceanLayout } from "@/components/customer/ocean-layout";

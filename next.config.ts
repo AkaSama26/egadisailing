@@ -23,6 +23,26 @@ const deploymentId =
 
 const projectRoot = process.cwd();
 
+const publicHtmlCacheHeaders = [
+  {
+    key: "Cache-Control",
+    value: "public, max-age=0, s-maxage=600, stale-while-revalidate=3600",
+  },
+];
+
+const localeRoutePattern = ":locale(it|en|es|fr|de)";
+const publicSectionPattern =
+  ":section(esperienze|experiences|experiencias|erlebnisse|barche|boats|barcos|bateaux|boote|isole|islands|islas|iles|inseln)";
+const publicStaticPagePattern =
+  ":page(chi-siamo|about|sobre-nosotros|a-propos|ueber-uns|contatti|contact|contacto|kontakt|faq|preguntas-frecuentes|questions-frequentes|haeufige-fragen|privacy|privacidad|confidentialite|datenschutz|terms|terminos-y-condiciones|conditions-generales|agb|cookie-policy|politique-de-cookies|cookie-richtlinie)";
+
+const publicMarketingPageSources = [
+  `/${localeRoutePattern}`,
+  `/${localeRoutePattern}/${publicSectionPattern}`,
+  `/${localeRoutePattern}/${publicSectionPattern}/:slug`,
+  `/${localeRoutePattern}/${publicStaticPagePattern}`,
+];
+
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: projectRoot,
@@ -266,6 +286,10 @@ const nextConfig: NextConfig = {
     ];
 
     return [
+      ...publicMarketingPageSources.map((source) => ({
+        source,
+        headers: publicHtmlCacheHeaders,
+      })),
       {
         source: "/llms.txt",
         headers: llmsHeaders,

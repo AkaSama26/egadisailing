@@ -103,21 +103,6 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
                 : "Memorizza le preferenze cookie espresse dall'utente.",
       expiration: locale === "fr" ? "6 mois" : locale === "es" ? "6 meses" : locale === "de" ? "6 Monate" : locale === "en" ? "6 months" : "6 mesi",
     },
-    {
-      name: "NEXT_LOCALE",
-      domain: "Egadisailing",
-      description:
-        locale === "fr"
-          ? "Enregistre la langue sélectionnée."
-          : locale === "es"
-            ? "Guarda el idioma seleccionado."
-            : locale === "de"
-              ? "Speichert die ausgewählte Sprache."
-              : locale === "en"
-                ? "Stores the selected language."
-                : "Memorizza la lingua selezionata.",
-      expiration: locale === "fr" ? "1 an" : locale === "es" ? "1 año" : locale === "de" ? "1 Jahr" : locale === "en" ? "1 year" : "1 anno",
-    },
   ];
 
   if (services.gaMeasurementId) {
