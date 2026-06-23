@@ -91,6 +91,12 @@ TURNSTILE_SECRET_KEY=0x4...
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4...
 ADMIN_EMAIL=info@egadisailing.com
 
+# Cloudflare cache purge after deploy
+# Create a separate token scoped to this zone:
+# Zone > Cache Purge > Purge
+CLOUDFLARE_ZONE_ID=...
+CLOUDFLARE_CACHE_PURGE_TOKEN=...
+
 # Opzionali — commentare se non usati
 # SENTRY_DSN=https://...ingest.sentry.io/...
 # TELEGRAM_BOT_TOKEN=...
@@ -225,6 +231,23 @@ docker compose -f docker-compose.prod.yml up -d --build app
 # Verifica health post-deploy:
 curl -s https://egadisailing.com/api/health | jq
 docker compose -f docker-compose.prod.yml logs app | tail -30
+
+# Purge Cloudflare edge HTML cache for public localized pages.
+# Default prefixes: egadisailing.com/it,/en,/de,/fr,/es + sitemap.xml + robots.txt.
+./scripts/cloudflare-purge-cache.sh
+```
+
+In alternativa, il comando app-only con purge integrata e':
+
+```bash
+./scripts/deploy-prod-app.sh
+```
+
+Prima di abilitare la purge in automazione, verificare il payload senza
+chiamare Cloudflare:
+
+```bash
+./scripts/cloudflare-purge-cache.sh --dry-run
 ```
 
 **Per breaking schema changes**: expand/contract su due release (mai

@@ -70,6 +70,8 @@ const envSchema = z.object({
   CLOUDFLARE_API_TOKEN: optionalSecret(16),
   CLOUDFLARE_ZONE_ID: optionalString(),
   CLOUDFLARE_ANALYTICS_HOSTNAME: optionalString(),
+  CLOUDFLARE_CACHE_PURGE_TOKEN: optionalSecret(16),
+  CLOUDFLARE_PURGE_PREFIXES: optionalString(),
   GA4_PROPERTY_ID: optionalString(),
   GOOGLE_ANALYTICS_CLIENT_EMAIL: optionalEmail(),
   GOOGLE_ANALYTICS_PRIVATE_KEY: optionalSecret(40),
