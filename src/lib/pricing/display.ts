@@ -8,6 +8,13 @@ export interface DisplayPrice {
   legacyFallback: boolean;
 }
 
+export interface SerializedDisplayPrice {
+  serviceId: string;
+  amount: string | null;
+  label: string;
+  legacyFallback: boolean;
+}
+
 export interface SeasonalDisplayPrice {
   seasonKey: string;
   seasonLabel: string;
@@ -117,6 +124,36 @@ export async function getDisplayPriceMap(
   }
 
   return result;
+}
+
+export async function getSerializedDisplayPrices(
+  serviceIds: string[],
+  year = 2026,
+  locale?: string | null,
+): Promise<SerializedDisplayPrice[]> {
+  const prices = await getDisplayPriceMap(serviceIds, year, locale);
+
+  return Array.from(prices.entries()).map(([serviceId, price]) => ({
+    serviceId,
+    amount: price.amount?.toString() ?? null,
+    label: price.label,
+    legacyFallback: price.legacyFallback,
+  }));
+}
+
+export function displayPriceMapFromSerialized(
+  prices: SerializedDisplayPrice[],
+): Map<string, DisplayPrice> {
+  return new Map(
+    prices.map((price) => [
+      price.serviceId,
+      {
+        amount: price.amount ? new Decimal(price.amount) : null,
+        label: price.label,
+        legacyFallback: price.legacyFallback,
+      },
+    ]),
+  );
 }
 
 export async function getSeasonalDisplayPrices(

@@ -1,7 +1,4 @@
-"use client";
-
-import React from "react";
-import { motion } from "framer-motion";
+import { type CSSProperties, Fragment } from "react";
 import { Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -130,18 +127,12 @@ export function TestimonialsRow({
 }: TestimonialsMarqueeProps) {
   return (
     <div className={cn("overflow-hidden", className)}>
-      <motion.div
-        animate={{ translateX: "-50%" }}
-        transition={{
-          duration,
-          repeat: Infinity,
-          ease: "linear",
-          repeatType: "loop",
-        }}
-        className="flex w-max gap-5 py-2 md:gap-6"
+      <div
+        className="testimonial-marquee-track flex w-max gap-5 py-2 md:gap-6"
+        style={{ "--testimonial-duration": `${duration}s` } as CSSProperties}
       >
         {Array.from({ length: 2 }).map((_, rowPass) => (
-          <React.Fragment key={rowPass}>
+          <Fragment key={rowPass}>
             {testimonials.map((testimonial, index) => (
               <TestimonialCard
                 {...testimonial}
@@ -150,9 +141,9 @@ export function TestimonialsRow({
                 key={`${rowPass}-${testimonial.name}-${index}`}
               />
             ))}
-          </React.Fragment>
+          </Fragment>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }

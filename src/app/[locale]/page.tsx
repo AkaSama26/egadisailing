@@ -1,10 +1,12 @@
 import { db } from "@/lib/db";
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { HeroSection } from "@/components/hero-section";
-import {
-  ExperienceChoiceDialog,
-  type ExperienceChoiceRecommendation,
-  type ExperienceChoiceRecommendationKey,
+import { DeferredExperienceChoiceDialog } from "@/components/deferred-experience-choice-dialog";
+import type {
+  ExperienceChoiceRecommendation,
+  ExperienceChoiceRecommendationKey,
 } from "@/components/experience-choice-dialog";
 import { LandingSections } from "./landing-sections";
 import { buildPageMetadata } from "@/lib/seo/metadata";
@@ -17,7 +19,11 @@ import {
 } from "@/data/catalog/experiences";
 import { env } from "@/lib/env";
 import { formatEur } from "@/lib/pricing/cents";
-import { getDisplayPriceMap, type DisplayPrice } from "@/lib/pricing/display";
+import {
+  displayPriceMapFromSerialized,
+  getSerializedDisplayPrices,
+  type DisplayPrice,
+} from "@/lib/pricing/display";
 import {
   PUBLIC_COMPANY_LEGAL,
   PUBLIC_CONTACT_EMAIL,
@@ -42,6 +48,35 @@ const CHOICE_RECOMMENDATION_SERVICE_IDS = {
   charter: "cabin-charter",
   fishing: "fishing-full-day",
 } as const satisfies Record<ExperienceChoiceRecommendationKey, string>;
+
+const getCachedHomeServices = unstable_cache(
+  async () =>
+    db.service.findMany({
+      where: { active: true },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        durationType: true,
+        durationHours: true,
+        capacityMax: true,
+        pricingUnit: true,
+        boat: { select: { id: true, name: true } },
+      },
+      orderBy: [{ boatId: "asc" }, { priority: "desc" }, { name: "asc" }],
+    }),
+  ["home-active-services-v1"],
+  { tags: ["public-services"], revalidate: 3600 },
+);
+
+const getCachedHomeDisplayPrices = unstable_cache(
+  async (serviceIds: string[], year: number, locale: string) => {
+    const uniqueServiceIds = Array.from(new Set(serviceIds)).sort();
+    return getSerializedDisplayPrices(uniqueServiceIds, year, locale);
+  },
+  ["home-display-prices-v1"],
+  { tags: ["public-prices"], revalidate: 3600 },
+);
 
 const HOME_SEO_COPY = {
   it: {
@@ -817,19 +852,14 @@ export default async function HomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const services = await db.service.findMany({
-    where: { active: true },
-    include: {
-      boat: { select: { id: true, name: true } },
-    },
-    orderBy: [{ boatId: "asc" }, { priority: "desc" }, { name: "asc" }],
-  });
+  const [services, tHero] = await Promise.all([
+    getCachedHomeServices(),
+    getTranslations({ locale, namespace: "hero" }),
+  ]);
   const publicServices = services.filter((service) => isPublicBookingServiceEnabled(service.id));
-  const displayPrices = await getDisplayPriceMap(
-    publicServices.map((service) => service.id),
-    2026,
-    locale,
-  );
+  const publicServiceIds = publicServices.map((service) => service.id).sort();
+  const displayPriceRows = await getCachedHomeDisplayPrices(publicServiceIds, 2026, locale);
+  const displayPrices = displayPriceMapFromSerialized(displayPriceRows);
   const serializedServices = publicServices
     .map((s) => ({
       id: s.id,
@@ -1023,9 +1053,14 @@ export default async function HomePage({
           __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
         }}
       />
-      <HeroSection experiences={heroExperiences} />
-      <ExperienceChoiceDialog locale={locale} recommendations={choiceRecommendations} />
-      <LandingSections services={serializedServices} />
+      <HeroSection
+        experiences={heroExperiences}
+        locale={locale}
+        title={tHero("seoTitle")}
+        subtitle={tHero("seoSubtitle")}
+      />
+      <DeferredExperienceChoiceDialog locale={locale} recommendations={choiceRecommendations} />
+      <LandingSections locale={locale} services={serializedServices} />
     </>
   );
 }

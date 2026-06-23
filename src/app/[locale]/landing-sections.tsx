@@ -1,7 +1,3 @@
-"use client";
-
-import { useLocale } from "next-intl";
-import { motion } from "framer-motion";
 import { ScrollSection } from "@/components/scroll-section";
 import {
   TestimonialsRow,
@@ -40,6 +36,7 @@ interface SerializedService {
 
 interface LandingSectionsProps {
   services: SerializedService[];
+  locale: string;
 }
 
 const featuredPackageOrder: Record<string, number> = {
@@ -216,54 +213,37 @@ function getPackagePriceLabel(
 function RevealTitle({ text, compact = false, id }: { text: string; compact?: boolean; id?: string }) {
   return (
     <div className="relative inline-block">
-      <motion.h2
+      <h2
         id={id}
         className={
           compact
             ? "relative font-heading text-3xl font-semibold leading-tight text-white/95 md:text-4xl lg:text-5xl xl:text-6xl"
             : "font-heading text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-bold text-white relative"
         }
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
       >
         {text}
-      </motion.h2>
-      {/* SVG underline decoration — animated wave */}
-      <motion.svg
+      </h2>
+      <svg
         aria-hidden="true"
         focusable="false"
         viewBox="0 0 400 20"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={compact ? "mx-auto mt-3 w-[42%]" : "w-[60%] mx-auto mt-4"}
-        initial={{ pathLength: 0, opacity: 0 }}
-        whileInView={{ pathLength: 1, opacity: 1 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 1.2, delay: 0.4, ease: "easeInOut" }}
       >
-        <motion.path
+        <path
           d="M0 10 Q50 2 100 10 T200 10 T300 10 T400 10"
           stroke="url(#revealGold)"
           strokeWidth="2.5"
           strokeLinecap="round"
           fill="none"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.2, delay: 0.4, ease: "easeInOut" }}
         />
-        <motion.path
+        <path
           d="M20 14 Q70 6 120 14 T220 14 T320 14 T380 14"
           stroke="url(#revealGold2)"
           strokeWidth="1.5"
           strokeLinecap="round"
           fill="none"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, delay: 0.7, ease: "easeInOut" }}
         />
         <defs>
           <linearGradient id="revealGold" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -280,7 +260,7 @@ function RevealTitle({ text, compact = false, id }: { text: string; compact?: bo
             <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
           </linearGradient>
         </defs>
-      </motion.svg>
+      </svg>
     </div>
   );
 }
@@ -289,8 +269,7 @@ function RevealTitle({ text, compact = false, id }: { text: string; compact?: bo
 /*  Main Component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function LandingSections({ services }: LandingSectionsProps) {
-  const locale = useLocale();
+export function LandingSections({ services, locale }: LandingSectionsProps) {
   const isEn = locale === "en";
   const isEs = locale === "es";
   const isFr = locale === "fr";
