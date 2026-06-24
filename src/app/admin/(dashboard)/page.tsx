@@ -1,88 +1,86 @@
 import type { ReactNode } from "react";
-import type Decimal from "decimal.js";
+import Decimal from "decimal.js";
 import Link from "next/link";
 import {
-  Activity,
   AlertTriangle,
-  BarChart3,
-  Calendar,
+  ArrowRight,
+  CalendarDays,
   CheckCircle2,
-  Clock,
+  CloudSun,
   CreditCard,
   Euro,
-  MousePointerClick,
-  Plug,
-  Search,
   Ship,
-  TrendingUp,
-  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AdminCard } from "@/components/admin/admin-card";
 import { EmptyState } from "@/components/admin/empty-state";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { TimeIso } from "@/components/ui/time-iso";
-import { formatItDay } from "@/lib/dates";
+import { BookingStatus, PaymentStatus, PaymentType } from "@/generated/prisma/enums";
+import { BOOKING_SOURCE_LABEL, labelOrRaw } from "@/lib/admin/labels";
+import { db } from "@/lib/db";
+import { addDays, formatItDay, isoDay } from "@/lib/dates";
 import { formatEur } from "@/lib/pricing/cents";
 import {
   getAdminControlRoomDashboard,
   type ControlRoomBooking,
-  type ControlRoomPayment,
 } from "@/lib/queries/admin-control-room-dashboard";
-import {
-  getCloudflareTrafficSummary,
-  type CloudflareTrafficRankItem,
-  type CloudflareTrafficSummary,
-} from "@/lib/cloudflare/analytics";
-import {
-  getGa4DashboardSummary,
-  type Ga4DashboardSummary,
-  type Ga4EventMetric,
-  type Ga4TopPageMetric,
-} from "@/lib/analytics/ga4-server";
-import { CloudflareHourlyLineChart } from "./cloudflare-hourly-line-chart";
-import {
-  BOOKING_SOURCE_LABEL,
-  BOOKING_STATUS_LABEL,
-  MANUAL_ALERT_ACTION_LABEL,
-  MANUAL_ALERT_CHANNEL_LABEL,
-  PAYMENT_METHOD_LABEL,
-  PAYMENT_TYPE_LABEL,
-  labelOrRaw,
-} from "@/lib/admin/labels";
+import { getAllWeather, type WeatherForBooking } from "@/lib/weather/service";
+
+interface AvailabilitySummaryRow {
+  boatId: string;
+  boatName: string;
+  totalDays: number;
+  availableDays: number;
+  blockedDays: number;
+  partialDays: number;
+}
+
+const MONEY_IN_TYPES: PaymentType[] = ["DEPOSIT", "BALANCE", "FULL"];
 
 const RISK_LABEL: Record<string, string> = {
+  LOW: "Buono",
   MEDIUM: "Da monitorare",
   HIGH: "Attenzione",
   EXTREME: "Critico",
 };
 
-const integerFormatter = new Intl.NumberFormat("it-IT");
-
-function formatNumber(value: number) {
-  return integerFormatter.format(value);
-}
-
 export default async function DashboardHome() {
-  const [dashboard, cloudflareTraffic, ga4Analytics] = await Promise.all([
-    getAdminControlRoomDashboard(),
-    getCloudflareTrafficSummary(),
-    getGa4DashboardSummary(),
-  ]);
+  const dashboard = await getAdminControlRoomDashboard();
+  const today = dashboard.today;
+  const tomorrow = addDays(today, 1);
+  const weekEnd = addDays(today, 6);
+  const todayKey = isoDay(today);
+
+  const [weatherRows, todayRevenue, overdueBalanceCount, availabilitySummary] =
+    await Promise.all([
+      getAllWeather().catch(() => [] as WeatherForBooking[]),
+      getTodayRevenue(today, tomorrow),
+      getOverdueBalanceCount(today),
+      getAvailabilitySummary(today, weekEnd),
+    ]);
+
+  const weatherByDate = new Map(weatherRows.map((row) => [row.date, row]));
+  const todayBookings = dashboard.upcomingBookings.filter(
+    (booking) => isoDay(booking.startDate) === todayKey,
+  );
+  const pendingBookings = dashboard.upcomingBookings.filter(
+    (booking) => booking.status === BookingStatus.PENDING,
+  );
+  const urgentCount =
+    dashboard.openBalanceCount +
+    pendingBookings.length +
+    dashboard.pendingAlerts.length +
+    dashboard.pendingChangeRequestCount +
+    dashboard.pendingOverrideCount +
+    dashboard.weatherWatchBookings.length;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Pannello di controllo"
-        subtitle="Quadro operativo di oggi, stagione, incassi, canali e azioni aperte."
+        title="Dashboard"
+        subtitle="Partenze, meteo, azioni urgenti e disponibilita' per la giornata."
         actions={
           <>
             <Link
@@ -101,101 +99,57 @@ export default async function DashboardHome() {
         }
       />
 
-      <form
-        action="/admin/prenotazioni"
-        className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row"
-      >
-        <label className="relative flex-1">
-          <span className="sr-only">Cerca prenotazione o cliente</span>
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          <input
-            name="q"
-            type="search"
-            placeholder="Cerca codice, cliente, email o telefono"
-            className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm"
-          />
-        </label>
-        <button
-          type="submit"
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
-          Cerca
-        </button>
-      </form>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiTile
-          label="Incassato mese"
-          value={formatEur(dashboard.monthRevenue)}
-          icon={Euro}
-          hint={`Pagamenti riusciti · rimborsi separati ${formatEur(dashboard.monthRefunds)}`}
-          href="/admin/finanza"
-        />
-        <KpiTile
-          label="Incassato stagione"
-          value={formatEur(dashboard.seasonRevenue)}
-          icon={TrendingUp}
-          hint={`Pagamenti riusciti · rimborsi separati ${formatEur(dashboard.seasonRefunds)}`}
-          href="/admin/finanza"
-        />
-        <KpiTile
-          label="Da incassare"
-          value={formatEur(dashboard.openBalanceTotal)}
-          icon={CreditCard}
-          tone={dashboard.openBalanceCount > 0 ? "warn" : "default"}
-          hint={`${dashboard.openBalanceCount} saldi aperti`}
-          href="/admin/finanza"
-        />
-        <KpiTile
-          label="Azioni aperte"
-          value={String(dashboard.taskCount)}
-          icon={Clock}
-          tone={dashboard.taskCount > 0 ? "warn" : "default"}
-          hint="Saldi, canali, meteo, email, conflitti"
-          href="#azioni"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[1.2fr_0.8fr]">
-        <CloudflareTrafficCard traffic={cloudflareTraffic} />
-        <Ga4AnalyticsCard analytics={ga4Analytics} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.95fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_0.85fr]">
         <AdminCard className="space-y-4">
           <SectionTitle
-            icon={Calendar}
-            title="Oggi e prossime uscite"
+            icon={CalendarDays}
+            title="Partenze di oggi"
             actionHref="/admin/calendario"
             actionLabel="Apri calendario"
           />
-          {dashboard.upcomingBookings.length === 0 ? (
-            <EmptyState message="Nessuna uscita confermata o in attesa nei prossimi 7 giorni." />
+          {todayBookings.length === 0 ? (
+            <EmptyState message="Nessuna partenza prevista oggi." />
           ) : (
             <div className="space-y-3">
-              {dashboard.upcomingBookings.slice(0, 8).map((booking) => (
-                <BookingPreview key={booking.id} booking={booking} />
+              {todayBookings.map((booking) => (
+                <TodayDeparture key={booking.id} booking={booking} />
               ))}
-              {dashboard.upcomingBookings.length > 8 && (
-                <MoreLink href="/admin/prenotazioni" count={dashboard.upcomingBookings.length - 8} />
-              )}
             </div>
           )}
         </AdminCard>
 
-        <AdminCard id="azioni" className="space-y-4" tone={dashboard.taskCount > 0 ? "warn" : "success"}>
-          <SectionTitle icon={CheckCircle2} title="Da fare ora" />
-          {dashboard.taskCount === 0 ? (
-            <EmptyState message="Nessuna azione aperta." />
+        <AdminCard className="space-y-4">
+          <SectionTitle
+            icon={CloudSun}
+            title="Meteo"
+            actionHref="/admin/meteo"
+            actionLabel="Dettaglio"
+          />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+            <WeatherDay title="Oggi" weather={weatherByDate.get(todayKey)} />
+            <WeatherDay title="Domani" weather={weatherByDate.get(isoDay(tomorrow))} />
+          </div>
+        </AdminCard>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.95fr_1.25fr]">
+        <AdminCard
+          id="azioni"
+          className="space-y-4"
+          tone={urgentCount > 0 ? "warn" : "success"}
+        >
+          <SectionTitle icon={urgentCount > 0 ? AlertTriangle : CheckCircle2} title="Azioni urgenti" />
+          {urgentCount === 0 ? (
+            <EmptyState message="Nessuna azione operativa aperta." />
           ) : (
-            <div className="space-y-4 text-sm">
+            <div className="space-y-3 text-sm">
               {dashboard.openBalanceBookings.length > 0 && (
                 <TaskBlock
                   title={`Saldi da incassare (${dashboard.openBalanceCount})`}
                   href="/admin/finanza"
                   tone="warn"
                 >
-                  {dashboard.openBalanceBookings.slice(0, 3).map((booking) => (
+                  {dashboard.openBalanceBookings.slice(0, 4).map((booking) => (
                     <TaskLine
                       key={booking.id}
                       href={`/admin/prenotazioni/${booking.id}`}
@@ -206,34 +160,14 @@ export default async function DashboardHome() {
                 </TaskBlock>
               )}
 
-              {dashboard.pendingAlerts.length > 0 && (
-                <TaskBlock
-                  title={`Azioni canali (${dashboard.pendingAlerts.length})`}
-                  href="/admin/sync-log"
-                  tone="warn"
-                >
-                  {dashboard.pendingAlerts.slice(0, 3).map((alert) => (
+              {pendingBookings.length > 0 && (
+                <TaskBlock title={`Booking pending (${pendingBookings.length})`} href="/admin/prenotazioni?status=PENDING">
+                  {pendingBookings.slice(0, 4).map((booking) => (
                     <TaskLine
-                      key={alert.id}
-                      href="/admin/sync-log"
-                      title={`${labelOrRaw(MANUAL_ALERT_CHANNEL_LABEL, alert.channel)} · ${labelOrRaw(MANUAL_ALERT_ACTION_LABEL, alert.action)}`}
-                      meta={formatItDay(alert.date)}
-                    />
-                  ))}
-                </TaskBlock>
-              )}
-
-              {dashboard.pendingChangeRequests.length > 0 && (
-                <TaskBlock
-                  title={`Cambi data (${dashboard.pendingChangeRequestCount})`}
-                  href="/admin/change-requests"
-                >
-                  {dashboard.pendingChangeRequests.slice(0, 3).map((request) => (
-                    <TaskLine
-                      key={request.id}
-                      href="/admin/change-requests"
-                      title={`${request.bookingCode} · ${request.customerName}`}
-                      meta={`${formatItDay(request.originalStartDate)} → ${formatItDay(request.requestedStartDate)}`}
+                      key={booking.id}
+                      href={`/admin/prenotazioni/${booking.id}`}
+                      title={`${booking.confirmationCode} · ${booking.customerName}`}
+                      meta={`${formatItDay(booking.startDate)} · ${booking.serviceName}`}
                     />
                   ))}
                 </TaskBlock>
@@ -241,11 +175,11 @@ export default async function DashboardHome() {
 
               {dashboard.pendingOverrides.length > 0 && (
                 <TaskBlock
-                  title={`Conflitti / overbooking (${dashboard.pendingOverrideCount})`}
+                  title={`Conflitti / override (${dashboard.pendingOverrideCount})`}
                   href="/admin/override-requests"
                   tone="alert"
                 >
-                  {dashboard.pendingOverrides.slice(0, 3).map((request) => (
+                  {dashboard.pendingOverrides.slice(0, 4).map((request) => (
                     <TaskLine
                       key={request.id}
                       href={`/admin/override-requests/${request.id}`}
@@ -256,13 +190,35 @@ export default async function DashboardHome() {
                 </TaskBlock>
               )}
 
+              {dashboard.pendingChangeRequests.length > 0 && (
+                <TaskBlock title={`Cambi data (${dashboard.pendingChangeRequestCount})`} href="/admin/change-requests">
+                  {dashboard.pendingChangeRequests.slice(0, 4).map((request) => (
+                    <TaskLine
+                      key={request.id}
+                      href="/admin/change-requests"
+                      title={`${request.bookingCode} · ${request.customerName}`}
+                      meta={`${formatItDay(request.originalStartDate)} -> ${formatItDay(request.requestedStartDate)}`}
+                    />
+                  ))}
+                </TaskBlock>
+              )}
+
+              {dashboard.pendingAlerts.length > 0 && (
+                <TaskBlock title={`Errori canali (${dashboard.pendingAlerts.length})`} href="/admin/sync-log" tone="warn">
+                  {dashboard.pendingAlerts.slice(0, 4).map((alert) => (
+                    <TaskLine
+                      key={alert.id}
+                      href="/admin/sync-log"
+                      title={`${alert.channel} · ${alert.action}`}
+                      meta={formatItDay(alert.date)}
+                    />
+                  ))}
+                </TaskBlock>
+              )}
+
               {dashboard.weatherWatchBookings.length > 0 && (
-                <TaskBlock
-                  title={`Meteo da controllare (${dashboard.weatherWatchBookings.length})`}
-                  href="/admin/meteo"
-                  tone="warn"
-                >
-                  {dashboard.weatherWatchBookings.slice(0, 3).map((booking) => (
+                <TaskBlock title={`Meteo da monitorare (${dashboard.weatherWatchBookings.length})`} href="/admin/meteo" tone="warn">
+                  {dashboard.weatherWatchBookings.slice(0, 4).map((booking) => (
                     <TaskLine
                       key={booking.id}
                       href={`/admin/prenotazioni/${booking.id}`}
@@ -272,690 +228,117 @@ export default async function DashboardHome() {
                   ))}
                 </TaskBlock>
               )}
-
-              {dashboard.failedEmails.length > 0 && (
-                <TaskBlock
-                  title={`Email fallite (${dashboard.failedEmailCount})`}
-                  href="/admin/sync-log"
-                  tone="warn"
-                >
-                  {dashboard.failedEmails.slice(0, 3).map((email) => (
-                    <TaskLine
-                      key={email.id}
-                      href="/admin/sync-log"
-                      title={email.subject}
-                      meta={`${email.recipientEmail} · tentativi ${email.attempts}`}
-                    />
-                  ))}
-                </TaskBlock>
-              )}
             </div>
           )}
         </AdminCard>
-      </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Card className="space-y-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Euro className="size-4 text-slate-500" aria-hidden="true" />
-              Incassi
-            </CardTitle>
-            <CardDescription>Incassato effettivo, rimborsi e saldi aperti.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <MoneyBars
-              rows={[
-                { label: "Incassato mese", value: dashboard.monthRevenue, tone: "positive" },
-                { label: "Rimborsi", value: dashboard.monthRefunds, tone: "negative" },
-                { label: "Da incassare", value: dashboard.openBalanceTotal, tone: "positive" },
-              ]}
+        <AdminCard className="space-y-5">
+          <SectionTitle icon={CreditCard} title="Pagamenti + disponibilita' prossimi 7 giorni" />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <MiniMetric label="Incassato oggi" value={formatEur(todayRevenue)} icon={Euro} />
+            <MiniMetric
+              label="Da incassare"
+              value={formatEur(dashboard.openBalanceTotal)}
+              hint={`${dashboard.openBalanceCount} saldi aperti`}
+              icon={CreditCard}
+              tone={dashboard.openBalanceCount > 0 ? "warn" : "default"}
             />
-            <div className="space-y-2 border-t border-slate-100 pt-3">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-xs font-semibold uppercase text-slate-500">Ultimi movimenti</h3>
-                <Link href="/admin/finanza" className="text-xs font-medium text-blue-700 hover:underline">
-                  Apri incassi
-                </Link>
-              </div>
-              {dashboard.recentPayments.length === 0 ? (
-                <EmptyState message="Nessun movimento registrato." />
-              ) : (
-                dashboard.recentPayments.slice(0, 5).map((payment) => (
-                  <PaymentMovement key={payment.id} payment={payment} />
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="space-y-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Ship className="size-4 text-slate-500" aria-hidden="true" />
-              Vendite
-            </CardTitle>
-            <CardDescription>
-              {dashboard.monthBookingsCount} prenotazioni mese · {dashboard.upcomingCount} uscite future.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {dashboard.servicesWithoutPrices > 0 && (
-              <Link
-                href="/admin/prezzi"
-                className="block rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
-              >
-                {dashboard.servicesWithoutPrices}/{dashboard.activeServiceCount} servizi senza listino
+            <MiniMetric
+              label="Saldi scaduti"
+              value={String(overdueBalanceCount)}
+              hint="partenze gia' passate"
+              icon={AlertTriangle}
+              tone={overdueBalanceCount > 0 ? "alert" : "default"}
+            />
+          </div>
+          <div className="space-y-3 border-t border-slate-100 pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-slate-900">Disponibilita' compatta</h3>
+              <Link href="/admin/calendario" className="text-xs font-medium text-blue-700 hover:underline">
+                Gestisci
               </Link>
-            )}
-            <BarChart
-              empty="Nessuna vendita di stagione."
-              rows={dashboard.topServices.map((service) => ({
-                key: service.serviceId,
-                label: service.serviceName,
-                meta: `${service.bookingsCount} prenotazioni`,
-                value: service.revenue,
-              }))}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="space-y-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plug className="size-4 text-slate-500" aria-hidden="true" />
-              Canali
-            </CardTitle>
-            <CardDescription>
-              {dashboard.channelProblemCount > 0
-                ? `${dashboard.channelProblemCount} canali da verificare`
-                : "Canali operativi"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BarChart
-              empty="Nessuna vendita per canale in stagione."
-              rows={dashboard.channels.map((channel) => ({
-                key: channel.source,
-                label: labelOrRaw(BOOKING_SOURCE_LABEL, channel.source),
-                meta: `${channel.bookingsCount} prenotazioni${channel.hasError ? " · errore" : ""}`,
-                value: channel.revenue,
-                tone: channel.hasError || channel.healthStatus === "RED"
-                  ? "alert"
-                  : channel.healthStatus === "YELLOW"
-                    ? "warn"
-                    : "default",
-              }))}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1fr]">
-        <AdminCard className="space-y-4">
-          <SectionTitle
-            icon={Users}
-            title="Prenotazioni recenti"
-            actionHref="/admin/prenotazioni"
-            actionLabel="Vedi tutte"
-          />
-          {dashboard.recentBookings.length === 0 ? (
-            <EmptyState message="Nessuna prenotazione registrata." />
-          ) : (
-            <div className="space-y-3">
-              {dashboard.recentBookings.map((booking) => (
-                <BookingPreview key={booking.id} booking={booking} compact />
-              ))}
             </div>
-          )}
-        </AdminCard>
-
-        <AdminCard className="space-y-4">
-          <SectionTitle icon={AlertTriangle} title="Stati prenotazioni stagione" />
-          <div className="grid grid-cols-2 gap-3">
-            {(["PENDING", "CONFIRMED", "CANCELLED", "REFUNDED"] as const).map((status) => (
-              <div key={status} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">
-                  {labelOrRaw(BOOKING_STATUS_LABEL, status)}
-                </div>
-                <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
-                  {dashboard.bookingStatusCounts[status] ?? 0}
-                </div>
+            {availabilitySummary.length === 0 ? (
+              <EmptyState message="Nessuna barca attiva trovata." />
+            ) : (
+              <div className="space-y-3">
+                {availabilitySummary.map((row) => (
+                  <AvailabilityRow key={row.boatId} row={row} />
+                ))}
               </div>
-            ))}
+            )}
           </div>
-          <div className="rounded-lg border border-slate-200 p-3 text-xs text-slate-500">
-            Ultimo aggiornamento <TimeIso datetime={dashboard.generatedAt} />
-          </div>
+          <p className="text-xs text-slate-500">
+            Aggiornato <TimeIso datetime={dashboard.generatedAt} />
+          </p>
         </AdminCard>
       </div>
     </div>
   );
 }
 
-const GA4_EVENT_LABELS: Record<string, string> = {
-  page_view: "Page view",
-  book_now_click: "Click Prenota ora",
-  cta_click: "Click CTA",
-  nav_click: "Click navigazione",
-  language_change: "Cambio lingua",
-  view_item_list: "Lista vista",
-  select_item: "Item selezionato",
-  view_item: "Item visto",
-  scroll_depth: "Scroll depth",
-  section_view: "Sezione vista",
-  booking_start: "Booking avviati",
-  booking_step_view: "Step booking visti",
-  booking_step_complete: "Step booking completati",
-  date_selected: "Date selezionate",
-  guest_count_selected: "Ospiti selezionati",
-  payment_option_selected: "Opzione pagamento",
-  begin_checkout: "Checkout avviati",
-  add_payment_info: "Metodo pagamento",
-  payment_submit: "Pagamento inviato",
-  payment_success: "Pagamenti riusciti",
-  booking_confirmed: "Prenotazioni confermate",
-  purchase: "Purchase GA4",
-  whatsapp_click: "Click WhatsApp",
-  phone_click: "Click telefono",
-  email_click: "Click email",
-  maps_click: "Click mappe",
-  contact_submit: "Contatti inviati",
-  generate_lead: "Lead generati",
-  form_error: "Errori form",
-  booking_error: "Errori booking",
-  payment_error: "Errori pagamento",
-  availability_unavailable: "Date non disponibili",
-};
+async function getTodayRevenue(today: Date, tomorrow: Date): Promise<Decimal> {
+  const result = await db.payment.aggregate({
+    where: {
+      status: PaymentStatus.SUCCEEDED,
+      type: { in: MONEY_IN_TYPES },
+      processedAt: { gte: today, lt: tomorrow },
+    },
+    _sum: { amount: true },
+  });
+  return result._sum.amount ?? new Decimal(0);
+}
 
-function Ga4AnalyticsCard({ analytics }: { analytics: Ga4DashboardSummary }) {
-  const tone = analytics.status === "error" ? "warn" : "default";
+async function getOverdueBalanceCount(today: Date): Promise<number> {
+  return db.directBooking.count({
+    where: {
+      balanceAmount: { not: null },
+      balancePaidAt: null,
+      booking: {
+        status: BookingStatus.CONFIRMED,
+        startDate: { lt: today },
+      },
+    },
+  });
+}
 
-  if (analytics.status !== "configured") {
-    return (
-      <AdminCard className="space-y-3" tone={tone}>
-        <SectionTitle icon={MousePointerClick} title="Conversioni GA4" />
-        <div className="rounded-lg border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
-          <p className="font-medium text-slate-900">
-            {analytics.status === "unavailable"
-              ? "GA4 Data API non configurata"
-              : "GA4 temporaneamente non disponibile"}
-          </p>
-          <p className="mt-1">{analytics.message}</p>
-          <p className="mt-3 text-xs text-slate-500">
-            Il tracking pubblico e' gia' attivo dopo consenso. Questo widget richiede solo le
-            credenziali server-side per leggere i report aggregati in admin.
-          </p>
-        </div>
-      </AdminCard>
-    );
+async function getAvailabilitySummary(from: Date, to: Date): Promise<AvailabilitySummaryRow[]> {
+  const boats = await db.boat.findMany({
+    where: { services: { some: { active: true } } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+  if (boats.length === 0) return [];
+
+  const rows = await db.boatAvailability.findMany({
+    where: {
+      boatId: { in: boats.map((boat) => boat.id) },
+      date: { gte: from, lte: to },
+    },
+    select: { boatId: true, date: true, status: true },
+  });
+
+  const totalDays = Math.round((to.getTime() - from.getTime()) / 86_400_000) + 1;
+  const byBoat = new Map<string, typeof rows>();
+  for (const row of rows) {
+    const list = byBoat.get(row.boatId) ?? [];
+    list.push(row);
+    byBoat.set(row.boatId, list);
   }
 
-  const maxFunnelCount = Math.max(...analytics.funnel30d.map((event) => event.eventCount), 1);
-  const maxPageViews = Math.max(...analytics.topPages30d.map((page) => page.pageViews), 1);
-
-  return (
-    <AdminCard className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <SectionTitle icon={MousePointerClick} title="Conversioni GA4" />
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-          ultimi 30 giorni
-        </span>
-      </div>
-
-      <div className="rounded-xl border border-slate-200 bg-emerald-950 p-4 text-white">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-emerald-100">
-          Utenti attivi
-        </p>
-        <p className="mt-2 text-4xl font-bold tabular-nums">
-          {formatNumber(analytics.last30d.activeUsers)}
-        </p>
-        <p className="mt-1 text-xs text-emerald-100">
-          {formatNumber(analytics.last30d.sessions)} sessioni · {formatNumber(analytics.last30d.pageViews)} pagine viste
-        </p>
-      </div>
-
-      <MetricRows
-        rows={[
-          ["Utenti 7g", formatNumber(analytics.last7d.activeUsers)],
-          ["Sessioni 7g", formatNumber(analytics.last7d.sessions)],
-          ["Eventi 30g", formatNumber(analytics.last30d.eventCount)],
-        ]}
-      />
-
-      <div className="space-y-3 border-t border-slate-100 pt-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <BarChart3 className="size-4 text-slate-500" aria-hidden="true" />
-          Funnel booking
-        </h3>
-        <div className="space-y-3">
-          {analytics.funnel30d.map((event) => (
-            <Ga4EventRow key={event.name} event={event} maxCount={maxFunnelCount} />
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-5 border-t border-slate-100 pt-4 xl:grid-cols-2">
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900">Azioni rapide</h3>
-          <MetricRows
-            rows={[
-              ["WhatsApp", formatNumber(eventCount(analytics.trackedEvents30d, "whatsapp_click"))],
-              ["Form contatti", formatNumber(eventCount(analytics.trackedEvents30d, "contact_submit"))],
-              ["Prenota ora", formatNumber(eventCount(analytics.trackedEvents30d, "book_now_click"))],
-              ["Lead", formatNumber(eventCount(analytics.trackedEvents30d, "generate_lead"))],
-              ["Checkout", formatNumber(eventCount(analytics.trackedEvents30d, "begin_checkout"))],
-            ]}
-          />
-        </div>
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900">Pagine top</h3>
-          {analytics.topPages30d.length === 0 ? (
-            <p className="rounded-lg border border-slate-200 p-3 text-sm text-slate-500">
-              Nessun dato pagina disponibile.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {analytics.topPages30d.slice(0, 4).map((page) => (
-                <Ga4TopPageRow key={page.path} page={page} maxPageViews={maxPageViews} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <p className="text-xs text-slate-500">
-        Aggiornato <TimeIso datetime={analytics.generatedAt} />
-      </p>
-    </AdminCard>
-  );
-}
-
-function Ga4EventRow({ event, maxCount }: { event: Ga4EventMetric; maxCount: number }) {
-  const width = barWidth(event.eventCount, maxCount);
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span className="truncate font-medium text-slate-800" title={event.name}>
-          {GA4_EVENT_LABELS[event.name] ?? event.name}
-        </span>
-        <span className="font-semibold tabular-nums text-slate-950">
-          {formatNumber(event.eventCount)}
-        </span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-emerald-600" style={{ width: width + "%" }} />
-      </div>
-    </div>
-  );
-}
-
-function Ga4TopPageRow({ page, maxPageViews }: { page: Ga4TopPageMetric; maxPageViews: number }) {
-  const width = barWidth(page.pageViews, maxPageViews);
-  return (
-    <div className="rounded-lg border border-slate-200 p-3">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 text-sm">
-        <span className="truncate font-medium text-slate-800" title={page.path}>
-          {pagePathLabel(page.path)}
-        </span>
-        <span className="font-semibold tabular-nums text-slate-950">
-          {formatNumber(page.pageViews)}
-        </span>
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-cyan-500" style={{ width: width + "%" }} />
-      </div>
-    </div>
-  );
-}
-
-function eventCount(events: Ga4EventMetric[], name: string): number {
-  return events.find((event) => event.name === name)?.eventCount ?? 0;
-}
-
-function CloudflareTrafficCard({ traffic }: { traffic: CloudflareTrafficSummary }) {
-  const tone = traffic.status === "error" ? "warn" : "default";
-
-  if (traffic.status !== "configured") {
-    return (
-      <AdminCard className="space-y-3" tone={tone}>
-        <SectionTitle icon={Activity} title="Traffico sito" />
-        <div className="rounded-lg border border-slate-200 bg-white/70 p-4 text-sm text-slate-700">
-          <p className="font-medium text-slate-900">
-            {traffic.status === "unavailable"
-              ? "Cloudflare Analytics non configurato"
-              : "Cloudflare Analytics temporaneamente non disponibile"}
-          </p>
-          <p className="mt-1">{traffic.message}</p>
-          <p className="mt-3 text-xs text-slate-500">
-            Il widget usa solo dati edge aggregati server-side. Nessun beacon o cookie viene
-            caricato sul sito pubblico.
-          </p>
-        </div>
-      </AdminCard>
-    );
-  }
-
-  const maxCountryVisits = maxVisits(traffic.topCountries);
-  const maxPageVisits = maxVisits(traffic.topPaths);
-
-  return (
-    <AdminCard className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <SectionTitle icon={Activity} title="Traffico sito" />
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-          ultime 24 ore
-        </span>
-      </div>
-
-      <div className="rounded-xl border border-slate-200 bg-slate-950 p-4 text-white">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-300">
-          Visite totali
-        </p>
-        <p className="mt-2 text-4xl font-bold tabular-nums">
-          {formatNumber(traffic.last24h.visits)}
-        </p>
-      </div>
-
-      <CloudflareHourlyLineChart
-        data={traffic.hourlyVisits.map((point) => ({
-          hour: point.hour,
-          visits: point.visits,
-        }))}
-      />
-
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-3">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <BarChart3 className="size-4 text-slate-500" aria-hidden="true" />
-            Paesi visitatori
-          </h3>
-          {traffic.topCountries.length === 0 ? (
-            <p className="rounded-lg border border-slate-200 p-3 text-sm text-slate-500">
-              Nessun dato disponibile.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {traffic.topCountries.map((country) => (
-                <CountryVisitBar
-                  key={country.label}
-                  country={country}
-                  maxVisits={maxCountryVisits}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <BarChart3 className="size-4 text-slate-500" aria-hidden="true" />
-            Pagine più viste
-          </h3>
-          {traffic.topPaths.length === 0 ? (
-            <p className="rounded-lg border border-slate-200 p-3 text-sm text-slate-500">
-              Nessun dato disponibile.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {traffic.topPaths.map((page) => (
-                <TopPageRow key={page.label} page={page} maxVisits={maxPageVisits} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <p className="text-xs text-slate-500">
-        Aggiornato <TimeIso datetime={traffic.generatedAt} />
-      </p>
-    </AdminCard>
-  );
-}
-
-function CountryVisitBar({
-  country,
-  maxVisits,
-}: {
-  country: CloudflareTrafficRankItem;
-  maxVisits: number;
-}) {
-  const meta = countryDisplay(country.label);
-  const visits = visitCount(country);
-  const width = barWidth(visits, maxVisits);
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <div className="min-w-0 flex items-center gap-2">
-          <span className="text-lg leading-none" aria-hidden="true">
-            {meta.flag}
-          </span>
-          <span className="truncate font-medium text-slate-800" title={meta.label}>
-            {meta.label}
-          </span>
-        </div>
-        <span className="font-semibold tabular-nums text-slate-950">
-          {formatNumber(visits)}
-        </span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-sky-500" style={{ width: `${width}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function TopPageRow({
-  page,
-  maxVisits,
-}: {
-  page: CloudflareTrafficRankItem;
-  maxVisits: number;
-}) {
-  const visits = visitCount(page);
-  const width = barWidth(visits, maxVisits);
-  const label = pagePathLabel(page.label);
-  const title = pagePathTitle(page);
-
-  return (
-    <div className="rounded-lg border border-slate-200 p-3">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 text-sm">
-        <span className="truncate font-medium text-slate-800" title={title}>
-          {label}
-        </span>
-        <span className="font-semibold tabular-nums text-slate-950">
-          {formatNumber(visits)}
-        </span>
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${width}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function maxVisits(rows: Array<{ visits: number }>): number {
-  return Math.max(...rows.map((row) => row.visits), 1);
-}
-
-function visitCount(row: CloudflareTrafficRankItem): number {
-  return row.visits;
-}
-
-function barWidth(value: number, maxValue: number): number {
-  if (value <= 0 || maxValue <= 0) return 0;
-  return Math.max(6, Math.round((value / maxValue) * 100));
-}
-
-function pagePathLabel(path: string): string {
-  if (path === "Homepage" || path === "/" || /^\/(it|en|de|es|fr)\/?$/.test(path)) {
-    return "Homepage";
-  }
-  return path;
-}
-
-function pagePathTitle(page: CloudflareTrafficRankItem): string {
-  const sources = page.sourceLabels?.filter((source) => source !== page.label);
-  if (!sources?.length) return page.label;
-  return `${pagePathLabel(page.label)}: ${sources.join(", ")}`;
-}
-
-const countryNameFormatter = new Intl.DisplayNames(["it"], { type: "region" });
-
-function countryDisplay(value: string): { flag: string; label: string } {
-  const code = value.trim().toUpperCase();
-  if (/^[A-Z]{2}$/.test(code)) {
+  return boats.map((boat) => {
+    const boatRows = byBoat.get(boat.id) ?? [];
+    const blockedDays = boatRows.filter((row) => row.status === "BLOCKED").length;
+    const partialDays = boatRows.filter((row) => row.status === "PARTIALLY_BOOKED").length;
     return {
-      flag: countryFlag(code),
-      label: countryNameFormatter.of(code) ?? code,
+      boatId: boat.id,
+      boatName: boat.name,
+      totalDays,
+      blockedDays,
+      partialDays,
+      availableDays: Math.max(0, totalDays - blockedDays - partialDays),
     };
-  }
-  if (!value || value === "Paese non rilevato") {
-    return { flag: "🌐", label: "Paese non rilevato" };
-  }
-  return { flag: "🌐", label: value };
-}
-
-function countryFlag(code: string): string {
-  const regionalIndicatorOffset = 127397;
-  return Array.from(code)
-    .map((letter) => String.fromCodePoint(letter.charCodeAt(0) + regionalIndicatorOffset))
-    .join("");
-}
-
-function KpiTile({
-  icon: Icon,
-  label,
-  value,
-  hint,
-  href,
-  tone = "default",
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  hint: string;
-  href: string;
-  tone?: "default" | "warn";
-}) {
-  const accent = tone === "warn" ? "border-l-amber-500" : "border-l-slate-900";
-  return (
-    <Link href={href} className="block">
-      <Card className={`min-h-[138px] border-l-4 ${accent} transition hover:bg-slate-50`}>
-        <CardHeader className="gap-2">
-          <div className="flex items-center justify-between gap-3">
-            <CardDescription>{label}</CardDescription>
-            <Icon className="size-4 text-slate-500" aria-hidden="true" />
-          </div>
-          <CardTitle className="text-2xl font-bold tabular-nums">{value}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-slate-500">{hint}</p>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
-
-function MoneyBars({
-  rows,
-}: {
-  rows: Array<{ label: string; value: Decimal; tone: "positive" | "negative" }>;
-}) {
-  const max = Math.max(1, ...rows.map((row) => Math.abs(row.value.toNumber())));
-  return (
-    <div className="space-y-3">
-      {rows.map((row) => {
-        const width = Math.max(4, Math.round((Math.abs(row.value.toNumber()) / max) * 100));
-        const color = row.tone === "negative" ? "bg-rose-500" : "bg-emerald-600";
-        return (
-          <div key={row.label} className="space-y-1">
-            <div className="flex justify-between gap-3 text-sm">
-              <span className="text-slate-600">{row.label}</span>
-              <span className="font-mono font-semibold tabular-nums text-slate-900">
-                {formatEur(row.value)}
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-slate-100">
-              <div className={`h-2 rounded-full ${color}`} style={{ width: `${width}%` }} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function PaymentMovement({ payment }: { payment: ControlRoomPayment }) {
-  const isRefund = payment.type === "REFUND";
-  return (
-    <Link
-      href={`/admin/prenotazioni/${payment.bookingId}`}
-      className="grid gap-2 rounded px-1 py-1 text-sm hover:bg-slate-50 sm:grid-cols-[1fr_auto]"
-    >
-      <span className="min-w-0">
-        <span className="block truncate font-medium text-slate-900">
-          {payment.bookingCode} · {payment.customerName}
-        </span>
-        <span className="block truncate text-xs text-slate-500">
-          {labelOrRaw(PAYMENT_TYPE_LABEL, payment.type)} ·{" "}
-          {labelOrRaw(PAYMENT_METHOD_LABEL, payment.method)}
-          {payment.processedAt ? ` · ${formatItDay(payment.processedAt)}` : ""}
-        </span>
-      </span>
-      <span className={`font-mono font-semibold ${isRefund ? "text-rose-700" : "text-emerald-700"}`}>
-        {isRefund ? "-" : ""}
-        {formatEur(payment.amount)}
-      </span>
-    </Link>
-  );
-}
-
-function BarChart({
-  rows,
-  empty,
-}: {
-  rows: Array<{
-    key: string;
-    label: string;
-    meta: string;
-    value: Decimal;
-    tone?: "default" | "warn" | "alert";
-  }>;
-  empty: string;
-}) {
-  if (rows.length === 0) return <EmptyState message={empty} />;
-  const max = Math.max(1, ...rows.map((row) => row.value.toNumber()));
-  return (
-    <div className="space-y-3">
-      {rows.map((row) => {
-        const width = Math.max(4, Math.round((row.value.toNumber() / max) * 100));
-        const color =
-          row.tone === "alert"
-            ? "bg-rose-500"
-            : row.tone === "warn"
-              ? "bg-amber-500"
-              : "bg-slate-800";
-        return (
-          <div key={row.key} className="space-y-1">
-            <div className="flex justify-between gap-3 text-sm">
-              <span className="min-w-0">
-                <span className="block truncate font-medium text-slate-900">{row.label}</span>
-                <span className="block truncate text-xs text-slate-500">{row.meta}</span>
-              </span>
-              <span className="shrink-0 font-mono font-semibold tabular-nums">
-                {formatEur(row.value)}
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-slate-100">
-              <div className={`h-2 rounded-full ${color}`} style={{ width: `${width}%` }} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  });
 }
 
 function SectionTitle({
@@ -984,59 +367,98 @@ function SectionTitle({
   );
 }
 
-function BookingPreview({
-  booking,
-  compact = false,
-}: {
-  booking: ControlRoomBooking;
-  compact?: boolean;
-}) {
-  const balanceAmount = booking.balanceAmount;
-  const hasBalance = balanceAmount !== null && !booking.balancePaid;
+function TodayDeparture({ booking }: { booking: ControlRoomBooking }) {
+  const hasBalance = booking.balanceAmount !== null && !booking.balancePaid;
   return (
-    <div className="rounded-lg border border-slate-200 p-3 text-sm">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <Link
+      href={`/admin/prenotazioni/${booking.id}`}
+      className="block rounded-xl border border-slate-200 p-4 transition hover:bg-slate-50"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link
-            href={`/admin/prenotazioni/${booking.id}`}
-            className="font-mono font-semibold text-blue-700 hover:underline"
-          >
-            {booking.confirmationCode}
-          </Link>
-          <span className="text-slate-500"> · {formatDateRange(booking)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="rounded bg-slate-100 px-2 py-0.5 text-xs">
-            {labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}
-          </span>
-          <StatusBadge status={booking.status} kind="booking" />
-        </div>
-      </div>
-      <div className="mt-2 grid gap-1 text-slate-700 md:grid-cols-2">
-        <div className="min-w-0">
-          <strong>{booking.serviceName}</strong> · {booking.boatName} · {booking.numPeople} pax
-        </div>
-        <div className="min-w-0 md:text-right">
-          {booking.customerName}
-          {booking.customerPhone && <span className="text-slate-500"> · {booking.customerPhone}</span>}
-        </div>
-      </div>
-      {!compact && (
-        <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
-          <span>
-            Pagato {formatEur(booking.paidAmount)} / {formatEur(booking.totalPrice)}
-          </span>
-          {hasBalance && (
-            <span className="font-semibold text-amber-700">
-              saldo {formatEur(balanceAmount)}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-sm font-semibold text-blue-700">
+              {booking.confirmationCode}
             </span>
-          )}
-          {booking.weatherRisk && booking.weatherRisk !== "LOW" && (
-            <span className="font-semibold text-amber-700">{riskText(booking)}</span>
-          )}
-          {booking.latestNote && <span className="truncate">Nota: {booking.latestNote}</span>}
+            <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+              {labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}
+            </span>
+            <StatusBadge status={booking.status} kind="booking" />
+          </div>
+          <p className="mt-2 font-semibold text-slate-950">{booking.serviceName}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            {booking.boatName} · {booking.customerName} · {booking.numPeople} pax
+          </p>
         </div>
+        <div className="text-right text-sm text-slate-600">
+          <div>{formatItDay(booking.startDate)}</div>
+          <div className="mt-1 inline-flex items-center gap-1 font-medium text-slate-950">
+            Apri <ArrowRight className="size-3" aria-hidden="true" />
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+        <span>Pagato {formatEur(booking.paidAmount)} / {formatEur(booking.totalPrice)}</span>
+        {hasBalance && (
+          <span className="font-semibold text-amber-700">
+            saldo {formatEur(booking.balanceAmount)}
+          </span>
+        )}
+        {booking.weatherRisk && booking.weatherRisk !== "LOW" && (
+          <span className="font-semibold text-amber-700">{riskText(booking)}</span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+function WeatherDay({ title, weather }: { title: string; weather?: WeatherForBooking }) {
+  if (!weather) {
+    return (
+      <div className="rounded-xl border border-slate-200 p-4 text-sm text-slate-500">
+        <p className="font-semibold text-slate-900">{title}</p>
+        <p className="mt-2">Meteo non disponibile.</p>
+      </div>
+    );
+  }
+  const riskClass =
+    weather.risk === "EXTREME"
+      ? "border-red-200 bg-red-50 text-red-900"
+      : weather.risk === "HIGH"
+        ? "border-amber-200 bg-amber-50 text-amber-900"
+        : weather.risk === "MEDIUM"
+          ? "border-sky-200 bg-sky-50 text-sky-900"
+          : "border-emerald-200 bg-emerald-50 text-emerald-900";
+  return (
+    <div className={`rounded-xl border p-4 ${riskClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{title}</p>
+          <p className="text-xs opacity-80">{formatItDay(new Date(`${weather.date}T00:00:00Z`))}</p>
+        </div>
+        <span className="rounded-full bg-white/70 px-2 py-1 text-xs font-semibold">
+          {RISK_LABEL[weather.risk] ?? weather.risk}
+        </span>
+      </div>
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-xs">
+        <Metric label="Vento" value={`${Math.round(weather.forecast.windSpeedKmh)} km/h`} />
+        <Metric label="Raffiche" value={`${Math.round(weather.forecast.windGustKmh)} km/h`} />
+        <Metric label="Onde" value={weather.forecast.waveHeightM === null ? "n/d" : `${weather.forecast.waveHeightM.toFixed(1)} m`} />
+        <Metric label="Pioggia" value={`${weather.forecast.precipitationProbability}%`} />
+        <Metric label="Temp." value={`${Math.round(weather.forecast.temperatureMin)}-${Math.round(weather.forecast.temperatureMax)} C`} />
+      </dl>
+      {weather.reasons.length > 0 && (
+        <p className="mt-3 text-xs opacity-85">{weather.reasons[0]}</p>
       )}
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="opacity-70">{label}</dt>
+      <dd className="font-semibold tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -1080,32 +502,61 @@ function TaskLine({ href, title, meta }: { href: string; title: string; meta: st
   );
 }
 
-function MetricRows({ rows }: { rows: Array<[string, string]> }) {
+function MiniMetric({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  icon: LucideIcon;
+  tone?: "default" | "warn" | "alert";
+}) {
+  const iconClass =
+    tone === "alert"
+      ? "text-red-600"
+      : tone === "warn"
+        ? "text-amber-600"
+        : "text-slate-500";
   return (
-    <dl className="space-y-2 text-sm">
-      {rows.map(([label, value]) => (
-        <div key={label} className="flex justify-between gap-3">
-          <dt className="text-slate-500">{label}</dt>
-          <dd className="font-mono font-semibold tabular-nums text-slate-900">{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+        <Icon className={`size-4 ${iconClass}`} aria-hidden="true" />
+      </div>
+      <p className="mt-2 text-2xl font-bold tabular-nums text-slate-950">{value}</p>
+      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+    </div>
   );
 }
 
-function MoreLink({ href, count }: { href: string; count: number }) {
+function AvailabilityRow({ row }: { row: AvailabilitySummaryRow }) {
+  const blockedWidth = Math.round((row.blockedDays / row.totalDays) * 100);
+  const partialWidth = Math.round((row.partialDays / row.totalDays) * 100);
   return (
-    <Link href={href} className="block text-sm font-medium text-blue-700 hover:underline">
-      +{count} altre righe
-    </Link>
+    <div className="rounded-lg border border-slate-200 p-3">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="flex min-w-0 items-center gap-2 font-semibold text-slate-900">
+          <Ship className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
+          <span className="truncate">{row.boatName}</span>
+        </span>
+        <span className="text-xs text-slate-500">
+          {row.availableDays}/{row.totalDays} liberi
+        </span>
+      </div>
+      <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-emerald-100">
+        <div className="bg-red-500" style={{ width: `${blockedWidth}%` }} />
+        <div className="bg-amber-400" style={{ width: `${partialWidth}%` }} />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+        <span>{row.blockedDays} bloccati</span>
+        <span>{row.partialDays} parziali</span>
+      </div>
+    </div>
   );
-}
-
-function formatDateRange(booking: ControlRoomBooking): string {
-  if (booking.startDate.getTime() === booking.endDate.getTime()) {
-    return formatItDay(booking.startDate);
-  }
-  return `${formatItDay(booking.startDate)} → ${formatItDay(booking.endDate)}`;
 }
 
 function riskText(booking: ControlRoomBooking): string {

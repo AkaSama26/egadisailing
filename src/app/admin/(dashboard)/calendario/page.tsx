@@ -1,14 +1,21 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
-import { AUDIT_ACTIONS } from "@/lib/audit/actions";
-import { type DayCell } from "@/components/admin/calendar-grid";
 import { AdminCard } from "@/components/admin/admin-card";
+import { type DayCell } from "@/components/admin/calendar-grid";
 import { PageHeader } from "@/components/admin/page-header";
-import { enrichDayCells } from "./enrich";
-import { CalendarClient } from "./calendar-client";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
+import { db } from "@/lib/db";
+import { isoDay, toUtcDay } from "@/lib/dates";
+import { getAllWeather } from "@/lib/weather/service";
+import { CalendarClient, type CalendarBoatView, type CalendarWeatherSummary } from "./calendar-client";
+import { enrichDayCells, type DayCellEnriched } from "./enrich";
 
 interface Props {
-  searchParams: Promise<{ month?: string; year?: string }>;
+  searchParams: Promise<{ month?: string; year?: string; view?: string }>;
+}
+
+interface FilterOption {
+  value: string;
+  label: string;
 }
 
 export default async function CalendarioPage({ searchParams }: Props) {
@@ -21,10 +28,9 @@ export default async function CalendarioPage({ searchParams }: Props) {
 
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const monthEnd = new Date(Date.UTC(year, month, 0));
-  // 0=Mon, 6=Sun — griglia europea.
   const firstWeekday = (monthStart.getUTCDay() + 6) % 7;
 
-  const [boats, bookings, availability, auditLogs] = await Promise.all([
+  const [boats, activeServices, bookings, availability, auditLogs, weatherRows] = await Promise.all([
     db.boat.findMany({
       where: {
         OR: [
@@ -38,14 +44,23 @@ export default async function CalendarioPage({ searchParams }: Props) {
               },
             },
           },
-          {
-            availability: {
-              some: { date: { gte: monthStart, lte: monthEnd } },
-            },
-          },
+          { availability: { some: { date: { gte: monthStart, lte: monthEnd } } } },
         ],
       },
+      select: { id: true, name: true },
       orderBy: { name: "asc" },
+    }),
+    db.service.findMany({
+      where: { active: true },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        priority: true,
+        boatId: true,
+        boat: { select: { id: true, name: true } },
+      },
+      orderBy: [{ priority: "asc" }, { name: "asc" }],
     }),
     db.booking.findMany({
       where: {
@@ -59,6 +74,7 @@ export default async function CalendarioPage({ searchParams }: Props) {
         status: true,
         confirmationCode: true,
         boatId: true,
+        serviceId: true,
         startDate: true,
         endDate: true,
         service: { select: { name: true, type: true } },
@@ -74,9 +90,6 @@ export default async function CalendarioPage({ searchParams }: Props) {
         lockedByBookingId: true,
       },
     }),
-    // Batch audit logs MANUAL_BLOCK per arricchire le celle admin-block
-    // con reason + blockedAt. Finestra 90gg indietro: la maggior parte dei
-    // blocchi recenti e' entro questa finestra; oltre scade retention.
     db.auditLog.findMany({
       where: {
         action: AUDIT_ACTIONS.MANUAL_BLOCK,
@@ -89,106 +102,206 @@ export default async function CalendarioPage({ searchParams }: Props) {
       orderBy: { timestamp: "desc" },
       take: 500,
     }),
+    getAllWeather().catch(() => []),
   ]);
 
+  const requestedView = sp.view ?? "all";
+  const serviceViews = new Set(activeServices.map((service) => `service:${service.id}`));
+  const boatViews = new Set(boats.map((boat) => `boat:${boat.id}`));
+  const selectedView =
+    requestedView === "all" || serviceViews.has(requestedView) || boatViews.has(requestedView)
+      ? requestedView
+      : "all";
+
+  const selectedServiceId = selectedView.startsWith("service:")
+    ? selectedView.slice("service:".length)
+    : null;
+  const selectedBoatId = selectedView.startsWith("boat:")
+    ? selectedView.slice("boat:".length)
+    : null;
+  const selectedService = selectedServiceId
+    ? activeServices.find((service) => service.id === selectedServiceId)
+    : null;
+
+  const visibleBoatIds = new Set<string>();
+  if (selectedService) {
+    visibleBoatIds.add(selectedService.boatId);
+  } else if (selectedBoatId) {
+    visibleBoatIds.add(selectedBoatId);
+  } else {
+    for (const boat of boats) visibleBoatIds.add(boat.id);
+  }
+
+  const visibleBoats = boats.filter((boat) => visibleBoatIds.has(boat.id));
+  const visibleBookings = bookings.filter((booking) => visibleBoatIds.has(booking.boatId));
+
   const enriched = enrichDayCells({
-    boats,
-    bookings,
+    boats: visibleBoats,
+    bookings: visibleBookings,
     availability,
     auditLogs,
     monthStart,
     monthEnd,
   });
 
+  const calendars: CalendarBoatView[] = visibleBoats.map((boat) => {
+    const boatEnriched = enriched.get(boat.id) ?? [];
+    return {
+      boatId: boat.id,
+      boatName: boat.name,
+      days: buildCalendarDays(firstWeekday, monthStart, boatEnriched),
+      enriched: boatEnriched,
+    };
+  });
+
+  const weather = weatherRows.map<CalendarWeatherSummary>((row) => ({
+    date: row.date,
+    risk: row.risk,
+    reasons: row.reasons,
+    forecast: {
+      temperatureMax: row.forecast.temperatureMax,
+      temperatureMin: row.forecast.temperatureMin,
+      windSpeedKmh: row.forecast.windSpeedKmh,
+      windGustKmh: row.forecast.windGustKmh,
+      precipitationProbability: row.forecast.precipitationProbability,
+      precipitationMm: row.forecast.precipitationMm,
+      waveHeightM: row.forecast.waveHeightM,
+    },
+  }));
+
   const prev = month === 1 ? { m: 12, y: year - 1 } : { m: month - 1, y: year };
   const next = month === 12 ? { m: 1, y: year + 1 } : { m: month + 1, y: year };
+  const todayIso = isoDay(toUtcDay(now));
+  const initialDateIso = todayIso >= isoDay(monthStart) && todayIso <= isoDay(monthEnd)
+    ? todayIso
+    : isoDay(monthStart);
+  const initialSelected = calendars[0]
+    ? { boatId: calendars[0].boatId, dateIso: initialDateIso }
+    : null;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={`Calendario · ${year}-${String(month).padStart(2, "0")}`}
+        subtitle="Seleziona esperienza o barca, poi usa il dettaglio della giornata a destra."
         actions={
           <>
             <Link
-              href={`/admin/calendario?year=${prev.y}&month=${prev.m}`}
-              className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
+              href={calendarHref({ year: prev.y, month: prev.m, view: selectedView })}
+              className="rounded border bg-white px-3 py-1 text-sm hover:bg-slate-50"
             >
-              ← Prec
+              Prec
             </Link>
             <Link
-              href="/admin/calendario"
-              className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
+              href={calendarHref({ view: selectedView })}
+              className="rounded border bg-white px-3 py-1 text-sm hover:bg-slate-50"
             >
               Oggi
             </Link>
             <Link
-              href={`/admin/calendario?year=${next.y}&month=${next.m}`}
-              className="px-3 py-1 border rounded text-sm bg-white hover:bg-slate-50"
+              href={calendarHref({ year: next.y, month: next.m, view: selectedView })}
+              className="rounded border bg-white px-3 py-1 text-sm hover:bg-slate-50"
             >
-              Succ →
+              Succ
             </Link>
           </>
         }
       />
 
-      {boats.length === 0 && (
-        <p className="text-sm text-slate-500">Nessuna barca configurata.</p>
-      )}
+      <AdminCard padding="sm">
+        <form action="/admin/calendario" className="flex flex-col gap-3 md:flex-row md:items-end">
+          <input type="hidden" name="year" value={year} />
+          <input type="hidden" name="month" value={month} />
+          <label className="flex-1 text-sm font-medium text-slate-700">
+            Esperienza o barca
+            <select
+              name="view"
+              defaultValue={selectedView}
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="all">Tutte le esperienze</option>
+              <optgroup label="Esperienze attive">
+                {activeServices.map((service) => (
+                  <option key={service.id} value={`service:${service.id}`}>
+                    {service.name} · {service.boat.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Barche">
+                {boats.map((boat) => (
+                  <option key={boat.id} value={`boat:${boat.id}`}>
+                    {boat.name}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </label>
+          <button
+            type="submit"
+            className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Applica filtro
+          </button>
+        </form>
+      </AdminCard>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {boats.map((boat) => {
-          const boatEnriched = enriched.get(boat.id) ?? [];
-          // Costruisci DayCell[] (shape legacy con padding) per CalendarGrid.
-          // Il padding cells + DayCellEnriched[] sono complementari: padding e' solo
-          // per allineare la griglia Lun-Dom; le celle vere arrivano dal enriched.
-          const days: DayCell[] = [];
-          for (let i = 0; i < firstWeekday; i++) {
-            days.push({
-              date: monthStart,
-              bookings: [],
-              status: "AVAILABLE",
-              isPadding: true,
-            });
-          }
-          for (const e of boatEnriched) {
-            days.push({
-              date: e.date,
-              bookings: e.bookings.map((b) => ({
-                id: b.id,
-                source: b.source,
-                serviceName: b.serviceName,
-                serviceType: b.serviceType,
-                confirmationCode: b.confirmationCode,
-              })),
-              status: e.status,
-            });
-          }
-          return (
-            <AdminCard key={boat.id} className="space-y-4">
-              <CalendarClient
-                boatId={boat.id}
-                boatName={boat.name}
-                days={days}
-                enriched={boatEnriched}
-              />
-            </AdminCard>
-          );
-        })}
-      </div>
+      <CalendarClient calendars={calendars} weather={weather} initialSelected={initialSelected} />
 
-      <AdminCard padding="sm" className="text-xs text-slate-600 space-y-1">
+      <AdminCard padding="sm" className="space-y-1 text-xs text-slate-600">
         <p className="font-semibold text-slate-900">Legenda:</p>
-        <div className="flex gap-3 flex-wrap">
-          <LegendBadge className="bg-red-50 border-red-200">Prenotato</LegendBadge>
+        <div className="flex flex-wrap gap-3">
+          <LegendBadge className="bg-red-50 border-red-200">Bloccato / prenotato</LegendBadge>
           <LegendBadge className="bg-amber-50 border-amber-200">Parzialmente prenotato</LegendBadge>
           <LegendBadge className="bg-white border-slate-200">Disponibile</LegendBadge>
         </div>
-        <p className="mt-2">Fino a 3 booking per cella; oltre mostra "+N".</p>
+        <p className="mt-2">Fino a 3 booking per cella; oltre mostra +N.</p>
       </AdminCard>
     </div>
   );
 }
 
+function buildCalendarDays(
+  firstWeekday: number,
+  monthStart: Date,
+  enriched: DayCellEnriched[],
+): DayCell[] {
+  const days: DayCell[] = [];
+  for (let i = 0; i < firstWeekday; i++) {
+    days.push({ date: monthStart, bookings: [], status: "AVAILABLE", isPadding: true });
+  }
+  for (const day of enriched) {
+    days.push({
+      date: day.date,
+      bookings: day.bookings.map((booking) => ({
+        id: booking.id,
+        source: booking.source,
+        serviceName: booking.serviceName,
+        serviceType: booking.serviceType,
+        confirmationCode: booking.confirmationCode,
+      })),
+      status: day.status,
+    });
+  }
+  return days;
+}
+
+function calendarHref({
+  year,
+  month,
+  view,
+}: {
+  year?: number;
+  month?: number;
+  view?: string;
+}): string {
+  const search = new URLSearchParams();
+  if (year) search.set("year", String(year));
+  if (month) search.set("month", String(month));
+  if (view && view !== "all") search.set("view", view);
+  const qs = search.toString();
+  return qs ? `/admin/calendario?${qs}` : "/admin/calendario";
+}
+
 function LegendBadge({ children, className }: { children: string; className: string }) {
-  return <span className={`px-2 py-0.5 rounded border ${className}`}>{children}</span>;
+  return <span className={`rounded border px-2 py-0.5 ${className}`}>{children}</span>;
 }

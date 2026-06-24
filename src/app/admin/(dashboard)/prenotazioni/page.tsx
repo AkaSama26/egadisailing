@@ -1,20 +1,25 @@
 import Decimal from "decimal.js";
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { Search } from "lucide-react";
+import { BookingSource, BookingStatus } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
-import {
-  BookingSource,
-  BookingStatus,
-} from "@/generated/prisma/enums";
 import { BookingTable, type BookingRow } from "@/components/admin/booking-table";
 import { PageHeader } from "@/components/admin/page-header";
+import { db } from "@/lib/db";
 import {
   BOOKING_SOURCE_LABEL,
   BOOKING_STATUS_LABEL,
 } from "@/lib/admin/labels";
 
 interface Props {
-  searchParams: Promise<{ source?: string; status?: string; q?: string }>;
+  searchParams: Promise<{
+    source?: string;
+    status?: string;
+    q?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    serviceId?: string;
+  }>;
 }
 
 const SOURCES: BookingSource[] = [
@@ -33,16 +38,32 @@ function isSource(v: string | undefined): v is BookingSource {
 function isStatus(v: string | undefined): v is BookingStatus {
   return typeof v === "string" && (STATUSES as string[]).includes(v);
 }
+function parseDateParam(value: string | undefined): Date | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  return new Date(`${value}T00:00:00Z`);
+}
 
 export default async function PrenotazioniPage({ searchParams }: Props) {
   const sp = await searchParams;
   const sourceFilter = isSource(sp.source) ? sp.source : undefined;
   const statusFilter = isStatus(sp.status) ? sp.status : undefined;
   const q = sp.q?.trim();
+  const dateFrom = parseDateParam(sp.dateFrom);
+  const dateTo = parseDateParam(sp.dateTo);
+  const serviceId = sp.serviceId?.trim() || undefined;
   const filters: Prisma.BookingWhereInput[] = [];
 
   if (sourceFilter) filters.push({ source: sourceFilter });
   if (statusFilter) filters.push({ status: statusFilter });
+  if (serviceId) filters.push({ serviceId });
+  if (dateFrom || dateTo) {
+    filters.push({
+      startDate: {
+        ...(dateFrom ? { gte: dateFrom } : {}),
+        ...(dateTo ? { lte: dateTo } : {}),
+      },
+    });
+  }
   if (q) {
     filters.push({
       OR: [
@@ -63,16 +84,23 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
     });
   }
 
-  const bookings = await db.booking.findMany({
-    where: filters.length > 0 ? { AND: filters } : undefined,
-    include: {
-      customer: { select: { firstName: true, lastName: true, email: true } },
-      service: { select: { name: true } },
-      payments: { select: { status: true, type: true, amount: true } },
-    },
-    orderBy: { startDate: "desc" },
-    take: 200,
-  });
+  const [services, bookings] = await Promise.all([
+    db.service.findMany({
+      where: { active: true },
+      select: { id: true, name: true, boat: { select: { name: true } } },
+      orderBy: [{ priority: "asc" }, { name: "asc" }],
+    }),
+    db.booking.findMany({
+      where: filters.length > 0 ? { AND: filters } : undefined,
+      include: {
+        customer: { select: { firstName: true, lastName: true, email: true } },
+        service: { select: { name: true } },
+        payments: { select: { status: true, type: true, amount: true } },
+      },
+      orderBy: { startDate: "desc" },
+      take: 200,
+    }),
+  ]);
 
   const rows: BookingRow[] = bookings.map((b) => {
     const paid = b.payments
@@ -97,79 +125,106 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
     <div className="space-y-6">
       <PageHeader title="Prenotazioni" />
 
-      <div className="space-y-2">
-        <div className="flex gap-2 flex-wrap">
-          <span className="text-xs font-semibold text-slate-500 self-center mr-1">Canale:</span>
-          <FilterChip
-            href={bookingHref({ status: statusFilter, q })}
-            label="Tutti"
-            active={!sourceFilter}
+      <form
+        action="/admin/prenotazioni"
+        className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 lg:grid-cols-[minmax(180px,1.4fr)_repeat(5,minmax(130px,1fr))_auto]"
+      >
+        <label className="relative text-sm font-medium text-slate-700">
+          Cerca
+          <Search className="pointer-events-none absolute bottom-2.5 left-3 size-4 text-slate-400" aria-hidden="true" />
+          <input
+            name="q"
+            type="search"
+            defaultValue={q ?? ""}
+            placeholder="Codice, cliente, email, telefono"
+            className="mt-1 w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm"
           />
-          {SOURCES.map((s) => (
-            <FilterChip
-              key={s}
-              href={bookingHref({ source: s, status: statusFilter, q })}
-              label={BOOKING_SOURCE_LABEL[s]}
-              active={sourceFilter === s}
-            />
-          ))}
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <span className="text-xs font-semibold text-slate-500 self-center mr-1">Stato:</span>
-          <FilterChip
-            href={bookingHref({ source: sourceFilter, q })}
-            label="Tutti"
-            active={!statusFilter}
+        </label>
+        <label className="text-sm font-medium text-slate-700">
+          Da
+          <input
+            name="dateFrom"
+            type="date"
+            defaultValue={sp.dateFrom ?? ""}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
-          {STATUSES.map((s) => (
-            <FilterChip
-              key={s}
-              href={bookingHref({ source: sourceFilter, status: s, q })}
-              label={BOOKING_STATUS_LABEL[s]}
-              active={statusFilter === s}
-            />
-          ))}
+        </label>
+        <label className="text-sm font-medium text-slate-700">
+          A
+          <input
+            name="dateTo"
+            type="date"
+            defaultValue={sp.dateTo ?? ""}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="text-sm font-medium text-slate-700">
+          Stato
+          <select
+            name="status"
+            defaultValue={statusFilter ?? ""}
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          >
+            <option value="">Tutti</option>
+            {STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {BOOKING_STATUS_LABEL[status]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm font-medium text-slate-700">
+          Fonte
+          <select
+            name="source"
+            defaultValue={sourceFilter ?? ""}
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          >
+            <option value="">Tutte</option>
+            {SOURCES.map((source) => (
+              <option key={source} value={source}>
+                {BOOKING_SOURCE_LABEL[source]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-sm font-medium text-slate-700">
+          Esperienza
+          <select
+            name="serviceId"
+            defaultValue={serviceId ?? ""}
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          >
+            <option value="">Tutte</option>
+            {services.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name} · {service.boat.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex items-end gap-2">
+          <button
+            type="submit"
+            className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Filtra
+          </button>
+          <Link
+            href="/admin/prenotazioni"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+          >
+            Reset
+          </Link>
         </div>
-      </div>
+      </form>
 
       <p className="text-xs text-slate-500">
-        Mostrati i {rows.length} risultati più recenti (limite 200)
-        {q ? ` per "${q}"` : ""}. Filtrare per ridurre lo scope.
+        Mostrati i {rows.length} risultati piu' recenti (limite 200)
+        {q ? ` per "${q}"` : ""}. Usa i filtri per ridurre lo scope.
       </p>
 
       <BookingTable rows={rows} />
     </div>
-  );
-}
-
-function bookingHref(params: { source?: BookingSource; status?: BookingStatus; q?: string }): string {
-  const search = new URLSearchParams();
-  if (params.source) search.set("source", params.source);
-  if (params.status) search.set("status", params.status);
-  if (params.q) search.set("q", params.q);
-  const qs = search.toString();
-  return qs ? `/admin/prenotazioni?${qs}` : "/admin/prenotazioni";
-}
-
-function FilterChip({
-  href,
-  label,
-  active,
-}: {
-  href: string;
-  label: string;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`px-3 py-1 rounded-full text-xs border transition ${
-        active
-          ? "bg-slate-900 text-white border-slate-900"
-          : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
-      }`}
-    >
-      {label}
-    </Link>
   );
 }

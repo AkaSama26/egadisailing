@@ -17,8 +17,8 @@ import {
  * Admin view: stato sync real-time.
  *
  * NB: `SyncQueue` legacy non e' piu' usato (BullMQ l'ha sostituito, Round 2).
- * Leggiamo direttamente dalla BullMQ queue + tabelle dedup (ProcessedBokun/
- * Boataround/Email) + AuditLog.
+ * Leggiamo direttamente dalla BullMQ queue + tabelle dedup attive
+ * (ProcessedBokun/Boataround) + AuditLog.
  */
 interface QueueBreakdown {
   queueName: string;
@@ -99,7 +99,6 @@ export default async function SyncLogPage() {
     failedEmails,
     bokunEvents,
     boataroundEvents,
-    charterEmails,
     auditEntries,
   ] =
     await Promise.all([
@@ -121,7 +120,6 @@ export default async function SyncLogPage() {
       }),
       db.processedBokunEvent.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
       db.processedBoataroundEvent.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
-      db.processedCharterEmail.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
       db.auditLog.findMany({ orderBy: { timestamp: "desc" }, take: 50 }),
     ]);
 
@@ -255,7 +253,7 @@ export default async function SyncLogPage() {
         )}
       </AdminCard>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <EventList title="Bokun events (ultimi 20)" items={bokunEvents.map((e) => ({
           id: e.eventId,
           label: e.topic,
@@ -264,11 +262,6 @@ export default async function SyncLogPage() {
         <EventList title="Boataround events (ultimi 20)" items={boataroundEvents.map((e) => ({
           id: e.eventId,
           label: e.eventType,
-          at: e.processedAt,
-        }))} />
-        <EventList title="Charter emails (ultimi 20)" items={charterEmails.map((e) => ({
-          id: e.messageHash,
-          label: e.platform ?? "unknown",
           at: e.processedAt,
         }))} />
       </div>

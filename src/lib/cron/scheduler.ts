@@ -13,9 +13,8 @@ export function startCronScheduler(): void {
   // Bokun reconciliation: ogni 5 minuti, fallback per webhook persi.
   scheduleCronFetch("*/5 * * * *", "/api/cron/bokun-reconciliation");
 
-  // Charter email parser: ogni 5 minuti (sfasato di 2 min dal Bokun per
-  // spalmare carico). Skippa silenzioso se IMAP non configurato.
-  scheduleCronFetch("2-59/5 * * * *", "/api/cron/email-parser");
+  // Charter email parser disattivato: non usato nel flusso operativo admin.
+  // Le tabelle storiche restano per eventuale cleanup DB separato.
 
   // Weather check: ogni mattina 07:15 Europe/Rome. Alert admin su booking
   // CONFIRMED nei prossimi 7gg con risk HIGH/EXTREME (Plan 6).
@@ -26,7 +25,7 @@ export function startCronScheduler(): void {
   // replaya via `handleStripeEvent` (idempotent via ProcessedStripeEvent).
   scheduleCronFetch("7-59/15 * * * *", "/api/cron/stripe-reconciliation");
 
-  // PENDING booking GC: ogni 15 min (sfasato di 3 min da Bokun/parser).
+  // PENDING booking GC: ogni 15 min (sfasato di 3 min da Bokun).
   // Cancella booking PENDING > 30min + PaymentIntent Stripe + release
   // availability per non zombificare slot dopo abbandono checkout.
   scheduleCronFetch("3-59/15 * * * *", "/api/cron/pending-gc");
