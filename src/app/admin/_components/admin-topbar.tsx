@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { isActivePath, navGroups } from "./admin-sidebar";
+import { isActiveItem, isActivePath, navGroups } from "./admin-sidebar";
 
 function getInitials(name?: string | null): string {
   if (!name) return "U";
@@ -71,20 +71,42 @@ export function AdminTopbar({ userName }: { userName?: string | null }) {
                   {group.label}
                 </div>
                 {group.items.map((item) => {
-                  const isActive = isActivePath(pathname, item.href);
+                  const isActive = isActiveItem(pathname, item);
                   const Icon = item.icon;
 
                   return (
-                    <Button
-                      key={item.href}
-                      variant={isActive ? "secondary" : "ghost"}
-                      nativeButton={false}
-                      className="w-full justify-start gap-2"
-                      render={<Link href={item.href} />}
-                    >
-                      <Icon className="size-4" aria-hidden="true" />
-                      {item.label}
-                    </Button>
+                    <div key={item.href}>
+                      <Button
+                        variant={isActive ? "secondary" : "ghost"}
+                        nativeButton={false}
+                        className="w-full justify-start gap-2"
+                        render={<Link href={item.href} />}
+                      >
+                        <Icon className="size-4" aria-hidden="true" />
+                        {item.label}
+                      </Button>
+                      {item.children && (
+                        <div className="ml-7 mt-1 space-y-1">
+                          {item.children.map((child) => {
+                            const childActive = isActivePath(pathname, child.href);
+                            const ChildIcon = child.icon;
+
+                            return (
+                              <Button
+                                key={child.href}
+                                variant={childActive ? "secondary" : "ghost"}
+                                nativeButton={false}
+                                className="h-8 w-full justify-start gap-2 text-sm text-slate-600"
+                                render={<Link href={child.href} />}
+                              >
+                                <ChildIcon className="size-3.5" aria-hidden="true" />
+                                {child.label}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>

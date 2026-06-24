@@ -12,6 +12,7 @@ import {
   LineChart,
   ListChecks,
   Plug,
+  ReceiptText,
   ScanLine,
   Settings,
   ShieldCheck,
@@ -24,6 +25,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  children?: NavItem[];
 }
 
 const primaryNavItems: NavItem[] = [
@@ -32,7 +34,12 @@ const primaryNavItems: NavItem[] = [
   { href: "/admin/prenotazioni", label: "Prenotazioni", icon: ListChecks },
   { href: "/admin/check-in", label: "Check-in", icon: ScanLine },
   { href: "/admin/clienti", label: "Clienti", icon: Users },
-  { href: "/admin/finanza", label: "Finanza", icon: LineChart },
+  {
+    href: "/admin/finanza",
+    label: "Finanza",
+    icon: LineChart,
+    children: [{ href: "/admin/ricevute", label: "Ricevute", icon: ReceiptText }],
+  },
   { href: "/admin/traffico", label: "Traffico sito", icon: BarChart3 },
   { href: "/admin/impostazioni", label: "Impostazioni", icon: Settings },
 ];
@@ -48,10 +55,19 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
   { label: "Tecnico", items: technicalNavItems },
 ];
 
-const navItems = navGroups.flatMap((group) => group.items);
+const navItems = navGroups.flatMap((group) =>
+  group.items.flatMap((item) => [item, ...(item.children ?? [])]),
+);
 
 function isActivePath(pathname: string, href: string): boolean {
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+}
+
+function isActiveItem(pathname: string, item: NavItem): boolean {
+  return (
+    isActivePath(pathname, item.href) ||
+    Boolean(item.children?.some((child) => isActivePath(pathname, child.href)))
+  );
 }
 
 function NavLink({ item, active }: { item: NavItem; active: boolean }) {
@@ -66,6 +82,23 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       }`}
     >
       <Icon className="size-4" aria-hidden="true" />
+      {item.label}
+    </Link>
+  );
+}
+
+function ChildNavLink({ item, active }: { item: NavItem; active: boolean }) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition ${
+        active
+          ? "bg-slate-100 font-medium text-slate-950"
+          : "text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+      }`}
+    >
+      <Icon className="size-3.5" aria-hidden="true" />
       {item.label}
     </Link>
   );
@@ -100,11 +133,20 @@ export function AdminSidebar() {
             Operativo
           </div>
           {primaryNavItems.map((item) => (
-            <NavLink
-              key={item.href}
-              item={item}
-              active={isActivePath(pathname, item.href)}
-            />
+            <div key={item.href}>
+              <NavLink item={item} active={isActiveItem(pathname, item)} />
+              {item.children && (
+                <div className="ml-7 mt-1 space-y-1">
+                  {item.children.map((child) => (
+                    <ChildNavLink
+                      key={child.href}
+                      item={child}
+                      active={isActivePath(pathname, child.href)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
 
@@ -130,4 +172,4 @@ export function AdminSidebar() {
   );
 }
 
-export { navGroups, navItems, primaryNavItems, technicalNavItems, isActivePath };
+export { navGroups, navItems, primaryNavItems, technicalNavItems, isActivePath, isActiveItem };

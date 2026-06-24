@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Plus, ReceiptText } from "lucide-react";
 import Decimal from "decimal.js";
 import { db } from "@/lib/db";
 import { formatEur } from "@/lib/pricing/cents";
@@ -54,7 +56,28 @@ export default async function FinanzaPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Incassi" />
+      <PageHeader
+        title="Incassi"
+        subtitle="Controlla entrate, rimborsi e documenti amministrativi."
+        actions={
+          <>
+            <Link
+              href="/admin/ricevute"
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <ReceiptText className="size-4" aria-hidden="true" />
+              Apri ricevute
+            </Link>
+            <Link
+              href="/admin/ricevute/nuova"
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              Nuova ricevuta
+            </Link>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Kpi label="Incassato mese" value={formatEur(monthRevenue)} />
