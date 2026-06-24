@@ -158,6 +158,14 @@ const tripadvisorReviews: TestimonialColumnItem[] = [
   },
 ];
 
+const HOME_REVIEW_COUNT = 10;
+const HOME_REVIEW_EXCERPT_CHARS = 230;
+
+function excerptReviewText(text: string) {
+  if (text.length <= HOME_REVIEW_EXCERPT_CHARS) return text;
+  return `${text.slice(0, HOME_REVIEW_EXCERPT_CHARS).trimEnd()}...`;
+}
+
 function getReviewItems() {
   const mixedReviews = [
     googleReviews[0],
@@ -173,7 +181,10 @@ function getReviewItems() {
     ...googleReviews.slice(5),
   ].filter((review): review is TestimonialColumnItem => Boolean(review));
 
-  return mixedReviews;
+  return mixedReviews.slice(0, HOME_REVIEW_COUNT).map((review) => ({
+    ...review,
+    text: excerptReviewText(review.text),
+  }));
 }
 
 function getMaxCapacity(services: SerializedService[], serviceIds: string[]) {

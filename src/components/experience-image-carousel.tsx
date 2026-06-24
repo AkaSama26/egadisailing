@@ -167,8 +167,7 @@ export function ExperienceImageCarousel({
                       alt={item.alt}
                       fill
                       sizes={GALLERY_CARD_SIZES}
-                      loading="eager"
-                      unoptimized
+                      loading="lazy"
                       className="object-cover transition duration-500 group-hover:scale-[1.035]"
                     />
                     <span className="pointer-events-none absolute inset-0 bg-black/0 transition group-hover:bg-black/10" />
@@ -178,27 +177,6 @@ export function ExperienceImageCarousel({
               ))}
             </div>
           </div>
-
-          {selectedIndex === null && (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute left-0 top-0 h-px w-px overflow-hidden opacity-0"
-            >
-              {slides.map((item, index) => (
-                <span key={`${item.src}-dialog-warm-${index}`} className="relative block h-px w-px">
-                  <Image
-                    src={item.src}
-                    alt=""
-                    fill
-                    sizes={GALLERY_DIALOG_SIZES}
-                    loading="eager"
-                    unoptimized
-                    className="object-contain"
-                  />
-                </span>
-              ))}
-            </div>
-          )}
 
           {slides.length > 1 && (
             <div className="mt-9 flex flex-wrap items-center justify-center gap-x-3 gap-y-4">
@@ -284,7 +262,6 @@ export function ExperienceImageCarousel({
                   fill
                   sizes={GALLERY_DIALOG_SIZES}
                   loading="eager"
-                  unoptimized
                   className="object-contain"
                 />
               )}

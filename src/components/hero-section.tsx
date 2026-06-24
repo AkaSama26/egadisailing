@@ -1,7 +1,6 @@
-import Image from "next/image";
 import { DeferredHeroExperienceCarousel } from "@/components/deferred-hero-experience-carousel";
 import { HeroBackgroundVideo } from "@/components/hero-background-video";
-import { HERO_VIDEO_POSTER_SRC } from "@/lib/public-assets";
+import { HERO_VIDEO_DESKTOP_POSTER_SRC, HERO_VIDEO_MOBILE_POSTER_SRC } from "@/lib/public-assets";
 
 export interface HeroExperienceCard {
   key: string;
@@ -183,16 +182,19 @@ export function HeroSection({ experiences, locale, title, subtitle }: HeroSectio
           className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_38%,rgba(14,165,233,0.24),transparent_42%),linear-gradient(180deg,#071934_0%,#0a2a4a_56%,#071934_100%)]"
         />
 
-        <Image
-          src={HERO_VIDEO_POSTER_SRC}
-          alt=""
+        <picture
           aria-hidden="true"
-          fill
-          preload
-          sizes="100vw"
-          quality={80}
-          className="absolute inset-0 z-0 h-full w-full object-cover object-[72%_center] opacity-100 transition-opacity duration-700 md:object-center"
-        />
+          className="absolute inset-0 z-0 h-full w-full opacity-100 transition-opacity duration-700"
+        >
+          <source media="(max-width: 767px)" srcSet={HERO_VIDEO_MOBILE_POSTER_SRC} />
+          <img
+            src={HERO_VIDEO_DESKTOP_POSTER_SRC}
+            alt=""
+            loading="eager"
+            decoding="async"
+            className="h-full w-full object-cover object-[72%_center] md:object-center"
+          />
+        </picture>
 
         <HeroBackgroundVideo />
 

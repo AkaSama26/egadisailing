@@ -237,10 +237,10 @@ export function HomePhotoStack({
                     fill
                     sizes={
                       variant === "duo"
-                        ? "(min-width: 1280px) 22vw, (min-width: 1024px) 28vw, (min-width: 640px) 34vw, 52vw"
-                        : "(min-width: 1280px) 16vw, (min-width: 1024px) 20vw, (min-width: 640px) 26vw, 42vw"
+                        ? "(min-width: 1280px) 18vw, (min-width: 1024px) 24vw, (min-width: 640px) 30vw, 48vw"
+                        : "(min-width: 1280px) 14vw, (min-width: 1024px) 18vw, (min-width: 640px) 24vw, 40vw"
                     }
-                    quality={80}
+                    quality={74}
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.035]"
                   />
                 </span>
@@ -256,15 +256,16 @@ export function HomePhotoStack({
         })}
       </div>
 
-      <Dialog.Root
-        open={selectedIndex !== null}
-        onOpenChange={(open) => {
-          if (!open) setSelectedIndex(null);
-        }}
-      >
-        <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-[330] bg-[#031225]/75 backdrop-blur-md transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
-          <Dialog.Popup
+      {selectedIndex !== null && (
+        <Dialog.Root
+          open
+          onOpenChange={(open) => {
+            if (!open) setSelectedIndex(null);
+          }}
+        >
+          <Dialog.Portal>
+            <Dialog.Backdrop className="fixed inset-0 z-[330] bg-[#031225]/75 backdrop-blur-md transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
+            <Dialog.Popup
             onKeyDown={handleDialogKeyDown}
             className="fixed left-1/2 top-1/2 z-[331] flex h-[calc(100vh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[74rem] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-white/14 bg-[#071934] text-white shadow-2xl shadow-black/40 outline-none transition duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 md:h-[calc(100vh-3rem)]"
           >
@@ -297,7 +298,7 @@ export function HomePhotoStack({
                   src={activeImage.src}
                   alt={activeImage.alt}
                   fill
-                  sizes="100vw"
+                  sizes="(max-width: 1024px) 100vw, 74rem"
                   className="object-contain"
                 />
               )}
@@ -341,9 +342,10 @@ export function HomePhotoStack({
                 ))}
               </div>
             )}
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+      )}
     </>
   );
 }

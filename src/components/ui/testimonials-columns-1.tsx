@@ -1,5 +1,4 @@
 import { type CSSProperties, Fragment } from "react";
-import { Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -25,10 +24,6 @@ function initialsFor(name: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-}
-
-function starsFor(rating: number) {
-  return Array.from({ length: Math.max(0, Math.min(5, Math.round(rating))) });
 }
 
 function profileAlt(name: string, locale: string) {
@@ -95,17 +90,11 @@ function TestimonialCard({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-white/45">
             {typeof rating === "number" ? (
               <span
-                className="flex items-center gap-0.5"
+                className="text-[0.72rem] leading-none text-[var(--color-gold)]"
                 role="img"
                 aria-label={ratingLabel(rating, locale)}
               >
-                {starsFor(rating).map((_, starIndex) => (
-                  <Star
-                    key={starIndex}
-                    className="h-3.5 w-3.5 fill-[var(--color-gold)] text-[var(--color-gold)]"
-                    aria-hidden="true"
-                  />
-                ))}
+                {"★".repeat(Math.max(0, Math.min(5, Math.round(rating))))}
               </span>
             ) : null}
             <span>{role}</span>

@@ -32,9 +32,237 @@ export interface ExperienceChoiceRecommendation {
   detailHref: string;
 }
 
+const RECOMMENDATION_IMAGE_BY_KEY: Record<ExperienceChoiceRecommendationKey, string> = {
+  shared8: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-drone.webp",
+  private4: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp",
+  private8: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
+  gourmet: "/images/boats/neel-47/trimarano-pasta-saltata.webp",
+  charter: "/images/boats/neel-47/trimarano-relax-rete.webp",
+  fishing: "/images/boats/fishing-rib/fishing-rib-hero.webp",
+};
+
+function buildRecommendationCopy(locale: string) {
+  const isEn = locale === "en";
+  const isEs = locale === "es";
+  const isFr = locale === "fr";
+  const isDe = locale === "de";
+  const content = {
+    shared8: {
+      emoji: "🌊",
+      title: isEs
+        ? "Tour en barco Favignana y Levanzo desde Trapani"
+        : isFr
+        ? "Tour en bateau Favignana et Levanzo depuis Trapani"
+        : isDe
+        ? "Bootstour Favignana und Levanzo ab Trapani"
+        : isEn
+        ? "Favignana and Levanzo boat tour from Trapani"
+        : "Tour in barca Favignana e Levanzo da Trapani",
+      boatLabel: isEs
+        ? "Barca Egadi Sailing · plaza compartida"
+        : isFr
+        ? "Barca Egadi Sailing · place partagée"
+        : isDe
+        ? "Barca Egadi Sailing · geteiltes Ticket"
+        : isEn
+        ? "Barca Egadi Sailing · shared seat"
+        : "Barca Egadi Sailing · posto condiviso",
+      reason: isEs
+        ? "El día compartido más completo: más tiempo entre calas, snorkel y un ritmo relajado por las Islas Egadi."
+        : isFr
+        ? "La journée partagée la plus complète : plus de temps entre les criques, snorkeling et rythme détendu aux îles Égades."
+        : isDe
+        ? "Der vollständigste geteilte Tag: mehr Zeit zwischen Buchten, Schnorcheln und ein entspannter Rhythmus auf den Ägadischen Inseln."
+        : isEn
+        ? "The most complete shared day: more time between bays, snorkelling and a relaxed Egadi Islands rhythm."
+        : "La giornata condivisa più completa: più tempo tra baie, snorkeling e ritmo lento alle Egadi.",
+    },
+    private4: {
+      emoji: "⚡",
+      title: isEs
+        ? "Excursión en barco 4 horas a las Islas Egadi"
+        : isFr
+        ? "Excursion en bateau 4 heures aux îles Égades"
+        : isDe
+        ? "4-Stunden-Bootstour zu den Ägadischen Inseln"
+        : isEn
+        ? "4-hour Egadi Islands boat tour"
+        : "Escursione in barca 4 ore alle Egadi",
+      boatLabel: isEs
+        ? "Barca Egadi Sailing · barco privado ágil"
+        : isFr
+        ? "Barca Egadi Sailing · bateau privé agile"
+        : isDe
+        ? "Barca Egadi Sailing · agiles Privatboot"
+        : isEn
+        ? "Barca Egadi Sailing · private agile boat"
+        : "Barca Egadi Sailing · barca privata agile",
+      reason: isEs
+	        ? "Medio día privado para tu grupo: ruta flexible, baños y la ligereza del barco abierto."
+        : isFr
+        ? "Une demi-journée privée pour votre groupe : route flexible, baignades et légèreté du bateau ouvert."
+        : isDe
+        ? "Ein privater halber Tag für Ihre Gruppe: flexible Route, Badestopps und die Leichtigkeit des offenen Boots."
+        : isEn
+        ? "A private half-day for your group: flexible route, swim stops and the lightness of the open boat."
+        : "Mezza giornata privata per il tuo gruppo: rotta flessibile, soste bagno e leggerezza della barca open.",
+    },
+    private8: {
+      emoji: "🚤",
+      title: isEs
+        ? "Tour privado a las Islas Egadi 8 horas desde Trapani"
+        : isFr
+        ? "Tour privé aux îles Égades 8 heures depuis Trapani"
+        : isDe
+        ? "Private Bootstour Ägadische Inseln 8 Stunden ab Trapani"
+        : isEn
+        ? "Private Egadi Islands 8-hour boat tour from Trapani"
+        : "Tour privato alle Egadi 8 ore da Trapani",
+      boatLabel: isEs
+        ? "Barca Egadi Sailing · barco privado ágil"
+        : isFr
+        ? "Barca Egadi Sailing · bateau privé agile"
+        : isDe
+        ? "Barca Egadi Sailing · agiles Privatboot"
+        : isEn
+        ? "Barca Egadi Sailing · private agile boat"
+        : "Barca Egadi Sailing · barca privata agile",
+      reason: isEs
+        ? "Un día completo privado: más calas, más tiempo en el agua y una ruta diseñada con el patrón."
+        : isFr
+        ? "Une journée complète privée : plus de criques, plus de temps dans l'eau et une route conçue avec le skipper."
+        : isDe
+        ? "Ein ganzer privater Tag mit dem agilen Boot: mehr Buchten, mehr Zeit im Wasser und eine Route mit dem Skipper."
+        : isEn
+        ? "A full private day with the agile boat: more bays, more time in the water and a route shaped with the skipper."
+        : "Una giornata intera privata con barca agile: più baie, più tempo in acqua e rotta scelta con lo skipper.",
+    },
+    gourmet: {
+      emoji: "🍽️",
+      title: isEs
+        ? "Chef a bordo en trimarán en las Islas Egadi"
+        : isFr
+        ? "Chef à bord en trimaran aux îles Égades"
+        : isDe
+        ? "Chef an Bord auf dem Trimaran zu den Ägadischen Inseln"
+        : isEn
+        ? "Chef on board in a trimaran in the Egadi Islands"
+        : "Chef a bordo in trimarano alle Egadi",
+      boatLabel: isEs
+	        ? "Trimarán · confort de catamarán, chef y patrón"
+        : isFr
+        ? "Trimaran · confort de catamaran, chef et skipper"
+        : isDe
+        ? "Trimaran · Katamaran-Komfort, Chef und Skipper"
+        : isEn
+        ? "Trimaran · catamaran-style comfort, chef and skipper"
+        : "Trimarano · comfort da catamarano, chef e skipper",
+      reason: isEs
+	        ? "Buscas un día cuidado: espacios amplios, comida preparada a bordo, privacidad y ritmo premium al fondeo."
+        : isFr
+        ? "Vous cherchez une journée soignée : grands espaces, déjeuner préparé à bord, intimité et rythme premium au mouillage."
+        : isDe
+        ? "Sie wünschen sich einen kuratierten Tag: viel Raum, an Bord zubereitetes Mittagessen, Privatsphäre und Premium-Rhythmus vor Anker."
+        : isEn
+        ? "You want a day that feels cared for: wide spaces, lunch prepared on board, privacy and a premium rhythm at anchor."
+        : "Vuoi una giornata curata: spazi ampi, pranzo preparato a bordo, privacy e ritmo premium in rada.",
+    },
+    charter: {
+      emoji: "🛏️",
+      title: isEs ? "Charter Islas Egadi en trimarán" : isFr ? "Charter aux îles Égades en trimaran" : isDe ? "Charter Ägadische Inseln im Trimaran" : isEn ? "Aegadian Islands yacht charter" : "Charter Egadi in trimarano",
+      boatLabel: isEs
+	        ? "Trimarán · confort de catamarán y ruta a medida"
+        : isFr
+        ? "Trimaran · confort de catamaran et route sur mesure"
+        : isDe
+        ? "Trimaran · Katamaran-Komfort und Route nach Maß"
+        : isEn
+        ? "Trimaran · catamaran-style comfort and tailored route"
+        : "Trimarano · comfort da catamarano e rotta su misura",
+      reason: isEs
+        ? "Para varios días en el mar: camarotes, fondeos tranquilos y ruta por Favignana, Levanzo y Marettimo."
+        : isFr
+        ? "Pour plusieurs jours en mer : cabines, mouillages calmes et route entre Favignana, Levanzo et Marettimo."
+        : isDe
+        ? "Für mehrere Tage auf See: Kabinen, ruhige Ankerplätze und eine Route zwischen Favignana, Levanzo und Marettimo."
+        : isEn
+        ? "For several days at sea: cabins, quiet anchorages and a route across Favignana, Levanzo and Marettimo."
+        : "Per vivere più giorni in mare: cabine, rade tranquille e rotta tra Favignana, Levanzo e Marettimo.",
+    },
+    fishing: {
+      emoji: "🎣",
+      title: isEs ? "Charter de pesca Egadi en neumática" : isFr ? "Charter de pêche Égades en semi-rigide" : isDe ? "Angelcharter Ägadische Inseln im RIB" : isEn ? "Egadi fishing charter by RIB" : "Charter pesca Egadi in gommone",
+      boatLabel: isEs
+        ? "Neumática de pesca · equipo profesional"
+        : isFr
+        ? "Semi-rigide de pêche · matériel professionnel"
+        : isDe
+        ? "Angel-RIB · Profi-Ausrüstung"
+        : isEn
+        ? "Fishing RIB · professional gear"
+        : "Gommone Pesca · attrezzatura professionale",
+      reason: isEs
+        ? "Para aficionados: 8 horas privadas con cañas profesionales, técnicas mixtas y ruta elegida por el patrón según mar, temporada y normativa."
+        : isFr
+        ? "Pour passionnés : 8 heures privées avec cannes professionnelles, techniques mixtes et route choisie par le skipper selon mer, saison et règles."
+        : isDe
+        ? "Für Angelbegeisterte: 8 private Stunden mit professionellen Ruten, gemischten Techniken und Route nach Meer, Saison und Regeln."
+        : isEn
+        ? "For fishing enthusiasts: 8 private hours with professional rods, mixed techniques and a route chosen by the skipper according to sea, season and rules."
+        : "Per appassionati: 8 ore private con canne professionali, tecniche miste e rotta scelta dallo skipper in base a mare, stagione e regole.",
+    },
+  } satisfies Record<
+    ExperienceChoiceRecommendationKey,
+    Omit<
+      ExperienceChoiceRecommendation,
+      "key" | "images" | "priceLabel" | "bookingHref" | "detailHref"
+    >
+  >;
+
+  return content;
+}
+
+function buildExperienceChoiceRecommendations(
+  locale: string,
+  recommendationSeed: ExperienceChoiceRecommendationSeed,
+): Record<ExperienceChoiceRecommendationKey, ExperienceChoiceRecommendation> {
+  const copy = buildRecommendationCopy(locale);
+  const makeRecommendation = (
+    key: ExperienceChoiceRecommendationKey,
+  ): ExperienceChoiceRecommendation => {
+    const staticCopy = copy[key];
+
+    return {
+      key,
+      ...staticCopy,
+      ...recommendationSeed[key],
+      images: [
+        {
+          src: RECOMMENDATION_IMAGE_BY_KEY[key],
+          alt: staticCopy.title,
+        },
+      ],
+    };
+  };
+
+  return {
+    shared8: makeRecommendation("shared8"),
+    private4: makeRecommendation("private4"),
+    private8: makeRecommendation("private8"),
+    gourmet: makeRecommendation("gourmet"),
+    charter: makeRecommendation("charter"),
+    fishing: makeRecommendation("fishing"),
+  };
+}
+
+export type ExperienceChoiceRecommendationSeed = Record<
+  ExperienceChoiceRecommendationKey,
+  Pick<ExperienceChoiceRecommendation, "priceLabel" | "bookingHref" | "detailHref">
+>;
+
 interface ExperienceChoiceDialogProps {
   locale: string;
-  recommendations: Record<ExperienceChoiceRecommendationKey, ExperienceChoiceRecommendation>;
+  recommendationSeed: ExperienceChoiceRecommendationSeed;
   delayMs?: number;
 }
 
@@ -79,7 +307,7 @@ function markDismissed() {
 
 export function ExperienceChoiceDialog({
   locale,
-  recommendations,
+  recommendationSeed,
   delayMs = DEFAULT_DELAY_MS,
 }: ExperienceChoiceDialogProps) {
   const isEn = locale === "en";
@@ -90,6 +318,10 @@ export function ExperienceChoiceDialog({
   const [step, setStep] = useState<WizardStep>("party");
   const [history, setHistory] = useState<WizardStep[]>([]);
   const [resultKey, setResultKey] = useState<ExperienceChoiceRecommendationKey | null>(null);
+  const recommendations = useMemo(
+    () => buildExperienceChoiceRecommendations(locale, recommendationSeed),
+    [locale, recommendationSeed],
+  );
   const result = resultKey ? recommendations[resultKey] : null;
 
   const copy = useMemo(

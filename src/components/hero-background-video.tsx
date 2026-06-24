@@ -2,17 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  HERO_VIDEO_DESKTOP_POSTER_SRC,
+  HERO_VIDEO_MOBILE_POSTER_SRC,
   HERO_VIDEO_MOBILE_SRC,
-  HERO_VIDEO_POSTER_SRC,
   HERO_VIDEO_SRC,
 } from "@/lib/public-assets";
 
 export function HeroBackgroundVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoSource, setVideoSource] = useState<string | null>(null);
+  const [posterSource, setPosterSource] = useState(HERO_VIDEO_DESKTOP_POSTER_SRC);
   const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const resolveHeroMedia = () => {
+      const desktopVideo = mediaQuery.matches;
+      return {
+        poster: desktopVideo ? HERO_VIDEO_DESKTOP_POSTER_SRC : HERO_VIDEO_MOBILE_POSTER_SRC,
+        video: desktopVideo ? HERO_VIDEO_SRC : HERO_VIDEO_MOBILE_SRC,
+      };
+    };
+    const updatePoster = () => setPosterSource(resolveHeroMedia().poster);
+    updatePoster();
+    mediaQuery.addEventListener("change", updatePoster);
+
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const connection = navigator as Navigator & {
       connection?: { saveData?: boolean; effectiveType?: string };
@@ -21,30 +35,50 @@ export function HeroBackgroundVideo() {
     const slowConnection = effectiveType === "slow-2g" || effectiveType === "2g";
 
     if (prefersReducedMotion || connection.connection?.saveData || slowConnection) {
-      return;
+      return () => mediaQuery.removeEventListener("change", updatePoster);
     }
 
     let hasRequestedVideo = false;
     const requestVideo = () => {
       if (hasRequestedVideo) return;
       hasRequestedVideo = true;
-      const desktopVideo = window.matchMedia("(min-width: 768px)").matches;
-      setVideoSource(desktopVideo ? HERO_VIDEO_SRC : HERO_VIDEO_MOBILE_SRC);
+      const media = resolveHeroMedia();
+      setPosterSource(media.poster);
+      setVideoSource(media.video);
+    };
+
+    let idleCallbackId: number | null = null;
+    let fallbackTimerId: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+    const requestVideoWhenIdle = () => {
+      if ("requestIdleCallback" in window) {
+        idleCallbackId = window.requestIdleCallback(requestVideo, { timeout: 3000 });
+        return;
+      }
+
+      fallbackTimerId = globalThis.setTimeout(requestVideo, 1800);
     };
 
     if (document.readyState === "complete") {
-      requestVideo();
+      requestVideoWhenIdle();
     } else {
-      window.addEventListener("load", requestVideo, { once: true });
+      window.addEventListener("load", requestVideoWhenIdle, { once: true });
     }
 
-    const interactionEvents = ["pointerdown", "keydown", "scroll"] as const;
+    const interactionEvents = ["pointerdown", "keydown"] as const;
     for (const eventName of interactionEvents) {
       window.addEventListener(eventName, requestVideo, { once: true, passive: true });
     }
 
     return () => {
-      window.removeEventListener("load", requestVideo);
+      mediaQuery.removeEventListener("change", updatePoster);
+      window.removeEventListener("load", requestVideoWhenIdle);
+      if (idleCallbackId !== null && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleCallbackId);
+      }
+      if (fallbackTimerId !== null) {
+        globalThis.clearTimeout(fallbackTimerId);
+      }
       for (const eventName of interactionEvents) {
         window.removeEventListener(eventName, requestVideo);
       }
@@ -87,7 +121,7 @@ export function HeroBackgroundVideo() {
       loop
       playsInline
       preload="none"
-      poster={HERO_VIDEO_POSTER_SRC}
+      poster={posterSource}
       onLoadedData={() => setVideoReady(true)}
       onCanPlay={() => setVideoReady(true)}
       onPlaying={() => setVideoReady(true)}

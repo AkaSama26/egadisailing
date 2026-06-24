@@ -7,8 +7,8 @@ import { getTranslations } from "next-intl/server";
 import { HeroSection } from "@/components/hero-section";
 import { DeferredExperienceChoiceDialog } from "@/components/deferred-experience-choice-dialog";
 import type {
-  ExperienceChoiceRecommendation,
   ExperienceChoiceRecommendationKey,
+  ExperienceChoiceRecommendationSeed,
 } from "@/components/experience-choice-dialog";
 import { LandingSections } from "./landing-sections";
 import { buildPageMetadata } from "@/lib/seo/metadata";
@@ -237,20 +237,6 @@ function lowestDisplayPrice(
   return lowest;
 }
 
-function structuredDurationLabel(key: ExperienceChoiceRecommendationKey, locale: string): string {
-  const isEn = locale === "en";
-  const isEs = locale === "es";
-  const isFr = locale === "fr";
-  const isDe = locale === "de";
-  if (key === "private4") {
-    return isEs ? "4 horas" : isFr ? "4 heures" : isDe ? "4 Stunden" : isEn ? "4 hours" : "4 ore";
-  }
-  if (key === "charter") {
-    return isEs ? "3-7 días" : isFr ? "3-7 jours" : isDe ? "3-7 Tage" : isEn ? "3-7 days" : "3-7 giornate";
-  }
-  return isEs ? "8 horas" : isFr ? "8 heures" : isDe ? "8 Stunden" : isEn ? "8 hours" : "8 ore";
-}
-
 function departurePropertyValue(locale: string) {
   if (locale === "es") return "Via dei Gladioli 15, Puerto de Trapani";
   if (locale === "fr") return "Via dei Gladioli 15, port de Trapani";
@@ -258,134 +244,6 @@ function departurePropertyValue(locale: string) {
   return locale === "en"
     ? "Via dei Gladioli 15, Trapani harbour"
     : "Via dei Gladioli 15, Porto di Trapani";
-}
-
-function structuredPackageDetails(key: ExperienceChoiceRecommendationKey, locale: string) {
-  const duration = structuredDurationLabel(key, locale);
-  const departure = departurePropertyValue(locale);
-  const isEn = locale === "en";
-  const isEs = locale === "es";
-  const isFr = locale === "fr";
-  const isDe = locale === "de";
-  const formulaByKey: Record<ExperienceChoiceRecommendationKey, string> = {
-    shared8: isEs
-      ? "Tour compartido 8 horas"
-      : isFr
-        ? "Tour partagé 8 heures"
-        : isDe
-          ? "Geteilte 8-Stunden-Tour"
-          : isEn
-            ? "Shared 8-hour tour"
-            : "Tour condiviso 8 ore",
-    private4: isEs
-      ? "Tour privado 4 horas"
-      : isFr
-        ? "Tour privé 4 heures"
-        : isDe
-          ? "Private 4-Stunden-Tour"
-          : isEn
-            ? "Private 4-hour tour"
-            : "Tour privato 4 ore",
-    private8: isEs
-      ? "Tour privado 8 horas"
-      : isFr
-        ? "Tour privé 8 heures"
-        : isDe
-          ? "Private 8-Stunden-Tour"
-          : isEn
-            ? "Private 8-hour tour"
-            : "Tour privato 8 ore",
-    gourmet: isEs
-      ? "Experiencia privada en trimarán con chef a bordo"
-      : isFr
-        ? "Expérience privée en trimaran avec chef à bord"
-        : isDe
-          ? "Privates Trimaran-Erlebnis mit Chef an Bord"
-          : isEn
-            ? "Private trimaran experience with chef on board"
-            : "Esperienza privata in trimarano con chef a bordo",
-    charter: isEs
-      ? "Charter privado en trimarán 3-7 días"
-      : isFr
-        ? "Charter privé en trimaran 3-7 jours"
-        : isDe
-          ? "Privater Trimaran-Charter 3-7 Tage"
-          : isEn
-            ? "Private 3-7 day trimaran charter"
-            : "Charter privato in trimarano 3-7 giorni",
-    fishing: isEs
-      ? "Pesca deportiva privada"
-      : isFr
-        ? "Pêche sportive privée"
-        : isDe
-          ? "Private Sportangel-Tour"
-          : isEn
-            ? "Private sport fishing"
-            : "Pesca sportiva privata",
-  };
-  const includedByKey: Record<ExperienceChoiceRecommendationKey, string> = {
-    shared8: isEs
-      ? "patrón, snorkel, bebidas, combustible, paradas para bañarte y pausa en Favignana"
-      : isFr
-        ? "skipper, snorkeling, boissons, carburant, arrêts baignade et pause à Favignana"
-        : isDe
-          ? "Skipper, Schnorcheln, Getränke, Treibstoff, Badestopps und Pause auf Favignana"
-          : isEn
-            ? "skipper, snorkelling, drinks, fuel, swim stops and a Favignana stop"
-            : "skipper, snorkeling, bevande, carburante, soste bagno e pausa a Favignana",
-    private4: isEs
-      ? "barco privado, patrón, snorkel, bebidas, combustible y paradas para bañarte"
-      : isFr
-        ? "bateau privé, skipper, snorkeling, boissons, carburant et arrêts baignade"
-        : isDe
-          ? "privates Boot, Skipper, Schnorcheln, Getränke, Treibstoff und Badestopps"
-          : isEn
-            ? "private boat, skipper, snorkelling, drinks, fuel and swim stops"
-            : "barca privata, skipper, snorkeling, bevande, carburante e soste bagno",
-    private8: isEs
-      ? "barco privado, patrón, snorkel, bebidas, combustible y ruta flexible"
-      : isFr
-        ? "bateau privé, skipper, snorkeling, boissons, carburant et route flexible"
-        : isDe
-          ? "privates Boot, Skipper, Schnorcheln, Getränke, Treibstoff und flexible Route"
-          : isEn
-            ? "private boat, skipper, snorkelling, drinks, fuel and flexible route"
-            : "barca privata, skipper, snorkeling, bevande, carburante e rotta flessibile",
-    gourmet: isEs
-      ? "trimarán con confort de catamarán, patrón, azafata, chef a bordo, comida, snorkel y combustible"
-      : isFr
-        ? "trimaran avec confort de catamaran, skipper, hôtesse, chef à bord, déjeuner, snorkeling et carburant"
-        : isDe
-          ? "Trimaran mit Katamaran-Komfort, Skipper, Hostess, Chef an Bord, Mittagessen, Schnorcheln und Treibstoff"
-          : isEn
-            ? "trimaran with catamaran-style comfort, skipper, hostess, chef on board, lunch, snorkelling and fuel"
-            : "trimarano con comfort da catamarano, skipper, hostess, chef a bordo, pranzo, snorkeling e carburante",
-    charter: isEs
-      ? "trimarán con confort de catamarán, patrón, cabinas, cocina, snorkel y planificación meteorológica"
-      : isFr
-        ? "trimaran avec confort de catamaran, skipper, cabines, cuisine, snorkeling et planification météo"
-        : isDe
-          ? "Trimaran mit Katamaran-Komfort, Skipper, Kabinen, Küche, Schnorcheln und Wetterplanung"
-          : isEn
-            ? "trimaran with catamaran-style comfort, skipper, cabins, galley, snorkelling and weather-aware planning"
-            : "trimarano con comfort da catamarano, skipper, cabine, cucina, snorkeling e pianificazione meteo",
-    fishing: isEs
-      ? "patrón/guía, cañas, carretes, cebos, combustible, agua y snack"
-      : isFr
-        ? "skipper/guide, cannes, moulinets, appâts, carburant, eau et snack"
-        : isDe
-          ? "Skipper/Guide, Ruten, Rollen, Köder, Treibstoff, Wasser und Snack"
-          : isEn
-            ? "skipper/guide, rods, reels, bait, fuel, water and snacks"
-            : "skipper/guida, canne, mulinelli, esche, carburante, acqua e snack",
-  };
-
-  return [
-    { "@type": "PropertyValue", name: "Duration", value: duration },
-    { "@type": "PropertyValue", name: "Departure", value: departure },
-    { "@type": "PropertyValue", name: "Formula", value: formulaByKey[key] },
-    { "@type": "PropertyValue", name: "Included", value: includedByKey[key] },
-  ];
 }
 
 function packagePills(input: {
@@ -591,32 +449,7 @@ function bookingHrefForService(
   return localizedPath(locale, `/prenota?${params.toString()}`);
 }
 
-function recommendationImages(serviceId: string, locale: string, fallbackAlt: string) {
-  const content = getExperienceContent(serviceId, locale);
-  const images =
-    content?.media
-      .flatMap((item) =>
-        item.src
-          ? [
-              {
-                src: item.src,
-                alt: item.alt,
-              },
-            ]
-          : [],
-      ) ?? [];
-
-  return images.length > 0
-    ? images
-    : [
-        {
-          src: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
-          alt: fallbackAlt,
-        },
-      ];
-}
-
-function buildExperienceChoiceRecommendations({
+function buildExperienceChoiceRecommendationSeed({
   locale,
   servicesById,
   displayPrices,
@@ -627,194 +460,12 @@ function buildExperienceChoiceRecommendations({
     { id: string; type: string; durationType: string; boat: { id: string } }
   >;
   displayPrices: Map<string, DisplayPrice>;
-}): Record<ExperienceChoiceRecommendationKey, ExperienceChoiceRecommendation> {
-  const isEn = locale === "en";
-  const isEs = locale === "es";
-  const isFr = locale === "fr";
-  const isDe = locale === "de";
-  const content = {
-    shared8: {
-      emoji: "🌊",
-      title: isEs
-        ? "Tour en barco Favignana y Levanzo desde Trapani"
-        : isFr
-        ? "Tour en bateau Favignana et Levanzo depuis Trapani"
-        : isDe
-        ? "Bootstour Favignana und Levanzo ab Trapani"
-        : isEn
-        ? "Favignana and Levanzo boat tour from Trapani"
-        : "Tour in barca Favignana e Levanzo da Trapani",
-      boatLabel: isEs
-        ? "Barca Egadi Sailing · plaza compartida"
-        : isFr
-        ? "Barca Egadi Sailing · place partagée"
-        : isDe
-        ? "Barca Egadi Sailing · geteiltes Ticket"
-        : isEn
-        ? "Barca Egadi Sailing · shared seat"
-        : "Barca Egadi Sailing · posto condiviso",
-      reason: isEs
-        ? "El día compartido más completo: más tiempo entre calas, snorkel y un ritmo relajado por las Islas Egadi."
-        : isFr
-        ? "La journée partagée la plus complète : plus de temps entre les criques, snorkeling et rythme détendu aux îles Égades."
-        : isDe
-        ? "Der vollständigste geteilte Tag: mehr Zeit zwischen Buchten, Schnorcheln und ein entspannter Rhythmus auf den Ägadischen Inseln."
-        : isEn
-        ? "The most complete shared day: more time between bays, snorkelling and a relaxed Egadi Islands rhythm."
-        : "La giornata condivisa più completa: più tempo tra baie, snorkeling e ritmo lento alle Egadi.",
-    },
-    private4: {
-      emoji: "⚡",
-      title: isEs
-        ? "Excursión en barco 4 horas a las Islas Egadi"
-        : isFr
-        ? "Excursion en bateau 4 heures aux îles Égades"
-        : isDe
-        ? "4-Stunden-Bootstour zu den Ägadischen Inseln"
-        : isEn
-        ? "4-hour Egadi Islands boat tour"
-        : "Escursione in barca 4 ore alle Egadi",
-      boatLabel: isEs
-        ? "Barca Egadi Sailing · barco privado ágil"
-        : isFr
-        ? "Barca Egadi Sailing · bateau privé agile"
-        : isDe
-        ? "Barca Egadi Sailing · agiles Privatboot"
-        : isEn
-        ? "Barca Egadi Sailing · private agile boat"
-        : "Barca Egadi Sailing · barca privata agile",
-      reason: isEs
-	        ? "Medio día privado para tu grupo: ruta flexible, baños y la ligereza del barco abierto."
-        : isFr
-        ? "Une demi-journée privée pour votre groupe : route flexible, baignades et légèreté du bateau ouvert."
-        : isDe
-        ? "Ein privater halber Tag für Ihre Gruppe: flexible Route, Badestopps und die Leichtigkeit des offenen Boots."
-        : isEn
-        ? "A private half-day for your group: flexible route, swim stops and the lightness of the open boat."
-        : "Mezza giornata privata per il tuo gruppo: rotta flessibile, soste bagno e leggerezza della barca open.",
-    },
-    private8: {
-      emoji: "🚤",
-      title: isEs
-        ? "Tour privado a las Islas Egadi 8 horas desde Trapani"
-        : isFr
-        ? "Tour privé aux îles Égades 8 heures depuis Trapani"
-        : isDe
-        ? "Private Bootstour Ägadische Inseln 8 Stunden ab Trapani"
-        : isEn
-        ? "Private Egadi Islands 8-hour boat tour from Trapani"
-        : "Tour privato alle Egadi 8 ore da Trapani",
-      boatLabel: isEs
-        ? "Barca Egadi Sailing · barco privado ágil"
-        : isFr
-        ? "Barca Egadi Sailing · bateau privé agile"
-        : isDe
-        ? "Barca Egadi Sailing · agiles Privatboot"
-        : isEn
-        ? "Barca Egadi Sailing · private agile boat"
-        : "Barca Egadi Sailing · barca privata agile",
-      reason: isEs
-        ? "Un día completo privado: más calas, más tiempo en el agua y una ruta diseñada con el patrón."
-        : isFr
-        ? "Une journée complète privée : plus de criques, plus de temps dans l'eau et une route conçue avec le skipper."
-        : isDe
-        ? "Ein ganzer privater Tag mit dem agilen Boot: mehr Buchten, mehr Zeit im Wasser und eine Route mit dem Skipper."
-        : isEn
-        ? "A full private day with the agile boat: more bays, more time in the water and a route shaped with the skipper."
-        : "Una giornata intera privata con barca agile: più baie, più tempo in acqua e rotta scelta con lo skipper.",
-    },
-    gourmet: {
-      emoji: "🍽️",
-      title: isEs
-        ? "Chef a bordo en trimarán en las Islas Egadi"
-        : isFr
-        ? "Chef à bord en trimaran aux îles Égades"
-        : isDe
-        ? "Chef an Bord auf dem Trimaran zu den Ägadischen Inseln"
-        : isEn
-        ? "Chef on board in a trimaran in the Egadi Islands"
-        : "Chef a bordo in trimarano alle Egadi",
-      boatLabel: isEs
-	        ? "Trimarán · confort de catamarán, chef y patrón"
-        : isFr
-        ? "Trimaran · confort de catamaran, chef et skipper"
-        : isDe
-        ? "Trimaran · Katamaran-Komfort, Chef und Skipper"
-        : isEn
-        ? "Trimaran · catamaran-style comfort, chef and skipper"
-        : "Trimarano · comfort da catamarano, chef e skipper",
-      reason: isEs
-	        ? "Buscas un día cuidado: espacios amplios, comida preparada a bordo, privacidad y ritmo premium al fondeo."
-        : isFr
-        ? "Vous cherchez une journée soignée : grands espaces, déjeuner préparé à bord, intimité et rythme premium au mouillage."
-        : isDe
-        ? "Sie wünschen sich einen kuratierten Tag: viel Raum, an Bord zubereitetes Mittagessen, Privatsphäre und Premium-Rhythmus vor Anker."
-        : isEn
-        ? "You want a day that feels cared for: wide spaces, lunch prepared on board, privacy and a premium rhythm at anchor."
-        : "Vuoi una giornata curata: spazi ampi, pranzo preparato a bordo, privacy e ritmo premium in rada.",
-    },
-    charter: {
-      emoji: "🛏️",
-      title: isEs ? "Charter Islas Egadi en trimarán" : isFr ? "Charter aux îles Égades en trimaran" : isDe ? "Charter Ägadische Inseln im Trimaran" : isEn ? "Aegadian Islands yacht charter" : "Charter Egadi in trimarano",
-      boatLabel: isEs
-	        ? "Trimarán · confort de catamarán y ruta a medida"
-        : isFr
-        ? "Trimaran · confort de catamaran et route sur mesure"
-        : isDe
-        ? "Trimaran · Katamaran-Komfort und Route nach Maß"
-        : isEn
-        ? "Trimaran · catamaran-style comfort and tailored route"
-        : "Trimarano · comfort da catamarano e rotta su misura",
-      reason: isEs
-        ? "Para varios días en el mar: camarotes, fondeos tranquilos y ruta por Favignana, Levanzo y Marettimo."
-        : isFr
-        ? "Pour plusieurs jours en mer : cabines, mouillages calmes et route entre Favignana, Levanzo et Marettimo."
-        : isDe
-        ? "Für mehrere Tage auf See: Kabinen, ruhige Ankerplätze und eine Route zwischen Favignana, Levanzo und Marettimo."
-        : isEn
-        ? "For several days at sea: cabins, quiet anchorages and a route across Favignana, Levanzo and Marettimo."
-        : "Per vivere più giorni in mare: cabine, rade tranquille e rotta tra Favignana, Levanzo e Marettimo.",
-    },
-    fishing: {
-      emoji: "🎣",
-      title: isEs ? "Charter de pesca Egadi en neumática" : isFr ? "Charter de pêche Égades en semi-rigide" : isDe ? "Angelcharter Ägadische Inseln im RIB" : isEn ? "Egadi fishing charter by RIB" : "Charter pesca Egadi in gommone",
-      boatLabel: isEs
-        ? "Neumática de pesca · equipo profesional"
-        : isFr
-        ? "Semi-rigide de pêche · matériel professionnel"
-        : isDe
-        ? "Angel-RIB · Profi-Ausrüstung"
-        : isEn
-        ? "Fishing RIB · professional gear"
-        : "Gommone Pesca · attrezzatura professionale",
-      reason: isEs
-        ? "Para aficionados: 8 horas privadas con cañas profesionales, técnicas mixtas y ruta elegida por el patrón según mar, temporada y normativa."
-        : isFr
-        ? "Pour passionnés : 8 heures privées avec cannes professionnelles, techniques mixtes et route choisie par le skipper selon mer, saison et règles."
-        : isDe
-        ? "Für Angelbegeisterte: 8 private Stunden mit professionellen Ruten, gemischten Techniken und Route nach Meer, Saison und Regeln."
-        : isEn
-        ? "For fishing enthusiasts: 8 private hours with professional rods, mixed techniques and a route chosen by the skipper according to sea, season and rules."
-        : "Per appassionati: 8 ore private con canne professionali, tecniche miste e rotta scelta dallo skipper in base a mare, stagione e regole.",
-    },
-  } satisfies Record<
-    ExperienceChoiceRecommendationKey,
-    Omit<
-      ExperienceChoiceRecommendation,
-      "key" | "images" | "priceLabel" | "bookingHref" | "detailHref"
-    >
-  >;
-
-  const makeRecommendation = (
-    key: ExperienceChoiceRecommendationKey,
-  ): ExperienceChoiceRecommendation => {
+}): ExperienceChoiceRecommendationSeed {
+  const makeRecommendationSeed = (key: ExperienceChoiceRecommendationKey) => {
     const serviceId = CHOICE_RECOMMENDATION_SERVICE_IDS[key];
     const service = servicesById.get(serviceId);
 
     return {
-      key,
-      ...content[key],
-      images: recommendationImages(serviceId, locale, content[key].title),
       priceLabel: lowestHeroPriceLabel([serviceId], displayPrices, locale),
       bookingHref: bookingHrefForService(service, serviceId, locale),
       detailHref: localizedPath(locale, `/experiences/${getExperiencePublicSlug(serviceId, locale)}`),
@@ -822,12 +473,12 @@ function buildExperienceChoiceRecommendations({
   };
 
   return {
-    shared8: makeRecommendation("shared8"),
-    private4: makeRecommendation("private4"),
-    private8: makeRecommendation("private8"),
-    gourmet: makeRecommendation("gourmet"),
-    charter: makeRecommendation("charter"),
-    fishing: makeRecommendation("fishing"),
+    shared8: makeRecommendationSeed("shared8"),
+    private4: makeRecommendationSeed("private4"),
+    private8: makeRecommendationSeed("private8"),
+    gourmet: makeRecommendationSeed("gourmet"),
+    charter: makeRecommendationSeed("charter"),
+    fishing: makeRecommendationSeed("fishing"),
   };
 }
 
@@ -933,7 +584,7 @@ export default async function HomePage({
       };
     })
     .filter((experience): experience is NonNullable<typeof experience> => Boolean(experience));
-  const choiceRecommendations = buildExperienceChoiceRecommendations({
+  const choiceRecommendationSeed = buildExperienceChoiceRecommendationSeed({
     locale,
     servicesById,
     displayPrices,
@@ -944,30 +595,20 @@ export default async function HomePage({
   const schemaTopics = homeSchemaTopics(locale);
   const areaServed = ["Isole Egadi", "Favignana", "Levanzo", "Marettimo", "Trapani"];
   const boardingAddress = PUBLIC_CONTACT_POSTAL_ADDRESS;
-  const homepageOffers = Object.values(choiceRecommendations).map((recommendation) => {
-    const serviceId = CHOICE_RECOMMENDATION_SERVICE_IDS[recommendation.key];
-    const price = lowestDisplayPrice([serviceId], displayPrices);
-    const url = `${siteBase}${recommendation.detailHref}`;
+  const homepageExperienceItems = Object.entries(CHOICE_RECOMMENDATION_SERVICE_IDS).map(
+    ([key, serviceId], index) => {
+      const recommendationKey = key as ExperienceChoiceRecommendationKey;
+      const content = getExperienceContent(serviceId, locale);
+      const url = `${siteBase}${choiceRecommendationSeed[recommendationKey].detailHref}`;
 
-    return {
-      "@type": "Offer",
-      url,
-      availability: "https://schema.org/InStock",
-      priceCurrency: "EUR",
-      ...(price?.amount ? { price: price.amount.toFixed(2) } : {}),
-      seller: { "@id": `${siteBase}/#organization` },
-      areaServed,
-      itemOffered: {
-        "@type": "Service",
-        name: recommendation.title,
-        description: recommendation.reason,
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        name: content?.seoTitle ?? content?.title ?? serviceId,
         url,
-        provider: { "@id": `${siteBase}/#organization` },
-        areaServed,
-        additionalProperty: structuredPackageDetails(recommendation.key, locale),
-      },
-    };
-  });
+      };
+    },
+  );
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -1032,17 +673,12 @@ export default async function HomePage({
         })),
         areaServed,
         knowsAbout: schemaTopics.about,
-        makesOffer: homepageOffers,
       },
       {
         "@type": "ItemList",
         "@id": `${pageUrl}#homepage-experiences`,
         name: seo.title,
-        itemListElement: Object.values(choiceRecommendations).map((recommendation, index) => ({
-          "@type": "ListItem",
-          position: index + 1,
-          item: homepageOffers[index],
-        })),
+        itemListElement: homepageExperienceItems,
       },
     ],
   };
@@ -1061,7 +697,10 @@ export default async function HomePage({
         title={tHero("seoTitle")}
         subtitle={tHero("seoSubtitle")}
       />
-      <DeferredExperienceChoiceDialog locale={locale} recommendations={choiceRecommendations} />
+      <DeferredExperienceChoiceDialog
+        locale={locale}
+        recommendationSeed={choiceRecommendationSeed}
+      />
       <LandingSections locale={locale} services={serializedServices} />
     </>
   );

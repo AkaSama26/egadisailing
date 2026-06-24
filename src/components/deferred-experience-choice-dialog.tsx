@@ -2,10 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import type {
-  ExperienceChoiceRecommendation,
-  ExperienceChoiceRecommendationKey,
-} from "@/components/experience-choice-dialog";
+import type { ExperienceChoiceRecommendationSeed } from "@/components/experience-choice-dialog";
 
 const DeferredDialog = dynamic(
   () =>
@@ -21,10 +18,7 @@ const DIALOG_DELAY_MS = 10000;
 
 interface DeferredExperienceChoiceDialogProps {
   locale: string;
-  recommendations: Record<
-    ExperienceChoiceRecommendationKey,
-    ExperienceChoiceRecommendation
-  >;
+  recommendationSeed: ExperienceChoiceRecommendationSeed;
 }
 
 function hasDismissedDialog() {
@@ -37,7 +31,7 @@ function hasDismissedDialog() {
 
 export function DeferredExperienceChoiceDialog({
   locale,
-  recommendations,
+  recommendationSeed,
 }: DeferredExperienceChoiceDialogProps) {
   const [shouldLoad, setShouldLoad] = useState(false);
 
@@ -70,7 +64,7 @@ export function DeferredExperienceChoiceDialog({
   return (
     <DeferredDialog
       locale={locale}
-      recommendations={recommendations}
+      recommendationSeed={recommendationSeed}
       delayMs={DIALOG_DELAY_MS}
     />
   );
