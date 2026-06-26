@@ -223,9 +223,9 @@ const TERMS_IT: TermsContent = {
 };
 
 const TERMS_EN: TermsContent = {
-  title: "Terms and Conditions",
+  title: "Egadisailing Booking Terms and Conditions",
   description:
-    "Egadisailing booking terms for boat experiences, cancellations, refunds, safety, weather and charter services.",
+    "Egadisailing booking terms for Egadi boat tours, cancellations, refunds, safety, weather, skipper authority and charter services.",
   versionLabel: `Version ${CURRENT_POLICY_VERSION} · Effective from ${EFFECTIVE_DATE_EN}`,
   intro:
     "These Terms govern direct bookings made through egadisailing.com. Before payment, the customer confirms that they have read and accepted these Terms together with the Privacy Policy.",
@@ -428,7 +428,7 @@ const TERMS_ES: TermsContent = {
       title: "1. Identidad del profesional y contactos",
       paragraphs: [
         `El vendedor y prestador de los servicios directos es ${companyEs}.`,
-        `Para asistencia contractual y reservas: ${PUBLIC_CONTACT_EMAIL}. Para solicitudes de privacidad: ${PRIVACY_CONTACT_EMAIL}. Teléfono/WhatsApp: ${PUBLIC_CONTACT_PHONE_TEXT}. Punto de encuentro habitual, salvo comunicación operativa distinta: ${PUBLIC_CONTACT_LOCATION.labelIt}.`,
+        `Para asistencia contractual y reservas: ${PUBLIC_CONTACT_EMAIL}. Para solicitudes de privacidad: ${PRIVACY_CONTACT_EMAIL}. Teléfono/WhatsApp: ${PUBLIC_CONTACT_PHONE_TEXT}. Punto de encuentro habitual, salvo comunicación operativa distinta: ${PUBLIC_CONTACT_LOCATION.labelEs}.`,
       ],
     },
     {

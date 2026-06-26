@@ -3,6 +3,7 @@ import {
   getExperiencePublicSlug,
   resolveExperienceServiceIdFromSlug,
 } from "@/data/catalog/experiences";
+import { getBoatPublicSlug, resolveBoatIdFromSlug } from "@/data/catalog/boats";
 
 type PathLocale = Locale;
 
@@ -68,7 +69,9 @@ export function localizedPath(locale: string, href: string): string {
   }
 
   if (first === "boats" && second) {
-    return `/${loc}${STATIC_PATHS["/boats"][loc]}/${second}${query}${hash}`;
+    const boatId = resolveBoatIdFromSlug(second);
+    const slug = getBoatPublicSlug(boatId, loc);
+    return `/${loc}${STATIC_PATHS["/boats"][loc]}/${slug}${query}${hash}`;
   }
 
   if (first === "islands" && second && !third) {

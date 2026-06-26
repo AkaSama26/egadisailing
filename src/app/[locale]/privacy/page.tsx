@@ -59,7 +59,7 @@ export async function generateMetadata({
   const isFr = locale === "fr";
   const isDe = locale === "de";
   return buildPageMetadata({
-    title: isEs ? "Política de privacidad" : isFr ? "Politique de confidentialité" : isDe ? "Datenschutzerklärung" : isEn ? "Privacy Policy" : "Informativa privacy",
+    title: isEs ? "Política de privacidad" : isFr ? "Politique de confidentialité" : isDe ? "Datenschutzerklärung" : isEn ? "Egadisailing Privacy Policy for Boat Tour Bookings" : "Informativa privacy",
     description: isEs
       ? "Política de privacidad de Egadisailing para reservas, pagos, solicitudes de contacto, cookies, seguridad y servicios de terceros utilizados por la plataforma."
       : isFr
@@ -67,7 +67,7 @@ export async function generateMetadata({
       : isDe
       ? "Datenschutzerklärung von Egadisailing für Buchungen, Zahlungen, Kontaktanfragen, Cookies, Sicherheit und Drittanbieter-Dienste der Plattform."
       : isEn
-      ? "Egadisailing Privacy Policy for bookings, payments, contact requests, cookies, security and third-party services used by the platform."
+      ? "Privacy Policy for Egadisailing boat tour bookings, payments, contact requests, cookies, security tools and third-party services."
       : "Informativa privacy di Egadisailing su prenotazioni, pagamenti, contatti, cookie, sicurezza e servizi terzi utilizzati dall'app.",
     path: "/privacy",
     locale,

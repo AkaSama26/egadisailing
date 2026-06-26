@@ -444,7 +444,7 @@ const fr: LocaleGuideMap = {
     secondaryCtaLabel: 'Voir les bateaux'
   },
   levanzo: {
-    h1: 'Levanzo en bateau',
+    h1: 'Levanzo en bateau depuis Trapani',
     eyebrow: 'Guide des îles Égades',
     intro: [
       'Levanzo est l’île la plus intime et tranquille des Égades : maisons blanches, petit port, eau transparente et côte parfaite pour naviguer lentement.',
@@ -465,12 +465,12 @@ const fr: LocaleGuideMap = {
       { question: 'Le snorkeling est-il intéressant ?', answer: 'Oui. L’eau claire et les fonds rocheux rendent Levanzo agréable pour le snorkeling dans les criques abritées.' }
     ],
     ctaTitle: 'Créez un itinéraire tranquille à Levanzo',
-    ctaText: 'Choisissez Levanzo pour une journée lente ou combinez-la avec Favignana en excursion privée.',
+    ctaText: 'Choisissez Levanzo depuis Trapani pour une journée lente ou combinez-la avec Favignana en excursion privée.',
     primaryCtaLabel: 'Réserver en privé',
     secondaryCtaLabel: 'Comparer les bateaux'
   },
   marettimo: {
-    h1: 'Marettimo en bateau',
+    h1: 'Marettimo en bateau depuis Trapani',
     eyebrow: 'Guide des îles Égades',
     intro: [
       'Marettimo est l’île la plus sauvage des Égades : plus haute, plus lointaine et plus spectaculaire, avec grottes, falaises et eau bleu profond.',
@@ -491,7 +491,7 @@ const fr: LocaleGuideMap = {
       { question: 'Quel bateau choisir ?', answer: 'Un bateau privé confortable avec bonne autonomie est recommandé. L’équipe conseille selon groupe, saison et confort souhaité.' }
     ],
     ctaTitle: 'Planifiez une journée sauvage à Marettimo',
-    ctaText: 'Demandez-nous le bateau et la fenêtre météo adaptés à l’île la plus lointaine des Égades.',
+    ctaText: 'Demandez-nous le bateau, le départ depuis Trapani et la fenêtre météo adaptés à l’île la plus lointaine des Égades.',
     primaryCtaLabel: 'Demander disponibilité',
     secondaryCtaLabel: 'Voir la flotte'
   }
@@ -499,7 +499,7 @@ const fr: LocaleGuideMap = {
 
 const de: LocaleGuideMap = {
   favignana: {
-    h1: 'Favignana mit dem Boot',
+    h1: 'Favignana mit dem Boot ab Trapani',
     eyebrow: 'Reiseführer Egadische Inseln',
     intro: [
       'Favignana ist von Trapani aus am einfachsten zu erreichen und vom Meer aus besonders eindrucksvoll: helle Felsen, türkisfarbenes Wasser und Buchten mit sehr unterschiedlichem Charakter.',
@@ -516,16 +516,16 @@ const de: LocaleGuideMap = {
     faqs: [
       { question: 'Besuchen wir immer Cala Rossa?', answer: 'Cala Rossa ist sehr gefragt, hängt aber von Wind, Welle und Sicherheit ab. Der Skipper wählt am Tag selbst die komfortabelsten Buchten.' },
       { question: 'Ist Favignana für Familien geeignet?', answer: 'Ja. Die Distanzen sind kurz und die Route kann mit häufigen Badestopps, Schattenpausen und ruhigen Alternativen angepasst werden.' },
-      { question: 'Wie lange dauert die Tour?', answer: 'Es gibt Halb- und Ganztagestouren. Ein ganzer Tag erlaubt mehr Ruhe oder eine Kombination mit Levanzo.' },
-      { question: 'Startet die Tour in Trapani?', answer: 'Meistens ja, abhängig von Boot, Saison und Verfügbarkeit. Treffpunkt und Uhrzeit werden vor Abfahrt bestätigt.' }
+      { question: 'Wie lange dauert die Bootstour?', answer: 'Es gibt Halb- und Ganztagsausfahrten. Ein ganzer Tag erlaubt mehr Ruhe oder eine Kombination mit Levanzo.' },
+      { question: 'Startet die Bootstour in Trapani?', answer: 'Meistens ja, abhängig von Boot, Saison und Verfügbarkeit. Treffpunkt und Uhrzeit werden vor Abfahrt bestätigt.' }
     ],
-    ctaTitle: 'Plane deinen Bootstag auf Favignana',
-    ctaText: 'Wähle eine private Tour ab Trapani oder kombiniere Favignana und Levanzo zu einer kompletten Egadi-Route.',
-    primaryCtaLabel: 'Bootstour buchen',
+    ctaTitle: 'Planen Sie Ihren Bootstag auf Favignana',
+    ctaText: 'Wählen Sie eine private Bootstour ab Trapani oder kombinieren Sie Favignana und Levanzo zu einer kompletten Egadi-Route.',
+    primaryCtaLabel: 'Verfügbarkeit prüfen',
     secondaryCtaLabel: 'Boote ansehen'
   },
   levanzo: {
-    h1: 'Levanzo mit dem Boot',
+    h1: 'Levanzo mit dem Boot ab Trapani',
     eyebrow: 'Reiseführer Egadische Inseln',
     intro: [
       'Levanzo ist die ruhigste und intimste der Egadischen Inseln: weiße Häuser, ein kleiner Hafen, klares Wasser und eine Küste wie gemacht für langsames Navigieren.',
@@ -535,23 +535,23 @@ const de: LocaleGuideMap = {
     sections: [
       { title: 'Warum Levanzo vom Meer aus funktioniert', body: ['Levanzo hat ein kleines Dorf und wenige Straßen, deshalb ist die Küste die eigentliche Route. Mit dem Boot erreicht man Cala Fredda, Cala Minnola, Höhlen und ruhige Ankerplätze.', 'Die Insel passt zu Gästen, die klares Wasser, ruhiges Baden und weniger Trubel suchen. Es geht weniger um Strecke als um den richtigen Ort zur richtigen Zeit.'] },
       { title: 'Cala Minnola, Cala Fredda und Höhlen', body: ['Cala Minnola ist einer der beliebtesten Stopps mit leuchtendem Wasser und geschützter Atmosphäre. Cala Fredda liegt nah am Dorf und eignet sich oft für den ersten oder letzten Badestopp.', 'Der Skipper kann Höhlen und Panoramapassagen einbauen, abhängig vom Meer. Manche Zonen genießt man vom Boot, andere laden zum Schnorcheln ein.'] },
-      { title: 'Levanzo und Favignana kombinieren', body: ['Levanzo und Favignana liegen nah genug, um sie auf vielen Ganztagestouren ab Trapani zu kombinieren. Der Kontrast zwischen den Inseln macht die Route besonders abwechslungsreich.', 'Bei wechselnder Wetterlage priorisiert der Skipper die geschütztere Seite. Diese Flexibilität ist ein wichtiger Teil einer gelungenen Egadi-Tour.'] }
+      { title: 'Levanzo und Favignana kombinieren', body: ['Levanzo und Favignana liegen nah genug, um sie auf vielen Ganztagsausfahrten ab Trapani zu kombinieren. Der Kontrast zwischen den Inseln macht die Route besonders abwechslungsreich.', 'Bei wechselnder Wetterlage priorisiert der Skipper die geschütztere Seite. Diese Flexibilität ist ein wichtiger Teil einer gelungenen Egadi-Bootstour.'] }
     ],
     highlightsTitle: 'Highlights von Levanzo',
     faqTitle: 'FAQ Bootstour Levanzo',
     faqs: [
       { question: 'Ist Levanzo ruhiger als Favignana?', answer: 'Meist ja, besonders außerhalb des Augusts. Es ist eine gute Wahl für eine entspanntere Egadi-Erfahrung.' },
-      { question: 'Können wir im Dorf anhalten?', answer: 'Das kann je nach Liegeplatz, Zeitplan und Route möglich sein. Bei privaten Touren berät der Skipper, ob es sinnvoll passt.' },
+      { question: 'Können wir im Dorf anhalten?', answer: 'Das kann je nach Liegeplatz, Zeitplan und Route möglich sein. Bei privaten Bootstouren berät der Skipper, ob es sinnvoll passt.' },
       { question: 'Geht Levanzo auch als Halbtagestour?', answer: 'Ja, Levanzo eignet sich gut für einen halben Tag ab Trapani. Ein ganzer Tag bietet mehr Zeit für Höhlen und Favignana.' },
       { question: 'Ist Schnorcheln gut?', answer: 'Ja. Klares Wasser und felsiger Grund machen Levanzo in geschützten Buchten angenehm zum Schnorcheln.' }
     ],
-    ctaTitle: 'Erstelle eine ruhige Levanzo-Route',
-    ctaText: 'Wähle Levanzo für einen langsamen Tag oder kombiniere die Insel mit Favignana auf einer privaten Ganztagestour.',
-    primaryCtaLabel: 'Private Tour buchen',
+    ctaTitle: 'Planen Sie eine ruhige Levanzo-Route',
+    ctaText: 'Wählen Sie Levanzo für einen ruhigen Tag oder kombinieren Sie die Insel mit Favignana auf einer privaten Ganztagsausfahrt ab Trapani.',
+    primaryCtaLabel: 'Private Ausfahrt prüfen',
     secondaryCtaLabel: 'Boote vergleichen'
   },
   marettimo: {
-    h1: 'Marettimo mit dem Boot',
+    h1: 'Marettimo mit dem Boot ab Trapani',
     eyebrow: 'Reiseführer Egadische Inseln',
     intro: [
       'Marettimo ist die wildeste Egadische Insel: höher, abgelegener und dramatischer als Favignana oder Levanzo, mit Höhlen, Klippen und tiefblauem Wasser.',
@@ -567,13 +567,13 @@ const de: LocaleGuideMap = {
     faqTitle: 'FAQ Bootstour Marettimo',
     faqs: [
       { question: 'Ist Marettimo immer erreichbar?', answer: 'Nein. Wegen der Entfernung hängt Marettimo stärker von Wind und Seegang ab. Bei ungeeigneten Bedingungen empfehlen wir eine sicherere Egadi-Route.' },
-      { question: 'Ist Marettimo gut für den ersten Egadi-Besuch?', answer: 'Möglich, aber viele starten mit Favignana und Levanzo. Marettimo ist ideal für eine wildere Ganztagestour.' },
+      { question: 'Ist Marettimo gut für den ersten Egadi-Besuch?', answer: 'Möglich, aber viele starten mit Favignana und Levanzo. Marettimo ist ideal für eine wildere Ganztagsausfahrt.' },
       { question: 'Kann man die Höhlen besuchen?', answer: 'Die Höhlen sind ein Höhepunkt, aber der Zugang hängt vom Meer ab. Der Skipper nähert sich nur, wenn es sicher ist.' },
       { question: 'Welches Boot eignet sich?', answer: 'Empfohlen ist ein komfortables privates Boot mit guter Reichweite. Das Team berät nach Gruppengröße, Saison und gewünschtem Komfort.' }
     ],
-    ctaTitle: 'Plane einen wilden Marettimo-Tag',
-    ctaText: 'Frag uns nach dem passenden Boot und Wetterfenster für die abgelegenste Egadi-Insel.',
-    primaryCtaLabel: 'Verfügbarkeit anfragen',
+    ctaTitle: 'Planen Sie einen wilden Marettimo-Tag',
+    ctaText: 'Fragen Sie uns nach dem passenden Boot und Wetterfenster für die abgelegenste Egadi-Insel.',
+    primaryCtaLabel: 'Verfügbarkeit prüfen',
     secondaryCtaLabel: 'Flotte ansehen'
   }
 };

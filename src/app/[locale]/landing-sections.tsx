@@ -8,6 +8,7 @@ import { Check, ExternalLink } from "lucide-react";
 import { PUBLIC_REVIEW_LINKS } from "@/lib/public-reviews";
 import { localizedPath } from "@/lib/i18n/paths";
 import { localizedExperiencePath } from "@/lib/i18n/public-experience-paths";
+import { localizedStaticPath } from "@/lib/i18n/static-paths";
 import { HomeExperiencesSection } from "./_components/home/home-experiences-section";
 import {
   HomePackagesSection,
@@ -323,6 +324,89 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
     : isEn
     ? ["Trapani harbour departure", "Local skipper", "Shared tours, private tours and charter"]
     : ["Partenza Porto di Trapani", "Skipper locale", "Tour condivisi, privati e charter"];
+  const hubLinksTitle = isEs
+    ? "Explora Egadi Sailing"
+    : isFr
+    ? "Explorer Egadi Sailing"
+    : isDe
+    ? "Egadi Sailing entdecken"
+    : isEn
+    ? "Explore Egadi Sailing"
+    : "Esplora Egadi Sailing";
+  const hubLinks = [
+    {
+      label: isEs
+        ? "Tours en barco Egadi"
+        : isFr
+        ? "Excursions bateau Égades"
+        : isDe
+        ? "Egadi Bootstouren"
+        : isEn
+        ? "Egadi boat tour packages"
+        : "Tour in barca Egadi",
+      href: localizedStaticPath(locale, "/experiences"),
+    },
+    {
+      label: isEs
+        ? "Barcos Egadi desde Trapani"
+        : isFr
+        ? "Bateaux Égades depuis Trapani"
+        : isDe
+        ? "Egadi Boote ab Trapani"
+        : isEn
+        ? "Egadi boats from Trapani"
+        : "Barche Egadi da Trapani",
+      href: localizedStaticPath(locale, "/boats"),
+    },
+    {
+      label: isEs
+        ? "Guía de las Islas Egadi"
+        : isFr
+        ? "Guide des îles Égades"
+        : isDe
+        ? "Guide zu den Egadi Inseln"
+        : isEn
+        ? "Egadi Islands boat guide"
+        : "Guida alle Isole Egadi",
+      href: localizedStaticPath(locale, "/islands"),
+    },
+    {
+      label: isEs
+        ? "Reservar online"
+        : isFr
+        ? "Réserver en ligne"
+        : isDe
+        ? "Online buchen"
+        : isEn
+        ? "Book an Egadi boat tour"
+        : "Prenota online",
+      href: localizedStaticPath(locale, "/prenota"),
+    },
+    {
+      label: isEs
+        ? "Contacto y punto de encuentro"
+        : isFr
+        ? "Contact et point de rendez-vous"
+        : isDe
+        ? "Kontakt und Treffpunkt"
+        : isEn
+        ? "Contact and Trapani meeting point"
+        : "Contatti e punto di incontro",
+      href: localizedStaticPath(locale, "/contacts"),
+    },
+    {
+      label: isEs
+        ? "Preguntas frecuentes"
+        : isFr
+        ? "Questions fréquentes"
+        : isDe
+        ? "Häufige Fragen"
+        : isEn
+        ? "Egadi boat tour FAQ"
+        : "Domande frequenti",
+      href: localizedStaticPath(locale, "/faq"),
+    },
+  ];
   const reviewTitle = isEs
     ? "Reseñas de los tours en barco por las Islas Egadi"
     : isFr
@@ -1240,6 +1324,22 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
                   {item}
                 </span>
               ))}
+            </div>
+            <div className="mx-auto mt-10 max-w-4xl border-t border-white/12 pt-7">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/46">
+                {hubLinksTitle}
+              </p>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                {hubLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-full border border-white/14 bg-white/[0.045] px-4 py-2 text-sm font-semibold text-white/72 transition hover:border-[var(--color-gold)]/60 hover:text-white"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </ScrollSection>
         </div>

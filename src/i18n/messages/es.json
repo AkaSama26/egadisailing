@@ -16,10 +16,10 @@
   },
   "hero": {
     "title": "Deja la costa atrás",
-    "subtitle": "Descubre las Islas Egadi: trimarán con chef, excursiones privadas y charter desde Trapani.",
-    "seoTitle": "Excursiones en barco a las Islas Egadi desde Trapani",
-    "seoSubtitle": "Tours privados y compartidos, chef a bordo y charter en trimarán entre Favignana, Levanzo y Marettimo, con patrón local y salida desde el puerto de Trapani.",
-    "cta": "Ver experiencias",
+    "subtitle": "Descubre las Islas Egadi con paseos en barco, trimarán con chef, tours privados y charter desde Trapani.",
+    "seoTitle": "Paseos en barco desde Trapani a las Islas Egadi",
+    "seoSubtitle": "Paseos compartidos y privados, chef a bordo y charter en trimarán entre Favignana, Levanzo y Marettimo, con patrón local y salida desde el puerto de Trapani.",
+    "cta": "Ver paseos",
     "vehicleLabel": "Barco",
     "vehiclePlaceholder": "Elige un barco",
     "experienceLabel": "Experiencia",
@@ -61,7 +61,7 @@
     }
   },
   "nav": {
-    "experiences": "Experiencias",
+    "experiences": "Paseos en barco",
     "boats": "Nuestros barcos",
     "islands": "Las islas",
     "about": "Sobre nosotros",
@@ -107,8 +107,8 @@
     "writeUs": "Escríbenos"
   },
   "islands": {
-    "title": "Las Islas Egadi",
-    "subtitle": "Tres joyas en el corazón del Mediterráneo",
+    "title": "Islas Egadi en barco desde Trapani",
+    "subtitle": "Favignana, Levanzo y Marettimo vistas desde el mar",
     "sectionLabel": "Descubre la ruta",
     "discoverExperiences": "Descubre experiencias que visitan esta isla",
     "favignana": {
@@ -169,7 +169,7 @@
   },
   "experiences": {
     "title": "Paseos en barco desde Trapani a las Islas Egadi",
-    "subtitle": "Compara paseos en barco desde Trapani: Favignana y Levanzo, excursiones compartidas o privadas, snorkel, charter en trimarán y pesca deportiva."
+    "subtitle": "Compara paseos y excursiones en barco desde Trapani: Favignana y Levanzo, tour compartido o privado, snorkel, charter en trimarán y pesca deportiva."
   },
   "boats": {
     "title": "Barcos para excursiones a las Islas Egadi desde Trapani",
@@ -182,8 +182,8 @@
     "specs": "Características"
   },
   "faq": {
-    "title": "FAQ sobre excursiones en barco por las Islas Egadi",
-    "subtitle": "Todo lo que necesitas saber antes de reservar una excursión en barco por las Islas Egadi.",
+    "title": "FAQ sobre paseos en barco por las Islas Egadi",
+    "subtitle": "Todo lo que necesitas saber antes de reservar un paseo o excursión en barco por las Islas Egadi desde Trapani.",
     "q1": "¿Qué debo llevar?",
     "a1": "Preferiblemente protector solar biodegradable, bañador, toalla personal, sombrero y calzado cómodo. También recomendamos llevar una prenda ligera para el regreso.",
     "q2": "¿Puedo cancelar mi reserva?",

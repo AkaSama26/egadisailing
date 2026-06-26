@@ -6,7 +6,7 @@ import {
   getExperiencePublicSlug,
   getListedExperienceIds,
 } from "@/data/catalog/experiences";
-import { getPublicBoatDetailSlugs } from "@/data/catalog/boats";
+import { getBoatPublicSlug, getPublicBoatDetailIds } from "@/data/catalog/boats";
 import { env } from "@/lib/env";
 import { localizedAbsoluteUrl, localizedPathWithoutLocale } from "@/lib/i18n/paths";
 
@@ -113,11 +113,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
   }
 
-  for (const slug of getPublicBoatDetailSlugs()) {
+  for (const boatId of getPublicBoatDetailIds()) {
     addLocalizedEntries(
       entries,
       baseUrl,
-      sameLocalizedPath(`/boats/${slug}`),
+      {
+        it: localizedPathWithoutLocale("it", `/boats/${getBoatPublicSlug(boatId, "it")}`),
+        en: localizedPathWithoutLocale("en", `/boats/${getBoatPublicSlug(boatId, "en")}`),
+        es: localizedPathWithoutLocale("es", `/boats/${getBoatPublicSlug(boatId, "es")}`),
+        fr: localizedPathWithoutLocale("fr", `/boats/${getBoatPublicSlug(boatId, "fr")}`),
+        de: localizedPathWithoutLocale("de", `/boats/${getBoatPublicSlug(boatId, "de")}`),
+      },
       {
         lastModified: CATALOG_CONTENT_LAST_MODIFIED,
       },

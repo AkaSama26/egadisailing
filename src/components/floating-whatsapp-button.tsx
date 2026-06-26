@@ -85,7 +85,7 @@ export function FloatingWhatsAppButton({ locale }: { locale: string }) {
           <span>{bubbleText}</span>
           <span
             aria-hidden="true"
-            className="absolute -right-2 bottom-4 h-4 w-4 rotate-45 border-r border-t border-white/70 bg-white"
+            className="whatsapp-help-bubble-arrow absolute -right-2 bottom-4 h-4 w-4 rotate-45 border-r border-t border-white/70 bg-white"
           />
         </button>
       )}

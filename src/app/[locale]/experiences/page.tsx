@@ -71,6 +71,50 @@ function inLanguage(locale: string): string {
   return locale === "en" ? "en-US" : "it-IT";
 }
 
+function experienceHubSeoCopy(locale: string, fallback: { title: string; description: string }) {
+  if (locale === "en") {
+    return {
+      title: "Egadi Boat Tour Packages from Trapani | Egadi Sailing",
+      description:
+        "Compare Egadi boat tours from Trapani: Favignana and Levanzo boat trips, shared or private tours, snorkelling, trimaran charter and fishing.",
+    };
+  }
+
+  if (locale === "es") {
+    return {
+      title: "Paseos en barco desde Trapani a las Islas Egadi | Egadi Sailing",
+      description:
+        "Compara paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, trimarán y pesca.",
+    };
+  }
+
+  if (locale === "it") {
+    return {
+      title: "Tour in barca Egadi da Trapani | Egadi Sailing",
+      description:
+        "Confronta tour in barca alle Egadi da Trapani: Favignana e Levanzo, escursioni condivise o private, trimarano, chef a bordo e pesca.",
+    };
+  }
+
+  if (locale === "fr") {
+    return {
+      title: "Excursions bateau Égades depuis Trapani | Egadi Sailing",
+      description:
+        "Comparez les excursions bateau aux îles Égades depuis Trapani : Favignana, Levanzo, sorties privées ou partagées, trimaran, chef à bord et pêche.",
+    };
+  }
+
+  if (locale === "de") {
+    return {
+      title: "Bootstouren ab Trapani zu den Ägadischen Inseln | Egadi Sailing",
+      description:
+        "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana, Levanzo, private oder geteilte Ausfahrten, Trimaran, Chef an Bord und Angeln.",
+    };
+  }
+
+  return fallback;
+}
+
 function experiencePageTopics(locale: string) {
   if (locale === "en") {
     return {
@@ -105,7 +149,10 @@ function experiencePageTopics(locale: string) {
         "Paseos en barco desde Trapani",
         "Paseo en barco Trapani",
         "Excursiones en barco Islas Egadi",
-        "Favignana",
+        "Excursión en barco Favignana y Levanzo",
+        "Barco desde Trapani a Favignana",
+        "Paseo en barco Islas Egadi",
+        "Cala Rossa",
         "Levanzo",
         "Snorkel",
         "Tour privado en barco",
@@ -116,8 +163,11 @@ function experiencePageTopics(locale: string) {
         "paseo en barco trapani",
         "paseos en barco desde trapani",
         "excursiones en barco islas egadi",
+        "excursion en barco favignana levanzo",
+        "barco desde trapani a favignana",
         "favignana y levanzo en barco",
         "tour en barco trapani",
+        "islas egadi en barco",
       ],
     };
   }
@@ -127,18 +177,18 @@ function experiencePageTopics(locale: string) {
       about: [
         "Bootstouren ab Trapani",
         "Bootstour Trapani",
-        "Bootstour Ägadische Inseln",
+        "Bootstouren zu den Ägadischen Inseln",
         "Favignana",
         "Levanzo",
         "Schnorcheln",
         "Private Bootstour",
-        "Geteilte Bootstour",
+        "Geteilte Ausfahrt",
         "Charter",
       ],
       keywords: [
         "bootstour trapani",
         "bootstouren ab trapani",
-        "bootstour ägadische inseln",
+        "bootstouren ägadische inseln",
         "favignana und levanzo bootstour",
         "bootstour favignana trapani",
       ],
@@ -153,14 +203,14 @@ function experiencePageTopics(locale: string) {
         "Favignana",
         "Levanzo",
         "Snorkeling",
-        "Tour privé en bateau",
-        "Tour partagé en bateau",
+        "Excursion privée en bateau",
+        "Excursion partagée en bateau",
         "Charter",
       ],
       keywords: [
         "excursion bateau égades",
         "excursions bateau depuis trapani",
-        "tour bateau favignana levanzo",
+        "excursion bateau favignana levanzo",
         "charter égades",
         "bateau privé trapani",
       ],
@@ -230,18 +280,18 @@ function getHubQuickLinks(locale: string) {
   if (locale === "es") {
     return {
       eyebrow: "Elección rápida",
-      title: "Elige la excursión Egadi según tu idea de viaje",
+      title: "Elige tu paseo en barco por las Islas Egadi desde Trapani",
       intro:
-        "Si ya sabes qué formato quieres, entra directamente en la página más útil: día completo, tour privado, charter de varios días o pesca.",
+        "Si ya sabes qué formato quieres, entra directamente en la página más útil: paseo compartido de día completo, tour privado, charter de varios días o pesca.",
       links: [
         {
-          label: "Excursión en barco Favignana y Levanzo desde Trapani",
-          description: "Ruta completa de día entero con baños, snorkel y opción compartida o privada.",
+          label: "Paseo en barco compartido Favignana y Levanzo",
+          description: "Excursión de día completo desde Trapani con baños, snorkel y ruta por Favignana y Levanzo.",
           href: sharedHref,
         },
         {
-          label: "Tour privado Favignana y Levanzo",
-          description: "Ideal para familias, grupos pequeños y quien quiere el barco reservado.",
+          label: "Paseo privado Favignana y Levanzo",
+          description: "Barco reservado desde Trapani para familias, grupos pequeños y quien quiere más libertad de ruta.",
           href: privateHref,
         },
         {
@@ -263,7 +313,7 @@ function getHubQuickLinks(locale: string) {
       eyebrow: "Choix rapide",
       title: "Choisir l'excursion Égades qui correspond à votre recherche",
       intro:
-        "Si vous connaissez déjà la formule, allez directement à la page la plus pertinente : journée complète, tour privé, charter ou pêche.",
+        "Si vous connaissez déjà la formule, allez directement à la page la plus pertinente : journée complète, excursion privée, charter ou pêche.",
       links: [
         {
           label: "Excursion bateau Favignana et Levanzo depuis Trapani",
@@ -271,7 +321,7 @@ function getHubQuickLinks(locale: string) {
           href: sharedHref,
         },
         {
-          label: "Tour privé Favignana et Levanzo",
+          label: "Excursion privée Favignana et Levanzo",
           description: "Adapté aux familles, petits groupes et voyageurs qui veulent le bateau réservé.",
           href: privateHref,
         },
@@ -294,7 +344,7 @@ function getHubQuickLinks(locale: string) {
       eyebrow: "Schnelle Auswahl",
       title: "Die passende Ägadische-Inseln-Bootstour für Ihre Reisepläne finden",
       intro:
-        "Wenn das Format schon klar ist, gehen Sie direkt zur passenden Seite: Ganztagestour, private Tour, mehrtägiger Charter oder Angeln.",
+        "Wenn das Format schon klar ist, gehen Sie direkt zur passenden Seite: Ganztagsausfahrt, private Bootstour, mehrtägiger Charter oder Angeln.",
       links: [
         {
           label: "Favignana und Levanzo Bootstour ab Trapani",
@@ -397,15 +447,15 @@ function getHubCopy(locale: string) {
       },
       departure: "Via dei Gladioli 15, Puerto de Trapani",
       policy: "Si Egadisailing cancela por mar no seguro: cambio de fecha gratuito o reembolso completo; cancelación cliente según términos.",
-      faqTitle: "FAQ sobre tours en barco a las Egadi desde Trapani",
+      faqTitle: "FAQ sobre paseos en barco a las Islas Egadi desde Trapani",
       faqs: [
         {
-          question: "¿Mejor un tour de 4 horas o de 8 horas?",
-          answer: "El tour de 8 horas es ideal para Favignana y Levanzo con más paradas de baño y snorkel. El tour privado de 4 horas funciona si quieres una salida compacta con barco reservado y regreso preciso.",
+          question: "¿Mejor un paseo de 4 horas o una excursión de 8 horas?",
+          answer: "La excursión de 8 horas es ideal para Favignana y Levanzo con más paradas de baño y snorkel. El paseo privado de 4 horas funciona si quieres una salida compacta con barco reservado y regreso preciso.",
         },
         {
-          question: "¿Tour compartido o tour privado?",
-          answer: "El tour compartido permite reservar plazas individuales y mantener el precio más accesible. El tour privado reserva el barco para tu grupo y deja más libertad en ritmo, pausas y privacidad.",
+          question: "¿Paseo compartido o tour privado?",
+          answer: "El paseo compartido permite reservar plazas individuales y mantener el precio más accesible. El tour privado reserva el barco para tu grupo y deja más libertad en ritmo, pausas y privacidad.",
         },
         {
           question: "¿Desde dónde salen las experiencias?",
@@ -457,7 +507,7 @@ function getHubCopy(locale: string) {
   if (locale === "fr") {
     return {
       intro:
-        "Choisissez votre excursion en bateau aux îles Égades depuis Trapani en comparant durée, prix, capacité, formule et route. Depuis Via dei Gladioli 15, près du port de Trapani, vous pouvez réserver excursions partagées de 8 heures à Favignana et Levanzo, tours privés de 4 heures, charter en trimaran, chef à bord ou pêche sportive. Les étapes possibles incluent Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda et Cala Minnola, toujours selon météo, vent et sécurité. Chaque forfait indique inclus, snorkeling, skipper, carburant et politique d'annulation ou remboursement en cas de mauvaise météo.",
+        "Choisissez votre excursion en bateau aux îles Égades depuis Trapani en comparant durée, prix, capacité, formule et route. Depuis Via dei Gladioli 15, près du port de Trapani, vous pouvez réserver excursions partagées de 8 heures à Favignana et Levanzo, excursions privées de 4 heures, charter en trimaran, chef à bord ou pêche sportive. Les étapes possibles incluent Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda et Cala Minnola, toujours selon météo, vent et sécurité. Chaque forfait indique inclus, snorkeling, skipper, carburant et politique d'annulation ou remboursement en cas de mauvaise météo.",
       labels: {
         duration: "Durée",
         price: "Prix",
@@ -474,11 +524,11 @@ function getHubCopy(locale: string) {
       faqs: [
         {
           question: "Vaut-il mieux choisir 4 heures ou 8 heures ?",
-          answer: "L'excursion de 8 heures est idéale pour Favignana et Levanzo avec plus d'arrêts baignade et snorkeling. Le tour privé de 4 heures convient à une sortie compacte avec bateau réservé.",
+          answer: "L'excursion de 8 heures est idéale pour Favignana et Levanzo avec plus d'arrêts baignade et snorkeling. L'excursion privée de 4 heures convient à une sortie compacte avec bateau réservé.",
         },
         {
-          question: "Tour partagé ou tour privé ?",
-          answer: "Le tour partagé permet de réserver des places individuelles. Le tour privé réserve le bateau à votre groupe et donne plus de liberté sur rythme, pauses et intimité.",
+          question: "Excursion partagée ou excursion privée ?",
+          answer: "L'excursion partagée permet de réserver des places individuelles. L'excursion privée réserve le bateau à votre groupe et donne plus de liberté sur rythme, pauses et intimité.",
         },
         {
           question: "D'où partent les expériences ?",
@@ -493,18 +543,18 @@ function getHubCopy(locale: string) {
           answer: "La route peut changer pour sécurité. Si Egadisailing annule parce que la mer ne permet pas l'expérience en sécurité, vous choisissez changement de date gratuit ou remboursement complet.",
         },
         {
-          question: "Quel tour choisir pour Favignana et Levanzo ?",
+          question: "Quelle excursion choisir pour Favignana et Levanzo ?",
           answer: "Pour Favignana et Levanzo depuis Trapani, la formule la plus complète est l'excursion de 8 heures. Pour événements, familles ou intimité, choisissez privé, chef à bord ou charter.",
         },
       ],
       facts: {
         "tour-barca-egadi-8-ore": {
-          formula: "Tour partagé ou privé",
+          formula: "Excursion partagée ou privée",
           route: "Départ de Trapani vers Favignana et Levanzo, avec Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda et Cala Minnola selon météo.",
           includes: "Skipper, carburant, snorkeling, eau, arrêts baignade et assistance.",
         },
         "tour-barca-egadi-4-ore": {
-          formula: "Tour privé demi-journée",
+          formula: "Excursion privée demi-journée",
           route: "Départ de Trapani vers une crique abritée autour de Favignana, avec route flexible selon vent et mer.",
           includes: "Bateau privé, skipper, carburant, snorkeling et arrêts baignade.",
         },
@@ -530,7 +580,7 @@ function getHubCopy(locale: string) {
   if (locale === "de") {
     return {
       intro:
-        "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln, bevor Sie die passende Formel wählen: geteilte Bootstour, private Tour, 4-Stunden-Halbtag, 8-Stunden-Tour nach Favignana und Levanzo, Trimaran-Charter, Chef an Bord oder Sportangeln. Ab Via dei Gladioli 15, nahe dem Hafen Trapani, werden die Routen rund um Favignana, Levanzo und die besten Seebedingungen des Tages geplant. Mögliche Stopps sind Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda und Cala Minnola. Jedes Paket zeigt Dauer, Preis, Kapazität, Inklusivleistungen, Schnorcheln, Skipper, Treibstoff sowie Storno- oder Erstattungsregeln bei schlechtem Wetter.",
+        "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln, bevor Sie die passende Formel wählen: geteilte Bootstour, private Ausfahrt, 4-Stunden-Halbtag, 8-stündige Bootstour nach Favignana und Levanzo, Trimaran-Charter, Chef an Bord oder Sportangeln. Ab Via dei Gladioli 15, nahe dem Hafen Trapani, werden die Routen rund um Favignana, Levanzo und die besten Seebedingungen des Tages geplant. Mögliche Stopps sind Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda und Cala Minnola. Jedes Paket zeigt Dauer, Preis, Kapazität, Inklusivleistungen, Schnorcheln, Skipper, Treibstoff sowie Storno- oder Erstattungsregeln bei schlechtem Wetter.",
       labels: {
         duration: "Dauer",
         price: "Preis",
@@ -547,11 +597,11 @@ function getHubCopy(locale: string) {
       faqs: [
         {
           question: "Sind 4 Stunden oder 8 Stunden besser?",
-          answer: "Die 8-Stunden-Tour ist ideal für Favignana und Levanzo mit mehr Badestopps und Schnorcheln. Die private 4-Stunden-Tour passt, wenn Sie ein kompaktes Zeitfenster mit reserviertem Boot wünschen.",
+          answer: "Die 8-stündige Bootstour ist ideal für Favignana und Levanzo mit mehr Badestopps und Schnorcheln. Die private 4-stündige Ausfahrt passt, wenn Sie ein kompaktes Zeitfenster mit reserviertem Boot wünschen.",
         },
         {
-          question: "Geteilte oder private Tour?",
-          answer: "Bei der geteilten Tour buchen Sie Einzelplätze. Bei der privaten Tour ist das Boot für Ihre Gruppe reserviert, mit mehr Freiheit bei Rhythmus, Pausen und Privatsphäre.",
+          question: "Geteilte oder private Ausfahrt?",
+          answer: "Bei der geteilten Ausfahrt buchen Sie Einzelplätze. Bei der privaten Bootstour ist das Boot für Ihre Gruppe reserviert, mit mehr Freiheit bei Rhythmus, Pausen und Privatsphäre.",
         },
         {
           question: "Wo starten die Erlebnisse?",
@@ -567,12 +617,12 @@ function getHubCopy(locale: string) {
         },
         {
           question: "Welche Bootstour ab Trapani passt für Favignana und Levanzo?",
-          answer: "Für Favignana und Levanzo ab Trapani ist die 8-Stunden-Bootstour am vollständigsten. Wählen Sie die geteilte Tour für einen zugänglichen Tagesausflug, die private Tour für Ihre Gruppe oder den Trimaran für mehr Komfort und Service.",
+          answer: "Für Favignana und Levanzo ab Trapani ist die 8-stündige Bootstour am vollständigsten. Wählen Sie die geteilte Ausfahrt für einen zugänglichen Tagesausflug, die private Bootstour für Ihre Gruppe oder den Trimaran für mehr Komfort und Service.",
         },
       ],
       facts: {
         "tour-barca-egadi-8-ore": {
-          formula: "Geteilte oder private Tour",
+          formula: "Geteilte oder private Ausfahrt",
           route: "Abfahrt ab Trapani nach Favignana und Levanzo, mit Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda und Cala Minnola je nach Wetter.",
           includes: "Skipper, Treibstoff, Schnorcheln, Wasser, Badestopps und Betreuung.",
         },
@@ -752,9 +802,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "experiences" });
-  return buildPageMetadata({
+  const seo = experienceHubSeoCopy(locale, {
     title: t("title"),
     description: t("subtitle"),
+  });
+  return buildPageMetadata({
+    title: seo.title,
+    description: seo.description,
     path: "/experiences",
     locale,
     image: "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp",
@@ -908,11 +962,11 @@ export default async function ExperiencesPage({
         "@id": itemListId,
         name:
           locale === "es"
-            ? "Paquetes de excursiones en barco por las Islas Egadi"
+            ? "Paseos y excursiones en barco por las Islas Egadi desde Trapani"
             : locale === "fr"
               ? "Forfaits d'excursions en bateau aux îles Égades"
               : locale === "de"
-                ? "Bootstour-Pakete ab Trapani zu den Ägadischen Inseln"
+                ? "Bootstouren und Charter ab Trapani zu den Ägadischen Inseln"
                 : locale === "en"
                   ? "Egadi boat tour packages"
                   : "Pacchetti tour in barca alle Egadi",

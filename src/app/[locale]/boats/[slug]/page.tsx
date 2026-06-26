@@ -32,6 +32,7 @@ import { localizedAbsoluteUrl, localizedPath } from "@/lib/i18n/paths";
 import { localizedStaticPath } from "@/lib/i18n/static-paths";
 import {
   getBoatContent,
+  getBoatPublicSlug,
   getBoatsPageContent,
   resolveBoatIdFromSlug,
   type BoatSpecIcon,
@@ -40,7 +41,6 @@ import {
 import { getExperienceContent, getExperiencePublicSlug } from "@/data/catalog/experiences";
 
 const DETAILED_BOAT_ID = "trimarano";
-const DETAILED_BOAT_SLUG = "catamarano-egadi-trimarano-da-trapani";
 
 const SPEC_ICONS: Record<BoatSpecIcon, LucideIcon> = {
   cabins: DoorOpen,
@@ -263,14 +263,14 @@ const BOAT_DETAIL_SCHEMA_TOPICS = {
     about: [
       "Egadi catamaran-style trimaran",
       "Egadi boats with skipper",
-      "Aegadian Islands yacht charter",
+      "Egadi Islands yacht charter",
       "Trapani trimaran charter",
       "Favignana, Levanzo and Marettimo by multihull",
     ],
     keywords: [
       "egadi catamaran",
       "egadi boats",
-      "yacht charter aegadian islands",
+      "egadi islands yacht charter",
       "trapani trimaran charter",
       "egadi multihull charter",
     ],
@@ -343,7 +343,10 @@ function BoatSpecs({ boat }: { boat: ResolvedBoatContent }) {
 }
 
 export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale, slug: DETAILED_BOAT_SLUG }));
+  return routing.locales.map((locale) => ({
+    locale,
+    slug: getBoatPublicSlug(DETAILED_BOAT_ID, locale),
+  }));
 }
 
 export async function generateMetadata({
@@ -359,7 +362,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     title: boat.seoTitle,
     description: boat.seoDescription,
-    path: `/boats/${boat.slug}`,
+    path: `/boats/${getBoatPublicSlug(boat.id, locale)}`,
     locale,
     image: boat.imageSrc ?? boat.gallery[0]?.src,
   });
@@ -381,7 +384,8 @@ export default async function BoatDetailPage({
 
   const boat = maybeBoat;
   if (!boat) notFound();
-  if (slug !== boat.slug) permanentRedirect(localizedPath(locale, `/boats/${boat.slug}`));
+  const canonicalSlug = getBoatPublicSlug(boat.id, locale);
+  if (slug !== canonicalSlug) permanentRedirect(localizedPath(locale, `/boats/${canonicalSlug}`));
 
   const t = copy(locale);
   const programParagraphs = getProgramParagraphs(locale);
@@ -389,7 +393,7 @@ export default async function BoatDetailPage({
     .map((id) => getExperienceContent(id, locale))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
   const base = env.APP_URL.replace(/\/$/, "");
-  const pageUrl = localizedAbsoluteUrl(base, locale, `/boats/${boat.slug}`);
+  const pageUrl = localizedAbsoluteUrl(base, locale, `/boats/${canonicalSlug}`);
   const inLanguage =
     locale === "de"
       ? "de-DE"

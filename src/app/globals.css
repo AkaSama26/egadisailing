@@ -307,6 +307,32 @@ body.experience-detail-floating-offset .egadi-floating-whatsapp {
   bottom: calc(env(safe-area-inset-bottom, 0px) + 9rem);
 }
 
+@media (max-width: 639px) {
+  .egadi-floating-whatsapp .whatsapp-help-bubble {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.75rem);
+    width: min(18rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+  }
+
+  .egadi-floating-whatsapp .whatsapp-help-bubble-arrow {
+    right: 1rem;
+    bottom: -0.45rem;
+    border-top: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  }
+
+  body.egadi-mobile-home-sticky-cta-visible {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4.75rem);
+  }
+
+  body.egadi-mobile-home-sticky-cta-visible .egadi-floating-cookie,
+  body.egadi-mobile-home-sticky-cta-visible .egadi-floating-whatsapp {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 5.25rem);
+  }
+}
+
 @media (min-width: 640px) {
   body.experience-detail-floating-offset .egadi-floating-cookie,
   body.experience-detail-floating-offset .egadi-floating-whatsapp {

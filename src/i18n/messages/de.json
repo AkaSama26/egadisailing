@@ -1,6 +1,6 @@
 {
   "common": {
-    "bookNow": "Jetzt buchen",
+    "bookNow": "Verfügbarkeit prüfen",
     "recoverBooking": "Buchung finden",
     "learnMore": "Mehr erfahren",
     "contactUs": "Kontakt aufnehmen",
@@ -27,10 +27,10 @@
   },
   "hero": {
     "title": "Lassen Sie das Ufer hinter sich",
-    "subtitle": "Entdecken Sie die Ägadischen Inseln: Trimaran mit Chefkoch, exklusive Touren und Charter ab Trapani.",
+    "subtitle": "Entdecken Sie die Ägadischen Inseln: Trimaran mit Chefkoch, private Bootstouren und Charter ab Trapani.",
     "seoTitle": "Bootstouren zu den Ägadischen Inseln ab Trapani",
     "seoSubtitle": "Private und geteilte Bootstouren, Koch an Bord und Trimaran-Charter zwischen Favignana, Levanzo und Marettimo, mit lokalem Skipper und Abfahrt vom Hafen von Trapani.",
-    "cta": "Erlebnisse ansehen",
+    "cta": "Bootstouren entdecken",
     "vehicleLabel": "Boot",
     "vehiclePlaceholder": "Boot auswählen",
     "experienceLabel": "Erlebnis",
@@ -98,7 +98,7 @@
     }
   },
   "nav": {
-    "experiences": "Erlebnisse",
+    "experiences": "Bootstouren",
     "boats": "Unsere Boote",
     "islands": "Ägadische Inseln",
     "about": "Über uns",
@@ -113,7 +113,7 @@
     "terms": "AGB",
     "cookiePreferences": "Cookie-Einstellungen",
     "madeBy": "Website von",
-    "tagline": "Einzigartige Bootserlebnisse auf den Ägadischen Inseln",
+    "tagline": "Sorgfältig geplante Bootstouren auf den Ägadischen Inseln",
     "quickLinks": "Schnellzugriff",
     "address": "EGADI SAILING SRLS, Via Calipso 42, 91100 Trapani"
   },
@@ -164,7 +164,7 @@
     "title": "Die Ägadischen Inseln",
     "subtitle": "Drei Juwelen im Herzen des Mittelmeers",
     "sectionLabel": "Route entdecken",
-    "discoverExperiences": "Erlebnisse entdecken, die diese Insel besuchen",
+    "discoverExperiences": "Passende Bootstouren zu dieser Insel entdecken",
     "favignana": {
       "name": "Favignana",
       "description": "Die größte der Ägadischen Inseln, berühmt für Cala Rossa und türkisfarbenes Wasser. Favignana bietet eindrucksvolle Buchten, ein lebendiges Zentrum und die ehemalige Tonnara Florio, die von der Geschichte des Thunfischfangs erzählt.",
@@ -188,7 +188,7 @@
     "itinerary": "Route",
     "pricing": "Preise und Saison",
     "reviews": "Bewertungen",
-    "bookNow": "Jetzt buchen",
+    "bookNow": "Verfügbarkeit prüfen",
     "from": "Ab",
     "perPerson": "pro Person",
     "duration": "Dauer",
@@ -229,10 +229,10 @@
   },
   "experiences": {
     "title": "Bootstouren ab Trapani zu den Ägadischen Inseln",
-    "subtitle": "Vergleichen Sie Bootstouren ab Trapani: Favignana und Levanzo, geteilte oder private Touren, Schnorcheln, Trimaran-Charter und Sportangeln."
+    "subtitle": "Vergleichen Sie Bootstouren ab Trapani: Favignana und Levanzo, geteilte oder private Ausfahrten, Schnorcheln, Trimaran-Charter und Sportangeln."
   },
   "boats": {
-    "title": "Boote für Touren zu den Ägadischen Inseln ab Trapani",
+    "title": "Boote für Bootstouren zu den Ägadischen Inseln ab Trapani",
     "subtitle": "Wählen Sie zwischen dem Trimaran mit Katamaran-Komfort und der Barca Egadi Sailing.",
     "length": "Länge",
     "year": "Baujahr",
@@ -240,7 +240,7 @@
     "cabins": "Kabinen",
     "meters": "m",
     "crew": "Crew",
-    "availableServices": "Verfügbare Erlebnisse",
+    "availableServices": "Passende Bootstouren",
     "specs": "Technische Daten"
   },
   "faq": {
@@ -249,13 +249,13 @@
     "q1": "Was sollte ich mitbringen?",
     "a1": "Am besten biologisch abbaubare Sonnencreme, Badebekleidung, ein eigenes Handtuch, Sonnenhut und bequeme Schuhe. Für die Rückfahrt empfehlen wir außerdem ein leichtes Oberteil.",
     "q2": "Kann ich meine Buchung stornieren?",
-    "a2": "Ja. Bis 30 Tage vor Abfahrt erhalten Sie eine vollständige Rückerstattung; 29 bis 15 Tage vor Abfahrt werden 50 % erstattet; innerhalb von 15 Tagen vor der Tour oder bei Nichterscheinen ist die Stornierung nicht erstattungsfähig. Datumsänderungen werden je nach Verfügbarkeit geprüft.",
+    "a2": "Ja. Bis 30 Tage vor Abfahrt erhalten Sie eine vollständige Rückerstattung; 29 bis 15 Tage vor Abfahrt werden 50 % erstattet; innerhalb von 15 Tagen vor der Ausfahrt oder bei Nichterscheinen ist die Stornierung nicht erstattungsfähig. Datumsänderungen werden je nach Verfügbarkeit geprüft.",
     "q3": "Was passiert bei schlechtem Wetter?",
     "a3": "Wir beobachten die Wetter- und Seebedingungen laufend. Wenn eine sichere Ausfahrt nicht möglich ist, kontaktieren wir Sie, um das Erlebnis zu verschieben oder eine vollständige Rückerstattung zu veranlassen.",
     "q4": "Können Kinder teilnehmen?",
     "a4": "Ja, Kinder sind an Bord willkommen. Für sehr kleine Kinder unter 3 Jahren kontaktieren Sie uns bitte vor der Buchung. Kinder-Schwimmwesten sind verfügbar.",
     "q5": "Ist Mittagessen inklusive?",
-    "a5": "Beim Premium-Erlebnis mit Chefkoch ist das Mittagessen inklusive. Bei den anderen Touren sind die genauen Leistungen in der jeweiligen Erlebnisbeschreibung angegeben.",
+    "a5": "Beim Premium-Erlebnis mit Chefkoch ist das Mittagessen inklusive. Bei den anderen Bootstouren sind die genauen Leistungen in der jeweiligen Beschreibung angegeben.",
     "q6": "Wo gehen wir an Bord?",
     "a6": "Die Einschiffung erfolgt in Trapani. Den genauen Treffpunkt und praktische Hinweise senden wir nach der Buchungsbestätigung per E-Mail."
   },
@@ -457,9 +457,9 @@
     "whyIslands": "Unberührte Inseln",
     "whyIslandsDesc": "Klares Mittelmeerwasser, Meereshöhlen und versteckte Buchten.",
     "testimonialsTitle": "Was unsere Gäste sagen",
-    "ctaTitle": "Buchen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani",
-    "ctaSubtitle": "Wählen Sie geteilte Tour, privates Boot, Chef an Bord oder Egadi-Charter",
-    "ctaButton": "Erlebnisse ansehen"
+    "ctaTitle": "Planen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani",
+    "ctaSubtitle": "Wählen Sie geteilte Ausfahrt, privates Boot, Chef an Bord oder Egadi-Charter",
+    "ctaButton": "Bootstouren entdecken"
   },
   "home": {
     "experiencesTitle": "Egadi-Ausflüge ab Trapani",
@@ -476,8 +476,8 @@
     "whyIslands": "Unberührte Inseln",
     "whyIslandsDesc": "Klares Mittelmeerwasser, Meereshöhlen und versteckte Buchten.",
     "testimonialsTitle": "Was unsere Gäste sagen",
-    "ctaTitle": "Buchen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani",
-    "ctaSubtitle": "Wählen Sie geteilte Tour, privates Boot, Chef an Bord oder Egadi-Charter",
-    "ctaButton": "Erlebnisse ansehen"
+    "ctaTitle": "Planen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani",
+    "ctaSubtitle": "Wählen Sie geteilte Ausfahrt, privates Boot, Chef an Bord oder Egadi-Charter",
+    "ctaButton": "Bootstouren entdecken"
   }
 }

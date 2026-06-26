@@ -8,6 +8,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { FloatingWhatsAppButton } from "@/components/floating-whatsapp-button";
+import { MobileHomeStickyCta } from "@/components/mobile-home-sticky-cta";
 import { env } from "@/lib/env";
 import { getCookieConsentPublicServices } from "@/lib/cookie-consent/server";
 import { getSiteVerificationMetadata } from "@/lib/site-verification";
@@ -90,6 +91,7 @@ export default async function LocaleLayout({
             {children}
           </main>
           <Footer />
+          <MobileHomeStickyCta locale={locale} />
           <CookieConsentBanner locale={locale} services={cookieConsentServices} />
           <FloatingWhatsAppButton locale={locale} />
         </NextIntlClientProvider>

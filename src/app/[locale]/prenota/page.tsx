@@ -45,22 +45,22 @@ export async function generateMetadata({
   const isDe = locale === "de";
   return buildPageMetadata({
     title: isEs
-      ? "Reserva excursiones en barco por las Islas Egadi online"
+      ? "Reserva paseos en barco por las Islas Egadi desde Trapani"
       : isFr
-      ? "Réserver une excursion en bateau aux îles Égades en ligne"
+      ? "Réserver une excursion bateau aux îles Égades depuis Trapani"
       : isDe
-      ? "Bootstouren zu den Ägadischen Inseln online buchen"
+      ? "Bootstouren zu den Ägadischen Inseln ab Trapani buchen"
       : isEn
-      ? "Book Egadi Islands Boat Tours Online"
+      ? "Book Egadi Boat Tours from Trapani Online"
       : "Prenota Escursioni in Barca alle Egadi Online",
     description: isEs
-      ? "Reserva excursiones en barco por las Islas Egadi con disponibilidad en vivo, precios actualizados y checkout seguro Egadisailing."
+      ? "Reserva paseos y excursiones en barco por las Islas Egadi desde Trapani con disponibilidad en vivo, precios actualizados y checkout seguro Egadisailing."
       : isFr
-      ? "Réservez une excursion en bateau aux îles Égades avec disponibilités en direct, prix à jour et checkout sécurisé Egadisailing."
+      ? "Réservez une excursion bateau aux îles Égades depuis Trapani avec disponibilités en direct, prix à jour et checkout sécurisé Egadisailing."
       : isDe
-      ? "Buchen Sie Bootstouren zu den Ägadischen Inseln mit Live-Verfügbarkeit, aktuellen Preisen und sicherem Egadisailing-Checkout."
+      ? "Prüfen Sie Verfügbarkeit und buchen Sie Bootstouren zu den Ägadischen Inseln ab Trapani mit aktuellen Preisen und sicherem Egadisailing-Checkout."
       : isEn
-      ? "Book boat tours in the Egadi Islands with live availability, updated prices and secure Egadisailing checkout."
+      ? "Book Egadi Islands boat tours from Trapani with live availability, updated prices, secure checkout and shared, private or charter options."
       : "Prenota escursioni in barca alle Isole Egadi con disponibilità live, prezzi aggiornati e checkout sicuro Egadisailing.",
     path: "/prenota",
     locale,

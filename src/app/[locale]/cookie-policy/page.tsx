@@ -63,7 +63,7 @@ export async function generateMetadata({
   const isFr = locale === "fr";
   const isDe = locale === "de";
   return buildPageMetadata({
-    title: isEs ? "Política de cookies" : isFr ? "Politique de cookies" : isDe ? "Cookie-Richtlinie" : isEn ? "Cookie Policy" : "Cookie Policy",
+    title: isEs ? "Política de cookies" : isFr ? "Politique de cookies" : isDe ? "Cookie-Richtlinie" : isEn ? "Egadisailing Cookie Policy and Consent Settings" : "Cookie Policy",
     description: isEs
       ? "Política de cookies Egadisailing: cookies técnicos, consentimiento, sesiones, pagos Stripe, Cloudflare, Google Maps y rastreadores opcionales con cookies solo tras consentimiento."
       : isFr
@@ -71,7 +71,7 @@ export async function generateMetadata({
       : isDe
       ? "Egadisailing Cookie-Richtlinie: technische Cookies, Einwilligung, Sitzungen, Stripe-Zahlungen, Cloudflare, Google Maps und optionale Tracker mit Cookies nur nach Zustimmung."
       : isEn
-      ? "Egadisailing Cookie Policy: technical cookies, consent choices, booking sessions, Stripe payments, Cloudflare, Google Maps and optional trackers."
+      ? "Cookie Policy for Egadisailing: technical cookies, consent choices, booking sessions, Stripe payments, Cloudflare, Google Maps and optional tracking."
       : "Cookie Policy Egadisailing: cookie tecnici, consenso, sessioni, pagamenti Stripe, Cloudflare, Google Maps e tracker opzionali con cookie solo dopo consenso.",
     path: "/cookie-policy",
     locale,

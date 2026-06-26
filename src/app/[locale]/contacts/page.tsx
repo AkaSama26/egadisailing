@@ -103,7 +103,7 @@ export async function generateMetadata({
       : isDe
         ? "Buchungen und Kontakt für Bootstouren zu den Ägadischen Inseln"
       : locale === "en"
-        ? "Egadi Boat Tour Bookings and Contacts"
+        ? "Contact Egadi Sailing in Trapani for Boat Tours"
         : "Prenotazioni e contatti per tour alle Egadi",
     description:
       isEs
@@ -113,7 +113,7 @@ export async function generateMetadata({
         : isDe
         ? "Buchen Sie oder fragen Sie Informationen für Ihre Bootstour zu den Ägadischen Inseln an. Kontaktieren Sie Egadisailing per WhatsApp, Telefon oder E-Mail."
         : locale === "en"
-        ? "Book or request information for your boat trip in the Egadi Islands. Contact Egadisailing by WhatsApp, phone or email."
+        ? "Contact Egadi Sailing in Trapani for Egadi Islands boat tours, live booking support, WhatsApp help and the harbour meeting point."
         : "Prenota o richiedi informazioni per la tua uscita in barca alle Egadi. Contatta Egadisailing via WhatsApp, telefono o email.",
     path: "/contacts",
     locale,

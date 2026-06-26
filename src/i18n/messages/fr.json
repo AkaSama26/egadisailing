@@ -27,10 +27,10 @@
   },
   "hero": {
     "title": "Quittez la terre ferme",
-    "subtitle": "Découvrez les îles Égades : trimaran avec chef, excursions privées et charter depuis Trapani.",
+    "subtitle": "Découvrez les îles Égades : excursions bateau depuis Trapani, trimaran avec chef, sorties privées et charter.",
     "seoTitle": "Excursions en bateau aux îles Égades depuis Trapani",
     "seoSubtitle": "Excursions privées et partagées, chef à bord et charter en trimaran entre Favignana, Levanzo et Marettimo, avec skipper local et départ du port de Trapani.",
-    "cta": "Voir les expériences",
+    "cta": "Voir les excursions",
     "vehicleLabel": "Bateau",
     "vehiclePlaceholder": "Choisir un bateau",
     "experienceLabel": "Expérience",
@@ -98,7 +98,7 @@
     }
   },
   "nav": {
-    "experiences": "Expériences",
+    "experiences": "Excursions",
     "boats": "Nos bateaux",
     "islands": "Îles Égades",
     "about": "À propos",
@@ -113,14 +113,14 @@
     "terms": "Conditions générales",
     "cookiePreferences": "Préférences de cookies",
     "madeBy": "Site réalisé par",
-    "tagline": "Expériences uniques en bateau aux îles Égades",
+    "tagline": "Excursions uniques en bateau aux îles Égades",
     "quickLinks": "Liens rapides",
     "address": "EGADI SAILING SRLS, Via Calipso 42, 91100 Trapani"
   },
   "about": {
     "title": "À propos",
     "subtitle": "La passion de la mer depuis 2010",
-    "heroText": "Egadisailing naît d'une passion pour la mer et d'un amour profond pour les îles Égades. Depuis 2010, nous proposons des expériences en bateau à celles et ceux qui veulent découvrir l'une des plus belles zones de mer de Méditerranée.",
+    "heroText": "Egadisailing naît d'une passion pour la mer et d'un amour profond pour les îles Égades. Depuis 2010, nous proposons des excursions en bateau à celles et ceux qui veulent découvrir l'une des plus belles zones de mer de Méditerranée.",
     "storyText": "Tout a commencé avec un bateau et une idée simple : faire vivre à chaque invité la magie des îles Égades telle que nous la vivons chaque jour. Aujourd'hui, avec une flotte soignée et un équipage passionné, chaque sortie devient un souvenir à part.",
     "valuesTitle": "Nos valeurs",
     "value1Title": "Passion de la mer",
@@ -240,7 +240,7 @@
     "cabins": "Cabines",
     "meters": "m",
     "crew": "Équipage",
-    "availableServices": "Expériences disponibles",
+    "availableServices": "Excursions disponibles",
     "specs": "Caractéristiques"
   },
   "faq": {
@@ -334,8 +334,8 @@
     "whyIslandsDesc": "Des eaux parmi les plus claires de Méditerranée, grottes marines et criques cachées.",
     "testimonialsTitle": "Ce que disent nos invités",
     "ctaTitle": "Réservez votre excursion en bateau aux îles Égades depuis Trapani",
-    "ctaSubtitle": "Choisissez tour partagé, bateau privé, chef à bord ou charter aux Égades",
-    "ctaButton": "Voir les expériences"
+    "ctaSubtitle": "Choisissez excursion partagée, bateau privé, chef à bord ou charter aux Égades",
+    "ctaButton": "Voir les excursions"
   },
   "home": {
     "experiencesTitle": "Excursions Égades depuis Trapani",
@@ -353,7 +353,7 @@
     "whyIslandsDesc": "Des eaux parmi les plus claires de Méditerranée, grottes marines et criques cachées.",
     "testimonialsTitle": "Ce que disent nos invités",
     "ctaTitle": "Réservez votre excursion en bateau aux îles Égades depuis Trapani",
-    "ctaSubtitle": "Choisissez tour partagé, bateau privé, chef à bord ou charter aux Égades",
-    "ctaButton": "Voir les expériences"
+    "ctaSubtitle": "Choisissez excursion partagée, bateau privé, chef à bord ou charter aux Égades",
+    "ctaButton": "Voir les excursions"
   }
 }

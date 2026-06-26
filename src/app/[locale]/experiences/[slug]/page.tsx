@@ -125,8 +125,8 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
       keywords: ["egadi islands boat tours", "egadi islands boat trip", "boat trips from trapani", "favignana levanzo boat tour"],
     },
     charter: {
-      about: ["Aegadian Islands yacht charter", "Private trimaran charter from Trapani", "Egadi catamaran-style charter", "Favignana, Levanzo and Marettimo yacht charter"],
-      keywords: ["yacht charter aegadian islands", "egadi yacht charter", "egadi catamaran charter", "trapani trimaran charter", "private charter egadi islands"],
+      about: ["Egadi Islands yacht charter", "Private trimaran charter from Trapani", "Egadi catamaran-style charter", "Favignana, Levanzo and Marettimo yacht charter"],
+      keywords: ["egadi islands yacht charter", "egadi yacht charter", "egadi catamaran charter", "trapani trimaran charter", "private charter egadi islands"],
     },
     fishing: {
       about: ["Egadi fishing charter from Trapani", "Private sport fishing trip", "Fishing RIB with skipper"],
@@ -139,8 +139,8 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
   },
   es: {
     boatTour: {
-      about: ["Paseo en barco Trapani Egadi", "Excursion en barco Favignana y Levanzo", "Snorkel en las Islas Egadi"],
-      keywords: ["paseo en barco trapani", "excursion en barco egadi", "favignana levanzo en barco", "snorkel egadi"],
+      about: ["Paseo en barco Trapani Egadi", "Excursion en barco Favignana y Levanzo", "Paseos en barco desde Trapani", "Barco desde Trapani a Favignana", "Snorkel en las Islas Egadi"],
+      keywords: ["paseo en barco trapani", "paseos en barco desde trapani", "excursion en barco egadi", "excursion en barco favignana levanzo", "barco desde trapani a favignana", "favignana levanzo en barco", "snorkel egadi"],
     },
     charter: {
       about: ["Charter Islas Egadi en trimaran", "Yacht charter Islas Egadi", "Catamaran Egadi con patron"],
@@ -175,19 +175,19 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
   },
   de: {
     boatTour: {
-      about: ["Bootstour ab Trapani zu den Egadi", "Bootstour Favignana und Levanzo", "Schnorcheln auf den Egadi"],
-      keywords: ["bootstour trapani", "bootstour aegadische inseln", "favignana levanzo bootstour", "schnorcheln egadi"],
+      about: ["Bootstour ab Trapani zu den Ägadischen Inseln", "Bootstour Favignana und Levanzo", "Schnorcheln auf den Ägadischen Inseln"],
+      keywords: ["bootstour trapani", "bootstour ägadische inseln", "favignana levanzo bootstour", "schnorcheln egadi"],
     },
     charter: {
-      about: ["Trimaran-Charter zu den Egadi", "Yachtcharter Aegadische Inseln", "Katamaran-Komfort mit Skipper"],
-      keywords: ["charter egadi", "yachtcharter aegadische inseln", "katamaran egadi", "trimaran trapani"],
+      about: ["Trimaran-Charter zu den Ägadischen Inseln", "Yachtcharter Ägadische Inseln", "Katamaran-Komfort mit Skipper"],
+      keywords: ["charter egadi", "yachtcharter ägadische inseln", "katamaran egadi", "trimaran trapani"],
     },
     fishing: {
-      about: ["Angelcharter Egadi ab Trapani", "Sportangeln auf den Egadi", "Private Angeltour mit Skipper"],
-      keywords: ["angelcharter egadi", "sportangeln egadi", "angeln trapani", "fishing charter egadi"],
+      about: ["Angelcharter Ägadische Inseln ab Trapani", "Sportangeln auf den Ägadischen Inseln", "Private Angelausfahrt mit Skipper"],
+      keywords: ["angelcharter egadi", "sportangeln ägadische inseln", "angeln trapani", "fishing charter egadi"],
     },
     gourmet: {
-      about: ["Chef an Bord auf den Egadi", "Gourmet-Erlebnis im Trimaran", "Private Bootstour mit Mittagessen"],
+      about: ["Chef an Bord auf den Ägadischen Inseln", "Gourmet-Erlebnis im Trimaran", "Private Bootstour mit Mittagessen"],
       keywords: ["chef an bord egadi", "gourmet bootstour egadi", "trimaran egadi mittagessen", "private bootstour egadi"],
     },
   },
@@ -339,7 +339,7 @@ const RELATED_ISLAND_COPY = {
       },
       marettimo: {
         name: "Marettimo",
-        description: "Die wildeste und entfernteste Insel, besonders relevant, wenn aus der Tour ein mehrtägiger Charter wird.",
+        description: "Die wildeste und entfernteste Insel, besonders relevant, wenn daraus ein mehrtägiger Charter wird.",
       },
     },
   },
@@ -579,7 +579,7 @@ function getFishingDetailCopy(locale: string) {
       : isFr
         ? "Réserver"
         : isDe
-          ? "Jetzt buchen"
+          ? "Verfügbarkeit prüfen"
           : isEn
             ? "Book now"
             : "Prenota ora",
@@ -776,7 +776,7 @@ function getFishingSeoExpansionCopy(
           : isFr
             ? "Ce n'est pas obligatoire, mais la sortie est pensée pour des passionnés motivés. Le skipper adapte technique et rythme au groupe et aux conditions."
             : isDe
-              ? "Nein, Erfahrung ist nicht zwingend, aber die Tour richtet sich an motivierte Angler. Der Skipper passt Technik und Tempo an Gruppe und Bedingungen an."
+              ? "Nein, Erfahrung ist nicht zwingend, aber die Ausfahrt richtet sich an motivierte Angler. Der Skipper passt Technik und Tempo an Gruppe und Bedingungen an."
               : isEn
                 ? "No, it is not mandatory, but the outing is designed for motivated enthusiasts. The skipper adapts technique and pace to the group and conditions."
                 : "Non è obbligatoria, ma l'uscita è pensata per appassionati motivati. Lo skipper adatta tecnica e ritmo al gruppo e alle condizioni.",
@@ -800,7 +800,7 @@ function getFishingSeoExpansionCopy(
           : isFr
             ? "La sécurité décide toujours. Si les conditions ne sont pas adaptées, la sortie est reprogrammée ou gérée selon la politique de réservation."
             : isDe
-              ? "Sicherheit entscheidet immer. Wenn die Bedingungen nicht geeignet sind, wird die Tour verschoben oder nach Buchungsbedingungen verwaltet."
+              ? "Sicherheit entscheidet immer. Wenn die Bedingungen nicht geeignet sind, wird die Ausfahrt verschoben oder nach Buchungsbedingungen verwaltet."
               : isEn
                 ? "Safety always comes first. If conditions are not suitable, the outing is rescheduled or handled according to the booking policy."
                 : "La sicurezza viene prima di tutto. Se le condizioni non sono adatte, l'uscita viene riprogrammata o gestita secondo la policy di prenotazione.",
@@ -840,10 +840,10 @@ function getFullDayBoatSeoExpansionCopy(
   if (locale === "es") {
     const formulaText = isPrivate
       ? `Tour privado en barco Favignana y Levanzo desde Trapani, con barco reservado para tu grupo.${boatNote} Hasta ${service.capacityMax} personas.`
-      : `Excursión compartida en barco Favignana y Levanzo desde Trapani, con plazas individuales a bordo.${boatNote} Hasta ${service.capacityMax} personas.`;
+      : `Paseo en barco compartido Favignana y Levanzo desde Trapani, con plazas individuales a bordo.${boatNote} Hasta ${service.capacityMax} personas.`;
     return {
       practicalEyebrow: "Antes de reservar",
-      practicalTitle: "Detalles del tour Favignana y Levanzo",
+      practicalTitle: "Detalles del paseo Favignana y Levanzo",
       practicalItems: [
         {
           icon: Anchor,
@@ -857,7 +857,7 @@ function getFullDayBoatSeoExpansionCopy(
         },
         {
           icon: Users,
-          title: isPrivate ? "Tour privado" : "Tour compartido",
+          title: isPrivate ? "Tour privado" : "Paseo compartido",
           text: formulaText,
         },
         {
@@ -1013,7 +1013,7 @@ function getFullDayBoatSeoExpansionCopy(
       : `Geteilte Bootstour Favignana und Levanzo ab Trapani, mit Einzelplätzen an Bord.${boatNote} Bis zu ${service.capacityMax} Personen.`;
     return {
       practicalEyebrow: "Vor der Buchung",
-      practicalTitle: "Details zur Tour Favignana und Levanzo",
+      practicalTitle: "Details zur Bootstour Favignana und Levanzo",
       practicalItems: [
         {
           icon: Anchor,
@@ -1027,7 +1027,7 @@ function getFullDayBoatSeoExpansionCopy(
         },
         {
           icon: Users,
-          title: isPrivate ? "Private Tour" : "Geteilte Tour",
+          title: isPrivate ? "Private Bootstour" : "Geteilte Ausfahrt",
           text: formulaText,
         },
         {
@@ -1065,11 +1065,11 @@ function getFullDayBoatSeoExpansionCopy(
       faqTitle: "Fragen zu Favignana und Levanzo per Boot",
       faqs: [
         {
-          question: "Wo startet die Tour?",
+          question: "Wo startet die Bootstour?",
           answer: "Die Abfahrt erfolgt vom Hafen Trapani. Der übliche Treffpunkt ist Via dei Gladioli 15, 91100 Trapani.",
         },
         {
-          question: "Dauert die Tour 8 Stunden?",
+          question: "Dauert die Bootstour 8 Stunden?",
           answer: "Ja, die geplante Dauer beträgt 8 Stunden von Abfahrt bis Rückkehr. Zeiten und Route können sich aus Sicherheits-, See- und Hafengründen anpassen.",
         },
         {
@@ -1077,7 +1077,7 @@ function getFullDayBoatSeoExpansionCopy(
           answer: "Mögliche Stopps sind Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Scalo Cavallo, Cala Fredda, Cala Minnola und Faraglione di Levanzo.",
         },
         {
-          question: "Ist die Tour geteilt oder privat?",
+          question: "Ist die Bootstour geteilt oder privat?",
           answer: `${formulaText} Das genaue Format steht im Titel und im Buchungsbereich.`,
         },
         {
@@ -1086,7 +1086,7 @@ function getFullDayBoatSeoExpansionCopy(
         },
         {
           question: "Was passiert bei schlechtem Wetter?",
-          answer: "Wenn Egadisailing wegen unsicherer Seebedingungen storniert, wählen Sie kostenlosen Terminwechsel oder volle Erstattung. Die Route kann sich ändern, wenn die Tour sicher durchführbar bleibt.",
+          answer: "Wenn Egadisailing wegen unsicherer Seebedingungen storniert, wählen Sie kostenlosen Terminwechsel oder volle Erstattung. Die Route kann sich ändern, wenn die Bootstour sicher durchführbar bleibt.",
         },
       ],
     };
@@ -1375,7 +1375,7 @@ function getDetailCopy(
       priceHeader: isCharter ? "Paketpreis" : "Preis",
       charterType: "Charterpaket",
       daysLabel: (days: number) => `${days} Tage`,
-      bookNow: "Jetzt buchen",
+      bookNow: "Verfügbarkeit prüfen",
       practicalEyebrow: "Vor der Buchung",
       practicalTitle: "Praktische Details",
       practicalItems: [
@@ -1833,10 +1833,10 @@ function getSeoExpansionCopy(
           ];
     const faqs = [
       {
-        question: isCharter ? "Wie lange kann der Charter dauern?" : "Wo startet die Tour?",
+        question: isCharter ? "Wie lange kann der Charter dauern?" : "Wo startet die Bootstour?",
         answer: isCharter
           ? "Der Charter auf den Ägadischen Inseln kann von 3 bis 7 Tagen geplant werden. Die endgültige Route wird mit dem Skipper bestätigt und an Wind, Meer und gewünschten Rhythmus angepasst."
-          : "Die Tour startet in Trapani. Der übliche Treffpunkt ist Via dei Gladioli 15, 91100 Trapani, sofern die Crew nichts anderes mitteilt.",
+          : "Die Bootstour startet in Trapani. Der übliche Treffpunkt ist Via dei Gladioli 15, 91100 Trapani, sofern die Crew nichts anderes mitteilt.",
       },
       {
         question: "Können wir die Route wählen?",
@@ -1850,7 +1850,7 @@ function getSeoExpansionCopy(
       {
         question: "Ist das Erlebnis für Kinder geeignet?",
         answer:
-          "Ja, wenn das gewählte Format und die Seebedingungen passen. Für Familien bietet eine private Tour oft mehr Freiheit bei Zeiten und Pausen.",
+          "Ja, wenn das gewählte Format und die Seebedingungen passen. Für Familien bietet eine private Bootstour oft mehr Freiheit bei Zeiten und Pausen.",
       },
       {
         question: "Was passiert, wenn sich das Wetter ändert?",
@@ -2435,8 +2435,8 @@ function getEditorialExperienceCopy(
           isSharedBoat
             ? "Das geteilte Format ist einfach und praktisch. Sie buchen Ihre Plätze, treffen die Crew in Trapani und teilen den Tag mit anderen Gästen, die dasselbe suchen: Meer, Baden und eine gut organisierte Route. Es ist eine gute Wahl, wenn Sie eine vollständige Egadi-Bootstour mit leichterem Budget und geselliger Stimmung an Bord wünschen."
             : isHalfDay
-              ? "Die private 4-Stunden-Tour passt, wenn Sie ein kompaktes Erlebnis möchten: klare Zeiten, Privatsphäre für Ihre Gruppe und ein oder zwei gut gewählte Stopps statt vieler Orte im Eiltempo. Sie eignet sich für Paare, Familien und Reisende, die das Meer vor oder nach einem anderen Plan in Trapani erleben möchten."
-              : "Die private Ganztagestour gibt dem Skipper mehr Freiheit, den Rhythmus an Ihre Gruppe anzupassen. Es bleibt mehr Zeit zum Baden, mehr Spielraum zwischen Favignana und Levanzo und ein ruhigeres Tempo an Bord. Sie ist die richtige Wahl, wenn Sie Privatsphäre, Raum und eine Route wünschen, die zu Kindern, Freunden oder einem besonderen Anlass passt.",
+              ? "Die private 4-stündige Bootstour passt, wenn Sie ein kompaktes Erlebnis möchten: klare Zeiten, Privatsphäre für Ihre Gruppe und ein oder zwei gut gewählte Stopps statt vieler Orte im Eiltempo. Sie eignet sich für Paare, Familien und Reisende, die das Meer vor oder nach einem anderen Plan in Trapani erleben möchten."
+              : "Die private Ganztages-Bootstour gibt dem Skipper mehr Freiheit, den Rhythmus an Ihre Gruppe anzupassen. Es bleibt mehr Zeit zum Baden, mehr Spielraum zwischen Favignana und Levanzo und ein ruhigeres Tempo an Bord. Sie ist die richtige Wahl, wenn Sie Privatsphäre, Raum und eine Route wünschen, die zu Kindern, Freunden oder einem besonderen Anlass passt.",
           `An Bord von ${boat} buchen Sie nicht nur einen Bootsnamen. Sie wählen ein offenes Motorboot, das sich leicht zwischen den Buchten bewegt. Es gibt Sitzplätze für die Gruppe, Raum für Sonne, Zugang zum Meer zum Baden und Schnorcheln, einen Skipper am Steuer und praktische Unterstützung vor der Abfahrt. Sie müssen die Ägadischen Inseln nicht bereits kennen; bringen Sie Badebekleidung, Handtuch, Sonnenschutz und eine weiche Tasche mit, die Crew führt die Route nach den Bedingungen des Tages.`,
           "Den Unterschied macht die lokale Einschätzung. Eine berühmte Bucht ist nicht immer der beste Stopp, wenn sie voll oder dem Wind ausgesetzt ist; manchmal bietet eine ruhigere Bucht klareres Wasser und ein angenehmeres Bad. Deshalb beschreiben wir diese Erfahrung als flexible Bootstour von Trapani zu den Ägadischen Inseln: Die Route hat eine klare Idee, aber der Skipper behält genug Freiheit, um Komfort, Sicherheit und Qualität des Tages zu schützen.",
         ],
@@ -2448,10 +2448,10 @@ function getEditorialExperienceCopy(
       : isGourmet
         ? "ein privater Premium-Tag auf dem Trimaran, aufgebaut rund um Komfort, Essen und ruhige Zeit vor Anker"
         : isSharedBoat
-          ? "eine geteilte Ganztages-Bootstour für Gäste, die die Ägadischen Inseln in einem einfachen und zugänglichen Format erleben möchten"
+          ? "eine geteilte Ganztages-Bootstour für Gäste, die die Ägadischen Inseln in einem einfachen und gut organisierten Format erleben möchten"
           : isHalfDay
-            ? "eine private Halbtagestour für Gruppen, die Meer, Privatsphäre und klare Rückkehrzeiten wünschen"
-            : "eine private Ganztagestour für Gruppen, die mehr Badezeit, flexible Route und ein langsameres Tempo suchen";
+            ? "eine private Halbtages-Bootstour für Gruppen, die Meer, Privatsphäre und klare Rückkehrzeiten wünschen"
+            : "eine private Ganztages-Bootstour für Gruppen, die mehr Badezeit, flexible Route und ein langsameres Tempo suchen";
 
     return {
       eyebrow: "Erlebnisguide",
@@ -2465,7 +2465,7 @@ function getEditorialExperienceCopy(
             ? "Beim Gourmet-Erlebnis wird das Boot zugleich Route und Tisch. Chef und Crew koordinieren die Zeiten so, dass das Mittagessen nicht wie eine Unterbrechung wirkt, sondern Teil des Tages wird: ein Bad vor dem Ankern, ruhiger Service an Bord, lokale Aromen und danach genug Zeit, wieder ins Wasser zu gehen. Es ist für Gäste gedacht, die Privatsphäre, Komfort und eine kuratiertere Art suchen, die Ägadischen Inseln zu erleben."
             : isPrivateBoat
               ? "Bei privaten Bootstouren ist Flexibilität der stärkste Vorteil. Das Boot ist für Ihre Gruppe reserviert, sodass der Skipper Badezeit, Tempo und Stopps anpassen kann, ohne unterschiedliche Erwartungen an Bord ausgleichen zu müssen. Das passt für Familien, Paare, Freundesgruppen und alle, die die Egadi-Inseln persönlicher erleben möchten."
-              : "Bei der geteilten Ganztagestour liegt der Reiz in der Einfachheit. Sie buchen Ihre Plätze, treffen die Crew in Trapani und nehmen an einem Tag teil, der das Wesentliche zusammenhält: klares Wasser, Badestopps, Panorama-Navigation und eine gesellige, aber gut organisierte Atmosphäre.",
+              : "Bei der geteilten Ganztages-Bootstour liegt der Reiz in der Einfachheit. Sie buchen Ihre Plätze, treffen die Crew in Trapani und nehmen an einem Tag teil, der das Wesentliche zusammenhält: klares Wasser, Badestopps, Panorama-Navigation und eine gesellige, aber gut organisierte Atmosphäre.",
         "Die Route wird bewusst flexibel beschrieben, weil die Ägadischen Inseln Erfahrung stärker belohnen als Improvisation. Ein guter Tag auf See hängt von kleinen Entscheidungen ab: wo man mit weniger Schwell ankert, welche Inselseite klarer ist, wann eine bekannte Bucht zu voll wird und wie lange die Gruppe im Wasser bleiben kann, ohne die Rückfahrt hektisch zu machen. Die Crew hält diese Details im Gleichgewicht, damit der Ausflug natürlich wirkt. Dahinter stehen Planung, lokale Kenntnis und ständige Aufmerksamkeit für Komfort.",
         "Das ist besonders wichtig, wenn Sie vor der Buchung verschiedene Erlebnisse vergleichen. Ein privates Format gibt mehr Kontrolle über Rhythmus und Privatsphäre; ein geteilter Ganztag hält die Kosten zugänglicher und bewahrt die wichtigsten Meeresmomente; ein Gourmet-Tag auf dem Trimaran ergänzt Service, Essen und Raum; ein Charter macht aus den Inseln eine langsamere Reise. Diese Seite soll diese Unterschiede klar machen, damit die Wahl des Datums der letzte Schritt ist und nicht der Moment, in dem Sie noch verstehen müssen, was Sie buchen.",
         "Die Seite hilft Ihnen auch, vor der Buchung sicherer zu entscheiden. Die Bilder zeigen Boot und Atmosphäre an Bord, der Reiseverlauf erklärt die wahrscheinliche Struktur des Tages, und die FAQ beantworten die praktischen Fragen, die vor der Datumswahl zählen. Preise und Verfügbarkeit bleiben im Buchungsbereich; hier bekommen Sie den Kontext: wie sich das Erlebnis anfühlt, für wen es passt, wie die Crew arbeitet und warum eine gut geführte Route rund um die Ägadischen Inseln deutlich anders sein kann als eine generische Bootsfahrt.",
@@ -2719,7 +2719,7 @@ function getExperienceIntroSectionCopy(
             ? `Das private Format dauert ${durationText}: Das Boot ist für Ihre Gruppe reserviert, daher kann der Skipper Tempo, Badestopps und Buchten persönlicher anpassen.`
             : isGourmet
               ? `Das Gourmet-Format dauert ${durationText}: Route, Badestopps und Mittagessen an Bord werden als ein ruhiger Premium-Tag geplant.`
-              : `Das gemeinsame Format dauert ${durationText}: Sie buchen Ihre Plätze und teilen die Tour mit anderen Gästen, behalten aber eine organisierte Route und echte Zeit im Wasser.`,
+              : `Das gemeinsame Format dauert ${durationText}: Sie buchen Ihre Plätze und teilen die Ausfahrt mit anderen Gästen, behalten aber eine organisierte Route und echte Zeit im Wasser.`,
       ],
     };
   }

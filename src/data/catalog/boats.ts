@@ -100,20 +100,51 @@ export interface ResolvedBoatsPageContent {
 
 const BOAT_DETAIL_PAGE_IDS = new Set(["trimarano"]);
 
+const BOAT_SLUG_LOCALES = ["it", "en", "es", "fr", "de"] as const;
+type BoatSlugLocale = (typeof BOAT_SLUG_LOCALES)[number];
+
+const BOAT_PUBLIC_SLUGS_BY_LOCALE: Record<string, Partial<Record<BoatSlugLocale, string>>> = {
+  trimarano: {
+    it: "catamarano-egadi-trimarano-da-trapani",
+    en: "egadi-catamaran-trimaran-from-trapani",
+    es: "catamaran-egadi-trimaran-desde-trapani",
+    fr: "catamaran-egades-trimaran-depuis-trapani",
+    de: "katamaran-egadi-trimaran-ab-trapani",
+  },
+};
+
+function normalizedBoatSlugLocale(locale?: string | null): BoatSlugLocale | null {
+  return BOAT_SLUG_LOCALES.includes(locale as BoatSlugLocale) ? (locale as BoatSlugLocale) : null;
+}
+
+function getLocalizedBoatSlug(entry: BoatCatalogEntry, locale?: string | null): string {
+  const loc = normalizedBoatSlugLocale(locale);
+  return (loc ? BOAT_PUBLIC_SLUGS_BY_LOCALE[entry.id]?.[loc] : null) ?? entry.slug;
+}
+
+function matchesBoatSlug(entry: BoatCatalogEntry, slug: string): boolean {
+  return (
+    entry.slug === slug ||
+    entry.id === slug ||
+    Object.values(BOAT_PUBLIC_SLUGS_BY_LOCALE[entry.id] ?? {}).includes(slug) ||
+    (entry.aliases ?? []).includes(slug)
+  );
+}
+
 const BOATS_PAGE_COPY = {
   seoTitle: {
     it: "Catamarani Egadi, trimarano e barche da Trapani",
-    en: "Egadi boats, catamaran-style trimaran from Trapani",
-    es: "Catamarán, trimarán y barcos a las Egadi desde Trapani",
-    fr: "Catamaran, trimaran et bateaux aux Égades depuis Trapani",
-    de: "Katamaran, Trimaran und Boote auf den Egadi ab Trapani",
+    en: "Egadi Boats from Trapani: Trimaran and Open Boat",
+    es: "Barcos Egadi desde Trapani: catamarán, trimarán y tour en barco",
+    fr: "Bateaux aux Égades depuis Trapani : catamaran et trimaran",
+    de: "Katamaran Egadi ab Trapani: Trimaran und Boote",
   },
   seoDescription: {
     it: "Cerchi catamarani alle Egadi? Scopri il trimarano con comfort da catamarano da Trapani e la barca open per tour privati o condivisi.",
-    en: "Explore Egadi boats from Trapani: a catamaran-style trimaran for premium charters and an open boat for private or shared tours.",
-    es: "¿Buscas un catamarán en las Egadi? Descubre el trimarán con confort de catamarán desde Trapani y el barco open para tours privados o compartidos.",
-    fr: "Vous cherchez un catamaran aux Égades ? Découvrez le trimaran au confort de catamaran depuis Trapani et le bateau open pour sorties privées ou partagées.",
-    de: "Sie suchen einen Katamaran auf den Egadi? Entdecken Sie den Trimaran mit Katamaran-Komfort ab Trapani und das offene Boot für private oder geteilte Touren.",
+    en: "Choose Egadi boats from Trapani: catamaran-style trimaran for private charters and an open boat for Favignana and Levanzo tours.",
+    es: "Barcos para las Islas Egadi desde Trapani: trimarán con confort de catamarán, barco open, paseos compartidos y tours privados a Favignana y Levanzo.",
+    fr: "Vous cherchez un catamaran aux Égades ? Découvrez le trimaran au confort de catamaran depuis Trapani et le bateau open pour excursions privées ou partagées.",
+    de: "Sie suchen einen Katamaran auf den Egadi? Entdecken Sie den Trimaran mit Katamaran-Komfort ab Trapani und das offene Boot für private oder geteilte Bootstouren.",
   },
   eyebrow: {
     it: "Flotta Egadisailing",
@@ -124,17 +155,17 @@ const BOATS_PAGE_COPY = {
   },
   title: {
     it: "Catamarani Egadi, trimarano e barche per scoprire le isole da Trapani",
-    en: "Egadi boats from Trapani: catamaran-style trimaran and open boat",
-    es: "Catamarán, trimarán y barcos para descubrir las Egadi desde Trapani",
-    fr: "Catamaran, trimaran et bateaux pour découvrir les Égades depuis Trapani",
-    de: "Katamaran, Trimaran und Boote für die Egadi ab Trapani",
+    en: "Egadi boats from Trapani: trimaran and open boat for island tours",
+    es: "Barcos para las Islas Egadi desde Trapani: trimarán, catamarán y tour en barco",
+    fr: "Bateaux pour les îles Égades depuis Trapani : catamaran, trimaran et excursions",
+    de: "Katamaran, Trimaran und Boote für die Ägadischen Inseln ab Trapani",
   },
   subtitle: {
     it: "La flotta Egadisailing nasce per vivere le Isole Egadi da Trapani con due esperienze diverse: il trimarano con comfort da catamarano per charter e giornate premium con skipper, e la Barca Egadi Sailing Cigala & Bertinetti 34 per escursioni in barca a Favignana e Levanzo, tour privati, uscite condivise, soste bagno e snorkeling. Se stai cercando catamarani alle Egadi, la soluzione premium è il nostro trimarano: spazi ampi, stabilità da multiscafo e una vita a bordo più comoda.",
     en: "The Egadisailing boats are built for experiencing the Egadi Islands from Trapani in two different ways: a trimaran with catamaran-style comfort for skippered charters and premium days, and Barca Egadi Sailing Cigala & Bertinetti 34 for Favignana and Levanzo boat tours, private trips, shared outings, swim stops and snorkelling. If you are looking for Egadi boats with comfort and local crew, the trimaran is the premium solution: wide spaces, multihull stability and more comfortable life on board.",
-    es: "La flota Egadisailing está pensada para vivir las Islas Egadi desde Trapani de dos formas: un trimarán con confort de catamarán para charter con patrón y jornadas premium, y Barca Egadi Sailing Cigala & Bertinetti 34 para excursiones en barco a Favignana y Levanzo, tours privados, salidas compartidas, baños y snorkel. Si buscas un catamarán en las Egadi, nuestra solución premium es el trimarán: espacios amplios, estabilidad de multicasco y una vida a bordo más cómoda.",
-    fr: "La flotte Egadisailing permet de vivre les îles Égades depuis Trapani de deux façons : un trimaran au confort de catamaran pour charter avec skipper et journées premium, et Barca Egadi Sailing Cigala & Bertinetti 34 pour excursions en bateau à Favignana et Levanzo, sorties privées ou partagées, baignades et snorkeling. Si vous cherchez un catamaran aux Égades, notre solution premium est le trimaran : grands espaces, stabilité de multicoque et vie à bord plus confortable.",
-    de: "Die Egadisailing-Flotte ist für zwei Arten gedacht, die Egadi ab Trapani zu erleben: ein Trimaran mit Katamaran-Komfort für Charter mit Skipper und Premium-Tage sowie die Barca Egadi Sailing Cigala & Bertinetti 34 für Bootstouren nach Favignana und Levanzo, private Touren, geteilte Ausfahrten, Badestopps und Schnorcheln. Wenn Sie einen Katamaran auf den Egadi suchen, ist unser Trimaran die Premium-Lösung: viel Platz, Multihull-Stabilität und komfortableres Leben an Bord.",
+    es: "La flota Egadisailing está pensada para vivir las Islas Egadi desde Trapani de dos formas: un trimarán con confort de catamarán para charter con patrón y jornadas premium, y Barca Egadi Sailing Cigala & Bertinetti 34 para paseos en barco a Favignana y Levanzo, tours privados, salidas compartidas, baños y snorkel. Si buscas un catamarán en las Egadi desde Trapani, nuestra solución premium es el trimarán: espacios amplios, estabilidad de multicasco y una vida a bordo más cómoda.",
+    fr: "La flotte Egadisailing permet de vivre les îles Égades depuis Trapani de deux façons : un trimaran au confort de catamaran pour charter avec skipper et journées premium, et Barca Egadi Sailing Cigala & Bertinetti 34 pour excursions en bateau à Favignana et Levanzo, formules privées ou partagées, baignades et snorkeling. Si vous cherchez un catamaran aux Égades, notre solution premium est le trimaran : grands espaces, stabilité de multicoque et vie à bord plus confortable.",
+    de: "Die Egadisailing-Flotte ist für zwei Arten gedacht, die Egadi ab Trapani zu erleben: ein Trimaran mit Katamaran-Komfort für Charter mit Skipper und Premium-Tage sowie die Barca Egadi Sailing Cigala & Bertinetti 34 für Bootstouren nach Favignana und Levanzo, private Bootstouren, geteilte Ausfahrten, Badestopps und Schnorcheln. Wenn Sie einen Katamaran auf den Egadi suchen, ist unser Trimaran die Premium-Lösung: viel Platz, Multihull-Stabilität und komfortableres Leben an Bord.",
   },
   comparisonTitle: {
     it: "Due barche, due modi di vivere il mare",
@@ -147,8 +178,8 @@ const BOATS_PAGE_COPY = {
     it: "Il Trimarano è pensato per comfort e charter con skipper: una soluzione multiscafo ideale se stai valutando catamarani alle Egadi ma vuoi più spazio e servizio a bordo. La Barca è la scelta agile per tour in barca, soste bagno e rotte più snelle.",
     en: "The trimaran is for comfort and skippered charter: a multihull solution among Egadi boats if you want more space and onboard service. The Boat is the agile choice for boat tours, swim stops and lighter routes.",
     es: "El trimarán está pensado para confort y charter con patrón: una solución multicasco si estás valorando un tour en catamarán por las Egadi y quieres más espacio y servicio a bordo. El barco es la opción ágil para tours, baños y rutas más ligeras.",
-    fr: "Le trimaran est pensé pour le confort et le charter avec skipper : une solution multicoque si vous envisagez un tour en catamaran aux Égades et souhaitez plus d'espace et de service à bord. Le bateau est le choix agile pour les sorties, baignades et routes plus souples.",
-    de: "Der Trimaran steht für Komfort und Charter mit Skipper: eine Multihull-Lösung, wenn Sie eine Katamaran-Tour auf den Egadi suchen und mehr Platz sowie Service an Bord wünschen. Das Boot ist die agile Wahl für Touren, Badestopps und leichtere Routen.",
+    fr: "Le trimaran est pensé pour le confort et le charter avec skipper : une solution multicoque si vous envisagez une excursion en catamaran aux Égades et souhaitez plus d'espace et de service à bord. Le bateau est le choix agile pour les sorties, baignades et routes plus souples.",
+    de: "Der Trimaran steht für Komfort und Charter mit Skipper: eine Multihull-Lösung, wenn Sie eine Katamaran-Ausfahrt auf den Egadi suchen und mehr Platz sowie Service an Bord wünschen. Das Boot ist die agile Wahl für Bootstouren, Badestopps und leichtere Routen.",
   },
   chooserTitle: {
     it: "Quale barca scegliere?",
@@ -175,15 +206,15 @@ const BOATS_PAGE_COPY = {
     it: "Vedi esperienze",
     en: "View experiences",
     es: "Ver experiencias",
-    fr: "Voir les expériences",
-    de: "Erlebnisse ansehen",
+    fr: "Voir les excursions",
+    de: "Bootstouren entdecken",
   },
   availableExperiencesLabel: {
     it: "Esperienze disponibili",
     en: "Available experiences",
     es: "Experiencias disponibles",
     fr: "Expériences disponibles",
-    de: "Verfügbare Erlebnisse",
+    de: "Passende Bootstouren",
   },
   fallbackImageNote: {
     it: "Foto completa in arrivo",
@@ -337,7 +368,17 @@ export const BOAT_CATALOG = {
     id: "trimarano",
     slug: "catamarano-egadi-trimarano-da-trapani",
     listed: true,
-    aliases: ["neel-47", "trimarano-egadisailing", "trimarano-egadi", "catamarano-egadi", "neel-43"],
+    aliases: [
+      "neel-47",
+      "trimarano-egadisailing",
+      "trimarano-egadi",
+      "catamarano-egadi",
+      "neel-43",
+      "egadi-catamaran-trimaran-from-trapani",
+      "catamaran-egadi-trimaran-desde-trapani",
+      "catamaran-egades-trimaran-depuis-trapani",
+      "katamaran-egadi-trimaran-ab-trapani",
+    ],
     externalUrl: "https://www.neel-trimarans.com/range/neel-47/",
     order: 10,
     title: {
@@ -382,11 +423,11 @@ export const BOAT_CATALOG = {
     },
     seoTitle: {
       it: "Noleggio catamarano Egadi: trimarano da Trapani",
-      en: "Egadi catamaran from Trapani: skippered trimaran",
+      en: "Egadi Catamaran Alternative from Trapani: Skippered Trimaran",
     },
     seoDescription: {
       it: "Noleggio catamarano alle Egadi da Trapani: alternativa premium in trimarano con skipper, cabine, comfort multiscafo, Favignana, Levanzo e Marettimo.",
-      en: "Catamaran-style charter in the Egadi Islands from Trapani: multihull trimaran with skipper, cabins, Favignana, Levanzo and Marettimo.",
+      en: "Catamaran-style trimaran charter in the Egadi Islands from Trapani with skipper, cabins, Favignana, Levanzo and Marettimo routes.",
     },
     imageSrc: "/images/home/traimarano-levanzo.webp",
     heroVideoSrc: "/images/boats/neel-47/hero-video.webm",
@@ -399,7 +440,7 @@ export const BOAT_CATALOG = {
         src: "/images/boats/neel-47/neel-47-hero.webp",
         alt: {
           it: "Trimarano in navigazione alle Egadi con comfort da catamarano",
-          en: "Trimarano sailing",
+          en: "Trimarano sailing in the Egadi Islands from Trapani",
         },
         caption: { it: "Trimarano", en: "Trimarano" },
       },
@@ -1075,11 +1116,11 @@ export const BOAT_CATALOG = {
     },
     seoTitle: {
       it: "Barca Egadi Sailing per tour Egadi da Trapani",
-      en: "Barca Egadi Sailing for Egadi Tours from Trapani",
+      en: "Barca Egadi Sailing for Egadi Boat Tours from Trapani",
     },
     seoDescription: {
       it: "Barca Egadi Sailing per tour Egadi da Trapani: barca open con skipper, snorkeling, soste bagno, Favignana, Levanzo e tour privati o condivisi.",
-      en: "Barca Egadi Sailing for Egadi tours from Trapani: open boat with skipper, snorkelling, swim stops, Favignana, Levanzo and private or shared tours.",
+      en: "Barca Egadi Sailing for Egadi boat tours from Trapani: open boat with skipper, snorkelling, swim stops, Favignana, Levanzo and private or shared tours.",
     },
     imageSrc: "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp",
     heroVideoSrc: "/images/boats/cigala-bertinetti-34-offshore-open/hero-video.webm",
@@ -1667,7 +1708,7 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
       eyebrow: "Trimaran pour excursions aux Égades",
       title: "Catamaran aux Égades ? Le trimaran avec skipper depuis Trapani",
       paragraphs: [
-        "Ce bateau est pensé pour ceux qui cherchent une expérience en bateau aux îles Égades plus confortable, soignée et privée qu'un tour rapide classique. Beaucoup d'hôtes recherchent un catamaran aux Égades, un tour en catamaran depuis Trapani ou un charter en catamaran avec skipper : techniquement, c'est un trimaran, avec trois coques, une grande stabilité et des espaces très habitables.",
+        "Ce bateau est pensé pour ceux qui cherchent une expérience en bateau aux îles Égades plus confortable, soignée et privée qu'une sortie rapide classique. Beaucoup d'hôtes recherchent un catamaran aux Égades, une excursion en catamaran depuis Trapani ou un charter en catamaran avec skipper : techniquement, c'est un trimaran, avec trois coques, une grande stabilité et des espaces très habitables.",
         "À bord, le temps ne se limite pas à la navigation : il y a de l'espace pour se détendre, prendre le soleil, se changer et vivre la journée à un rythme lent. En charter, la route est construite avec le skipper entre Favignana, Levanzo et Marettimo, en choisissant des baies abritées pour baignade, snorkeling et mouillages confortables.",
         "En termes simples, c'est l'alternative premium à la location de catamaran aux Égades : skipper, équipage, confort réel et une manière plus élégante de vivre la mer. Il n'est pas nécessaire de connaître les criques ni d'avoir de l'expérience en voile : route, horaires et arrêts sont ajustés avec l'équipage selon la météo, la mer et l'objectif de la journée.",
       ],
@@ -1691,10 +1732,10 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
       {
         question: "Est-ce un catamaran ou un trimaran ?",
         answer:
-          "C'est un trimaran, pas un catamaran classique. Pour ceux qui cherchent un catamaran aux Égades ou un tour en catamaran depuis Trapani, c'est notre solution multicoque la plus proche pour le confort, l'espace et la stabilité, avec l'avantage d'une structure à trois coques.",
+          "C'est un trimaran, pas un catamaran classique. Pour ceux qui cherchent un catamaran aux Égades ou une excursion en catamaran depuis Trapani, c'est notre solution multicoque la plus proche pour le confort, l'espace et la stabilité, avec l'avantage d'une structure à trois coques.",
       },
       {
-        question: "Convient-il à ceux qui cherchent un tour en catamaran aux Égades ?",
+        question: "Convient-il à ceux qui cherchent une excursion en catamaran aux Égades ?",
         answer:
           "Oui. Si vous cherchez de grands espaces, de la stabilité, un skipper et un service soigné, le trimaran répond au même besoin avec une configuration à trois coques. Il est idéal pour charter avec baignade, snorkeling et mouillages entre Favignana, Levanzo et Marettimo.",
       },
@@ -1722,17 +1763,17 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
       title: "Barca Egadi Sailing : le bateau agile pour criques, baignades et routes flexibles",
       paragraphs: [
         "La Barca Egadi Sailing est idéale pour ceux qui veulent se déplacer rapidement entre les criques, faire des arrêts baignade et vivre une expérience plus directe avec la mer.",
-        "Il fonctionne très bien pour les tours privés de 4 heures le matin ou l'après-midi autour de Favignana, et pour les journées de 8 heures lorsque vous voulez plus de temps pour Favignana, Levanzo et les zones protégées du jour.",
+        "Il fonctionne très bien pour les excursions privées de 4 heures le matin ou l'après-midi autour de Favignana, et pour les journées de 8 heures lorsque vous voulez plus de temps pour Favignana, Levanzo et les zones protégées du jour.",
         "C'est un bateau ouvert et sportif : parfait pour les groupes qui cherchent eau claire, snorkeling et route flexible avec skipper.",
       ],
     },
     seoTitle: "Barca Egadi Sailing pour excursions en bateau aux îles Égades",
     seoDescription:
-      "Barca Egadi Sailing depuis Trapani pour tours privés de 4 heures autour de Favignana et excursions de 8 heures partagées ou privées à Favignana et Levanzo.",
+      "Barca Egadi Sailing depuis Trapani pour excursions privées de 4 heures autour de Favignana et excursions de 8 heures partagées ou privées à Favignana et Levanzo.",
     imageAlt: "Barca Egadi Sailing naviguant aux îles Égades",
     idealFor: [
       "Excursions privées de 4 heures le matin ou l'après-midi",
-      "Tour partagé de 8 heures avec places individuelles",
+      "Excursion partagée de 8 heures avec places individuelles",
       "Groupes qui veulent baignade, snorkeling et route flexible",
       "Ceux qui préfèrent un bateau ouvert et dynamique",
     ],
@@ -1748,9 +1789,9 @@ const FRENCH_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
           "Non. La formule de 4 heures est proposée comme expérience privée, le matin ou l'après-midi.",
       },
       {
-        question: "La Barca Egadi Sailing convient-elle à un tour partagé ?",
+        question: "La Barca Egadi Sailing convient-elle à une excursion partagée ?",
         answer:
-          "Oui, le tour partagé disponible est celui de 8 heures, avec places individuelles et départ depuis Trapani.",
+          "Oui, l'excursion partagée disponible est celui de 8 heures, avec places individuelles et départ depuis Trapani.",
       },
       {
         question: "Que faut-il apporter ?",
@@ -1773,10 +1814,10 @@ const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
     description:
       "Sie suchen einen Katamaran auf den Egadi? Unsere Premium-Lösung ist ein Multihull-Trimaran mit viel Platz, Kabinen, Bordküche, Stabilität und Katamaran-Komfort für private Tage mit Skipper und mehrtägige Charter.",
     detail: {
-      eyebrow: "Trimaran für Touren zu den Ägadischen Inseln",
+      eyebrow: "Trimaran für Bootstouren zu den Ägadischen Inseln",
       title: "Katamaran auf den Egadi? Der Trimaran mit Skipper ab Trapani",
       paragraphs: [
-        "Dieses Boot ist für Gäste gedacht, die ein komfortableres, gepflegteres und privateres Bootserlebnis auf den Egadi suchen als eine klassische schnelle Tour. Viele Gäste suchen nach einem Katamaran auf den Egadi, einer Katamaran-Tour ab Trapani oder einem Katamaran-Charter mit Skipper: technisch ist es ein Trimaran mit drei Rümpfen, hoher Stabilität und sehr gut nutzbaren Bereichen.",
+        "Dieses Boot ist für Gäste gedacht, die ein komfortableres, gepflegteres und privateres Bootserlebnis auf den Egadi suchen als eine klassische schnelle Ausfahrt. Viele Gäste suchen nach einem Katamaran auf den Egadi, einer Katamaran-Ausfahrt ab Trapani oder einem Katamaran-Charter mit Skipper: technisch ist es ein Trimaran mit drei Rümpfen, hoher Stabilität und sehr gut nutzbaren Bereichen.",
         "An Bord geht es nicht nur um Navigation: Es gibt Platz zum Entspannen, Sonnenbaden und Umziehen, damit der Tag in ruhigem Tempo verlaufen kann. Beim Charter wird die Route mit dem Skipper zwischen Favignana, Levanzo und Marettimo geplant, mit geschützten Buchten zum Baden, Schnorcheln und Ankern.",
         "Einfach gesagt: Es ist die Premium-Alternative zur Katamaran-Miete auf den Egadi, mit Skipper, Crew, echtem Komfort und einer eleganteren Art, das Meer zu erleben. Sie müssen die Buchten nicht kennen und keine Segelerfahrung haben: Route, Zeiten und Stopps werden mit der Crew nach Wetter, Meer und Tagesziel angepasst.",
       ],
@@ -1800,10 +1841,10 @@ const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
       {
         question: "Ist es ein Katamaran oder ein Trimaran?",
         answer:
-          "Es ist ein Trimaran, kein klassischer Katamaran. Für Gäste, die einen Katamaran auf den Egadi oder eine Katamaran-Tour ab Trapani suchen, ist es unsere nächstliegende Multihull-Lösung für Komfort, Platz und Stabilität, mit dem Vorteil einer Struktur mit drei Rümpfen.",
+          "Es ist ein Trimaran, kein klassischer Katamaran. Für Gäste, die einen Katamaran auf den Egadi oder eine Katamaran-Ausfahrt ab Trapani suchen, ist es unsere nächstliegende Multihull-Lösung für Komfort, Platz und Stabilität, mit dem Vorteil einer Struktur mit drei Rümpfen.",
       },
       {
-        question: "Eignet er sich für Gäste, die eine Katamaran-Tour auf den Egadi suchen?",
+        question: "Eignet er sich für Gäste, die eine Katamaran-Ausfahrt auf den Egadi suchen?",
         answer:
           "Ja. Wenn Sie viel Platz, Stabilität, Skipper und gepflegten Service suchen, erfüllt der Trimaran denselben Wunsch mit einer Drei-Rumpf-Konfiguration. Er eignet sich ideal für Charter mit Baden, Schnorcheln und Ankern zwischen Favignana, Levanzo und Marettimo.",
       },
@@ -1825,41 +1866,41 @@ const GERMAN_BOAT_OVERRIDES: Partial<Record<string, Partial<ResolvedBoatContent>
     shortTitle: "Barca Egadi Sailing",
     eyebrow: "Agil, schnell und offen",
     description:
-      "Die Barca Egadi Sailing ist das agile Boot für private 4-Stunden-Touren rund um Favignana und geteilte oder private 8-Stunden-Ausfahrten zwischen Favignana und Levanzo.",
+      "Die Barca Egadi Sailing ist das agile Boot für private 4-Stunden-Bootstouren rund um Favignana und geteilte oder private 8-Stunden-Ausfahrten zwischen Favignana und Levanzo.",
     detail: {
       eyebrow: "Offenes Boot für die Ägadischen Inseln",
       title: "Barca Egadi Sailing: das agile Boot für Buchten, Badestopps und flexible Routen",
       paragraphs: [
         "Die Barca Egadi Sailing ist ideal, wenn Sie sich schnell zwischen Buchten bewegen, Badestopps einlegen und das Meer direkter erleben möchten.",
-        "Sie eignet sich sehr gut für private 4-Stunden-Touren am Vormittag oder Nachmittag rund um Favignana sowie für 8-Stunden-Tage, wenn Sie mehr Zeit für Favignana, Levanzo und die geschützten Bereiche des Tages wünschen.",
+        "Sie eignet sich sehr gut für private 4-Stunden-Bootstouren am Vormittag oder Nachmittag rund um Favignana sowie für 8-Stunden-Tage, wenn Sie mehr Zeit für Favignana, Levanzo und die geschützten Bereiche des Tages wünschen.",
         "Es ist ein offenes, sportliches Boot: perfekt für Gruppen, die klares Wasser, Schnorcheln und eine flexible Route mit Skipper suchen.",
       ],
     },
     seoTitle: "Barca Egadi Sailing für Bootstouren zu den Ägadischen Inseln",
     seoDescription:
-      "Barca Egadi Sailing ab Trapani für private 4-Stunden-Touren und geteilte oder private 8-Stunden-Bootstouren nach Favignana und Levanzo.",
+      "Barca Egadi Sailing ab Trapani für private 4-Stunden-Bootstouren und geteilte oder private 8-Stunden-Bootstouren nach Favignana und Levanzo.",
     imageAlt: "Barca Egadi Sailing auf den Ägadischen Inseln",
     idealFor: [
-      "Private 4-Stunden-Touren am Vormittag oder Nachmittag",
-      "Geteilte 8-Stunden-Tour mit Einzelplätzen",
+      "Private 4-Stunden-Bootstouren am Vormittag oder Nachmittag",
+      "Geteilte 8-Stunden-Ausfahrt mit Einzelplätzen",
       "Gruppen, die Baden, Schnorcheln und flexible Route wünschen",
       "Gäste, die ein offenes und dynamisches Boot bevorzugen",
     ],
     routes: [
-      "Favignana und Levanzo als Ganztagestour",
+      "Favignana und Levanzo als Ganztages-Bootstour",
       "Geschützte Buchten für private Halbtage",
       "Route angepasst an Wind, Meer und Besucheraufkommen",
     ],
     faqs: [
       {
-        question: "Ist die 4-Stunden-Tour geteilt?",
+        question: "Ist die 4-Stunden-Bootstour geteilt?",
         answer:
           "Nein. Die 4-Stunden-Formel wird als private Erfahrung am Vormittag oder Nachmittag angeboten.",
       },
       {
-        question: "Eignet sich die Barca Egadi Sailing für eine geteilte Tour?",
+        question: "Eignet sich die Barca Egadi Sailing für eine geteilte Ausfahrt?",
         answer:
-          "Ja, die geteilte Tour ist die 8-Stunden-Variante mit Einzelplätzen und Abfahrt ab Trapani.",
+          "Ja, die geteilte Ausfahrt ist die 8-Stunden-Variante mit Einzelplätzen und Abfahrt ab Trapani.",
       },
       {
         question: "Was sollte ich mitbringen?",
@@ -1879,7 +1920,7 @@ export function getBoatContent(boatId: string, locale?: string | null): Resolved
   if (!entry) return null;
   const content: ResolvedBoatContent = {
     id: entry.id,
-    slug: entry.slug,
+    slug: getLocalizedBoatSlug(entry, locale),
     externalUrl: entry.externalUrl,
     order: entry.order,
     title: localize(entry.title, locale),
@@ -1932,11 +1973,11 @@ export function getPublicBoatIds(): string[] {
     .map((entry) => entry.id);
 }
 
-export function getPublicBoatSlugs(): string[] {
+export function getPublicBoatSlugs(locale?: string | null): string[] {
   return Object.values(BOAT_CATALOG)
     .filter((entry) => entry.listed !== false)
     .sort((a, b) => a.order - b.order)
-    .map((entry) => entry.slug);
+    .map((entry) => getLocalizedBoatSlug(entry, locale));
 }
 
 export function hasPublicBoatDetailPage(boatId: string): boolean {
@@ -1944,11 +1985,18 @@ export function hasPublicBoatDetailPage(boatId: string): boolean {
   return Boolean(entry && entry.listed !== false && BOAT_DETAIL_PAGE_IDS.has(entry.id));
 }
 
-export function getPublicBoatDetailSlugs(): string[] {
+export function getPublicBoatDetailIds(): string[] {
   return Object.values(BOAT_CATALOG)
     .filter((entry) => entry.listed !== false && BOAT_DETAIL_PAGE_IDS.has(entry.id))
     .sort((a, b) => a.order - b.order)
-    .map((entry) => entry.slug);
+    .map((entry) => entry.id);
+}
+
+export function getPublicBoatDetailSlugs(locale?: string | null): string[] {
+  return Object.values(BOAT_CATALOG)
+    .filter((entry) => entry.listed !== false && BOAT_DETAIL_PAGE_IDS.has(entry.id))
+    .sort((a, b) => a.order - b.order)
+    .map((entry) => getLocalizedBoatSlug(entry, locale));
 }
 
 export function isPublicBoatId(boatId: string): boolean {
@@ -1956,17 +2004,13 @@ export function isPublicBoatId(boatId: string): boolean {
   return Boolean(entry && entry.listed !== false);
 }
 
-export function getBoatPublicSlug(boatId: string): string {
-  return getBoatCatalogEntry(boatId)?.slug ?? boatId;
+export function getBoatPublicSlug(boatId: string, locale?: string | null): string {
+  const entry = getBoatCatalogEntry(boatId);
+  return entry ? getLocalizedBoatSlug(entry, locale) : boatId;
 }
 
 export function resolveBoatIdFromSlug(slug: string): string {
-  const match = Object.values(BOAT_CATALOG).find(
-    (entry) =>
-      entry.slug === slug ||
-      entry.id === slug ||
-      ("aliases" in entry && (entry.aliases as readonly string[]).includes(slug)),
-  );
+  const match = Object.values(BOAT_CATALOG).find((entry) => matchesBoatSlug(entry, slug));
   return match?.id ?? slug;
 }
 

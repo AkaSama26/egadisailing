@@ -105,7 +105,7 @@ export async function generateMetadata({
       : isDe
       ? "Lokale Crew für Bootstouren zu den Ägadischen Inseln"
       : isEn
-      ? "Local Crew for Egadi Boat Tours"
+      ? "Egadi Sailing Crew and Local Skippers in Trapani"
       : "Crew locale per escursioni in barca alle Egadi",
     description: isEs
       ? "Conoce a Egadisailing y Nicolò Genna: armador, patrón, azafata y chef para excursiones en barco por las Islas Egadi desde Trapani."
@@ -114,7 +114,7 @@ export async function generateMetadata({
       : isDe
       ? "Lernen Sie Egadisailing und Nicolò Genna kennen: Eigner, Skipper, Hostess und Chef für Bootstouren zu den Ägadischen Inseln ab Trapani."
       : isEn
-      ? "Meet Egadisailing and Nicolò Genna: owner, skipper, hostess and chef for boat tours in the Egadi Islands from Trapani."
+      ? "Meet Egadisailing in Trapani: local skipper, hostess and chef for Egadi Islands boat tours, private charters and chef-on-board experiences."
       : "Scopri Egadisailing e Nicolò Genna: armatore, skipper, hostess e chef per escursioni in barca alle Isole Egadi da Trapani.",
     path: "/about",
     locale,

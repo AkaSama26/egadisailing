@@ -51,37 +51,37 @@ const languageLabel: Record<Locale, string> = {
 
 const homeCopy: Record<Locale, { title: string; description: string; body: string }> = {
   it: {
-    title: "Egadi Sailing | Tour in barca alle Egadi da Trapani",
+    title: "Tour in barca Egadi da Trapani | Egadi Sailing",
     description:
-      "Tour in barca alle Egadi da Trapani: Favignana e Levanzo, tour privati o condivisi, snorkeling, chef a bordo e charter in trimarano.",
+      "Tour in barca alle Egadi da Trapani con barche private o condivise, trimarano con comfort da catamarano, snorkeling, chef a bordo, Favignana e Levanzo.",
     body:
       "Egadi Sailing organizza esperienze in barca da Trapani verso Favignana, Levanzo e Marettimo. Le rotte vengono adattate a meteo, vento, sicurezza e ritmo del gruppo.",
   },
   en: {
-    title: "Egadi Sailing | Egadi Islands Boat Tours from Trapani",
+    title: "Egadi Islands Boat Tours from Trapani | Egadi Sailing",
     description:
-      "Egadi Islands boat tours from Trapani: Favignana and Levanzo, private or shared tours, snorkelling, chef on board and trimaran charter.",
+      "Egadi Islands boat tours and boat trips from Trapani to Favignana and Levanzo: shared or private tours, snorkelling, chef on board and trimaran charters.",
     body:
       "Egadi Sailing runs boat experiences from Trapani to Favignana, Levanzo and Marettimo. Routes are adapted to weather, wind, safety and guest pace.",
   },
   es: {
-    title: "Egadi Sailing | Excursiones en barco Egadi desde Trapani",
+    title: "Paseos en barco desde Trapani a las Islas Egadi | Egadi Sailing",
     description:
-      "Excursiones en barco a las Islas Egadi desde Trapani: Favignana y Levanzo, tours privados o compartidos, snorkel, chef a bordo y charter en trimaran.",
+      "Paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, chef a bordo y charter en trimaran.",
     body:
       "Egadi Sailing organiza experiencias en barco desde Trapani hacia Favignana, Levanzo y Marettimo. Las rutas se adaptan a clima, viento, seguridad y ritmo del grupo.",
   },
   fr: {
-    title: "Egadi Sailing | Excursions bateau aux Egades depuis Trapani",
+    title: "Excursions bateau aux Egades depuis Trapani | Egadi Sailing",
     description:
-      "Excursions en bateau aux iles Egades depuis Trapani: Favignana et Levanzo, sorties privees ou partagees, snorkeling, chef a bord et charter en trimaran.",
+      "Excursions bateau depuis Trapani vers les iles Egades: Favignana et Levanzo, sorties privees ou partagees, snorkeling, chef a bord et charter en trimaran.",
     body:
-      "Egadi Sailing organise des experiences en bateau depuis Trapani vers Favignana, Levanzo et Marettimo. Les itineraires sont adaptes a la meteo, au vent, a la securite et au rythme du groupe.",
+      "Egadi Sailing organise des excursions en bateau depuis Trapani vers Favignana, Levanzo et Marettimo. Les itineraires sont adaptes a la meteo, au vent, a la securite et au rythme du groupe.",
   },
   de: {
-    title: "Egadi Sailing | Bootstouren Agadische Inseln ab Trapani",
+    title: "Bootstouren ab Trapani zu den Ägadischen Inseln | Egadi Sailing",
     description:
-      "Bootstouren zu den Agadischen Inseln ab Trapani: Favignana und Levanzo, private oder geteilte Touren, Schnorcheln, Chef an Bord und Trimaran-Charter.",
+      "Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana und Levanzo, geteilte oder private Ausfahrten, Schnorcheln, Chef an Bord und Trimaran-Charter.",
     body:
       "Egadi Sailing organisiert Bootserlebnisse ab Trapani nach Favignana, Levanzo und Marettimo. Die Routen werden an Wetter, Wind, Sicherheit und Gruppentempo angepasst.",
   },
@@ -203,6 +203,20 @@ function buildHome(locale: Locale): string {
 
 function buildExperiencesHub(locale: Locale): string {
   const packages = getExperiencePackageContents(locale);
+  const titleByLocale: Record<Locale, string> = {
+    it: "Tour in barca Egadi da Trapani | Egadi Sailing",
+    en: "Egadi Boat Tours and Trips from Trapani | Egadi Sailing",
+    es: "Paseos en barco desde Trapani a las Islas Egadi | Egadi Sailing",
+    fr: "Excursions bateau aux Egades depuis Trapani | Egadi Sailing",
+    de: "Bootstouren ab Trapani zu den Ägadischen Inseln | Egadi Sailing",
+  };
+  const descriptionByLocale: Record<Locale, string> = {
+    it: "Confronta tour in barca alle Egadi da Trapani: Favignana e Levanzo, escursioni condivise o private, trimarano, chef a bordo e pesca.",
+    en: "Compare Egadi boat tours from Trapani: Favignana and Levanzo boat trips, shared or private tours, snorkelling, trimaran charter and fishing.",
+    es: "Compara paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, trimaran y pesca.",
+    fr: "Comparez les excursions bateau aux iles Egades depuis Trapani: Favignana, Levanzo, sorties privees ou partagees, trimaran, chef a bord et peche.",
+    de: "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana, Levanzo, private oder geteilte Ausfahrten, Trimaran, Chef an Bord und Angeln.",
+  };
   const packageLines = packages.map((item) => {
     const variants = item.variants.length > 0
       ? ` Variants: ${item.variants.map((variant) => `${variant.label} (${withLocale(locale, variant.href)}.md)`).join("; ")}.`
@@ -210,11 +224,8 @@ function buildExperiencesHub(locale: Locale): string {
     return `${item.title}: ${item.subtitle} Duration: ${item.durationLabel}. Detail: ${item.detailLabel}.${variants}`;
   });
   return headingDocument({
-    title: locale === "it" ? "Esperienze Egadi da Trapani" : "Egadi experiences from Trapani",
-    description:
-      locale === "it"
-        ? "Hub pulito delle esperienze Egadi Sailing: tour condivisi, privati, chef a bordo, charter in trimarano e pesca."
-        : "Clean hub for Egadi Sailing experiences: shared tours, private tours, chef on board, trimaran charter and fishing.",
+    title: titleByLocale[locale],
+    description: descriptionByLocale[locale],
     locale,
     href: "/experiences",
     sections: [
@@ -279,7 +290,7 @@ function buildBoatDetail(locale: Locale, boatId: string): string | null {
     title: boat.seoTitle,
     description: boat.seoDescription,
     locale,
-    href: `/boats/${boat.slug}`,
+    href: `/boats/${getBoatPublicSlug(boat.id, locale)}`,
     sections: [
       boat.description,
       `## ${boat.detail.title}\n\n${boat.detail.paragraphs.join("\n\n")}`,
@@ -454,7 +465,7 @@ function resolveBoat(locale: Locale, path: string): MarkdownMirror | null {
   const boatId = resolveBoatIdFromSlug(slug);
   if (!isPublicBoatId(boatId)) return null;
 
-  const canonicalSlug = getBoatPublicSlug(boatId);
+  const canonicalSlug = getBoatPublicSlug(boatId, locale);
   if (slug !== canonicalSlug) return redirectTo(locale, `${base}/${canonicalSlug}`);
 
   const markdown = buildBoatDetail(locale, boatId);
