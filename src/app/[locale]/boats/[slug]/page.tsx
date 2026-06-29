@@ -432,7 +432,7 @@ export default async function BoatDetailPage({
         keywords: schemaTopics.keywords.join(", "),
       },
       {
-        "@type": ["Product", "Vehicle"],
+        "@type": "Vehicle",
         "@id": `${pageUrl}#boat`,
         inLanguage,
         mainEntityOfPage: { "@id": `${pageUrl}#webpage` },
