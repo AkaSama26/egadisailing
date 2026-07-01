@@ -60,6 +60,62 @@ function firstRecord(values: Array<unknown | undefined>): AnyRecord | undefined 
   return undefined;
 }
 
+function roundMoney(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function moneyAmount(value: unknown): number | undefined {
+  const record = getRecord(value);
+  return numberValue(record?.amount) ?? numberValue(value);
+}
+
+function sumPaymentAmounts(payments: unknown[] | undefined): number | undefined {
+  if (!payments) return undefined;
+  let total = 0;
+  let hasAmount = false;
+  for (const payment of payments) {
+    const record = getRecord(payment);
+    const amount = moneyAmount(record?.amountAsMoney) ?? numberValue(record?.amount);
+    if (amount !== undefined && amount > 0) {
+      total += amount;
+      hasAmount = true;
+    }
+  }
+  return hasAmount ? roundMoney(total) : undefined;
+}
+
+function maxPositive(values: Array<number | undefined>): number | undefined {
+  const positives = values.filter((value): value is number => value !== undefined && value > 0);
+  if (positives.length === 0) return undefined;
+  return roundMoney(Math.max(...positives));
+}
+
+function getSellerCommissionPercent(child: AnyRecord | undefined): number | undefined {
+  const sellerInvoice = getRecord(child?.sellerInvoice);
+  const lineItem = getRecord(getArray(sellerInvoice?.lineItems)?.[0]);
+  return numberValue(lineItem?.commission);
+}
+
+function deriveCommissionAmount(
+  retailPrice: number,
+  commissionPercent: number | undefined,
+  explicitCommissionAmount: number | undefined,
+): number | undefined {
+  if (explicitCommissionAmount !== undefined) return roundMoney(explicitCommissionAmount);
+  if (commissionPercent === undefined) return undefined;
+  return roundMoney(retailPrice * (commissionPercent / 100));
+}
+
+function deriveNetAmount(
+  retailPrice: number,
+  commissionAmount: number | undefined,
+  explicitNetAmount: number | undefined,
+): number | undefined {
+  if (explicitNetAmount !== undefined) return roundMoney(explicitNetAmount);
+  if (commissionAmount === undefined) return undefined;
+  return roundMoney(retailPrice - commissionAmount);
+}
+
 function getBookingChildren(raw: AnyRecord): unknown[] {
   return (
     getArray(raw.productBookings) ??
@@ -129,9 +185,23 @@ export function normalizeBokunBookingResponse(raw: unknown): BokunBookingSummary
   const startDate = dateOnly(child?.startDate ?? child?.startDateTime ?? child?.date ?? raw.startDate);
   const endDate = dateOnly(child?.endDate ?? child?.endDateTime ?? child?.date ?? raw.endDate) ?? startDate;
   const status = stringValue(child?.status) ?? stringValue(raw.status);
-  const totalPrice = numberValue(child?.totalPrice ?? child?.priceWithDiscount ?? raw.totalPrice);
+  const supplierPrice = numberValue(child?.totalPrice ?? child?.priceWithDiscount ?? raw.totalPrice);
+  const searchFallbackPrice = numberValue(child?.totalPrice ?? child?.priceWithDiscount ?? raw.totalPrice);
+  const customerPaid = sumPaymentAmounts(getArray(raw.customerPayments));
+  const totalPrice = maxPositive([customerPaid, numberValue(raw.totalPaid), supplierPrice]) ?? searchFallbackPrice;
   const currency = stringValue(raw.currency ?? child?.currency);
   const channelName = getChannelName(raw, child);
+  const commissionPercent = getSellerCommissionPercent(child);
+  const commissionAmount = deriveCommissionAmount(
+    totalPrice ?? 0,
+    commissionPercent,
+    numberValue(raw.commissionAmount ?? child?.commissionAmount),
+  );
+  const netAmount = deriveNetAmount(
+    totalPrice ?? 0,
+    commissionAmount,
+    numberValue(raw.netAmount ?? child?.netAmount),
+  );
 
   if (!productId || !confirmationCode || !productConfirmationCode || !startDate || !status || totalPrice === undefined || !currency || !channelName) {
     return null;
@@ -151,9 +221,11 @@ export function normalizeBokunBookingResponse(raw: unknown): BokunBookingSummary
     mainContactDetails: normalizeCustomer(raw, child, id),
     passengers: getArray(raw.passengers) as BokunBookingSummary["passengers"],
     numPeople: integerValue(child?.numPeople ?? child?.totalParticipants ?? raw.numPeople),
-    paymentStatus: stringValue(raw.paymentStatus ?? child?.paymentStatus ?? raw.paymentType),
-    commissionAmount: numberValue(raw.commissionAmount),
-    netAmount: numberValue(raw.netAmount),
+    paymentStatus: stringValue(raw.paymentStatus ?? child?.paymentStatus ?? raw.paymentType ?? child?.paidType),
+    supplierPrice,
+    commissionPercent,
+    commissionAmount,
+    netAmount,
     experienceBookings: getArray(raw.experienceBookings ?? raw.activityBookings),
     productBookings: getArray(raw.productBookings ?? raw.activityBookings),
   };

@@ -90,10 +90,12 @@ export async function importBokunBooking(
   }
 
   const totalPriceStr = new Decimal(booking.totalPrice).toFixed(2);
-  const commissionStr = booking.commissionAmount
+  const commissionStr = booking.commissionAmount !== null && booking.commissionAmount !== undefined
     ? new Decimal(booking.commissionAmount).toFixed(2)
     : null;
-  const netStr = booking.netAmount ? new Decimal(booking.netAmount).toFixed(2) : null;
+  const netStr = booking.netAmount !== null && booking.netAmount !== undefined
+    ? new Decimal(booking.netAmount).toFixed(2)
+    : null;
 
   // GDPR minimization: salviamo SOLO i campi business-essenziali; PII
   // (firstName/lastName/email/phone/passengers) vive gia' su `Customer` che
@@ -499,7 +501,9 @@ function buildSafeRawPayload(booking: BokunBookingSummary): Prisma.InputJsonValu
     endDate: booking.endDate,
     numPeople: booking.numPeople,
     totalPrice: booking.totalPrice,
+    supplierPrice: booking.supplierPrice,
     currency: booking.currency,
+    commissionPercent: booking.commissionPercent,
     commissionAmount: booking.commissionAmount,
     netAmount: booking.netAmount,
     paymentStatus: booking.paymentStatus,

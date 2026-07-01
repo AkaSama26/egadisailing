@@ -104,7 +104,15 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
         customer: { select: { firstName: true, lastName: true, email: true, phone: true } },
         service: { select: { name: true } },
         payments: { select: { status: true, type: true, amount: true } },
-        bokunBooking: { select: { bokunBookingId: true, channelName: true, rawPayload: true } },
+        bokunBooking: {
+          select: {
+            bokunBookingId: true,
+            channelName: true,
+            rawPayload: true,
+            commissionAmount: true,
+            netAmount: true,
+          },
+        },
       },
       orderBy: { startDate: "desc" },
       take: 200,
@@ -118,7 +126,7 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
     const externalPaymentStatus = jsonStringField(b.bokunBooking?.rawPayload, "paymentStatus");
     const externalPaid =
       externalPaymentStatus && EXTERNAL_PAID_STATUSES.has(externalPaymentStatus)
-        ? new Decimal(b.totalPrice.toString())
+        ? new Decimal(b.bokunBooking?.netAmount?.toString() ?? b.totalPrice.toString())
         : new Decimal(0);
     return {
       id: b.id,

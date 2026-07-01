@@ -29,6 +29,8 @@ export interface BokunBookingSummary {
   }>;
   numPeople?: number;
   paymentStatus?: string;
+  supplierPrice?: number | null;
+  commissionPercent?: number | null;
   commissionAmount?: number | null;
   netAmount?: number | null;
   experienceBookings?: unknown[];

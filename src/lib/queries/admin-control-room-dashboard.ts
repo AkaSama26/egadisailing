@@ -12,6 +12,13 @@ import { summarizeControlRoomTasks } from "./admin-control-room-dashboard-helper
 const MONEY_IN_TYPES = ["DEPOSIT", "BALANCE", "FULL"] as const;
 const ACTIVE_BOOKING_STATUSES = ["PENDING", "CONFIRMED"] as const;
 const PROBLEM_HEALTH = new Set(["YELLOW", "RED"]);
+const EXTERNAL_PAID_STATUSES = new Set(["PAID", "PAID_IN_FULL", "COMPLETED", "CAPTURED"]);
+
+function jsonStringField(value: unknown, key: string): string | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" && field.trim() ? field.trim() : undefined;
+}
 
 type PendingManualAlert = Awaited<ReturnType<typeof listPendingManualAlerts>>[number];
 
@@ -463,6 +470,7 @@ function bookingDashboardInclude() {
     service: { select: { name: true, type: true } },
     boat: { select: { name: true } },
     directBooking: { select: { balanceAmount: true, balancePaidAt: true } },
+    bokunBooking: { select: { netAmount: true, rawPayload: true } },
     payments: { select: { amount: true, status: true, type: true } },
     bookingNotes: {
       select: { note: true, createdAt: true },
@@ -477,6 +485,7 @@ type BookingDashboardRow = Awaited<ReturnType<typeof db.booking.findMany>>[numbe
   service: { name: string; type: string };
   boat: { name: string };
   directBooking: { balanceAmount: unknown; balancePaidAt: Date | null } | null;
+  bokunBooking: { netAmount: unknown; rawPayload: unknown } | null;
   payments: Array<{ amount: unknown; status: string; type: string }>;
   bookingNotes: Array<{ note: string }>;
 };
@@ -487,9 +496,15 @@ function toControlRoomBooking(
 ): ControlRoomBooking {
   const forecast = forecastByDate.get(isoDay(booking.startDate));
   const assessment = forecast ? assessRisk(forecast) : null;
-  const paidAmount = booking.payments
+  const stripePaidAmount = booking.payments
     .filter((payment) => payment.status === "SUCCEEDED" && payment.type !== "REFUND")
     .reduce((acc, payment) => acc.plus(toDecimal(payment.amount)), new Decimal(0));
+  const externalPaymentStatus = jsonStringField(booking.bokunBooking?.rawPayload, "paymentStatus");
+  const externalPaidAmount =
+    externalPaymentStatus && EXTERNAL_PAID_STATUSES.has(externalPaymentStatus)
+      ? toDecimal(booking.bokunBooking?.netAmount)
+      : new Decimal(0);
+  const paidAmount = stripePaidAmount.gt(0) ? stripePaidAmount : externalPaidAmount;
 
   return {
     id: booking.id,

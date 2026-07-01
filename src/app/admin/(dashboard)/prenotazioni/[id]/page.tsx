@@ -57,7 +57,15 @@ export default async function BookingDetailPage({
       },
       bookingNotes: { orderBy: { createdAt: "desc" } },
       directBooking: true,
-      bokunBooking: { select: { bokunBookingId: true, channelName: true, rawPayload: true } },
+      bokunBooking: {
+        select: {
+          bokunBookingId: true,
+          channelName: true,
+          rawPayload: true,
+          commissionAmount: true,
+          netAmount: true,
+        },
+      },
       charterBooking: { select: { platformName: true, platformBookingRef: true } },
       checkedInBy: { select: { name: true, email: true } },
     },
@@ -108,8 +116,11 @@ export default async function BookingDetailPage({
   const externalPaymentStatus = jsonStringField(booking.bokunBooking?.rawPayload, "paymentStatus");
   const externalPaidAmount =
     externalPaymentStatus && EXTERNAL_PAID_STATUSES.has(externalPaymentStatus)
-      ? formatEur(booking.totalPrice.toString())
+      ? formatEur(booking.bokunBooking?.netAmount?.toString() ?? booking.totalPrice.toString())
       : undefined;
+  const externalCommissionAmount = booking.bokunBooking?.commissionAmount
+    ? formatEur(booking.bokunBooking.commissionAmount.toString())
+    : undefined;
 
   return (
     <div className="space-y-6">
@@ -250,10 +261,16 @@ export default async function BookingDetailPage({
                 label="Pagamento esterno"
                 value={
                   externalPaymentStatus
-                    ? `${externalPaymentStatus}${externalPaidAmount ? ` · ${externalPaidAmount}` : ""}`
+                    ? `${externalPaymentStatus} · retail ${formatEur(booking.totalPrice.toString())}`
                     : "Gestito su Bokun"
                 }
               />
+              {externalCommissionAmount && (
+                <DetailRow label="Commissione canale" value={externalCommissionAmount} />
+              )}
+              {externalPaidAmount && (
+                <DetailRow label="Netto previsto" value={externalPaidAmount} />
+              )}
             </>
           )}
           {booking.charterBooking && (

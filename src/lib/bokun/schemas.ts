@@ -57,6 +57,8 @@ export const bokunBookingResponseSchema = z.object({
   // qui vorrebbe dire webhook 500 + retry loop Bokun.
   numPeople: z.number().int().min(0).max(100).optional(),
   paymentStatus: z.string().max(64).optional(),
+  supplierPrice: z.number().nonnegative().max(1_000_000).optional().nullable(),
+  commissionPercent: z.number().nonnegative().max(100).optional().nullable(),
   commissionAmount: z.number().nonnegative().max(1_000_000).optional().nullable(),
   netAmount: z.number().nonnegative().max(1_000_000).optional().nullable(),
   experienceBookings: z.array(z.unknown()).optional(),
