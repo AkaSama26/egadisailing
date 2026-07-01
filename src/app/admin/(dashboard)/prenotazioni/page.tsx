@@ -43,6 +43,14 @@ function parseDateParam(value: string | undefined): Date | undefined {
   return new Date(`${value}T00:00:00Z`);
 }
 
+const EXTERNAL_PAID_STATUSES = new Set(["PAID", "PAID_IN_FULL", "COMPLETED", "CAPTURED"]);
+
+function jsonStringField(value: unknown, key: string): string | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" && field.trim() ? field.trim() : undefined;
+}
+
 export default async function PrenotazioniPage({ searchParams }: Props) {
   const sp = await searchParams;
   const sourceFilter = isSource(sp.source) ? sp.source : undefined;
@@ -93,9 +101,10 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
     db.booking.findMany({
       where: filters.length > 0 ? { AND: filters } : undefined,
       include: {
-        customer: { select: { firstName: true, lastName: true, email: true } },
+        customer: { select: { firstName: true, lastName: true, email: true, phone: true } },
         service: { select: { name: true } },
         payments: { select: { status: true, type: true, amount: true } },
+        bokunBooking: { select: { bokunBookingId: true, channelName: true, rawPayload: true } },
       },
       orderBy: { startDate: "desc" },
       take: 200,
@@ -106,17 +115,28 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
     const paid = b.payments
       .filter((p) => p.status === "SUCCEEDED" && p.type !== "REFUND")
       .reduce((acc, p) => acc.plus(p.amount.toString()), new Decimal(0));
+    const externalPaymentStatus = jsonStringField(b.bokunBooking?.rawPayload, "paymentStatus");
+    const externalPaid =
+      externalPaymentStatus && EXTERNAL_PAID_STATUSES.has(externalPaymentStatus)
+        ? new Decimal(b.totalPrice.toString())
+        : new Decimal(0);
     return {
       id: b.id,
       confirmationCode: b.confirmationCode,
       source: b.source,
+      sourceLabel: b.bokunBooking?.channelName ?? BOOKING_SOURCE_LABEL[b.source],
+      sourceDetail: b.bokunBooking?.bokunBookingId
+        ? `Bokun #${b.bokunBooking.bokunBookingId}`
+        : undefined,
       customerName: `${b.customer.firstName} ${b.customer.lastName}`.trim(),
       customerEmail: b.customer.email,
+      customerPhone: b.customer.phone,
       serviceName: b.service.name,
       startDate: b.startDate,
       numPeople: b.numPeople,
       totalPrice: b.totalPrice.toString(),
-      paidAmount: paid.toString(),
+      paidAmount: paid.gt(0) ? paid.toString() : externalPaid.toString(),
+      paidDetail: externalPaymentStatus ? `Bokun: ${externalPaymentStatus}` : undefined,
       status: b.status,
     };
   });

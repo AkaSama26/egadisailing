@@ -27,6 +27,14 @@ import {
 } from "../actions";
 import { createReceiptFromPaymentsFromForm } from "../../ricevute/actions";
 
+const EXTERNAL_PAID_STATUSES = new Set(["PAID", "PAID_IN_FULL", "COMPLETED", "CAPTURED"]);
+
+function jsonStringField(value: unknown, key: string): string | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "string" && field.trim() ? field.trim() : undefined;
+}
+
 export default async function BookingDetailPage({
   params,
 }: {
@@ -49,7 +57,7 @@ export default async function BookingDetailPage({
       },
       bookingNotes: { orderBy: { createdAt: "desc" } },
       directBooking: true,
-      bokunBooking: { select: { bokunBookingId: true, channelName: true } },
+      bokunBooking: { select: { bokunBookingId: true, channelName: true, rawPayload: true } },
       charterBooking: { select: { platformName: true, platformBookingRef: true } },
       checkedInBy: { select: { name: true, email: true } },
     },
@@ -92,6 +100,16 @@ export default async function BookingDetailPage({
       payment.type !== "REFUND" &&
       !payment.receiptLink,
   );
+  const bookingSourceLabel = booking.bokunBooking?.channelName
+    ? `${booking.bokunBooking.channelName} via Bokun`
+    : booking.charterBooking?.platformName
+      ? `${booking.charterBooking.platformName} via ${labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}`
+      : labelOrRaw(BOOKING_SOURCE_LABEL, booking.source);
+  const externalPaymentStatus = jsonStringField(booking.bokunBooking?.rawPayload, "paymentStatus");
+  const externalPaidAmount =
+    externalPaymentStatus && EXTERNAL_PAID_STATUSES.has(externalPaymentStatus)
+      ? formatEur(booking.totalPrice.toString())
+      : undefined;
 
   return (
     <div className="space-y-6">
@@ -102,7 +120,7 @@ export default async function BookingDetailPage({
           </h1>
           <div className="text-sm text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
             <span>
-              Canale: <strong>{labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}</strong>
+              Canale: <strong>{bookingSourceLabel}</strong>
             </span>
             <span>·</span>
             <StatusBadge status={booking.status} kind="booking" />
@@ -179,7 +197,7 @@ export default async function BookingDetailPage({
       {isNonDirect && canCancel && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
           <strong>Attenzione</strong> — questo booking proviene da{" "}
-          <strong>{labelOrRaw(BOOKING_SOURCE_LABEL, booking.source)}</strong>. La cancellazione qui rilascia l'availability
+          <strong>{bookingSourceLabel}</strong>. La cancellazione qui rilascia l'availability
           interna e crea un promemoria operativo per ricordarti di cancellare anche sul
           pannello esterno (Bokun, Boataround, ecc). Il sito non cancella automaticamente
           la prenotazione sul portale esterno.
@@ -223,10 +241,20 @@ export default async function BookingDetailPage({
             </>
           )}
           {booking.bokunBooking && (
-            <DetailRow
-              label="Bokun"
-              value={`${booking.bokunBooking.channelName} · ${booking.bokunBooking.bokunBookingId}`}
-            />
+            <>
+              <DetailRow
+                label="Bokun"
+                value={`${booking.bokunBooking.channelName} via Bokun · #${booking.bokunBooking.bokunBookingId}`}
+              />
+              <DetailRow
+                label="Pagamento esterno"
+                value={
+                  externalPaymentStatus
+                    ? `${externalPaymentStatus}${externalPaidAmount ? ` · ${externalPaidAmount}` : ""}`
+                    : "Gestito su Bokun"
+                }
+              />
+            </>
           )}
           {booking.charterBooking && (
             <DetailRow
@@ -252,7 +280,13 @@ export default async function BookingDetailPage({
       <AdminCard>
         <h2 className="font-bold text-slate-900 mb-3">Pagamenti</h2>
         {booking.payments.length === 0 ? (
-          <EmptyState message="Nessun pagamento registrato." />
+          <EmptyState
+            message={
+              booking.bokunBooking
+                ? `Pagamento gestito da Bokun${externalPaymentStatus ? ` (${externalPaymentStatus})` : ""}${externalPaidAmount ? ` · ${externalPaidAmount}` : ""}.`
+                : "Nessun pagamento registrato."
+            }
+          />
         ) : (
           <form action={createReceiptFromPaymentsFromForm} className="space-y-3">
             <ul className="space-y-2 text-sm">

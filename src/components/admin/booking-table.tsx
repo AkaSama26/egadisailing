@@ -11,13 +11,17 @@ export interface BookingRow {
   id: string;
   confirmationCode: string;
   source: string;
+  sourceLabel?: string;
+  sourceDetail?: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string | null;
   serviceName: string;
   startDate: Date;
   numPeople: number;
   totalPrice: string;
   paidAmount: string;
+  paidDetail?: string;
   status: string;
 }
 
@@ -58,14 +62,19 @@ export function BookingTable({ rows }: { rows: BookingRow[] }) {
               <td className="p-3">
                 <div className="font-medium">{r.customerName}</div>
                 <div className="text-xs text-slate-500">{r.customerEmail}</div>
+                {r.customerPhone && <div className="text-xs text-slate-500">{r.customerPhone}</div>}
               </td>
               <td className="p-3">
                 <span className="px-2 py-1 rounded bg-slate-100 text-xs">
-                  {labelOrRaw(BOOKING_SOURCE_LABEL, r.source)}
+                  {r.sourceLabel ?? labelOrRaw(BOOKING_SOURCE_LABEL, r.source)}
                 </span>
+                {r.sourceDetail && <div className="mt-1 text-xs text-slate-500">{r.sourceDetail}</div>}
               </td>
               <td className="p-3 text-right tabular-nums">{formatEur(r.totalPrice)}</td>
-              <td className="p-3 text-right tabular-nums">{formatEur(r.paidAmount)}</td>
+              <td className="p-3 text-right tabular-nums">
+                <div>{formatEur(r.paidAmount)}</div>
+                {r.paidDetail && <div className="text-xs text-slate-500">{r.paidDetail}</div>}
+              </td>
               <td className="p-3">
                 <StatusBadge status={r.status} kind="booking" />
               </td>

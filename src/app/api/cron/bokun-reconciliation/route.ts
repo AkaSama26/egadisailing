@@ -1,4 +1,4 @@
-import { searchBokunBookings } from "@/lib/bokun/bookings";
+import { getBokunBooking, searchBokunBookings } from "@/lib/bokun/bookings";
 import type { BokunBookingSummary } from "@/lib/bokun/types";
 import { importBokunBooking } from "@/lib/bokun/adapters/booking";
 import { syncBookingAvailability } from "@/lib/bokun/sync-availability";
@@ -98,7 +98,18 @@ export const GET = withCronGuard(
         },
         processItem: async (b) => {
           try {
-            const ours = await importBokunBooking(b);
+            const detailed = await getBokunBooking(b.id).catch((err) => {
+              logger.warn(
+                {
+                  err,
+                  bokunBookingId: b.id,
+                  productId: b.productId,
+                },
+                "Bokun detail fetch failed during reconciliation, using search result fallback",
+              );
+              return b;
+            });
+            const ours = await importBokunBooking(detailed);
             // R27-CRIT-6: skip fan-out quando l'import e' stato "skipped"
             // (status terminale locale preserva admin-cancel). Senza questa
             // guardia il cron re-chiamava `blockDates` → ri-BLOCCA cella su
