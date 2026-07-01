@@ -13,6 +13,7 @@ import { RUN_BUDGET } from "@/lib/timing";
 import { recordChannelSync } from "@/lib/sync/record-channel-sync";
 import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
+import { NotFoundError } from "@/lib/errors";
 
 export const runtime = "nodejs";
 
@@ -74,6 +75,7 @@ export const GET = withCronGuard(
 
       let imported = 0;
       let failed = 0;
+      let skippedUnmapped = 0;
       let totalHits = 0;
 
       // R14-REG-A4 / R28-ALTA-3: cursor pagination via processBatchPaginated.
@@ -107,12 +109,30 @@ export const GET = withCronGuard(
             }
             imported++;
           } catch (err) {
+            const errorCode = (err as { code?: string }).code;
+            const errorMessage = (err as Error).message;
+            const unmappedProduct =
+              (err instanceof NotFoundError || errorCode === "NOT_FOUND") &&
+              errorMessage.includes("bokunProductId=");
+
+            if (unmappedProduct) {
+              skippedUnmapped++;
+              logger.warn(
+                {
+                  bokunBookingId: b.id,
+                  productId: b.productId,
+                },
+                "Skipping Bokun booking for unmapped product",
+              );
+              return;
+            }
+
             failed++;
             logger.error(
               {
                 bokunBookingId: b.id,
-                errorCode: (err as { code?: string }).code,
-                errorMessage: (err as Error).message,
+                errorCode,
+                errorMessage,
               },
               "importBokunBooking failed",
             );
@@ -126,6 +146,7 @@ export const GET = withCronGuard(
             page: batchRes.batchCount,
             imported,
             failed,
+            skippedUnmapped,
             elapsedMs: ctx.elapsedMs(),
           },
           "Bokun reconciliation stopped at RUN_BUDGET_MS — backlog continues next run",
@@ -180,11 +201,11 @@ export const GET = withCronGuard(
       }
 
       logger.info(
-        { imported, failed, totalHits, pages: page - 1, durationMs, since: since.toISOString() },
+        { imported, failed, skippedUnmapped, totalHits, pages: page - 1, durationMs, since: since.toISOString() },
         "Bokun reconciliation run completed",
       );
 
-      return { imported, failed, totalHits, pages: page - 1, durationMs };
+      return { imported, failed, skippedUnmapped, totalHits, pages: page - 1, durationMs };
     } catch (err) {
       logger.error({ err }, "Bokun reconciliation failed");
       await recordChannelSync({
