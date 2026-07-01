@@ -5,6 +5,7 @@ import { Inter, Caveat, Manrope } from "next/font/google";
 import { AnalyticsInteractionTracker } from "@/components/analytics/analytics-interaction-tracker";
 import { GtmConsentBootstrap } from "@/components/analytics/gtm-consent-bootstrap";
 import { GtmPageViewTracker } from "@/components/analytics/gtm-page-view-tracker";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { ServiceWorkerCleanup } from "@/components/service-worker-cleanup";
 import { env } from "@/lib/env";
 import type { CookieConsentPublicServices } from "@/lib/cookie-consent/policy";
@@ -84,13 +85,17 @@ type RootRuntimeProps = {
 };
 
 export function RootRuntime({ trackingServices }: RootRuntimeProps) {
-  const shouldLoadTracking = Boolean(trackingServices && env.NEXT_PUBLIC_GTM_ID);
+  const shouldLoadGtm = Boolean(trackingServices && env.NEXT_PUBLIC_GTM_ID);
+  const shouldRunTrackingRuntime = Boolean(
+    trackingServices &&
+      (env.NEXT_PUBLIC_GTM_ID || trackingServices.metaPixelId),
+  );
 
   return (
     <>
       {trackingServices ? <GtmConsentBootstrap services={trackingServices} /> : null}
-      {shouldLoadTracking ? <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM_ID!} /> : null}
-      {shouldLoadTracking ? (
+      {shouldLoadGtm ? <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM_ID!} /> : null}
+      {shouldLoadGtm ? (
         <noscript>
           <iframe
             src={`https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(env.NEXT_PUBLIC_GTM_ID!)}`}
@@ -101,8 +106,9 @@ export function RootRuntime({ trackingServices }: RootRuntimeProps) {
           />
         </noscript>
       ) : null}
-      {shouldLoadTracking ? (
+      {shouldRunTrackingRuntime ? (
         <Suspense fallback={null}>
+          {trackingServices?.metaPixelId ? <MetaPixel pixelId={trackingServices.metaPixelId} /> : null}
           <GtmPageViewTracker />
           <AnalyticsInteractionTracker />
         </Suspense>

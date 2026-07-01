@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import crypto from "node:crypto";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,6 +27,7 @@ import { QrDownloadButton } from "@/components/qr-download-button";
 import { BookingSuccessAnalytics } from "@/components/analytics/booking-success-analytics";
 import { PUBLIC_CONTACT_LOCATION, getContactLocationLabel } from "@/lib/public-contact";
 import { localizedPath } from "@/lib/i18n/paths";
+import { buildAnalyticsTransactionId } from "@/lib/analytics/transaction-id";
 
 // R26-A1-A5: pagina post-payment con PII (confirmation code + email link).
 // noindex defense-in-depth.
@@ -128,11 +128,7 @@ export default async function BookingSuccessPage({
     .toNumber();
   const totalCents = new Decimal(booking.totalPrice.toString()).mul(100).toNumber();
   const balanceCents = Math.max(0, totalCents - paidCents);
-  const analyticsTransactionId = crypto
-    .createHash("sha256")
-    .update(booking.id)
-    .digest("hex")
-    .slice(0, 16);
+  const analyticsTransactionId = buildAnalyticsTransactionId(booking.id);
   const dateLabel = sameUtcDay(booking.startDate, booking.endDate)
     ? formatPublicDay(booking.startDate, locale)
     : `${formatPublicDay(booking.startDate, locale)} - ${formatPublicDay(booking.endDate, locale)}`;

@@ -146,7 +146,7 @@ function buildCookieTable(locale: CookieConsentLocale, services: CookieConsentPu
   if (services.metaPixelId) {
     rows.push({
       name: "_fbp",
-      domain: "Meta via Google Tag Manager",
+      domain: "Meta Pixel",
       description:
         locale === "fr"
           ? "Mesure des conversions et des campagnes Meta."

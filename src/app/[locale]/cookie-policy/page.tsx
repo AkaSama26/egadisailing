@@ -582,7 +582,7 @@ export default async function CookiePolicyPage({
               {optionalSectionNumber}. Cookie opzionali solo dopo consenso
             </h2>
             <p className={paragraphClass}>
-              Google Tag Manager può essere presente in pagina con Consent Mode e storage negato e orchestrare GA4, Google Ads, Meta Pixel e Bing UET dal container.
+              Google Tag Manager può essere presente in pagina con Consent Mode e storage negato e orchestrare GA4, Google Ads e Bing UET. Meta Pixel può essere caricato direttamente dal sito.
               Cookie opzionali, storage e misurazione completa partono solo dopo il tuo consenso.
             </p>
             {hasOptionalServices ? (
@@ -612,7 +612,7 @@ export default async function CookiePolicyPage({
                 )}
                 {services.metaPixelId && (
                   <tr>
-                    <Td>Meta Pixel via Google Tag Manager</Td>
+                    <Td>Meta Pixel</Td>
                     <Td>
                       <code>_fbp</code>, <code>_fbc</code>
                     </Td>
@@ -635,7 +635,7 @@ export default async function CookiePolicyPage({
             ) : (
               <p className={paragraphClass}>
                 Al momento non sono configurati cookie analitici o marketing. Se verranno
-                attivati in futuro strumenti gestiti da Google Tag Manager, come Google Analytics 4, Google Ads, Meta
+                attivati in futuro strumenti come Google Analytics 4, Google Ads, Meta
                 Pixel o servizi Bing/Microsoft Advertising, compariranno nel pannello
                 preferenze e resteranno bloccati finché non avrai espresso consenso.
               </p>

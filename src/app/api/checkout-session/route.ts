@@ -25,6 +25,7 @@ import { routing } from "@/i18n/routing";
 import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 import { localizedPath } from "@/lib/i18n/paths";
 import { getExperiencePublicSlug } from "@/data/catalog/experiences";
+import { buildAnalyticsTransactionId } from "@/lib/analytics/transaction-id";
 
 export const runtime = "nodejs";
 
@@ -166,6 +167,7 @@ export const POST = withErrorHandler(async (req: Request) => {
       {
         data: {
           confirmationCode: booking.confirmationCode,
+          analyticsTransactionId: buildAnalyticsTransactionId(booking.bookingId),
           checkoutUrl: session.checkoutUrl,
           amountCents: booking.upfrontAmountCents,
           totalCents: booking.totalAmountCents,

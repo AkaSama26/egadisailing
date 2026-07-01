@@ -22,6 +22,7 @@ import { emailSchema, personNameSchema } from "@/lib/validation/common-zod";
 import { RL_WINDOW } from "@/lib/timing";
 import { passengerBreakdownSchema } from "@/lib/booking/passengers";
 import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
+import { buildAnalyticsTransactionId } from "@/lib/analytics/transaction-id";
 
 export const runtime = "nodejs";
 
@@ -201,6 +202,7 @@ export const POST = withErrorHandler(async (req: Request) => {
     {
       data: {
         confirmationCode: booking.confirmationCode,
+        analyticsTransactionId: buildAnalyticsTransactionId(booking.bookingId),
         clientSecret: pi.clientSecret,
         amountCents: booking.upfrontAmountCents,
         totalCents: booking.totalAmountCents,

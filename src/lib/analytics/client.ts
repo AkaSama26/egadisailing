@@ -36,6 +36,7 @@ declare global {
 }
 
 const SESSION_KEY_PREFIX = "egadi:analytics:event:";
+export const ANALYTICS_EVENT_BROWSER_EVENT = "egadi:analytics-event" as const;
 const REDACTED_VALUE = "[redacted]";
 const DATE_VALUE_KEYS = new Set([
   "selected_date",
@@ -161,6 +162,9 @@ export function pushDataLayerEvent(event: DataLayerEvent): boolean {
   if (typeof window === "undefined") return false;
   window.dataLayer = window.dataLayer ?? [];
   window.dataLayer.push(event);
+  if (typeof window.dispatchEvent === "function" && typeof CustomEvent === "function") {
+    window.dispatchEvent(new CustomEvent(ANALYTICS_EVENT_BROWSER_EVENT, { detail: event }));
+  }
   return true;
 }
 

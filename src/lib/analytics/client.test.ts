@@ -118,4 +118,36 @@ describe("analytics dataLayer client", () => {
     });
     expect(dispatchEvent).toHaveBeenCalledOnce();
   });
+
+  test("dispatches sanitized analytics events for first-party bridges", async () => {
+    const dataLayer: unknown[] = [];
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal("window", {
+      dataLayer,
+      dispatchEvent,
+      __egadiTrackingConsentState: {
+        analytics_storage: "granted",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+      },
+    });
+    vi.stubGlobal("CustomEvent", class CustomEvent<T = unknown> extends Event {
+      detail: T;
+
+      constructor(type: string, init?: CustomEventInit<T>) {
+        super(type);
+        this.detail = init?.detail as T;
+      }
+    });
+    const { ANALYTICS_EVENT_BROWSER_EVENT, trackEvent } = await import("./client");
+
+    expect(trackEvent("generate_lead", { email: "guest@example.com", method: "contact_form" })).toBe(true);
+    expect(dispatchEvent).toHaveBeenCalledOnce();
+    expect(dispatchEvent.mock.calls[0][0]).toMatchObject({
+      type: ANALYTICS_EVENT_BROWSER_EVENT,
+      detail: { event: "generate_lead", method: "contact_form" },
+    });
+  });
+
 });

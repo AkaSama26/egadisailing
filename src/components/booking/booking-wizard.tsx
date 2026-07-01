@@ -468,6 +468,7 @@ export function BookingWizard(props: Props) {
   });
   const [intent, setIntent] = useState<{
     confirmationCode: string;
+    analyticsTransactionId?: string;
     clientSecret: string;
     amountCents: number;
     totalCents: number;
@@ -829,6 +830,7 @@ export function BookingWizard(props: Props) {
       }
       setIntent({
         confirmationCode: payload.confirmationCode,
+        analyticsTransactionId: typeof payload.analyticsTransactionId === "string" ? payload.analyticsTransactionId : undefined,
         clientSecret: payload.clientSecret,
         amountCents: payload.amountCents,
         totalCents: payload.totalCents,
@@ -1123,18 +1125,35 @@ export function BookingWizard(props: Props) {
           balanceCents={intent.balanceCents}
           onSuccess={() => {
             clearDraft(props.serviceId);
+            const paidGuestCount = occupiedSeats(passengers);
+            const paymentAnalyticsParams = {
+              ...analyticsServiceParams,
+              currency: "EUR",
+              value: centsToAnalyticsValue(intent.amountCents),
+              total_value: centsToAnalyticsValue(intent.totalCents),
+              payment_schedule: selectedPaymentSchedule,
+              guest_count: paidGuestCount,
+            };
             trackEventOncePerSession(
               "payment-success:" + props.serviceId + ":" + intent.totalCents + ":" + intent.amountCents,
               "payment_success",
-              {
-                ...analyticsServiceParams,
-                currency: "EUR",
-                value: centsToAnalyticsValue(intent.amountCents),
-                total_value: centsToAnalyticsValue(intent.totalCents),
-                payment_schedule: selectedPaymentSchedule,
-                guest_count: occupiedSeats(passengers),
-              },
+              paymentAnalyticsParams,
             );
+            if (intent.analyticsTransactionId) {
+              trackEventOncePerSession("purchase:" + intent.analyticsTransactionId, "purchase", {
+                ...paymentAnalyticsParams,
+                transaction_id: intent.analyticsTransactionId,
+                items: [
+                  {
+                    item_id: props.serviceId,
+                    item_name: props.serviceName,
+                    item_category: props.serviceType,
+                    quantity: Math.max(1, paidGuestCount),
+                    price: centsToAnalyticsValue(intent.totalCents),
+                  },
+                ],
+              });
+            }
             setStep("success");
           }}
           onRetryNeeded={() => {
