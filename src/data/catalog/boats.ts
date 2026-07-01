@@ -1105,8 +1105,8 @@ export const BOAT_CATALOG = {
           en: "Barca Egadi Sailing is the Egadisailing boat for Egadi boat tours from Trapani, designed for guests who want to experience Favignana and Levanzo in a simple, dynamic and sea-focused way. It is an open boat: not a yacht with cabins, but a comfortable and fast boat for moving between coves, stopping often, swimming, snorkelling and enjoying the sea without complications.",
         },
         {
-          it: "È adatta sia ai tour privati da 4 ore, al mattino o al pomeriggio, sia ai tour da 8 ore condivisi o privati. Nei tour brevi la rotta si concentra sulle soste migliori raggiungibili con tempi comodi; nella giornata intera c'è più margine per muoversi tra Favignana e Levanzo, scegliere baie riparate, alternare navigazione e pause in acqua e vivere l'arcipelago con meno fretta.",
-          en: "It works for private 4-hour morning or afternoon tours and for 8-hour shared or private tours. Short tours focus on the best stops that fit comfortably into the schedule; full-day tours allow more time to move between Favignana and Levanzo, choose sheltered bays, alternate cruising and swim breaks and enjoy the archipelago without rushing.",
+          it: "È adatta sia ai tour privati da 4 ore al mattino, sia ai tour da 8 ore condivisi o privati. Nei tour brevi la rotta si concentra sulle soste migliori raggiungibili con tempi comodi; nella giornata intera c'è più margine per muoversi tra Favignana e Levanzo, scegliere baie riparate, alternare navigazione e pause in acqua e vivere l'arcipelago con meno fretta.",
+          en: "It works for private 4-hour morning tours and for 8-hour shared or private tours. Short tours focus on the best stops that fit comfortably into the schedule; full-day tours allow more time to move between Favignana and Levanzo, choose sheltered bays, alternate cruising and swim breaks and enjoy the archipelago without rushing.",
         },
         {
           it: "Per l'utente che non è esperto, la cosa importante è questa: a bordo ci sono skipper, sedute, spazio prendisole, accesso al mare e attrezzatura per vivere una giornata da tour Egadi senza dover decidere nulla di tecnico. La rotta viene adattata ogni giorno a vento, mare e affollamento delle cale, così il tour resta piacevole e sicuro.",
@@ -1172,8 +1172,8 @@ export const BOAT_CATALOG = {
     ],
     idealFor: [
       {
-        it: "Tour privati da 4 ore al mattino o al pomeriggio, ideali se vuoi una barca tutta per il tuo gruppo senza impegnare l'intera giornata.",
-        en: "Private 4-hour morning or afternoon tours, ideal if you want the boat for your group without taking up the whole day.",
+        it: "Tour privati da 4 ore al mattino, ideali se vuoi una barca tutta per il tuo gruppo senza impegnare l'intera giornata.",
+        en: "Private 4-hour morning tours, ideal if you want the boat for your group without taking up the whole day.",
       },
       {
         it: "Tour da 8 ore condivisi o privati, con più tempo per soste bagno, snorkeling e spostamenti tra Favignana e Levanzo.",
@@ -1199,7 +1199,6 @@ export const BOAT_CATALOG = {
       },
     ],
     serviceIds: [
-      "boat-exclusive-afternoon",
       "boat-shared-full-day",
       "boat-exclusive-full-day",
       "boat-exclusive-morning",
@@ -1271,8 +1270,8 @@ export const BOAT_CATALOG = {
           en: "What is the difference between the 4-hour and 8-hour tours?",
         },
         answer: {
-          it: "Il tour da 4 ore è più compatto e si concentra su poche soste scelte bene, ideale se vuoi un'uscita mattina o pomeriggio. Il tour da 8 ore dà più tempo per Favignana e Levanzo, snorkeling, bagni e pause senza correre.",
-          en: "The 4-hour tour is more compact and focuses on a few well-chosen stops, ideal for a morning or afternoon outing. The 8-hour tour gives more time for Favignana and Levanzo, snorkelling, swimming and slower breaks.",
+          it: "Il tour da 4 ore è più compatto e si concentra su poche soste scelte bene, ideale se vuoi un'uscita al mattino. Il tour da 8 ore dà più tempo per Favignana e Levanzo, snorkeling, bagni e pause senza correre.",
+          en: "The 4-hour tour is more compact and focuses on a few well-chosen stops, ideal for a morning outing. The 8-hour tour gives more time for Favignana and Levanzo, snorkelling, swimming and slower breaks.",
         },
       },
       {

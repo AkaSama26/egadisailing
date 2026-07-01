@@ -2245,7 +2245,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
   {
     key: "tour-barca-egadi-4-ore",
     order: 20,
-    serviceIds: ["boat-exclusive-morning", "boat-exclusive-afternoon"],
+    serviceIds: ["boat-exclusive-morning"],
     title: {
       it: "Tour privato alle Egadi 4 ore da Trapani",
       en: "Private 4-hour Egadi boat tour from Trapani",
@@ -2266,7 +2266,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     detailLabel: { it: "Barca in esclusiva", en: "Private boat" },
     priceUnitLabel: { it: "per barca", en: "per boat" },
     primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
-    primaryHref: "/experiences/boat-exclusive-afternoon",
+    primaryHref: "/experiences/boat-exclusive-morning",
     media: EXPERIENCE_HUB_4_HOUR_MEDIA,
     variants: [
       {
@@ -2277,15 +2277,6 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
         },
         serviceId: "boat-exclusive-morning",
         href: "/experiences/boat-exclusive-morning",
-      },
-      {
-        label: { it: "Privato pomeriggio", en: "Private afternoon" },
-        description: {
-          it: "Barca riservata al tuo gruppo.",
-          en: "Boat reserved for your group.",
-        },
-        serviceId: "boat-exclusive-afternoon",
-        href: "/experiences/boat-exclusive-afternoon",
       },
     ],
   },
@@ -3445,7 +3436,7 @@ function applyLocalizedPackageOverride(
   const primaryServiceByPackage: Record<string, string> = {
     "esperienza-gourmet-trimarano": "exclusive-experience",
     "charter-egadi": "cabin-charter",
-    "tour-barca-egadi-4-ore": "boat-exclusive-afternoon",
+    "tour-barca-egadi-4-ore": "boat-exclusive-morning",
     "tour-barca-egadi-8-ore": "boat-shared-full-day",
     "charter-pesca-egadi": "fishing-full-day",
   };
@@ -3474,26 +3465,6 @@ function applyLocalizedPackageOverride(
             : locale === "de"
               ? "Boot am Vormittag reserviert, Rückkehr gegen 13:00 Uhr."
               : "Barco reservado por la mañana, con regreso alrededor de las 13:00.",
-      };
-    }
-    if (variant.serviceId === "boat-exclusive-afternoon") {
-      if (locale !== "es" && locale !== "fr" && locale !== "de") {
-        return localizedVariant;
-      }
-      return {
-        ...localizedVariant,
-        label:
-          locale === "fr"
-            ? "Privé l'après-midi"
-            : locale === "de"
-              ? "Privat am Nachmittag"
-              : "Privado por la tarde",
-        description:
-          locale === "fr"
-            ? "Bateau réservé pour votre groupe."
-            : locale === "de"
-              ? "Boot exklusiv für Ihre Gruppe."
-              : "Barco reservado para tu grupo.",
       };
     }
     if (variant.serviceId === "boat-shared-full-day") {

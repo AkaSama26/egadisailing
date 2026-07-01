@@ -44,7 +44,7 @@ const BOAT_SERVICE_TYPES = new Set(["BOAT_SHARED", "BOAT_EXCLUSIVE"]);
 
 const CHOICE_RECOMMENDATION_SERVICE_IDS = {
   shared8: "boat-shared-full-day",
-  private4: "boat-exclusive-afternoon",
+  private4: "boat-exclusive-morning",
   private8: "boat-exclusive-full-day",
   gourmet: "exclusive-experience",
   charter: "cabin-charter",

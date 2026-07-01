@@ -17,6 +17,8 @@ import { buildPageMetadata } from "@/lib/seo/metadata";
 import { getPriceUnitLabel, getServiceDurationLabel } from "@/lib/services/display";
 import { getPublicTurnstileSiteKey } from "@/lib/turnstile/public";
 
+const HIDDEN_BOOKING_SERVICE_IDS = new Set(["boat-exclusive-afternoon"]);
+
 function experienceKeyForOption(service: BookingServiceOption): string {
   if (service.serviceType === "BOAT_SHARED") return `${service.boatId}:BOAT_SHARED`;
   if (service.serviceType === "BOAT_EXCLUSIVE") return `${service.boatId}:BOAT_EXCLUSIVE`;
@@ -102,9 +104,10 @@ export default async function BookingIndexPage({
       },
     },
   });
-  const displayPrices = await getDisplayPriceMap(services.map((service) => service.id), 2026, locale);
+  const bookableServices = services.filter((service) => !HIDDEN_BOOKING_SERVICE_IDS.has(service.id));
+  const displayPrices = await getDisplayPriceMap(bookableServices.map((service) => service.id), 2026, locale);
 
-  const options: BookingServiceOption[] = services
+  const options: BookingServiceOption[] = bookableServices
     .sort((a, b) => compareExperienceOrder(a.id, b.id))
     .map((service) => {
       const content = getExperienceContent(service.id, locale);

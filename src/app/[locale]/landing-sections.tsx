@@ -777,7 +777,7 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
     },
     {
       key: "barca-4-ore",
-      serviceIds: ["boat-exclusive-morning", "boat-exclusive-afternoon"],
+      serviceIds: ["boat-exclusive-morning"],
       eyebrow: isEs ? "Media jornada" : isFr ? "Demi-journée" : isDe ? "Halbtagesausflug" : isEn ? "Half-day" : "Mezza giornata",
       title: isEs
         ? "Excursión en barco 4 horas a las Islas Egadi"
@@ -798,20 +798,20 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
           : isEn
           ? "The agile private formula for experiencing the Egadi Islands in half a day, with swimming, scenic cruising and a route chosen according to the sea."
           : "La formula agile in esclusiva per vivere le Egadi in mezza giornata, con bagno, navigazione panoramica e rotta scelta in base al mare.",
-      priceLabel: priceLabelFor(["boat-exclusive-morning", "boat-exclusive-afternoon"]),
+      priceLabel: priceLabelFor(["boat-exclusive-morning"]),
       durationLabel: isEs ? "4 horas" : isFr ? "4 heures" : isDe ? "4 Stunden" : isEn ? "4 hours" : "4 ore",
       detailLabel: isEs ? "Solo privado" : isFr ? "Privé uniquement" : isDe ? "Nur privat" : isEn ? "Private only" : "Solo esclusivo",
-      capacityLabel: capacityLabelFor(["boat-exclusive-morning", "boat-exclusive-afternoon"], isEs ? "huéspedes" : isFr ? "invités" : isDe ? "Gäste" : isEn ? "guests" : "persone"),
+      capacityLabel: capacityLabelFor(["boat-exclusive-morning"], isEs ? "huéspedes" : isFr ? "invités" : isDe ? "Gäste" : isEn ? "guests" : "persone"),
       formulaLabel: isEs ? "Tour privado 4 horas" : isFr ? "Tour privé 4 heures" : isDe ? "Private 4-Stunden-Tour" : isEn ? "Private 4-hour tour" : "Tour privato 4 ore",
       scheduleLabel: isEs
-        ? "Salida de mañana o tarde, 4 horas con regreso claro."
+        ? "Salida de mañana, 4 horas con regreso claro."
         : isFr
-        ? "Départ matin ou après-midi, 4 heures avec retour clair."
+        ? "Départ le matin, 4 heures avec retour clair."
         : isDe
-        ? "Abfahrt morgens oder nachmittags, 4 Stunden mit klarer Rückkehrzeit."
+        ? "Abfahrt am Vormittag, 4 Stunden mit klarer Rückkehrzeit."
         : isEn
-        ? "Morning or afternoon departure, 4 hours with a clear return time."
-        : "Mattina o pomeriggio, 4 ore con rientro preciso.",
+        ? "Morning departure, 4 hours with a clear return time."
+        : "Mattina, 4 ore con rientro preciso.",
       details: [
         {
           title: idealForTitle,
@@ -850,7 +850,7 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
 	            : "Favignana, scegliendo la cala migliore raggiungibile in sicurezza in 4 ore.",
 	        },
       ],
-      href: localizedExperiencePath(locale, "boat-exclusive-afternoon"),
+      href: localizedExperiencePath(locale, "boat-exclusive-morning"),
       ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
       polaroids: [
         {

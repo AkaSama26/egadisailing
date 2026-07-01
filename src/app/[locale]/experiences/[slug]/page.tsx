@@ -210,9 +210,9 @@ function experienceDetailSchemaTopics(locale: string, service: { id?: string; ty
 }
 
 const RELATED_EXPERIENCE_IDS_BY_SERVICE: Record<string, string[]> = {
-  "boat-shared-full-day": ["boat-exclusive-full-day", "boat-exclusive-afternoon", "cabin-charter"],
-  "boat-exclusive-full-day": ["boat-shared-full-day", "boat-exclusive-afternoon", "exclusive-experience"],
-  "boat-exclusive-morning": ["boat-exclusive-afternoon", "boat-exclusive-full-day", "boat-shared-full-day"],
+  "boat-shared-full-day": ["boat-exclusive-full-day", "boat-exclusive-morning", "cabin-charter"],
+  "boat-exclusive-full-day": ["boat-shared-full-day", "boat-exclusive-morning", "exclusive-experience"],
+  "boat-exclusive-morning": ["boat-exclusive-full-day", "boat-shared-full-day", "exclusive-experience"],
   "boat-exclusive-afternoon": ["boat-exclusive-morning", "boat-exclusive-full-day", "boat-shared-full-day"],
   "cabin-charter": ["exclusive-experience", "boat-exclusive-full-day", "fishing-full-day"],
   "exclusive-experience": ["cabin-charter", "boat-exclusive-full-day", "boat-shared-full-day"],

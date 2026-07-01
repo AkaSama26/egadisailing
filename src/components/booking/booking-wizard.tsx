@@ -7,12 +7,10 @@ import { getCountries, getCountryCallingCode, type CountryCode } from "libphonen
 import { StripePaymentForm } from "./stripe-payment-form";
 import { CountryFlag, type FlagCode } from "@/components/country-flag";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
-import { CustomerWeatherCard } from "@/components/weather/customer-weather-card";
 import { centsToAnalyticsValue, trackEvent, trackEventOncePerSession } from "@/lib/analytics/client";
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
-import type { PublicWeatherSummary } from "@/lib/weather/public-format";
 import {
   DEFAULT_PASSENGER_FARE_CATEGORIES,
   estimatePaidUnitEquivalent,
@@ -240,6 +238,7 @@ interface Props {
   initialEndDate?: string;
   initialDurationDays?: number;
   fixedDurationDays?: number;
+  onBackToSelection?: () => void;
 }
 
 interface Customer {
@@ -511,6 +510,9 @@ export function BookingWizard(props: Props) {
     !isCharter ||
     (Boolean(fixedDurationDays) && Boolean(startDate)) ||
     (charterDurationDays !== null && charterDurationDays >= 3 && charterDurationDays <= 7);
+  const isPeopleStep = step === "people";
+  const isCustomerStep = step === "customer";
+  const showWizardHeader = step !== "date" && !isPeopleStep && !isCustomerStep;
 
   const analyticsServiceParams = useMemo(
     () => ({
@@ -531,6 +533,35 @@ export function BookingWizard(props: Props) {
       step_number: checkoutStepNumber(completedStep),
       ...extra,
     });
+  }
+
+  const showWizardBack = step !== "success" && (step !== "date" || Boolean(props.onBackToSelection));
+
+  function goBackWithinWizard() {
+    if (loading) return;
+    setError(null);
+    if (step === "date") {
+      props.onBackToSelection?.();
+      return;
+    }
+    if (step === "people") {
+      setStep("date");
+      return;
+    }
+    if (step === "customer") {
+      setStep("people");
+      return;
+    }
+    if (step === "review") {
+      setStep("customer");
+      return;
+    }
+    if (step === "payment") {
+      setIntent(null);
+      setTurnstileToken(null);
+      setTurnstileResetKey((key) => key + 1);
+      setStep("review");
+    }
   }
 
   // R26-A1-C1 + R26-P2-CRITICA: restore in useEffect client-side per evitare
@@ -886,25 +917,48 @@ export function BookingWizard(props: Props) {
   }
 
   return (
-    <div className="max-w-full overflow-hidden rounded-lg border border-white/20 bg-white shadow-2xl shadow-black/20">
-      <div className="border-b border-white/10 bg-[linear-gradient(135deg,#071934_0%,#0c3d5e_100%)] px-5 py-6 text-white sm:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-100">
-          {copy.directCheckout}
-        </p>
-        <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h3 className="font-heading text-2xl font-bold text-white md:text-3xl">
-              {props.serviceName}
-            </h3>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/72">
-              {copy.headerSubtitle}
-            </p>
+    <div
+      className={cnStep(
+        "flex max-w-full flex-col overflow-hidden rounded-lg border border-white/20 bg-white shadow-2xl shadow-black/20",
+        isPeopleStep || isCustomerStep ? "h-fit max-h-full" : "h-full",
+      )}
+    >
+      {showWizardHeader && (
+        <div className="shrink-0 border-b border-white/10 bg-[linear-gradient(135deg,#071934_0%,#0c3d5e_100%)] px-4 py-3 text-white sm:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              {showWizardBack && (
+                <button
+                  type="button"
+                  onClick={goBackWithinWizard}
+                  disabled={loading}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/18 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ArrowLeft className="size-3.5" aria-hidden="true" />
+                  <span>{copy.back}</span>
+                </button>
+              )}
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-100 sm:text-xs">
+                  {copy.directCheckout}
+                </p>
+                <h3 className="mt-1 truncate font-heading text-lg font-bold text-white sm:text-2xl">
+                  {props.serviceName}
+                </h3>
+              </div>
+            </div>
+            <StepIndicator step={step} locale={props.locale} />
           </div>
-          <StepIndicator step={step} locale={props.locale} />
         </div>
-      </div>
+      )}
 
-      <div className="p-4 sm:p-8">
+      <div
+        className={cnStep(
+          "min-h-0 overflow-y-auto",
+          !isPeopleStep && !isCustomerStep && "flex-1",
+          showWizardHeader ? "p-3 sm:p-5" : "p-2 sm:p-3",
+        )}
+      >
       {error && (
         <div
           role="alert"
@@ -960,6 +1014,8 @@ export function BookingWizard(props: Props) {
               });
               setStep("people");
             }}
+            onBack={props.onBackToSelection ? goBackWithinWizard : undefined}
+            backLabel={copy.back}
             canContinue={Boolean(startDate) && canContinueFromDate}
             selectedPrice={selectedPrice}
             onPriceChange={setSelectedPrice}
@@ -972,10 +1028,8 @@ export function BookingWizard(props: Props) {
           <PeopleStep
             locale={props.locale}
             capacityMax={props.capacityMax}
-            serviceType={props.serviceType}
             value={passengers}
             passengerCategories={passengerCategories}
-            selectedPrice={selectedPrice}
             onChange={(nextPassengers) => {
               setPassengers(nextPassengers);
               trackEvent("guest_count_selected", {
@@ -985,19 +1039,10 @@ export function BookingWizard(props: Props) {
                 total_guests: totalGuestCountFromBreakdown(nextPassengers),
               });
             }}
-            onBack={() => setStep("date")}
+            onBack={goBackWithinWizard}
             onNext={() => void handleContinueFromPax()}
             checking={overrideCheck.status === "checking"}
           />
-          {overrideCheck.status === "checking" && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="pt-3 text-sm text-gray-600"
-            >
-              {copy.checkingAvailability}
-            </div>
-          )}
           {overrideCheck.status === "blocked" && (
             <div
               role="alert"
@@ -1010,14 +1055,14 @@ export function BookingWizard(props: Props) {
       )}
 
       {step === "customer" && (
-        <CustomerStep
-          locale={props.locale}
-          value={customer}
-          onChange={setCustomer}
-          onBack={() => setStep("people")}
-          onNext={() => {
-            trackBookingStepComplete("customer");
-            setStep("review");
+          <CustomerStep
+            locale={props.locale}
+            value={customer}
+            onChange={setCustomer}
+            onBack={goBackWithinWizard}
+            onNext={() => {
+              trackBookingStepComplete("customer");
+              setStep("review");
           }}
           loading={loading}
           turnstileSiteKey={props.turnstileSiteKey}
@@ -1062,7 +1107,6 @@ export function BookingWizard(props: Props) {
             if (submit) void createIntent(schedule);
           }}
           loading={loading}
-          onBack={() => setStep("customer")}
           onConfirm={() => void createIntent()}
         />
       )}
@@ -1190,6 +1234,7 @@ function getWizardCopy(locale: string) {
   if (locale === "fr") {
     return {
       directCheckout: "Checkout direct",
+      back: "Retour",
       headerSubtitle: "Date, invités, coordonnées client et paiement en ligne.",
       acceptPolicies: "Acceptez la Politique de confidentialité et les Conditions générales pour continuer",
       completeCaptcha: "Complétez la vérification CAPTCHA avant de continuer",
@@ -1220,6 +1265,7 @@ function getWizardCopy(locale: string) {
   if (locale === "es") {
     return {
       directCheckout: "Checkout directo",
+      back: "Atrás",
       headerSubtitle: "Fecha, huéspedes, datos del cliente y pago online.",
       acceptPolicies: "Acepta la Política de privacidad y los Términos y condiciones para continuar",
       completeCaptcha: "Completa la verificación CAPTCHA antes de continuar",
@@ -1250,6 +1296,7 @@ function getWizardCopy(locale: string) {
   if (locale === "de") {
     return {
       directCheckout: "Direkter Checkout",
+      back: "Zurück",
       headerSubtitle: "Datum, Gäste, Kundendaten und Online-Zahlung.",
       acceptPolicies: "Akzeptieren Sie die Datenschutzerklärung und die AGB, um fortzufahren",
       completeCaptcha: "Schließen Sie die CAPTCHA-Prüfung ab, bevor Sie fortfahren",
@@ -1280,6 +1327,7 @@ function getWizardCopy(locale: string) {
   if (locale === "en") {
     return {
       directCheckout: "Direct checkout",
+      back: "Back",
       headerSubtitle: "Date, guests, customer details and online payment.",
       acceptPolicies: "Accept the Privacy Policy and Terms & Conditions to continue",
       completeCaptcha: "Complete CAPTCHA verification before continuing",
@@ -1309,6 +1357,7 @@ function getWizardCopy(locale: string) {
 
   return {
     directCheckout: "Checkout diretto",
+    back: "Indietro",
     headerSubtitle: "Data, ospiti, dati cliente e pagamento online.",
     acceptPolicies: "Accetta Privacy Policy e Termini & Condizioni per continuare",
     completeCaptcha: "Completa la verifica CAPTCHA prima di continuare",
@@ -1949,12 +1998,6 @@ interface CalendarApiDay {
   reasonLabel: string | null;
 }
 
-interface WeatherApiResponse {
-  data?: {
-    weather?: PublicWeatherSummary | null;
-  };
-}
-
 function calendarDayAriaLabel(
   date: string,
   day?: CalendarApiDay,
@@ -2065,6 +2108,8 @@ function DateStep({
   onChange,
   onEndChange,
   onNext,
+  onBack,
+  backLabel,
   canContinue,
   selectedPrice,
   onPriceChange,
@@ -2078,6 +2123,8 @@ function DateStep({
   onChange: (v: string) => void;
   onEndChange: (v: string) => void;
   onNext: () => void;
+  onBack?: () => void;
+  backLabel: string;
   canContinue: boolean;
   selectedPrice: SelectedPrice | null;
   onPriceChange: (price: SelectedPrice | null) => void;
@@ -2089,9 +2136,6 @@ function DateStep({
   const [calendarDays, setCalendarDays] = useState<Record<string, CalendarApiDay>>({});
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
-  const [weatherSummary, setWeatherSummary] = useState<PublicWeatherSummary | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherError, setWeatherError] = useState(false);
   const [rangeQuoteDay, setRangeQuoteDay] = useState<CalendarApiDay | null>(null);
   const [rangeQuoteLoading, setRangeQuoteLoading] = useState(false);
   const charterDurationDays = isCharter ? inclusiveDaysBetween(value, endValue) : null;
@@ -2294,91 +2338,36 @@ function DateStep({
     value,
   ]);
 
-  useEffect(() => {
-    if (!value) {
-      queueMicrotask(() => {
-        setWeatherSummary(null);
-        setWeatherLoading(false);
-        setWeatherError(false);
-      });
-      return;
-    }
-
-    const controller = new AbortController();
-    const params = new URLSearchParams({ date: value, locale });
-    queueMicrotask(() => {
-      if (!controller.signal.aborted) {
-        setWeatherLoading(true);
-        setWeatherError(false);
-      }
-    });
-
-    fetch(`/api/weather?${params.toString()}`, {
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("weather lookup failed");
-        const body = (await res.json()) as WeatherApiResponse;
-        setWeatherSummary(body.data?.weather ?? null);
-      })
-      .catch((err) => {
-        if ((err as Error).name !== "AbortError") {
-          setWeatherSummary(null);
-          setWeatherError(true);
-        }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setWeatherLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [locale, value]);
-
   const displayedEndDate = fixedEndDate || endValue;
-  const weatherTitle =
-    locale === "es"
-      ? "Meteo estimada"
-      : locale === "fr"
-        ? "Météo estimée"
-        : locale === "de"
-          ? "Geschätztes Wetter"
-        : locale === "en"
-          ? "Estimated weather"
-          : "Meteo stimato";
-  const weatherLoadingLabel =
-    locale === "es"
-      ? "Cargando previsión meteorológica..."
-      : locale === "fr"
-        ? "Chargement des prévisions météo..."
-        : locale === "en"
-          ? "Loading weather forecast..."
-          : "Carico previsione meteo...";
-  const weatherUnavailableLabel =
-    locale === "es"
-      ? "La previsión meteorológica no está disponible ahora."
-      : locale === "fr"
-        ? "Les prévisions météo ne sont pas disponibles pour le moment."
-        : locale === "en"
-          ? "Weather forecast is not available right now."
-          : "Previsione meteo non disponibile in questo momento.";
 
   return (
     <form
-      className="space-y-5"
+      className="flex min-h-0 flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
         if (canSubmit) onNext();
       }}
     >
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(20rem,0.95fr)] lg:items-start">
-        <div className="space-y-4">
-          <h2 className="font-heading text-2xl font-bold leading-tight text-slate-950 md:text-3xl">
-            {copy.title}
-          </h2>
-          <fieldset className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+      <h2 className="sr-only">{copy.title}</h2>
+
+      {onBack && (
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+          >
+            <ArrowLeft className="size-3.5" aria-hidden="true" />
+            {backLabel}
+          </button>
+        </div>
+      )}
+
+      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.75fr)] lg:items-start">
+        <div className="min-h-0">
+          <fieldset className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
             <legend className="sr-only">{copy.calendarLegend}</legend>
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setVisibleMonth((month) => shiftMonth(month, -1))}
@@ -2475,7 +2464,7 @@ function DateStep({
                 );
               })}
             </div>
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
+            <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold text-slate-600 sm:text-[11px]">
               <span className="inline-flex items-center gap-1">
                 <span className="size-2 rounded-full bg-emerald-500" aria-hidden="true" />
                 {copy.available}
@@ -2497,14 +2486,14 @@ function DateStep({
           </fieldset>
         </div>
 
-        <aside className="rounded-lg border border-slate-200 bg-slate-50 p-4 shadow-sm lg:sticky lg:top-24">
+        <aside className="rounded-lg border border-slate-200 bg-slate-50 p-3 shadow-sm lg:sticky lg:top-24">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-sky-700">
             {isCharter ? copy.charterSummaryTitle : copy.summaryTitle}
           </p>
 
           {isCharter ? (
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <div className="rounded-lg border border-white bg-white px-3 py-3">
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="rounded-lg border border-white bg-white px-3 py-2">
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
                   {copy.start}
                 </p>
@@ -2512,7 +2501,7 @@ function DateStep({
                   {value ? formatIsoDateLabel(value, locale) : copy.selectStartDate}
                 </p>
               </div>
-              <div className="rounded-lg border border-white bg-white px-3 py-3">
+              <div className="rounded-lg border border-white bg-white px-3 py-2">
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
                   {copy.end}
                 </p>
@@ -2523,9 +2512,9 @@ function DateStep({
             </div>
           ) : null}
 
-          <dl className="mt-5 grid gap-3">
+          <dl className="mt-3 grid gap-2">
             {!isCharter && (
-              <div className="rounded-lg border border-white bg-white px-3 py-3">
+              <div className="rounded-lg border border-white bg-white px-3 py-2">
                 <dt className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
                   {copy.selectedDate}
                 </dt>
@@ -2534,7 +2523,7 @@ function DateStep({
                 </dd>
               </div>
             )}
-            <div className="rounded-lg border border-white bg-white px-3 py-3">
+            <div className="rounded-lg border border-white bg-white px-3 py-2">
               <dt className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
                 {copy.estimatedPrice}
               </dt>
@@ -2549,12 +2538,12 @@ function DateStep({
           </dl>
 
           {charterIsTooShort && (
-            <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
               {copy.charterTooShort}
             </p>
           )}
           {charterIsTooLong && (
-            <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 px-3 py-3 text-sm text-sky-900">
+            <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 px-3 py-3 text-sm text-sky-900">
               <p className="font-semibold leading-5">{copy.charterTooLong}</p>
               <a
                 href={contactHref}
@@ -2565,7 +2554,7 @@ function DateStep({
             </div>
           )}
           {selectedUnavailable && (
-            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-800">
+            <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-800">
               <p className="font-black">{copy.rangeUnavailable}</p>
               <p className="mt-1 leading-5">{copy.unavailableHelp}</p>
               <a
@@ -2577,30 +2566,10 @@ function DateStep({
             </div>
           )}
 
-          {value && (
-            <div className="mt-4">
-              {weatherLoading ? (
-                <div className="rounded-lg border border-sky-100 bg-sky-50/80 p-3 text-sm text-sky-900">
-                  {weatherLoadingLabel}
-                </div>
-              ) : weatherSummary ? (
-                <CustomerWeatherCard
-                  summary={weatherSummary}
-                  locale={locale}
-                  title={weatherTitle}
-                />
-              ) : weatherError ? (
-                <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
-                  {weatherUnavailableLabel}
-                </p>
-              ) : null}
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={!canSubmit}
-            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] px-5 py-4 text-base font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] px-5 py-3 text-base font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {copy.next}
             <ChevronRight className="size-4" aria-hidden="true" />
@@ -2614,10 +2583,8 @@ function DateStep({
 function PeopleStep({
   locale,
   capacityMax,
-  serviceType,
   value,
   passengerCategories,
-  selectedPrice,
   onChange,
   onBack,
   onNext,
@@ -2625,10 +2592,8 @@ function PeopleStep({
 }: {
   locale: string;
   capacityMax: number;
-  serviceType: string;
   value: PassengerBreakdown;
   passengerCategories: PassengerFareCategoryConfig[];
-  selectedPrice: SelectedPrice | null;
   onChange: (n: PassengerBreakdown) => void;
   onBack?: () => void;
   onNext: () => void;
@@ -2636,16 +2601,8 @@ function PeopleStep({
 }) {
   const copy = getPeopleStepCopy(locale);
   const seats = occupiedSeats(value);
-  const paidUnits = paidUnitsForClient(serviceType, value, selectedPrice);
-  const totalGuests = totalGuestCountFromBreakdown(value);
   const capacityExceeded = seats > capacityMax;
   const canSubmit = !checking && !capacityExceeded && seats >= 1;
-  const estimatedTotal =
-    selectedPrice && selectedPrice.pricingUnit === "PER_PACKAGE"
-      ? selectedPrice.amount
-      : selectedPrice
-        ? selectedPrice.amount * paidUnits
-        : null;
   const update = (key: keyof PassengerBreakdown, nextValue: number) => {
     onChange({
       ...value,
@@ -2655,14 +2612,27 @@ function PeopleStep({
 
   return (
     <form
-      className="space-y-5"
+      className="flex min-h-0 flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
         if (canSubmit) onNext();
       }}
     >
-      <h2 className="font-heading text-3xl font-bold text-slate-950 md:text-4xl">{copy.title}</h2>
-      <div className="grid min-w-0 gap-4 sm:grid-cols-3">
+      {onBack && (
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={checking}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ArrowLeft className="size-3.5" aria-hidden="true" />
+            {copy.back}
+          </button>
+        </div>
+      )}
+
+      <div className="grid min-w-0 gap-2 sm:grid-cols-3">
         {passengerCategories.map((rule) => {
           const field = PASSENGER_CATEGORY_FIELD[rule.category];
           return (
@@ -2687,55 +2657,16 @@ function PeopleStep({
           );
         })}
       </div>
-      <div
-        className={cnStep(
-          "grid grid-cols-2 gap-3 rounded-lg border p-4 text-sm sm:grid-cols-3",
-          capacityExceeded ? "border-red-200 bg-red-50 text-red-800" : "border-slate-200 bg-slate-50 text-slate-700",
-        )}
-      >
-        <div>
-          <div className="text-xs font-semibold uppercase text-slate-500">{copy.seatsUsed}</div>
-          <div className="font-bold tabular-nums">{seats} / {capacityMax}</div>
-        </div>
-        <div>
-          <div className="text-xs font-semibold uppercase text-slate-500">{copy.paidUnits}</div>
-          <div className="font-bold tabular-nums">
-            {paidUnits.toLocaleString(clientIntlLocale(locale))}
-          </div>
-        </div>
-        <div className="col-span-2 sm:col-span-1">
-          <div className="text-xs font-semibold uppercase text-slate-500">{copy.estimatedTotal}</div>
-          <div className="font-bold tabular-nums">
-            {estimatedTotal != null ? formatClientEurWithVat(estimatedTotal, locale) : copy.loading}
-          </div>
-        </div>
-      </div>
-      {totalGuests > 0 && (
-        <p id="wizard-people-hint" className="text-sm text-gray-600">
-          {copy.totalGuests}: {totalGuests}.
-        </p>
-      )}
       {capacityExceeded && (
         <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
           {copy.capacityExceeded}
         </p>
       )}
-      <div className="flex flex-col gap-3 sm:flex-row">
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            disabled={checking}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-4 font-semibold disabled:opacity-50"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            {copy.back}
-          </button>
-        )}
+      <div className="flex flex-col gap-3">
         <button
           type="submit"
           disabled={!canSubmit}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-4 font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
         >
           {checking ? copy.checking : copy.next}
           {!checking && <ChevronRight className="size-4" aria-hidden="true" />}
@@ -2767,9 +2698,9 @@ function PassengerCounter({
   incrementText?: string;
 }) {
   return (
-    <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-100">
-      <div className="mb-4 flex min-w-0 items-center gap-3">
-        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-800">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition focus-within:border-sky-300 focus-within:ring-2 focus-within:ring-sky-100">
+      <div className="mb-3 flex min-w-0 items-center gap-2">
+        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-800">
           {icon}
         </span>
         <div className="min-w-0">
@@ -2784,7 +2715,7 @@ function PassengerCounter({
           type="button"
           onClick={() => onChange(value - 1)}
           disabled={value <= min}
-          className="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xl font-bold disabled:opacity-40"
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xl font-bold disabled:opacity-40"
           aria-label={`${decrementText} ${label}`}
         >
           -
@@ -2799,12 +2730,12 @@ function PassengerCounter({
             const digits = event.target.value.replace(/\D/g, "");
             onChange(digits ? Number.parseInt(digits, 10) : 0);
           }}
-          className="h-12 w-0 min-w-0 flex-1 rounded-md border border-slate-300 text-center text-lg font-bold tabular-nums"
+          className="h-10 w-0 min-w-0 flex-1 rounded-md border border-slate-300 text-center text-lg font-bold tabular-nums"
         />
         <button
           type="button"
           onClick={() => onChange(value + 1)}
-          className="inline-flex size-12 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xl font-bold"
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-300 text-xl font-bold"
           aria-label={`${incrementText} ${label}`}
         >
           +
@@ -2850,7 +2781,7 @@ function ReviewStep({
   depositPercentage: number;
   onPaymentScheduleChange: (schedule: CheckoutPaymentSchedule, submit?: boolean) => void;
   loading: boolean;
-  onBack: () => void;
+  onBack?: () => void;
   onConfirm: () => void;
 }) {
   const copy = getReviewStepCopy(locale);
@@ -2895,7 +2826,7 @@ function ReviewStep({
 
   return (
     <form
-      className="space-y-5"
+      className="space-y-3"
       onSubmit={(event) => {
         event.preventDefault();
         if (payment && !loading) onConfirm();
@@ -2905,17 +2836,17 @@ function ReviewStep({
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700">
           {copy.eyebrow}
         </p>
-        <h2 className="mt-1 font-heading text-3xl font-bold text-slate-950 md:text-4xl">{copy.title}</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <h2 className="mt-1 font-heading text-2xl font-bold text-slate-950 sm:text-3xl">{copy.title}</h2>
+        <p className="mt-1 text-sm leading-5 text-slate-600">
           {copy.subtitle}
         </p>
       </div>
 
-      <fieldset className="rounded-lg border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <fieldset className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4">
         <legend className="text-sm font-bold uppercase tracking-[0.12em] text-slate-500">
           {copy.paymentQuestion}
         </legend>
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <div className="mt-2 grid gap-2 md:grid-cols-2">
           <PaymentChoiceCard
             checked={paymentSchedule === "DEPOSIT_BALANCE"}
             title={
@@ -2963,8 +2894,8 @@ function ReviewStep({
         )}
       </fieldset>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+        <div className="flex flex-col gap-2 border-b border-slate-200 pb-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-sky-700">
               {copy.summary}
@@ -2978,14 +2909,14 @@ function ReviewStep({
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-5 gap-y-4 border-b border-slate-200 py-4 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-slate-200 py-3 sm:grid-cols-3">
           <SummaryMetric label={copy.date} value={dateLabel} />
           <SummaryMetric label={copy.duration} value={durationLabel} />
           <SummaryMetric label={copy.guestsLabel} value={guestLabel} />
         </div>
 
         {(showGuestBreakdown || guestAccountingDetails.length > 0) && (
-          <div className="border-b border-slate-200 py-3">
+          <div className="border-b border-slate-200 py-2">
             {showGuestBreakdown && (
               <div className="flex flex-wrap gap-2">
                 {passengerCategories.map((rule) => {
@@ -3008,7 +2939,7 @@ function ReviewStep({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-x-5 gap-y-4 border-b border-slate-200 py-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-slate-200 py-3">
           <SummaryMetric label={copy.customer} value={customerName} />
           <SummaryMetric label={copy.phone} value={customer.phone} />
           <div className="col-span-2">
@@ -3016,12 +2947,12 @@ function ReviewStep({
           </div>
         </div>
 
-        <div className="pt-4">
+        <div className="pt-3">
           <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
             {copy.payment}
           </h4>
           {payment ? (
-            <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3">
+            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
               <SummaryMetric
                 label={copy.total}
                 value={appendClientVatIncluded(formatClientCents(payment.totalCents, locale), locale)}
@@ -3061,19 +2992,21 @@ function ReviewStep({
       </p>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={loading}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-4 text-center font-semibold disabled:opacity-50"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          {copy.editDetails}
-        </button>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={loading}
+            className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-3 text-center font-semibold disabled:opacity-50"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            {copy.editDetails}
+          </button>
+        )}
         <button
           type="submit"
           disabled={!payment || loading}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-4 text-center font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 text-center font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
         >
           {loading ? copy.creatingPayment : copy.confirmAndPay}
           {!loading && <CreditCard className="size-4" aria-hidden="true" />}
@@ -3423,7 +3356,7 @@ function PhoneNumberField({
           autoComplete="tel-national"
           inputMode="tel"
           placeholder={locale === "es" ? "612 345 678" : locale === "fr" ? "6 12 34 56 78" : locale === "de" ? "1512 3456789" : locale === "en" ? "7123 456789" : "333 123 4567"}
-          className="min-w-0 px-4 py-4 text-base outline-none"
+          className="min-w-0 px-4 py-3 text-base outline-none"
           value={nationalNumber}
           onChange={(event) => handleNumberChange(event.target.value)}
         />
@@ -3451,7 +3384,7 @@ function CustomerStep({
   locale: string;
   value: Customer;
   onChange: (v: Customer) => void;
-  onBack: () => void;
+  onBack?: () => void;
   onNext: () => void;
   loading: boolean;
   turnstileSiteKey: string;
@@ -3472,13 +3405,26 @@ function CustomerStep({
   );
   return (
     <form
-      className="space-y-5"
+      className="flex min-h-0 flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
         if (valid && !loading && consentPrivacy && consentTerms) onNext();
       }}
     >
-      <h2 className="font-heading text-3xl font-bold text-slate-950 md:text-4xl">{copy.title}</h2>
+      <h2 className="sr-only">{copy.title}</h2>
+      {onBack && (
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={loading}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ArrowLeft className="size-3.5" aria-hidden="true" />
+            {copy.back}
+          </button>
+        </div>
+      )}
       {/* R19 WCAG 3.3.2 label visibility: placeholder-as-label era
            non-conforme (scompare al focus, screen reader incerto su quale
            campo). Ora label esplicita + aria-required. EAA 2025 blocker
@@ -3494,7 +3440,7 @@ function CustomerStep({
           required
           aria-required="true"
           autoComplete="email"
-          className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-4 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+          className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
           value={value.email}
           onChange={(e) => onChange({ ...value, email: e.target.value })}
         />
@@ -3510,7 +3456,7 @@ function CustomerStep({
             required
             aria-required="true"
             autoComplete="given-name"
-            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-4 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
             value={value.firstName}
             onChange={(e) => onChange({ ...value, firstName: e.target.value })}
           />
@@ -3525,7 +3471,7 @@ function CustomerStep({
             required
             aria-required="true"
             autoComplete="family-name"
-            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-4 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
             value={value.lastName}
             onChange={(e) => onChange({ ...value, lastName: e.target.value })}
           />
@@ -3550,7 +3496,7 @@ function CustomerStep({
         </div>
       )}
 
-      <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+      <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
         <label className="flex cursor-pointer items-start gap-3">
           <input
             type="checkbox"
@@ -3617,20 +3563,11 @@ function CustomerStep({
         </label>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={loading}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 px-4 py-4 text-center font-semibold disabled:opacity-50"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          {copy.back}
-        </button>
+      <div className="flex flex-col gap-3">
         <button
           type="submit"
           disabled={!valid || loading || !consentPrivacy || !consentTerms}
-          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-4 text-center font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#d97706] px-4 py-3 text-center font-black text-white shadow-lg shadow-amber-900/15 transition hover:bg-[#f2b84b] hover:text-[#06233a] disabled:opacity-50"
         >
           {loading ? copy.wait : copy.continueToPayment}
           {!loading && <CreditCard className="size-4" aria-hidden="true" />}
