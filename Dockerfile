@@ -100,7 +100,7 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 # prisma + client come production-only in runner stage. Aggiunge ~40MB
 # ma garantisce che prisma migrate deploy funzioni sempre.
 COPY --from=builder /app/package.json /app/package-lock.json ./
-RUN npm install --omit=dev --no-audit --no-fund prisma @prisma/client \
+RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund prisma @prisma/client \
   && rm -rf ~/.npm
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
