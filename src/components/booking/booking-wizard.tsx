@@ -13,6 +13,7 @@ import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
 import {
   DEFAULT_PASSENGER_FARE_CATEGORIES,
+  PASSENGER_FARE_SERVICE_TYPE,
   estimatePaidUnitEquivalent,
   estimatePassengerFareTotal,
   occupiedSeatCountForPassengerCategories,
@@ -343,6 +344,19 @@ interface SelectedPrice {
   passengerCategoryPrices?: PassengerFareCategoryPriceConfig[] | null;
 }
 
+function passengerCategoryPricesEqual(
+  left?: PassengerFareCategoryPriceConfig[] | null,
+  right?: PassengerFareCategoryPriceConfig[] | null,
+): boolean {
+  const leftPrices = left ?? [];
+  const rightPrices = right ?? [];
+  if (leftPrices.length !== rightPrices.length) return false;
+  return leftPrices.every((price, index) => {
+    const other = rightPrices[index];
+    return other?.category === price.category && other.amount === price.amount;
+  });
+}
+
 function defaultPassengers(): PassengerBreakdown {
   return { adults: 1, children: 0, infants: 0 };
 }
@@ -363,6 +377,28 @@ function paidUnitsForClient(
     passengers,
     categoryPrices: selectedPrice?.passengerCategoryPrices ?? null,
   });
+}
+
+function passengerCategoryUnitPrice(
+  rule: PassengerFareCategoryConfig,
+  serviceType: string,
+  selectedPrice: SelectedPrice | null,
+): number | null {
+  if (!selectedPrice || selectedPrice.pricingUnit === "PER_PACKAGE") return null;
+
+  const categoryPrice = selectedPrice.passengerCategoryPrices?.find(
+    (price) => price.category === rule.category,
+  );
+  if (categoryPrice && Number.isFinite(categoryPrice.amount)) {
+    return Math.max(0, categoryPrice.amount);
+  }
+
+  if (serviceType !== PASSENGER_FARE_SERVICE_TYPE) {
+    return rule.occupiesSeat ? selectedPrice.amount : 0;
+  }
+
+  if (rule.pricingMode === "FIXED") return Math.max(0, rule.fixedAmount ?? 0);
+  return Math.max(0, selectedPrice.amount * rule.multiplier);
 }
 
 function formatClientEur(amount: number, locale?: string | null): string {
@@ -695,7 +731,9 @@ export function BookingWizard(props: Props) {
             passengerCategoryPrices: day.passengerCategoryPrices ?? null,
           };
           setSelectedPrice((current) =>
-            current?.amount === nextPrice.amount && current.pricingUnit === nextPrice.pricingUnit
+            current?.amount === nextPrice.amount &&
+            current.pricingUnit === nextPrice.pricingUnit &&
+            passengerCategoryPricesEqual(current.passengerCategoryPrices, nextPrice.passengerCategoryPrices)
               ? current
               : nextPrice,
           );
@@ -1029,9 +1067,11 @@ export function BookingWizard(props: Props) {
         <>
           <PeopleStep
             locale={props.locale}
+            serviceType={props.serviceType}
             capacityMax={props.capacityMax}
             value={passengers}
             passengerCategories={passengerCategories}
+            selectedPrice={selectedPrice}
             onChange={(nextPassengers) => {
               setPassengers(nextPassengers);
               trackEvent("guest_count_selected", {
@@ -2601,18 +2641,22 @@ function DateStep({
 
 function PeopleStep({
   locale,
+  serviceType,
   capacityMax,
   value,
   passengerCategories,
+  selectedPrice,
   onChange,
   onBack,
   onNext,
   checking,
 }: {
   locale: string;
+  serviceType: string;
   capacityMax: number;
   value: PassengerBreakdown;
   passengerCategories: PassengerFareCategoryConfig[];
+  selectedPrice: SelectedPrice | null;
   onChange: (n: PassengerBreakdown) => void;
   onBack?: () => void;
   onNext: () => void;
@@ -2654,12 +2698,14 @@ function PeopleStep({
       <div className="grid min-w-0 gap-2 sm:grid-cols-3">
         {passengerCategories.map((rule) => {
           const field = PASSENGER_CATEGORY_FIELD[rule.category];
+          const unitPrice = passengerCategoryUnitPrice(rule, serviceType, selectedPrice);
           return (
             <PassengerCounter
               key={rule.category}
               id={`wizard-${field}`}
               label={passengerCategoryLabel(rule, locale)}
               hint={passengerCategoryHint(rule, locale)}
+              priceLabel={unitPrice == null ? undefined : formatClientEurWithVat(unitPrice, locale)}
               value={value[field]}
               min={0}
               icon={
@@ -2699,6 +2745,7 @@ function PassengerCounter({
   id,
   label,
   hint,
+  priceLabel,
   value,
   min,
   icon,
@@ -2709,6 +2756,7 @@ function PassengerCounter({
   id: string;
   label: string;
   hint: string;
+  priceLabel?: string;
   value: number;
   min: number;
   icon: ReactNode;
@@ -2727,6 +2775,9 @@ function PassengerCounter({
             {label}
           </label>
           <p className="text-xs leading-4 text-slate-500">{hint}</p>
+          {priceLabel && (
+            <p className="mt-1 text-xs font-bold leading-4 text-sky-800">{priceLabel}</p>
+          )}
         </div>
       </div>
       <div className="flex w-full min-w-0 items-center gap-2">
