@@ -7,6 +7,7 @@ import {
   BarChart3,
   Calendar,
   ChevronDown,
+  Coins,
   ExternalLink,
   LayoutDashboard,
   LineChart,
@@ -40,6 +41,7 @@ const primaryNavItems: NavItem[] = [
     icon: LineChart,
     children: [{ href: "/admin/ricevute", label: "Ricevute", icon: ReceiptText }],
   },
+  { href: "/admin/prezzi", label: "Listino", icon: Coins },
   { href: "/admin/traffico", label: "Traffico sito", icon: BarChart3 },
   { href: "/admin/impostazioni", label: "Impostazioni", icon: Settings },
 ];
