@@ -1,91 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Anchor, Compass, Utensils } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ScrollSection } from "@/components/scroll-section";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { localizedStaticPath } from "@/lib/i18n/static-paths";
-
-const crew = [
-  {
-    role: { it: "Skipper", en: "Skipper", es: "Patrón", fr: "Skipper", de: "Skipper" },
-    image: "/images/about/skipper.webp",
-    alt: {
-      it: "Skipper Egadisailing durante una navigazione alle Isole Egadi",
-      en: "Egadisailing skipper sailing through the Egadi Islands",
-      es: "Patrón de Egadisailing navegando por las Islas Egadi",
-      fr: "Skipper Egadisailing en navigation aux îles Égades",
-      de: "Egadisailing-Skipper auf Fahrt durch die Ägadischen Inseln",
-    },
-    icon: Anchor,
-    description: {
-      it: "Guida la rotta, legge vento e mare, sceglie le cale più riparate e rende la navigazione sicura, fluida e piacevole.",
-      en: "Guides the route, reads wind and sea conditions, chooses the most sheltered coves and keeps the navigation safe, smooth and enjoyable.",
-      es: "Guía la ruta, lee el viento y el mar, elige las calas más protegidas y mantiene la navegación segura, fluida y agradable.",
-      fr: "Guide la route, lit le vent et la mer, choisit les criques les plus abritées et garde une navigation sûre, fluide et agréable.",
-      de: "Führt die Route, liest Wind und Meer, wählt die geschütztesten Buchten und hält die Navigation sicher, flüssig und angenehm.",
-    },
-    note: {
-      it: "Rotte sicure, ritmo giusto, conoscenza vera delle Egadi.",
-      en: "Safe routes, the right rhythm and real knowledge of the Egadi Islands.",
-      es: "Rutas seguras, buen ritmo y conocimiento real de las Islas Egadi.",
-      fr: "Routes sûres, bon rythme et vraie connaissance des îles Égades.",
-      de: "Sichere Routen, passender Rhythmus und echte Kenntnis der Ägadischen Inseln.",
-    },
-  },
-  {
-    role: { it: "Hostess", en: "Hostess", es: "Azafata", fr: "Hôtesse", de: "Hostess" },
-    image: "/images/about/hostess.webp",
-    alt: {
-      it: "Hostess Egadisailing che accoglie gli ospiti a bordo",
-      en: "Egadisailing hostess welcoming guests on board",
-      es: "Azafata de Egadisailing recibiendo a los huéspedes a bordo",
-      fr: "Hôtesse Egadisailing accueillant les invités à bord",
-      de: "Egadisailing-Hostess begrüßt Gäste an Bord",
-    },
-    icon: Compass,
-    description: {
-      it: "Si prende cura dell'accoglienza, dei dettagli a bordo e del comfort degli ospiti, dal primo sorriso fino al rientro in porto.",
-      en: "Takes care of the welcome, the details on board and guest comfort, from the first smile to the return to harbour.",
-      es: "Cuida la bienvenida, los detalles a bordo y el confort de los huéspedes desde el primer saludo hasta el regreso a puerto.",
-      fr: "Prend soin de l'accueil, des détails à bord et du confort des invités, du premier sourire au retour au port.",
-      de: "Kümmert sich um Empfang, Details an Bord und den Komfort der Gäste vom ersten Lächeln bis zur Rückkehr in den Hafen.",
-    },
-    note: {
-      it: "Presenza discreta, attenzione concreta, ospitalità siciliana.",
-      en: "Discreet presence, practical care and Sicilian hospitality.",
-      es: "Presencia discreta, atención real y hospitalidad siciliana.",
-      fr: "Présence discrète, attention concrète et hospitalité sicilienne.",
-      de: "Diskrete Präsenz, konkrete Aufmerksamkeit und sizilianische Gastfreundschaft.",
-    },
-  },
-  {
-    role: { it: "Chef", en: "Chef", es: "Chef", fr: "Chef", de: "Chef" },
-    image: "/images/about/chef.webp",
-    alt: {
-      it: "Chef Egadisailing che prepara un pranzo a bordo",
-      en: "Egadisailing chef preparing lunch on board",
-      es: "Chef de Egadisailing preparando la comida a bordo",
-      fr: "Chef Egadisailing préparant le déjeuner à bord",
-      de: "Egadisailing-Chef bereitet ein Mittagessen an Bord vor",
-    },
-    icon: Utensils,
-    description: {
-      it: "Porta in tavola sapori del territorio, ingredienti freschi e piatti pensati per essere gustati con il mare intorno.",
-      en: "Brings local flavours, fresh ingredients and dishes designed to be enjoyed with the sea all around.",
-      es: "Lleva a la mesa sabores locales, ingredientes frescos y platos pensados para disfrutarse con el mar alrededor.",
-      fr: "Apporte à table les saveurs du territoire, des ingrédients frais et des plats pensés pour être dégustés avec la mer autour.",
-      de: "Bringt lokale Aromen, frische Zutaten und Gerichte an den Tisch, die mit dem Meer rundherum genossen werden.",
-    },
-    note: {
-      it: "Cucina di bordo, prodotti locali, pranzo vista Egadi.",
-      en: "On-board cooking, local produce and lunch with views of the Egadi Islands.",
-      es: "Cocina a bordo, producto local y comida con vistas a las Islas Egadi.",
-      fr: "Cuisine à bord, produits locaux et déjeuner avec vue sur les Égades.",
-      de: "Bordküche, lokale Produkte und Mittagessen mit Blick auf die Ägadischen Inseln.",
-    },
-  },
-] as const;
 
 export async function generateMetadata({
   params,
@@ -99,23 +18,23 @@ export async function generateMetadata({
   const isDe = locale === "de";
   return buildPageMetadata({
     title: isEs
-      ? "Tripulación local para excursiones en barco a las Islas Egadi"
+      ? "Egadisailing: excursiones en barco a las Islas Egadi desde Trapani"
       : isFr
-      ? "Équipage local pour excursions en bateau aux îles Égades"
+      ? "Egadisailing : excursions bateau aux îles Égades depuis Trapani"
       : isDe
-      ? "Lokale Crew für Bootstouren zu den Ägadischen Inseln"
+      ? "Egadisailing: Bootstouren zu den Ägadischen Inseln ab Trapani"
       : isEn
-      ? "Egadi Sailing Crew and Local Skippers in Trapani"
-      : "Crew locale per escursioni in barca alle Egadi",
+      ? "Egadisailing: Egadi Islands Boat Tours from Trapani"
+      : "Egadisailing: escursioni in barca alle Egadi da Trapani",
     description: isEs
-      ? "Conoce a Egadisailing y Nicolò Genna: armador, patrón, azafata y chef para excursiones en barco por las Islas Egadi desde Trapani."
+      ? "Conoce a Egadisailing y Nicolò Genna: una base local en Trapani para excursiones en barco por las Islas Egadi, tours privados, charter y almuerzo a bordo."
       : isFr
-      ? "Découvrez Egadisailing et Nicolò Genna : armateur, skipper, hôtesse et chef pour excursions en bateau aux îles Égades depuis Trapani."
+      ? "Découvrez Egadisailing et Nicolò Genna : une base locale à Trapani pour excursions bateau aux îles Égades, tours privés, charter et déjeuner à bord."
       : isDe
-      ? "Lernen Sie Egadisailing und Nicolò Genna kennen: Eigner, Skipper, Hostess und Chef für Bootstouren zu den Ägadischen Inseln ab Trapani."
+      ? "Lernen Sie Egadisailing und Nicolò Genna kennen: eine lokale Basis in Trapani für Bootstouren zu den Ägadischen Inseln, private Touren, Charter und Mittagessen an Bord."
       : isEn
-      ? "Meet Egadisailing in Trapani: local skipper, hostess and chef for Egadi Islands boat tours, private charters and chef-on-board experiences."
-      : "Scopri Egadisailing e Nicolò Genna: armatore, skipper, hostess e chef per escursioni in barca alle Isole Egadi da Trapani.",
+      ? "Meet Egadisailing in Trapani: a local base for Egadi Islands boat tours, private charters, trimaran days and lunch on board experiences."
+      : "Scopri Egadisailing e Nicolò Genna: una base locale a Trapani per escursioni in barca alle Isole Egadi, tour privati, charter e pranzo a bordo.",
     path: "/about",
     locale,
   });
@@ -131,7 +50,6 @@ export default async function AboutPage({
   const isEs = locale === "es";
   const isFr = locale === "fr";
   const isDe = locale === "de";
-  const crewLocale: "it" | "en" | "es" | "fr" | "de" = isDe ? "de" : isFr ? "fr" : isEs ? "es" : isEn ? "en" : "it";
   const copy = {
     eyebrow: isEs ? "Sobre nosotros" : isFr ? "À propos" : isDe ? "Über uns" : isEn ? "About us" : "Chi siamo",
     title: isEs
@@ -219,17 +137,6 @@ export default async function AboutPage({
           "Per noi un'escursione in barca non è solo una sequenza di soste. È scegliere il momento giusto per entrare in una baia, capire dove il mare è più pulito, lasciare spazio al silenzio quando serve e creare a bordo un'ospitalità semplice, curata, memorabile.",
           "Egadisailing mette insieme esperienza locale, attenzione alla sicurezza, comfort in navigazione e cucina di bordo. È il nostro modo di condividere Favignana, Levanzo e Marettimo con chi vuole scoprirle senza fretta.",
         ],
-    crewEyebrow: isEs ? "La tripulación" : isFr ? "L'équipage" : isDe ? "Die Crew" : isEn ? "The crew" : "La crew",
-    crewTitle: isEs ? "Las personas que te acompañan a bordo" : isFr ? "Les personnes qui vous accompagnent à bord" : isDe ? "Die Menschen, die Sie an Bord begleiten" : isEn ? "The people who welcome you on board" : "Le persone che ti accompagnano a bordo",
-    crewIntro: isEs
-      ? "Patrón, azafata y chef trabajan juntos para que cada salida tenga una ruta segura, una atención cercana y sabores que hablan del territorio."
-      : isFr
-      ? "Skipper, hôtesse et chef travaillent ensemble pour que chaque sortie ait une route sûre, une attention proche et des saveurs qui parlent du territoire."
-      : isDe
-      ? "Skipper, Hostess und Chef arbeiten zusammen, damit jede Ausfahrt eine sichere Route, aufmerksame Gastfreundschaft und Aromen des Gebiets hat."
-      : isEn
-      ? "Skipper, hostess and chef work together so every outing has a safe route, attentive hospitality and flavours that tell the story of the territory."
-      : "Skipper, hostess e chef lavorano insieme perché ogni uscita abbia una rotta sicura, un'accoglienza attenta e sapori capaci di raccontare il territorio.",
     ctaEyebrow: isEs ? "Sube a bordo" : isFr ? "Montez à bord" : isDe ? "Kommen Sie an Bord" : isEn ? "Come on board" : "Sali a bordo",
     ctaTitle: isEs
       ? "La mejor forma de conocernos es pasar un día en el mar"
@@ -334,60 +241,6 @@ export default async function AboutPage({
               ))}
             </div>
           </ScrollSection>
-        </div>
-      </section>
-
-      <section className="bg-[#092337] px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        <div className="mx-auto max-w-7xl">
-          <ScrollSection animation="fade-up">
-            <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--color-gold)]">
-                {copy.crewEyebrow}
-              </p>
-              <h2 className="mt-3 font-heading text-3xl font-bold leading-tight text-white sm:text-4xl md:text-5xl">
-                {copy.crewTitle}
-              </h2>
-              <p className="mt-5 text-base leading-7 text-white/66 sm:text-lg">
-                {copy.crewIntro}
-              </p>
-            </div>
-          </ScrollSection>
-
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {crew.map((member, index) => {
-              const Icon = member.icon;
-
-              return (
-	                <ScrollSection key={member.role.it} animation="fade-up" delay={index * 0.12}>
-                  <article className="h-full overflow-hidden rounded-lg border border-white/10 bg-white/[0.05] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
-                    <div className="relative aspect-[4/5] bg-white/[0.04]">
-	                      <Image
-	                        src={member.image}
-	                        alt={member.alt[crewLocale]}
-                        fill
-                        sizes="(min-width: 768px) 31vw, 100vw"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="p-6">
-                      <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-gold)]/14 text-[var(--color-gold)]">
-                        <Icon className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-gold)]">
-	                        {member.role[crewLocale]}
-                      </p>
-	                      <p className="mt-3 text-base leading-7 text-white/72">
-	                      {member.description[crewLocale]}
-	                      </p>
-	                      <p className="mt-5 border-t border-white/10 pt-5 text-sm font-medium leading-6 text-white">
-	                        {member.note[crewLocale]}
-                      </p>
-                    </div>
-                  </article>
-                </ScrollSection>
-              );
-            })}
-          </div>
         </div>
       </section>
 

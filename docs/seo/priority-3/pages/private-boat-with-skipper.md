@@ -11,7 +11,7 @@
 - Intento primario: Barca privata con skipper a Trapani per le Egadi
 - Intento secondario: Intercettare utenti che cercano noleggio con skipper e portarli ai tour privati 4h/8h.
 - Cosa NON deve targetizzare: Non usare 'senza skipper', bareboat, patente nautica o noleggio libero.
-- Ruolo nella SEO architecture: Nuova landing ponte tra keyword noleggio e prodotti reali: 4h privato, 8h privato, chef e charter.
+- Ruolo nella SEO architecture: Nuova landing ponte tra keyword noleggio e prodotti reali: 4h privato, 8h privato, pranzo a bordo e charter.
 
 ## Analisi Competitor
 | Competitor | URL | Intento pagina | Cosa fa bene | Gap rispetto a noi |
@@ -35,7 +35,7 @@
 - Varianti parziali: 2-3x ciascuna; 'noleggio' massimo 2x e sempre qualificato con skipper.
 - Keyword locali: Trapani/Egadi 4-6x; Favignana/Levanzo 2-4x.
 - Entita'/luoghi: usare nomi di isole, cale, porto, skipper, AMP e barche solo quando aggiungono informazione reale.
-- Anchor interne: Uscire verso 4h privato, 8h privato, chef, charter; ricevere da hub e barche.
+- Anchor interne: Uscire verso 4h privato, 8h privato, pranzo a bordo, charter; ricevere da hub e barche.
 - Note: le frequenze sono una guida editoriale. Se una frase suona artificiale, vince la chiarezza per l'utente.
 
 ## Interventi On-Page

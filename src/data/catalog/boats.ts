@@ -695,7 +695,7 @@ export const BOAT_CATALOG = {
         caption: { it: "Tavola a bordo", en: "Table on board" },
       },
       {
-        src: "/images/boats/neel-47/neel-47-chef.webp",
+        src: "/images/boats/neel-47/neel-47-pranzo-a-bordo.webp",
         alt: {
           it: "Crew prepara il servizio a bordo del Trimarano",
           en: "Crew preparing onboard service on the Trimarano",

@@ -27,7 +27,7 @@
   },
   "hero": {
     "title": "Lassen Sie das Ufer hinter sich",
-    "subtitle": "Entdecken Sie die Ägadischen Inseln: Trimaran mit Chefkoch, private Bootstouren und Charter ab Trapani.",
+    "subtitle": "Entdecken Sie die Ägadischen Inseln: Trimaran mit Mittagessen an Bord, private Bootstouren und Charter ab Trapani.",
     "seoTitle": "Bootstouren zu den Ägadischen Inseln ab Trapani",
     "seoSubtitle": "Private und geteilte Bootstouren, Koch an Bord und Trimaran-Charter zwischen Favignana, Levanzo und Marettimo, mit lokalem Skipper und Abfahrt vom Hafen von Trapani.",
     "cta": "Bootstouren entdecken",
@@ -74,11 +74,11 @@
     },
     "exclusive": {
       "title": "Exklusives Erlebnis",
-      "short": "Privater Chefkoch, Route nach Maß und kompromissloser Komfort."
+      "short": "Mittagessen an Bord, von der Crew zubereitet, Route nach Maß und kompromissloser Komfort."
     },
     "exclusiveExperience": {
       "title": "Exklusives Erlebnis",
-      "short": "Privater Chefkoch, Route nach Maß und kompromissloser Komfort."
+      "short": "Mittagessen an Bord, von der Crew zubereitet, Route nach Maß und kompromissloser Komfort."
     },
     "cabinCharter": {
       "title": "Charter",
@@ -128,9 +128,7 @@
     "value2Title": "Sizilianische Gastfreundschaft",
     "value2Desc": "Herzlicher Empfang, sorgfältig zubereitete Speisen und Liebe zum Detail: sizilianische Tradition an Bord.",
     "value3Title": "Respekt vor der Meeresumwelt",
-    "value3Desc": "Wir fahren verantwortungsvoll, um das marine Ökosystem der Ägadischen Inseln für kommende Generationen zu schützen.",
-    "crewTitle": "Unsere Crew",
-    "crewText": "Unser Team besteht aus Meeresprofis: erfahrenen Skippern, talentierten Köchen und aufmerksamen Hostessen. Alle teilen dieselbe Liebe zu den Ägadischen Inseln und zur Gastfreundschaft."
+    "value3Desc": "Wir fahren verantwortungsvoll, um das marine Ökosystem der Ägadischen Inseln für kommende Generationen zu schützen."
   },
   "contact": {
     "title": "Kontakt",
@@ -200,7 +198,7 @@
     "whatToBring": "Mitbringen",
     "allExperiences": "Alle Erlebnisse",
     "include1": "Professioneller Skipper",
-    "include2": "Mittagessen mit frischem Fisch, vom Chefkoch zubereitet",
+    "include2": "Mittagessen an Bord mit frischem Fisch, von der Crew zubereitet",
     "include3": "Schnorchelausrüstung",
     "include4": "Treibstoff",
     "include5": "Wasser und Softdrinks",
@@ -215,7 +213,7 @@
     "itin2Time": "10:00",
     "itin2Text": "Ankunft in Favignana — Cala Rossa, Baden und Schnorcheln",
     "itin3Time": "12:30",
-    "itin3Text": "Mittagessen an Bord, vom Chefkoch zubereitet",
+    "itin3Text": "Mittagessen an Bord, von der Crew zubereitet",
     "itin4Time": "14:00",
     "itin4Text": "Panoramafahrt entlang Favignana",
     "itin5Time": "15:30",
@@ -255,7 +253,7 @@
     "q4": "Können Kinder teilnehmen?",
     "a4": "Ja, Kinder sind an Bord willkommen. Für sehr kleine Kinder unter 3 Jahren kontaktieren Sie uns bitte vor der Buchung. Kinder-Schwimmwesten sind verfügbar.",
     "q5": "Ist Mittagessen inklusive?",
-    "a5": "Beim Premium-Erlebnis mit Chefkoch ist das Mittagessen inklusive. Bei den anderen Bootstouren sind die genauen Leistungen in der jeweiligen Beschreibung angegeben.",
+    "a5": "Beim Premium-Erlebnis mit Mittagessen an Bord ist das von der Crew zubereitete Essen inklusive. Bei den anderen Bootstouren sind die genauen Leistungen in der jeweiligen Beschreibung angegeben.",
     "q6": "Wo gehen wir an Bord?",
     "a6": "Die Einschiffung erfolgt in Trapani. Den genauen Treffpunkt und praktische Hinweise senden wir nach der Buchungsbestätigung per E-Mail."
   },
@@ -279,7 +277,7 @@
       },
       "stop3": {
         "name": "Mittagessen an Bord",
-        "description": "Der Chefkoch bereitet frischen Fisch mit Blick aufs offene Meer zu."
+        "description": "Die Crew bereitet frischen Fisch mit Blick aufs offene Meer zu."
       },
       "stop4": {
         "name": "Bue Marino",
@@ -307,8 +305,8 @@
         "description": "Gourmet-Mittagessen vor Anker bei Cala Rossa, Favignana."
       },
       "stop4": {
-        "name": "Live Cooking an Bord",
-        "description": "Der lokale Chefkoch bereitet das Mittagessen an Bord bei Cala Rossa zu."
+        "name": "Mittagessen an Bord",
+        "description": "Die Crew bereitet das Mittagessen an Bord bei Cala Rossa zu."
       },
       "stop5": {
         "name": "Mittagessen mit Meerblick",
@@ -354,8 +352,8 @@
         "description": "Gourmet-Mittagessen vor Anker bei Cala Rossa, Favignana."
       },
       "stop4": {
-        "name": "Live Cooking an Bord",
-        "description": "Der lokale Chefkoch bereitet das Mittagessen an Bord bei Cala Rossa zu."
+        "name": "Mittagessen an Bord",
+        "description": "Die Crew bereitet das Mittagessen an Bord bei Cala Rossa zu."
       },
       "stop5": {
         "name": "Mittagessen mit Meerblick",
@@ -448,17 +446,17 @@
     "islandsTitle": "Die Ägadischen Inseln",
     "islandsSubtitle": "Drei Juwelen im Herzen des Mittelmeers",
     "whyTitle": "Warum Egadisailing",
-    "whyChef": "Chef an Bord",
-    "whyChefDesc": "Mittagessen mit frischem Fisch, von unserem Chefkoch mit lokalen Zutaten und sizilianischen Rezepten zubereitet.",
+    "whyLunch": "Mittagessen an Bord",
+    "whyLunchDesc": "Mittagessen mit frischem Fisch, von der Crew mit lokalen Zutaten und sizilianischen Rezepten zubereitet.",
     "whyLuxury": "Zugänglicher Luxus",
     "whyLuxuryDesc": "Premium-Erlebnisse zu fairen Preisen, damit Sie das Meer so erleben, wie Sie es verdienen.",
     "whyCrew": "Erfahrene Crew",
-    "whyCrewDesc": "Professioneller Skipper, Chefkoch und Hostess für ein sicheres und sorgfältig gestaltetes Erlebnis.",
+    "whyCrewDesc": "Professioneller Skipper, Hostess und Crew für ein sicheres und sorgfältig gestaltetes Erlebnis.",
     "whyIslands": "Unberührte Inseln",
     "whyIslandsDesc": "Klares Mittelmeerwasser, Meereshöhlen und versteckte Buchten.",
     "testimonialsTitle": "Was unsere Gäste sagen",
     "ctaTitle": "Planen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani",
-    "ctaSubtitle": "Wählen Sie geteilte Ausfahrt, privates Boot, Chef an Bord oder Egadi-Charter",
+    "ctaSubtitle": "Wählen Sie geteilte Ausfahrt, privates Boot, Mittagessen an Bord oder Egadi-Charter",
     "ctaButton": "Bootstouren entdecken"
   },
   "home": {
@@ -467,17 +465,17 @@
     "islandsTitle": "Die Ägadischen Inseln",
     "islandsSubtitle": "Drei Juwelen im Herzen des Mittelmeers",
     "whyTitle": "Warum Egadisailing",
-    "whyChef": "Chef an Bord",
-    "whyChefDesc": "Mittagessen mit frischem Fisch, von unserem Chefkoch mit lokalen Zutaten und sizilianischen Rezepten zubereitet.",
+    "whyLunch": "Mittagessen an Bord",
+    "whyLunchDesc": "Mittagessen mit frischem Fisch, von der Crew mit lokalen Zutaten und sizilianischen Rezepten zubereitet.",
     "whyLuxury": "Zugänglicher Luxus",
     "whyLuxuryDesc": "Premium-Erlebnisse zu fairen Preisen, damit Sie das Meer so erleben, wie Sie es verdienen.",
     "whyCrew": "Erfahrene Crew",
-    "whyCrewDesc": "Professioneller Skipper, Chefkoch und Hostess für ein sicheres und sorgfältig gestaltetes Erlebnis.",
+    "whyCrewDesc": "Professioneller Skipper, Hostess und Crew für ein sicheres und sorgfältig gestaltetes Erlebnis.",
     "whyIslands": "Unberührte Inseln",
     "whyIslandsDesc": "Klares Mittelmeerwasser, Meereshöhlen und versteckte Buchten.",
     "testimonialsTitle": "Was unsere Gäste sagen",
     "ctaTitle": "Planen Sie Ihre Bootstour zu den Ägadischen Inseln ab Trapani",
-    "ctaSubtitle": "Wählen Sie geteilte Ausfahrt, privates Boot, Chef an Bord oder Egadi-Charter",
+    "ctaSubtitle": "Wählen Sie geteilte Ausfahrt, privates Boot, Mittagessen an Bord oder Egadi-Charter",
     "ctaButton": "Bootstouren entdecken"
   }
 }

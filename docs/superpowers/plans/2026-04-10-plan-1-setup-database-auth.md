@@ -656,8 +656,8 @@ async function main() {
       name: "Social Boating",
       type: ServiceType.SOCIAL_BOATING,
       description: {
-        it: "Sali a bordo, il mare delle Egadi ti aspetta. Navigazione, tuffi in acque cristalline e pranzo di pesce fresco preparato dal nostro chef.",
-        en: "Come aboard, the Egadi sea awaits you. Sailing, swimming in crystal clear waters and fresh fish lunch prepared by our chef.",
+        it: "Sali a bordo, il mare delle Egadi ti aspetta. Navigazione, tuffi in acque cristalline e pranzo di pesce fresco cucinato dalla crew.",
+        en: "Come aboard, the Egadi sea awaits you. Sailing, swimming in crystal clear waters and fresh fish lunch cooked by the crew.",
       },
       durationType: DurationType.FULL_DAY,
       durationHours: 8,
@@ -675,8 +675,8 @@ async function main() {
       name: "Exclusive Experience",
       type: ServiceType.EXCLUSIVE_EXPERIENCE,
       description: {
-        it: "Un'esperienza riservata a te e ai tuoi ospiti. Chef rinomato, rotta personalizzata, lusso senza compromessi.",
-        en: "An experience reserved for you and your guests. Renowned chef, customized route, uncompromised luxury.",
+        it: "Un'esperienza riservata a te e ai tuoi ospiti. Pranzo a bordo cucinato dalla crew, rotta personalizzata, lusso senza compromessi.",
+        en: "An experience reserved for you and your guests. Lunch on board cooked by the crew, customized route, uncompromised luxury.",
       },
       durationType: DurationType.FULL_DAY,
       durationHours: 8,
@@ -840,7 +840,7 @@ async function main() {
     update: {},
     create: {
       id: "chef-1",
-      name: "Chef Demo",
+      name: "Crew Cucina Demo",
       role: CrewRole.CHEF,
     },
   });
@@ -1252,7 +1252,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     },
     "exclusive": {
       "title": "Exclusive Experience",
-      "short": "Chef rinomato, rotta personalizzata, lusso senza compromessi."
+      "short": "Pranzo a bordo cucinato dalla crew, rotta personalizzata, lusso senza compromessi."
     },
     "cabinCharter": {
       "title": "Cabin Charter",
@@ -1312,7 +1312,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     },
     "exclusive": {
       "title": "Exclusive Experience",
-      "short": "Renowned chef, customized route, uncompromised luxury."
+      "short": "Lunch on board cooked by the crew, customized route, uncompromised luxury."
     },
     "cabinCharter": {
       "title": "Cabin Charter",

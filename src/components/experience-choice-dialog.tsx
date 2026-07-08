@@ -140,23 +140,23 @@ function buildRecommendationCopy(locale: string) {
     gourmet: {
       emoji: "🍽️",
       title: isEs
-        ? "Chef a bordo en trimarán en las Islas Egadi"
+        ? "Almuerzo a bordo en trimarán en las Islas Egadi"
         : isFr
-        ? "Chef à bord en trimaran aux îles Égades"
+        ? "Déjeuner à bord en trimaran aux îles Égades"
         : isDe
-        ? "Chef an Bord auf dem Trimaran zu den Ägadischen Inseln"
+        ? "Mittagessen an Bord auf dem Trimaran zu den Ägadischen Inseln"
         : isEn
-        ? "Chef on board in a trimaran in the Egadi Islands"
-        : "Chef a bordo in trimarano alle Egadi",
+        ? "Lunch on board in a trimaran in the Egadi Islands"
+        : "Pranzo a bordo in trimarano alle Egadi",
       boatLabel: isEs
-	        ? "Trimarán · confort de catamarán, chef y patrón"
+	        ? "Trimarán · confort de catamarán, almuerzo y patrón"
         : isFr
-        ? "Trimaran · confort de catamaran, chef et skipper"
+        ? "Trimaran · confort de catamaran, déjeuner et skipper"
         : isDe
-        ? "Trimaran · Katamaran-Komfort, Chef und Skipper"
+        ? "Trimaran · Katamaran-Komfort, Mittagessen und Skipper"
         : isEn
-        ? "Trimaran · catamaran-style comfort, chef and skipper"
-        : "Trimarano · comfort da catamarano, chef e skipper",
+        ? "Trimaran · catamaran-style comfort, lunch and skipper"
+        : "Trimarano · comfort da catamarano, pranzo e skipper",
       reason: isEs
 	        ? "Buscas un día cuidado: espacios amplios, comida preparada a bordo, privacidad y ritmo premium al fondeo."
         : isFr
@@ -898,12 +898,12 @@ function getGermanQuestion({
       return {
         eyebrow: "Mittagessen",
         title: "Möchten Sie an Bord oder auf der Insel zu Mittag essen?",
-        description: "Mittagessen an Bord führt zum Trimaran mit Chef, Hostess und Premium-Flächen.",
+        description: "Mittagessen an Bord führt zum Trimaran mit Crew, Hostess und Premium-Flächen.",
         choices: [
           {
             emoji: "🍽️",
             label: "An Bord",
-            description: "Chef, Tisch vor Anker und ein Premium-Tag.",
+            description: "Mittagessen, Tisch vor Anker und ein Premium-Tag.",
             onSelect: () => recommend("gourmet"),
           },
           {
@@ -1053,12 +1053,12 @@ function getFrenchQuestion({
       return {
         eyebrow: "Déjeuner",
         title: "Vous voulez déjeuner à bord ou sur l'île ?",
-        description: "Le déjeuner à bord oriente vers le trimaran, avec chef, hôtesse et espaces premium.",
+        description: "Le déjeuner à bord oriente vers le trimaran, avec équipage, hôtesse et espaces premium.",
         choices: [
           {
             emoji: "🍽️",
             label: "À bord",
-            description: "Chef, table au mouillage et journée premium.",
+            description: "Déjeuner, table au mouillage et journée premium.",
             onSelect: () => recommend("gourmet"),
           },
           {
@@ -1208,12 +1208,12 @@ function getSpanishQuestion({
       return {
         eyebrow: "Comida",
         title: "¿Quieres comer a bordo o en la isla?",
-        description: "Comer a bordo apunta al trimarán con chef, azafata y espacios premium.",
+        description: "Comer a bordo apunta al trimarán con tripulación, azafata y espacios premium.",
         choices: [
           {
             emoji: "🍽️",
             label: "A bordo",
-            description: "Chef, mesa al fondeo y jornada premium.",
+            description: "Almuerzo, mesa al fondeo y jornada premium.",
             onSelect: () => recommend("gourmet"),
           },
           {
@@ -1363,12 +1363,12 @@ function getItalianQuestion({
       return {
         eyebrow: "Pranzo",
         title: "Vuoi pranzare a bordo o pranzare sull'isola?",
-        description: "Il pranzo a bordo è il segnale giusto per il Trimarano con chef, hostess e spazi premium.",
+        description: "Il pranzo a bordo è il segnale giusto per il Trimarano con crew, hostess e spazi premium.",
         choices: [
           {
             emoji: "🍽️",
             label: "A bordo",
-            description: "Chef, tavola in rada e giornata premium.",
+            description: "Pranzo, tavola in rada e giornata premium.",
             onSelect: () => recommend("gourmet"),
           },
           {
@@ -1518,12 +1518,12 @@ function getEnglishQuestion({
       return {
         eyebrow: "Lunch",
         title: "Would you like lunch on board or on the island?",
-        description: "Lunch on board points to the Trimarano, with chef, hostess and premium spaces.",
+        description: "Lunch on board points to the Trimarano, with crew, hostess and premium spaces.",
         choices: [
           {
             emoji: "🍽️",
             label: "On board",
-            description: "Chef, a table at anchor and a premium day.",
+            description: "Lunch, a table at anchor and a premium day.",
             onSelect: () => recommend("gourmet"),
           },
           {

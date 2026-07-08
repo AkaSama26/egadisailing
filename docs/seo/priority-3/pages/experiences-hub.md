@@ -9,7 +9,7 @@
 
 ## Intento Della Nostra Pagina
 - Intento primario: Tour in barca alle Egadi da Trapani
-- Intento secondario: Confrontare tour condivisi, privati, 4h, 8h, chef, charter e pesca.
+- Intento secondario: Confrontare tour condivisi, privati, 4h, 8h, pranzo a bordo, charter e pesca.
 - Cosa NON deve targetizzare: Non deve targetizzare in modo primario 'prenota online' o brand puro homepage.
 - Ruolo nella SEO architecture: Money hub principale: deve essere la URL che Google associa alle query generiche commerciali Egadi da Trapani.
 

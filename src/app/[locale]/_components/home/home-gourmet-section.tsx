@@ -24,14 +24,14 @@ function gourmetCopy(locale: string) {
   const pillars: GourmetPillar[] = [
     {
       title: isEs
-        ? "Chef a bordo y cocina local"
+        ? "Almuerzo a bordo y cocina local"
         : isFr
-        ? "Chef à bord et cuisine locale"
+        ? "Déjeuner à bord et cuisine locale"
         : isDe
-        ? "Chef an Bord und lokale Küche"
+        ? "Mittagessen an Bord und lokale Küche"
         : isEn
-        ? "Chef on board and local cuisine"
-        : "Chef a bordo e cucina locale",
+        ? "Lunch on board and local cuisine"
+        : "Pranzo a bordo e cucina locale",
       text: isEs
         ? "Platos preparados durante la jornada con sabores sicilianos, productos del territorio y una atención que transforma el tour en una experiencia privada."
         : isFr
@@ -104,14 +104,14 @@ function gourmetCopy(locale: string) {
       ? "Not just a catamaran: a gourmet experience on a trimaran"
       : "Non è un semplice catamarano: è un'esperienza gourmet in trimarano",
     intro: isEs
-      ? "Con Egadi Sailing, el tour en barco por las Islas Egadi se vuelve una experiencia premium luxury: chef a bordo, almuerzo en rada, pescado fresco comprado por la mañana, aperitivos, vinos sicilianos y una navegación lenta entre Favignana y Levanzo en trimarán con confort de catamarán."
+      ? "Con Egadi Sailing, el tour en barco por las Islas Egadi se vuelve una experiencia premium luxury: almuerzo a bordo cocinado por la tripulación, pausa en rada, pescado fresco comprado por la mañana, aperitivos, vinos sicilianos y una navegación lenta entre Favignana y Levanzo en trimarán con confort de catamarán."
       : isFr
-      ? "Avec Egadi Sailing, le tour en bateau aux îles Égades devient une expérience premium luxury : chef à bord, déjeuner au mouillage, poisson frais acheté le matin, apéritifs, vins siciliens et navigation lente entre Favignana et Levanzo en trimaran avec confort de catamaran."
+      ? "Avec Egadi Sailing, le tour en bateau aux îles Égades devient une expérience premium luxury : déjeuner à bord, déjeuner au mouillage, poisson frais acheté le matin, apéritifs, vins siciliens et navigation lente entre Favignana et Levanzo en trimaran avec confort de catamaran."
       : isDe
-      ? "Mit Egadi Sailing wird die Bootstour zu den Ägadischen Inseln zu einem Premium-Luxury-Erlebnis: Chef an Bord, Mittagessen vor Anker, morgens gekaufter frischer Fisch, Aperitifs, sizilianische Weine und langsame Fahrt zwischen Favignana und Levanzo im Trimaran mit Katamaran-Komfort."
+      ? "Mit Egadi Sailing wird die Bootstour zu den Ägadischen Inseln zu einem Premium-Luxury-Erlebnis: Mittagessen an Bord, Mittagessen vor Anker, morgens gekaufter frischer Fisch, Aperitifs, sizilianische Weine und langsame Fahrt zwischen Favignana und Levanzo im Trimaran mit Katamaran-Komfort."
       : isEn
-      ? "With Egadi Sailing, the Egadi Islands boat tour becomes a premium luxury experience: chef on board, lunch at anchor, fresh fish bought in the morning, aperitifs, Sicilian wines and slow sailing between Favignana and Levanzo on a trimaran with catamaran-style comfort."
-      : "Con Egadi Sailing, il tour in barca alle Isole Egadi diventa un'esperienza premium luxury: chef a bordo, pranzo in rada, pesce fresco acquistato la mattina, aperitivi, vini siciliani e navigazione lenta tra Favignana e Levanzo in trimarano con comfort da catamarano.",
+      ? "With Egadi Sailing, the Egadi Islands boat tour becomes a premium luxury experience: lunch on board, lunch at anchor, fresh fish bought in the morning, aperitifs, Sicilian wines and slow sailing between Favignana and Levanzo on a trimaran with catamaran-style comfort."
+      : "Con Egadi Sailing, il tour in barca alle Isole Egadi diventa un'esperienza premium luxury: pranzo a bordo, pranzo in rada, pesce fresco acquistato la mattina, aperitivi, vini siciliani e navigazione lenta tra Favignana e Levanzo in trimarano con comfort da catamarano.",
     imageAlt: isEs
       ? "Vino trapanés servido a bordo del trimarán durante una experiencia gourmet por las Islas Egadi"
       : isFr
@@ -149,14 +149,14 @@ function gourmetCopy(locale: string) {
       ? "Explore the gourmet experience"
       : "Scopri l'esperienza gourmet",
     highlights: isEs
-      ? ["Chef a bordo", "Pescado fresco", "Vinos locales"]
+      ? ["Almuerzo a bordo", "Pescado fresco", "Vinos locales"]
       : isFr
-      ? ["Chef à bord", "Poisson frais", "Vins locaux"]
+      ? ["Déjeuner à bord", "Poisson frais", "Vins locaux"]
       : isDe
-      ? ["Chef an Bord", "Frischer Fisch", "Lokale Weine"]
+      ? ["Mittagessen an Bord", "Frischer Fisch", "Lokale Weine"]
       : isEn
-      ? ["Chef on board", "Fresh fish", "Local wines"]
-      : ["Chef a bordo", "Pesce fresco", "Vini locali"],
+      ? ["Lunch on board", "Fresh fish", "Local wines"]
+      : ["Pranzo a bordo", "Pesce fresco", "Vini locali"],
     pillars,
   };
 }

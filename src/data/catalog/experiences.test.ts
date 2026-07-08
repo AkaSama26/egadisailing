@@ -128,7 +128,7 @@ describe("fishing charter catalog", () => {
 
   it("publishes SEO-first slugs for non-8-hour experiences", () => {
     expect(getExperiencePublicSlug("exclusive-experience", "it")).toBe(
-      "chef-a-bordo-egadi-trimarano-da-trapani",
+      "pranzo-a-bordo-egadi-trimarano-da-trapani",
     );
     expect(getExperiencePublicSlug("cabin-charter", "it")).toBe(
       "charter-egadi-trimarano-da-trapani",
@@ -141,7 +141,7 @@ describe("fishing charter catalog", () => {
     );
 
     expect(getExperiencePublicSlug("exclusive-experience", "en")).toBe(
-      "chef-on-board-egadi-trimaran-from-trapani",
+      "lunch-on-board-egadi-trimaran-from-trapani",
     );
     expect(getExperiencePublicSlug("cabin-charter", "en")).toBe(
       "egadi-trimaran-charter-from-trapani",
@@ -166,7 +166,7 @@ describe("fishing charter catalog", () => {
       "Escursione in barca Favignana e Levanzo 8 ore da Trapani",
     );
     expect(italianPackages[1]?.title).toBe("Tour privato alle Egadi 4 ore da Trapani");
-    expect(italianPackages[2]?.title).toBe("Chef a bordo alle Egadi in trimarano");
+    expect(italianPackages[2]?.title).toBe("Pranzo a bordo alle Egadi in trimarano");
   });
 
   it("localizes new trimaran gallery captions and alt text beyond English", () => {
@@ -198,7 +198,7 @@ describe("fishing charter catalog", () => {
       ),
     ).toMatchObject({
       caption: "Salón con vistas al mar",
-      alt: "Salón con vistas al mar durante la experiencia chef a bordo en trimarán por las Islas Egadi",
+      alt: "Salón con vistas al mar durante la experiencia almuerzo a bordo en trimarán por las Islas Egadi",
     });
     expect(
       getExperienceContent("cabin-charter", "fr")?.media.find(

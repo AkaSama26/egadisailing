@@ -84,27 +84,27 @@ const HOME_SEO_COPY = {
   it: {
     title: "Tour in barca Egadi da Trapani | Egadi Sailing",
     description:
-      "Tour in barca alle Egadi da Trapani con barche private o condivise, trimarano con comfort da catamarano, snorkeling, chef a bordo, Favignana e Levanzo.",
+      "Tour in barca alle Egadi da Trapani con barche private o condivise, trimarano con comfort da catamarano, snorkeling, pranzo a bordo, Favignana e Levanzo.",
   },
   en: {
     title: "Egadi Islands Boat Tours from Trapani | Egadi Sailing",
     description:
-      "Egadi Islands boat tours and boat trips from Trapani to Favignana and Levanzo: shared or private tours, snorkelling, chef on board and trimaran charters.",
+      "Egadi Islands boat tours and boat trips from Trapani to Favignana and Levanzo: shared or private tours, snorkelling, lunch on board and trimaran charters.",
   },
   es: {
     title: "Paseos en barco desde Trapani a las Islas Egadi | Egadi Sailing",
     description:
-      "Paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, chef a bordo y charter en trimarán.",
+      "Paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, almuerzo a bordo y charter en trimarán.",
   },
   fr: {
     title: "Excursions bateau aux Égades depuis Trapani | Egadi Sailing",
     description:
-      "Excursions bateau depuis Trapani vers les îles Égades : Favignana et Levanzo, sorties privées ou partagées, snorkeling, chef à bord et charter en trimaran.",
+      "Excursions bateau depuis Trapani vers les îles Égades : Favignana et Levanzo, sorties privées ou partagées, snorkeling, déjeuner à bord et charter en trimaran.",
   },
   de: {
     title: "Bootstouren ab Trapani zu den Ägadischen Inseln | Egadi Sailing",
     description:
-      "Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana und Levanzo, geteilte oder private Ausfahrten, Schnorcheln, Chef an Bord und Trimaran-Charter.",
+      "Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana und Levanzo, geteilte oder private Ausfahrten, Schnorcheln, Mittagessen an Bord und Trimaran-Charter.",
   },
 } as const;
 
@@ -294,14 +294,14 @@ function heroCardCopy(
   const copyByPackage: Record<string, { title: string; subtitle: string }> = {
     "esperienza-gourmet-trimarano": {
       title: isEs
-        ? "Chef a bordo en trimarán en las Islas Egadi"
+        ? "Almuerzo a bordo en trimarán en las Islas Egadi"
         : isFr
-        ? "Chef à bord en trimaran aux îles Égades"
+        ? "Déjeuner à bord en trimaran aux îles Égades"
         : isDe
-        ? "Chef an Bord auf dem Trimaran zu den Ägadischen Inseln"
+        ? "Mittagessen an Bord auf dem Trimaran zu den Ägadischen Inseln"
         : isEn
-        ? "Chef on board in a trimaran in the Egadi Islands"
-        : "Chef a bordo in trimarano alle Egadi",
+        ? "Lunch on board in a trimaran in the Egadi Islands"
+        : "Pranzo a bordo in trimarano alle Egadi",
       subtitle: isEs
         ? "Trimarán privado, comida y tripulación dedicada."
         : isFr
@@ -414,14 +414,14 @@ function heroCardImagesForPackage(packageKey: string, locale: string): Array<{ s
     "esperienza-gourmet-trimarano": {
       src: "/images/boats/neel-47/trimarano-pasta-saltata.webp",
       alt: isEs
-        ? "Chef a bordo en trimarán durante una experiencia gourmet en las Islas Egadi"
+        ? "Almuerzo a bordo en trimarán durante una experiencia gourmet en las Islas Egadi"
         : isFr
-        ? "Chef à bord en trimaran pendant une expérience gourmet aux îles Égades"
+        ? "Déjeuner à bord en trimaran pendant une expérience gourmet aux îles Égades"
         : isDe
-        ? "Chef an Bord auf dem Trimaran während eines Gourmet-Erlebnisses zu den Ägadischen Inseln"
+        ? "Mittagessen an Bord auf dem Trimaran während eines Gourmet-Erlebnisses zu den Ägadischen Inseln"
         : isEn
-        ? "Chef on board a trimaran during an Egadi Islands gourmet experience"
-        : "Chef a bordo in trimarano durante esperienza gourmet alle Egadi",
+        ? "Lunch on board a trimaran during an Egadi Islands gourmet experience"
+        : "Pranzo a bordo in trimarano durante esperienza gourmet alle Egadi",
     },
     "charter-egadi": {
       src: "/images/boats/neel-47/trimarano-relax-rete.webp",

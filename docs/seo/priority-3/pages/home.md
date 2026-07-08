@@ -9,14 +9,14 @@
 
 ## Intento Della Nostra Pagina
 - Intento primario: Brand Egadisailing e operatore premium per esperienze in barca alle Egadi
-- Intento secondario: Orientare verso tour, privato, chef, charter e prenotazione senza diventare il money hub generico.
+- Intento secondario: Orientare verso tour, privato, pranzo a bordo, charter e prenotazione senza diventare il money hub generico.
 - Cosa NON deve targetizzare: Non deve competere direttamente con 'tour in barca alle Egadi da Trapani', che appartiene al hub esperienze.
 - Ruolo nella SEO architecture: Pagina di fiducia, brand e smistamento: deve aumentare E-E-A-T locale e distribuire link equity alle pagine money.
 
 ## Analisi Competitor
 | Competitor | URL | Intento pagina | Cosa fa bene | Gap rispetto a noi |
 |---|---|---|---|---|
-| Egadi Charter & Tour | https://egadicharterandtour.com/ | Charter e tour privati Egadi | Forte matching su charter/privato | Noi dobbiamo valorizzare Neel 47, chef e comfort da trimarano |
+| Egadi Charter & Tour | https://egadicharterandtour.com/ | Charter e tour privati Egadi | Forte matching su charter/privato | Noi dobbiamo valorizzare Neel 47, pranzo a bordo e comfort da trimarano |
 | EmotionSicily | https://www.emotionsicily.it/ | Esperienze Sicilia premium | Immaginario emozionale e local experience | Noi abbiamo prodotto piu' specifico sulle Egadi |
 | Egadi Summer Sea | https://www.egadisummersea.it/en/charter-dinghy-trapani/ | Charter con skipper | Pagina verticale internazionale | Noi dobbiamo localizzare bene EN/ES/FR/DE |
 

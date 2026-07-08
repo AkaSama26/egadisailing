@@ -26,7 +26,7 @@ Per evitare duplicati e cannibalizzazione, il feed Things to do dovrebbe avere 5
 | --- | --- | --- | --- | --- | --- |
 | `tour-barca-egadi-8-ore` | Escursione in barca Favignana e Levanzo 8 ore da Trapani | Condiviso, privato | `/it/esperienze/escursione-barca-favignana-levanzo-da-trapani`, `/it/esperienze/tour-privato-favignana-levanzo-da-trapani` | da EUR 75 a persona, privato da EUR 900 per barca | pronto quasi completo |
 | `tour-privato-egadi-4-ore` | Tour privato alle Egadi 4 ore da Trapani | Mattina, pomeriggio | `/it/esperienze/tour-privato-egadi-4-ore-mattina-da-trapani`, `/it/esperienze/tour-privato-egadi-4-ore-pomeriggio-da-trapani` | da EUR 630 per barca | pronto quasi completo |
-| `chef-a-bordo-egadi-trimarano` | Chef a bordo alle Egadi in trimarano | Giornata privata 8 ore | `/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani` | da EUR 2000 per pacchetto | pronto quasi completo |
+| `pranzo-a-bordo-egadi-trimarano` | Pranzo a bordo alle Egadi in trimarano | Giornata privata 8 ore | `/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani` | da EUR 2000 per pacchetto | pronto quasi completo |
 | `charter-egadi-trimarano` | Charter Egadi in trimarano da Trapani | 3, 4, 5, 6, 7 giorni | `/it/esperienze/charter-egadi-trimarano-da-trapani` | da EUR 3250 per 3 giorni | serve attenzione su multidata/prezzo |
 | `charter-pesca-egadi` | Charter pesca Egadi da Trapani | Giornata privata 8 ore | `/it/esperienze/charter-pesca-egadi-da-trapani` | da EUR 800 per gruppo | pronto quasi completo |
 
@@ -90,15 +90,15 @@ Link: `/it/barche/catamarano-egadi-trimarano-da-trapani`
 
 ### Categoria servizio: Esperienze private premium
 
-Servizio: Chef a bordo alle Egadi
+Servizio: Pranzo a bordo alle Egadi
 
 Descrizione:
 
-Giornata privata in trimarano da Trapani con chef a bordo, skipper, hostess, pranzo cucinato a bordo e soste tra Favignana e Levanzo. Esperienza premium con comfort da catamarano.
+Giornata privata in trimarano da Trapani con pranzo a bordo cucinato dalla crew, skipper, hostess e soste tra Favignana e Levanzo. Esperienza premium con comfort da catamarano.
 
 Prezzo: da EUR 2000 per pacchetto.
 
-Link: `/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani`
+Link: `/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani`
 
 ### Categoria servizio: Pesca sportiva
 

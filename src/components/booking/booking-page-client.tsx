@@ -71,9 +71,9 @@ const BOOKING_BOAT_ORDER: Record<string, number> = {
   boat: 20,
   "fishing-rib": 30,
 };
-const CHEF_TRIMARAN_SERVICE_ID = "exclusive-experience";
-const CHEF_TRIMARAN_CARD_IMAGE_SRC = "/images/home/trimarano-favignana.webp";
-const CHEF_TRIMARAN_DESKTOP_CARD_IMAGE_SRC = "/images/boats/neel-47/neel-47-chef.webp";
+const LUNCH_TRIMARAN_SERVICE_ID = "exclusive-experience";
+const LUNCH_TRIMARAN_CARD_IMAGE_SRC = "/images/home/trimarano-favignana.webp";
+const LUNCH_TRIMARAN_DESKTOP_CARD_IMAGE_SRC = "/images/boats/neel-47/neel-47-pranzo-a-bordo.webp";
 const PRIVATE_BOAT_DESKTOP_CARD_IMAGE_SRC =
   "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp";
 
@@ -118,14 +118,14 @@ function bookingCategoryHint(boatId: string, locale: string): string {
   }
   if (boatId === "trimarano") {
     return locale === "es"
-      ? "Confort y chef"
+      ? "Confort y almuerzo"
       : locale === "fr"
-        ? "Confort et chef"
+        ? "Confort et déjeuner"
         : locale === "de"
-          ? "Komfort und Chef"
+          ? "Komfort und Mittagessen"
           : locale === "en"
-            ? "Comfort and chef"
-            : "Comfort e chef";
+            ? "Comfort and lunch"
+            : "Comfort e pranzo";
   }
   if (boatId === "fishing-rib") {
     return locale === "es"
@@ -144,14 +144,14 @@ function bookingCategoryHint(boatId: string, locale: string): string {
 function bookingBoatSubtitle(boatId: string, locale: string): string {
   if (boatId === "trimarano") {
     return locale === "es"
-      ? "Confort premium, chef a bordo y charter privado."
+      ? "Confort premium, almuerzo a bordo y charter privado."
       : locale === "fr"
-        ? "Confort premium, chef à bord et charters privés."
+        ? "Confort premium, déjeuner à bord et charters privés."
         : locale === "de"
-          ? "Premium-Komfort, Chefkoch an Bord und private Charter."
+          ? "Premium-Komfort, Mittagessen an Bord und private Charter."
           : locale === "en"
-            ? "Premium comfort, chef on board and private charters."
-            : "Comfort premium, chef a bordo e charter privati.";
+            ? "Premium comfort, lunch on board and private charters."
+            : "Comfort premium, pranzo a bordo e charter privati.";
   }
   if (boatId === "boat") {
     return locale === "es"
@@ -293,18 +293,18 @@ function nextStepAfterExperience(services: BookingServiceOption[]): SelectionSte
   return "booking";
 }
 
-function isChefTrimaranService(service: BookingServiceOption | undefined): boolean {
-  return Boolean(service && service.id === CHEF_TRIMARAN_SERVICE_ID && service.boatId === "trimarano");
+function isLunchTrimaranService(service: BookingServiceOption | undefined): boolean {
+  return Boolean(service && service.id === LUNCH_TRIMARAN_SERVICE_ID && service.boatId === "trimarano");
 }
 
 function cardImageSrc(service: BookingServiceOption | undefined): string {
   if (!service) return "/videos/hero-poster.webp";
-  if (isChefTrimaranService(service)) return CHEF_TRIMARAN_CARD_IMAGE_SRC;
+  if (isLunchTrimaranService(service)) return LUNCH_TRIMARAN_CARD_IMAGE_SRC;
   return service.imageSrc ?? service.boatImageSrc ?? bookingBoatImageSrc(service);
 }
 
 function desktopCardImageSrc(service: BookingServiceOption | undefined): string | undefined {
-  if (isChefTrimaranService(service)) return CHEF_TRIMARAN_DESKTOP_CARD_IMAGE_SRC;
+  if (isLunchTrimaranService(service)) return LUNCH_TRIMARAN_DESKTOP_CARD_IMAGE_SRC;
   if (service?.boatId === "boat" && service.serviceType === "BOAT_EXCLUSIVE") {
     return PRIVATE_BOAT_DESKTOP_CARD_IMAGE_SRC;
   }
@@ -312,7 +312,7 @@ function desktopCardImageSrc(service: BookingServiceOption | undefined): string 
 }
 
 function experienceCardImageSrc(option: ExperienceOption, primaryService: BookingServiceOption | undefined): string {
-  if (isChefTrimaranService(primaryService)) return CHEF_TRIMARAN_CARD_IMAGE_SRC;
+  if (isLunchTrimaranService(primaryService)) return LUNCH_TRIMARAN_CARD_IMAGE_SRC;
   return option.imageSrc ?? cardImageSrc(primaryService);
 }
 
@@ -320,7 +320,7 @@ function experienceCardDesktopImageSrc(
   option: ExperienceOption,
   primaryService: BookingServiceOption | undefined,
 ): string | undefined {
-  if (isChefTrimaranService(primaryService)) return CHEF_TRIMARAN_DESKTOP_CARD_IMAGE_SRC;
+  if (isLunchTrimaranService(primaryService)) return LUNCH_TRIMARAN_DESKTOP_CARD_IMAGE_SRC;
   if (option.key === "boat:BOAT_EXCLUSIVE") return PRIVATE_BOAT_DESKTOP_CARD_IMAGE_SRC;
   return desktopCardImageSrc(primaryService);
 }

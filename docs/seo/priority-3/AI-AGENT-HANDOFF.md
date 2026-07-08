@@ -53,7 +53,7 @@ Implementare:
 
 - `pages/experiences/private-egadi-4h-morning.md`
 - `pages/experiences/private-egadi-4h-afternoon.md`
-- `pages/experiences/chef-on-board-trimaran.md`
+- `pages/experiences/lunch-on-board-trimaran.md`
 - `pages/experiences/trimaran-charter-egadi.md`
 - `pages/experiences/fishing-charter-egadi.md`
 

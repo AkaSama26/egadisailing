@@ -16,9 +16,9 @@
   },
   "hero": {
     "title": "Lascia la Terra Ferma",
-    "subtitle": "Scopri le Isole Egadi. Trimarano con chef, escursioni esclusive e charter da Trapani",
+    "subtitle": "Scopri le Isole Egadi. Trimarano con pranzo a bordo, escursioni esclusive e charter da Trapani",
     "seoTitle": "Tour in barca alle Egadi da Trapani",
-    "seoSubtitle": "Tour privati e condivisi, chef a bordo e charter in trimarano tra Favignana, Levanzo e Marettimo, con skipper locale e partenza dal Porto di Trapani.",
+    "seoSubtitle": "Tour privati e condivisi, pranzo a bordo e charter in trimarano tra Favignana, Levanzo e Marettimo, con skipper locale e partenza dal Porto di Trapani.",
     "cta": "Esplora le Esperienze",
     "vehicleLabel": "Mezzo",
     "vehiclePlaceholder": "Scegli il mezzo",
@@ -45,7 +45,7 @@
     },
     "exclusive": {
       "title": "Exclusive Experience",
-      "short": "Chef rinomato, rotta personalizzata, lusso senza compromessi."
+      "short": "Pranzo a bordo cucinato dalla crew, rotta personalizzata e comfort senza compromessi."
     },
     "cabinCharter": {
       "title": "Charter",
@@ -88,9 +88,7 @@
     "value2Title": "Ospitalità Siciliana",
     "value2Desc": "Accoglienza calorosa, pranzi preparati con amore e attenzione ai dettagli: la tradizione siciliana a bordo delle nostre barche.",
     "value3Title": "Rispetto dell'Ambiente",
-    "value3Desc": "Navighiamo con responsabilità, proteggendo l'ecosistema marino delle Egadi per le generazioni future.",
-    "crewTitle": "La Nostra Crew",
-    "crewText": "Il nostro team è composto da professionisti del mare: skipper esperti, chef talentuosi e hostess attente. Ogni membro della crew condivide la stessa passione per le Egadi e per l'ospitalità."
+    "value3Desc": "Navighiamo con responsabilità, proteggendo l'ecosistema marino delle Egadi per le generazioni future."
   },
   "contacts": {
     "title": "Contattaci",
@@ -142,7 +140,7 @@
     "boat": "Barca",
     "allExperiences": "Tutte le Esperienze",
     "include1": "Skipper professionista",
-    "include2": "Pranzo preparato dallo chef con pesce fresco",
+    "include2": "Pranzo a bordo cucinato dalla crew con pesce fresco",
     "include3": "Attrezzatura snorkeling",
     "include4": "Asciugamani di bordo",
     "include5": "Acqua e soft drink",
@@ -156,7 +154,7 @@
     "itin2Time": "10:00",
     "itin2Text": "Arrivo a Favignana — Cala Rossa, tuffi e snorkeling",
     "itin3Time": "12:30",
-    "itin3Text": "Pranzo a bordo preparato dallo chef",
+    "itin3Text": "Pranzo a bordo cucinato dalla crew",
     "itin4Time": "14:00",
     "itin4Text": "Navigazione panoramica lungo Favignana",
     "itin5Time": "15:30",
@@ -193,7 +191,7 @@
     "q4": "I bambini possono partecipare?",
     "a4": "Sì, i bambini sono i benvenuti a bordo! Per i più piccoli (sotto i 3 anni) chiediamo di contattarci in anticipo. Giubbotti di salvataggio per bambini sono sempre disponibili.",
     "q5": "Il pranzo è incluso?",
-    "a5": "Per Social Boating e Exclusive Experience il pranzo preparato dallo chef è incluso nel prezzo. Per i Boat Tour, è possibile aggiungere il servizio pranzo su richiesta.",
+    "a5": "Per Social Boating e Exclusive Experience il pranzo a bordo cucinato dalla crew è incluso nel prezzo. Per i Boat Tour, è possibile aggiungere il servizio pranzo su richiesta.",
     "q6": "Dove ci si imbarca?",
     "a6": "L'imbarco avviene dal Porto di Trapani. Ti invieremo le indicazioni esatte e il punto di incontro via email dopo la conferma della prenotazione."
   },
@@ -208,7 +206,7 @@
     "socialBoating": {
       "stop1": { "name": "Partenza", "description": "Imbarco al porto di Trapani, welcome drink e briefing del capitano" },
       "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "Tuffo nelle acque turchesi più famose del Mediterraneo, snorkeling tra fondali di posidonia" },
-      "stop3": { "name": "Pranzo a bordo", "description": "Lo chef prepara pesce freschissimo del giorno con vista mare aperto" },
+      "stop3": { "name": "Pranzo a bordo", "description": "La crew cucina pesce freschissimo del giorno con vista mare aperto" },
       "stop4": { "name": "Bue Marino", "island": "Favignana", "description": "Grotta marina spettacolare, acque cristalline tra le falesie" },
       "stop5": { "name": "Rientro", "description": "Navigazione al tramonto verso Trapani" }
     },
@@ -216,7 +214,7 @@
       "stop1": { "name": "Accoglienza a bordo", "description": "Punto di incontro: Via dei Gladioli 15, 91100 Trapani." },
       "stop2": { "name": "Cala Azzurra", "island": "Favignana", "description": "Bagno in acque cristalline. Cala Azzurra, Favignana, Free municipal consortium of Trapani, Italy." },
       "stop3": { "name": "Cala Rossa", "island": "Favignana", "description": "Pranzo gourmet in rada. Cala Rossa, Favignana, Free municipal consortium of Trapani, Italy, 91023." },
-      "stop4": { "name": "Show cooking a bordo", "description": "Lo chef locale prepara il pranzo in rada a Cala Rossa, Favignana." },
+      "stop4": { "name": "Pranzo a bordo", "description": "La crew prepara il pranzo a bordo in rada a Cala Rossa, Favignana." },
       "stop5": { "name": "Pranzo vista mare", "description": "Pranzo gourmet vista mare a Cala Rossa, Favignana." },
       "stop6": { "name": "Relax a Cala Rossa", "island": "Favignana", "description": "Relax e sosta bagno nelle acque di Cala Rossa, Favignana." },
       "stop7": { "name": "Cala Dogana", "island": "Levanzo", "description": "Sosta a Spiaggia di Cala Dogana, Levanzo, Free municipal consortium of Trapani, Italy, 91023 Levanzo." },
@@ -247,17 +245,17 @@
     "islandsTitle": "Le Isole Egadi",
     "islandsSubtitle": "Tre gioielli nel cuore del Mediterraneo",
     "whyTitle": "Perché Egadisailing",
-    "whyChef": "Chef a Bordo",
-    "whyChefDesc": "Pranzo di pesce fresco preparato dal nostro chef, con ingredienti locali e ricette siciliane.",
+    "whyLunch": "Pranzo a bordo",
+    "whyLunchDesc": "Pranzo di pesce fresco cucinato dalla crew, con ingredienti locali e ricette siciliane.",
     "whyLuxury": "Lusso Accessibile",
     "whyLuxuryDesc": "Esperienze premium a prezzi ragionevoli, per vivere il mare come meriti.",
     "whyCrew": "Crew Esperta",
-    "whyCrewDesc": "Skipper, chef e hostess professionisti per un'esperienza sicura e curata nei dettagli.",
+    "whyCrewDesc": "Skipper, hostess e crew professionale per un'esperienza sicura e curata nei dettagli.",
     "whyIslands": "Isole Incontaminate",
     "whyIslandsDesc": "Le acque più cristalline del Mediterraneo, grotte marine e calette nascoste.",
     "testimonialsTitle": "Cosa Dicono i Nostri Ospiti",
     "ctaTitle": "Prenota il tuo tour in barca alle Egadi da Trapani",
-    "ctaSubtitle": "Scegli tour condiviso, barca privata, chef a bordo o charter alle Egadi",
+    "ctaSubtitle": "Scegli tour condiviso, barca privata, pranzo a bordo o charter alle Egadi",
     "ctaButton": "Esplora le Esperienze"
   }
 }

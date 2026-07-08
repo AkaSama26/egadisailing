@@ -17,8 +17,8 @@ Piattaforma web completa per **Egadisailing**, business di charter nautico luxur
 
 | Servizio | Capacita | Prezzo | Durata | Crew | Note |
 |----------|----------|--------|--------|------|------|
-| Social Boating | Max 20 pax | 120EUR (bassa) - 150EUR (alta) /pax | 8h | Skipper, Chef, Hostess | Min 11 paganti. Aperitivo + pranzo pesce incluso. Drink alcolici a pagamento a bordo |
-| Exclusive Experience | Max 20 pax | Dinamico (da dashboard) | 8h | Skipper, Chef rinomato, Hostess | Menu raffinato. Drink a pagamento a bordo |
+| Social Boating | Max 20 pax | 120EUR (bassa) - 150EUR (alta) /pax | 8h | Skipper, Crew cucina, Hostess | Min 11 paganti. Aperitivo + pranzo pesce incluso. Drink alcolici a pagamento a bordo |
+| Exclusive Experience | Max 20 pax | Dinamico (da dashboard) | 8h | Skipper, pranzo a bordo cucinato dalla crew, Hostess | Menu raffinato. Drink a pagamento a bordo |
 | Cabin Charter | Max 4 coppie (3 cabine) | 2.300EUR/cabina/settimana | 7 giorni | Skipper + crew | Prenotabile per singola cabina o intero trimarano |
 
 ### Barca
@@ -87,7 +87,7 @@ Piattaforma web completa per **Egadisailing**, business di charter nautico luxur
 |--------|-------------|
 | **Homepage** | Hero video/immagine Egadi, presentazione servizi, CTA prenotazione, testimonial |
 | **Trimarano Social Boating** | Descrizione, galleria, prezzi stagionali, calendario disponibilita, prenota |
-| **Trimarano Exclusive** | Esperienza premium, chef, menu, galleria, prenota per gruppo |
+| **Trimarano Exclusive** | Esperienza premium, pranzo a bordo, menu, galleria, prenota per gruppo |
 | **Cabin Charter** | Esperienza settimanale, cabine, itinerario, prenota cabina o intero |
 | **Boat Tour Condiviso** | Max 12 pax, prezzi giornata/mattina, prenota |
 | **Boat Tour Esclusivo** | Barca esclusiva, prezzi, prenota |
@@ -101,7 +101,7 @@ Ogni servizio ha una pagina dettaglio con:
 
 - **Hero** con galleria foto/video
 - **Itinerario della giornata** — timeline visuale (es: partenza Trapani -> Favignana -> Cala Rossa -> pranzo a bordo -> Levanzo -> rientro)
-- **Cosa include** — checklist visiva (pranzo chef, snorkeling, asciugamani, etc.)
+- **Cosa include** — checklist visiva (pranzo a bordo, snorkeling, asciugamani, etc.)
 - **Cosa portare** — crema solare, costume, etc.
 - **Prezzi e stagionalita** — tabella dinamica per periodo
 - **Calendario disponibilita** con CTA "Prenota ora"
@@ -113,7 +113,7 @@ Ogni servizio ha una pagina dettaglio con:
 - **Scheda tecnica** — nome, tipo, lunghezza, anno, capacita max
 - **Galleria fotografica** — interni, esterni, deck, cabine
 - **Dotazioni** — doccia, frigo, casse audio, zona ombra, snorkeling gear, etc.
-- **Crew associata** — presentazione skipper/chef/hostess con foto e bio
+- **Crew associata** — presentazione skipper/crew cucina/hostess con foto e bio
 - **Mappa cabine** (cabin charter) — layout visuale 3 cabine
 - **Servizi disponibili** — link ai servizi prenotabili su questa barca
 
@@ -182,7 +182,7 @@ Tutti i contenuti gestibili dalla dashboard admin.
 
 #### Gestione Crew
 
-- Anagrafica crew: skipper, chef, hostess
+- Anagrafica crew: skipper, crew cucina, hostess
 - Assegnazione crew alle uscite dal calendario
 - Vista disponibilita crew
 
@@ -207,7 +207,7 @@ Tutta la dashboard costruita con **shadcn/ui** (tabelle, form, calendar, dialog,
 | **Trip** | servizio_id, data, ora_partenza, ora_ritorno, stato (programmata/completata/cancellata), posti_disponibili |
 | **Booking** | trip_id, cliente_id, num_persone, prezzo_totale, stato (confermata/attesa/cancellata/rimborsata), canale (sito/gyg/airbnb/clickandboat/manuale), stripe_payment_id |
 | **Customer** | nome, email, telefono, nazionalita, lingua, note |
-| **CrewMember** | nome, ruolo (skipper/chef/hostess), telefono, email |
+| **CrewMember** | nome, ruolo (skipper/crew cucina/hostess), telefono, email |
 | **TripCrew** | trip_id, crew_member_id |
 | **PortalSync** | portale, ultimo_sync, stato, log_errori |
 | **User** | email, password_hash, ruolo (admin/staff) |
@@ -274,8 +274,8 @@ Tutta la dashboard costruita con **shadcn/ui** (tabelle, form, calendar, dialog,
 - Sofisticato per l'exclusive experience, conviviale e inclusivo per il social boating
 
 **Esempi di copy:**
-- Social Boating: *"Sali a bordo, il mare delle Egadi ti aspetta. Navigazione, tuffi in acque cristalline e pranzo di pesce fresco preparato dal nostro chef."*
-- Exclusive: *"Un'esperienza riservata a te e ai tuoi ospiti. Chef rinomato, rotta personalizzata, lusso senza compromessi."*
+- Social Boating: *"Sali a bordo, il mare delle Egadi ti aspetta. Navigazione, tuffi in acque cristalline e pranzo di pesce fresco cucinato dalla crew."*
+- Exclusive: *"Un'esperienza riservata a te e ai tuoi ospiti. Pranzo a bordo cucinato dalla crew, rotta personalizzata, lusso senza compromessi."*
 - Cabin Charter: *"Una settimana tra Favignana, Levanzo e Marettimo. La tua casa e il mare."*
 
 ### Palette Colori

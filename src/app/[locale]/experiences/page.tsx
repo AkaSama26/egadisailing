@@ -92,7 +92,7 @@ function experienceHubSeoCopy(locale: string, fallback: { title: string; descrip
     return {
       title: "Tour in barca Egadi da Trapani | Egadi Sailing",
       description:
-        "Confronta tour in barca alle Egadi da Trapani: Favignana e Levanzo, escursioni condivise o private, trimarano, chef a bordo e pesca.",
+        "Confronta tour in barca alle Egadi da Trapani: Favignana e Levanzo, escursioni condivise o private, trimarano, pranzo a bordo e pesca.",
     };
   }
 
@@ -100,7 +100,7 @@ function experienceHubSeoCopy(locale: string, fallback: { title: string; descrip
     return {
       title: "Excursions bateau Égades depuis Trapani | Egadi Sailing",
       description:
-        "Comparez les excursions bateau aux îles Égades depuis Trapani : Favignana, Levanzo, sorties privées ou partagées, trimaran, chef à bord et pêche.",
+        "Comparez les excursions bateau aux îles Égades depuis Trapani : Favignana, Levanzo, sorties privées ou partagées, trimaran, déjeuner à bord et pêche.",
     };
   }
 
@@ -108,7 +108,7 @@ function experienceHubSeoCopy(locale: string, fallback: { title: string; descrip
     return {
       title: "Bootstouren ab Trapani zu den Ägadischen Inseln | Egadi Sailing",
       description:
-        "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana, Levanzo, private oder geteilte Ausfahrten, Trimaran, Chef an Bord und Angeln.",
+        "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana, Levanzo, private oder geteilte Ausfahrten, Trimaran, Mittagessen an Bord und Angeln.",
     };
   }
 
@@ -434,7 +434,7 @@ function getHubCopy(locale: string) {
   if (locale === "es") {
     return {
       intro:
-        "Compara paseos en barco desde Trapani a las Islas Egadi antes de elegir la fórmula adecuada: excursión compartida, tour privado, medio día de 4 horas, día completo a Favignana y Levanzo, charter en trimarán, chef a bordo o pesca deportiva. Desde Via dei Gladioli 15, cerca del Puerto de Trapani, las rutas se planifican según Favignana, Levanzo y las mejores condiciones del mar. Las paradas posibles incluyen Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda y Cala Minnola. Cada paquete indica duración, precio, capacidad, incluidos, snorkel, patrón, combustible y política de cancelación o reembolso por mal tiempo.",
+        "Compara paseos en barco desde Trapani a las Islas Egadi antes de elegir la fórmula adecuada: excursión compartida, tour privado, medio día de 4 horas, día completo a Favignana y Levanzo, charter en trimarán, almuerzo a bordo o pesca deportiva. Desde Via dei Gladioli 15, cerca del Puerto de Trapani, las rutas se planifican según Favignana, Levanzo y las mejores condiciones del mar. Las paradas posibles incluyen Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda y Cala Minnola. Cada paquete indica duración, precio, capacidad, incluidos, snorkel, patrón, combustible y política de cancelación o reembolso por mal tiempo.",
       labels: {
         duration: "Duración",
         price: "Precio",
@@ -463,7 +463,7 @@ function getHubCopy(locale: string) {
         },
         {
           question: "¿Qué incluye el precio?",
-          answer: "Cada página indica los incluidos exactos. En general encontrarás skipper, carburante para la ruta prevista, agua o soft drink, snorkeling, asistencia a bordo e indicaciones sobre comida o chef cuando previsto.",
+          answer: "Cada página indica los incluidos exactos. En general encontrarás skipper, carburante para la ruta prevista, agua o soft drink, snorkeling, asistencia a bordo e indicaciones sobre comida a bordo cuando prevista.",
         },
         {
           question: "¿Qué pasa con mal tiempo?",
@@ -486,9 +486,9 @@ function getHubCopy(locale: string) {
 	          includes: "Barco privado, skipper, combustible, snorkel y paradas de baño.",
 	        },
         "esperienza-gourmet-trimarano": {
-          formula: "Trimarán privado con chef",
+          formula: "Trimarán privado con almuerzo a bordo",
           route: "Desde Trapani hacia Favignana y Levanzo, con almuerzo a bordo, paradas de baño y comodidad de catamarán.",
-          includes: "Chef, patrón, azafata, comida, bebidas, combustible y snorkel.",
+          includes: "Almuerzo a bordo cocinado por la tripulación, patrón, azafata, bebidas, combustible y snorkel.",
         },
         "charter-egadi": {
           formula: "Charter privado 3-7 días",
@@ -507,7 +507,7 @@ function getHubCopy(locale: string) {
   if (locale === "fr") {
     return {
       intro:
-        "Choisissez votre excursion en bateau aux îles Égades depuis Trapani en comparant durée, prix, capacité, formule et route. Depuis Via dei Gladioli 15, près du port de Trapani, vous pouvez réserver excursions partagées de 8 heures à Favignana et Levanzo, excursions privées de 4 heures, charter en trimaran, chef à bord ou pêche sportive. Les étapes possibles incluent Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda et Cala Minnola, toujours selon météo, vent et sécurité. Chaque forfait indique inclus, snorkeling, skipper, carburant et politique d'annulation ou remboursement en cas de mauvaise météo.",
+        "Choisissez votre excursion en bateau aux îles Égades depuis Trapani en comparant durée, prix, capacité, formule et route. Depuis Via dei Gladioli 15, près du port de Trapani, vous pouvez réserver excursions partagées de 8 heures à Favignana et Levanzo, excursions privées de 4 heures, charter en trimaran, déjeuner à bord ou pêche sportive. Les étapes possibles incluent Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda et Cala Minnola, toujours selon météo, vent et sécurité. Chaque forfait indique inclus, snorkeling, skipper, carburant et politique d'annulation ou remboursement en cas de mauvaise météo.",
       labels: {
         duration: "Durée",
         price: "Prix",
@@ -536,7 +536,7 @@ function getHubCopy(locale: string) {
         },
         {
           question: "Qu'est-ce qui est inclus dans le prix ?",
-          answer: "Chaque page indique les inclus exacts. En général : skipper, carburant pour la route prévue, eau ou boissons fraîches, snorkeling, assistance à bord et repas ou chef quand prévu.",
+          answer: "Chaque page indique les inclus exacts. En général : skipper, carburant pour la route prévue, eau ou boissons fraîches, snorkeling, assistance à bord et déjeuner à bord quand prévu.",
         },
         {
           question: "Que se passe-t-il en cas de mauvaise météo ?",
@@ -544,7 +544,7 @@ function getHubCopy(locale: string) {
         },
         {
           question: "Quelle excursion choisir pour Favignana et Levanzo ?",
-          answer: "Pour Favignana et Levanzo depuis Trapani, la formule la plus complète est l'excursion de 8 heures. Pour événements, familles ou intimité, choisissez privé, chef à bord ou charter.",
+          answer: "Pour Favignana et Levanzo depuis Trapani, la formule la plus complète est l'excursion de 8 heures. Pour événements, familles ou intimité, choisissez privé, déjeuner à bord ou charter.",
         },
       ],
       facts: {
@@ -559,9 +559,9 @@ function getHubCopy(locale: string) {
           includes: "Bateau privé, skipper, carburant, snorkeling et arrêts baignade.",
         },
         "esperienza-gourmet-trimarano": {
-          formula: "Trimaran privé avec chef",
+          formula: "Trimaran privé avec déjeuner à bord",
           route: "Depuis Trapani vers Favignana et Levanzo, avec déjeuner à bord, arrêts baignade et confort de catamaran.",
-          includes: "Chef, skipper, hôtesse, déjeuner, boissons, carburant et snorkeling.",
+          includes: "Déjeuner à bord préparé par l'équipage, skipper, hôtesse, boissons, carburant et snorkeling.",
         },
         "charter-egadi": {
           formula: "Charter privé 3-7 jours",
@@ -580,7 +580,7 @@ function getHubCopy(locale: string) {
   if (locale === "de") {
     return {
       intro:
-        "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln, bevor Sie die passende Formel wählen: geteilte Bootstour, private Ausfahrt, 4-Stunden-Halbtag, 8-stündige Bootstour nach Favignana und Levanzo, Trimaran-Charter, Chef an Bord oder Sportangeln. Ab Via dei Gladioli 15, nahe dem Hafen Trapani, werden die Routen rund um Favignana, Levanzo und die besten Seebedingungen des Tages geplant. Mögliche Stopps sind Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda und Cala Minnola. Jedes Paket zeigt Dauer, Preis, Kapazität, Inklusivleistungen, Schnorcheln, Skipper, Treibstoff sowie Storno- oder Erstattungsregeln bei schlechtem Wetter.",
+        "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln, bevor Sie die passende Formel wählen: geteilte Bootstour, private Ausfahrt, 4-Stunden-Halbtag, 8-stündige Bootstour nach Favignana und Levanzo, Trimaran-Charter, Mittagessen an Bord oder Sportangeln. Ab Via dei Gladioli 15, nahe dem Hafen Trapani, werden die Routen rund um Favignana, Levanzo und die besten Seebedingungen des Tages geplant. Mögliche Stopps sind Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda und Cala Minnola. Jedes Paket zeigt Dauer, Preis, Kapazität, Inklusivleistungen, Schnorcheln, Skipper, Treibstoff sowie Storno- oder Erstattungsregeln bei schlechtem Wetter.",
       labels: {
         duration: "Dauer",
         price: "Preis",
@@ -609,7 +609,7 @@ function getHubCopy(locale: string) {
         },
         {
           question: "Was ist im Preis enthalten?",
-          answer: "Jede Detailseite nennt die genauen Leistungen. Meist enthalten: Skipper, Treibstoff für die geplante Route, Wasser oder Softdrinks, Schnorcheln, Betreuung an Bord und Essen oder Chef, wenn vorgesehen.",
+          answer: "Jede Detailseite nennt die genauen Leistungen. Meist enthalten: Skipper, Treibstoff für die geplante Route, Wasser oder Softdrinks, Schnorcheln, Betreuung an Bord und Mittagessen an Bord, wenn vorgesehen.",
         },
         {
           question: "Was passiert bei schlechtem Wetter?",
@@ -632,9 +632,9 @@ function getHubCopy(locale: string) {
           includes: "Privates Boot, Skipper, Treibstoff, Schnorcheln und Badestopps.",
         },
         "esperienza-gourmet-trimarano": {
-          formula: "Privater Trimaran mit Chef",
+          formula: "Privater Trimaran mit Mittagessen an Bord",
           route: "Von Trapani nach Favignana und Levanzo, mit Mittagessen an Bord, Badestopps und Katamaran-Komfort.",
-          includes: "Chef, Skipper, Hostess, Mittagessen, Getränke, Treibstoff und Schnorcheln.",
+          includes: "Mittagessen an Bord, Skipper, Hostess, Getränke, Treibstoff und Schnorcheln.",
         },
         "charter-egadi": {
           formula: "Privater Charter 3-7 Tage",
@@ -653,7 +653,7 @@ function getHubCopy(locale: string) {
   if (locale === "en") {
     return {
       intro:
-        "Compare Egadi Islands boat tours and boat trips from Trapani before choosing the right format: shared boat tour, private boat tour, 4-hour half day, 8-hour Favignana and Levanzo trip, trimaran charter, chef on board or sport fishing. From Via dei Gladioli 15, near Trapani harbour, routes are planned around Favignana, Levanzo and the best sea conditions of the day. Possible stops include Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda and Cala Minnola. Each package shows duration, price, capacity, inclusions, snorkelling, skipper, fuel and the cancellation or refund policy for unsafe sea conditions.",
+        "Compare Egadi Islands boat tours and boat trips from Trapani before choosing the right format: shared boat tour, private boat tour, 4-hour half day, 8-hour Favignana and Levanzo trip, trimaran charter, lunch on board or sport fishing. From Via dei Gladioli 15, near Trapani harbour, routes are planned around Favignana, Levanzo and the best sea conditions of the day. Possible stops include Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda and Cala Minnola. Each package shows duration, price, capacity, inclusions, snorkelling, skipper, fuel and the cancellation or refund policy for unsafe sea conditions.",
       labels: {
         duration: "Duration",
         price: "Price",
@@ -682,7 +682,7 @@ function getHubCopy(locale: string) {
         },
         {
           question: "What is included in the price?",
-          answer: "Each detail page lists the exact inclusions. In general you will find skipper, fuel for the planned route, water or soft drinks, snorkelling, assistance on board and food or chef service where included.",
+          answer: "Each detail page lists the exact inclusions. In general you will find skipper, fuel for the planned route, water or soft drinks, snorkelling, assistance on board and lunch on board where included.",
         },
         {
           question: "What happens in bad weather?",
@@ -705,9 +705,9 @@ function getHubCopy(locale: string) {
 	          includes: "Private boat, skipper, fuel, snorkelling and swim stops.",
 	        },
         "esperienza-gourmet-trimarano": {
-          formula: "Private trimaran with chef",
+          formula: "Private trimaran with lunch on board",
           route: "From Trapani to Favignana and Levanzo, with lunch on board, swim stops and catamaran-style comfort.",
-          includes: "Chef, skipper, hostess, lunch, drinks, fuel and snorkelling.",
+          includes: "Lunch on board cooked by the crew, skipper, hostess, drinks, fuel and snorkelling.",
         },
         "charter-egadi": {
           formula: "Private 3-7 day charter",
@@ -725,7 +725,7 @@ function getHubCopy(locale: string) {
 
   return {
     intro:
-      "Scegli il tuo tour in barca alle Isole Egadi da Trapani confrontando durata, prezzo, capienza, formula e rotta. Da Via dei Gladioli 15, vicino al Porto di Trapani, puoi prenotare escursioni condivise di 8 ore a Favignana e Levanzo, tour privati di 4 ore, charter in trimarano, chef a bordo o pesca sportiva. Le tappe possibili includono Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda e Cala Minnola, sempre in base a meteo, vento e sicurezza. Ogni pacchetto indica inclusi, snorkeling, skipper, carburante e policy di cancellazione o rimborso in caso di mare non sicuro.",
+      "Scegli il tuo tour in barca alle Isole Egadi da Trapani confrontando durata, prezzo, capienza, formula e rotta. Da Via dei Gladioli 15, vicino al Porto di Trapani, puoi prenotare escursioni condivise di 8 ore a Favignana e Levanzo, tour privati di 4 ore, charter in trimarano, pranzo a bordo o pesca sportiva. Le tappe possibili includono Cala Rossa, Cala Azzurra, Bue Marino, Grotta degli Innamorati, Cala Fredda e Cala Minnola, sempre in base a meteo, vento e sicurezza. Ogni pacchetto indica inclusi, snorkeling, skipper, carburante e policy di cancellazione o rimborso in caso di mare non sicuro.",
     labels: {
       duration: "Durata",
       price: "Prezzo",
@@ -754,7 +754,7 @@ function getHubCopy(locale: string) {
       },
       {
         question: "Cosa include il prezzo?",
-        answer: "Ogni pagina dettaglio indica gli inclusi esatti. In generale trovi skipper, carburante per la rotta prevista, acqua o soft drink, snorkeling, assistenza a bordo e pranzo o chef quando previsto.",
+        answer: "Ogni pagina dettaglio indica gli inclusi esatti. In generale trovi skipper, carburante per la rotta prevista, acqua o soft drink, snorkeling, assistenza a bordo e pranzo a bordo quando previsto.",
       },
       {
         question: "Cosa succede in caso di maltempo?",
@@ -762,7 +762,7 @@ function getHubCopy(locale: string) {
       },
       {
         question: "Quale tour scegliere per Favignana e Levanzo?",
-        answer: "Per Favignana e Levanzo da Trapani la scelta più completa è l'escursione di 8 ore. Per eventi, famiglie o privacy scegli privato, chef a bordo o charter.",
+        answer: "Per Favignana e Levanzo da Trapani la scelta più completa è l'escursione di 8 ore. Per eventi, famiglie o privacy scegli privato, pranzo a bordo o charter.",
       },
     ],
     facts: {
@@ -777,9 +777,9 @@ function getHubCopy(locale: string) {
 	        includes: "Barca privata, skipper, carburante, snorkeling e soste bagno.",
 	      },
       "esperienza-gourmet-trimarano": {
-        formula: "Trimarano privato con chef",
+        formula: "Trimarano privato con pranzo a bordo",
         route: "Da Trapani verso Favignana e Levanzo, con pranzo a bordo, soste bagno e comfort da catamarano.",
-        includes: "Chef, skipper, hostess, pranzo, bevande, carburante e snorkeling.",
+        includes: "Pranzo a bordo cucinato dalla crew, skipper, hostess, bevande, carburante e snorkeling.",
       },
       "charter-egadi": {
         formula: "Charter privato 3-7 giorni",

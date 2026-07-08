@@ -75,25 +75,25 @@ function itineraryCopy(locale: string) {
     {
       eyebrow: isEs ? "A bordo" : isFr ? "À bord" : isDe ? "An Bord" : isEn ? "On board" : "A bordo",
       title: isEs
-        ? "Baños, snorkeling y almuerzo/chef a bordo"
+        ? "Baños, snorkeling y almuerzo a bordo"
         : isFr
-        ? "Baignades, snorkeling et déjeuner/chef à bord"
+        ? "Baignades, snorkeling et déjeuner à bord"
         : isDe
-        ? "Badestopps, Schnorcheln und Mittagessen/Chef an Bord"
+        ? "Badestopps, Schnorcheln und Mittagessen/Mittagessen an Bord"
         : isEn
-        ? "Swim stops, snorkelling and lunch/chef on board"
-        : "Soste bagno, snorkeling e pranzo/chef a bordo",
+        ? "Swim stops, snorkelling and lunch on board"
+        : "Soste bagno, snorkeling e pranzo a bordo",
       text: isEs
-        ? "La experiencia no es solo una ruta: máscaras, paradas de baño, aperitivo, almuerzo a bordo y, en la fórmula premium, chef en trimarán con confort de catamarán."
+        ? "La experiencia no es solo una ruta: máscaras, paradas de baño, aperitivo, almuerzo a bordo y, en la fórmula premium, almuerzo cocinado a bordo por la tripulación en trimarán con confort de catamarán."
         : isFr
-        ? "L'expérience n'est pas seulement une route : masques, baignades, apéritif, déjeuner à bord et, en formule premium, chef en trimaran avec confort de catamaran."
+        ? "L'expérience n'est pas seulement une route : masques, baignades, apéritif, déjeuner à bord et, en formule premium, déjeuner cuisiné à bord par l'équipage en trimaran avec confort de catamaran."
         : isDe
-        ? "Das Erlebnis ist nicht nur eine Route: Masken, Badestopps, Aperitif, Mittagessen an Bord und im Premium-Format ein Chef im Trimaran mit Katamaran-Komfort."
+        ? "Das Erlebnis ist nicht nur eine Route: Masken, Badestopps, Aperitif, Mittagessen an Bord und im Premium-Format ein von der Crew zubereitetes Mittagessen im Trimaran mit Katamaran-Komfort."
         : isEn
-        ? "The experience is not only a route: masks, swim stops, aperitivo, lunch on board and, in the premium format, a chef on a trimaran with catamaran-style comfort."
-        : "L'esperienza non è solo una rotta: maschere, soste bagno, aperitivo, pranzo a bordo e, nella formula premium, chef in trimarano con comfort da catamarano.",
+        ? "The experience is not only a route: masks, swim stops, aperitivo, lunch on board and, in the premium format, lunch cooked on board by the crew on a trimaran with catamaran-style comfort."
+        : "L'esperienza non è solo una rotta: maschere, soste bagno, aperitivo, pranzo a bordo e, nella formula premium, pranzo cucinato a bordo dalla crew in trimarano con comfort da catamarano.",
       href: localizedExperiencePath(locale, "exclusive-experience"),
-      cta: isEs ? "Ver experiencia chef" : isFr ? "Voir expérience chef" : isDe ? "Chef-Erlebnis ansehen" : isEn ? "View chef experience" : "Vedi esperienza chef",
+      cta: isEs ? "Ver experiencia de almuerzo a bordo" : isFr ? "Voir expérience déjeuner à bord" : isDe ? "Mittagessen an Bord ansehen" : isEn ? "View lunch on board experience" : "Vedi esperienza pranzo a bordo",
     },
     {
       eyebrow: isEs ? "Fórmulas" : isFr ? "Formules" : isDe ? "Formate" : isEn ? "Formats" : "Formule",

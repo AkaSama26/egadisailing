@@ -15,7 +15,7 @@ Public, AI-oriented Markdown mirrors are available by appending `.md` to the can
 
 Egadi Sailing offers boat tours, private charters and sea experiences in the Egadi Islands from Trapani, Sicily. The main destinations are Favignana, Levanzo and Marettimo. The website serves public content in Italian, English, Spanish, French and German.
 
-The company focuses on real boat experiences rather than generic travel brokerage: private trimaran days, chef-on-board experiences, shared and private boat tours, half-day private tours, multi-day charter and fishing charter. Routes are weather-aware and can change according to sea, wind, safety and guest comfort.
+The company focuses on real boat experiences rather than generic travel brokerage: private trimaran days, lunch-on-board experiences, shared and private boat tours, half-day private tours, multi-day charter and fishing charter. Routes are weather-aware and can change according to sea, wind, safety and guest comfort.
 
 ## Public Business Data
 
@@ -103,15 +103,15 @@ The company focuses on real boat experiences rather than generic travel brokerag
 
 ## Main Experiences
 
-### Chef On Board In An Egadi Trimaran
+### Lunch On Board In An Egadi Trimaran
 
-Italian URL: https://egadisailing.com/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani
-English URL: https://egadisailing.com/en/experiences/chef-on-board-egadi-trimaran-from-trapani
-Spanish URL: https://egadisailing.com/es/experiencias/chef-a-bordo-egadi-trimaran-desde-trapani
-French URL: https://egadisailing.com/fr/experiences/chef-a-bord-egades-trimaran-depuis-trapani
-German URL: https://egadisailing.com/de/erlebnisse/chef-an-bord-aegadische-inseln-trimaran-ab-trapani
+Italian URL: https://egadisailing.com/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani
+English URL: https://egadisailing.com/en/experiences/lunch-on-board-egadi-trimaran-from-trapani
+Spanish URL: https://egadisailing.com/es/experiencias/almuerzo-a-bordo-egadi-trimaran-desde-trapani
+French URL: https://egadisailing.com/fr/experiences/dejeuner-a-bord-egades-trimaran-depuis-trapani
+German URL: https://egadisailing.com/de/erlebnisse/mittagessen-an-bord-aegadische-inseln-trimaran-ab-trapani
 
-Private trimaran day from Trapani with skipper, hostess and chef. The experience focuses on comfort, lunch prepared on board, swimming stops and a curated route between Favignana and Levanzo. It is the premium choice for guests looking for a catamaran-style day in the Egadi Islands with a more distinctive multihull experience.
+Private trimaran day from Trapani with skipper, hostess and lunch on board cooked by the crew. The experience focuses on comfort, lunch prepared on board, swimming stops and a curated route between Favignana and Levanzo. It is the premium choice for guests looking for a catamaran-style day in the Egadi Islands with a more distinctive multihull experience.
 
 ### Egadi Trimaran Charter From Trapani
 
@@ -183,7 +183,7 @@ Spanish URL: https://egadisailing.com/es/barcos/catamarano-egadi-trimarano-da-tr
 French URL: https://egadisailing.com/fr/bateaux/catamarano-egadi-trimarano-da-trapani
 German URL: https://egadisailing.com/de/boote/catamarano-egadi-trimarano-da-trapani
 
-The main premium boat context is the trimaran, positioned as a spacious multihull alternative for guests searching for catamaran comfort in the Egadi Islands. It is used for premium private experiences, chef on board and multi-day charter.
+The main premium boat context is the trimaran, positioned as a spacious multihull alternative for guests searching for catamaran comfort in the Egadi Islands. It is used for premium private experiences, lunch on board and multi-day charter.
 
 ## Island Guides
 
@@ -241,7 +241,7 @@ Routes in the Egadi Islands are weather-aware. The skipper may adapt the route, 
 - What happens if the weather is not suitable?
 - What should we bring on board?
 - Can children join?
-- Is lunch or chef service included?
+- Is lunch on board service included?
 - Where is the meeting point?
 - Can the route include Cala Rossa, Bue Marino, Cala Azzurra, Cala Minnola or Cala Fredda?
 

@@ -2,11 +2,11 @@ import { localizedPath } from "@/lib/i18n/paths";
 
 const PUBLIC_EXPERIENCE_SLUGS = {
   "exclusive-experience": {
-    it: "chef-a-bordo-egadi-trimarano-da-trapani",
-    en: "chef-on-board-egadi-trimaran-from-trapani",
-    es: "chef-a-bordo-egadi-trimaran-desde-trapani",
-    fr: "chef-a-bord-egades-trimaran-depuis-trapani",
-    de: "chef-an-bord-aegadische-inseln-trimaran-ab-trapani",
+    it: "pranzo-a-bordo-egadi-trimarano-da-trapani",
+    en: "lunch-on-board-egadi-trimaran-from-trapani",
+    es: "almuerzo-a-bordo-egadi-trimaran-desde-trapani",
+    fr: "dejeuner-a-bord-egades-trimaran-depuis-trapani",
+    de: "mittagessen-an-bord-aegadische-inseln-trimaran-ab-trapani",
   },
   "boat-shared-full-day": {
     it: "escursione-barca-favignana-levanzo-da-trapani",

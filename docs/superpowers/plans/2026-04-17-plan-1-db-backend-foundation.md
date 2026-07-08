@@ -1170,7 +1170,7 @@ async function main() {
   // Crew members (placeholder per testing)
   const crew = [
     { name: "Marco Skipper", role: "SKIPPER" as const, phone: "+39 333 1111111", dailyRate: 200 },
-    { name: "Chef Giuseppe", role: "CHEF" as const, phone: "+39 333 2222222", dailyRate: 250 },
+    { name: "Crew Cucina Giuseppe", role: "CHEF" as const, phone: "+39 333 2222222", dailyRate: 250 },
     { name: "Laura Hostess", role: "HOSTESS" as const, phone: "+39 333 3333333", dailyRate: 150 },
   ];
 

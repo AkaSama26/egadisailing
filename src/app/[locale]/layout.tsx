@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     default: "Egadisailing | Tour in barca alle Egadi da Trapani",
   },
   description:
-    "Favignana, Levanzo, Marettimo ti aspettano. Con chef, skipper e il lusso del mare aperto.",
+    "Favignana, Levanzo, Marettimo ti aspettano. Con pranzo a bordo, skipper e il lusso del mare aperto.",
   openGraph: {
     siteName: "Egadisailing",
     locale: "it_IT",

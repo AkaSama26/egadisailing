@@ -257,34 +257,34 @@ export function HomeExperiencesSection({
   const premiumBlock = isEs
     ? {
         title: "Tour en barco Islas Egadi",
-        text: "Egadi Sailing organiza tours en barco por las Islas Egadi desde Trapani, entre Favignana y Levanzo, con rutas elegidas según el mar. Además de las excursiones compartidas, los tours privados y los charters, puedes vivir una experiencia premium luxury en trimarán con almuerzo cocinado a bordo por un chef: una propuesta única y distintiva para navegar las Egadi con más espacio, comodidad, patrón local, snorkel y paradas para bañarte en Cala Rossa, Cala Azzurra y las calas más bonitas.",
+        text: "Egadi Sailing organiza tours en barco por las Islas Egadi desde Trapani, entre Favignana y Levanzo, con rutas elegidas según el mar. Además de las excursiones compartidas, los tours privados y los charters, puedes vivir una experiencia premium luxury en trimarán con almuerzo a bordo cocinado por la tripulación: una propuesta única y distintiva para navegar las Egadi con más espacio, comodidad, patrón local, snorkel y paradas para bañarte en Cala Rossa, Cala Azzurra y las calas más bonitas.",
         bullets: ["Salida desde el Puerto de Trapani", "Favignana y Levanzo en un día"],
         alt: "Favignana vista desde el mar durante un tour en barco por las Islas Egadi",
       }
     : isFr
     ? {
         title: "Tour en bateau îles Égades",
-        text: "Egadi Sailing organise des tours en bateau aux îles Égades depuis Trapani, entre Favignana et Levanzo, avec des routes choisies selon la mer. En plus des excursions partagées, des tours privés et des charters, vous pouvez vivre une expérience premium luxury en trimaran avec déjeuner cuisiné à bord par un chef : une proposition unique et distinctive pour naviguer les Égades avec plus d'espace, de confort, un skipper local, du snorkeling et des baignades à Cala Rossa, Cala Azzurra et dans les plus belles criques.",
+        text: "Egadi Sailing organise des tours en bateau aux îles Égades depuis Trapani, entre Favignana et Levanzo, avec des routes choisies selon la mer. En plus des excursions partagées, des tours privés et des charters, vous pouvez vivre une expérience premium luxury en trimaran avec déjeuner à bord préparé par l'équipage : une proposition unique et distinctive pour naviguer les Égades avec plus d'espace, de confort, un skipper local, du snorkeling et des baignades à Cala Rossa, Cala Azzurra et dans les plus belles criques.",
         bullets: ["Départ du port de Trapani", "Favignana et Levanzo dans la journée"],
         alt: "Favignana vue depuis la mer pendant un tour en bateau aux îles Égades",
       }
     : isDe
     ? {
         title: "Bootstour Ägadische Inseln",
-        text: "Egadi Sailing organisiert Bootstouren zu den Ägadischen Inseln ab Trapani, zwischen Favignana und Levanzo, mit Routen je nach Meer. Neben geteilten Ausflügen, privaten Touren und Chartern erleben Sie eine Premium-Luxury-Erfahrung im Trimaran mit an Bord von einem Chef gekochtem Mittagessen: ein einzigartiges und unverwechselbares Angebot, um die Egadi mit mehr Raum, Komfort, lokalem Skipper, Schnorcheln und Badestopps an Cala Rossa, Cala Azzurra und den schönsten Buchten zu entdecken.",
+        text: "Egadi Sailing organisiert Bootstouren zu den Ägadischen Inseln ab Trapani, zwischen Favignana und Levanzo, mit Routen je nach Meer. Neben geteilten Ausflügen, privaten Touren und Chartern erleben Sie eine Premium-Luxury-Erfahrung im Trimaran mit von der Crew an Bord zubereitetem Mittagessen: ein einzigartiges und unverwechselbares Angebot, um die Egadi mit mehr Raum, Komfort, lokalem Skipper, Schnorcheln und Badestopps an Cala Rossa, Cala Azzurra und den schönsten Buchten zu entdecken.",
         bullets: ["Abfahrt vom Hafen von Trapani", "Favignana und Levanzo an einem Tag"],
         alt: "Favignana vom Meer aus während einer Bootstour zu den Ägadischen Inseln",
       }
     : isEn
     ? {
         title: "Egadi Islands boat tour",
-        text: "Egadi Sailing runs Egadi Islands boat tours from Trapani, between Favignana and Levanzo, with routes chosen around the sea. Alongside shared excursions, private tours and charters, you can enjoy a premium luxury trimaran experience with lunch cooked on board by a chef: a unique and distinctive way to sail the Egadi Islands with more space, comfort, a local skipper, snorkelling and swim stops at Cala Rossa, Cala Azzurra and the most beautiful coves.",
+        text: "Egadi Sailing runs Egadi Islands boat tours from Trapani, between Favignana and Levanzo, with routes chosen around the sea. Alongside shared excursions, private tours and charters, you can enjoy a premium luxury trimaran experience with lunch on board cooked by the crew: a unique and distinctive way to sail the Egadi Islands with more space, comfort, a local skipper, snorkelling and swim stops at Cala Rossa, Cala Azzurra and the most beautiful coves.",
         bullets: ["Departure from Trapani harbour", "Favignana and Levanzo in one day"],
         alt: "Favignana from the sea during an Egadi Islands boat tour",
       }
     : {
         title: "Tour in barca Isole Egadi",
-        text: "Egadi Sailing organizza tour in barca alle Isole Egadi da Trapani, tra Favignana e Levanzo, con itinerari scelti in base al mare. Oltre alle escursioni condivise, ai tour privati e ai charter, puoi vivere un'esperienza premium luxury in trimarano con pranzo cucinato a bordo da uno chef: una proposta unica e distintiva per navigare le Egadi con più spazio, comfort, skipper locale, snorkeling e soste bagno a Cala Rossa, Cala Azzurra e nelle cale più belle.",
+        text: "Egadi Sailing organizza tour in barca alle Isole Egadi da Trapani, tra Favignana e Levanzo, con itinerari scelti in base al mare. Oltre alle escursioni condivise, ai tour privati e ai charter, puoi vivere un'esperienza premium luxury in trimarano con pranzo a bordo cucinato dalla crew: una proposta unica e distintiva per navigare le Egadi con più spazio, comfort, skipper locale, snorkeling e soste bagno a Cala Rossa, Cala Azzurra e nelle cale più belle.",
         bullets: ["Partenza dal Porto di Trapani", "Favignana e Levanzo in giornata"],
         alt: "Favignana vista dal mare durante un tour in barca alle Isole Egadi",
       };

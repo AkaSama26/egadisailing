@@ -41,7 +41,7 @@ interface LandingSectionsProps {
 }
 
 const featuredPackageOrder: Record<string, number> = {
-  "chef-a-bordo": 10,
+  "pranzo-a-bordo": 10,
   charter: 20,
   "barca-8-ore": 30,
   "barca-4-ore": 40,
@@ -298,14 +298,14 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
     ? "Book your Egadi Islands boat tour from Trapani"
     : "Prenota il tuo tour in barca alle Egadi da Trapani";
   const finalCtaSubtitle = isEs
-    ? "Elige tour compartido, tour privado, chef a bordo en trimarán o charter Egadi. Salida desde el Porto di Trapani y ruta flexible entre Favignana y Levanzo."
+    ? "Elige tour compartido, tour privado, almuerzo a bordo en trimarán o charter Egadi. Salida desde el Porto di Trapani y ruta flexible entre Favignana y Levanzo."
     : isFr
-    ? "Choisissez tour partagé, tour privé, chef à bord en trimaran ou charter aux Égades. Départ du Porto di Trapani et route flexible entre Favignana et Levanzo."
+    ? "Choisissez tour partagé, tour privé, déjeuner à bord en trimaran ou charter aux Égades. Départ du Porto di Trapani et route flexible entre Favignana et Levanzo."
     : isDe
-    ? "Wählen Sie geteilte Tour, private Tour, Chef an Bord im Trimaran oder Egadi-Charter. Abfahrt vom Porto di Trapani und flexible Route zwischen Favignana und Levanzo."
+    ? "Wählen Sie geteilte Tour, private Tour, Mittagessen an Bord im Trimaran oder Egadi-Charter. Abfahrt vom Porto di Trapani und flexible Route zwischen Favignana und Levanzo."
     : isEn
-    ? "Choose a shared tour, private tour, chef on board in a trimaran or Egadi charter. Departure from Trapani harbour and a flexible route between Favignana and Levanzo."
-    : "Scegli tour condiviso, tour privato, chef a bordo in trimarano o charter Egadi. Partenza dal Porto di Trapani e rotta flessibile tra Favignana e Levanzo.";
+    ? "Choose a shared tour, private tour, lunch on board in a trimaran or Egadi charter. Departure from Trapani harbour and a flexible route between Favignana and Levanzo."
+    : "Scegli tour condiviso, tour privato, pranzo a bordo in trimarano o charter Egadi. Partenza dal Porto di Trapani e rotta flessibile tra Favignana e Levanzo.";
   const finalCtaLabel = isEs
     ? "Reservar ahora"
     : isFr
@@ -417,14 +417,14 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
     ? "Reviews of Egadi Islands boat tours"
     : "Recensioni sui tour in barca alle Isole Egadi";
   const reviewSubtitle = isEs
-    ? "Experiencias reales entre Favignana, Levanzo, snorkeling, chef a bordo, charter y días en trimarán con salida desde Trapani."
+    ? "Experiencias reales entre Favignana, Levanzo, snorkeling, almuerzo a bordo, charter y días en trimarán con salida desde Trapani."
     : isFr
-    ? "Expériences réelles entre Favignana, Levanzo, snorkeling, chef à bord, charter et journées en trimaran au départ de Trapani."
+    ? "Expériences réelles entre Favignana, Levanzo, snorkeling, déjeuner à bord, charter et journées en trimaran au départ de Trapani."
     : isDe
-    ? "Echte Erfahrungen zwischen Favignana, Levanzo, Schnorcheln, Chef an Bord, Charter und Trimaran-Tagen ab Trapani."
+    ? "Echte Erfahrungen zwischen Favignana, Levanzo, Schnorcheln, Mittagessen an Bord, Charter und Trimaran-Tagen ab Trapani."
     : isEn
-    ? "Real guest experiences between Favignana, Levanzo, snorkelling, chef on board, charter and trimaran days from Trapani."
-    : "Esperienze reali tra Favignana, Levanzo, snorkeling, chef a bordo, charter e giornate in trimarano con partenza da Trapani.";
+    ? "Real guest experiences between Favignana, Levanzo, snorkelling, lunch on board, charter and trimaran days from Trapani."
+    : "Esperienze reali tra Favignana, Levanzo, snorkeling, pranzo a bordo, charter e giornate in trimarano con partenza da Trapani.";
   const reviewTrustItems = isEs
     ? ["Google y Tripadvisor", "Tour Favignana y Levanzo", "Experiencias privadas y gourmet"]
     : isFr
@@ -448,28 +448,28 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
     getPackagePriceLabel(services, serviceIds, locale);
   const featuredPackages: FeaturedPackage[] = [
     {
-      key: "chef-a-bordo",
+      key: "pranzo-a-bordo",
       serviceIds: ["exclusive-experience"],
       eyebrow: isEs ? "Premium privado" : isFr ? "Premium privé" : isDe ? "Privates Premium-Erlebnis" : isEn ? "Private premium" : "Premium privato",
       title: isEs
-        ? "Chef a bordo en trimarán en las Islas Egadi"
+        ? "Almuerzo a bordo en trimarán en las Islas Egadi"
         : isFr
-        ? "Chef à bord en trimaran aux îles Égades"
+        ? "Déjeuner à bord en trimaran aux îles Égades"
         : isDe
-        ? "Chef an Bord auf dem Trimaran zu den Ägadischen Inseln"
+        ? "Mittagessen an Bord auf dem Trimaran zu den Ägadischen Inseln"
         : isEn
-        ? "Chef on board in a trimaran in the Egadi Islands"
-        : "Chef a bordo in trimarano alle Egadi",
+        ? "Lunch on board in a trimaran in the Egadi Islands"
+        : "Pranzo a bordo in trimarano alle Egadi",
       subtitle:
         isEs
-	          ? "El trimarán reservado para ti, con confort de catamarán, chef, patrón y azafata para un día cuidado entre sabores locales, mar y fondeos tranquilos."
+	          ? "El trimarán reservado para ti, con confort de catamarán, almuerzo a bordo cocinado por la tripulación, patrón y azafata para un día cuidado entre sabores locales, mar y fondeos tranquilos."
           : isFr
-          ? "Le trimaran réservé pour vous, avec confort de catamaran, chef, skipper et hôtesse pour une journée soignée entre saveurs locales, mer et mouillages tranquilles."
+          ? "Le trimaran réservé pour vous, avec confort de catamaran, déjeuner à bord préparé par l'équipage, skipper et hôtesse pour une journée soignée entre saveurs locales, mer et mouillages tranquilles."
           : isDe
-          ? "Der Trimaran exklusiv für Sie, mit Katamaran-Komfort, Chefkoch, Skipper und Hostess für einen gepflegten Tag zwischen lokalen Aromen, Meer und ruhigen Ankerplätzen."
+          ? "Der Trimaran exklusiv für Sie, mit Katamaran-Komfort, von der Crew zubereitetes Mittagessen, Skipper und Hostess für einen gepflegten Tag zwischen lokalen Aromen, Meer und ruhigen Ankerplätzen."
           : isEn
-          ? "The trimaran reserved for you, with catamaran-style comfort, chef, skipper and hostess for a curated day of local flavours, sea and stops at anchor."
-          : "Il trimarano in esclusiva, con comfort da catamarano, chef, skipper e hostess per una giornata curata tra sapori locali, mare e soste in rada.",
+          ? "The trimaran reserved for you, with catamaran-style comfort, lunch on board cooked by the crew, skipper and hostess for a curated day of local flavours, sea and stops at anchor."
+          : "Il trimarano in esclusiva, con comfort da catamarano, pranzo a bordo cucinato dalla crew, skipper e hostess per una giornata curata tra sapori locali, mare e soste in rada.",
       priceLabel: priceLabelFor(["exclusive-experience"]),
       durationLabel: isEs ? "8 horas" : isFr ? "8 heures" : isDe ? "8 Stunden" : isEn ? "8 hours" : "8 ore",
       detailLabel: isEs
@@ -549,9 +549,9 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
           src: "/images/boats/neel-47/trimarano-pasta-rete.webp",
         },
         {
-          caption: isEs ? "Chef a bordo" : isFr ? "Chef à bord" : isDe ? "Chef an Bord" : isEn ? "Chef on board" : "Chef a bordo",
+          caption: isEs ? "Almuerzo a bordo" : isFr ? "Déjeuner à bord" : isDe ? "Mittagessen an Bord" : isEn ? "Lunch on board" : "Pranzo a bordo",
           color: "#FDE68A",
-          src: "/images/boats/neel-47/trimarano-chef.webp",
+          src: "/images/boats/neel-47/trimarano-pranzo-a-bordo.webp",
         },
         {
           caption: isEs ? "San Pedro fresco" : isFr ? "Saint-pierre frais" : isDe ? "Frischer Petersfisch" : isEn ? "Fresh John Dory" : "San Pietro fresco",

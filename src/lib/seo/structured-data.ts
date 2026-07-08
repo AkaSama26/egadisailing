@@ -19,42 +19,42 @@ const LOCALE_LANGUAGE: Record<string, string> = {
 };
 
 const SITE_DESCRIPTION: Record<string, string> = {
-  it: "Egadisailing organizza tour in barca alle Isole Egadi da Trapani: Favignana, Levanzo, Marettimo, charter privati, trimarano, chef a bordo e pesca sportiva.",
-  en: "Egadisailing runs boat tours to the Egadi Islands from Trapani: Favignana, Levanzo, Marettimo, private charters, trimaran trips, chef on board and fishing charters.",
-  es: "Egadisailing organiza excursiones en barco a las Islas Egadi desde Trapani: Favignana, Levanzo, Marettimo, charter privado, trimarán, chef a bordo y pesca.",
-  fr: "Egadisailing organise des excursions en bateau aux îles Égades depuis Trapani : Favignana, Levanzo, Marettimo, charter privé, trimaran, chef à bord et pêche.",
-  de: "Egadisailing organisiert Bootstouren zu den Ägadischen Inseln ab Trapani: Favignana, Levanzo, Marettimo, private Charter, Trimaran, Chef an Bord und Angeltouren.",
+  it: "Egadisailing organizza tour in barca alle Isole Egadi da Trapani: Favignana, Levanzo, Marettimo, charter privati, trimarano, pranzo a bordo e pesca sportiva.",
+  en: "Egadisailing runs boat tours to the Egadi Islands from Trapani: Favignana, Levanzo, Marettimo, private charters, trimaran trips, lunch on board and fishing charters.",
+  es: "Egadisailing organiza excursiones en barco a las Islas Egadi desde Trapani: Favignana, Levanzo, Marettimo, charter privado, trimarán, almuerzo a bordo y pesca.",
+  fr: "Egadisailing organise des excursions en bateau aux îles Égades depuis Trapani : Favignana, Levanzo, Marettimo, charter privé, trimaran, déjeuner à bord et pêche.",
+  de: "Egadisailing organisiert Bootstouren zu den Ägadischen Inseln ab Trapani: Favignana, Levanzo, Marettimo, private Charter, Trimaran, Mittagessen an Bord und Angeltouren.",
 };
 
 const SERVICE_CATALOG: Record<string, Array<{ name: string; serviceType: string }>> = {
   it: [
     { name: "Tour in barca Favignana e Levanzo", serviceType: "Boat tour" },
     { name: "Charter privato alle Isole Egadi", serviceType: "Private boat charter" },
-    { name: "Esperienza chef a bordo in trimarano", serviceType: "Gourmet sailing experience" },
+    { name: "Esperienza pranzo a bordo in trimarano", serviceType: "Gourmet sailing experience" },
     { name: "Charter pesca sportiva alle Egadi", serviceType: "Fishing charter" },
   ],
   en: [
     { name: "Favignana and Levanzo boat tour", serviceType: "Boat tour" },
     { name: "Private charter in the Egadi Islands", serviceType: "Private boat charter" },
-    { name: "Chef on board trimaran experience", serviceType: "Gourmet sailing experience" },
+    { name: "Lunch on board trimaran experience", serviceType: "Gourmet sailing experience" },
     { name: "Egadi sport fishing charter", serviceType: "Fishing charter" },
   ],
   es: [
     { name: "Excursión en barco a Favignana y Levanzo", serviceType: "Boat tour" },
     { name: "Charter privado en las Islas Egadi", serviceType: "Private boat charter" },
-    { name: "Experiencia con chef a bordo en trimarán", serviceType: "Gourmet sailing experience" },
+    { name: "Experiencia con almuerzo a bordo en trimarán", serviceType: "Gourmet sailing experience" },
     { name: "Charter de pesca deportiva en las Egadi", serviceType: "Fishing charter" },
   ],
   fr: [
     { name: "Excursion en bateau à Favignana et Levanzo", serviceType: "Boat tour" },
     { name: "Charter privé aux îles Égades", serviceType: "Private boat charter" },
-    { name: "Expérience chef à bord en trimaran", serviceType: "Gourmet sailing experience" },
+    { name: "Expérience déjeuner à bord en trimaran", serviceType: "Gourmet sailing experience" },
     { name: "Charter de pêche sportive aux Égades", serviceType: "Fishing charter" },
   ],
   de: [
     { name: "Bootstour Favignana und Levanzo", serviceType: "Boat tour" },
     { name: "Private Charter auf den Ägadischen Inseln", serviceType: "Private boat charter" },
-    { name: "Chef-an-Bord-Erlebnis im Trimaran", serviceType: "Gourmet sailing experience" },
+    { name: "Mittagessen-an-Bord-Erlebnis im Trimaran", serviceType: "Gourmet sailing experience" },
     { name: "Sportangel-Charter auf den Egadi", serviceType: "Fishing charter" },
   ],
 };

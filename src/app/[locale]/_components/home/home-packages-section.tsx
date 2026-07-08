@@ -39,7 +39,7 @@ interface HomePackagesSectionProps {
 }
 
 const packagePriority: Record<string, number> = {
-  "chef-a-bordo": 10,
+  "pranzo-a-bordo": 10,
   "barca-8-ore": 20,
   "barca-4-ore": 30,
   charter: 40,
@@ -72,14 +72,14 @@ function sectionCopy(locale: string) {
       ? "Choose your Egadi Islands boat tour from Trapani"
       : "Scegli il tuo tour in barca alle Egadi da Trapani",
     intro: isEs
-      ? "Compara excursiones compartidas, tours privados, experiencias premium en trimarán con chef a bordo, charter de varios días y pesca deportiva. Precio, duración, fórmula y salida se muestran de inmediato para ayudarte a elegir sin perder el estilo del viaje."
+      ? "Compara excursiones compartidas, tours privados, experiencias premium en trimarán con almuerzo a bordo, charter de varios días y pesca deportiva. Precio, duración, fórmula y salida se muestran de inmediato para ayudarte a elegir sin perder el estilo del viaje."
       : isFr
-      ? "Comparez excursions partagées, tours privés, expériences premium en trimaran avec chef à bord, charters de plusieurs jours et pêche sportive. Prix, durée, formule et départ restent visibles pour choisir facilement sans perdre l'esprit du voyage."
+      ? "Comparez excursions partagées, tours privés, expériences premium en trimaran avec déjeuner à bord, charters de plusieurs jours et pêche sportive. Prix, durée, formule et départ restent visibles pour choisir facilement sans perdre l'esprit du voyage."
       : isDe
-      ? "Vergleichen Sie geteilte Ausflüge, private Touren, Premium-Erlebnisse im Trimaran mit Chef an Bord, mehrtägige Charter und Sportangeln. Preis, Dauer, Format und Abfahrt bleiben sichtbar, damit die Auswahl einfach und hochwertig bleibt."
+      ? "Vergleichen Sie geteilte Ausflüge, private Touren, Premium-Erlebnisse im Trimaran mit Mittagessen an Bord, mehrtägige Charter und Sportangeln. Preis, Dauer, Format und Abfahrt bleiben sichtbar, damit die Auswahl einfach und hochwertig bleibt."
       : isEn
-      ? "Compare shared excursions, private tours, premium trimaran experiences with chef on board, multi-day charters and sport fishing. Price, duration, format and departure stay visible, so choosing feels clear without losing the premium tone."
-      : "Confronta escursioni condivise, tour privati, esperienze premium in trimarano con chef a bordo, charter di più giorni e pesca sportiva. Prezzo, durata, formula e partenza restano subito visibili, così scegliere è semplice senza perdere il tono premium del viaggio.",
+      ? "Compare shared excursions, private tours, premium trimaran experiences with lunch on board, multi-day charters and sport fishing. Price, duration, format and departure stay visible, so choosing feels clear without losing the premium tone."
+      : "Confronta escursioni condivise, tour privati, esperienze premium in trimarano con pranzo a bordo, charter di più giorni e pesca sportiva. Prezzo, durata, formula e partenza restano subito visibili, così scegliere è semplice senza perdere il tono premium del viaggio.",
     policyTitle: isEs
       ? "Meteorología, cancelación y reembolso"
       : isFr
@@ -358,7 +358,7 @@ export function HomePackagesSection({
       (packagePriority[a.key] ?? Number.MAX_SAFE_INTEGER) -
       (packagePriority[b.key] ?? Number.MAX_SAFE_INTEGER),
   );
-  const heroPackage = packages.find((experience) => experience.key === "chef-a-bordo") ?? packages[0];
+  const heroPackage = packages.find((experience) => experience.key === "pranzo-a-bordo") ?? packages[0];
   const secondaryPackages = packages.filter((experience) => experience.key !== heroPackage?.key);
 
   if (!heroPackage) return null;

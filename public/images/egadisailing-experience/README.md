@@ -6,7 +6,7 @@ Formato richiesto: `.webp`
 
 Naming consigliato:
 
-- `01-cooking-experience-chef-a-bordo.webp`
+- `01-cooking-experience-pranzo-a-bordo.webp`
 - `02-isole-egadi-come-non-le-hai-mai-viste.webp`
 - `03-nuoto-cala-rossa-acqua-cristallina.webp`
 - `04-aperitivo-tramonto-isole-egadi.webp`
@@ -14,4 +14,4 @@ Naming consigliato:
 
 Percorso pubblico da usare nel codice:
 
-- `/images/egadisailing-experience/01-cooking-experience-chef-a-bordo.webp`
+- `/images/egadisailing-experience/01-cooking-experience-pranzo-a-bordo.webp`

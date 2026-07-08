@@ -16,7 +16,7 @@
 ## Analisi Competitor
 | Competitor | URL | Intento pagina | Cosa fa bene | Gap rispetto a noi |
 |---|---|---|---|---|
-| Egadi Charter & Tour | https://egadicharterandtour.com/ | Charter e tour privati Egadi | Forte matching su charter/privato | Noi dobbiamo valorizzare Neel 47, chef e comfort da trimarano |
+| Egadi Charter & Tour | https://egadicharterandtour.com/ | Charter e tour privati Egadi | Forte matching su charter/privato | Noi dobbiamo valorizzare Neel 47, pranzo a bordo e comfort da trimarano |
 | EmotionSicily | https://www.emotionsicily.it/ | Esperienze Sicilia premium | Immaginario emozionale e local experience | Noi abbiamo prodotto piu' specifico sulle Egadi |
 | Egadi Summer Sea | https://www.egadisummersea.it/en/charter-dinghy-trapani/ | Charter con skipper | Pagina verticale internazionale | Noi dobbiamo localizzare bene EN/ES/FR/DE |
 

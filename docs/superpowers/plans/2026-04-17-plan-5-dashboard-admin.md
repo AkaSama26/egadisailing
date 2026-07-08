@@ -1447,7 +1447,7 @@ export default async function CrewPage() {
         <input name="name" placeholder="Nome" className="border rounded px-3 py-2" required />
         <select name="role" className="border rounded px-3 py-2">
           <option value="SKIPPER">Skipper</option>
-          <option value="CHEF">Chef</option>
+          <option value="CHEF">Crew cucina</option>
           <option value="HOSTESS">Hostess</option>
         </select>
         <input name="phone" placeholder="Telefono" className="border rounded px-3 py-2" />

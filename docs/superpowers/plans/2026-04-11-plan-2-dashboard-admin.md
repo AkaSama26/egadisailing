@@ -1376,7 +1376,7 @@ Server component listing crew members with create dialog.
 
 - [ ] **Step 4: Verifica crew management**
 
-View seed crew (Skipper, Chef, Hostess). Create new member. Edit existing.
+View seed crew (Skipper, Crew cucina, Hostess). Create new member. Edit existing.
 
 - [ ] **Step 5: Commit**
 

@@ -53,7 +53,7 @@ Nota: dopo cambi categoria Google puo' chiedere nuova verifica o rivedere il pro
 
 Descrizione consigliata:
 
-Egadisailing organizza tour in barca alle Isole Egadi con partenza da Trapani: escursioni a Favignana e Levanzo, tour privati, charter in trimarano con comfort da catamarano, esperienze con chef a bordo e charter pesca. Le rotte vengono adattate da skipper e crew in base a mare, vento e sicurezza, con attenzione a servizio, comfort e qualita' dell'esperienza.
+Egadisailing organizza tour in barca alle Isole Egadi con partenza da Trapani: escursioni a Favignana e Levanzo, tour privati, charter in trimarano con comfort da catamarano, esperienze con pranzo a bordo e charter pesca. Le rotte vengono adattate da skipper e crew in base a mare, vento e sicurezza, con attenzione a servizio, comfort e qualita' dell'esperienza.
 
 Controlli:
 
@@ -132,17 +132,17 @@ https://www.egadisailing.it/it/barche/catamarano-egadi-trimarano-da-trapani
 
 ### Gruppo: Esperienze private premium
 
-Servizio: Chef a bordo alle Egadi
+Servizio: Pranzo a bordo alle Egadi
 
 Prezzo: da EUR 2000
 
 Descrizione:
 
-Giornata privata in trimarano da Trapani con chef a bordo, skipper, hostess, pranzo cucinato a bordo e soste tra Favignana e Levanzo. Esperienza premium con comfort da catamarano.
+Giornata privata in trimarano da Trapani con pranzo a bordo cucinato dalla crew, skipper, hostess e soste tra Favignana e Levanzo. Esperienza premium con comfort da catamarano.
 
 Link:
 
-https://www.egadisailing.it/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani
+https://www.egadisailing.it/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani
 
 ### Gruppo: Pesca sportiva
 
@@ -171,7 +171,7 @@ Foto consigliate per priorita':
 5. Cala Azzurra.
 6. Trimarano davanti a Levanzo.
 7. Trimarano Favignana.
-8. Chef a bordo / pasta saltata.
+8. Pranzo a bordo / pasta saltata.
 9. Trimarano relax drone.
 10. Fishing RIB / setup pesca.
 
@@ -206,7 +206,7 @@ Primi 4 post consigliati:
 1. Escursione in barca Favignana e Levanzo da Trapani.
 2. Tour privato alle Egadi 4 ore.
 3. Charter in trimarano alle Egadi, alternativa al catamarano.
-4. Chef a bordo alle Egadi in trimarano.
+4. Pranzo a bordo alle Egadi in trimarano.
 
 Formato post:
 

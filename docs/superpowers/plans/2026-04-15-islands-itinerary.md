@@ -331,14 +331,14 @@ The structure:
     "socialBoating": {
       "stop1": { "name": "Partenza", "description": "Imbarco al porto di Trapani, welcome drink e briefing del capitano" },
       "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "Tuffo nelle acque turchesi più famose del Mediterraneo, snorkeling tra fondali di posidonia" },
-      "stop3": { "name": "Pranzo a bordo", "description": "Lo chef prepara pesce freschissimo del giorno con vista mare aperto" },
+      "stop3": { "name": "Pranzo a bordo", "description": "La crew prepara pesce freschissimo del giorno con vista mare aperto" },
       "stop4": { "name": "Bue Marino", "island": "Favignana", "description": "Grotta marina spettacolare, acque cristalline tra le falesie" },
       "stop5": { "name": "Rientro", "description": "Navigazione al tramonto verso Trapani" }
     },
     "exclusive": {
       "stop1": { "name": "Partenza", "description": "Imbarco riservato, accoglienza con champagne e briefing privato" },
       "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "La spiaggia più iconica delle Egadi, tutta per voi" },
-      "stop3": { "name": "Pranzo gourmet", "description": "Menu raffinato dello chef con pesce del mercato di Trapani" },
+      "stop3": { "name": "Pranzo gourmet", "description": "Menu raffinato preparato dalla crew con pesce del mercato di Trapani" },
       "stop4": { "name": "Cala Tramontana", "island": "Levanzo", "description": "Caletta nascosta con acque trasparenti e fondali incontaminati" },
       "stop5": { "name": "Rientro", "description": "Aperitivo al tramonto durante la navigazione di ritorno" }
     },
@@ -388,14 +388,14 @@ Add matching `"itinerary"` block with English translations. Tab labels stay the 
     "socialBoating": {
       "stop1": { "name": "Departure", "description": "Boarding at Trapani harbour, welcome drink and captain's briefing" },
       "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "Swim in the most famous turquoise waters of the Mediterranean, snorkelling over posidonia seabeds" },
-      "stop3": { "name": "Lunch on board", "description": "The chef prepares the freshest catch of the day with open-sea views" },
+      "stop3": { "name": "Lunch on board", "description": "The crew prepares the freshest catch of the day with open-sea views" },
       "stop4": { "name": "Bue Marino", "island": "Favignana", "description": "Spectacular sea cave, crystal-clear waters among the cliffs" },
       "stop5": { "name": "Return", "description": "Sunset cruise back to Trapani" }
     },
     "exclusive": {
       "stop1": { "name": "Departure", "description": "Private boarding, champagne welcome and personal briefing" },
       "stop2": { "name": "Cala Rossa", "island": "Favignana", "description": "The most iconic beach of the Egadi, all to yourselves" },
-      "stop3": { "name": "Gourmet lunch", "description": "Refined chef's menu with fish from Trapani market" },
+      "stop3": { "name": "Gourmet lunch", "description": "Refined crew-prepared menu with fish from Trapani market" },
       "stop4": { "name": "Cala Tramontana", "island": "Levanzo", "description": "Hidden cove with transparent waters and pristine seabeds" },
       "stop5": { "name": "Return", "description": "Sunset aperitivo during the return sail" }
     },

@@ -8,8 +8,8 @@
 - DE: https://egadisailing.com/de/boote/neel-47
 
 ## Intento Della Nostra Pagina
-- Intento primario: Neel 47 Egadi con chef e charter
-- Intento secondario: Pagina barca premium collegata a chef e charter.
+- Intento primario: Neel 47 Egadi con pranzo a bordo e charter
+- Intento secondario: Pagina barca premium collegata a pranzo a bordo e charter.
 - Cosa NON deve targetizzare: Non deve diventare pagina tecnica isolata senza conversione.
 - Ruolo nella SEO architecture: Cluster supporto: aiuta Google a capire mezzi, servizi associati e differenziazione.
 
@@ -23,9 +23,9 @@
 ## Keyword Plan
 | Keyword | Tipo | Lingue | Uso consigliato | Perche' e' importante |
 |---|---|---|---|---|
-| Neel 47 Egadi con chef e charter | Primary | IT/EN/ES/FR/DE | Title 1x, H1 1x, intro 1x, body 2-4x, FAQ 1x | Corrisponde all'intento principale della pagina e deve essere il segnale piu' netto per Google. |
+| Neel 47 Egadi con pranzo a bordo e charter | Primary | IT/EN/ES/FR/DE | Title 1x, H1 1x, intro 1x, body 2-4x, FAQ 1x | Corrisponde all'intento principale della pagina e deve essere il segnale piu' netto per Google. |
 | trimarano Egadi | Secondary | IT/EN/ES/FR/DE | H2/H3 1x, body 1-3x, FAQ o CTA 1x | Copre variante long-tail senza creare una seconda pagina concorrente. |
-| trimarano con chef a bordo | Secondary | IT/EN/ES/FR/DE | Body 1-2x, internal anchor 1x se naturale | Intercetta query comparabili e rafforza il campo semantico. |
+| trimarano con pranzo a bordo | Secondary | IT/EN/ES/FR/DE | Body 1-2x, internal anchor 1x se naturale | Intercetta query comparabili e rafforza il campo semantico. |
 | cabine | Semantic entity | IT/EN/ES/FR/DE | Naturale 2-4x in itinerario, alt o FAQ | Aiuta Google a collegare il contenuto a luoghi reali e all'esperienza venduta. |
 | comfort da catamarano | Semantic entity | IT/EN/ES/FR/DE | Naturale 1-3x in blocchi pratici | Aumenta pertinenza locale e riduce genericita'. |
 | charter | Trust/local | IT/EN/ES/FR/DE | Footer/NAP/FAQ/structured data, non forzare | Rafforza local SEO e coerenza tra pagina, schema e contatti. |
@@ -39,11 +39,11 @@
 - Note: le frequenze sono una guida editoriale. Se una frase suona artificiale, vince la chiarezza per l'utente.
 
 ## Interventi On-Page
-- Title: Neel 47 Egadi con chef e charter | Egadisailing, con localizzazione per lingua.
-- Meta description: Descrizione di 145-160 caratteri che cita Neel 47 Egadi con chef e charter, partenza da Trapani e valore specifico della pagina.
-- H1: Neel 47 Egadi con chef e charter
+- Title: Neel 47 Egadi con pranzo a bordo e charter | Egadisailing, con localizzazione per lingua.
+- Meta description: Descrizione di 145-160 caratteri che cita Neel 47 Egadi con pranzo a bordo e charter, partenza da Trapani e valore specifico della pagina.
+- H1: Neel 47 Egadi con pranzo a bordo e charter
 - H2/H3: Usare H2 per scelta, itinerario/fatti pratici, inclusi, policy meteo, FAQ; H3 per varianti e dettagli.
-- Intro: Aprire con una risposta diretta all'intento: Neel 47 Egadi con chef e charter, cosa include e per chi e' adatta.
+- Intro: Aprire con una risposta diretta all'intento: Neel 47 Egadi con pranzo a bordo e charter, cosa include e per chi e' adatta.
 - Blocchi da aggiungere/modificare: Aggiungere relazioni barca-servizio, specifiche utili, gallery, alt e FAQ su adatta a chi.
 - FAQ: 4-6 FAQ con domande reali, evitando risposte duplicate tra pagine vicine.
 - CTA: CTA verso esperienze disponibili con quella barca.

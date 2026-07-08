@@ -24,7 +24,7 @@ Links below point to clean Markdown mirrors when a mirror exists; canonical HTML
 
 ## Experience Hubs
 
-- [Esperienze](https://egadisailing.com/it/esperienze.md): Italian hub for private tours, shared tours, trimaran charter, chef on board and fishing charter.
+- [Esperienze](https://egadisailing.com/it/esperienze.md): Italian hub for private tours, shared tours, trimaran charter, lunch on board and fishing charter.
 - [Experiences](https://egadisailing.com/en/experiences.md): English hub for Egadi boat tours and charters.
 - [Experiencias](https://egadisailing.com/es/experiencias.md): Spanish hub for Egadi boat excursions.
 - [Experiences FR](https://egadisailing.com/fr/experiences.md): French hub for Egadi boat excursions.
@@ -32,7 +32,7 @@ Links below point to clean Markdown mirrors when a mirror exists; canonical HTML
 
 ## Main Experiences
 
-- [Chef a bordo alle Egadi in trimarano da Trapani](https://egadisailing.com/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani.md): Private trimaran day with skipper, hostess and chef between Favignana and Levanzo.
+- [Pranzo a bordo alle Egadi in trimarano da Trapani](https://egadisailing.com/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani.md): Private trimaran day with skipper, hostess and lunch on board cooked by the crew between Favignana and Levanzo.
 - [Charter Egadi in trimarano da Trapani](https://egadisailing.com/it/esperienze/charter-egadi-trimarano-da-trapani.md): Flexible 3 to 7 day trimaran charter around Favignana, Levanzo and Marettimo.
 - [Escursione barca Favignana e Levanzo da Trapani](https://egadisailing.com/it/esperienze/escursione-barca-favignana-levanzo-da-trapani.md): Shared full-day boat tour with swimming and snorkeling stops.
 - [Tour privato Favignana e Levanzo da Trapani](https://egadisailing.com/it/esperienze/tour-privato-favignana-levanzo-da-trapani.md): Private full-day boat tour with flexible route.

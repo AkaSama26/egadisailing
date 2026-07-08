@@ -543,7 +543,7 @@ The landing page should be a long scroll experience with these sections:
 - Fade animations
 
 **Section 4 — "Perché Egadisailing"**
-- Value propositions (3-4 USPs): Chef a bordo, Lusso accessibile, Crew esperta, Isole incontaminate
+- Value propositions (3-4 USPs): Pranzo a bordo, Lusso accessibile, Crew esperta, Isole incontaminate
 - Icons + short descriptions
 - Fade-left/fade-right alternating
 

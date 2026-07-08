@@ -34,7 +34,7 @@ function getContactLocalSeoCopy(locale: string) {
     return {
       heading: "Punto de encuentro Egadisailing en Trapani",
       paragraphs: [
-        "Egadisailing opera desde Trapani, en Via dei Gladioli 15, cerca del Puerto de Trapani y de los embarques hacia las Islas Egadi. Desde aquí organizamos excursiones en barco a Favignana y Levanzo, tours privados, charter en trimarán, experiencias con chef a bordo y pesca deportiva.",
+        "Egadisailing opera desde Trapani, en Via dei Gladioli 15, cerca del Puerto de Trapani y de los embarques hacia las Islas Egadi. Desde aquí organizamos excursiones en barco a Favignana y Levanzo, tours privados, charter en trimarán, experiencias con almuerzo a bordo y pesca deportiva.",
         "Antes de la salida confirmamos por WhatsApp o email el muelle, la hora de encuentro, el nombre del barco y cualquier indicación útil sobre aparcamiento, equipaje, meteo y ruta prevista. Para grupos, familias o charter de varios días recomendamos escribir con antelación para elegir la fórmula correcta.",
       ],
       facts: ["Via dei Gladioli 15, 91100 Trapani", "Salida cerca del Puerto de Trapani", "Asistencia en italiano e inglés"],
@@ -44,7 +44,7 @@ function getContactLocalSeoCopy(locale: string) {
     return {
       heading: "Point de rendez-vous Egadisailing à Trapani",
       paragraphs: [
-        "Egadisailing opère depuis Trapani, Via dei Gladioli 15, près du port de Trapani et des départs vers les îles Égades. C'est le point de référence pour les excursions en bateau vers Favignana et Levanzo, les tours privés, le charter en trimaran, les expériences avec chef à bord et la pêche sportive.",
+        "Egadisailing opère depuis Trapani, Via dei Gladioli 15, près du port de Trapani et des départs vers les îles Égades. C'est le point de référence pour les excursions en bateau vers Favignana et Levanzo, les tours privés, le charter en trimaran, les expériences avec déjeuner à bord et la pêche sportive.",
         "Avant le départ, nous confirmons par WhatsApp ou email le quai, l'heure de rendez-vous, le nom du bateau et les indications utiles sur stationnement, bagages, météo et itinéraire prévu. Pour groupes, familles ou charter sur plusieurs jours, mieux vaut nous contacter à l'avance.",
       ],
       facts: ["Via dei Gladioli 15, 91100 Trapani", "Départ près du port de Trapani", "Assistance en italien et anglais"],
@@ -54,7 +54,7 @@ function getContactLocalSeoCopy(locale: string) {
     return {
       heading: "Egadisailing Treffpunkt in Trapani",
       paragraphs: [
-        "Egadisailing startet in Trapani, Via dei Gladioli 15, nahe dem Hafen von Trapani und den Verbindungen zu den Ägadischen Inseln. Von hier organisieren wir Bootstouren nach Favignana und Levanzo, private Touren, Trimaran-Charter, Erlebnisse mit Chef an Bord und Sportangeln.",
+        "Egadisailing startet in Trapani, Via dei Gladioli 15, nahe dem Hafen von Trapani und den Verbindungen zu den Ägadischen Inseln. Von hier organisieren wir Bootstouren nach Favignana und Levanzo, private Touren, Trimaran-Charter, Erlebnisse mit Mittagessen an Bord und Sportangeln.",
         "Vor der Abfahrt bestätigen wir per WhatsApp oder E-Mail den Steg, die Treffzeit, den Bootsnamen sowie Hinweise zu Parken, Gepäck, Wetter und geplanter Route. Für Gruppen, Familien oder mehrtägige Charter empfehlen wir eine frühzeitige Anfrage.",
       ],
       facts: ["Via dei Gladioli 15, 91100 Trapani", "Abfahrt nahe dem Hafen von Trapani", "Betreuung auf Italienisch und Englisch"],
@@ -64,7 +64,7 @@ function getContactLocalSeoCopy(locale: string) {
     return {
       heading: "Egadisailing meeting point in Trapani",
       paragraphs: [
-        "Egadisailing operates from Trapani, at Via dei Gladioli 15, close to the Port of Trapani and the routes to the Egadi Islands. This is the reference point for boat tours to Favignana and Levanzo, private tours, trimaran charters, chef-on-board experiences and sport fishing.",
+        "Egadisailing operates from Trapani, at Via dei Gladioli 15, close to the Port of Trapani and the routes to the Egadi Islands. This is the reference point for boat tours to Favignana and Levanzo, private tours, trimaran charters, lunch-on-board experiences and sport fishing.",
         "Before departure we confirm by WhatsApp or email the pier, meeting time, boat name and useful notes about parking, luggage, weather and the planned route. For groups, families or multi-day charters, contacting us early helps us recommend the right formula.",
       ],
       facts: ["Via dei Gladioli 15, 91100 Trapani, Italy", "Departure near the Port of Trapani", "Support in Italian and English"],
@@ -73,7 +73,7 @@ function getContactLocalSeoCopy(locale: string) {
   return {
     heading: "Punto di incontro Egadisailing a Trapani",
     paragraphs: [
-      "Egadisailing opera da Trapani, in Via dei Gladioli 15, vicino al Porto di Trapani e agli imbarchi verso le Isole Egadi. Da qui organizziamo tour in barca a Favignana e Levanzo, esperienze private, charter in trimarano, giornate con chef a bordo e charter pesca sportiva.",
+      "Egadisailing opera da Trapani, in Via dei Gladioli 15, vicino al Porto di Trapani e agli imbarchi verso le Isole Egadi. Da qui organizziamo tour in barca a Favignana e Levanzo, esperienze private, charter in trimarano, giornate con pranzo a bordo e charter pesca sportiva.",
       "Prima della partenza confermiamo via WhatsApp o email molo, orario di incontro, nome della barca e indicazioni utili su parcheggio, bagagli, meteo e rotta prevista. Per gruppi, famiglie o charter di più giorni è meglio scriverci in anticipo, così possiamo consigliare la formula più adatta.",
     ],
     facts: ["Via dei Gladioli 15, 91100 Trapani", "Partenza vicino al Porto di Trapani", "Assistenza in italiano e inglese"],

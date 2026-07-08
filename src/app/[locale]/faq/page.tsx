@@ -13,7 +13,7 @@ function getFaqIntroCopy(locale: string) {
       heading: "Antes de reservar un paseo en barco por las Egadi",
       paragraphs: [
         "Las excursiones de Egadisailing salen de Trapani y se adaptan a meteo, viento, seguridad y ritmo del grupo. En esta página aclaramos qué llevar, cómo funcionan cancelaciones y cambios de fecha, qué pasa con mal tiempo, niños, comida a bordo y punto de encuentro.",
-        "Para elegir bien, compara duración, fórmula compartida o privada, inclusiones y tipo de barco. Favignana y Levanzo funcionan muy bien en una jornada completa; los paseos privados de 4 horas son más ágiles; charter y chef a bordo requieren más planificación.",
+        "Para elegir bien, compara duración, fórmula compartida o privada, inclusiones y tipo de barco. Favignana y Levanzo funcionan muy bien en una jornada completa; los paseos privados de 4 horas son más ágiles; charter y almuerzo a bordo requieren más planificación.",
       ],
       points: ["Salida desde Trapani", "Rutas según meteo", "Soporte antes de embarcar"],
     };
@@ -23,7 +23,7 @@ function getFaqIntroCopy(locale: string) {
       heading: "Avant de réserver une excursion bateau aux Égades depuis Trapani",
       paragraphs: [
         "Les excursions Egadisailing partent de Trapani et sont adaptées à la météo, au vent, à la sécurité et au rythme du groupe. Cette page explique quoi apporter, comment fonctionnent annulations et changements de date, que se passe-t-il en cas de mauvaise météo, enfants, repas à bord et point de rendez-vous.",
-        "Pour choisir la bonne formule, comparez durée, excursion partagée ou privée, inclusions et type de bateau. Favignana et Levanzo conviennent très bien à une journée complète; les excursions privées de 4 heures sont plus compactes; charter et chef à bord demandent plus d'organisation.",
+        "Pour choisir la bonne formule, comparez durée, excursion partagée ou privée, inclusions et type de bateau. Favignana et Levanzo conviennent très bien à une journée complète; les excursions privées de 4 heures sont plus compactes; charter et déjeuner à bord demandent plus d'organisation.",
       ],
       points: ["Départ de Trapani", "Routes selon météo", "Assistance avant embarquement"],
     };
@@ -33,7 +33,7 @@ function getFaqIntroCopy(locale: string) {
       heading: "Vor der Buchung einer Bootstour zu den Ägadischen Inseln",
       paragraphs: [
         "Egadisailing-Touren starten in Trapani und werden nach Wetter, Wind, Sicherheit und Gruppentempo angepasst. Diese Seite erklärt, was Sie mitbringen sollten, wie Storno und Datumsänderungen funktionieren, was bei schlechtem Wetter passiert und was für Kinder, Essen an Bord und Treffpunkt gilt.",
-        "Für die richtige Wahl vergleichen Sie Dauer, geteilte oder private Formel, Leistungen und Bootstyp. Favignana und Levanzo passen sehr gut zu einem ganzen Tag; 4-Stunden-Touren sind kompakter; Charter und Chef an Bord brauchen mehr Planung.",
+        "Für die richtige Wahl vergleichen Sie Dauer, geteilte oder private Formel, Leistungen und Bootstyp. Favignana und Levanzo passen sehr gut zu einem ganzen Tag; 4-Stunden-Touren sind kompakter; Charter und Mittagessen an Bord brauchen mehr Planung.",
       ],
       points: ["Abfahrt ab Trapani", "Routen nach Wetter", "Support vor dem Boarding"],
     };
@@ -43,7 +43,7 @@ function getFaqIntroCopy(locale: string) {
       heading: "Before booking an Egadi Islands boat tour",
       paragraphs: [
         "Egadisailing tours depart from Trapani and are adapted to weather, wind, safety and group pace. This page explains what to bring, how cancellations and date changes work, what happens in bad weather, and what to know about children, lunch on board and the meeting point.",
-        "To choose well, compare duration, shared or private format, inclusions and boat type. Favignana and Levanzo work best as a full-day route; 4-hour tours are more compact; charters and chef-on-board experiences need more planning.",
+        "To choose well, compare duration, shared or private format, inclusions and boat type. Favignana and Levanzo work best as a full-day route; 4-hour tours are more compact; charters and lunch-on-board experiences need more planning.",
       ],
       points: ["Departure from Trapani", "Weather-aware routes", "Support before boarding"],
     };
@@ -52,7 +52,7 @@ function getFaqIntroCopy(locale: string) {
     heading: "Prima di prenotare un tour in barca alle Egadi",
     paragraphs: [
       "Le esperienze Egadisailing partono da Trapani e vengono adattate a meteo, vento, sicurezza e ritmo del gruppo. In questa pagina trovi risposte pratiche su cosa portare, cancellazioni, cambi data, maltempo, bambini, pranzo a bordo e punto di incontro.",
-      "Per scegliere bene confronta durata, formula condivisa o privata, inclusioni e tipo di barca. Favignana e Levanzo funzionano al meglio in giornata intera; i tour da 4 ore sono più agili; charter e chef a bordo richiedono una pianificazione più mirata.",
+      "Per scegliere bene confronta durata, formula condivisa o privata, inclusioni e tipo di barca. Favignana e Levanzo funzionano al meglio in giornata intera; i tour da 4 ore sono più agili; charter e pranzo a bordo richiedono una pianificazione più mirata.",
     ],
     points: ["Partenza da Trapani", "Rotte secondo meteo", "Assistenza prima dell'imbarco"],
   };

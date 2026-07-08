@@ -53,35 +53,35 @@ const homeCopy: Record<Locale, { title: string; description: string; body: strin
   it: {
     title: "Tour in barca Egadi da Trapani | Egadi Sailing",
     description:
-      "Tour in barca alle Egadi da Trapani con barche private o condivise, trimarano con comfort da catamarano, snorkeling, chef a bordo, Favignana e Levanzo.",
+      "Tour in barca alle Egadi da Trapani con barche private o condivise, trimarano con comfort da catamarano, snorkeling, pranzo a bordo, Favignana e Levanzo.",
     body:
       "Egadi Sailing organizza esperienze in barca da Trapani verso Favignana, Levanzo e Marettimo. Le rotte vengono adattate a meteo, vento, sicurezza e ritmo del gruppo.",
   },
   en: {
     title: "Egadi Islands Boat Tours from Trapani | Egadi Sailing",
     description:
-      "Egadi Islands boat tours and boat trips from Trapani to Favignana and Levanzo: shared or private tours, snorkelling, chef on board and trimaran charters.",
+      "Egadi Islands boat tours and boat trips from Trapani to Favignana and Levanzo: shared or private tours, snorkelling, lunch on board and trimaran charters.",
     body:
       "Egadi Sailing runs boat experiences from Trapani to Favignana, Levanzo and Marettimo. Routes are adapted to weather, wind, safety and guest pace.",
   },
   es: {
     title: "Paseos en barco desde Trapani a las Islas Egadi | Egadi Sailing",
     description:
-      "Paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, chef a bordo y charter en trimaran.",
+      "Paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, pranzo a bordo y charter en trimaran.",
     body:
       "Egadi Sailing organiza experiencias en barco desde Trapani hacia Favignana, Levanzo y Marettimo. Las rutas se adaptan a clima, viento, seguridad y ritmo del grupo.",
   },
   fr: {
     title: "Excursions bateau aux Egades depuis Trapani | Egadi Sailing",
     description:
-      "Excursions bateau depuis Trapani vers les iles Egades: Favignana et Levanzo, sorties privees ou partagees, snorkeling, chef a bord et charter en trimaran.",
+      "Excursions bateau depuis Trapani vers les iles Egades: Favignana et Levanzo, sorties privees ou partagees, snorkeling, dejeuner a bord et charter en trimaran.",
     body:
       "Egadi Sailing organise des excursions en bateau depuis Trapani vers Favignana, Levanzo et Marettimo. Les itineraires sont adaptes a la meteo, au vent, a la securite et au rythme du groupe.",
   },
   de: {
     title: "Bootstouren ab Trapani zu den Ägadischen Inseln | Egadi Sailing",
     description:
-      "Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana und Levanzo, geteilte oder private Ausfahrten, Schnorcheln, Chef an Bord und Trimaran-Charter.",
+      "Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana und Levanzo, geteilte oder private Ausfahrten, Schnorcheln, Mittagessen an Bord und Trimaran-Charter.",
     body:
       "Egadi Sailing organisiert Bootserlebnisse ab Trapani nach Favignana, Levanzo und Marettimo. Die Routen werden an Wetter, Wind, Sicherheit und Gruppentempo angepasst.",
   },
@@ -211,11 +211,11 @@ function buildExperiencesHub(locale: Locale): string {
     de: "Bootstouren ab Trapani zu den Ägadischen Inseln | Egadi Sailing",
   };
   const descriptionByLocale: Record<Locale, string> = {
-    it: "Confronta tour in barca alle Egadi da Trapani: Favignana e Levanzo, escursioni condivise o private, trimarano, chef a bordo e pesca.",
+    it: "Confronta tour in barca alle Egadi da Trapani: Favignana e Levanzo, escursioni condivise o private, trimarano, pranzo a bordo e pesca.",
     en: "Compare Egadi boat tours from Trapani: Favignana and Levanzo boat trips, shared or private tours, snorkelling, trimaran charter and fishing.",
     es: "Compara paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, trimaran y pesca.",
-    fr: "Comparez les excursions bateau aux iles Egades depuis Trapani: Favignana, Levanzo, sorties privees ou partagees, trimaran, chef a bord et peche.",
-    de: "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana, Levanzo, private oder geteilte Ausfahrten, Trimaran, Chef an Bord und Angeln.",
+    fr: "Comparez les excursions bateau aux iles Egades depuis Trapani: Favignana, Levanzo, sorties privees ou partagees, trimaran, dejeuner a bord et peche.",
+    de: "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana, Levanzo, private oder geteilte Ausfahrten, Trimaran, Mittagessen an Bord und Angeln.",
   };
   const packageLines = packages.map((item) => {
     const variants = item.variants.length > 0

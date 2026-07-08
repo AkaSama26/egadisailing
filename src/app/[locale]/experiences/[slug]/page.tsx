@@ -115,8 +115,8 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
       keywords: ["charter pesca egadi", "pesca sportiva egadi", "charter pesca trapani", "egadi fishing charter"],
     },
     gourmet: {
-      about: ["Chef a bordo alle Egadi", "Esperienza gourmet in trimarano", "Tour privato alle Egadi con pranzo"],
-      keywords: ["chef a bordo egadi", "esperienza gourmet egadi", "trimarano egadi chef", "tour privato egadi pranzo"],
+      about: ["Pranzo a bordo alle Egadi", "Esperienza gourmet in trimarano", "Tour privato alle Egadi con pranzo"],
+      keywords: ["pranzo a bordo egadi", "esperienza gourmet egadi", "trimarano egadi pranzo a bordo", "tour privato egadi pranzo"],
     },
   },
   en: {
@@ -133,8 +133,8 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
       keywords: ["egadi fishing charter", "fishing charter trapani", "sport fishing egadi", "private fishing trip egadi"],
     },
     gourmet: {
-      about: ["Chef on board in the Egadi Islands", "Private gourmet trimaran experience", "Egadi private boat tour with lunch"],
-      keywords: ["chef on board egadi", "egadi gourmet boat tour", "private trimaran experience egadi", "egadi boat tour with lunch"],
+      about: ["Lunch on board in the Egadi Islands", "Private gourmet trimaran experience", "Egadi private boat tour with lunch"],
+      keywords: ["lunch on board egadi", "egadi gourmet boat tour", "private trimaran experience egadi", "egadi boat tour with lunch"],
     },
   },
   es: {
@@ -151,8 +151,8 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
       keywords: ["charter pesca egadi", "pesca deportiva egadi", "pesca trapani", "fishing charter egadi"],
     },
     gourmet: {
-      about: ["Chef a bordo en las Egadi", "Experiencia gourmet en trimaran", "Tour privado con comida"],
-      keywords: ["chef a bordo egadi", "experiencia gourmet egadi", "trimaran egadi comida", "tour privado egadi"],
+      about: ["Almuerzo a bordo en las Egadi", "Experiencia gourmet en trimaran", "Tour privado con comida"],
+      keywords: ["pranzo a bordo egadi", "experiencia gourmet egadi", "trimaran egadi comida", "tour privado egadi"],
     },
   },
   fr: {
@@ -169,8 +169,8 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
       keywords: ["charter peche egades", "peche sportive egades", "peche trapani", "fishing charter egadi"],
     },
     gourmet: {
-      about: ["Chef a bord aux Egades", "Experience gourmet en trimaran", "Tour prive avec dejeuner"],
-      keywords: ["chef a bord egades", "experience gourmet egades", "trimaran egades dejeuner", "tour prive egades"],
+      about: ["Déjeuner à bord aux Égades", "Experience gourmet en trimaran", "Tour prive avec dejeuner"],
+      keywords: ["dejeuner a bord egades", "experience gourmet egades", "trimaran egades dejeuner", "tour prive egades"],
     },
   },
   de: {
@@ -187,8 +187,8 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
       keywords: ["angelcharter egadi", "sportangeln ägadische inseln", "angeln trapani", "fishing charter egadi"],
     },
     gourmet: {
-      about: ["Chef an Bord auf den Ägadischen Inseln", "Gourmet-Erlebnis im Trimaran", "Private Bootstour mit Mittagessen"],
-      keywords: ["chef an bord egadi", "gourmet bootstour egadi", "trimaran egadi mittagessen", "private bootstour egadi"],
+      about: ["Mittagessen an Bord auf den Ägadischen Inseln", "Gourmet-Erlebnis im Trimaran", "Private Bootstour mit Mittagessen"],
+      keywords: ["mittagessen an bord egadi", "gourmet bootstour egadi", "trimaran egadi mittagessen", "private bootstour egadi"],
     },
   },
 } as const satisfies Record<string, Record<ExperienceSchemaCategory, ExperienceSchemaTopics>>;
@@ -1301,7 +1301,7 @@ function getDetailCopy(
         ? "Das Boot ist für Ihre Gruppe reserviert; Stopps und Rhythmus werden mit dem Skipper abgestimmt."
         : isSharedBoat
           ? "Sie buchen einzelne Plätze und teilen das Erlebnis mit anderen Gästen."
-          : "Privater Premium-Tag auf dem Trimaran mit Chef, Skipper und Hostess.";
+          : "Privater Premium-Tag auf dem Trimaran mit von der Crew zubereitetem Mittagessen, Skipper und Hostess.";
     const whatYouSeeItems = isCharter
       ? [
           { title: "Nächte vor Anker", text: "Wachen Sie nahe geschützter Buchten auf und passen Sie jeden Tag ohne Eile an." },
@@ -1423,7 +1423,7 @@ function getDetailCopy(
         ? "Le bateau est réservé à votre groupe, avec arrêts et rythme définis avec le skipper."
         : isSharedBoat
           ? "Vous réservez des places individuelles et partagez l'expérience avec d'autres hôtes."
-          : "Journée privée premium en trimaran avec chef, skipper et hôtesse.";
+          : "Journée privée premium en trimaran avec déjeuner à bord préparé par l'équipage, skipper et hôtesse.";
     const whatYouSeeItems = isCharter
       ? [
           { title: "Nuits au mouillage", text: "Réveillez-vous près de criques protégées et adaptez chaque journée sans courir." },
@@ -1545,7 +1545,7 @@ function getDetailCopy(
         ? "El barco queda reservado para tu grupo, con paradas y ritmo acordados con el patrón."
         : isSharedBoat
           ? "Reservas plazas individuales y compartes la experiencia con otros huéspedes."
-	          : "Jornada privada premium en trimarán con chef, patrón y azafata.";
+	          : "Jornada privada premium en trimarán con almuerzo a bordo cocinado por la tripulación, patrón y azafata.";
     const whatYouSeeItems = isCharter
       ? [
 	          { title: "Noches al fondeo", text: "Despiértate cerca de calas protegidas y adapta cada día sin prisas." },
@@ -1812,7 +1812,7 @@ function getSeoExpansionCopy(
         : isSharedBoat
           ? "Sie buchen einzelne Plätze und teilen das Erlebnis mit anderen Gästen."
           : isGourmet
-            ? "Privater Premium-Tag auf dem Trimaran mit Chef, Skipper und Hostess."
+            ? "Privater Premium-Tag auf dem Trimaran mit von der Crew zubereitetem Mittagessen, Skipper und Hostess."
             : "Ein sorgfältig kuratiertes Erlebnis auf den Ägadischen Inseln mit professioneller Crew.";
     const whatYouSeeItems = isCharter
       ? [
@@ -1900,7 +1900,7 @@ function getSeoExpansionCopy(
         : isSharedBoat
           ? "Vous réservez des places individuelles et partagez l'expérience avec d'autres hôtes."
           : isGourmet
-            ? "Journée privée premium en trimaran avec chef, skipper et hôtesse."
+            ? "Journée privée premium en trimaran avec déjeuner à bord préparé par l'équipage, skipper et hôtesse."
             : "Une expérience soignée aux Égades avec équipage professionnel.";
     const whatYouSeeItems = isCharter
       ? [
@@ -1988,7 +1988,7 @@ function getSeoExpansionCopy(
         : isSharedBoat
           ? "Reservas plazas individuales y compartes la experiencia con otros huéspedes."
           : isGourmet
-	            ? "Jornada privada premium en trimarán con chef, patrón y azafata."
+	            ? "Jornada privada premium en trimarán con almuerzo a bordo cocinado por la tripulación, patrón y azafata."
             : "Una experiencia cuidada en las Egadi con tripulación profesional.";
     const whatYouSeeItems = isCharter
       ? [
@@ -2091,8 +2091,8 @@ function getSeoExpansionCopy(
           : "Prenoti posti singoli e condividi l'esperienza con altri ospiti."
         : isGourmet
           ? isEn
-            ? "A premium private trimaran day with chef, skipper and hostess."
-            : "Giornata privata premium in trimarano con chef, skipper e hostess."
+            ? "A premium private trimaran day with lunch on board cooked by the crew, skipper and hostess."
+            : "Giornata privata premium in trimarano con pranzo a bordo cucinato dalla crew, skipper e hostess."
           : isEn
             ? "A curated Egadi experience with professional crew."
             : "Un'esperienza alle Egadi curata dalla crew professionale.";
@@ -2216,8 +2216,8 @@ function getSeoExpansionCopy(
           {
             question: isEn ? "What is included in the Gourmet Experience?" : "Cosa include l'esperienza Gourmet?",
             answer: isEn
-              ? "The Gourmet Experience includes skipper, hostess, private chef, lunch based on local fish and local products, fuel, aperitif, wine, water, soft drinks and snorkelling equipment."
-              : "L'esperienza Gourmet include skipper, hostess, chef privato, pranzo a base di pesce locale e prodotti del territorio, carburante, aperitivo, vino, acqua, bevande e attrezzatura da snorkeling.",
+              ? "The Gourmet Experience includes skipper, hostess, lunch on board cooked by the crew with local fish and local products, fuel, aperitif, wine, water, soft drinks and snorkelling equipment."
+              : "L'esperienza Gourmet include skipper, hostess, pranzo a bordo cucinato dalla crew con pesce locale e prodotti del territorio, carburante, aperitivo, vino, acqua, bevande e attrezzatura da snorkeling.",
           },
           {
             question: isEn ? "Which islands and coves are visited?" : "Quali isole e cale si visitano?",
@@ -2228,8 +2228,8 @@ function getSeoExpansionCopy(
           {
             question: isEn ? "Is it like a catamaran day in the Egadi Islands?" : "È come una giornata in catamarano alle Egadi?",
             answer: isEn
-              ? "It is a private day on a trimaran, so the experience is very close to the catamaran idea in terms of space, stability and relaxed onboard life, with the added focus on chef service and lunch prepared on board."
-              : "È una giornata privata su un trimarano: per spazio, stabilità e vita a bordo è molto vicina all'idea di catamarano alle Egadi, con in più chef locale, hostess e pranzo cucinato direttamente a bordo.",
+              ? "It is a private day on a trimaran, so the experience is very close to the catamaran idea in terms of space, stability and relaxed onboard life, with the added focus on lunch on board cooked by the crew."
+              : "È una giornata privata su un trimarano: per spazio, stabilità e vita a bordo è molto vicina all'idea di catamarano alle Egadi, con in più hostess e pranzo a bordo cucinato dalla crew.",
           },
           {
             question: isEn ? "Is the menu fixed?" : "Il menu è fisso?",
@@ -2240,8 +2240,8 @@ function getSeoExpansionCopy(
           {
             question: isEn ? "Can allergies or intolerances be managed?" : "Si possono gestire allergie o intolleranze?",
             answer: isEn
-              ? "Yes. Allergies, intolerances and important dietary needs must be communicated at least 48 hours before the experience, so the chef can organise the menu correctly."
-              : "Sì. Allergie, intolleranze ed esigenze alimentari importanti devono essere comunicate almeno 48 ore prima dell'esperienza, così lo chef può organizzare correttamente il menu.",
+              ? "Yes. Allergies, intolerances and important dietary needs must be communicated at least 48 hours before the experience, so the crew can organise the menu correctly."
+              : "Sì. Allergie, intolleranze ed esigenze alimentari importanti devono essere comunicate almeno 48 ore prima dell'esperienza, così la crew può organizzare correttamente il menu.",
           },
           {
             question: isEn ? "Are drinks included?" : "Le bevande sono incluse?",
@@ -2258,8 +2258,8 @@ function getSeoExpansionCopy(
           {
             question: isEn ? "Is the Gourmet Experience private?" : "L'esperienza Gourmet è privata?",
             answer: isEn
-              ? "Yes. The trimaran is reserved for your group, with skipper, hostess and private chef on board."
-              : "Sì. Il trimarano è riservato al tuo gruppo, con skipper, hostess e chef privato a bordo.",
+              ? "Yes. The trimaran is reserved for your group, with skipper, hostess and crew on board."
+              : "Sì. Il trimarano è riservato al tuo gruppo, con skipper, hostess e crew a bordo.",
           },
           {
             question: isEn ? "How many people can join?" : "Quante persone possono partecipare?",
@@ -2462,7 +2462,7 @@ function getEditorialExperienceCopy(
         isCharter
           ? "Beim Charter wird der Rhythmus noch wichtiger. Eine mehrtägige Route lässt die Inseln langsam aufgehen: ein erster Badestopp nach der Abfahrt von Trapani, ein Abend vor Anker, wenn das Wetter passt, Morgenstunden nahe klarem Wasser und die Möglichkeit, den nächsten Tag anzupassen, statt ein fixes Programm zu erzwingen. Der Trimaran bietet dafür eine komfortable Basis mit Kabinen, Gemeinschaftsflächen und genug Raum, damit das Boot zu einem kleinen Zuhause auf dem Meer wird."
           : isGourmet
-            ? "Beim Gourmet-Erlebnis wird das Boot zugleich Route und Tisch. Chef und Crew koordinieren die Zeiten so, dass das Mittagessen nicht wie eine Unterbrechung wirkt, sondern Teil des Tages wird: ein Bad vor dem Ankern, ruhiger Service an Bord, lokale Aromen und danach genug Zeit, wieder ins Wasser zu gehen. Es ist für Gäste gedacht, die Privatsphäre, Komfort und eine kuratiertere Art suchen, die Ägadischen Inseln zu erleben."
+            ? "Beim Gourmet-Erlebnis wird das Boot zugleich Route und Tisch. Die Crew koordiniert die Zeiten so, dass das Mittagessen nicht wie eine Unterbrechung wirkt, sondern Teil des Tages wird: ein Bad vor dem Ankern, ruhiger Service an Bord, lokale Aromen und danach genug Zeit, wieder ins Wasser zu gehen. Es ist für Gäste gedacht, die Privatsphäre, Komfort und eine kuratiertere Art suchen, die Ägadischen Inseln zu erleben."
             : isPrivateBoat
               ? "Bei privaten Bootstouren ist Flexibilität der stärkste Vorteil. Das Boot ist für Ihre Gruppe reserviert, sodass der Skipper Badezeit, Tempo und Stopps anpassen kann, ohne unterschiedliche Erwartungen an Bord ausgleichen zu müssen. Das passt für Familien, Paare, Freundesgruppen und alle, die die Egadi-Inseln persönlicher erleben möchten."
               : "Bei der geteilten Ganztages-Bootstour liegt der Reiz in der Einfachheit. Sie buchen Ihre Plätze, treffen die Crew in Trapani und nehmen an einem Tag teil, der das Wesentliche zusammenhält: klares Wasser, Badestopps, Panorama-Navigation und eine gesellige, aber gut organisierte Atmosphäre.",
@@ -2493,7 +2493,7 @@ function getEditorialExperienceCopy(
         isCharter
           ? "En charter, le rythme est essentiel. Plusieurs jours permettent de découvrir les îles peu à peu, avec mouillages calmes, cabines et possibilité d'adapter la route au lendemain."
           : isGourmet
-            ? "Dans l'expérience gourmet, le bateau devient à la fois route et table. Le chef et l'équipage coordonnent baignade, mouillage et déjeuner pour que tout fasse naturellement partie de la journée."
+            ? "Dans l'expérience gourmet, le bateau devient à la fois route et table. L'équipage coordonne baignade, mouillage et déjeuner pour que tout fasse naturellement partie de la journée."
             : isSharedBoat
               ? "La formule partagée est pratique : vous réservez votre place, rencontrez l'équipage à Trapani et partagez la route avec d'autres hôtes qui cherchent mer, baignade et sortie bien organisée."
               : "Dans les tours privés, la flexibilité est le point fort. Le bateau est réservé à votre groupe, le skipper peut donc ajuster arrêts, rythme et navigation sans équilibrer les attentes d'autres hôtes.",
@@ -2525,7 +2525,7 @@ function getEditorialExperienceCopy(
         isCharter
 	          ? "En el charter, el ritmo es fundamental. Varias jornadas permiten descubrir las islas poco a poco: primer baño tras salir de Trapani, noche al fondeo si el tiempo acompaña y posibilidad de adaptar el plan al día siguiente."
           : isGourmet
-            ? "En la experiencia gourmet, el barco se convierte en ruta y mesa a la vez. El chef y la tripulación coordinan tiempos, baño, fondeo y comida para que todo forme parte natural del día."
+            ? "En la experiencia gourmet, el barco se convierte en ruta y mesa a la vez. La tripulación coordina tiempos, baño, fondeo y comida para que todo forme parte natural del día."
             : isSharedBoat
               ? "La fórmula compartida es práctica: reservas tu plaza, conoces a la tripulación en Trapani y compartes la ruta con otros huéspedes que buscan mar, baño y una salida bien organizada."
               : "En los tours privados, la flexibilidad es el punto fuerte. El barco queda reservado para tu grupo, así que el patrón puede ajustar paradas, ritmo y navegación sin equilibrar expectativas de otros huéspedes.",
@@ -2584,7 +2584,7 @@ function getEditorialExperienceCopy(
         isCharter
           ? "For charter guests, the rhythm becomes even more important. A multi-day route lets the islands open slowly: a first swim after leaving Trapani, dinner at anchor when the weather is right, mornings close to clear water and the possibility to adapt the following day instead of forcing a fixed programme. The trimaran gives the charter a more comfortable base, with cabins, shared spaces and enough room to turn the boat into a small floating home."
 	          : isGourmet
-	            ? "For the gourmet experience, the boat becomes both route and table. The chef and crew coordinate the timing so lunch does not feel like an interruption but part of the day: a swim before anchoring, calm service on board, local flavours and enough time after the meal to enjoy the water again. It is designed for guests who want privacy, comfort and a more curated way to experience the Egadi Islands."
+	            ? "For the gourmet experience, the boat becomes both route and table. The crew coordinates the timing so lunch does not feel like an interruption but part of the day: a swim before anchoring, calm service on board, local flavours and enough time after the meal to enjoy the water again. It is designed for guests who want privacy, comfort and a more curated way to experience the Egadi Islands."
           : isPrivateBoat
               ? "For private boat tours, flexibility is the strongest advantage. The boat is reserved for your group, so the skipper can adjust swim time, pace and stops without balancing different expectations on board. This is useful for families, couples, groups of friends and anyone who wants the Egadi with more privacy and a route that feels personal rather than standard."
 	              : "For the shared full-day tour, the appeal is simplicity. You book your seats, meet the crew in Trapani and join a day that keeps the essentials: clear water, swim stops, scenic navigation and a sociable but organised atmosphere. It is a good choice when you want the full Egadi Islands experience without booking the entire boat privately.",
@@ -2642,7 +2642,7 @@ function getEditorialExperienceCopy(
       isCharter
         ? "Nel charter il ritmo diventa ancora più importante. Più giornate permettono alle isole di aprirsi lentamente: primo bagno dopo la partenza da Trapani, cena in rada quando il meteo lo consente, risvegli vicino all'acqua limpida e possibilità di adattare il giorno successivo senza forzare un programma fisso. Il trimarano offre una base comoda, con cabine, spazi comuni e abbastanza respiro per trasformare la barca in una piccola casa sul mare: per questo è una scelta naturale anche per chi sta valutando un noleggio catamarano alle Egadi con skipper."
         : isGourmet
-          ? "Nell'esperienza gourmet la barca diventa insieme rotta e tavola. Chef e crew coordinano i tempi per far sentire il pranzo come parte naturale della giornata: bagno prima dell'ancoraggio, servizio tranquillo a bordo, sapori locali e tempo sufficiente per tornare in acqua dopo il pasto. È una formula pensata per chi cerca privacy, comfort e un modo più curato di vivere le Egadi, molto adatta anche a chi immagina una giornata in catamarano tra Favignana e Levanzo."
+          ? "Nell'esperienza gourmet la barca diventa insieme rotta e tavola. La crew coordina i tempi per far sentire il pranzo come parte naturale della giornata: bagno prima dell'ancoraggio, servizio tranquillo a bordo, sapori locali e tempo sufficiente per tornare in acqua dopo il pasto. È una formula pensata per chi cerca privacy, comfort e un modo più curato di vivere le Egadi, molto adatta anche a chi immagina una giornata in catamarano tra Favignana e Levanzo."
           : isPrivateBoat
             ? "Nei tour privati il vantaggio principale è la flessibilità. La barca è riservata al tuo gruppo, quindi lo skipper può modulare soste, ritmo e navigazione senza dover bilanciare aspettative diverse a bordo. Funziona bene per famiglie, coppie, gruppi di amici e per chi vuole sentire le Egadi in modo personale, senza trasformare l'uscita in un programma standard."
             : "Nel tour condiviso di giornata intera il punto forte è la semplicità. Prenoti i posti, incontri la crew a Trapani e vivi una giornata che tiene insieme gli elementi essenziali: acqua limpida, soste bagno, navigazione panoramica e un'atmosfera sociale ma ordinata. È una buona scelta se vuoi l'esperienza completa delle Egadi senza riservare tutta la barca.",
@@ -2891,7 +2891,7 @@ function getExperienceIntroSectionCopy(
 	          ? `La formula privata dura ${durationText}: è il tour in barca alle Egadi giusto se vuoi spazio per il tuo gruppo, soste scelte bene e una rotta compatta costruita con lo skipper.`
 	          : `La formula privata dura ${durationText}: è il tour in barca alle Egadi giusto se vuoi spazio per il tuo gruppo, più libertà nelle soste e una rotta costruita con lo skipper. Per chi cerca un tour privato Favignana e Levanzo da Trapani, qui contano ritmo e privacy.`
           : isGourmet
-            ? `La formula gourmet dura ${durationText}: un tour in trimarano alle Egadi con chef a bordo, pranzo curato e tempo lento in rada, pensato per chi vuole comfort e servizio oltre alla rotta. È una soluzione naturale per chi cerca una giornata in catamarano alle Egadi, ma desidera una cucina vera a bordo.`
+            ? `La formula gourmet dura ${durationText}: un tour in trimarano alle Egadi con pranzo a bordo cucinato dalla crew e tempo lento in rada, pensato per chi vuole comfort e servizio oltre alla rotta. È una soluzione naturale per chi cerca una giornata in catamarano alle Egadi, ma desidera una cucina vera a bordo.`
             : `La formula condivisa dura ${durationText}: è adatta se vuoi un tour in barca alle Egadi completo ma semplice da prenotare, un'escursione in barca Favignana e Levanzo con partenza da Trapani e tempo vero per bagno e snorkeling.`,
     ],
   };
@@ -2970,7 +2970,7 @@ function getDayProgramEditorialCopy(
           ? [
               {
                 lead: "Bei Cala Rossa ist der wichtigste Stopp für das Mittagessen an Bord vorgesehen.",
-                text: "Der lokale Chef kocht direkt auf dem Trimaran: eine Cooking Experience mit regionalen Zutaten, Meerblick und ruhigem Timing vor der Weiterfahrt.",
+                text: "Die Crew bereitet das Mittagessen direkt auf dem Trimaran zu: Mittagessen an Bord mit regionalen Zutaten, Meerblick und ruhigem Timing vor der Weiterfahrt.",
               },
             ]
           : isFullDayBoatProgram
@@ -3057,7 +3057,7 @@ function getDayProgramEditorialCopy(
           ? [
               {
                 lead: "À Cala Rossa, l'arrêt principal est prévu pour le déjeuner à bord.",
-                text: "Le chef local cuisine directement sur le trimaran : une cooking experience avec ingrédients du territoire, service face à la mer et rythme détendu avant de reprendre la navigation.",
+                text: "L'équipage prépare le déjeuner directement sur le trimaran : déjeuner à bord avec ingrédients du territoire, service face à la mer et rythme détendu avant de reprendre la navigation.",
               },
             ]
           : isFullDayBoatProgram
@@ -3144,7 +3144,7 @@ function getDayProgramEditorialCopy(
           ? [
               {
                 lead: "En Cala Rossa está prevista la parada principal para la comida a bordo.",
-                text: "El chef local cocina directamente en el trimarán: una cooking experience con ingredientes del territorio, servicio frente al mar y tiempo tranquilo antes de seguir navegando.",
+                text: "La tripulación prepara el almuerzo directamente en el trimarán: almuerzo a bordo con ingredientes locales, servicio frente al mar y tiempo tranquilo antes de seguir navegando.",
               },
             ]
           : isFullDayBoatProgram
@@ -3231,7 +3231,7 @@ function getDayProgramEditorialCopy(
           ? [
               {
                 lead: "At Cala Rossa, the main stop is planned around lunch on board.",
-                text: "The local chef cooks directly on the trimaran: a cooking experience with local ingredients, sea-view service and relaxed timing before navigation continues.",
+                text: "The crew prepares lunch directly on the trimaran: lunch on board cooked by the crew with local ingredients, sea-view service and relaxed timing before navigation continues.",
               },
             ]
           : isFullDayBoatProgram
@@ -3317,7 +3317,7 @@ function getDayProgramEditorialCopy(
         ? [
             {
               lead: "A Cala Rossa è prevista la sosta principale per il pranzo a bordo.",
-              text: "Lo chef locale cucina direttamente sul trimarano: una cooking experience con ingredienti del territorio, servizio vista mare e tempi distesi prima di riprendere la navigazione.",
+              text: "La crew prepara il pranzo direttamente sul trimarano: pranzo a bordo cucinato dalla crew con ingredienti del territorio, servizio vista mare e tempi distesi prima di riprendere la navigazione.",
             },
           ]
         : isFullDayBoatProgram
@@ -3573,7 +3573,7 @@ function getGourmetMenuCopy(locale: string) {
   const isDe = locale === "de";
 
   return {
-    eyebrow: isDe ? "Chef an Bord" : isEs ? "Chef a bordo" : isFr ? "Chef à bord" : isEn ? "Chef on board" : "Chef a bordo",
+    eyebrow: isDe ? "Mittagessen an Bord" : isEs ? "Almuerzo a bordo" : isFr ? "Déjeuner à bord" : isEn ? "Lunch on board" : "Pranzo a bordo",
     title: isDe
       ? "Beispielmenüs für das Gourmet-Erlebnis"
       : isEs
@@ -3584,14 +3584,14 @@ function getGourmetMenuCopy(locale: string) {
             ? "Sample gourmet menus"
             : "Esempi di menu gourmet",
     intro: isEs
-      ? "Tres ejemplos de comida servida a bordo durante la Premium Experience. El menú final se confirma con el chef según pesca fresca, temporada y necesidades de los huéspedes."
+      ? "Tres ejemplos de comida servida a bordo durante la Premium Experience. El menú final se confirma con la tripulación según pesca fresca, temporada y necesidades de los huéspedes."
       : isDe
-      ? "Drei Beispiele für das Mittagessen an Bord während der Premium Experience. Das endgültige Menü wird mit dem Chef nach frischem Fang, Saison und Bedürfnissen der Gäste bestätigt."
+      ? "Drei Beispiele für das Mittagessen an Bord während der Premium Experience. Das endgültige Menü wird mit der Crew nach frischem Fang, Saison und Bedürfnissen der Gäste bestätigt."
       : isFr
-      ? "Trois exemples de déjeuner servis à bord pendant la Premium Experience. Le menu final est confirmé avec le chef selon la pêche fraîche, la saison et les besoins des hôtes."
+      ? "Trois exemples de déjeuner servis à bord pendant la Premium Experience. Le menu final est confirmé avec l'équipage selon la pêche fraîche, la saison et les besoins des hôtes."
       : isEn
-      ? "Three sample lunch styles served on board during the Gourmet Experience. The final menu is confirmed with the chef according to fresh catch, seasonality and guest needs."
-      : "Tre esempi di pranzo servito a bordo durante l'Esperienza Gourmet. Il menu definitivo viene concordato con lo chef in base a pescato fresco, stagione ed esigenze degli ospiti.",
+      ? "Three sample lunch styles served on board during the Gourmet Experience. The final menu is confirmed with the crew according to fresh catch, seasonality and guest needs."
+      : "Tre esempi di pranzo servito a bordo durante l'Esperienza Gourmet. Il menu definitivo viene concordato con la crew in base a pescato fresco, stagione ed esigenze degli ospiti.",
     seasonalNote: isEs
       ? "Los menús pueden variar según disponibilidad. Alergias, intolerancias y necesidades alimentarias importantes deben comunicarse antes de la salida."
       : isDe
@@ -3960,7 +3960,7 @@ export default async function ExperienceDetailPage({
           ? ["Geteilte Bootstour", "Schnorcheln", "Ägadische Inseln"]
           : service.type === "BOAT_EXCLUSIVE"
             ? ["Private Bootstour", "Familien", "Kleine Gruppen"]
-            : ["Gourmet-Erlebnis mit Chef an Bord", "Private Gruppe", "Ägadische Inseln"]
+            : ["Gourmet-Erlebnis mit Mittagessen an Bord", "Private Gruppe", "Ägadische Inseln"]
       : service.type === "CABIN_CHARTER"
         ? ["Private charter", "Multi-day sailing", "Egadi Islands"]
         : service.type === "BOAT_SHARED"

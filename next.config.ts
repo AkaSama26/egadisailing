@@ -115,7 +115,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/it/esperienze/exclusive-experience",
-        destination: "/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani",
+        destination: "/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/it/esperienze/chef-a-bordo-egadi-trimarano-da-trapani",
+        destination: "/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani",
         statusCode: 301,
       },
       {
@@ -140,7 +145,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/en/experiences/exclusive-experience",
-        destination: "/en/experiences/chef-on-board-egadi-trimaran-from-trapani",
+        destination: "/en/experiences/lunch-on-board-egadi-trimaran-from-trapani",
+        statusCode: 301,
+      },
+      {
+        source: "/en/experiences/chef-on-board-egadi-trimaran-from-trapani",
+        destination: "/en/experiences/lunch-on-board-egadi-trimaran-from-trapani",
         statusCode: 301,
       },
       {
@@ -164,8 +174,13 @@ const nextConfig: NextConfig = {
         statusCode: 301,
       },
       {
+        source: "/es/experiencias/chef-a-bordo-egadi-trimaran-desde-trapani",
+        destination: "/es/experiencias/almuerzo-a-bordo-egadi-trimaran-desde-trapani",
+        statusCode: 301,
+      },
+      {
         source: "/es/experiencias/chef-a-bordo-neel-47",
-        destination: "/es/experiencias/chef-a-bordo-egadi-trimaran-desde-trapani",
+        destination: "/es/experiencias/almuerzo-a-bordo-egadi-trimaran-desde-trapani",
         statusCode: 301,
       },
       {
@@ -189,8 +204,13 @@ const nextConfig: NextConfig = {
         statusCode: 301,
       },
       {
+        source: "/fr/experiences/chef-a-bord-egades-trimaran-depuis-trapani",
+        destination: "/fr/experiences/dejeuner-a-bord-egades-trimaran-depuis-trapani",
+        statusCode: 301,
+      },
+      {
         source: "/fr/experiences/chef-a-bord-neel-47",
-        destination: "/fr/experiences/chef-a-bord-egades-trimaran-depuis-trapani",
+        destination: "/fr/experiences/dejeuner-a-bord-egades-trimaran-depuis-trapani",
         statusCode: 301,
       },
       {
@@ -214,8 +234,13 @@ const nextConfig: NextConfig = {
         statusCode: 301,
       },
       {
+        source: "/de/erlebnisse/chef-an-bord-aegadische-inseln-trimaran-ab-trapani",
+        destination: "/de/erlebnisse/mittagessen-an-bord-aegadische-inseln-trimaran-ab-trapani",
+        statusCode: 301,
+      },
+      {
         source: "/de/erlebnisse/chef-an-bord-neel-47",
-        destination: "/de/erlebnisse/chef-an-bord-aegadische-inseln-trimaran-ab-trapani",
+        destination: "/de/erlebnisse/mittagessen-an-bord-aegadische-inseln-trimaran-ab-trapani",
         statusCode: 301,
       },
       {

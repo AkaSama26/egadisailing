@@ -123,19 +123,19 @@ const gourmetItinerary = [
       en: "Favignana",
     },
     text: {
-      it: "Sosta in rada a Cala Rossa, Favignana, con bagno e preparazione del pranzo cucinato a bordo da uno chef locale.",
-      en: "Anchor stop in Cala Rossa, Favignana, with swimming and lunch cooked on board by a local chef.",
+      it: "Sosta in rada a Cala Rossa, Favignana, con bagno e preparazione del pranzo a bordo cucinato dalla crew.",
+      en: "Anchor stop in Cala Rossa, Favignana, with swimming and lunch on board cooked by the crew.",
     },
   },
   {
     time: "13:00",
     title: {
-      it: "Show cooking a bordo",
-      en: "Show cooking on board",
+      it: "Pranzo a bordo",
+      en: "Lunch on board",
     },
     text: {
-      it: "Lo chef locale prepara il pranzo direttamente sul trimarano: una cooking experience a bordo, con ingredienti del territorio e servizio vista mare.",
-      en: "The local chef prepares lunch directly on the trimaran: an onboard cooking experience with local ingredients and sea-view service.",
+      it: "La crew prepara il pranzo direttamente sul trimarano: un pranzo a bordo cucinato dalla crew, con ingredienti del territorio e servizio vista mare.",
+      en: "The crew prepares lunch directly on the trimaran: lunch on board cooked by the crew with local ingredients and sea-view service.",
     },
   },
   {
@@ -735,11 +735,11 @@ function createGourmetTrimaranMedia(
   return {
     caption,
     alt: {
-      it: `${caption.it} durante l'esperienza chef a bordo in trimarano alle Egadi`,
-      en: `${caption.en} during the chef on board trimaran experience in the Egadi Islands`,
-      es: `${caption.es ?? caption.en} durante la experiencia chef a bordo en trimarán por las Islas Egadi`,
-      fr: `${caption.fr ?? caption.en} pendant l'expérience chef à bord en trimaran aux îles Égades`,
-      de: `${caption.de ?? caption.en} während des Chef-an-Bord-Erlebnisses im Trimaran auf den Ägadischen Inseln`,
+      it: `${caption.it} durante l'esperienza pranzo a bordo in trimarano alle Egadi`,
+      en: `${caption.en} during the lunch on board trimaran experience in the Egadi Islands`,
+      es: `${caption.es ?? caption.en} durante la experiencia almuerzo a bordo en trimarán por las Islas Egadi`,
+      fr: `${caption.fr ?? caption.en} pendant l'expérience déjeuner à bord en trimaran aux îles Égades`,
+      de: `${caption.de ?? caption.en} während des Mittagessens an Bord im Trimaran auf den Ägadischen Inseln`,
     },
     color,
     src,
@@ -775,17 +775,17 @@ const GOURMET_TRIMARAN_DETAIL_MEDIA: ExperienceCatalogMedia[] = [
     it: "Calice vista mare",
     en: "Glass with sea view",
   }, "#FBCFE8"),
-  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-chef-ingredienti.webp", {
-    it: "Chef e ingredienti",
-    en: "Chef and ingredients",
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-pranzo-ingredienti.webp", {
+    it: "Pranzo e ingredienti",
+    en: "Lunch and ingredients",
   }, "#FFDAB9"),
-  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-chef.webp", {
-    it: "Chef a bordo",
-    en: "Chef on board",
+  createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-pranzo-a-bordo.webp", {
+    it: "Pranzo a bordo",
+    en: "Lunch on board",
   }, "#FECACA"),
   createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-cooking-show.webp", {
-    it: "Cooking show",
-    en: "Cooking show",
+    it: "Pranzo a bordo",
+    en: "Pranzo a bordo",
   }, "#FDE68A"),
   createGourmetTrimaranMedia("/images/boats/neel-47/trimarano-ingredienti-alto.webp", {
     it: "Ingredienti dall'alto",
@@ -978,7 +978,7 @@ const GOURMET_TRIMARAN_DETAIL_MEDIA: ExperienceCatalogMedia[] = [
   }, "#FDE68A"),
   createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8090.webp", {
     it: "Cucina a bordo",
-    en: "Cooking on board",
+    en: "Lunch on board",
   }, "#FDBA74"),
   createGourmetTrimaranMedia("/images/boats/neel-47/_V6B8092.webp", {
     it: "Preparazione in cucina",
@@ -1146,7 +1146,7 @@ const CHARTER_TRIMARAN_DETAIL_MEDIA: ExperienceCatalogMedia[] = [
     it: "Calice vista mare",
     en: "Glass with sea view",
   }, "#FBCFE8"),
-  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-chef-ingredienti.webp", {
+  createCharterTrimaranMedia("/images/boats/neel-47/trimarano-pranzo-ingredienti.webp", {
     it: "Ingredienti a bordo",
     en: "Ingredients on board",
   }, "#FFDAB9"),
@@ -1407,30 +1407,30 @@ export const EXPERIENCE_CATALOG = {
     order: 10,
     listed: true,
     title: {
-      it: "Chef a bordo alle Egadi in trimarano da Trapani",
-      en: "Chef on board in an Egadi trimaran from Trapani",
+      it: "Pranzo a bordo alle Egadi in trimarano da Trapani",
+      en: "Lunch on board in an Egadi trimaran from Trapani",
     },
     subtitle: {
-      it: "Il trimarano tutto per te, con chef a bordo e comfort da catamarano tra Favignana e Levanzo: una giornata in catamarano alle Egadi reinterpretata in chiave multiscafo.",
-      en: "The trimaran reserved for you, with an on-board chef and catamaran-style comfort between Favignana and Levanzo.",
+      it: "Il trimarano tutto per te, con pranzo a bordo cucinato dalla crew e comfort da catamarano tra Favignana e Levanzo: una giornata in catamarano alle Egadi reinterpretata in chiave multiscafo.",
+      en: "The trimaran reserved for you, with lunch on board cooked by the crew and catamaran-style comfort between Favignana and Levanzo.",
     },
     detailDescription: {
-      it: "Una giornata privata sul trimarano con comfort da catamarano: skipper, hostess e chef coordinano ritmo, pranzo a bordo e soste bagno tra Favignana e Levanzo. È ideale per chi desidera un tour in catamarano alle Egadi, ma vuole una cooking experience curata su un trimarano con spazi ampi e servizio premium.",
-      en: "A private day on the trimaran with catamaran-style comfort: skipper, hostess and chef coordinate the pace, lunch on board and swim stops between Favignana and Levanzo.",
+      it: "Una giornata privata sul trimarano con comfort da catamarano: skipper, hostess e crew coordinano ritmo, pranzo a bordo e soste bagno tra Favignana e Levanzo. È ideale per chi desidera un tour in catamarano alle Egadi, ma vuole un pranzo a bordo cucinato dalla crew su un trimarano con spazi ampi e servizio premium.",
+      en: "A private day on the trimaran with catamaran-style comfort: skipper, hostess and crew coordinate the pace, lunch on board and swim stops between Favignana and Levanzo.",
     },
     seoTitle: {
-      it: "Chef a bordo alle Egadi in trimarano da Trapani",
-      en: "Chef on Board in an Egadi Trimaran from Trapani",
+      it: "Pranzo a bordo alle Egadi in trimarano da Trapani",
+      en: "Lunch on Board in an Egadi Trimaran from Trapani",
     },
     seoDescription: {
-      it: "Chef a bordo alle Egadi in trimarano da Trapani: pranzo a bordo, Favignana e Levanzo, snorkeling e comfort da catamarano per una giornata alle Egadi.",
-      en: "Chef on board in an Egadi trimaran from Trapani: lunch on board, skipper, hostess, Favignana and Levanzo, snorkelling and catamaran-style comfort.",
+      it: "Pranzo a bordo alle Egadi in trimarano da Trapani: pranzo a bordo, Favignana e Levanzo, snorkeling e comfort da catamarano per una giornata alle Egadi.",
+      en: "Lunch on board in an Egadi trimaran from Trapani: lunch on board, skipper, hostess, Favignana and Levanzo, snorkelling and catamaran-style comfort.",
     },
     media: GOURMET_TRIMARAN_DETAIL_MEDIA,
     itinerary: gourmetItinerary,
     includes: [
       { it: "Trimarano in esclusiva", en: "Private trimaran" },
-      { it: "Skipper, hostess e chef", en: "Skipper, hostess and chef" },
+      { it: "Skipper, hostess e crew", en: "Skipper, hostess and crew" },
       { it: "Pranzo preparato a bordo", en: "Lunch prepared on board" },
       { it: "Attrezzatura snorkeling", en: "Snorkelling equipment" },
       { it: "Acqua, soft drink e carburante rotta", en: "Water, soft drinks and fuel for the planned route" },
@@ -2083,11 +2083,11 @@ const EXPERIENCE_HUB_GOURMET_MEDIA = [
       de: "Trimaran vor Levanzo",
     },
     alt: {
-      it: "Trimarano Egadisailing davanti a Levanzo durante esperienza chef a bordo",
-      en: "Egadisailing trimaran off Levanzo during the chef on board experience",
-      es: "Trimarán Egadisailing frente a Levanzo durante la experiencia chef a bordo",
-      fr: "Trimaran Egadisailing face à Levanzo pendant l'expérience chef à bord",
-      de: "Egadisailing Trimaran vor Levanzo während des Chef-an-Bord-Erlebnisses",
+      it: "Trimarano Egadisailing davanti a Levanzo durante esperienza pranzo a bordo",
+      en: "Egadisailing trimaran off Levanzo during the lunch on board experience",
+      es: "Trimarán Egadisailing frente a Levanzo durante la experiencia de almuerzo a bordo",
+      fr: "Trimaran Egadisailing face à Levanzo pendant l'expérience déjeuner à bord",
+      de: "Egadisailing Trimaran vor Levanzo während des Mittagessen-an-Bord-Erlebnisses",
     },
     color: "#FFDAB9",
     src: "/images/home/traimarano-levanzo.webp",
@@ -2119,11 +2119,11 @@ const EXPERIENCE_HUB_GOURMET_MEDIA = [
       de: "Mittagessen an Bord",
     },
     alt: {
-      it: "Pasta cucinata a bordo durante chef experience in trimarano alle Isole Egadi",
-      en: "Pasta cooked on board during a chef experience on an Egadi Islands trimaran",
-      es: "Pasta cocinada a bordo durante experiencia chef en trimarán por las Islas Egadi",
-      fr: "Pâtes cuisinées à bord pendant expérience chef en trimaran aux îles Égades",
-      de: "Pasta an Bord gekocht während Chef-Erlebnis im Trimaran auf den Ägadischen Inseln",
+      it: "Pasta cucinata a bordo durante un pranzo a bordo in trimarano alle Isole Egadi",
+      en: "Pasta cooked on board during a lunch on board experience on an Egadi Islands trimaran",
+      es: "Pasta cocinada a bordo durante experiencia de almuerzo a bordo en trimarán por las Islas Egadi",
+      fr: "Pâtes cuisinées à bord pendant déjeuner à bord en trimaran aux îles Égades",
+      de: "Pasta an Bord gekocht während des Mittagessens an Bord im Trimaran auf den Ägadischen Inseln",
     },
     color: "#DDA0DD",
     src: "/images/boats/neel-47/trimarano-pasta-saltata.webp",
@@ -2193,23 +2193,23 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     order: 30,
     serviceIds: ["exclusive-experience"],
     title: {
-      it: "Chef a bordo alle Egadi in trimarano",
-      en: "Chef on board in an Egadi trimaran",
+      it: "Pranzo a bordo alle Egadi in trimarano",
+      en: "Lunch on board in an Egadi trimaran",
     },
     subtitle: {
-      it: "Trimarano con comfort da catamarano, chef, skipper e hostess per una giornata in catamarano alle Egadi reinterpretata tra Favignana e Levanzo.",
-      en: "Trimaran with catamaran-style comfort, chef, skipper and hostess for lunch on board, snorkelling and stops between Favignana and Levanzo.",
+      it: "Trimarano con comfort da catamarano, pranzo a bordo, skipper e hostess per una giornata in catamarano alle Egadi reinterpretata tra Favignana e Levanzo.",
+      en: "Trimaran with catamaran-style comfort, lunch on board, skipper and hostess for lunch on board, snorkelling and stops between Favignana and Levanzo.",
     },
     seoTitle: {
-      it: "Chef a bordo alle Egadi in trimarano",
-      en: "Chef on Board in an Egadi Trimaran",
+      it: "Pranzo a bordo alle Egadi in trimarano",
+      en: "Lunch on Board in an Egadi Trimaran",
     },
     seoDescription: {
-      it: "Giornata privata alle Egadi con chef a bordo, trimarano con comfort da catamarano, skipper, hostess, Favignana e Levanzo.",
-      en: "Private Egadi day with chef on board, trimaran with catamaran-style comfort, skipper, hostess, Favignana and Levanzo.",
+      it: "Giornata privata alle Egadi con pranzo a bordo, trimarano con comfort da catamarano, skipper, hostess, Favignana e Levanzo.",
+      en: "Private Egadi day with lunch on board, trimaran with catamaran-style comfort, skipper, hostess, Favignana and Levanzo.",
     },
     durationLabel: { it: "8 ore", en: "8 hours" },
-    detailLabel: { it: "Chef, skipper e hostess", en: "Chef, skipper and hostess" },
+    detailLabel: { it: "Pranzo a bordo, skipper e hostess", en: "Lunch on board, skipper and hostess" },
     priceUnitLabel: { it: "per pacchetto", en: "per package" },
     primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package" },
     primaryHref: "/experiences/exclusive-experience",
@@ -2395,7 +2395,7 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
 export type ExperienceServiceId = keyof typeof EXPERIENCE_CATALOG;
 
 const EXPERIENCE_PUBLIC_SLUGS: Partial<Record<ExperienceServiceId, string>> = {
-  "exclusive-experience": "chef-a-bordo-egadi-trimarano-da-trapani",
+  "exclusive-experience": "pranzo-a-bordo-egadi-trimarano-da-trapani",
   "boat-shared-full-day": "escursione-barca-favignana-levanzo-da-trapani",
   "boat-exclusive-full-day": "tour-privato-favignana-levanzo-da-trapani",
   "cabin-charter": "charter-egadi-trimarano-da-trapani",
@@ -2408,10 +2408,10 @@ const EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE: Partial<
   Record<ExperienceServiceId, Partial<Record<"it" | "en" | "es" | "fr" | "de", string>>>
 > = {
   "exclusive-experience": {
-    en: "chef-on-board-egadi-trimaran-from-trapani",
-    es: "chef-a-bordo-egadi-trimaran-desde-trapani",
-    fr: "chef-a-bord-egades-trimaran-depuis-trapani",
-    de: "chef-an-bord-aegadische-inseln-trimaran-ab-trapani",
+    en: "lunch-on-board-egadi-trimaran-from-trapani",
+    es: "almuerzo-a-bordo-egadi-trimaran-desde-trapani",
+    fr: "dejeuner-a-bord-egades-trimaran-depuis-trapani",
+    de: "mittagessen-an-bord-aegadische-inseln-trimaran-ab-trapani",
   },
   "cabin-charter": {
     it: "charter-egadi-trimarano-da-trapani",
@@ -2454,6 +2454,11 @@ const EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE: Partial<
 };
 
 const EXPERIENCE_SLUG_ALIASES: Record<string, ExperienceServiceId> = {
+  "pranzo-a-bordo-egadi-trimarano-da-trapani": "exclusive-experience",
+  "lunch-on-board-egadi-trimaran-from-trapani": "exclusive-experience",
+  "almuerzo-a-bordo-egadi-trimaran-desde-trapani": "exclusive-experience",
+  "dejeuner-a-bord-egades-trimaran-depuis-trapani": "exclusive-experience",
+  "mittagessen-an-bord-aegadische-inseln-trimaran-ab-trapani": "exclusive-experience",
   "chef-a-bordo-egadi-trimarano-da-trapani": "exclusive-experience",
   "chef-on-board-egadi-trimaran-from-trapani": "exclusive-experience",
   "chef-a-bordo-egadi-trimaran-desde-trapani": "exclusive-experience",
@@ -2575,14 +2580,14 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
   >
 > = {
   "exclusive-experience": {
-    title: "Chef a bordo en trimarán desde Trapani a las Islas Egadi",
+    title: "Almuerzo a bordo en trimarán desde Trapani a las Islas Egadi",
     subtitle:
-      "Paseo privado en trimarán con comodidad de catamarán, chef, patrón y azafata entre Favignana y Levanzo.",
+      "Paseo privado en trimarán con comodidad de catamarán, almuerzo a bordo cocinado por la tripulación, patrón y azafata entre Favignana y Levanzo.",
     detailDescription:
       "Experiencia gourmet privada en trimarán desde Trapani para descubrir las Islas Egadi con ritmo lento, comida a bordo, baños y ruta entre Favignana y Levanzo.",
-    seoTitle: "Chef a bordo en trimarán desde Trapani a las Islas Egadi",
+    seoTitle: "Almuerzo a bordo en trimarán desde Trapani a las Islas Egadi",
     seoDescription:
-      "Experiencia gourmet privada en trimarán desde Trapani con confort de catamarán, chef a bordo, patrón, azafata, comida siciliana y ruta entre Favignana y Levanzo.",
+      "Experiencia gourmet privada en trimarán desde Trapani con confort de catamarán, almuerzo a bordo cocinado por la tripulación, patrón, azafata y ruta entre Favignana y Levanzo.",
     itinerary: [
       {
         time: "09:30",
@@ -2604,7 +2609,7 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
       {
         time: "13:00",
         title: "Cocina en vivo a bordo",
-        text: "El chef prepara la comida con pescado local y productos sicilianos.",
+        text: "La tripulación cocina la comida a bordo con pescado local y productos sicilianos.",
       },
       {
         time: "14:30",
@@ -2626,7 +2631,7 @@ const SPANISH_EXPERIENCE_OVERRIDES: Partial<
     ],
     includes: [
       "Trimarán en privado",
-      "Patrón, chef y azafata",
+      "Patrón, azafata y tripulación",
       "Comida gourmet a bordo",
       "Vino trapanese, agua y refrescos",
       "Aperitivo",
@@ -2830,14 +2835,14 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
   >
 > = {
   "exclusive-experience": {
-    title: "Chef à bord aux îles Égades en trimaran depuis Trapani",
+    title: "Déjeuner à bord aux îles Égades en trimaran depuis Trapani",
     subtitle:
-      "Journée privée en trimaran avec confort de catamaran, chef, skipper et hôtesse entre Favignana et Levanzo.",
+      "Journée privée en trimaran avec confort de catamaran, déjeuner à bord préparé par l'équipage, skipper et hôtesse entre Favignana et Levanzo.",
     detailDescription:
       "Une expérience gourmet privée en trimaran avec confort de catamaran pour découvrir les îles Égades avec rythme lent, déjeuner à bord et route entre Favignana et Levanzo.",
-    seoTitle: "Chef à bord aux îles Égades en trimaran depuis Trapani",
+    seoTitle: "Déjeuner à bord aux îles Égades en trimaran depuis Trapani",
     seoDescription:
-      "Expérience gourmet privée en trimaran au confort de catamaran depuis Trapani, avec chef à bord, skipper, hôtesse, déjeuner sicilien et itinéraire entre Favignana et Levanzo.",
+      "Expérience gourmet privée en trimaran au confort de catamaran depuis Trapani, avec déjeuner à bord préparé par l'équipage, skipper, hôtesse et itinéraire entre Favignana et Levanzo.",
     itinerary: [
       { time: "09:30", title: "Accueil à bord", text: "Point de rencontre : Via dei Gladioli 15, 91100 Trapani." },
       {
@@ -2852,7 +2857,7 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
         location: "Favignana",
         text: "Mouillage dans l'une des criques les plus célèbres de Favignana pour vivre le moment gourmet de la journée.",
       },
-      { time: "13:00", title: "Cuisine en direct à bord", text: "Le chef prépare le déjeuner avec poisson local et produits siciliens." },
+      { time: "13:00", title: "Cuisine en direct à bord", text: "L'équipage prépare le déjeuner à bord avec poisson local et produits siciliens." },
       {
         time: "14:30",
         title: "Relax et baignade",
@@ -2869,7 +2874,7 @@ const FRENCH_EXPERIENCE_OVERRIDES: Partial<
     ],
     includes: [
       "Trimaran en privé",
-      "Skipper, chef et hôtesse",
+      "Skipper, hôtesse et équipage",
       "Déjeuner gourmet à bord",
       "Vin de Trapani, eau et boissons fraîches",
       "Apéritif",
@@ -2986,14 +2991,14 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
   >
 > = {
   "exclusive-experience": {
-    title: "Chef an Bord auf Trimaran zu den Ägadischen Inseln ab Trapani",
+    title: "Mittagessen an Bord auf Trimaran zu den Ägadischen Inseln ab Trapani",
     subtitle:
-      "Privater Tag auf dem Trimaran mit Katamaran-Komfort, Chefkoch, Skipper und Hostess zwischen Favignana und Levanzo.",
+      "Privater Tag auf dem Trimaran mit Katamaran-Komfort, von der Crew zubereitetem Mittagessen an Bord, Skipper und Hostess zwischen Favignana und Levanzo.",
     detailDescription:
       "Ein privates Gourmet-Erlebnis auf dem Trimaran mit Katamaran-Komfort, um die Ägadischen Inseln mit ruhigem Rhythmus, Mittagessen an Bord und Route zwischen Favignana und Levanzo zu entdecken.",
-    seoTitle: "Chef an Bord auf Trimaran zu den Ägadischen Inseln ab Trapani",
+    seoTitle: "Mittagessen an Bord auf Trimaran zu den Ägadischen Inseln ab Trapani",
     seoDescription:
-      "Privates Gourmet-Erlebnis auf Trimaran ab Trapani, mit Chef an Bord, Skipper, Hostess, sizilianischem Mittagessen, Favignana und Levanzo.",
+      "Privates Gourmet-Erlebnis auf Trimaran ab Trapani, mit Mittagessen an Bord, Skipper, Hostess, sizilianischem Mittagessen, Favignana und Levanzo.",
     itinerary: [
       { time: "09:30", title: "Willkommen an Bord", text: "Treffpunkt: Via dei Gladioli 15, 91100 Trapani." },
       {
@@ -3008,7 +3013,7 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
         location: "Favignana",
         text: "Ankern in einer der berühmtesten Buchten von Favignana für den Gourmet-Moment des Tages.",
       },
-      { time: "13:00", title: "Live Cooking an Bord", text: "Der Chefkoch bereitet das Mittagessen mit lokalem Fisch und sizilianischen Produkten zu." },
+      { time: "13:00", title: "Mittagessen an Bord", text: "Die Crew bereitet das Mittagessen an Bord mit lokalem Fisch und sizilianischen Produkten zu." },
       {
         time: "14:30",
         title: "Entspannung und Baden",
@@ -3025,7 +3030,7 @@ const GERMAN_EXPERIENCE_OVERRIDES: Partial<
     ],
     includes: [
       "Privater Trimaran",
-      "Skipper, Chefkoch und Hostess",
+      "Skipper, Hostess und Crew",
       "Gourmet-Mittagessen an Bord",
       "Wein aus Trapani, Wasser und Softdrinks",
       "Aperitif",
@@ -3240,14 +3245,14 @@ const SPANISH_PACKAGE_OVERRIDES: Record<
   >
 > = {
   "esperienza-gourmet-trimarano": {
-    title: "Chef a bordo en trimarán desde Trapani",
+    title: "Almuerzo a bordo en trimarán desde Trapani",
     subtitle:
-      "Trimarán con comodidad de catamarán, chef, patrón y azafata para comida a bordo, snorkel y paradas entre Favignana y Levanzo desde Trapani.",
-    seoTitle: "Chef a bordo en trimarán desde Trapani",
+      "Trimarán con comodidad de catamarán, almuerzo a bordo cocinado por la tripulación, patrón y azafata para snorkel y paradas entre Favignana y Levanzo desde Trapani.",
+    seoTitle: "Almuerzo a bordo en trimarán desde Trapani",
     seoDescription:
-      "Día privado en trimarán desde Trapani con confort de catamarán, chef a bordo, patrón, azafata y ruta entre Favignana y Levanzo.",
+      "Día privado en trimarán desde Trapani con confort de catamarán, pranzo a bordo, patrón, azafata y ruta entre Favignana y Levanzo.",
     durationLabel: "8 horas",
-    detailLabel: "Chef, patrón y azafata",
+    detailLabel: "Almuerzo a bordo, patrón y azafata",
     priceUnitLabel: "por paquete",
     primaryCtaLabel: "Ver paquete",
   },
@@ -3306,14 +3311,14 @@ const FRENCH_PACKAGE_OVERRIDES: Record<
   >
 > = {
   "esperienza-gourmet-trimarano": {
-    title: "Chef à bord aux îles Égades en trimaran",
+    title: "Déjeuner à bord aux îles Égades en trimaran",
     subtitle:
-      "Trimaran avec confort de catamaran, chef, skipper et hôtesse pour déjeuner à bord, snorkeling et arrêts entre Favignana et Levanzo.",
-    seoTitle: "Chef à bord aux îles Égades en trimaran",
+      "Trimaran avec confort de catamaran, déjeuner à bord préparé par l'équipage, skipper et hôtesse pour snorkeling et arrêts entre Favignana et Levanzo.",
+    seoTitle: "Déjeuner à bord aux îles Égades en trimaran",
     seoDescription:
-      "Journée privée en trimaran au confort de catamaran avec chef à bord, skipper, hôtesse et itinéraire entre Favignana et Levanzo.",
+      "Journée privée en trimaran au confort de catamaran avec déjeuner à bord préparé par l'équipage, skipper, hôtesse et itinéraire entre Favignana et Levanzo.",
     durationLabel: "8 heures",
-    detailLabel: "Chef, skipper et hôtesse",
+    detailLabel: "Déjeuner à bord, skipper et hôtesse",
     priceUnitLabel: "par forfait",
     primaryCtaLabel: "Voir le forfait",
   },
@@ -3372,14 +3377,14 @@ const GERMAN_PACKAGE_OVERRIDES: Record<
   >
 > = {
   "esperienza-gourmet-trimarano": {
-    title: "Chef an Bord auf Trimaran zu den Ägadischen Inseln",
+    title: "Mittagessen an Bord auf Trimaran zu den Ägadischen Inseln",
     subtitle:
-      "Trimaran mit Katamaran-Komfort, Chefkoch, Skipper und Hostess für Mittagessen an Bord, Schnorcheln und Stopps zwischen Favignana und Levanzo.",
-    seoTitle: "Chef an Bord auf Trimaran zu den Ägadischen Inseln",
+      "Trimaran mit Katamaran-Komfort, von der Crew zubereitetem Mittagessen an Bord, Skipper und Hostess für Schnorcheln und Stopps zwischen Favignana und Levanzo.",
+    seoTitle: "Mittagessen an Bord auf Trimaran zu den Ägadischen Inseln",
     seoDescription:
-      "Privater Tag auf dem Trimaran mit Katamaran-Komfort, Chef an Bord, Skipper, Hostess und Route zwischen Favignana und Levanzo.",
+      "Privater Tag auf dem Trimaran mit Katamaran-Komfort, Mittagessen an Bord, Skipper, Hostess und Route zwischen Favignana und Levanzo.",
     durationLabel: "8 Stunden",
-    detailLabel: "Chefkoch, Skipper und Hostess",
+    detailLabel: "Mittagessen an Bord, Skipper und Hostess",
     priceUnitLabel: "pro Paket",
     primaryCtaLabel: "Paket prüfen",
   },
