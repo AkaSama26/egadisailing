@@ -25,10 +25,10 @@ export function startCronScheduler(): void {
   // replaya via `handleStripeEvent` (idempotent via ProcessedStripeEvent).
   scheduleCronFetch("7-59/15 * * * *", "/api/cron/stripe-reconciliation");
 
-  // PENDING booking GC: ogni 15 min (sfasato di 3 min da Bokun).
-  // Cancella booking PENDING > 30min + PaymentIntent Stripe + release
+  // PENDING booking GC: ogni 5 min.
+  // Cancella booking PENDING > 15min + PaymentIntent Stripe + release
   // availability per non zombificare slot dopo abbandono checkout.
-  scheduleCronFetch("3-59/15 * * * *", "/api/cron/pending-gc");
+  scheduleCronFetch("*/5 * * * *", "/api/cron/pending-gc");
 
   // Priority Override Fase 1 — 4 cron sfasati per non saturare worker Next.js.
   // overrideReminders min 0, overrideReconcile ogni 10min (granularita' sotto),

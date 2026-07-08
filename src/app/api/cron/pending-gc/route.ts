@@ -18,9 +18,9 @@ export const runtime = "nodejs";
 
 import { PENDING_GC_TTL_MS } from "@/lib/booking/constants";
 
-// R20-A1-1: cutoff a 45min (da 30min) per creare buffer 30min rispetto alla
-// DIRECT_RETRY_WINDOW_MS (15min). Evita race retry-window vs GC concorrente
-// al bordo 30min quando cliente clicca "Usa altro metodo" al 29:59.
+// Cutoff a 15min per gli hold Checkout: abbastanza breve da liberare slot
+// abbandonati, con retry-window cliente tenuta 1min sotto per evitare race al
+// bordo tra nuovo tentativo e release del vecchio hold.
 const PENDING_MAX_AGE_MS = PENDING_GC_TTL_MS;
 // R15-REG-6: soft-timeout per non superare il lease TTL. Ogni iteration:
 // cancelPaymentIntent (1-3s Stripe API) + releaseDates (7 days × fan-out).
@@ -28,7 +28,7 @@ const PENDING_MAX_AGE_MS = PENDING_GC_TTL_MS;
 const RUN_BUDGET_MS = RUN_BUDGET.STANDARD;
 
 /**
- * Cron ogni 15 min: trova booking PENDING > 30min → cancel PaymentIntent
+ * Cron frequente: trova booking PENDING > 15min → cancel PaymentIntent
  * Stripe + release availability + mark CANCELLED.
  *
  * Perche' serve: abbandoni checkout (chiude tab, carta rifiutata senza retry)

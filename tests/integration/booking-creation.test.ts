@@ -7,7 +7,7 @@
  *  2. Pre-check #1 BoatAvailability BLOCKED → ConflictError.
  *  3. Pre-check #2 Booking overlap PENDING/CONFIRMED → ConflictError.
  *  4. R20-A1-1: retry-window self-cliente PENDING esclusione → stesso
- *     customer retry entro 44min supera pre-check (vecchio PENDING ignorato).
+ *     customer retry entro 14min supera pre-check (vecchio PENDING ignorato).
  *  5. GDPR consent mancante → ValidationError.
  *  6. numPeople > capacityMax → ValidationError.
  *  7. startDate passato (R22-P2-MEDIA-2 parseDateLikelyLocalDay) → Validation.
@@ -742,7 +742,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     expect(res.overrideRequest?.requestId).toBeDefined();
   });
 
-  it("R20-A1-1 retry-window: stesso customer entro 44min → auto-cancel del vecchio PENDING (exclusive)", async () => {
+  it("R20-A1-1 retry-window: stesso customer entro 14min → auto-cancel del vecchio PENDING (exclusive)", async () => {
     // R28-CRIT-1: il retry-window partitioning scatta solo quando il pre-check
     // #2 trova conflitto (CABIN_CHARTER/BOAT_EXCLUSIVE). Per SOCIAL_BOATING il
     // vecchio PENDING e' "overlap permesso" quindi non entra ne' in blocker

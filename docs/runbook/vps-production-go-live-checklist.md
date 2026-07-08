@@ -496,7 +496,7 @@ Sequenza consigliata:
 Ogni giorno controllare:
 
 - Nuovi booking creati.
-- Booking rimasti `PENDING` oltre 45 minuti.
+- Booking rimasti `PENDING` oltre 15 minuti.
 - Pagamenti Stripe e booking DB allineati.
 - `EmailOutbox` con status `FAILED`.
 - Health deep.
@@ -534,7 +534,7 @@ LIMIT 20;
 SELECT "confirmationCode", status, "createdAt"
 FROM "Booking"
 WHERE status = 'PENDING'
-  AND "createdAt" < NOW() - INTERVAL '45 minutes'
+  AND "createdAt" < NOW() - INTERVAL '15 minutes'
 ORDER BY "createdAt" ASC;
 ```
 

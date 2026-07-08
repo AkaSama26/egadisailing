@@ -32,10 +32,10 @@ export const TTL = {
 
 /** Time-to-live durations in milliseconds (in-memory + Date arithmetic). */
 export const TTL_MS = {
-  /** Direct booking retry window (15min). */
-  DIRECT_RETRY_WINDOW: 15 * 60 * 1000,
-  /** Pending GC cutoff (45min). */
-  PENDING_GC_CUTOFF: 45 * 60 * 1000,
+  /** Direct booking retry window (14min). */
+  DIRECT_RETRY_WINDOW: 14 * 60 * 1000,
+  /** Pending GC cutoff (15min). */
+  PENDING_GC_CUTOFF: 15 * 60 * 1000,
   /** Balance link expiry (6h). */
   BALANCE_LINK_EXPIRY: 6 * 60 * 60 * 1000,
   /** Override reminder cooldown (24h). */

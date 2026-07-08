@@ -390,7 +390,7 @@ export async function createPendingDirectBooking(
         ownRetriable.push(c);
       } else {
         // PI noto + nessun FAILED record: potrebbe essere in-flight. Tratta
-        // come blocker per sicurezza. Il pending-gc (45min) sblocca se
+        // come blocker per sicurezza. Il pending-gc (15min) sblocca se
         // abbandonato.
         blockers.push(c);
       }

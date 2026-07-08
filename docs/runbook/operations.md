@@ -65,7 +65,7 @@ WHERE status = 'PENDING' AND "createdAt" < NOW() - INTERVAL '1 hour';
 - Cliente non ha pagato → admin `/admin/prenotazioni/[id]` → bottone "Cancella"
   (chiama `cancelBooking` Server Action con cascade refund + releaseDates +
   audit + notification admin). Lo stesso booking viene auto-pulito dal cron
-  pending-gc dopo 45min (status=CANCELLED + release availability).
+  pending-gc dopo 15min (status=CANCELLED + release availability).
 
 ## Refund manuale
 

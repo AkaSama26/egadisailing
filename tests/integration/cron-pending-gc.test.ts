@@ -2,8 +2,8 @@
  * Integration test — pending-gc cron.
  *
  * Scenari:
- *  1. Booking PENDING > 45min → cancel PI + release + status CANCELLED.
- *  2. Booking PENDING < 45min → non toccato.
+ *  1. Booking PENDING > 15min → cancel PI + release + status CANCELLED.
+ *  2. Booking PENDING < 15min → non toccato.
  *  3. Booking gia' CONFIRMED/CANCELLED → non toccato.
  *  4. Booking non-DIRECT source → non toccato (cron opera solo su DIRECT).
  *  5. cancelPaymentIntent errore Stripe → logged ma non blocca il batch.
@@ -139,9 +139,9 @@ function makeReq(auth = true): Request {
 }
 
 describe("pending-gc cron", () => {
-  it("PENDING > 45min → cancel PI + release + CANCELLED", async () => {
+  it("PENDING > 15min → cancel PI + release + CANCELLED", async () => {
     const booking = await seedPendingBooking({
-      createdAtMinutesAgo: 60,
+      createdAtMinutesAgo: 20,
       piId: "pi_stale_1",
     });
     // Seed cell BLOCKED che il cron deve release.
@@ -179,9 +179,9 @@ describe("pending-gc cron", () => {
     expect(cell.lockedByBookingId).toBeNull();
   });
 
-  it("PENDING < 45min (30min) → non toccato", async () => {
+  it("PENDING < 15min (10min) → non toccato", async () => {
     const booking = await seedPendingBooking({
-      createdAtMinutesAgo: 30,
+      createdAtMinutesAgo: 10,
       piId: "pi_fresh_1",
     });
 
@@ -269,7 +269,7 @@ describe("pending-gc cron", () => {
     cancelPaymentIntentMock.mockRejectedValueOnce(new Error("Stripe 500"));
 
     const booking = await seedPendingBooking({
-      createdAtMinutesAgo: 60,
+      createdAtMinutesAgo: 20,
       piId: "pi_fail",
     });
 
