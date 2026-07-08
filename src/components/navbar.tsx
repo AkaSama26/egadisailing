@@ -120,8 +120,14 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
-        <div className="lg:hidden">
+        {/* Mobile actions */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageSwitcher
+            className={cn(
+              scrolled ? "text-gray-700" : "text-white",
+              "[&>button]:h-11 [&>button]:px-3",
+            )}
+          />
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
               render={<button type="button" />}
@@ -152,9 +158,6 @@ export function Navbar() {
                     {t(link.key)}
                   </Link>
                 ))}
-                <div className="mt-4 border-t pt-4">
-                  <LanguageSwitcher className="text-gray-700" />
-                </div>
                 <Link
                   href={localizedStaticPath(locale, "/prenota")}
                   onClick={() => setMobileMenuOpen(false)}
