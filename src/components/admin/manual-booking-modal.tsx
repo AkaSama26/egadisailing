@@ -142,7 +142,7 @@ export function ManualBookingModal({
     if (!serviceId || !Number.isInteger(seatsNumber) || seatsNumber < 1) return;
     let cancelled = false;
     setQuoteLoading(true);
-    setQuoteMessage(null);
+    setQuoteMessage((current) => current ?? "Aggiorno suggerimento...");
 
     quoteManualBookingPriceAction({ serviceId, dateIso, seats: seatsNumber })
       .then((result) => {
@@ -383,17 +383,18 @@ export function ManualBookingModal({
               </label>
             </section>
 
-            {quoteMessage && (
-              <p
-                className={`rounded-lg border px-3 py-2 text-sm ${
-                  quoteLoading
-                    ? "border-slate-200 bg-slate-50 text-slate-600"
-                    : "border-blue-100 bg-blue-50 text-blue-800"
-                }`}
-              >
-                {quoteMessage}
-              </p>
-            )}
+            <p
+              aria-live="polite"
+              className={`min-h-11 rounded-lg border px-3 py-2 text-sm ${
+                quoteLoading
+                  ? "border-slate-200 bg-slate-50 text-slate-600"
+                  : "border-blue-100 bg-blue-50 text-blue-800"
+              }`}
+            >
+              {quoteLoading
+                ? "Aggiorno suggerimento..."
+                : (quoteMessage ?? "Prezzo suggerito in caricamento...")}
+            </p>
 
             <label className="block text-sm font-medium text-slate-700">
               Note interne
