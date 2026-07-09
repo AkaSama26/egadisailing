@@ -1,16 +1,97 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { withAdminAction } from "@/lib/admin/with-admin-action";
 import { auditLog } from "@/lib/audit/log";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 import { blockDates, releaseDates } from "@/lib/availability/service";
 import { parseIsoDay, eachUtcDayInclusive } from "@/lib/dates";
 import { CHANNELS } from "@/lib/channels";
+import { createManualAdminBooking } from "@/lib/booking/create-manual-admin";
+import { quotePrice } from "@/lib/pricing/service";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 
 const MAX_MANUAL_RANGE_DAYS = 90;
+
+
+const isoDaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data non valida");
+
+const manualBookingQuoteSchema = z.object({
+  serviceId: z.string().min(1),
+  dateIso: isoDaySchema,
+  seats: z.coerce.number().int().min(1).max(100),
+});
+
+const createManualBookingSchema = z.object({
+  boatId: z.string().min(1),
+  serviceId: z.string().min(1),
+  dateIso: isoDaySchema,
+  seats: z.coerce.number().int().min(1).max(100),
+  customer: z.object({
+    firstName: z.string().trim().min(1).max(100),
+    lastName: z.string().trim().min(1).max(100),
+    email: z.string().trim().email().max(320),
+    phone: z.string().trim().min(1).max(50),
+  }),
+  totalEur: z.coerce.number(),
+  depositEur: z.coerce.number(),
+  balanceEur: z.coerce.number(),
+  paymentMethod: z.enum(["CASH", "BANK_TRANSFER"]),
+  note: z.string().max(2000).optional().nullable(),
+});
+
+export const quoteManualBookingPriceAction = withAdminAction(
+  {
+    schema: manualBookingQuoteSchema,
+    rateLimitPerMin: 120,
+  },
+  async (input) => {
+    const service = await db.service.findUnique({
+      where: { id: input.serviceId },
+      select: { id: true, active: true, capacityMax: true },
+    });
+    if (!service) throw new NotFoundError("Service", input.serviceId);
+    if (!service.active) throw new ValidationError("Servizio non attivo");
+    if (input.seats > service.capacityMax) {
+      throw new ValidationError(`Posti fuori range (1..${service.capacityMax})`);
+    }
+
+    try {
+      const quote = await quotePrice(input.serviceId, parseIsoDay(input.dateIso), input.seats);
+      return {
+        available: true as const,
+        totalPriceEur: quote.totalPrice.toNumber(),
+        unitPriceEur: quote.finalUnitPrice.toNumber(),
+        pricingUnit: quote.pricingUnit,
+        legacyFallback: quote.legacyFallback,
+      };
+    } catch (err) {
+      if (err instanceof NotFoundError && err.context.entity === "ServicePrice") {
+        return {
+          available: false as const,
+          message: "Prezzo suggerito non configurato per questa data",
+        };
+      }
+      throw err;
+    }
+  },
+);
+
+export const createManualBookingAction = withAdminAction(
+  {
+    schema: createManualBookingSchema,
+    revalidatePaths: [
+      "/admin/calendario",
+      "/admin/prenotazioni",
+      "/admin",
+      "/admin/finanza",
+    ],
+  },
+  async (input, { userId }) => createManualAdminBooking({ ...input, userId }),
+);
 
 async function validateRange(
   boatId: string,

@@ -5,6 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, CloudSun, ExternalLink, Lock, Plus, Unlock } from "lucide-react";
 import { CalendarGrid, type DayCell } from "@/components/admin/calendar-grid";
 import { DayActionsModal } from "@/components/admin/day-actions-modal";
+import {
+  ManualBookingModal,
+  type ManualBookingServiceOption,
+} from "@/components/admin/manual-booking-modal";
 import { StatusBadge } from "@/components/admin/status-badge";
 import {
   AVAILABILITY_STATUS_LABEL,
@@ -40,9 +44,17 @@ export interface CalendarClientProps {
   calendars: CalendarBoatView[];
   weather: CalendarWeatherSummary[];
   initialSelected?: { boatId: string; dateIso: string } | null;
+  services: ManualBookingServiceOption[];
+  initialServiceId?: string | null;
 }
 
-export function CalendarClient({ calendars, weather, initialSelected }: CalendarClientProps) {
+export function CalendarClient({
+  calendars,
+  weather,
+  initialSelected,
+  services,
+  initialServiceId,
+}: CalendarClientProps) {
   const fallbackSelected = useMemo(() => {
     if (initialSelected) return initialSelected;
     const firstCalendar = calendars[0];
@@ -54,6 +66,11 @@ export function CalendarClient({ calendars, weather, initialSelected }: Calendar
 
   const [selected, setSelected] = useState<{ boatId: string; dateIso: string } | null>(fallbackSelected);
   const [actionDay, setActionDay] = useState<{
+    boatId: string;
+    boatName: string;
+    day: DayCellEnriched;
+  } | null>(null);
+  const [manualBookingDay, setManualBookingDay] = useState<{
     boatId: string;
     boatName: string;
     day: DayCellEnriched;
@@ -94,6 +111,7 @@ export function CalendarClient({ calendars, weather, initialSelected }: Calendar
   useEffect(() => {
     setSelected(fallbackSelected);
     setActionDay(null);
+    setManualBookingDay(null);
   }, [dataVersion, fallbackSelected]);
 
   const selectedRecord = selected
@@ -129,6 +147,7 @@ export function CalendarClient({ calendars, weather, initialSelected }: Calendar
           selected={selectedRecord}
           weather={selectedWeather}
           onOpenActions={(payload) => setActionDay(payload)}
+          onOpenManualBooking={(payload) => setManualBookingDay(payload)}
         />
       </aside>
 
@@ -140,6 +159,18 @@ export function CalendarClient({ calendars, weather, initialSelected }: Calendar
           onClose={() => setActionDay(null)}
         />
       )}
+
+      {manualBookingDay && (
+        <ManualBookingModal
+          boatId={manualBookingDay.boatId}
+          boatName={manualBookingDay.boatName}
+          date={manualBookingDay.day.date}
+          dateIso={manualBookingDay.day.dateIso}
+          services={services}
+          initialServiceId={initialServiceId}
+          onClose={() => setManualBookingDay(null)}
+        />
+      )}
     </div>
   );
 }
@@ -148,10 +179,12 @@ function DayDetail({
   selected,
   weather,
   onOpenActions,
+  onOpenManualBooking,
 }: {
   selected: { boatId: string; boatName: string; day: DayCellEnriched } | null;
   weather?: CalendarWeatherSummary;
   onOpenActions: (payload: { boatId: string; boatName: string; day: DayCellEnriched }) => void;
+  onOpenManualBooking: (payload: { boatId: string; boatName: string; day: DayCellEnriched }) => void;
 }) {
   if (!selected) {
     return (
@@ -243,13 +276,14 @@ function DayDetail({
               <ExternalLink className="size-4" aria-hidden="true" />
               Apri prenotazioni
             </Link>
-            <Link
-              href={`/admin/prenotazioni?date=${encodeURIComponent(day.dateIso)}`}
+            <button
+              type="button"
+              onClick={() => onOpenManualBooking({ boatId, boatName, day })}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50 sm:col-span-2 xl:col-span-1 2xl:col-span-2"
             >
               <Plus className="size-4" aria-hidden="true" />
               Nuova prenotazione
-            </Link>
+            </button>
           </div>
         </section>
       </div>

@@ -58,6 +58,7 @@ export default async function CalendarioPage({ searchParams }: Props) {
         type: true,
         priority: true,
         boatId: true,
+        capacityMax: true,
         boat: { select: { id: true, name: true } },
       },
       orderBy: [{ priority: "asc" }, { name: "asc" }],
@@ -154,6 +155,14 @@ export default async function CalendarioPage({ searchParams }: Props) {
     };
   });
 
+  const manualBookingServices = activeServices.map((service) => ({
+    id: service.id,
+    name: service.name,
+    type: service.type,
+    boatId: service.boatId,
+    capacityMax: service.capacityMax,
+  }));
+
   const weather = weatherRows.map<CalendarWeatherSummary>((row) => ({
     date: row.date,
     risk: row.risk,
@@ -245,7 +254,13 @@ export default async function CalendarioPage({ searchParams }: Props) {
         </form>
       </AdminCard>
 
-      <CalendarClient calendars={calendars} weather={weather} initialSelected={initialSelected} />
+      <CalendarClient
+        calendars={calendars}
+        weather={weather}
+        initialSelected={initialSelected}
+        services={manualBookingServices}
+        initialServiceId={selectedServiceId}
+      />
 
       <AdminCard padding="sm" className="space-y-1 text-xs text-slate-600">
         <p className="font-semibold text-slate-900">Legenda:</p>
