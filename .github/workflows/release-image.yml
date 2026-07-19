@@ -237,7 +237,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          source_digest="${SCAN_IMAGE##*@}"
           release_ref="${IMAGE_NAME}:${RELEASE_SHA}"
           docker buildx imagetools create --tag "$release_ref" "$SCAN_IMAGE"
 
