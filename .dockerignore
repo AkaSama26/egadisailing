@@ -1,8 +1,32 @@
 node_modules
 .next
 .git
+.github
+.deploy
 *.md
-.env
-.env.*
-!.env.example
-.env.local
+.env*
+
+# Operator-only material must never enter a Docker build context or cache.
+private
+private/**
+backups
+backups/**
+backup
+backup/**
+prisma/backup
+prisma/backup/**
+outreach-data
+outreach-data/**
+contact-ledgers
+contact-ledgers/**
+*contact-ledger*
+scripts/*outreach*
+scripts/send-partner-emails.mjs
+docs/partner-email-send-log.json
+*.sql
+*.sql.gz
+*.dump
+*.bak
+
+# Le migration sono codice applicativo necessario a `prisma migrate deploy`.
+!prisma/migrations/**/migration.sql

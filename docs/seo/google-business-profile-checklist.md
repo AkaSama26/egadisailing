@@ -78,7 +78,7 @@ Escursione di 8 ore da Trapani verso Favignana e Levanzo, con skipper, soste bag
 
 Link:
 
-https://www.egadisailing.it/it/esperienze/escursione-barca-favignana-levanzo-da-trapani
+https://egadisailing.com/it/esperienze/escursione-barca-favignana-levanzo-da-trapani
 
 Servizio: Tour privato Favignana e Levanzo
 
@@ -90,7 +90,7 @@ Barca riservata al tuo gruppo per una giornata alle Egadi da Trapani. Skipper, r
 
 Link:
 
-https://www.egadisailing.it/it/esperienze/tour-privato-favignana-levanzo-da-trapani
+https://egadisailing.com/it/esperienze/tour-privato-favignana-levanzo-da-trapani
 
 Servizio: Tour privato Egadi 4 ore
 
@@ -102,7 +102,7 @@ Mezza giornata privata in barca da Trapani, ideale per gruppi che vogliono mare,
 
 Link:
 
-https://www.egadisailing.it/it/esperienze/tour-privato-egadi-4-ore-pomeriggio-da-trapani
+https://egadisailing.com/it/esperienze/tour-privato-egadi-4-ore-pomeriggio-da-trapani
 
 ### Gruppo: Charter e catamarano alle Egadi
 
@@ -116,7 +116,7 @@ Charter da 3 a 7 giorni alle Isole Egadi su trimarano con comfort da catamarano,
 
 Link:
 
-https://www.egadisailing.it/it/esperienze/charter-egadi-trimarano-da-trapani
+https://egadisailing.com/it/esperienze/charter-egadi-trimarano-da-trapani
 
 Servizio: Catamarano Egadi con skipper
 
@@ -128,7 +128,7 @@ Alternativa premium al classico catamarano alle Egadi: trimarano multiscafo con 
 
 Link:
 
-https://www.egadisailing.it/it/barche/catamarano-egadi-trimarano-da-trapani
+https://egadisailing.com/it/barche/catamarano-egadi-trimarano-da-trapani
 
 ### Gruppo: Esperienze private premium
 
@@ -142,7 +142,7 @@ Giornata privata in trimarano da Trapani con pranzo a bordo cucinato dalla crew,
 
 Link:
 
-https://www.egadisailing.it/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani
+https://egadisailing.com/it/esperienze/pranzo-a-bordo-egadi-trimarano-da-trapani
 
 ### Gruppo: Pesca sportiva
 
@@ -156,7 +156,7 @@ Giornata privata di pesca sportiva da Trapani su gommone dedicato, con attrezzat
 
 Link:
 
-https://www.egadisailing.it/it/esperienze/charter-pesca-egadi-da-trapani
+https://egadisailing.com/it/esperienze/charter-pesca-egadi-da-trapani
 
 ## Step 5 - Foto Da Caricare
 

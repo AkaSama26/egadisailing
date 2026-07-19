@@ -22,7 +22,11 @@ export function initSentry(context: "server" | "edge" | "client"): void {
   Sentry.init({
     dsn: env.SENTRY_DSN,
     environment: env.SENTRY_ENVIRONMENT ?? env.NODE_ENV,
-    release: env.SENTRY_RELEASE ?? process.env.GIT_SHA?.slice(0, 7),
+    release:
+      env.SENTRY_RELEASE ??
+      env.GIT_SHA ??
+      env.DEPLOYMENT_VERSION ??
+      env.NEXT_DEPLOYMENT_ID,
     tracesSampleRate: 0.1,
     sendDefaultPii: false,
     // PII filter analogo a REDACT_PATHS pino (coerenza tra log + Sentry).

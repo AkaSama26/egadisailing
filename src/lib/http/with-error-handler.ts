@@ -7,6 +7,18 @@ import { logger } from "@/lib/logger";
 
 type Handler = (req: Request, ...args: unknown[]) => Promise<Response>;
 
+async function captureRouteError(
+  err: unknown,
+  context: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const { captureError } = await import("@/lib/sentry/init");
+    captureError(err, context);
+  } catch {
+    /* Sentry non inizializzato — skip silenzioso */
+  }
+}
+
 /**
  * Wraps an App Router API handler:
  * - Attaches a requestId (from client or generated) to every request
@@ -27,6 +39,17 @@ export function withErrorHandler<H extends Handler>(handler: H): H {
       return res;
     } catch (err) {
       if (err instanceof AppError) {
+        if (err.statusCode >= 500) {
+          reqLogger.error(
+            { err, code: err.code, statusCode: err.statusCode },
+            "Operational route error",
+          );
+          await captureRouteError(err, {
+            requestId,
+            code: err.code,
+            statusCode: err.statusCode,
+          });
+        }
         const headers: Record<string, string> = { "x-request-id": requestId };
         if (err instanceof RateLimitError) {
           const retry = err.context.retryAfterSeconds;
@@ -48,12 +71,7 @@ export function withErrorHandler<H extends Handler>(handler: H): H {
       reqLogger.error({ err }, "Unhandled route error");
       // Sentry capture (no-op se DSN non configurato). Tag con requestId per
       // correlazione log.
-      try {
-        const { captureError } = await import("@/lib/sentry/init");
-        captureError(err, { requestId });
-      } catch {
-        /* Sentry non inizializzato — skip silenzioso */
-      }
+      await captureRouteError(err, { requestId, statusCode: 500 });
       return NextResponse.json(
         { error: { code: "INTERNAL_ERROR", requestId } },
         { status: 500, headers: { "x-request-id": requestId } },

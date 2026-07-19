@@ -1,6 +1,7 @@
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { withCronGuard } from "@/lib/http/with-cron-guard";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
+import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;
@@ -20,6 +21,8 @@ export const GET = withCronGuard(
   },
   async () => ({
     disabled: true,
-    reason: "charter_email_parser_not_used",
+    reason: env.IMAP_INGEST_ENABLED
+      ? "charter_email_parser_not_used"
+      : "imap_ingest_feature_disabled",
   }),
 );

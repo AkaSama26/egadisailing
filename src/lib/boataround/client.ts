@@ -87,5 +87,9 @@ export function boataroundClient(): BoataroundClient {
 }
 
 export function isBoataroundConfigured(): boolean {
-  return Boolean(env.BOATAROUND_API_TOKEN && env.BOATAROUND_WEBHOOK_SECRET);
+  return Boolean(
+    env.BOATAROUND_SYNC_ENABLED &&
+      env.BOATAROUND_API_TOKEN &&
+      env.BOATAROUND_WEBHOOK_SECRET,
+  );
 }

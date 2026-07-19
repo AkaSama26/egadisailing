@@ -51,13 +51,19 @@ const envSchema = z.object({
     ),
   NEXTAUTH_URL: z.string().url(),
 
-  // Seed admin (required in production, optional in dev)
+  // Usato soltanto da `prisma db seed`; non e' un requisito del runtime app.
   SEED_ADMIN_PASSWORD: z.string().min(12).optional(),
 
   // App URL
   APP_URL: z.string().url().default("http://localhost:3000"),
   APP_LOCALES_DEFAULT: z.string().default("it"),
+  // Identita' immutabile del release. In produzione i quattro valori sono
+  // impostati allo stesso full SHA dalla pipeline/deploy script.
+  GIT_SHA: optionalString(),
+  DEPLOYMENT_VERSION: optionalString(),
+  NEXT_DEPLOYMENT_ID: optionalString(),
   NEXT_PUBLIC_ASSET_CDN_URL: optionalUrl(),
+  NEXT_PUBLIC_HOME_TOUR_EGADI_VIDEO_URL: optionalUrl(),
   NEXT_PUBLIC_GTM_ID: optionalString(),
   NEXT_PUBLIC_GA_MEASUREMENT_ID: optionalString(),
   NEXT_PUBLIC_GOOGLE_ADS_ID: optionalString(),
@@ -123,6 +129,9 @@ const envSchema = z.object({
 
   // Cron
   CRON_SECRET: z.string().default("dev-cron-please-change"),
+  // Secret dedicato al deep health. Non condivide fallback con CRON_SECRET:
+  // in produzione e' un confine operativo separato.
+  OPS_HEALTH_SECRET: optionalSecret(32),
 
   // Sentry (observability) — optional in dev, active prod quando DSN settato.
   SENTRY_DSN: optionalUrl(),
@@ -135,6 +144,12 @@ const envSchema = z.object({
   BOKUN_ACCESS_KEY: z.string().optional(),
   BOKUN_SECRET_KEY: z.string().optional(),
   BOKUN_WEBHOOK_SECRET: z.string().optional(),
+  // Disabled-by-default finche' Bokun non conferma endpoint/permission e
+  // read-back del contratto pricing. Non disabilita booking/availability.
+  BOKUN_PRICING_SYNC_ENABLED: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
   BOKUN_PRICE_MARKUP: z
     .string()
     .default("1.15")
@@ -159,15 +174,27 @@ const envSchema = z.object({
 
   // Admin notifications (Plan 6)
   ADMIN_EMAIL: z.string().email().default("info@egadisailing.com"),
+  TELEGRAM_NOTIFICATIONS_ENABLED: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_CHAT_ID: z.string().optional(),
 
   // Boataround (Plan 4)
   BOATAROUND_API_URL: defaultUrl("https://partner-api.boataround.com"),
+  BOATAROUND_SYNC_ENABLED: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
   BOATAROUND_API_TOKEN: z.string().optional(),
   BOATAROUND_WEBHOOK_SECRET: z.string().optional(),
 
   // IMAP for charter email parsing (Plan 4)
+  IMAP_INGEST_ENABLED: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
   IMAP_HOST: z.string().optional(),
   IMAP_PORT: z
     .string()
@@ -194,9 +221,6 @@ function loadEnv() {
   // NODE_ENV=production ma i secret non sono obbligatori al compile.
   const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
   if (parsed.data.NODE_ENV === "production" && !isBuildPhase) {
-    if (!parsed.data.SEED_ADMIN_PASSWORD) {
-      throw new Error("SEED_ADMIN_PASSWORD is required in production");
-    }
     if (!parsed.data.STRIPE_SECRET_KEY || !parsed.data.STRIPE_WEBHOOK_SECRET) {
       throw new Error("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET required in production");
     }
@@ -213,6 +237,19 @@ function loadEnv() {
     }
     if (!parsed.data.TURNSTILE_SECRET_KEY || !parsed.data.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
       throw new Error("TURNSTILE_SECRET_KEY + NEXT_PUBLIC_TURNSTILE_SITE_KEY required in production");
+    }
+    if (
+      !parsed.data.BOKUN_VENDOR_ID ||
+      !parsed.data.BOKUN_ACCESS_KEY ||
+      !parsed.data.BOKUN_SECRET_KEY ||
+      !parsed.data.BOKUN_WEBHOOK_SECRET
+    ) {
+      throw new Error(
+        "BOKUN_VENDOR_ID, BOKUN_ACCESS_KEY, BOKUN_SECRET_KEY and BOKUN_WEBHOOK_SECRET required in production",
+      );
+    }
+    if (new URL(parsed.data.BOKUN_API_URL).hostname.includes("bokuntest")) {
+      throw new Error("BOKUN_API_URL must not use the Bokun test host in production");
     }
     if (
       parsed.data.CRON_SECRET === "dev-cron-please-change" ||

@@ -1,18 +1,37 @@
-# Stage 1: Dependencies
-FROM node:24-slim AS deps
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+
+# Build toolchain: the digest resolves the official multi-arch Node 24.18.0
+# Bookworm image. It bundles npm 11.16.0 and OpenSSL 3, so Prisma resolves the
+# same engine target as the Debian 13 runtime without a mutable apt step.
+ARG BUILD_IMAGE=node:24.18.0-bookworm@sha256:5711a0d445a1af54af9589066c646df387d1831a608226f4cd694fc59e745059
+
+# Shell-less production runtime. The native Node executable is 24.18.0 and the
+# pinned multi-arch image currently scans with zero HIGH/CRITICAL findings.
+ARG RUNTIME_IMAGE=gcr.io/distroless/nodejs24-debian13:nonroot@sha256:af85d11ce7ef10172855a6e3649e3e8125b1b9e3ca41849ec2918036f05cb212
+
+# Stage 1: Build dependencies
+FROM ${BUILD_IMAGE} AS deps
 WORKDIR /app
+ENV PRISMA_CLI_BINARY_TARGETS=debian-openssl-3.0.x
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Stage 2: Build
-FROM node:24-slim AS builder
+# Stage 2: Runtime dependencies. Prisma remains a production dependency because
+# the release script runs its CLI from this immutable image before cutover.
+FROM ${BUILD_IMAGE} AS prod-deps
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates openssl \
-  && rm -rf /var/lib/apt/lists/*
-ARG APP_URL=http://localhost:3000
+ENV PRISMA_CLI_BINARY_TARGETS=debian-openssl-3.0.x
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev \
+  && test -x node_modules/@prisma/engines/schema-engine-debian-openssl-3.0.x \
+  && npm cache clean --force
+
+# Stage 3: Build
+FROM ${BUILD_IMAGE} AS builder
+WORKDIR /app
+ARG APP_URL=https://egadisailing.com
 ARG APP_LOCALES_DEFAULT=it
-ARG NEXTAUTH_URL=http://localhost:3000
+ARG NEXTAUTH_URL=https://egadisailing.com
 ARG NEXT_DEPLOYMENT_ID=
 ARG DEPLOYMENT_VERSION=
 ARG SENTRY_RELEASE=
@@ -21,6 +40,7 @@ ARG SERVER_ACTIONS_ALLOWED_ORIGINS=egadisailing.com,www.egadisailing.com
 ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
 ARG NEXT_PUBLIC_ASSET_CDN_URL=
+ARG NEXT_PUBLIC_HOME_TOUR_EGADI_VIDEO_URL=
 ARG NEXT_PUBLIC_GTM_ID=
 ARG NEXT_PUBLIC_GA_MEASUREMENT_ID=
 ARG NEXT_PUBLIC_GOOGLE_ADS_ID=
@@ -49,6 +69,7 @@ ENV SERVER_ACTIONS_ALLOWED_ORIGINS=$SERVER_ACTIONS_ALLOWED_ORIGINS
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ENV NEXT_PUBLIC_ASSET_CDN_URL=$NEXT_PUBLIC_ASSET_CDN_URL
+ENV NEXT_PUBLIC_HOME_TOUR_EGADI_VIDEO_URL=$NEXT_PUBLIC_HOME_TOUR_EGADI_VIDEO_URL
 ENV NEXT_PUBLIC_GTM_ID=$NEXT_PUBLIC_GTM_ID
 ENV NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID
 ENV NEXT_PUBLIC_GOOGLE_ADS_ID=$NEXT_PUBLIC_GOOGLE_ADS_ID
@@ -63,54 +84,58 @@ ENV OVERRIDE_CANCELLATION_RATE_SOFT_WARN=$OVERRIDE_CANCELLATION_RATE_SOFT_WARN
 ENV OVERRIDE_CANCELLATION_RATE_HARD_BLOCK=$OVERRIDE_CANCELLATION_RATE_HARD_BLOCK
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
+RUN npm run db:generate
 RUN npm run build
+RUN mkdir -p /app/.next/cache
 
-# Stage 3: Production
-FROM node:24-slim AS runner
+# Stage 4: Production
+FROM ${RUNTIME_IMAGE} AS runner
 WORKDIR /app
+ARG GIT_SHA=unknown
+ARG NEXT_DEPLOYMENT_ID=unknown
+ARG DEPLOYMENT_VERSION=unknown
+ARG SENTRY_RELEASE=unknown
+ARG PUBLIC_CONFIG_SHA256=unknown
 ENV NODE_ENV=production
 ENV LOG_LEVEL=info
+ENV HOME=/tmp
+ENV GIT_SHA=$GIT_SHA
+ENV NEXT_DEPLOYMENT_ID=$NEXT_DEPLOYMENT_ID
+ENV DEPLOYMENT_VERSION=$DEPLOYMENT_VERSION
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
 
-# R26-P3 dry-run fix: node:22-slim (Debian) invece di node:22-alpine
-# per evitare lock file desync su optional deps musl-vs-glibc. Lo slim
-# ha OpenSSL per Prisma + glibc matches dev host. Size ~180MB vs alpine
-# 140MB — accettabile per semplicita' cross-platform dev/prod.
-#
-# Wget per healthcheck interno (docker-compose.prod.yml).
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates openssl \
-  && rm -rf /var/lib/apt/lists/*
+LABEL org.opencontainers.image.source="https://github.com/AkaSama26/egadisailing" \
+      org.opencontainers.image.revision=$GIT_SHA \
+      org.opencontainers.image.version=$DEPLOYMENT_VERSION \
+      org.opencontainers.image.base.name="gcr.io/distroless/nodejs24-debian13:nonroot" \
+      com.egadisailing.public-config-sha256=$PUBLIC_CONFIG_SHA256
 
-RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 --gid nodejs nextjs
-
+# Distroless has no shell, package manager or mutable install step. UID/GID
+# 1001 intentionally matches the existing production next_cache volume created
+# by the previous non-root image, avoiding any permission mutation at cutover.
+# Application code/dependencies remain root-owned and read-only to uid 1001.
+# Only the cache path is writable by the runtime process.
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-RUN mkdir -p /app/.next/cache \
-  && chown -R nextjs:nodejs /app/.next
+COPY --from=builder --chown=1001:1001 /app/.next/cache ./.next/cache
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/deploy/prepare-email-rollback.mjs ./deploy/prepare-email-rollback.mjs
 
-# Prisma CLI + transitive deps (R26-P3 dry-run fix):
-# Standalone build traccia solo deps runtime importate. Prisma CLI ha
-# deps transitive (`effect`, `@prisma/config`, etc.) non in standalone.
-# Invece di cherry-pick specifici pacchetti (fragile), installiamo
-# prisma + client come production-only in runner stage. Aggiunge ~40MB
-# ma garantisce che prisma migrate deploy funzioni sempre.
-COPY --from=builder /app/package.json /app/package-lock.json ./
-RUN npm install --save-prod --legacy-peer-deps --no-audit --no-fund prisma@7.8.0 @prisma/client@7.8.0 \
-  && rm -rf ~/.npm
+# The standalone output contains the application trace. Merge the immutable
+# production dependency tree so the Prisma CLI and its transitive dependencies
+# are available without mutating package.json or the lockfile in this stage.
+COPY --from=prod-deps /app/node_modules ./node_modules
 
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-USER nextjs
+USER 1001:1001
 
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["node", "server.js"]
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+  CMD ["/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+
+ENTRYPOINT ["/nodejs/bin/node"]
+CMD ["server.js"]

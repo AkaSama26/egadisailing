@@ -1,5 +1,9 @@
 # Go-Live Final Assessment — 18 aprile 2026
 
+> **Documento storico.** I valori e i gap sotto fotografano il Round 18 e non
+> rappresentano lo stato di rilascio corrente. Per deploy immutabile, backup,
+> health e Sentry usare [`deployment.md`](deployment.md).
+
 Audit Round 18 consolidated post-17-round. **VERDICT: Stop audit, shift delivery. Pilot launch target 20 maggio 2026.**
 
 ## State-of-the-art dopo 17 round

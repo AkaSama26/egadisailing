@@ -33,7 +33,7 @@ Servizi esterni collegati:
 - Brevo per email transazionali.
 - Cloudflare Turnstile per anti-spam/anti-bot.
 - Bokun e canali charter quando le credenziali production sono pronte.
-- Uptime monitor e, idealmente, Sentry.
+- Uptime monitor e Sentry server/edge obbligatorio con release SHA.
 
 ## P0 — No-go assoluti
 
@@ -131,13 +131,14 @@ Da fare:
 
 - Clonare repo sulla VPS.
 - Checkout `main`.
-- Eseguire deploy con `docker-compose.prod.yml`.
-- Verificare che `docker/entrypoint.sh` applichi `prisma migrate deploy`.
+- Eseguire il deploy immutabile con `deploy/release.sh <full-sha>`.
+- Verificare nei log del deploy che la migration Prisma sia stata applicata
+  dal digest candidato prima del cutover.
 - Verificare Caddy e certificato HTTPS.
 
 Accettazione:
 
-- `docker compose -f docker-compose.prod.yml ps` mostra servizi healthy/up.
+- `./deploy/compose.sh ps` mostra servizi healthy/up.
 - `curl -I https://egadisailing.com` ritorna 200/3xx con TLS valido.
 - `curl https://egadisailing.com/api/health` ritorna 200.
 - Log app non mostrano errori Prisma/env/Redis all'avvio.
@@ -268,9 +269,11 @@ Da fare:
 
 - Configurare uptime monitor esterno su:
   - `https://egadisailing.com/api/health`
-- Configurare alert a email admin e possibilmente Telegram.
-- Configurare Sentry o segnare formalmente come rischio accettato.
-- Verificare `/api/health?deep=1` con `CRON_SECRET`.
+- Configurare alert a email admin; Telegram resta spento finche' non viene
+  configurato e revisionato separatamente.
+- Configurare `SENTRY_DSN`, eseguire `deploy/sentry-smoke.sh <full-sha>` e
+  confermare evento, release ed environment prima del deploy.
+- Verificare `/api/health?deep=1` con il dedicato `OPS_HEALTH_SECRET`.
 
 Accettazione:
 

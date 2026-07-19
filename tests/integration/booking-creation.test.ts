@@ -17,6 +17,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { setupTestDb, resetTestDb, closeTestDb } from "../helpers/test-db";
 import { installRedisMock, resetRedisMock } from "../helpers/redis-mock";
 
+const TEST_YEAR = new Date().getUTCFullYear() + 1;
+const testDate = (monthDay: string) =>
+  new Date(`${TEST_YEAR}-${monthDay}T00:00:00.000Z`);
+const TEST_DAY = testDate("07-15");
+
 let testPrisma: Awaited<ReturnType<typeof setupTestDb>>;
 vi.mock("@/lib/db", () => ({
   get db() {
@@ -101,11 +106,11 @@ async function seedServiceSocial() {
   await db.pricingPeriod.create({
     data: {
       serviceId: service.id,
-      label: "Test 2026",
-      startDate: new Date("2026-01-01"),
-      endDate: new Date("2026-12-31"),
+      label: `Test ${TEST_YEAR}`,
+      startDate: testDate("01-01"),
+      endDate: testDate("12-31"),
       pricePerPerson: "100.00",
-      year: 2026,
+      year: TEST_YEAR,
     },
   });
   return { boat, service };
@@ -152,11 +157,11 @@ async function seedServiceExclusive(
   await db.pricingPeriod.create({
     data: {
       serviceId: service.id,
-      label: "Test 2026",
-      startDate: new Date("2026-01-01"),
-      endDate: new Date("2026-12-31"),
+      label: `Test ${TEST_YEAR}`,
+      startDate: testDate("01-01"),
+      endDate: testDate("12-31"),
       pricePerPerson: "100.00",
-      year: 2026,
+      year: TEST_YEAR,
     },
   });
   return { boat, service };
@@ -164,7 +169,7 @@ async function seedServiceExclusive(
 
 const baseInput = (overrides: Record<string, unknown> = {}) => ({
   serviceId: "s-social",
-  startDate: new Date("2026-07-15T00:00:00.000Z"),
+  startDate: new Date(TEST_DAY),
   numPeople: 2,
   customer: {
     email: "mario@example.com",
@@ -259,7 +264,9 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
       where: { id: res.bookingId },
     });
     expect(booking.totalPrice.toString()).toBe("100");
-    expect(booking.endDate.toISOString().slice(0, 10)).toBe("2026-07-19");
+    expect(booking.endDate.toISOString().slice(0, 10)).toBe(
+      testDate("07-19").toISOString().slice(0, 10),
+    );
   });
 
   it("R7 pre-check #2: booking overlap CONFIRMED → ConflictError (CABIN_CHARTER)", async () => {
@@ -276,8 +283,8 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
         customerId: customer.id,
         serviceId: service.id,
         boatId: boat.id,
-        startDate: new Date("2026-07-15"),
-        endDate: new Date("2026-07-15"),
+        startDate: new Date(TEST_DAY),
+        endDate: new Date(TEST_DAY),
         numPeople: 2,
         totalPrice: "200.00",
         status: "CONFIRMED",
@@ -311,8 +318,8 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
         customerId: customer.id,
         serviceId: service.id,
         boatId: boat.id,
-        startDate: new Date("2026-07-15"),
-        endDate: new Date("2026-07-15"),
+        startDate: new Date(TEST_DAY),
+        endDate: new Date(TEST_DAY),
         numPeople: 12,
         totalPrice: "1200.00",
         status: "CONFIRMED",
@@ -344,8 +351,8 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
         customerId: customer.id,
         serviceId: service.id,
         boatId: boat.id,
-        startDate: new Date("2026-07-15"),
-        endDate: new Date("2026-07-15"),
+        startDate: new Date(TEST_DAY),
+        endDate: new Date(TEST_DAY),
         numPeople: 2,
         totalPrice: "200.00",
         status: "CONFIRMED",
@@ -374,8 +381,8 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
         customerId: customer.id,
         serviceId: service.id,
         boatId: boat.id,
-        startDate: new Date("2026-07-15"),
-        endDate: new Date("2026-07-15"),
+        startDate: new Date(TEST_DAY),
+        endDate: new Date(TEST_DAY),
         numPeople: 2,
         totalPrice: "200.00",
         status: "CONFIRMED",
@@ -469,11 +476,11 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
       await db.pricingPeriod.create({
         data: {
           serviceId: service.id,
-          label: "Test 2026",
-          startDate: new Date("2026-01-01"),
-          endDate: new Date("2026-12-31"),
+          label: `Test ${TEST_YEAR}`,
+          startDate: testDate("01-01"),
+          endDate: testDate("12-31"),
           pricePerPerson: service.pricingUnit === "PER_PACKAGE" ? "1200.00" : "100.00",
-          year: 2026,
+          year: TEST_YEAR,
         },
       });
     }
@@ -501,8 +508,8 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
         customerId: customer.id,
         serviceId: opts.serviceId,
         boatId: opts.boatId,
-        startDate: new Date("2026-07-15"),
-        endDate: new Date("2026-07-15"),
+        startDate: new Date(TEST_DAY),
+        endDate: new Date(TEST_DAY),
         numPeople: opts.numPeople,
         totalPrice: "100.00",
         status: "CONFIRMED",
@@ -612,7 +619,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
 
     await expect(
       db.boatAvailability.findUnique({
-        where: { boatId_date: { boatId: boat.id, date: new Date("2026-07-15") } },
+        where: { boatId_date: { boatId: boat.id, date: new Date(TEST_DAY) } },
       }),
     ).resolves.toMatchObject({
       status: "PARTIALLY_BOOKED",
@@ -632,7 +639,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
     ).resolves.toMatchObject({ status: "CANCELLED" });
     await expect(
       db.boatAvailability.findUnique({
-        where: { boatId_date: { boatId: boat.id, date: new Date("2026-07-15") } },
+        where: { boatId_date: { boatId: boat.id, date: new Date(TEST_DAY) } },
       }),
     ).resolves.toMatchObject({ status: "AVAILABLE" });
   });
@@ -655,7 +662,7 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
 
     await expect(
       db.boatAvailability.findUnique({
-        where: { boatId_date: { boatId: boat.id, date: new Date("2026-07-15") } },
+        where: { boatId_date: { boatId: boat.id, date: new Date(TEST_DAY) } },
       }),
     ).resolves.toMatchObject({
       status: "BLOCKED",

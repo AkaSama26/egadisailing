@@ -108,7 +108,11 @@ export function toDispatchResult(outcome: DispatchOutcome): DispatchResult {
  * dove e' effettivamente consegnabile senza if-chain in ogni caller.
  */
 export function defaultNotificationChannels(): Array<"EMAIL" | "TELEGRAM"> {
-  if (env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
+  if (
+    env.TELEGRAM_NOTIFICATIONS_ENABLED &&
+    env.TELEGRAM_BOT_TOKEN &&
+    env.TELEGRAM_CHAT_ID
+  ) {
     return ["EMAIL", "TELEGRAM"];
   }
   return ["EMAIL"];
@@ -140,7 +144,10 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
   }
 
   const wantEmail = event.channels.includes("EMAIL");
-  const wantTelegram = event.channels.includes("TELEGRAM") && !!rendered.telegram;
+  const wantTelegram =
+    env.TELEGRAM_NOTIFICATIONS_ENABLED &&
+    event.channels.includes("TELEGRAM") &&
+    !!rendered.telegram;
   const htmlContent = rendered.html.includes("<html")
     ? rendered.html
     : emailLayout({ heading: rendered.subject, bodyHtml: rendered.html });
