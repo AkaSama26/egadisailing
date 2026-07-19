@@ -139,7 +139,8 @@ services:
       TELEGRAM_NOTIFICATIONS_ENABLED: "false"
       TELEGRAM_BOT_TOKEN: ""
       TELEGRAM_CHAT_ID: ""
-      SENTRY_DSN: ${SENTRY_DSN:?SENTRY_DSN required}
+      # Disabled by production policy. Re-enable only in a reviewed release.
+      SENTRY_DSN: ""
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
       SENTRY_RELEASE: ${RELEASE_SHA:?RELEASE_SHA required}
       BOKUN_VENDOR_ID: ${BOKUN_VENDOR_ID:?BOKUN_VENDOR_ID required}
@@ -173,7 +174,7 @@ services:
         aliases:
           - egadisailing-app
 
-  # pg_dump sidecar → local VPS copy + encrypted Restic offsite snapshot.
+  # pg_dump sidecar → verified local VPS copy; Restic remains optional.
   backup:
     image: alpine:3.20
     container_name: egadisailing-backup
@@ -184,8 +185,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       BACKUP_DIR: /backups
       BACKUP_RETENTION_DAYS: "7"
-      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:?RESTIC_REPOSITORY required}
-      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?RESTIC_PASSWORD required}
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
       RESTIC_KEEP_DAILY: "7"
       RESTIC_KEEP_WEEKLY: "4"
       RESTIC_KEEP_MONTHLY: "12"
@@ -202,7 +203,10 @@ services:
       - -c
       - |
         set -eu
-        apk add --no-cache postgresql-client restic coreutils util-linux jq
+        apk add --no-cache postgresql-client coreutils util-linux
+        if [ -n "$${RESTIC_REPOSITORY:-}" ] || [ -n "$${RESTIC_PASSWORD:-}" ]; then
+          apk add --no-cache restic
+        fi
         mkdir -p /backups
         echo "*/15 * * * * /backup.sh >> /proc/1/fd/1 2>> /proc/1/fd/2" | crontab -
         /backup.sh

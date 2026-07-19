@@ -113,7 +113,7 @@ wait_for_backup_ready() {
   local attempt
   for attempt in $(seq 1 150); do
     if docker exec "$BACKUP_CONTAINER" sh -c \
-      'command -v pg_dump >/dev/null && command -v restic >/dev/null && command -v flock >/dev/null && flock -n /backups/.backup.lock true' \
+      'command -v pg_dump >/dev/null && command -v gzip >/dev/null && command -v sha256sum >/dev/null && command -v stat >/dev/null && command -v flock >/dev/null && test -d /backups && test ! -L /backups && test ! -L /backups/.backup.lock && flock -n /backups/.backup.lock true' \
       >/dev/null 2>&1; then
       return 0
     fi
@@ -259,9 +259,6 @@ git fetch --prune origin main
 
 for required_env in \
   OPS_HEALTH_SECRET \
-  SENTRY_DSN \
-  RESTIC_REPOSITORY \
-  RESTIC_PASSWORD \
   BOKUN_VENDOR_ID \
   BOKUN_ACCESS_KEY \
   BOKUN_SECRET_KEY \
@@ -269,10 +266,14 @@ for required_env in \
   QUEUE_HISTORY_EXPORT_MARKER; do
   [[ -n "$(dotenv_value "$required_env")" ]] || fail "$required_env must be configured in .env"
 done
+RESTIC_REPOSITORY_VALUE="$(dotenv_value RESTIC_REPOSITORY)"
+RESTIC_PASSWORD_VALUE="$(dotenv_value RESTIC_PASSWORD)"
+if [[ -n "$RESTIC_REPOSITORY_VALUE" || -n "$RESTIC_PASSWORD_VALUE" ]]; then
+  [[ -n "$RESTIC_REPOSITORY_VALUE" && -n "$RESTIC_PASSWORD_VALUE" ]] \
+    || fail "RESTIC_REPOSITORY and RESTIC_PASSWORD must be configured together"
+fi
 [[ "$(dotenv_value BOKUN_API_URL)" != *bokuntest* ]] \
   || fail "BOKUN_API_URL must not use the Bokun test host in production"
-[[ "$(dotenv_value SENTRY_TEST_EVENT_CONFIRMED_SHA)" == "$RELEASE_SHA" ]] \
-  || fail "Sentry test event is not confirmed for this exact release SHA"
 [[ "$(dotenv_value TELEGRAM_EXPOSED_TOKEN_REVOKED_CONFIRMED)" == "true" ]] \
   || fail "BotFather revocation of the exposed Telegram token is not confirmed"
 [[ "$(dotenv_value BOKUN_PRICING_SYNC_ENABLED)" == "false" ]] \
@@ -354,11 +355,12 @@ fi
 echo "[deploy] ensuring backup sidecar is ready"
 compose_with_state "$CANDIDATE_STATE" up -d --no-build postgres backup
 wait_for_backup_ready || fail "backup sidecar did not become ready"
-echo "[deploy] forcing encrypted pre-migration backup"
+echo "[deploy] forcing verified pre-migration PostgreSQL backup"
+BACKUP_STARTED_EPOCH="$(date -u +%s)"
 docker exec "$BACKUP_CONTAINER" /backup.sh
 
-echo "[deploy] proving the latest offsite snapshot can be restored"
-"$ROOT_DIR/deploy/restore-drill.sh"
+echo "[deploy] proving the latest local PostgreSQL dump can be restored"
+"$ROOT_DIR/deploy/restore-drill.sh" --not-before-epoch "$BACKUP_STARTED_EPOCH"
 
 echo "[deploy] applying forward-only Prisma migrations"
 compose_with_state "$CANDIDATE_STATE" run --rm --no-deps \

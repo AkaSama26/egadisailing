@@ -144,8 +144,8 @@ redis-cli -a $REDIS_PASSWORD LLEN 'bull:sync.avail.boataround:failed'
 
 **Sintomo**: corruzione dati, mistake operatore, disaster recovery.
 
-**Prerequisito**: snapshot Restic cifrato offsite recente, password Restic e
-credenziali bucket custodite separatamente.
+**Prerequisito**: `pg_dump` locale recente, gzip verificato dal sidecar. Il
+drill calcola e registra anche il checksum del file usato.
 
 **Verifica non distruttiva (procedura normale)**:
 ```bash
@@ -163,25 +163,26 @@ ripristina e valida li', quindi effettua uno switch controllato. Conserva
 l'istanza precedente finche' booking, pagamenti, migration e healthcheck non
 sono stati riconciliati.
 
-## Backup offsite assente o stale
+## Backup PostgreSQL assente o stale
 
-**Sintomo**: nessuno snapshot Restic negli ultimi 30 minuti, `restic check`
-fallisce o il backup sidecar e' in restart loop.
+**Sintomo**: nessun dump locale riuscito negli ultimi 30 minuti o backup
+sidecar in restart loop.
 
 **Diagnosi**:
 
 ```bash
 ./deploy/compose.sh logs --tail 150 backup
-docker exec egadisailing-backup restic snapshots --host egadisailing-production --tag postgres
-docker exec egadisailing-backup restic check
+docker exec egadisailing-backup sh -c 'cat /backups/.last-success-epoch && find /backups -maxdepth 1 -type f -name "pgdump-*.sql.gz" -print | tail -n 3'
 ```
 
 **Azione**:
 
 - Blocca deploy e migration, ma lascia il sito corrente online.
-- Verifica endpoint, chiave bucket-scoped, `RESTIC_PASSWORD` e spazio locale.
-- Non eseguire `restic init` su un repository gia' esistente: un errore di
-  password o endpoint non va trattato come repository vuoto.
+- Verifica spazio locale, raggiungibilita' PostgreSQL e credenziali DB del
+  sidecar.
+- Se Restic e' stato configurato opzionalmente, verifica anche endpoint,
+  chiave bucket-scoped e `RESTIC_PASSWORD`. Non eseguire `restic init` su un
+  repository gia' esistente.
 - Dopo il fix forza `docker exec egadisailing-backup /backup.sh` e completa
   `./deploy/restore-drill.sh` prima di sbloccare il deploy.
 
@@ -323,7 +324,8 @@ esplicito + workflow OTA manuale.
 **Week 1 (staging)**: `FEATURE_OVERRIDE_ENABLED=true`, OTA disabled. QA DIRECT-vs-DIRECT (punti 1-11 + 15 della checklist).
 
 **Week 2 (prod canary)**: stesso setup. 7 giorni monitoring:
-- Sentry alert su `OVERRIDE_RECONCILE_FAILED` (non dovrebbe firare con OTA off).
+- Alert email dai log su `OVERRIDE_RECONCILE_FAILED` (non dovrebbe scattare
+  con OTA off).
 - Daily KPI review: `/admin/override-requests` PENDING count + approve/reject ratio.
 - Metric: % booking che diventano override_request vs normal (atteso <10%).
 
@@ -347,14 +349,13 @@ esplicito + workflow OTA manuale.
 
 ### Monitoring obbligatorio
 
-- **Sentry**: `SENTRY_DSN` configurato. Alert su:
-  - `logger.error` con tag `event=OVERRIDE_RECONCILE_FAILED` → Slack + email admin.
-  - `logger.fatal` con tag `event=override*` → SMS admin.
+- **Log applicativi**: controllare `logger.error`/`logger.fatal` tramite i log
+  del container e inviare gli alert operativi all'email admin.
 - **Uptime monitor**: ping pubblico su `/api/health`; per
   `/api/health?deep=1` configurare il custom header
   `Authorization: Bearer <OPS_HEALTH_SECRET>` (5min, alert se HTTP != 200).
 - **Telegram alert**: disabilitato e credenziali vuote finche' non esiste una
-  riattivazione separata e revisionata. Usare Sentry + email per gli alert.
+  riattivazione separata e revisionata. Usare email e uptime monitor.
 - **Daily KPI review** (5min mattina):
   - `/admin` — KPI "Override approvati questo mese" count.
   - `/admin/override-requests?status=PENDING` — count + eta' oldest request.

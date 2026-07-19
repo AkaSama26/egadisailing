@@ -1,6 +1,6 @@
 #!/bin/sh
-# PostgreSQL backup: restricted local dump plus an encrypted Restic snapshot.
-# The Restic repository must be initialized explicitly by an operator.
+# PostgreSQL backup: restricted, verified local dump. If both Restic settings
+# are present, the same dump is also copied to the encrypted offsite store.
 set -eu
 
 umask 077
@@ -138,7 +138,7 @@ if [ -n "${RESTIC_REPOSITORY:-}" ] || [ -n "${RESTIC_PASSWORD:-}" ]; then
     echo "[backup] Restic retention applied (${RESTIC_KEEP_DAILY} daily, ${RESTIC_KEEP_WEEKLY} weekly, ${RESTIC_KEEP_MONTHLY} monthly)"
   fi
 else
-  echo "[backup] WARNING: Restic is not configured; only the local copy exists" >&2
+  echo "[backup] Restic not configured; local PostgreSQL backup completed"
 fi
 
 if ! date -u -d "1 day ago" +%s >/dev/null 2>&1; then

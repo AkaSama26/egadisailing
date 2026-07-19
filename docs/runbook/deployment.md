@@ -22,7 +22,7 @@ egadisailing-app (immutable GHCR digest)
 
 egadisailing-backup
         +-- local pg_dump (7 days)
-        +-- encrypted Restic repository (7 daily / 4 weekly / 12 monthly)
+        +-- optional encrypted Restic replica (7 daily / 4 weekly / 12 monthly)
 ```
 
 `docker-compose.vps.yml` is the production source of truth. The shared
@@ -43,13 +43,19 @@ second reverse proxy and do not use `docker compose build` in production.
   `refs/heads/main`. A package-write credential alone cannot make a replacement
   digest deployable.
 - Compose runs the digest, not a mutable tag.
-- `GIT_SHA`, `NEXT_DEPLOYMENT_ID`, `DEPLOYMENT_VERSION` and `SENTRY_RELEASE`
-  all receive the same full SHA.
-- A verified offsite backup is mandatory before migrations.
+- `GIT_SHA`, `NEXT_DEPLOYMENT_ID` and `DEPLOYMENT_VERSION` all receive the
+  same full SHA. `SENTRY_RELEASE` is also populated for compatibility, but
+  Sentry stays disabled while `SENTRY_DSN` is empty.
+- A fresh local PostgreSQL dump and a successful isolated restore drill are
+  mandatory before migrations. An offsite replica is recommended, not a
+  release gate.
 - The 1,132 legacy BullMQ jobs must already be present in the encrypted queue
   evidence archive. `QUEUE_HISTORY_EXPORT_MARKER` points to a private marker;
   the release decrypts the archive only as a stream and verifies its checksum
   and the 1,070 pricing + 62 transactional counts before workers start.
+- The 62 archived transactional jobs are historical evidence only. They and
+  the corresponding stale outbox records are marked `DISMISSED`; none is
+  replayed or replaced, including the dated May and August cases.
 - Migrations are forward-only and additive. Rollback switches only the image;
   it never runs a down migration.
 - The one-time legacy rollback is marked as not email-idempotency-safe. Before
@@ -105,13 +111,13 @@ existing application values plus:
 
 ```dotenv
 OPS_HEALTH_SECRET=<independent random secret>
-SENTRY_DSN=<production Sentry DSN>
-SENTRY_ENVIRONMENT=production
-# Written only after the exact-image smoke event is visible in Sentry.
-SENTRY_TEST_EVENT_CONFIRMED_SHA=
 BOKUN_PRICING_SYNC_ENABLED=false
 
-# S3-compatible Restic example (Backblaze B2 S3 endpoint is supported)
+# Explicitly disabled; not a release requirement.
+SENTRY_DSN=
+
+# Optional S3-compatible Restic replica (Backblaze B2 is supported).
+# Leave all of these empty to use only normal local PostgreSQL dumps.
 RESTIC_REPOSITORY=s3:https://s3.eu-central-003.backblazeb2.com/egadisailing-prod-backups/restic
 RESTIC_PASSWORD=<long independent encryption password>
 AWS_ACCESS_KEY_ID=<bucket-scoped key id>
@@ -119,16 +125,17 @@ AWS_SECRET_ACCESS_KEY=<bucket-scoped application key>
 AWS_DEFAULT_REGION=eu-central-003
 ```
 
-Compose fissa la policy a 7 giorni locali e 7 snapshot giornalieri, 4
-settimanali, 12 mensili; non è sovrascrivibile dalla shell di deploy.
+Compose keeps normal local dumps for 7 days. If Restic is configured, its
+retention is 7 daily, 4 weekly and 12 monthly snapshots; these values are not
+overridden by the deploy shell.
 
 For the native B2 backend, use
 `RESTIC_REPOSITORY=b2:<bucket>:<prefix>` with `B2_ACCOUNT_ID` and
 `B2_ACCOUNT_KEY`. Grant the key access only to the backup bucket. Store the
 Restic password in the password manager separately from the bucket key.
 
-Initialize a new repository once. This command installs Restic only in the
-one-off container; it does not build the app:
+If offsite replication is desired, initialize a new Restic repository once.
+This optional command does not build the app:
 
 ```bash
 APP_IMAGE=alpine:3.20 \
@@ -151,27 +158,14 @@ docker exec egadisailing-backup /backup.sh
 ./deploy/restore-drill.sh
 ```
 
-The drill restores the latest offsite snapshot, verifies gzip, restores into a
+The drill verifies the latest local dump, restores into a
 uniquely named `egadisailing_restore_drill_*` database, checks tables and
 Prisma migrations, and removes only that temporary database.
 
 ## Deploy a release
 
 Deploy only after required GitHub checks, vulnerability scans and image
-publication are green. Before cutover, send a test event from the exact image,
-open the returned event ID in Sentry and verify both `release` and
-`environment`. Then record the confirmation in `.env`:
-
-```bash
-cd /home/ubuntu/www/egadisailing
-RELEASE_SHA=<full-sha-published-by-release-workflow>
-./deploy/sentry-smoke.sh "$RELEASE_SHA"
-# Only after the event is visible with the expected release/environment:
-# SENTRY_TEST_EVENT_CONFIRMED_SHA=<same-full-sha>
-```
-
-The deploy is fail-closed when that confirmation does not exactly match its
-argument. Continue with the release only after this gate:
+publication are green:
 
 ```bash
 cd /home/ubuntu/www/egadisailing
@@ -186,8 +180,8 @@ The helper performs, in order:
 
 1. clean-tree, `HEAD`, `origin/main` and full-SHA checks;
 2. GHCR pull, digest resolution, OCI revision and public-config verification;
-3. encrypted pre-migration backup;
-4. restore of that latest Restic snapshot into an isolated temporary database,
+3. verified local pre-migration PostgreSQL backup;
+4. restore of that latest local dump into an isolated temporary database,
    with gzip/table/migration checks and an evidence marker;
 5. explicit `prisma migrate deploy` in the candidate image;
 6. `docker compose up -d --no-build app`;
@@ -215,10 +209,9 @@ curl -fsS -H "Authorization: Bearer $OPS_HEALTH_SECRET" \
   'https://egadisailing.com/api/health?deep=1'
 ```
 
-Both must be 200 and the response must report the deployed SHA. Sentry is a
-release gate, not an optional production integration: `sentry-smoke.sh` sends
-the event from the immutable candidate, and `release.sh` requires the exact
-confirmed SHA before changing the live container.
+Both must be 200 and the response must report the deployed SHA. Operational
+visibility comes from the authenticated deep healthcheck, container logs and
+an external uptime monitor. Sentry is disabled and is not a release gate.
 
 The following remain deliberately disabled in Compose until a separate
 reviewed activation:
@@ -287,37 +280,19 @@ host-wide maintenance window.
 
 ## Backup operations
 
-The backup sidecar creates a verified local dump every 15 minutes and sends
-each dump to the encrypted Restic repository. Restic pruning runs at most once
-per UTC day and keeps 7 daily, 4 weekly and 12 monthly snapshots.
+The backup sidecar creates and gzip-verifies a normal PostgreSQL dump every 15
+minutes, stored under `backups/postgres/` with mode-restricted files and a
+7-day local retention. The restore drill always uses this local dump.
 
 ```bash
 ./deploy/compose.sh logs --tail 100 backup
-docker exec egadisailing-backup restic snapshots --host egadisailing-production --tag postgres
-docker exec egadisailing-backup restic check
 ./deploy/restore-drill.sh
 ```
 
 Perform the restore drill monthly and before risky data/deploy work. Alert if
-there is no successful offsite snapshot within 30 minutes. A local dump alone
-does not satisfy the release gate.
-
-## Canonical `.it` redirect
-
-The `.com` domain is canonical. Do not advertise or serve duplicate content
-from the `.it` domain.
-
-1. Point apex and `www` DNS records for the alternate domain to the central
-   Nginx proxy (or its Cloudflare zone) with a low TTL.
-2. Wait for both names to resolve to the intended proxy.
-3. Issue a certificate covering apex and `www`; install it as
-   `/opt/nginx/ssl/egadisailing.it.pem` and `.key`, mode-restricted.
-4. Only after the certificate files exist, install
-   `deploy/nginx/egadisailing-it-redirect.conf` in `/opt/nginx/conf.d/`.
-5. Validate `nginx -t`, reload, then test HTTP and HTTPS for both names with a
-   path and query string. All four variants must return 301 to
-   `https://egadisailing.com$request_uri`.
-
-Installing the HTTPS server block before its certificate exists will prevent
-Nginx from reloading. The repository configuration is therefore a gated
-artifact and must not be copied live prematurely.
+there is no successful local dump within 30 minutes. Restic remains an
+optional extra copy: when configured, also monitor `restic snapshots` and
+`restic check`. Leaving its variables empty is supported and is not a release
+gate. Once an operator explicitly configures Restic, a replication failure
+fails that backup run until the configuration is repaired or deliberately
+removed. A copy outside the VPS is still recommended for host failure.

@@ -24,7 +24,7 @@ Cliente
   -> Next.js app container
   -> Postgres container
   -> Redis container
-  -> backup sidecar verso S3/B2
+  -> backup sidecar con pg_dump locale (replica offsite opzionale)
 ```
 
 Servizi esterni collegati:
@@ -33,7 +33,7 @@ Servizi esterni collegati:
 - Brevo per email transazionali.
 - Cloudflare Turnstile per anti-spam/anti-bot.
 - Bokun e canali charter quando le credenziali production sono pronte.
-- Uptime monitor e Sentry server/edge obbligatorio con release SHA.
+- Uptime monitor esterno sul healthcheck pubblico; Sentry resta disattivato.
 
 ## P0 — No-go assoluti
 
@@ -169,20 +169,19 @@ Accettazione:
 
 Da fare:
 
-- Configurare bucket S3/B2 per backup.
-- Configurare env backup sidecar:
-  - `BACKUP_S3_BUCKET`
-  - `BACKUP_S3_ENDPOINT`
-  - `BACKUP_S3_KEY`
-  - `BACKUP_S3_SECRET`
-  - `BACKUP_RETENTION_DAYS`
+- Avviare il sidecar che crea un `pg_dump` locale verificato ogni 15 minuti.
+- Mantenere la directory `backups/postgres/` fuori dall'immagine applicativa,
+  con permessi ristretti e retention locale di 7 giorni.
 - Eseguire almeno un backup manuale prima del live.
-- Fare restore del dump su DB separato o locale.
+- Eseguire `deploy/restore-drill.sh`, che ripristina l'ultimo dump in un DB
+  temporaneo isolato e poi lo rimuove.
+- Facoltativo ma raccomandato: copiare i dump fuori dalla VPS con Restic o un
+  altro trasferimento cifrato.
 
 Accettazione:
 
-- Backup manuale produce file nel bucket.
-- Il dump si scarica e si ripristina senza errori.
+- Backup manuale produce un file `.sql.gz` valido nella directory locale.
+- Il restore drill termina senza errori e registra checksum e conteggi.
 - Dopo restore, query base su `Booking`, `Customer`, `Payment` funzionano.
 
 No-go:
@@ -271,8 +270,6 @@ Da fare:
   - `https://egadisailing.com/api/health`
 - Configurare alert a email admin; Telegram resta spento finche' non viene
   configurato e revisionato separatamente.
-- Configurare `SENTRY_DSN`, eseguire `deploy/sentry-smoke.sh <full-sha>` e
-  confermare evento, release ed environment prima del deploy.
 - Verificare `/api/health?deep=1` con il dedicato `OPS_HEALTH_SECRET`.
 
 Accettazione:

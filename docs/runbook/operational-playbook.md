@@ -2,7 +2,7 @@
 
 Runbook per admin single-user post-go-live. Generato da audit Round 16.
 
-**Presupposti ambiente**: VPS Hetzner/DO, Docker Compose (`postgres:16-alpine` + `redis:7-alpine` con AOF + app standalone Next), reverse proxy Caddy, backup offsite S3/B2 via rclone.
+**Presupposti ambiente**: VPS Hetzner/DO, Docker Compose (`postgres:16-alpine` + `redis:7-alpine` con AOF + app standalone Next), reverse proxy Caddy e backup PostgreSQL locale verificato; replica offsite opzionale.
 
 **Convenzioni**: tutti i comandi assumono `cd /home/ubuntu/egadisailing` dove non specificato.
 - `$PG` = `docker compose exec -T postgres psql -U egadisailing -d egadisailing`
@@ -14,16 +14,21 @@ Runbook per admin single-user post-go-live. Generato da audit Round 16.
 
 ### DR-1 — VPS distrutto / perso (total loss)
 
-**RPO** realistico: 24h (ultimo `pg_dump` giornaliero). **RTO** realistico: 2-4h se S3 + DNS Cloudflare ok, 6-8h primo restore.
+Con i soli dump locali, la perdita totale del disco/VPS comporta anche la
+perdita dei backup: questo rischio e' accettato dalla configurazione minima.
+RPO/RTO sono stimabili soltanto se esiste una copia esterna opzionale o uno
+snapshot del provider: RPO pari all'ultima copia, RTO tipico 2-8 ore.
 
 **Prerequisites**:
-- [ ] Backup giornaliero `pg_dump` su B2/S3 via rclone — verificato settimanalmente con test restore
+- [ ] Per recuperare da total loss: copia esterna cifrata o snapshot provider,
+      verificato periodicamente con un restore
 - [ ] `.env.production` salvato in password manager (1Password/Bitwarden), NON nel repo
 - [ ] SSH key pubblica del nuovo VPS già in GitHub (per `git clone`)
 - [ ] DNS su Cloudflare (TTL 300s per ripuntare in 5 min)
-- [ ] Credenziali S3/B2 memorizzate separate (NON nel backup stesso)
+- [ ] Se usato: credenziali storage esterno memorizzate separatamente
 
-**Detection**: ping VPS fallisce, UptimeRobot/BetterStack invia email + Telegram "Down > 5min". Provider cloud segnala incident.
+**Detection**: ping VPS fallisce, UptimeRobot/BetterStack invia email "Down >
+5min". Provider cloud segnala incident.
 
 **Response**:
 ```bash
@@ -43,9 +48,10 @@ cd egadisailing
 # Copia .env dal password manager (NON rigenerare secrets — devono matchare il backup)
 nano .env
 
-# 4. Restore DB (15-30 min per 500MB dump)
+# 4. Restore DB solo se esiste una copia sopravvissuta fuori dalla VPS
+#    (15-30 min per 500MB dump). Senza tale copia, i dati non sono recuperabili.
 mkdir -p /backups
-rclone copy b2:egadisailing-backups/egadisailing-$(date -d yesterday +%F).sql.gz /backups/
+# Copia qui il dump dallo storage esterno o dallo snapshot provider.
 docker compose up -d postgres redis
 sleep 10
 gunzip -c /backups/egadisailing-*.sql.gz | docker compose exec -T postgres psql -U egadisailing -d egadisailing
@@ -248,7 +254,7 @@ falla passare in CI e rilasciala con `deploy/release.sh <full-sha>`.
 
 | URL | Freq | Expected | Alert |
 |---|---|---|---|
-| `https://egadisailing.com/api/health` | 2 min | 200 + `status=ok` | 2 fail consecutivi → email + Telegram |
+| `https://egadisailing.com/api/health` | 2 min | 200 + `status=ok` | 2 fail consecutivi → email |
 | `https://egadisailing.com/` | 5 min | 200 + keyword "Egadi" | 3 fail → email |
 | `https://egadisailing.com/prenota/social-boating` | 15 min | 200 | 2 fail → email |
 | `https://egadisailing.com/admin/login` | 30 min | 200 | 2 fail → email |
@@ -257,10 +263,10 @@ falla passare in CI e rilasciala con `deploy/release.sh <full-sha>`.
 
 | Segnale | Soglia | Severità | Canale |
 |---|---|---|---|
-| `/api/health` 503 | 2 consecutivi | HIGH | Email + Telegram |
-| Payment failures | > 3 in 5min | HIGH | Telegram |
+| `/api/health` 503 | 2 consecutivi | HIGH | Email |
+| Payment failures | > 3 in 5min | HIGH | Email |
 | Queue `waiting` > 100 | sustained 10min | MEDIUM | Email |
-| Queue `unresolvedRecent` > 0 | istantaneo | HIGH | Sentry + email |
+| Queue `unresolvedRecent` > 0 | istantaneo | HIGH | Email |
 | DB conn > 15 | sustained 5min | MEDIUM | Email |
 | Redis > 80% max | istantaneo | MEDIUM | Email |
 | Disk > 80% | istantaneo | HIGH | Monitor host + email |
@@ -358,4 +364,3 @@ $RE DEL rlb:OTP_BLOCK_EMAIL:user@example.com
 | Outbox pattern reale fan-out (R6 deferred) | DR-3 Redis loss | Recovery via reconciliation ma drift |
 | PITR Postgres (pgBackRest) | DR-2 RPO 24h | Perdi fino 24h in corruzione |
 | MAINTENANCE_MODE flag | DR-4 Stripe down | Workaround manuale via telefono |
-| Sentry browser + source-map upload | Diagnostica frontend | Server/edge attivi; test evento per-SHA e' gate di deploy |
