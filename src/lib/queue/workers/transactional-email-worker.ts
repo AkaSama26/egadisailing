@@ -8,6 +8,7 @@ import {
   emailDeliveryWindowExpired,
   emailProviderIdempotencyKey,
   emailRetryPolicy,
+  isHistoricalEmailResolution,
   MAX_EMAIL_ATTEMPTS,
   SENDING_VISIBILITY_TIMEOUT_MS,
 } from "@/lib/email/outbox";
@@ -38,6 +39,12 @@ export function startTransactionalEmailWorker() {
         logger.warn({ emailOutboxId: data.emailOutboxId }, "Email outbox row missing");
         return;
       }
+      // Difesa permanente anche se un operatore alterasse manualmente lo
+      // status: le comunicazioni archiviate al cutover non sono reinviabili.
+      if (
+        email.historicalDismissedAt !== null ||
+        isHistoricalEmailResolution(email.resolutionReason)
+      ) return;
       if (
         email.status === EMAIL_OUTBOX_STATUS.SENT ||
         email.status === EMAIL_OUTBOX_STATUS.DISMISSED
@@ -59,6 +66,7 @@ export function startTransactionalEmailWorker() {
           where: {
             id: email.id,
             status: EMAIL_OUTBOX_STATUS.PENDING,
+            historicalDismissedAt: null,
             attempts: { gt: 0 },
             deliveryStartedAt: null,
           },
@@ -77,7 +85,11 @@ export function startTransactionalEmailWorker() {
         emailDeliveryWindowExpired(email.deliveryStartedAt, now)
       ) {
         await db.emailOutbox.updateMany({
-          where: { id: email.id, status: EMAIL_OUTBOX_STATUS.PENDING },
+          where: {
+            id: email.id,
+            status: EMAIL_OUTBOX_STATUS.PENDING,
+            historicalDismissedAt: null,
+          },
           data: {
             status: EMAIL_OUTBOX_STATUS.FAILED,
             lastError:
@@ -90,6 +102,7 @@ export function startTransactionalEmailWorker() {
         where: {
           id: email.id,
           status: EMAIL_OUTBOX_STATUS.PENDING,
+          historicalDismissedAt: null,
           nextAttemptAt: { lte: now },
           attempts: { lt: MAX_EMAIL_ATTEMPTS },
         },

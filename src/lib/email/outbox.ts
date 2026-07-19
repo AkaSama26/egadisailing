@@ -56,7 +56,25 @@ export interface ResolveTransactionalEmailResult {
   queued?: boolean;
 }
 
+export const HISTORICAL_DISMISS_REASON_PREFIX =
+  "Historical cutover: archived; owner decision: never send";
 export const ROLLBACK_DISMISS_REASON_PREFIX = "Automatic rollback safety:";
+
+export function isHistoricalEmailResolution(reason: string | null | undefined): boolean {
+  return reason?.startsWith(HISTORICAL_DISMISS_REASON_PREFIX) ?? false;
+}
+
+const NON_HISTORICAL_RESOLUTION_FILTER: Prisma.EmailOutboxWhereInput = {
+  historicalDismissedAt: null,
+  OR: [
+    { resolutionReason: null },
+    {
+      resolutionReason: {
+        not: { startsWith: HISTORICAL_DISMISS_REASON_PREFIX },
+      },
+    },
+  ],
+};
 
 const MAX_EMAIL_ATTEMPTS = 5;
 // Il cron gira ogni 5 minuti. Tre minuti + il worst-case fino al prossimo
@@ -248,6 +266,7 @@ export async function recoverStaleTransactionalEmails(
   if (deliveryMode !== "brevo") {
     const failed = await db.emailOutbox.updateMany({
       where: {
+        ...NON_HISTORICAL_RESOLUTION_FILTER,
         status: EMAIL_OUTBOX_STATUS.SENDING,
         nextAttemptAt: { lte: now },
       },
@@ -267,6 +286,7 @@ export async function recoverStaleTransactionalEmails(
   const [pending, failed] = await db.$transaction([
     db.emailOutbox.updateMany({
       where: {
+        ...NON_HISTORICAL_RESOLUTION_FILTER,
         status: EMAIL_OUTBOX_STATUS.SENDING,
         nextAttemptAt: { lte: now },
         attempts: { lt: MAX_EMAIL_ATTEMPTS },
@@ -285,10 +305,15 @@ export async function recoverStaleTransactionalEmails(
       where: {
         status: EMAIL_OUTBOX_STATUS.SENDING,
         nextAttemptAt: { lte: now },
-        OR: [
-          { attempts: { gte: MAX_EMAIL_ATTEMPTS } },
-          { deliveryStartedAt: null },
-          { deliveryStartedAt: { lte: providerWindowCutoff } },
+        AND: [
+          NON_HISTORICAL_RESOLUTION_FILTER,
+          {
+            OR: [
+              { attempts: { gte: MAX_EMAIL_ATTEMPTS } },
+              { deliveryStartedAt: null },
+              { deliveryStartedAt: { lte: providerWindowCutoff } },
+            ],
+          },
         ],
       },
       data: {
@@ -312,7 +337,11 @@ export async function retryTransactionalEmail(input: {
   const reason = input.reason.trim();
   if (!reason) throw new ValidationError("A retry reason is required");
   const changed = await db.emailOutbox.updateMany({
-    where: { id: input.emailOutboxId, status: EMAIL_OUTBOX_STATUS.FAILED },
+    where: {
+      ...NON_HISTORICAL_RESOLUTION_FILTER,
+      id: input.emailOutboxId,
+      status: EMAIL_OUTBOX_STATUS.FAILED,
+    },
     data: {
       status: EMAIL_OUTBOX_STATUS.PENDING,
       attempts: 0,
@@ -326,8 +355,18 @@ export async function retryTransactionalEmail(input: {
   });
   const row = await db.emailOutbox.findUniqueOrThrow({
     where: { id: input.emailOutboxId },
-    select: { status: true },
+    select: {
+      status: true,
+      resolutionReason: true,
+      historicalDismissedAt: true,
+    },
   });
+  if (
+    Boolean(row.historicalDismissedAt) ||
+    isHistoricalEmailResolution(row.resolutionReason)
+  ) {
+    throw new ValidationError("Historical email is archived and can never be retried");
+  }
   const status = parseEmailOutboxStatus(row.status);
 
   if (changed.count === 1) {
@@ -366,6 +405,7 @@ export async function dismissTransactionalEmail(input: {
 
   const changed = await db.emailOutbox.updateMany({
     where: {
+      ...NON_HISTORICAL_RESOLUTION_FILTER,
       id: input.emailOutboxId,
       status: { in: [EMAIL_OUTBOX_STATUS.PENDING, EMAIL_OUTBOX_STATUS.FAILED] },
     },
@@ -379,8 +419,18 @@ export async function dismissTransactionalEmail(input: {
   });
   const row = await db.emailOutbox.findUniqueOrThrow({
     where: { id: input.emailOutboxId },
-    select: { status: true },
+    select: {
+      status: true,
+      resolutionReason: true,
+      historicalDismissedAt: true,
+    },
   });
+  if (
+    Boolean(row.historicalDismissedAt) ||
+    isHistoricalEmailResolution(row.resolutionReason)
+  ) {
+    throw new ValidationError("Historical email is already permanently dismissed");
+  }
   const status = parseEmailOutboxStatus(row.status);
   if (changed.count === 1) {
     await auditLog({
@@ -399,11 +449,11 @@ export async function dismissTransactionalEmail(input: {
 }
 
 /**
- * Crea una nuova outbox per una comunicazione quarantinata da un rollback.
- * Il record DISMISSED resta immutabile: la nuova chiave business, derivata
- * dall'ID originale, rende l'operazione idempotente anche su doppio click.
- * Il caller amministrativo deve prima verificare in Brevo l'assenza della
- * consegna e fornire una motivazione esplicita.
+ * Crea una nuova outbox per una comunicazione futura resa ambigua da un
+ * rollback tecnico. Il record DISMISSED resta immutabile e la nuova chiave
+ * business rende l'operazione idempotente anche su doppio click. Le email
+ * storiche del cutover hanno un tombstone separato e non possono entrare in
+ * questo percorso.
  */
 export async function createRollbackReplacementEmail(input: {
   emailOutboxId: string;
@@ -430,13 +480,17 @@ export async function createRollbackReplacementEmail(input: {
       customerId: true,
       status: true,
       resolutionReason: true,
+      historicalDismissedAt: true,
     },
   });
   if (
+    original.historicalDismissedAt !== null ||
     original.status !== EMAIL_OUTBOX_STATUS.DISMISSED ||
     !original.resolutionReason?.startsWith(ROLLBACK_DISMISS_REASON_PREFIX)
   ) {
-    throw new ValidationError("Only rollback-quarantined email can be replaced");
+    throw new ValidationError(
+      "Only a future email quarantined by rollback can be replaced",
+    );
   }
 
   const replacement = await enqueueTransactionalEmail({
@@ -491,6 +545,7 @@ export async function enqueueDueTransactionalEmailJobs(limit = 100): Promise<{
   const recovered = await recoverStaleTransactionalEmails(now);
   const due = await db.emailOutbox.findMany({
     where: {
+      ...NON_HISTORICAL_RESOLUTION_FILTER,
       status: EMAIL_OUTBOX_STATUS.PENDING,
       nextAttemptAt: { lte: now },
       attempts: { lt: MAX_EMAIL_ATTEMPTS },

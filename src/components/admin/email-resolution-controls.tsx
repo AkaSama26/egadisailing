@@ -90,7 +90,7 @@ export function RollbackEmailReplacementControl({
         htmlFor={`replacement-reason-${emailOutboxId}`}
         className="block text-xs font-semibold"
       >
-        Approvazione nuovo messaggio dopo verifica Brevo
+        Verifica Brevo per email futura dopo rollback tecnico
       </label>
       <textarea
         id={`replacement-reason-${emailOutboxId}`}

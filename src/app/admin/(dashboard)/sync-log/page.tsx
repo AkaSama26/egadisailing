@@ -129,6 +129,7 @@ export default async function SyncLogPage() {
       db.emailOutbox.findMany({
         where: {
           status: "DISMISSED",
+          historicalDismissedAt: null,
           resolutionReason: { startsWith: ROLLBACK_DISMISS_REASON_PREFIX },
         },
         select: {
@@ -282,15 +283,16 @@ export default async function SyncLogPage() {
 
       <AdminCard id="email-quarantena-rollback">
         <h2 className="font-bold text-slate-900 mb-3">
-          Email in quarantena da rollback ({rollbackDismissedEmails.length})
+          Email future in quarantena da rollback ({rollbackDismissedEmails.length})
         </h2>
         <p className="mb-3 text-sm text-slate-600">
-          Sono terminali e non vengono mai reinviate automaticamente. Crea un
-          messaggio sostitutivo soltanto dopo aver verificato in Brevo che la
-          comunicazione precedente non sia stata consegnata.
+          Questa sezione riguarda solo comunicazioni create dopo il cutover e
+          rese ambigue da un rollback tecnico. Le email storiche hanno un
+          tombstone permanente, non compaiono qui e non possono essere
+          sostituite.
         </p>
         {rollbackDismissedEmails.length === 0 ? (
-          <EmptyState message="Nessuna email in quarantena rollback." />
+          <EmptyState message="Nessuna email futura in quarantena rollback." />
         ) : (
           <ul className="text-sm divide-y divide-slate-100">
             {rollbackDismissedEmails.map((email) => (

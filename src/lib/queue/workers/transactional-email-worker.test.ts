@@ -49,6 +49,9 @@ vi.mock("@/lib/email/outbox", () => ({
   emailDeliveryWindowExpired: vi.fn().mockReturnValue(false),
   emailProviderIdempotencyKey: vi.fn().mockReturnValue("provider-key"),
   emailRetryPolicy: vi.fn().mockReturnValue({ finalFailure: true, delayMinutes: 5 }),
+  isHistoricalEmailResolution: vi.fn((reason?: string | null) =>
+    reason?.startsWith("Historical cutover: archived; owner decision: never send") ?? false,
+  ),
 }));
 vi.mock("@/lib/env", () => ({
   env: { EMAIL_DELIVERY_MODE: "brevo" },
@@ -61,6 +64,8 @@ const baseEmail = {
   status: "PENDING",
   attempts: 0,
   deliveryStartedAt: null,
+  resolutionReason: null,
+  historicalDismissedAt: null,
 };
 
 async function runJob() {
@@ -77,6 +82,21 @@ describe("transactional email worker terminal and idempotent behavior", () => {
 
   it.each(["SENT", "DISMISSED"])("non reinvia un record terminale %s", async (status) => {
     mocks.findUnique.mockResolvedValueOnce({ ...baseEmail, status });
+
+    await runJob();
+
+    expect(mocks.updateMany).not.toHaveBeenCalled();
+    expect(mocks.sendEmailWithResult).not.toHaveBeenCalled();
+  });
+
+  it("non invia una email storica anche se lo status fosse alterato a PENDING", async () => {
+    mocks.findUnique.mockResolvedValueOnce({
+      ...baseEmail,
+      status: "PENDING",
+      historicalDismissedAt: new Date("2026-07-19T12:00:00.000Z"),
+      resolutionReason:
+        "Historical cutover: archived; owner decision: never send; booking date 2026-08-14",
+    });
 
     await runJob();
 

@@ -63,7 +63,8 @@ vi.mock("@/lib/logger", () => ({
   },
 }));
 
-import { GET, HEALTH_DEPENDENCY_TIMEOUT_MS } from "./route";
+import { HEALTH_DEPENDENCY_TIMEOUT_MS } from "./health-config";
+import { GET } from "./route";
 
 beforeEach(() => {
   vi.clearAllMocks();

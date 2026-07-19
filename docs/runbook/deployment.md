@@ -58,15 +58,30 @@ second reverse proxy and do not use `docker compose build` in production.
   replayed or replaced, including the dated May and August cases.
 - Migrations are forward-only and additive. Rollback switches only the image;
   it never runs a down migration.
-- The one-time legacy rollback is marked as not email-idempotency-safe. Before
-  switching to it, the current worker is stopped and any PENDING/SENDING/FAILED
-  outbox with a started delivery is atomically changed to `DISMISSED` with an
-  audit entry. It is never resent automatically; Brevo must be checked before
-  an operator creates the single idempotent replacement from
-  `/admin/sync-log#email-quarantena-rollback`, recording the verification
-  reason in the audit trail. The same fail-closed barrier
-  persistently pauses `sync.pricing.bokun` in Redis before the legacy worker
-  starts, because that image predates `BOKUN_PRICING_SYNC_ENABLED`.
+- Before the first modern image starts, every historical pre-cutoff
+  `PENDING`/`SENDING`/`FAILED` outbox receives the immutable
+  `historicalDismissedAt` tombstone and becomes `DISMISSED`. No replacement
+  action exists for those historical records, even if Brevo shows no prior
+  delivery.
+- The cutover globally pauses both `email.transactional` and
+  `sync.pricing.bokun` under the deploy lock before evidence decryption,
+  `git fetch`, image pull, signature checks or any other slow/network work.
+  A read-only helper from the requested commit is mounted into the exact local
+  legacy image with `--pull never`.
+- The historical stop is a direct `SIGKILL`, never a graceful SIGTERM/drain.
+  `active > 0` is recorded durably and stops the workflow with the site down,
+  both queues paused and external Brevo/Bokun reconciliation required. That
+  reconciliation can only establish what happened; it never authorizes a
+  historical retry or replacement. With `active = 0`, a post-stop invocation
+  must match the exact sorted job-ID manifest and capture the canonical
+  PostgreSQL cutoff used by the tombstone transaction.
+- A later rollback to the retained legacy image is a separate policy. Before
+  switching, the new worker is stopped and only future claims with an
+  ambiguous delivery outcome (`SENDING`, `FAILED`, attempts already made or a
+  delivery timestamp) are quarantined. A never-attempted future `PENDING`
+  record is not mislabeled as historical. The barrier also keeps
+  `sync.pricing.bokun` paused because the legacy image predates
+  `BOKUN_PRICING_SYNC_ENABLED`.
 
 ## One-time VPS preparation
 
@@ -180,14 +195,27 @@ The helper performs, in order:
 
 1. clean-tree, `HEAD`, `origin/main` and full-SHA checks;
 2. GHCR pull, digest resolution, OCI revision and public-config verification;
-3. verified local pre-migration PostgreSQL backup;
-4. restore of that latest local dump into an isolated temporary database,
+3. on the one-time legacy cutover, durable global pause of email/pricing and
+   immediate non-draining legacy kill, before any evidence/network work;
+4. encrypted exact-ID evidence verification, post-stop `active = 0`, exact-ID
+   assertion and canonical DB cutoff;
+5. verified local pre-migration PostgreSQL backup while the legacy worker is
+   already stopped;
+6. restore of that latest local dump into an isolated temporary database,
    with gzip/table/migration checks and an evidence marker;
-5. explicit `prisma migrate deploy` in the candidate image;
-6. `docker compose up -d --no-build app`;
-7. container image-ID, public shallow, authenticated deep and release-SHA gates;
-8. promotion of `.deploy/current-release.env`, retention of the prior image,
+7. explicit `prisma migrate deploy` in the candidate image;
+8. historical outbox tombstones and selective purge of archived job IDs;
+9. `docker compose up -d --no-build app`;
+10. container image-ID, public shallow, authenticated deep and release-SHA gates;
+11. atomic `COMMITTED` journal, promotion of `.deploy/current-release.env`,
+   retention of the prior image,
    then Cloudflare cache purge.
+
+The first legacy cutover therefore has a deliberate maintenance window from
+the legacy stop in step 3 through candidate startup in step 9. This is the
+safety boundary that prevents the old worker from consuming historical mail
+during backup, restore drill or migrations. Later immutable releases keep the
+current app online through those preparation phases.
 
 Use the release-aware wrapper for later Compose operations:
 
@@ -200,6 +228,74 @@ Use the release-aware wrapper for later Compose operations:
 Do not manually edit `.deploy/current-release.env`. It contains no secrets,
 but it is mode `0600`, ignored by Git and is the authoritative deployed
 digest.
+
+## Interrupted release recovery
+
+`release.sh` journals every post-freeze transition under `.deploy/`. After a
+host reboot, Docker daemon restart or uncatchable `SIGKILL`, do not delete
+those files and do not manually resume either BullMQ queue. Inspect the state:
+
+```bash
+bash deploy/recover-release.sh status
+```
+
+The recovery command takes the same deployment lock as release/rollback. Its
+available modes are:
+
+```bash
+# Read-only journal, container and queue status.
+bash deploy/recover-release.sh status
+
+# Restore and health-check the recorded rollback image.
+bash deploy/recover-release.sh rollback
+
+# Abort the bootstrap window before its first durable cutover journal. This
+# also accepts the documented early historical-cutover phases.
+bash deploy/recover-release.sh abort-pre-cutover
+```
+
+If a historical-cutover journal exists, `rollback` and the accepted early
+`abort-pre-cutover` phases first disable container restart, freeze the app,
+switch Redis AOF to `appendfsync=always` for the atomic queue boundary, and
+force-remove the app without draining provider jobs. They restore the site only after the queue
+pause is attested, verify the recorded image
+and shallow/release health, write
+`.deploy/historical-email-hold.env`, and only then remove the release
+journals. Both queues remain paused. Create a fresh encrypted exact-ID queue
+export and run the normal `deploy/release.sh <full-sha>` flow again; there is
+no recovery command that sends or resumes historical email.
+
+If containment reports an active job, the synchronously-fsynced Redis marker plus the durable
+`activeObserved=true` result survive a helper, shell or host crash, including a
+crash between the Redis boundary and the host-side result file. The app is killed immediately and automatic
+recovery does not restart it. Inspect Brevo/Bokun and the outbox; only after
+that reconciliation may an operator run `abort-pre-cutover`, which restores
+the site with both queues still paused, writes an explicit hold and acknowledges
+the sticky Redis observation. This acknowledgement is not available through a
+normal rollback. Historical
+email remains permanently non-sendable in every outcome.
+
+The production Redis service also starts with `appendonly=yes` and
+`appendfsync=always`. The containment helper refuses to establish a successful
+boundary if AOF is disabled or immediate fsync cannot be attested. Before the
+first EVAL, the exact legacy container is already frozen with restart disabled;
+a power loss therefore cannot restart a worker against a lost pause marker.
+
+There are two no-journal cases. During the first bootstrap, the app may already
+be frozen with restart disabled just before `CONTAINMENT_INTENT`; explicit
+`abort-pre-cutover` therefore establishes the same fsynced queue boundary and
+restores the recorded legacy image with both queues paused under an email hold.
+If it discovers active work for the first time, it persists
+`ACTIVE_RECONCILIATION_REQUIRED` and stops; the operator must reconcile before
+running the explicit abort a second time. On later rollback-safe releases,
+recovery stops any candidate and restores the recorded release without creating
+an email hold. In both cases it updates only
+`current-release.env`: an existing `previous-release.env` is deliberately
+preserved so a later `rollback.sh` can never select the failed candidate.
+
+Never recover by running `docker compose up app` directly, deleting
+`.deploy/*`, or calling BullMQ `resume`: each bypasses either the immutable
+image journal or the historical-email safety proof.
 
 ## Health and observability gates
 
@@ -248,20 +344,38 @@ For the first rollback only, the retained dirty-build image predates provider
 idempotency. The rollback journal records
 `EMAIL_OUTBOX_ROLLBACK_SAFE=false`; the script stops the new worker and runs
 the transactional dismissal barrier before that legacy process can start.
-Every legacy `SENDING`/`FAILED`, every row with attempts already started and
-every row with a delivery timestamp is dismissed; only a never-attempted
-`PENDING` row remains eligible. The
-barrier also requires Redis and verifies that `sync.pricing.bokun` is globally
+Only future records whose provider outcome is ambiguous are dismissed:
+`SENDING`, `FAILED`, or rows with a prior attempt/delivery timestamp. A future
+`PENDING` row never attempted remains eligible. This rollback quarantine is
+distinct from the immutable historical cutover tombstone. After an operator
+verifies in Brevo that no delivery occurred, the admin can create one
+idempotent replacement for this future-only rollback case.
+The barrier also requires Redis and verifies that `sync.pricing.bokun` is globally
 paused; rollback aborts if either protection cannot be established. A future
 pricing canary must resume that queue explicitly through reviewed BullMQ
 tooling only after the vendor contract and read-back gate have passed.
 
-If Brevo proves that one quarantined message was not delivered, return to a
-modern release and use the dedicated **Email in quarantena da rollback**
-control. Never edit the `DISMISSED` row or enqueue it directly: the control
-clones it under a deterministic replacement key, so repeated submissions
-cannot create multiple messages. If Brevo shows a prior delivery, leave the
-row `DISMISSED`.
+Every manual rollback owns `.deploy/rollback-email-barrier.env`; despite the
+legacy filename it is a two-identity, fsynced transaction journal. Before its
+`COMMITTED` phase, rerunning `deploy/rollback.sh` restores the newer image. At
+or after `COMMITTED`, rerunning it converges on the health-verified rollback
+target and can never reverse that decision. Derived swap/target files are
+removed before this terminal journal.
+
+For an unsafe legacy target, the same journal also tracks the future-only email
+quarantine. If the shell or host dies after the email queue is paused, rerunning
+`deploy/rollback.sh` completes the idempotent DB barrier and verifies
+`email.transactional` resumed before restoring the newer image. If that cannot
+be proven, the newer app remains stopped and
+`.deploy/historical-email-hold.env` records the queue state as `UNKNOWN`; a
+global pause can therefore never remain invisible. A pre-existing historical
+hold blocks manual rollback entirely: complete a fresh immutable release
+cutover instead.
+
+Do not edit, retry, clone or enqueue a historical `DISMISSED` row. This policy
+also covers the 14 August case: it is archived without any send approval or
+replacement path. The future-only rollback recovery described above cannot
+select a row with `historicalDismissedAt` set.
 
 After the rollback window, remove only the captured legacy dirty-build image:
 

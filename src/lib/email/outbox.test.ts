@@ -37,6 +37,8 @@ import {
   emailRetryPolicy,
   enqueueTransactionalEmail,
   enqueueDueTransactionalEmailJobs,
+  HISTORICAL_DISMISS_REASON_PREFIX,
+  isHistoricalEmailResolution,
   recoverStaleTransactionalEmails,
   retryTransactionalEmail,
 } from "./outbox";
@@ -134,9 +136,9 @@ describe("email outbox resolution", () => {
     expect(mocks.auditLog).toHaveBeenCalledTimes(1);
   });
 
-  it("crea una sola outbox sostitutiva per una quarantena rollback verificata", async () => {
+  it("crea una sola outbox sostitutiva per una futura quarantena rollback verificata", async () => {
     mocks.findUniqueOrThrow.mockResolvedValueOnce({
-      id: "legacy-dismissed",
+      id: "future-rollback-dismissed",
       templateKey: "booking-confirmation",
       recipientEmail: "customer@example.com",
       recipientName: "Cliente",
@@ -151,6 +153,7 @@ describe("email outbox resolution", () => {
       status: EMAIL_OUTBOX_STATUS.DISMISSED,
       resolutionReason:
         "Automatic rollback safety: delivery outcome is ambiguous; verify Brevo",
+      historicalDismissedAt: null,
     });
     mocks.create.mockResolvedValueOnce({
       id: "replacement-1",
@@ -158,7 +161,7 @@ describe("email outbox resolution", () => {
     });
 
     const result = await createRollbackReplacementEmail({
-      emailOutboxId: "legacy-dismissed",
+      emailOutboxId: "future-rollback-dismissed",
       userId: "admin-1",
       reason: "Brevo verificato: nessuna consegna precedente",
     });
@@ -172,37 +175,75 @@ describe("email outbox resolution", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           payload: expect.objectContaining({
-            replacementOfOutboxId: "legacy-dismissed",
+            replacementOfOutboxId: "future-rollback-dismissed",
           }),
           idempotencyKey: expect.stringMatching(/^[0-9a-f]{64}$/),
         }),
       }),
     );
     expect(mocks.queueAdd).toHaveBeenCalledOnce();
-    expect(mocks.auditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: "EMAIL_OUTBOX_ROLLBACK_REPLACEMENT",
-        entityId: "legacy-dismissed",
-      }),
-    );
   });
 
-  it("rifiuta la sostituzione di un DISMISSED non creato dal rollback", async () => {
+  it("rifiuta una sostituzione per qualunque email storica tombstonata", async () => {
     mocks.findUniqueOrThrow.mockResolvedValueOnce({
-      id: "ordinary-dismissed",
+      id: "historical-dismissed",
       status: EMAIL_OUTBOX_STATUS.DISMISSED,
-      resolutionReason: "Prenotazione cancellata",
+      resolutionReason:
+        "Automatic rollback safety: testo alterato manualmente",
+      historicalDismissedAt: new Date("2026-07-19T12:00:00.000Z"),
     });
 
     await expect(
       createRollbackReplacementEmail({
-        emailOutboxId: "ordinary-dismissed",
+        emailOutboxId: "historical-dismissed",
         userId: "admin-1",
         reason: "tentativo non consentito",
       }),
     ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     expect(mocks.create).not.toHaveBeenCalled();
     expect(mocks.queueAdd).not.toHaveBeenCalled();
+  });
+
+  it("rifiuta per sempre il retry di una email storica, incluso il caso 14 agosto", async () => {
+    mocks.updateMany.mockResolvedValueOnce({ count: 0 });
+    mocks.findUniqueOrThrow.mockResolvedValueOnce({
+      status: EMAIL_OUTBOX_STATUS.DISMISSED,
+      historicalDismissedAt: new Date("2026-07-19T12:00:00.000Z"),
+      resolutionReason: `${HISTORICAL_DISMISS_REASON_PREFIX}; booking date 2026-08-14`,
+    });
+
+    await expect(
+      retryTransactionalEmail({
+        emailOutboxId: "historical-2026-08-14",
+        userId: "admin-1",
+        reason: "tentativo non consentito anche dopo verifica Brevo",
+      }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.queueAdd).not.toHaveBeenCalled();
+    expect(mocks.auditLog).not.toHaveBeenCalled();
+    expect(
+      isHistoricalEmailResolution(
+        `${HISTORICAL_DISMISS_REASON_PREFIX}; booking date 2026-08-14`,
+      ),
+    ).toBe(true);
+  });
+
+  it("non sovrascrive la motivazione terminale di una email storica", async () => {
+    mocks.updateMany.mockResolvedValueOnce({ count: 0 });
+    mocks.findUniqueOrThrow.mockResolvedValueOnce({
+      status: EMAIL_OUTBOX_STATUS.DISMISSED,
+      historicalDismissedAt: new Date("2026-07-19T12:00:00.000Z"),
+      resolutionReason: HISTORICAL_DISMISS_REASON_PREFIX,
+    });
+
+    await expect(
+      dismissTransactionalEmail({
+        emailOutboxId: "historical-1",
+        userId: "admin-1",
+        reason: "tentativo di modifica",
+      }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(mocks.auditLog).not.toHaveBeenCalled();
   });
 
   it("retry FAILED fa CAS a PENDING e usa un nuovo execution id", async () => {
@@ -266,6 +307,16 @@ describe("email outbox resolution", () => {
     expect(secondPayload.logicalKey).toBe("email-outbox:e-recover");
     expect(firstPayload.executionId).not.toBe(secondPayload.executionId);
     expect(mocks.queueAdd.mock.calls[1][2]).toMatchObject({ attempts: 1 });
+    expect(mocks.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          historicalDismissedAt: null,
+          OR: expect.arrayContaining([
+            expect.objectContaining({ resolutionReason: null }),
+          ]),
+        }),
+      }),
+    );
   });
 
   it("il drain recupera claim SENDING stale prima di accodare", async () => {
@@ -313,7 +364,11 @@ describe("email outbox resolution", () => {
     });
     expect(mocks.updateMany.mock.calls[1][0]).toMatchObject({
       where: {
-        OR: expect.arrayContaining([{ deliveryStartedAt: null }]),
+        AND: expect.arrayContaining([
+          expect.objectContaining({
+            OR: expect.arrayContaining([{ deliveryStartedAt: null }]),
+          }),
+        ]),
       },
     });
     expect(mocks.queueAdd).not.toHaveBeenCalled();

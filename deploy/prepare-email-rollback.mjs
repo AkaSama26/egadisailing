@@ -22,6 +22,7 @@ const redis = new IORedis(redisUrl, {
 // ioredis lo stampi anche come evento globale non gestito.
 redis.on("error", () => undefined);
 let pricingQueue;
+let emailQueue;
 let transactionStarted = false;
 let barrierError;
 
@@ -32,9 +33,19 @@ try {
   await redis.connect();
   await redis.ping();
   pricingQueue = new Queue("sync.pricing.bokun", { connection: redis });
-  await pricingQueue.pause();
-  if (!(await pricingQueue.isPaused())) {
-    throw new Error("Bokun pricing queue did not enter the paused state");
+  emailQueue = new Queue("email.transactional", { connection: redis });
+  await Promise.all([pricingQueue.pause(), emailQueue.pause()]);
+  if (!(await pricingQueue.isPaused()) || !(await emailQueue.isPaused())) {
+    throw new Error("pricing/email rollback queues did not enter paused state");
+  }
+  const [pricingActive, emailActive] = await Promise.all([
+    pricingQueue.getActiveCount(),
+    emailQueue.getActiveCount(),
+  ]);
+  if (pricingActive !== 0 || emailActive !== 0) {
+    throw new Error(
+      `active jobs prevent rollback barrier: pricing=${pricingActive}, email=${emailActive}`,
+    );
   }
 
   await client.connect();
@@ -76,12 +87,36 @@ try {
       ],
     );
   }
+  const remaining = await client.query(
+    `SELECT COUNT(*)::int AS "count"
+       FROM "EmailOutbox"
+      WHERE "status" IN ('PENDING', 'SENDING', 'FAILED')
+        AND (
+          "status" IN ('SENDING', 'FAILED')
+          OR "attempts" > 0
+          OR "deliveryStartedAt" IS NOT NULL
+        )`,
+  );
+  if (remaining.rows[0].count !== 0) {
+    throw new Error(
+      `${remaining.rows[0].count} ambiguous EmailOutbox row(s) remain after rollback barrier`,
+    );
+  }
   await client.query("COMMIT");
   transactionStarted = false;
+  await emailQueue.resume();
+  if (await emailQueue.isPaused()) {
+    throw new Error("email queue did not resume after rollback barrier");
+  }
+  if (!(await pricingQueue.isPaused())) {
+    throw new Error("Bokun pricing queue must remain paused after rollback barrier");
+  }
   process.stdout.write(
     `${JSON.stringify({
       bokunPricingQueuePaused: true,
+      emailQueueResumed: true,
       dismissedAmbiguousEmailOutbox: dismissed.rowCount ?? 0,
+      ambiguousEmailOutboxRemaining: 0,
     })}\n`,
   );
 } catch (error) {
@@ -91,6 +126,22 @@ try {
   barrierError = error;
 } finally {
   await client.end().catch(() => undefined);
+  if (barrierError && emailQueue) {
+    try {
+      // A failed rollback barrier must never strand all future transactional
+      // mail behind a global pause while the newer image is restored.
+      if (await emailQueue.isPaused()) await emailQueue.resume();
+      if (await emailQueue.isPaused()) {
+        throw new Error("email.transactional remained globally paused");
+      }
+    } catch (resumeError) {
+      barrierError = new AggregateError(
+        [barrierError, resumeError],
+        "CRITICAL: rollback barrier failed and email.transactional could not be resumed; manual recovery required",
+      );
+    }
+  }
+  await emailQueue?.close().catch(() => undefined);
   await pricingQueue?.close().catch(() => undefined);
   if (redis.status === "ready") {
     await redis.quit().catch(() => redis.disconnect());

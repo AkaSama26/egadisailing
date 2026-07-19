@@ -12,8 +12,7 @@ import {
   isChannelHealthEnabled,
   type QueueHealth,
 } from "@/lib/queue/health";
-
-export const HEALTH_DEPENDENCY_TIMEOUT_MS = 5_000;
+import { HEALTH_DEPENDENCY_TIMEOUT_MS } from "./health-config";
 
 type CheckResult = { ok: true; latencyMs: number } | { ok: false; error: string };
 
