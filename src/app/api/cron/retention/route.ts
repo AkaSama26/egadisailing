@@ -7,6 +7,7 @@ import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { pruneProcessedEvents } from "@/lib/dedup/processed-event";
 import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
+import { cleanExpiredQueueJobs } from "@/lib/queue/retention";
 
 export const runtime = "nodejs";
 
@@ -64,6 +65,8 @@ export const GET = withCronGuard(
       charterPayloadRedacted: 0,
       weatherCacheDeleted: 0,
       auditLogDeleted: 0,
+      queueCompletedDeleted: 0,
+      queueFailedDeleted: 0,
     };
     const errors: string[] = [];
 
@@ -289,6 +292,15 @@ export const GET = withCronGuard(
     } catch (err) {
       errors.push("auditLog");
       logger.error({ err }, "AuditLog retention cleanup failed");
+    }
+
+    try {
+      const queueRetention = await cleanExpiredQueueJobs();
+      results.queueCompletedDeleted = queueRetention.completedDeleted;
+      results.queueFailedDeleted = queueRetention.failedDeleted;
+    } catch (err) {
+      errors.push("queues");
+      logger.error({ err }, "BullMQ retention cleanup failed");
     }
 
     const payload = { ...results, errors };

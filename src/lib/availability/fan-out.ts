@@ -7,6 +7,8 @@ import type { Queue } from "bullmq";
 import type { AvailabilityUpdateJobPayload, Job as SyncJob } from "@/lib/queue/types";
 import { CHANNEL_SYNC_MODE, CHANNELS, FAN_OUT_CHANNELS, SYNC_MODE, type Channel } from "@/lib/channels";
 import { logger } from "@/lib/logger";
+import { createQueueJobIdentity, queueExecutionJobId } from "@/lib/queue/job-identity";
+import { env } from "@/lib/env";
 
 export interface FanOutOptions {
   boatId: string;
@@ -39,9 +41,8 @@ function queueForChannel(channel: Channel): Queue<SyncJob> | null {
 /**
  * Accoda un job per ogni canale esterno diverso dalla source.
  *
- * `jobId` deterministico per coalescenza BullMQ: update multipli sulla stessa
- * cella convergeranno sullo stato finale (il worker rilegge sempre dal DB
- * prima di chiamare il canale esterno, quindi l'ordine di esecuzione non conta).
+ * Ogni enqueue ha un executionId nuovo. Il logicalKey stabile serializza la
+ * stessa cella nel worker, che rilegge il DB prima dell'upstream call.
  */
 export async function fanOutAvailability(opts: FanOutOptions): Promise<void> {
   const sourceAsChannel = opts.sourceChannel as Channel;
@@ -50,7 +51,10 @@ export async function fanOutAvailability(opts: FanOutOptions): Promise<void> {
   // Gli UNBLOCK comunque non si propagano automaticamente per iCal senza
   // METHOD:CANCEL — limite noto del formato sottoscrizione (deferred Plan 5).
   const targets = FAN_OUT_CHANNELS.filter(
-    (ch) => ch !== sourceAsChannel && CHANNEL_SYNC_MODE[ch] !== SYNC_MODE.ICAL,
+    (ch) =>
+      ch !== sourceAsChannel &&
+      CHANNEL_SYNC_MODE[ch] !== SYNC_MODE.ICAL &&
+      (ch !== CHANNELS.BOATAROUND || env.BOATAROUND_SYNC_ENABLED),
   );
 
   // R23-Q-MEDIA-4: Promise.allSettled → partial enqueue visibile invece di
@@ -68,11 +72,14 @@ export async function fanOutAvailability(opts: FanOutOptions): Promise<void> {
         targetChannel,
         originBookingId: opts.originBookingId,
       };
+      const identity = createQueueJobIdentity(
+        `availability:${opts.boatId}:${opts.date}:${targetChannel}`,
+      );
       return queue.add(
         "availability.update",
-        { type: "availability.update", data: payload },
+        { type: "availability.update", data: payload, ...identity },
         {
-          jobId: `availability-${opts.boatId}-${opts.date}-${targetChannel}`,
+          jobId: queueExecutionJobId(identity),
           priority: 1,
         },
       );

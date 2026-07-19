@@ -7,6 +7,7 @@ import { startTransactionalEmailWorker } from "./workers/transactional-email-wor
 import { getRegisteredWorkers, getRedisConnection } from "./index";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { env } from "@/lib/env";
 
 const globalForWorkers = globalThis as unknown as {
   __workersRegistered__?: boolean;
@@ -38,12 +39,24 @@ export function registerQueueWorkers(): void {
 
   startBokunAvailabilityWorker();
   startBokunBookingWorker();
-  startBokunPricingWorker();
-  startBoataroundAvailabilityWorker();
+  if (env.BOKUN_PRICING_SYNC_ENABLED) {
+    startBokunPricingWorker();
+  } else {
+    logger.warn("Bokun pricing worker disabled by BOKUN_PRICING_SYNC_ENABLED=false");
+  }
+  if (env.BOATAROUND_SYNC_ENABLED) {
+    startBoataroundAvailabilityWorker();
+  } else {
+    logger.info("Boataround availability worker disabled");
+  }
   startManualAlertWorker();
   startTransactionalEmailWorker();
   logger.info(
-    "BullMQ workers registered (bokun availability, bokun booking, bokun pricing, boataround availability, manual alert, transactional email)",
+    {
+      bokunPricingEnabled: env.BOKUN_PRICING_SYNC_ENABLED,
+      boataroundSyncEnabled: env.BOATAROUND_SYNC_ENABLED,
+    },
+    "BullMQ workers registered",
   );
 
   registerShutdownHandler();

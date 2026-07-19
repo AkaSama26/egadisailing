@@ -217,7 +217,7 @@ describe("R23-B-ALTA-1: preserve lockedByBookingId first-winner", () => {
 });
 
 describe("R23-Q-CRITICA-1: fan-out route per-channel queue", () => {
-  it("blockDates DIRECT → fan-out a BOKUN + BOATAROUND + MANUAL queue (no SAMBOAT iCal)", async () => {
+  it("blockDates DIRECT → fan-out solo ai canali attivi (Boataround disabilitato)", async () => {
     const boat = await seedBoat();
     const { blockDates } = await import("@/lib/availability/service");
 
@@ -227,11 +227,10 @@ describe("R23-Q-CRITICA-1: fan-out route per-channel queue", () => {
     const bookingX = await seedBooking(boat.id, { date: start });
     await blockDates(boat.id, start, end, "DIRECT", bookingX);
 
-    // 1 day × 3 non-iCal channels = 3 job enqueues (BOKUN, BOATAROUND, MANUAL).
-    // SAMBOAT e' ICAL → filtered out upstream (fan-out.ts:29).
-    // Totale somma cross-queue = 3 (1 per queue).
+    // Boataround e' esplicitamente spento nel default di produzione; SamBoat
+    // usa iCal pull. Restano BOKUN + i due canali manuali.
     expect(availBokunAdd).toHaveBeenCalledTimes(1);
-    expect(availBoataroundAdd).toHaveBeenCalledTimes(1);
+    expect(availBoataroundAdd).not.toHaveBeenCalled();
     // Manual queue riceve sia CLICKANDBOAT che NAUTAL jobs — 2 call.
     expect(availManualAdd).toHaveBeenCalledTimes(2);
   });
@@ -257,10 +256,10 @@ describe("R23-Q-CRITICA-1: fan-out route per-channel queue", () => {
       expect(c.lockedByBookingId).toBe(bookingWeek);
     }
 
-    // Fan-out: 7 giorni × 3 queue non-iCal = 21 job totali
-    // (7 BOKUN + 7 BOATAROUND + 14 MANUAL [clickandboat+nautal]).
+    // Fan-out: 7 BOKUN + 14 MANUAL (Click&Boat + Nautal). Boataround resta
+    // escluso finche' BOATAROUND_SYNC_ENABLED non viene approvato.
     expect(availBokunAdd).toHaveBeenCalledTimes(7);
-    expect(availBoataroundAdd).toHaveBeenCalledTimes(7);
+    expect(availBoataroundAdd).not.toHaveBeenCalled();
     expect(availManualAdd).toHaveBeenCalledTimes(14);
   });
 });

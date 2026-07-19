@@ -49,7 +49,10 @@ function dotStuff(content: string): string {
 
 function buildSmtpMessage(opts: SendEmailOptions): { message: string; messageId: string } {
   const boundary = `egadisailing-${crypto.randomBytes(16).toString("hex")}`;
-  const messageId = `<${crypto.randomUUID()}@egadisailing.com>`;
+  // Lo stesso outbox usa sempre lo stesso Message-ID. SMTP non offre una
+  // garanzia exactly-once, ma un identificatore stabile consente al relay e
+  // ai client di riconoscere un retry dopo crash del worker.
+  const messageId = `<${opts.idempotencyKey ?? crypto.randomUUID()}@egadisailing.com>`;
   const replyTo =
     opts.replyTo ??
     (env.BREVO_REPLY_TO
@@ -239,6 +242,8 @@ export interface SendEmailOptions {
    *  cosi' admin fa Reply nativo invece di copia/incolla from-line. Se non
    *  impostato fallback a `BREVO_REPLY_TO` env (default sender). */
   replyTo?: { email: string; name?: string };
+  /** UUID stabile per l'outbox. Brevo deduplica i retry entro la sua TTL. */
+  idempotencyKey?: string;
 }
 
 export interface SendEmailResult {
@@ -288,6 +293,7 @@ export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendE
   try {
     const res = await fetch(BREVO_API_URL, {
       method: "POST",
+      signal: AbortSignal.timeout(SMTP_TIMEOUT_MS),
       headers: {
         "api-key": env.BREVO_API_KEY,
         "content-type": "application/json",
@@ -317,6 +323,13 @@ export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendE
         subject: opts.subject,
         htmlContent: opts.htmlContent,
         textContent: opts.textContent,
+        // Brevo's transactional-email API expects this inside the JSON
+        // `headers` map (it becomes an email header), not as an HTTP header.
+        // Keep the provider's canonical field spelling from its idempotency
+        // guide so duplicate requests are actually deduplicated.
+        headers: opts.idempotencyKey
+          ? { idempotencyKey: opts.idempotencyKey }
+          : undefined,
       }),
     });
 
@@ -332,6 +345,20 @@ export async function sendEmailWithResult(opts: SendEmailOptions): Promise<SendE
       } catch {
         code = errorBody.slice(0, 120);
       }
+      // Brevo risponde duplicate_parameter quando la stessa idempotency key
+      // e' gia' stata accettata. Questo e' il percorso atteso se il worker
+      // cade dopo l'ack upstream ma prima di marcare l'outbox SENT.
+      if (opts.idempotencyKey && code === "duplicate_parameter") {
+        logger.info(
+          { subject: opts.subject },
+          "Brevo idempotent retry already accepted",
+        );
+        return {
+          delivered: true,
+          messageId: `brevo-idempotent-${opts.idempotencyKey}`,
+        };
+      }
+
       logger.error(
         { status: res.status, brevoCode: code },
         "Brevo send failed",

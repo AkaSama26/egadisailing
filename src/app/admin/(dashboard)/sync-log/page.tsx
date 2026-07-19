@@ -8,6 +8,11 @@ import { EmptyState } from "@/components/admin/empty-state";
 import { ResolveAlertForm } from "@/components/admin/resolve-alert-form";
 import { PageHeader } from "@/components/admin/page-header";
 import {
+  EmailResolutionControls,
+  RollbackEmailReplacementControl,
+} from "@/components/admin/email-resolution-controls";
+import { ROLLBACK_DISMISS_REASON_PREFIX } from "@/lib/email/outbox";
+import {
   MANUAL_ALERT_ACTION_LABEL,
   MANUAL_ALERT_CHANNEL_LABEL,
   labelOrRaw,
@@ -22,10 +27,10 @@ import {
  */
 interface QueueBreakdown {
   queueName: string;
-  counts: { waiting: number; active: number; delayed: number; failed: number; completed: number };
+  counts: { waiting: number; paused: number; active: number; delayed: number; failed: number; completed: number };
 }
 interface QueueStatusInfo {
-  totals: { waiting: number; active: number; delayed: number; failed: number; completed: number };
+  totals: { waiting: number; paused: number; active: number; delayed: number; failed: number; completed: number };
   breakdown: QueueBreakdown[];
   failedJobs: Array<{
     id: string;
@@ -49,13 +54,14 @@ async function loadQueueStatus(): Promise<QueueStatusInfo | QueueStatusUnreachab
       ALL_QUEUE_NAMES.map(async (queueName) => {
         const q = getQueue(queueName);
         const [counts, failed] = await Promise.all([
-          q.getJobCounts("waiting", "active", "delayed", "failed", "completed"),
+          q.getJobCounts("waiting", "paused", "active", "delayed", "failed", "completed"),
           q.getFailed(0, 4),
         ]);
         return {
           queueName,
           counts: {
             waiting: counts.waiting ?? 0,
+            paused: counts.paused ?? 0,
             active: counts.active ?? 0,
             delayed: counts.delayed ?? 0,
             failed: counts.failed ?? 0,
@@ -74,12 +80,13 @@ async function loadQueueStatus(): Promise<QueueStatusInfo | QueueStatusUnreachab
     const totals = perQueue.reduce(
       (acc, q) => ({
         waiting: acc.waiting + q.counts.waiting,
+        paused: acc.paused + q.counts.paused,
         active: acc.active + q.counts.active,
         delayed: acc.delayed + q.counts.delayed,
         failed: acc.failed + q.counts.failed,
         completed: acc.completed + q.counts.completed,
       }),
-      { waiting: 0, active: 0, delayed: 0, failed: 0, completed: 0 },
+      { waiting: 0, paused: 0, active: 0, delayed: 0, failed: 0, completed: 0 },
     );
     return {
       totals,
@@ -97,6 +104,7 @@ export default async function SyncLogPage() {
     queueStatus,
     manualAlerts,
     failedEmails,
+    rollbackDismissedEmails,
     bokunEvents,
     boataroundEvents,
     auditEntries,
@@ -118,6 +126,22 @@ export default async function SyncLogPage() {
         orderBy: { updatedAt: "desc" },
         take: 30,
       }),
+      db.emailOutbox.findMany({
+        where: {
+          status: "DISMISSED",
+          resolutionReason: { startsWith: ROLLBACK_DISMISS_REASON_PREFIX },
+        },
+        select: {
+          id: true,
+          templateKey: true,
+          recipientEmail: true,
+          subject: true,
+          resolutionReason: true,
+          updatedAt: true,
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 30,
+      }),
       db.processedBokunEvent.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
       db.processedBoataroundEvent.findMany({ orderBy: { processedAt: "desc" }, take: 20 }),
       db.auditLog.findMany({ orderBy: { timestamp: "desc" }, take: 50 }),
@@ -131,8 +155,9 @@ export default async function SyncLogPage() {
         <h2 className="font-bold text-slate-900 mb-3">BullMQ queue · totali</h2>
         {queueStatus.reachable ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm">
               <QueueStat label="Waiting" value={queueStatus.totals.waiting} />
+              <QueueStat label="Paused" value={queueStatus.totals.paused} />
               <QueueStat label="Active" value={queueStatus.totals.active} />
               <QueueStat label="Delayed" value={queueStatus.totals.delayed} />
               <QueueStat
@@ -151,6 +176,7 @@ export default async function SyncLogPage() {
                   <li key={b.queueName} className="flex gap-3 border-l-2 border-slate-200 pl-2 py-1">
                     <span className="text-slate-700 font-semibold w-48 shrink-0">{b.queueName}</span>
                     <span>W:{b.counts.waiting}</span>
+                    <span>P:{b.counts.paused}</span>
                     <span>A:{b.counts.active}</span>
                     <span>D:{b.counts.delayed}</span>
                     <span className={b.counts.failed > 0 ? "text-red-600 font-bold" : ""}>
@@ -247,6 +273,45 @@ export default async function SyncLogPage() {
                 {email.lastError && (
                   <p className="mt-1 break-words text-xs text-red-700">{email.lastError}</p>
                 )}
+                <EmailResolutionControls emailOutboxId={email.id} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </AdminCard>
+
+      <AdminCard id="email-quarantena-rollback">
+        <h2 className="font-bold text-slate-900 mb-3">
+          Email in quarantena da rollback ({rollbackDismissedEmails.length})
+        </h2>
+        <p className="mb-3 text-sm text-slate-600">
+          Sono terminali e non vengono mai reinviate automaticamente. Crea un
+          messaggio sostitutivo soltanto dopo aver verificato in Brevo che la
+          comunicazione precedente non sia stata consegnata.
+        </p>
+        {rollbackDismissedEmails.length === 0 ? (
+          <EmptyState message="Nessuna email in quarantena rollback." />
+        ) : (
+          <ul className="text-sm divide-y divide-slate-100">
+            {rollbackDismissedEmails.map((email) => (
+              <li key={email.id} className="py-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900">{email.subject}</div>
+                    <div className="text-xs text-slate-500">
+                      {email.recipientEmail} · {email.templateKey}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-xs text-slate-500">
+                    <TimeIso datetime={email.updatedAt} />
+                  </span>
+                </div>
+                {email.resolutionReason && (
+                  <p className="mt-1 break-words text-xs text-slate-600">
+                    {email.resolutionReason}
+                  </p>
+                )}
+                <RollbackEmailReplacementControl emailOutboxId={email.id} />
               </li>
             ))}
           </ul>
