@@ -9,22 +9,6 @@ export const PUBLIC_COMPANY_LEGAL = {
   recipientCode: "KRRH6B9",
 } as const;
 
-export const PUBLIC_TECHNICAL_MAINTAINER = {
-  name: "Marweb di Antonio Marino",
-  legalRepresentative: "Antonio Marino",
-  legalAddress: "Via F.sco Crispi 80, 91027 Paceco (TP)",
-  vatNumber: "02925820819",
-  pec: "antoniomarino96@pec.it",
-  roleIt:
-    "sviluppo, manutenzione tecnica, gestione codice, database, deploy e supporto applicativo",
-  roleEn:
-    "software development, technical maintenance, code, database, deployment and application support",
-  roleEs:
-    "desarrollo de software, mantenimiento técnico, código, base de datos, despliegue y soporte de la aplicación",
-  roleFr:
-    "développement logiciel, maintenance technique, code, base de données, déploiement et support applicatif",
-} as const;
-
 export const PUBLIC_CONTACT_LOCATION = {
   labelIt: "Via dei Gladioli 15, 91100 Trapani",
   labelEn: "Via dei Gladioli 15, 91100 Trapani, Italy",

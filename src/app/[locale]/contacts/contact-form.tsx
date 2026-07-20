@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
 import { Send } from "lucide-react";
 import { TurnstileWidget } from "@/components/turnstile/turnstile-widget";
 import { trackEvent } from "@/lib/analytics/client";
+import { localizedPath } from "@/lib/i18n/paths";
+import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 import { sendContactMessage, type ContactFormState } from "./actions";
 
 const initialState: ContactFormState = { status: "idle" };
@@ -45,6 +48,32 @@ export function ContactForm({ turnstileSiteKey, locale }: ContactFormProps) {
     messagePlaceholder: isEs ? "Cuéntanos qué estás buscando..." : isFr ? "Dites-nous ce que vous cherchez..." : isDe ? "Sagen Sie uns, wonach Sie suchen..." : isEn ? "Tell us what you are looking for..." : "Raccontaci cosa cerchi...",
     sending: isEs ? "Enviando..." : isFr ? "Envoi..." : isDe ? "Wird gesendet..." : isEn ? "Sending..." : "Invio...",
     send: isEs ? "Enviar mensaje" : isFr ? "Envoyer le message" : isDe ? "Nachricht senden" : isEn ? "Send message" : "Invia messaggio",
+    legalPrefix: isEs
+      ? "He leído y acepto la"
+      : isFr
+        ? "J'ai lu et j'accepte la"
+        : isDe
+          ? "Ich habe die"
+          : isEn
+            ? "I have read and accept the"
+            : "Ho letto e accetto la",
+    privacy: isEs
+      ? "Política de privacidad"
+      : isFr
+        ? "Politique de confidentialité"
+        : isDe
+          ? "Datenschutzerklärung"
+          : "Privacy Policy",
+    legalJoin: isDe ? "und die" : isEn ? "and the" : isEs ? "y los" : isFr ? "et les" : "e i",
+    terms: isEs
+      ? "Términos y condiciones"
+      : isFr
+        ? "Conditions générales"
+        : isDe
+          ? "Allgemeinen Geschäftsbedingungen gelesen und akzeptiere sie"
+          : isEn
+            ? "Terms and Conditions"
+            : "Termini e condizioni",
   };
 
   if (state.status === "sent") {
@@ -63,6 +92,7 @@ export function ContactForm({ turnstileSiteKey, locale }: ContactFormProps) {
   return (
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="locale" value={isEs ? "es" : isFr ? "fr" : isDe ? "de" : isEn ? "en" : "it"} />
+      <input type="hidden" name="policyVersion" value={CURRENT_POLICY_VERSION} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="name" className="text-white/50 text-sm">
@@ -139,6 +169,38 @@ export function ContactForm({ turnstileSiteKey, locale }: ContactFormProps) {
           placeholder={copy.messagePlaceholder}
           className="w-full px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.1] text-white placeholder:text-white/25 focus:border-[var(--color-gold)] focus:outline-none transition-colors resize-none"
         />
+      </div>
+
+      <div className="flex items-start gap-3 rounded-xl border border-white/[0.12] bg-white/[0.04] p-4">
+        <input
+          id="legalAccepted"
+          name="legalAccepted"
+          type="checkbox"
+          value="true"
+          required
+          className="mt-0.5 size-5 shrink-0 cursor-pointer accent-[var(--color-gold)]"
+        />
+        <label htmlFor="legalAccepted" className="text-sm leading-6 text-white/75">
+          {copy.legalPrefix}{" "}
+          <Link
+            href={localizedPath(locale, "/privacy")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-[var(--color-gold)] underline underline-offset-2"
+          >
+            {copy.privacy}
+          </Link>{" "}
+          {copy.legalJoin}{" "}
+          <Link
+            href={localizedPath(locale, "/terms")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-[var(--color-gold)] underline underline-offset-2"
+          >
+            {copy.terms}
+          </Link>
+          . *
+        </label>
       </div>
 
       {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} theme="dark" />}

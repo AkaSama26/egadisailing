@@ -565,6 +565,28 @@ model ConsentRecord {
   @@index([acceptedAt])
 }
 
+/// GDPR art. 7 — prova dell'accettazione di Privacy Policy e Termini
+/// effettuata nel modulo contatti. E' separata dai consensi di prenotazione
+/// per non creare Customer o Booking fittizi per una semplice richiesta.
+model ContactConsentRecord {
+  id              String   @id @default(cuid())
+  submissionKey   String   @unique
+  name            String
+  email           String
+  subject         String
+  locale          String
+  privacyAccepted Boolean
+  termsAccepted   Boolean
+  policyVersion   String
+  acceptedAt      DateTime @default(now())
+  ipAddress       String?
+  userAgent       String?
+
+  @@index([email])
+  @@index([policyVersion])
+  @@index([acceptedAt])
+}
+
 /// GDPR/ePrivacy — prova delle scelte cookie/tracker del visitatore.
 ///
 /// Separato da `ConsentRecord`: quello prova privacy/T&C della prenotazione,

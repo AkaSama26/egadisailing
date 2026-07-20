@@ -259,6 +259,26 @@ CREATE TABLE "ConsentRecord" (
 );
 
 -- CreateTable
+CREATE TABLE "ContactConsentRecord" (
+    "id" TEXT NOT NULL,
+    "submissionKey" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "subject" TEXT NOT NULL,
+    "locale" TEXT NOT NULL,
+    "privacyAccepted" BOOLEAN NOT NULL,
+    "termsAccepted" BOOLEAN NOT NULL,
+    "policyVersion" TEXT NOT NULL,
+    "acceptedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+
+    CONSTRAINT "ContactConsentRecord_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "ContactConsentRecord_required_acceptance_check"
+      CHECK ("privacyAccepted" = TRUE AND "termsAccepted" = TRUE)
+);
+
+-- CreateTable
 CREATE TABLE "BokunBooking" (
     "bookingId" TEXT NOT NULL,
     "bokunBookingId" TEXT NOT NULL,
@@ -531,6 +551,18 @@ CREATE INDEX "ConsentRecord_bookingId_idx" ON "ConsentRecord"("bookingId");
 
 -- CreateIndex
 CREATE INDEX "ConsentRecord_acceptedAt_idx" ON "ConsentRecord"("acceptedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ContactConsentRecord_submissionKey_key" ON "ContactConsentRecord"("submissionKey");
+
+-- CreateIndex
+CREATE INDEX "ContactConsentRecord_email_idx" ON "ContactConsentRecord"("email");
+
+-- CreateIndex
+CREATE INDEX "ContactConsentRecord_policyVersion_idx" ON "ContactConsentRecord"("policyVersion");
+
+-- CreateIndex
+CREATE INDEX "ContactConsentRecord_acceptedAt_idx" ON "ContactConsentRecord"("acceptedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BokunBooking_bokunBookingId_key" ON "BokunBooking"("bokunBookingId");

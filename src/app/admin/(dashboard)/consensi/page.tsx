@@ -19,9 +19,9 @@ import {
 } from "@/lib/site-verification";
 
 const PAGE_SIZE = 50;
-const CONSENT_TYPES = ["booking", "cookie"] as const;
+const CONSENT_TYPES = ["booking", "contact", "cookie"] as const;
 const ACTIONS = ["FIRST_CONSENT", "UPDATE", "WITHDRAW"] as const;
-const ACTION_FILTERS = ["BOOKING_REQUIRED", ...ACTIONS] as const;
+const ACTION_FILTERS = ["BOOKING_REQUIRED", "CONTACT_REQUIRED", ...ACTIONS] as const;
 const CATEGORIES = ["necessary", "analytics", "marketing"] as const;
 const CATEGORY_FILTERS = ["privacy_terms", ...CATEGORIES] as const;
 
@@ -31,7 +31,7 @@ interface Props {
 
 interface UnifiedConsentRow {
   id: string;
-  type: "booking" | "cookie";
+  type: "booking" | "contact" | "cookie";
   createdAt: Date;
   action: string;
   acceptedItems: string[];
@@ -71,13 +71,17 @@ function listLabel(values: string[]): string {
 }
 
 function consentTypeLabel(type: string): string {
-  return type === "booking" ? "Prenotazione" : "Cookie/tracking";
+  if (type === "booking") return "Prenotazione";
+  if (type === "contact") return "Modulo contatti";
+  return "Cookie/tracking";
 }
 
 function actionLabel(action: string): string {
   switch (action) {
     case "BOOKING_REQUIRED":
       return "Accettazione obbligatoria";
+    case "CONTACT_REQUIRED":
+      return "Accettazione modulo contatti";
     case "FIRST_CONSENT":
       return "Primo consenso";
     case "UPDATE":
@@ -105,7 +109,9 @@ const columns: AdminTableColumn<UnifiedConsentRow>[] = [
         className={
           event.type === "booking"
             ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700"
-            : "rounded-full bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700"
+            : event.type === "contact"
+              ? "rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700"
+              : "rounded-full bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700"
         }
       >
         {consentTypeLabel(event.type)}
@@ -179,24 +185,31 @@ export default async function ConsensiPage({ searchParams }: Props) {
   const queryLimit = skip + PAGE_SIZE;
 
   const cookieWhere: Prisma.CookieConsentEventWhereInput = {};
-  if (action && action !== "BOOKING_REQUIRED") cookieWhere.action = action;
+  if (action && ACTIONS.includes(action as (typeof ACTIONS)[number])) cookieWhere.action = action;
   if (category && category !== "privacy_terms") cookieWhere.acceptedCategories = { has: category };
 
   const includeBookingRows =
     (!type || type === "booking") &&
     (!action || action === "BOOKING_REQUIRED") &&
     (!category || category === "privacy_terms");
+  const includeContactRows =
+    (!type || type === "contact") &&
+    (!action || action === "CONTACT_REQUIRED") &&
+    (!category || category === "privacy_terms");
   const includeCookieRows =
     (!type || type === "cookie") &&
-    (!action || action !== "BOOKING_REQUIRED") &&
+    (!action || ACTIONS.includes(action as (typeof ACTIONS)[number])) &&
     (!category || category !== "privacy_terms");
 
   const [
     bookingConsentRecords,
     bookingFilteredCount,
+    contactConsentRecords,
+    contactFilteredCount,
     cookieEvents,
     cookieFilteredCount,
     totalBookingConsents,
+    totalContactConsents,
     totalEvents,
     analyticsAccepted,
     marketingAccepted,
@@ -223,6 +236,13 @@ export default async function ConsensiPage({ searchParams }: Props) {
         })
       : Promise.resolve([]),
     includeBookingRows ? db.consentRecord.count() : Promise.resolve(0),
+    includeContactRows
+      ? db.contactConsentRecord.findMany({
+          orderBy: { acceptedAt: "desc" },
+          take: queryLimit,
+        })
+      : Promise.resolve([]),
+    includeContactRows ? db.contactConsentRecord.count() : Promise.resolve(0),
     includeCookieRows
       ? db.cookieConsentEvent.findMany({
           where: cookieWhere,
@@ -232,6 +252,7 @@ export default async function ConsensiPage({ searchParams }: Props) {
       : Promise.resolve([]),
     includeCookieRows ? db.cookieConsentEvent.count({ where: cookieWhere }) : Promise.resolve(0),
     db.consentRecord.count(),
+    db.contactConsentRecord.count(),
     db.cookieConsentEvent.count(),
     db.cookieConsentEvent.count({ where: { acceptedCategories: { has: "analytics" } } }),
     db.cookieConsentEvent.count({ where: { acceptedCategories: { has: "marketing" } } }),
@@ -277,6 +298,33 @@ export default async function ConsensiPage({ searchParams }: Props) {
     };
   });
 
+  const contactRows: UnifiedConsentRow[] = contactConsentRecords.map((record) => ({
+    id: `contact:${record.id}`,
+    type: "contact",
+    createdAt: record.acceptedAt,
+    action: "CONTACT_REQUIRED",
+    acceptedItems: [
+      ...(record.privacyAccepted ? ["Privacy Policy"] : []),
+      ...(record.termsAccepted ? ["Termini e condizioni"] : []),
+    ],
+    rejectedItems: [
+      ...(!record.privacyAccepted ? ["Privacy Policy"] : []),
+      ...(!record.termsAccepted ? ["Termini e condizioni"] : []),
+    ],
+    policyVersion: record.policyVersion,
+    cookieRevision: null,
+    primary: record.name,
+    secondary: `${record.email} · ${record.subject}`,
+    detailRows: [
+      { label: "Record ID", value: record.id },
+      { label: "Richiesta", value: record.submissionKey },
+      { label: "Lingua", value: record.locale },
+      { label: "IP", value: record.ipAddress ?? "-" },
+      { label: "UA", value: record.userAgent ?? "-" },
+    ],
+    bookingId: null,
+  }));
+
   const cookieRows: UnifiedConsentRow[] = cookieEvents.map((event) => ({
     id: `cookie:${event.id}`,
     type: "cookie",
@@ -300,10 +348,10 @@ export default async function ConsensiPage({ searchParams }: Props) {
     bookingId: null,
   }));
 
-  const rows = [...bookingRows, ...cookieRows]
+  const rows = [...bookingRows, ...contactRows, ...cookieRows]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(skip, skip + PAGE_SIZE);
-  const totalFiltered = bookingFilteredCount + cookieFilteredCount;
+  const totalFiltered = bookingFilteredCount + contactFilteredCount + cookieFilteredCount;
 
   const currentSnapshot = getCookieConsentPolicySnapshotData();
   const trackingServices = getCookieConsentPublicServices();
@@ -325,8 +373,9 @@ export default async function ConsensiPage({ searchParams }: Props) {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <KpiCard label="Consensi prenotazione" value={String(totalBookingConsents)} icon={ShieldCheck} />
+        <KpiCard label="Consensi contatti" value={String(totalContactConsents)} icon={ShieldCheck} />
         <KpiCard label="Eventi cookie" value={String(totalEvents)} icon={FileClock} hint={`${withdrawals} revoche`} />
         <KpiCard label="Opt-in analytics" value={String(analyticsAccepted)} icon={Cookie} />
         <KpiCard label="Opt-in marketing" value={String(marketingAccepted)} icon={Cookie} />
@@ -478,7 +527,7 @@ export default async function ConsensiPage({ searchParams }: Props) {
 
       <AdminCard padding="none" className="overflow-x-auto">
         <AdminTable<UnifiedConsentRow>
-          caption="Registro consensi prenotazione e cookie"
+          caption="Registro consensi prenotazione, modulo contatti e cookie"
           columns={columns}
           rows={rows}
           emptyMessage="Nessun consenso registrato per i filtri selezionati."

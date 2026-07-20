@@ -11,7 +11,6 @@ import {
   PUBLIC_COMPANY_LEGAL,
   PRIVACY_CONTACT_EMAIL,
   PUBLIC_CONTACT_EMAIL,
-  PUBLIC_TECHNICAL_MAINTAINER,
   getEmailHref,
 } from "@/lib/public-contact";
 
@@ -647,18 +646,16 @@ export default async function CookiePolicyPage({
             <h2 className={headingClass}>{servicesSectionNumber}. Servizi terzi collegati</h2>
             <p className={paragraphClass}>
               Alcuni servizi possono impostare cookie o usare strumenti simili quando
-              interagisci con funzioni specifiche del sito. La manutenzione tecnica
-              dell&apos;applicazione è curata da{" "}
-              <strong>{PUBLIC_TECHNICAL_MAINTAINER.name}</strong>, P.IVA{" "}
-              {PUBLIC_TECHNICAL_MAINTAINER.vatNumber}, con sede legale in{" "}
-              {PUBLIC_TECHNICAL_MAINTAINER.legalAddress}, per conto di Egadisailing quale
-              responsabile del trattamento ai sensi dell&apos;art. 28 GDPR.
+              interagisci con funzioni specifiche del sito. Egadisailing può inoltre
+              avvalersi di fornitori per la manutenzione tecnica dell&apos;applicazione; quando
+              accedono a dati personali, operano quali responsabili del trattamento ai sensi
+              dell&apos;art. 28 GDPR.
             </p>
             <LegalTable headers={["Fornitore", "Quando viene usato", "Policy"]}>
               <tr>
-                <Td>{PUBLIC_TECHNICAL_MAINTAINER.name}</Td>
+                <Td>Fornitori tecnici incaricati</Td>
                 <Td>Sviluppo, manutenzione tecnica, database, deploy e supporto applicativo</Td>
-                <Td>Responsabile del trattamento nominato da Egadisailing</Td>
+                <Td>Responsabili del trattamento nominati da Egadisailing, quando richiesto</Td>
               </tr>
               <tr>
                 <Td>OVH Cloud</Td>

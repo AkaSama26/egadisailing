@@ -6,7 +6,6 @@ import {
   PUBLIC_COMPANY_LEGAL,
   PRIVACY_CONTACT_EMAIL,
   PUBLIC_CONTACT_EMAIL,
-  PUBLIC_TECHNICAL_MAINTAINER,
   getEmailHref,
 } from "@/lib/public-contact";
 
@@ -113,12 +112,13 @@ function GermanPrivacyPolicyPage() {
 
           <section className={sectionClass}>
             <p className={eyebrowClass}>Technische Wartung</p>
-            <h2 className={headingClass}>2. Technischer Dienstleister der Anwendung</h2>
+            <h2 className={headingClass}>2. Technische Dienstleister der Anwendung</h2>
             <p className={paragraphClass}>
-              Code, Datenbank, Deployments, technische Wartung und Support der Plattform werden von{" "}
-              <strong>{PUBLIC_TECHNICAL_MAINTAINER.name}</strong> verwaltet. Der Dienstleister handelt
-              im Auftrag von Egadisailing als Auftragsverarbeiter, wenn er für Wartung, Sicherheit,
-              Backups oder Support auf personenbezogene Daten zugreift.
+              Egadisailing kann technische Dienstleister für Code, Datenbank, Deployments,
+              Wartung, Sicherheit, Backups und Support einsetzen. Wenn diese Anbieter auf
+              personenbezogene Daten zugreifen, handeln sie im Auftrag von Egadisailing als
+              Auftragsverarbeiter gemäß Art. 28 DSGVO und nur soweit dies für den Dienst
+              erforderlich ist.
             </p>
           </section>
 
@@ -129,7 +129,7 @@ function GermanPrivacyPolicyPage() {
               <li><strong>Buchungen:</strong> Name, E-Mail, Telefon, Erlebnis, Boot, Datum, Teilnehmer, Beträge, Status, Buchungscode und Einwilligungen.</li>
               <li><strong>Rechnungsdaten:</strong> Staatsangehörigkeit, Rechnungsanschrift, Ort, Postleitzahl, Land, gegebenenfalls Provinz/Region sowie italienische Steuernummer oder freiwillig angegebene ausländische Steuer-ID.</li>
               <li><strong>Zahlungen:</strong> Betrag, Währung, Zahlungsstatus und technische Stripe-Referenzen. Vollständige Kartendaten werden nicht auf Egadisailing-Servern gespeichert.</li>
-              <li><strong>Kontakte:</strong> Name, E-Mail, Telefon falls angegeben, Betreff und Nachricht.</li>
+              <li><strong>Kontakte:</strong> Name, E-Mail, Telefon falls angegeben, Betreff, Nachricht sowie Nachweis der Annahme von Datenschutzerklärung und Bedingungen mit Version, Datum, IP und User-Agent.</li>
               <li><strong>Buchungsabruf:</strong> E-Mail, gehashter OTP-Code, temporäre Sitzung, IP und User-Agent aus Sicherheitsgründen.</li>
               <li><strong>Cookies und Sicherheit:</strong> Einwilligungspräferenzen, Sprache, technische Logs, Rate-Limit, Sitzungstokens und minimale Anti-Missbrauchsdaten.</li>
             </ul>
@@ -219,12 +219,13 @@ function FrenchPrivacyPolicyPage() {
 
           <section className={sectionClass}>
             <p className={eyebrowClass}>Maintenance technique</p>
-            <h2 className={headingClass}>2. Prestataire technique de l'application</h2>
+            <h2 className={headingClass}>2. Prestataires techniques de l&apos;application</h2>
             <p className={paragraphClass}>
-              Code, base de données, déploiements, maintenance et support technique sont gérés par{" "}
-              <strong>{PUBLIC_TECHNICAL_MAINTAINER.name}</strong>, qui agit pour le compte
-              d'Egadisailing comme sous-traitant lorsqu'il accède à des données personnelles pour
-              maintenance, sécurité, sauvegarde ou assistance.
+              Egadisailing peut recourir à des prestataires techniques pour le code, la base de
+              données, les déploiements, la maintenance, la sécurité, les sauvegardes et
+              l&apos;assistance. Lorsqu&apos;ils accèdent à des données personnelles, ils agissent pour le
+              compte d&apos;Egadisailing en qualité de sous-traitants au sens de l&apos;art. 28 du RGPD et
+              uniquement dans la mesure nécessaire au service.
             </p>
           </section>
 
@@ -235,7 +236,7 @@ function FrenchPrivacyPolicyPage() {
               <li><strong>Réservations :</strong> nom, email, téléphone, expérience, bateau, date, participants, montants, statut, code de réservation et consentements.</li>
               <li><strong>Données de facturation :</strong> nationalité, adresse, ville, code postal, pays, province/région le cas échéant, code fiscal italien ou identifiant fiscal étranger fourni volontairement.</li>
               <li><strong>Paiements :</strong> montant, devise, statut du paiement et références techniques Stripe. Les données complètes de carte ne sont pas conservées sur les serveurs Egadisailing.</li>
-              <li><strong>Contacts :</strong> nom, email, téléphone si indiqué, sujet et message.</li>
+              <li><strong>Contacts :</strong> nom, email, téléphone si indiqué, sujet, message et preuve d&apos;acceptation de la politique de confidentialité et des conditions avec version, date, IP et user-agent.</li>
               <li><strong>Récupération de réservation :</strong> email, OTP hashé, session temporaire, IP et user-agent pour sécurité.</li>
               <li><strong>Cookies et sécurité :</strong> préférences de consentement, langue, logs techniques, rate limit, tokens de session et données minimales anti-abus.</li>
             </ul>
@@ -326,12 +327,13 @@ function SpanishPrivacyPolicyPage() {
 
           <section className={sectionClass}>
             <p className={eyebrowClass}>Mantenimiento técnico</p>
-            <h2 className={headingClass}>2. Proveedor técnico de la aplicación</h2>
+            <h2 className={headingClass}>2. Proveedores técnicos de la aplicación</h2>
             <p className={paragraphClass}>
-              Código, base de datos, despliegues, mantenimiento técnico y soporte de la
-              plataforma son gestionados por <strong>{PUBLIC_TECHNICAL_MAINTAINER.name}</strong>,
-              que actúa por cuenta de Egadisailing como encargado del tratamiento cuando
-              accede a datos personales para mantenimiento, seguridad, backup o asistencia.
+              Egadisailing puede utilizar proveedores técnicos para código, base de datos,
+              despliegues, mantenimiento, seguridad, copias de respaldo y soporte. Cuando
+              acceden a datos personales, actúan por cuenta de Egadisailing como encargados del
+              tratamiento conforme al art. 28 del RGPD y solo en la medida necesaria para el
+              servicio.
             </p>
           </section>
 
@@ -342,7 +344,7 @@ function SpanishPrivacyPolicyPage() {
               <li><strong>Reservas:</strong> nombre, apellidos, email, teléfono, experiencia, barco, fecha, participantes, importes, estado, código de reserva y consentimientos.</li>
               <li><strong>Datos de facturación:</strong> nacionalidad, dirección, ciudad, código postal, país, provincia/región cuando proceda, código fiscal italiano o identificación fiscal extranjera facilitada voluntariamente.</li>
               <li><strong>Pagos:</strong> importe, moneda, estado del pago y referencias técnicas de Stripe. Los datos completos de la tarjeta no se guardan en servidores Egadisailing.</li>
-              <li><strong>Contactos:</strong> nombre, email, teléfono si se indica, asunto y mensaje.</li>
+              <li><strong>Contactos:</strong> nombre, email, teléfono si se indica, asunto, mensaje y prueba de aceptación de la política de privacidad y las condiciones con versión, fecha, IP y user-agent.</li>
               <li><strong>Recuperación de reserva:</strong> email, OTP en formato hash, sesión temporal, IP y user-agent por seguridad.</li>
               <li><strong>Cookies y seguridad:</strong> preferencias de consentimiento, idioma, logs técnicos, rate limit, tokens de sesión y datos mínimos para prevenir abuso, spam y fraude.</li>
               <li><strong>Canales externos:</strong> si la reserva llega desde plataformas conectadas, pueden tratarse datos recibidos de Bokun, Boataround, SamBoat, Click&Boat, Nautal u otros partners.</li>
@@ -455,31 +457,13 @@ export default async function PrivacyPolicyPage({
 
           <section className={sectionClass}>
             <p className={eyebrowClass}>Software e manutenzione</p>
-            <h2 className={headingClass}>2. Fornitore tecnico dell&apos;applicazione</h2>
+            <h2 className={headingClass}>2. Fornitori tecnici dell&apos;applicazione</h2>
             <p className={paragraphClass}>
-              Il codice, il database, i deploy, la manutenzione tecnica e il supporto
-              applicativo della piattaforma sono gestiti da{" "}
-              <strong>{PUBLIC_TECHNICAL_MAINTAINER.name}</strong>, P.IVA{" "}
-              {PUBLIC_TECHNICAL_MAINTAINER.vatNumber}, sede legale in{" "}
-              {PUBLIC_TECHNICAL_MAINTAINER.legalAddress}, PEC{" "}
-              <a
-                className="font-semibold text-[#0b6694]"
-                href={getEmailHref(PUBLIC_TECHNICAL_MAINTAINER.pec)}
-              >
-                {PUBLIC_TECHNICAL_MAINTAINER.pec}
-              </a>
-              . Marweb opera per conto di Egadisailing quale responsabile del
-              trattamento ai sensi dell&apos;art. 28 GDPR, sulla base di apposito
-              accordo di nomina, quando accede o tratta dati personali per
-              manutenzione, assistenza, sicurezza, backup, gestione database o interventi
-              applicativi.
-            </p>
-            <p className={paragraphClass}>
-              Marweb non decide finalità e mezzi commerciali del trattamento: queste
-              decisioni restano in capo a Egadisailing. L&apos;accesso ai dati avviene nei
-              limiti necessari a mantenere sicura e funzionante l&apos;applicazione. I
-              sub-fornitori tecnici utilizzati da Marweb sono indicati nella sezione sui
-              destinatari e sub-responsabili.
+              Egadisailing può avvalersi di fornitori tecnici per codice, database, deploy,
+              manutenzione, assistenza, sicurezza e backup. Quando accedono a dati personali,
+              tali fornitori operano per conto di Egadisailing quali responsabili del
+              trattamento ai sensi dell&apos;art. 28 GDPR, sulla base di appositi accordi, e
+              soltanto nei limiti necessari a mantenere sicura e funzionante la piattaforma.
             </p>
           </section>
 
@@ -506,7 +490,8 @@ export default async function PrivacyPolicyPage({
               </li>
               <li>
                 <strong>Modulo contatti:</strong> nome, email, telefono se indicato,
-                oggetto e messaggio.
+                oggetto, messaggio e prova dell&apos;accettazione di Privacy Policy e Termini e
+                condizioni, con versione delle policy, data, IP e user-agent.
               </li>
               <li>
                 <strong>Recupero prenotazione:</strong> email, codice OTP in forma hash,
@@ -587,9 +572,9 @@ export default async function PrivacyPolicyPage({
             </p>
             <ul className={listClass}>
               <li>
-                <strong>{PUBLIC_TECHNICAL_MAINTAINER.name}</strong> per sviluppo,
-                manutenzione, gestione codice, database, deploy, sicurezza e supporto
-                applicativo, in qualità di responsabile del trattamento.
+                Fornitori tecnici incaricati di sviluppo, manutenzione, gestione codice,
+                database, deploy, sicurezza e supporto applicativo, nominati responsabili del
+                trattamento quando richiesto.
               </li>
               <li>
                 <strong>OVH Cloud</strong> per VPS, database e backup ospitati

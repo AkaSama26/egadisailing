@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { contactAutoReplyTemplate } from "@/lib/email/templates/customer-lifecycle";
 import { emailLayout } from "@/lib/email/templates/_layout";
@@ -17,18 +18,8 @@ import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { logger } from "@/lib/logger";
 import { ValidationError } from "@/lib/errors";
 import { normalizeEmail } from "@/lib/email-normalize";
-import { emailSchema, freeTextSchema } from "@/lib/validation/common-zod";
+import { contactFormSchema } from "@/lib/contact-form";
 import { RL_WINDOW } from "@/lib/timing";
-
-const schema = z.object({
-  locale: z.enum(["it", "en", "es", "fr", "de"]).default("it"),
-  name: z.string().min(2).max(120).regex(/^[^<>]*$/, "Caratteri non ammessi"),
-  email: emailSchema,
-  phone: z.string().max(32).optional(),
-  subject: freeTextSchema({ min: 3, max: 200 }),
-  message: freeTextSchema({ min: 10, max: 5000 }),
-  turnstileToken: z.string().optional(),
-});
 
 export interface ContactFormState {
   status: "idle" | "sent" | "error";
@@ -51,7 +42,7 @@ export async function sendContactMessage(
   const ip = getClientIp(h);
 
   try {
-    const parsed = schema.parse({
+    const parsed = contactFormSchema.parse({
       locale:
         formData.get("locale") === "es"
           ? "es"
@@ -67,6 +58,8 @@ export async function sendContactMessage(
       phone: formData.get("phone") || undefined,
       subject: formData.get("subject"),
       message: formData.get("message"),
+      legalAccepted: formData.get("legalAccepted"),
+      policyVersion: formData.get("policyVersion"),
       turnstileToken: formData.get("cf-turnstile-response") ?? undefined,
     });
 
@@ -100,6 +93,30 @@ export async function sendContactMessage(
     });
 
     const userAgent = getUserAgent(h);
+    const normalizedEmail = normalizeEmail(parsed.email);
+    const submissionKey = buildEmailIdempotencyKey([
+      "contact-consent",
+      normalizedEmail,
+      parsed.subject,
+      parsed.message,
+    ]);
+    const consentRecord = await db.contactConsentRecord.upsert({
+      where: { submissionKey },
+      update: {},
+      create: {
+        submissionKey,
+        name: parsed.name,
+        email: normalizedEmail,
+        subject: parsed.subject,
+        locale: parsed.locale,
+        privacyAccepted: true,
+        termsAccepted: true,
+        policyVersion: parsed.policyVersion,
+        ipAddress: ip,
+        userAgent,
+      },
+      select: { id: true },
+    });
     // R22-P2-MEDIA-1: strip \r\n / control chars da parsed per plain text
     // (Brevo SMTP bridge puo' corrompere MIME con header injection se il
     // message contiene sequenze \r\n Subject:). Zod gia' blocca <>, ma
@@ -134,13 +151,15 @@ export async function sendContactMessage(
       replyTo: { email: parsed.email, name: parsed.name },
       payload: {
         name: parsed.name,
-        email: normalizeEmail(parsed.email),
+        email: normalizedEmail,
         phone: parsed.phone ?? null,
         subject: parsed.subject,
+        consentRecordId: consentRecord.id,
+        policyVersion: parsed.policyVersion,
       },
       idempotencyKey: buildEmailIdempotencyKey([
         "admin-contact",
-        normalizeEmail(parsed.email),
+        normalizedEmail,
         parsed.subject,
         parsed.message,
       ]),
@@ -160,10 +179,12 @@ export async function sendContactMessage(
       textContent: reply.text,
       payload: {
         subject: parsed.subject,
+        consentRecordId: consentRecord.id,
+        policyVersion: parsed.policyVersion,
       },
       idempotencyKey: buildEmailIdempotencyKey([
         "contact-auto-reply",
-        normalizeEmail(parsed.email),
+        normalizedEmail,
         parsed.subject,
         parsed.message,
       ]),
