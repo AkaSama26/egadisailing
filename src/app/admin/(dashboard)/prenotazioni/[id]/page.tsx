@@ -57,6 +57,7 @@ export default async function BookingDetailPage({
       },
       bookingNotes: { orderBy: { createdAt: "desc" } },
       directBooking: true,
+      billingDetails: true,
       bokunBooking: {
         select: {
           bokunBookingId: true,
@@ -291,6 +292,32 @@ export default async function BookingDetailPage({
           <DetailRow label="Telefono" value={booking.customer.phone ?? "-"} />
           <DetailRow label="Nazionalità" value={booking.customer.nationality ?? "-"} />
           <DetailRow label="Lingua" value={booking.customer.language ?? "-"} />
+          {booking.billingDetails && (
+            <div className="mt-4 space-y-2 border-t border-slate-200 pt-4">
+              <h3 className="text-sm font-bold text-slate-900">Dati di fatturazione</h3>
+              <DetailRow
+                label="Intestatario"
+                value={`${booking.billingDetails.firstName} ${booking.billingDetails.lastName}`.trim()}
+              />
+              <DetailRow
+                label="Codice fiscale / Tax ID"
+                value={booking.billingDetails.taxId ?? "-"}
+              />
+              <DetailRow
+                label="Indirizzo"
+                value={[
+                  booking.billingDetails.addressLine1,
+                  booking.billingDetails.addressLine2,
+                  `${booking.billingDetails.postalCode} ${booking.billingDetails.city}`,
+                  booking.billingDetails.province,
+                  booking.billingDetails.countryCode,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              />
+              <DetailRow label="Nazionalità" value={booking.billingDetails.nationality} />
+            </div>
+          )}
         </AdminCard>
       </div>
 

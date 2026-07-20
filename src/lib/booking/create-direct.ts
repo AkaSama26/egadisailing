@@ -34,6 +34,11 @@ import {
 } from "@/lib/booking/passengers";
 import { localizedAbsoluteUrl } from "@/lib/i18n/paths";
 import { emailServiceName, formatEmailDay, resolveEmailLocale } from "@/lib/email/templates/locale";
+import {
+  isoCountryCodeSchema,
+  privateBillingDetailsSchema,
+  type PrivateBillingDetails,
+} from "@/lib/booking/billing-details";
 
 export interface ConsentInput {
   privacyAccepted: boolean;
@@ -54,9 +59,10 @@ export interface CreateDirectBookingInput {
     firstName: string;
     lastName: string;
     phone: string;
-    nationality?: string;
+    nationality: string;
     language?: string;
   };
+  billingDetails: PrivateBillingDetails;
   paymentSchedule: "FULL" | "DEPOSIT_BALANCE";
   depositPercentage?: number;
   notes?: string;
@@ -116,6 +122,8 @@ export async function createPendingDirectBooking(
   if (!phone) {
     throw new ValidationError("Telefono obbligatorio");
   }
+  const nationality = isoCountryCodeSchema.parse(input.customer.nationality);
+  const billingDetails = privateBillingDetailsSchema.parse(input.billingDetails);
 
   const passengers = normalizePassengerBreakdown(input.passengers, input.numPeople ?? 1);
   const occupiedSeats = occupiedSeatCount(passengers);
@@ -237,7 +245,7 @@ export async function createPendingDirectBooking(
       where: { email: emailLower },
       update: {
         phone,
-        nationality: input.customer.nationality || undefined,
+        nationality,
         language: input.customer.language || undefined,
       },
       create: {
@@ -245,7 +253,7 @@ export async function createPendingDirectBooking(
         firstName: input.customer.firstName,
         lastName: input.customer.lastName,
         phone,
-        nationality: input.customer.nationality,
+        nationality,
         language: input.customer.language,
       },
     });
@@ -483,6 +491,20 @@ export async function createPendingDirectBooking(
               input.paymentSchedule === "DEPOSIT_BALANCE"
                 ? fromCents(balanceCents).toFixed(2)
                 : null,
+          },
+        },
+        billingDetails: {
+          create: {
+            firstName: input.customer.firstName.trim(),
+            lastName: input.customer.lastName.trim(),
+            taxId: billingDetails.taxId || null,
+            addressLine1: billingDetails.addressLine1,
+            addressLine2: billingDetails.addressLine2 || null,
+            city: billingDetails.city,
+            province: billingDetails.province || null,
+            postalCode: billingDetails.postalCode,
+            countryCode: billingDetails.countryCode,
+            nationality,
           },
         },
       },

@@ -127,6 +127,7 @@ function GermanPrivacyPolicyPage() {
             <h2 className={headingClass}>3. Verarbeitete personenbezogene Daten</h2>
             <ul className={listClass}>
               <li><strong>Buchungen:</strong> Name, E-Mail, Telefon, Erlebnis, Boot, Datum, Teilnehmer, Beträge, Status, Buchungscode und Einwilligungen.</li>
+              <li><strong>Rechnungsdaten:</strong> Staatsangehörigkeit, Rechnungsanschrift, Ort, Postleitzahl, Land, gegebenenfalls Provinz/Region sowie italienische Steuernummer oder freiwillig angegebene ausländische Steuer-ID.</li>
               <li><strong>Zahlungen:</strong> Betrag, Währung, Zahlungsstatus und technische Stripe-Referenzen. Vollständige Kartendaten werden nicht auf Egadisailing-Servern gespeichert.</li>
               <li><strong>Kontakte:</strong> Name, E-Mail, Telefon falls angegeben, Betreff und Nachricht.</li>
               <li><strong>Buchungsabruf:</strong> E-Mail, gehashter OTP-Code, temporäre Sitzung, IP und User-Agent aus Sicherheitsgründen.</li>
@@ -232,6 +233,7 @@ function FrenchPrivacyPolicyPage() {
             <h2 className={headingClass}>3. Données personnelles traitées</h2>
             <ul className={listClass}>
               <li><strong>Réservations :</strong> nom, email, téléphone, expérience, bateau, date, participants, montants, statut, code de réservation et consentements.</li>
+              <li><strong>Données de facturation :</strong> nationalité, adresse, ville, code postal, pays, province/région le cas échéant, code fiscal italien ou identifiant fiscal étranger fourni volontairement.</li>
               <li><strong>Paiements :</strong> montant, devise, statut du paiement et références techniques Stripe. Les données complètes de carte ne sont pas conservées sur les serveurs Egadisailing.</li>
               <li><strong>Contacts :</strong> nom, email, téléphone si indiqué, sujet et message.</li>
               <li><strong>Récupération de réservation :</strong> email, OTP hashé, session temporaire, IP et user-agent pour sécurité.</li>
@@ -338,6 +340,7 @@ function SpanishPrivacyPolicyPage() {
             <h2 className={headingClass}>3. Datos personales tratados</h2>
             <ul className={listClass}>
               <li><strong>Reservas:</strong> nombre, apellidos, email, teléfono, experiencia, barco, fecha, participantes, importes, estado, código de reserva y consentimientos.</li>
+              <li><strong>Datos de facturación:</strong> nacionalidad, dirección, ciudad, código postal, país, provincia/región cuando proceda, código fiscal italiano o identificación fiscal extranjera facilitada voluntariamente.</li>
               <li><strong>Pagos:</strong> importe, moneda, estado del pago y referencias técnicas de Stripe. Los datos completos de la tarjeta no se guardan en servidores Egadisailing.</li>
               <li><strong>Contactos:</strong> nombre, email, teléfono si se indica, asunto y mensaje.</li>
               <li><strong>Recuperación de reserva:</strong> email, OTP en formato hash, sesión temporal, IP y user-agent por seguridad.</li>
@@ -485,10 +488,15 @@ export default async function PrivacyPolicyPage({
             <h2 className={headingClass}>3. Dati personali trattati</h2>
             <ul className={listClass}>
               <li>
-                <strong>Prenotazioni:</strong> nome, cognome, email, telefono, eventuale
+                <strong>Prenotazioni:</strong> nome, cognome, email, telefono,
                 nazionalità e lingua preferita, esperienza scelta, barca, data, numero e
                 tipologia dei partecipanti, importi, stato della prenotazione, codice
                 prenotazione, note inserite dal cliente e consensi privacy/termini.
+              </li>
+              <li>
+                <strong>Dati di fatturazione:</strong> indirizzo, città, CAP o codice
+                postale, Paese, provincia/regione quando prevista, Codice Fiscale italiano
+                oppure identificativo fiscale estero fornito volontariamente.
               </li>
               <li>
                 <strong>Pagamenti:</strong> importo, valuta, stato del pagamento,

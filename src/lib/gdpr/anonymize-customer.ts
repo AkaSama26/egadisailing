@@ -74,6 +74,25 @@ export async function anonymizeCustomer(
       where: { customerId },
       data: { ipAddress: null, userAgent: null },
     });
+    // I dati di fatturazione sono snapshot per-booking e quindi non vivono
+    // nella riga Customer. Vanno mascherati esplicitamente nello stesso
+    // processo, altrimenti nome, CF e indirizzo resterebbero consultabili
+    // dopo che il pannello ha dichiarato il cliente anonimizzato.
+    await tx.bookingBillingDetails.updateMany({
+      where: { booking: { customerId } },
+      data: {
+        firstName: "ANONIMO",
+        lastName: "UTENTE",
+        taxId: null,
+        addressLine1: "[redacted]",
+        addressLine2: null,
+        city: "[redacted]",
+        province: null,
+        postalCode: "[redacted]",
+        countryCode: "XX",
+        nationality: "XX",
+      },
+    });
     // R18-ALTA: AuditLog.before/after JSON possono contenere PII dal customer
     // (es. updateCustomer con email nel after). Retention 24mo significa che
     // post-anonymize il dato anagrafico sopravvive 2 anni nei log. Art. 17

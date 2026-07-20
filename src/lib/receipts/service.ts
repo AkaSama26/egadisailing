@@ -122,14 +122,16 @@ export async function createReceiptFromPayments(input: PaymentReceiptInput, user
 
     const booking = payments[0].booking;
     const customer = booking.customer;
+    const billing = booking.billingDetails;
     const recipient = {
       name:
         input.recipient?.name?.trim() ||
+        (billing ? `${billing.firstName} ${billing.lastName}`.trim() : "") ||
         `${customer.firstName} ${customer.lastName}`.trim() ||
         customer.email,
       email: input.recipient?.email ?? customer.email,
-      address: input.recipient?.address,
-      taxId: input.recipient?.taxId,
+      address: input.recipient?.address ?? formatBillingAddress(billing),
+      taxId: input.recipient?.taxId ?? billing?.taxId ?? undefined,
     };
     const productKey = "booking-product";
     const lines = normalizeReceiptLines([
@@ -601,10 +603,35 @@ async function loadPaymentsForReceipt(tx: ReceiptTx, paymentIds: string[]) {
       booking: {
         include: {
           customer: true,
+          billingDetails: true,
           service: { select: { name: true } },
         },
       },
     },
     orderBy: { createdAt: "asc" },
   });
+}
+
+function formatBillingAddress(
+  billing:
+    | {
+        addressLine1: string;
+        addressLine2: string | null;
+        city: string;
+        province: string | null;
+        postalCode: string;
+        countryCode: string;
+      }
+    | null,
+): string | undefined {
+  if (!billing) return undefined;
+  return [
+    billing.addressLine1,
+    billing.addressLine2,
+    `${billing.postalCode} ${billing.city}`.trim(),
+    billing.province,
+    billing.countryCode,
+  ]
+    .filter(Boolean)
+    .join(", ");
 }

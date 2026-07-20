@@ -408,6 +408,7 @@ model Booking {
   // il "nuovo" in PENDING che vuole scavalcare conflict esistenti.
   overrideRequest OverrideRequest? @relation("NewBookingOverride")
   changeRequests BookingChangeRequest[]
+  billingDetails BookingBillingDetails?
 
   @@index([source, status])
   @@index([startDate])
@@ -425,6 +426,29 @@ model Booking {
   @@index([source, externalRef])
   @@index([checkedInAt])
   @@index([checkedInByUserId])
+}
+
+/// Snapshot dei dati anagrafici forniti dal cliente privato durante il
+/// checkout. E' legato alla singola prenotazione: una prenotazione successiva
+/// dello stesso Customer non modifica retroattivamente questi dati.
+model BookingBillingDetails {
+  bookingId    String   @id
+  firstName    String
+  lastName     String
+  taxId        String?
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  province     String?
+  postalCode   String
+  countryCode  String
+  nationality  String
+  createdAt    DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([countryCode])
+  @@index([taxId])
 }
 
 model EmailOutbox {

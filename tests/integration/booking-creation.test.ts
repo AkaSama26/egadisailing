@@ -179,6 +179,15 @@ const baseInput = (overrides: Record<string, unknown> = {}) => ({
     nationality: "IT",
     language: "it",
   },
+  billingDetails: {
+    taxId: "RSSMRA80A01H501U",
+    addressLine1: "Via Roma 1",
+    addressLine2: "",
+    city: "Roma",
+    province: "RM",
+    postalCode: "00100",
+    countryCode: "IT",
+  },
   paymentSchedule: "FULL" as const,
   consent: {
     privacyAccepted: true,
@@ -212,12 +221,19 @@ describe("createPendingDirectBooking (R7+R20 fixes)", () => {
 
     const booking = await db.booking.findUnique({
       where: { id: res.bookingId },
-      include: { directBooking: true, customer: true },
+      include: { directBooking: true, customer: true, billingDetails: true },
     });
     expect(booking?.status).toBe("PENDING");
     expect(booking?.source).toBe("DIRECT");
     expect(booking?.directBooking).not.toBeNull();
     expect(booking?.customer.email).toBe("mario@example.com");
+    expect(booking?.billingDetails).toMatchObject({
+      firstName: "Mario",
+      lastName: "Rossi",
+      taxId: "RSSMRA80A01H501U",
+      countryCode: "IT",
+      nationality: "IT",
+    });
 
     const consents = await db.consentRecord.findMany({
       where: { bookingId: res.bookingId },

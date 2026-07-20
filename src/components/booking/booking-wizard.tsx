@@ -22,6 +22,7 @@ import {
   type PassengerFareCategoryPriceConfig,
   type PassengerFareCategoryConfig,
 } from "@/lib/pricing/passenger-fare-rules-shared";
+import type { PrivateBillingDetails } from "@/lib/booking/billing-details";
 
 type Step = "date" | "customer" | "review" | "payment" | "success";
 type PersistedStep = Step | "people";
@@ -99,6 +100,7 @@ interface PersistedState {
   passengers?: PassengerBreakdown;
   paymentSchedule?: CheckoutPaymentSchedule;
   customer: Customer;
+  billingDetails: PrivateBillingDetails;
 }
 
 function storageKey(serviceId: string): string {
@@ -292,6 +294,19 @@ const PHONE_COUNTRIES: PhoneCountry[] = getCountries()
 
 function defaultPhoneCountryCode(locale: string): CountryCode {
   return locale === "es" ? "ES" : locale === "fr" ? "FR" : locale === "de" ? "DE" : locale === "en" ? "GB" : "IT";
+}
+
+type CountryOption = { code: string; label: string };
+
+function localizedCountryOptions(locale: string): CountryOption[] {
+  const displayNames = new Intl.DisplayNames([clientIntlLocale(locale)], { type: "region" });
+  return getCountries()
+    .map((code) => ({ code, label: displayNames.of(code) ?? code }))
+    .sort((left, right) => left.label.localeCompare(right.label, clientIntlLocale(locale)));
+}
+
+function localizedCountryName(code: string, locale: string): string {
+  return new Intl.DisplayNames([clientIntlLocale(locale)], { type: "region" }).of(code) ?? code;
 }
 
 function countryByCode(code: string): PhoneCountry {
@@ -500,8 +515,17 @@ export function BookingWizard(props: Props) {
     firstName: "",
     lastName: "",
     phone: "",
-    nationality: "IT",
+    nationality: defaultPhoneCountryCode(props.locale),
     language: "it",
+  });
+  const [billingDetails, setBillingDetails] = useState<PrivateBillingDetails>({
+    taxId: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    province: "",
+    postalCode: "",
+    countryCode: defaultPhoneCountryCode(props.locale),
   });
   const [intent, setIntent] = useState<{
     confirmationCode: string;
@@ -633,6 +657,9 @@ export function BookingWizard(props: Props) {
       if (d.customer && typeof d.customer === "object") {
         setCustomer((prev) => ({ ...prev, ...d.customer }));
       }
+      if (d.billingDetails && typeof d.billingDetails === "object") {
+        setBillingDetails((prev) => ({ ...prev, ...d.billingDetails }));
+      }
     }
     setHydrated(true);
   }, [
@@ -658,6 +685,7 @@ export function BookingWizard(props: Props) {
       passengers,
       paymentSchedule: selectedPaymentSchedule,
       customer,
+      billingDetails,
     });
   }, [
     hydrated,
@@ -670,6 +698,7 @@ export function BookingWizard(props: Props) {
     passengers,
     selectedPaymentSchedule,
     customer,
+    billingDetails,
   ]);
 
   useEffect(() => {
@@ -783,6 +812,7 @@ export function BookingWizard(props: Props) {
           durationDays: isCharter ? effectiveDurationDays : undefined,
           passengers,
           customer,
+          billingDetails,
           paymentSchedule,
           depositPercentage:
             paymentSchedule === "DEPOSIT_BALANCE"
@@ -1083,6 +1113,8 @@ export function BookingWizard(props: Props) {
             locale={props.locale}
             value={customer}
             onChange={setCustomer}
+            billingDetails={billingDetails}
+            onBillingDetailsChange={setBillingDetails}
             onBack={goBackWithinWizard}
             onNext={() => {
               trackBookingStepComplete("customer");
@@ -1118,6 +1150,7 @@ export function BookingWizard(props: Props) {
           passengers={passengers}
           passengerCategories={passengerCategories}
           customer={customer}
+          billingDetails={billingDetails}
           selectedPrice={selectedPrice}
           paymentSchedule={selectedPaymentSchedule}
           depositPercentage={props.defaultDepositPercentage ?? 30}
@@ -1904,10 +1937,23 @@ function getReviewStepCopy(locale: string) {
 function getCustomerStepCopy(locale: string) {
   if (locale === "fr") {
     return {
-      title: "Vos coordonnées",
+      title: "Vos coordonnées personnelles et de facturation",
       firstName: "Prénom",
       lastName: "Nom",
       phone: "Téléphone",
+      nationality: "Nationalité",
+      billingTitle: "Adresse de facturation",
+      billingDescription: "Ces informations sont requises pour chaque réservation.",
+      billingCountry: "Pays de facturation",
+      taxIdItaly: "Code fiscal italien",
+      taxIdForeign: "Identifiant fiscal étranger",
+      taxIdForeignHint: "Facultatif si votre pays n'en attribue pas aux particuliers.",
+      addressLine1: "Adresse",
+      addressLine2: "Complément d'adresse (facultatif)",
+      city: "Ville",
+      provinceItaly: "Province",
+      provinceForeign: "Région / État (facultatif)",
+      postalCode: "Code postal",
       privacyPrefix: "J'ai lu et j'accepte la",
       termsPrefix: "J'accepte les",
       terms: "Conditions générales",
@@ -1920,10 +1966,23 @@ function getCustomerStepCopy(locale: string) {
 
   if (locale === "es") {
     return {
-      title: "Tus datos",
+      title: "Tus datos personales y de facturación",
       firstName: "Nombre",
       lastName: "Apellidos",
       phone: "Teléfono",
+      nationality: "Nacionalidad",
+      billingTitle: "Dirección de facturación",
+      billingDescription: "Estos datos son obligatorios para cada reserva.",
+      billingCountry: "País de facturación",
+      taxIdItaly: "Código fiscal italiano",
+      taxIdForeign: "Identificación fiscal extranjera",
+      taxIdForeignHint: "Opcional si tu país no la asigna a particulares.",
+      addressLine1: "Dirección",
+      addressLine2: "Dirección adicional (opcional)",
+      city: "Ciudad",
+      provinceItaly: "Provincia",
+      provinceForeign: "Región / Estado (opcional)",
+      postalCode: "Código postal",
       privacyPrefix: "He leído y acepto la",
       termsPrefix: "Acepto los",
       terms: "Términos y condiciones",
@@ -1936,10 +1995,23 @@ function getCustomerStepCopy(locale: string) {
 
   if (locale === "de") {
     return {
-      title: "Ihre Daten",
+      title: "Ihre persönlichen und Rechnungsdaten",
       firstName: "Vorname",
       lastName: "Nachname",
       phone: "Telefon",
+      nationality: "Staatsangehörigkeit",
+      billingTitle: "Rechnungsanschrift",
+      billingDescription: "Diese Angaben sind für jede Buchung erforderlich.",
+      billingCountry: "Rechnungsland",
+      taxIdItaly: "Italienische Steuernummer",
+      taxIdForeign: "Ausländische Steuer-ID",
+      taxIdForeignHint: "Optional, wenn Ihr Land Privatpersonen keine Steuer-ID zuweist.",
+      addressLine1: "Adresse",
+      addressLine2: "Adresszusatz (optional)",
+      city: "Ort",
+      provinceItaly: "Provinz",
+      provinceForeign: "Region / Bundesland (optional)",
+      postalCode: "Postleitzahl",
       privacyPrefix: "Ich akzeptiere die",
       termsPrefix: "Ich akzeptiere die",
       terms: "AGB",
@@ -1952,10 +2024,23 @@ function getCustomerStepCopy(locale: string) {
 
   if (locale === "en") {
     return {
-      title: "Your details",
+      title: "Your personal and billing details",
       firstName: "First name",
       lastName: "Last name",
       phone: "Phone",
+      nationality: "Nationality",
+      billingTitle: "Billing address",
+      billingDescription: "These details are required for every booking.",
+      billingCountry: "Billing country",
+      taxIdItaly: "Italian tax code",
+      taxIdForeign: "Foreign tax ID",
+      taxIdForeignHint: "Optional if your country does not issue one to private individuals.",
+      addressLine1: "Address",
+      addressLine2: "Address line 2 (optional)",
+      city: "City",
+      provinceItaly: "Province",
+      provinceForeign: "Region / State (optional)",
+      postalCode: "Postal code",
       privacyPrefix: "I have read and accept the",
       termsPrefix: "I accept the",
       terms: "Terms & Conditions",
@@ -1967,10 +2052,23 @@ function getCustomerStepCopy(locale: string) {
   }
 
   return {
-    title: "I tuoi dati",
+    title: "I tuoi dati personali e di fatturazione",
     firstName: "Nome",
     lastName: "Cognome",
     phone: "Telefono",
+    nationality: "Nazionalità",
+    billingTitle: "Indirizzo di fatturazione",
+    billingDescription: "Questi dati sono obbligatori per ogni prenotazione.",
+    billingCountry: "Paese di fatturazione",
+    taxIdItaly: "Codice Fiscale",
+    taxIdForeign: "Identificativo fiscale estero",
+    taxIdForeignHint: "Facoltativo se il tuo Paese non ne assegna uno ai privati.",
+    addressLine1: "Indirizzo",
+    addressLine2: "Indirizzo aggiuntivo (facoltativo)",
+    city: "Città",
+    provinceItaly: "Provincia",
+    provinceForeign: "Regione / Stato (facoltativo)",
+    postalCode: "CAP / codice postale",
     privacyPrefix: "Ho letto e accetto la",
     termsPrefix: "Accetto i",
     terms: "Termini & Condizioni",
@@ -2837,6 +2935,7 @@ function ReviewStep({
   passengers,
   passengerCategories,
   customer,
+  billingDetails,
   selectedPrice,
   paymentSchedule,
   depositPercentage,
@@ -2856,6 +2955,7 @@ function ReviewStep({
   passengers: PassengerBreakdown;
   passengerCategories: PassengerFareCategoryConfig[];
   customer: Customer;
+  billingDetails: PrivateBillingDetails;
   selectedPrice: SelectedPrice | null;
   paymentSchedule: CheckoutPaymentSchedule;
   depositPercentage: number;
@@ -2865,6 +2965,7 @@ function ReviewStep({
   onConfirm: () => void;
 }) {
   const copy = getReviewStepCopy(locale);
+  const customerCopy = getCustomerStepCopy(locale);
   const totalAmount = estimateTotalAmount(serviceType, passengers, selectedPrice);
   const payment = estimatePaymentBreakdown(totalAmount, paymentSchedule, depositPercentage);
   const seats = occupiedSeats(passengers);
@@ -2882,6 +2983,15 @@ function ReviewStep({
       : formatIsoDateLabel(startDate, locale);
   const guestLabel = totalGuests === 1 ? copy.oneGuest : `${totalGuests} ${copy.guests}`;
   const customerName = `${customer.firstName} ${customer.lastName}`.trim();
+  const billingAddress = [
+    billingDetails.addressLine1,
+    billingDetails.addressLine2,
+    `${billingDetails.postalCode} ${billingDetails.city}`.trim(),
+    billingDetails.province,
+    localizedCountryName(billingDetails.countryCode, locale),
+  ]
+    .filter(Boolean)
+    .join(", ");
   const paymentModeLabel =
     paymentSchedule === "DEPOSIT_BALANCE"
       ? locale === "es"
@@ -3024,6 +3134,31 @@ function ReviewStep({
           <SummaryMetric label={copy.phone} value={customer.phone} />
           <div className="col-span-2">
             <SummaryMetric label="Email" value={customer.email} />
+          </div>
+        </div>
+
+        <div className="border-b border-slate-200 py-3">
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+            {customerCopy.billingTitle}
+          </h4>
+          <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <SummaryMetric label={customerCopy.addressLine1} value={billingAddress} />
+            </div>
+            <SummaryMetric
+              label={customerCopy.nationality}
+              value={localizedCountryName(customer.nationality, locale)}
+            />
+            {billingDetails.taxId && (
+              <SummaryMetric
+                label={
+                  billingDetails.countryCode === "IT"
+                    ? customerCopy.taxIdItaly
+                    : customerCopy.taxIdForeign
+                }
+                value={billingDetails.taxId}
+              />
+            )}
           </div>
         </div>
 
@@ -3449,6 +3584,8 @@ function CustomerStep({
   locale,
   value,
   onChange,
+  billingDetails,
+  onBillingDetailsChange,
   onBack,
   onNext,
   loading,
@@ -3464,6 +3601,8 @@ function CustomerStep({
   locale: string;
   value: Customer;
   onChange: (v: Customer) => void;
+  billingDetails: PrivateBillingDetails;
+  onBillingDetailsChange: (v: PrivateBillingDetails) => void;
   onBack?: () => void;
   onNext: () => void;
   loading: boolean;
@@ -3477,11 +3616,23 @@ function CustomerStep({
   onConsentTermsChange: (v: boolean) => void;
 }) {
   const copy = getCustomerStepCopy(locale);
+  const countries = useMemo(() => localizedCountryOptions(locale), [locale]);
+  const isItalianBilling = billingDetails.countryCode === "IT";
+  const taxIdValid = isItalianBilling
+    ? /^[A-Za-z0-9]{16}$/.test(billingDetails.taxId.trim())
+    : true;
   const valid = Boolean(
     value.email.trim() &&
       value.firstName.trim() &&
       value.lastName.trim() &&
-      hasNationalPhoneNumber(value.phone, locale),
+      hasNationalPhoneNumber(value.phone, locale) &&
+      value.nationality.trim() &&
+      billingDetails.countryCode.trim() &&
+      billingDetails.addressLine1.trim() &&
+      billingDetails.city.trim() &&
+      billingDetails.postalCode.trim() &&
+      (!isItalianBilling || billingDetails.province.trim()) &&
+      taxIdValid,
   );
   return (
     <form
@@ -3491,7 +3642,6 @@ function CustomerStep({
         if (valid && !loading && consentPrivacy && consentTerms) onNext();
       }}
     >
-      <h2 className="sr-only">{copy.title}</h2>
       {onBack && (
         <div className="shrink-0">
           <button
@@ -3505,6 +3655,11 @@ function CustomerStep({
           </button>
         </div>
       )}
+      <div className="shrink-0">
+        <h2 className="font-heading text-xl font-bold text-slate-950 sm:text-2xl">
+          {copy.title}
+        </h2>
+      </div>
       {/* R19 WCAG 3.3.2 label visibility: placeholder-as-label era
            non-conforme (scompare al focus, screen reader incerto su quale
            campo). Ora label esplicita + aria-required. EAA 2025 blocker
@@ -3563,6 +3718,181 @@ function CustomerStep({
         value={value.phone}
         onChange={(phone) => onChange({ ...value, phone })}
       />
+      <div>
+        <label htmlFor="wizard-nationality" className="mb-1 block text-sm font-medium">
+          {copy.nationality}
+        </label>
+        <select
+          id="wizard-nationality"
+          required
+          aria-required="true"
+          autoComplete="off"
+          value={value.nationality}
+          onChange={(event) => onChange({ ...value, nationality: event.target.value })}
+          className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+        >
+          {countries.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <fieldset className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 sm:p-4">
+        <legend className="px-1 text-sm font-bold text-slate-900">{copy.billingTitle}</legend>
+        <p className="text-xs leading-5 text-slate-600">{copy.billingDescription}</p>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="wizard-billing-country" className="mb-1 block text-sm font-medium">
+              {copy.billingCountry}
+            </label>
+            <select
+              id="wizard-billing-country"
+              required
+              aria-required="true"
+              autoComplete="billing country"
+              value={billingDetails.countryCode}
+              onChange={(event) =>
+                onBillingDetailsChange({
+                  ...billingDetails,
+                  countryCode: event.target.value,
+                })
+              }
+              className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+            >
+              {countries.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="wizard-tax-id" className="mb-1 block text-sm font-medium">
+              {isItalianBilling ? copy.taxIdItaly : copy.taxIdForeign}
+            </label>
+            <input
+              id="wizard-tax-id"
+              type="text"
+              required={isItalianBilling}
+              aria-required={isItalianBilling}
+              minLength={isItalianBilling ? 16 : undefined}
+              maxLength={isItalianBilling ? 16 : 64}
+              pattern={isItalianBilling ? "[A-Za-z0-9]{16}" : undefined}
+              autoCapitalize={isItalianBilling ? "characters" : "none"}
+              spellCheck={false}
+              value={billingDetails.taxId}
+              onChange={(event) =>
+                onBillingDetailsChange({
+                  ...billingDetails,
+                  taxId: isItalianBilling
+                    ? event.target.value.toUpperCase()
+                    : event.target.value,
+                })
+              }
+              className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+            />
+            {!isItalianBilling && (
+              <p className="mt-1 text-xs leading-4 text-slate-500">{copy.taxIdForeignHint}</p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="wizard-address-line-1" className="mb-1 block text-sm font-medium">
+            {copy.addressLine1}
+          </label>
+          <input
+            id="wizard-address-line-1"
+            type="text"
+            required
+            aria-required="true"
+            maxLength={200}
+            autoComplete="billing address-line1"
+            value={billingDetails.addressLine1}
+            onChange={(event) =>
+              onBillingDetailsChange({ ...billingDetails, addressLine1: event.target.value })
+            }
+            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="wizard-address-line-2" className="mb-1 block text-sm font-medium">
+            {copy.addressLine2}
+          </label>
+          <input
+            id="wizard-address-line-2"
+            type="text"
+            maxLength={200}
+            autoComplete="billing address-line2"
+            value={billingDetails.addressLine2}
+            onChange={(event) =>
+              onBillingDetailsChange({ ...billingDetails, addressLine2: event.target.value })
+            }
+            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <label htmlFor="wizard-city" className="mb-1 block text-sm font-medium">
+              {copy.city}
+            </label>
+            <input
+              id="wizard-city"
+              type="text"
+              required
+              aria-required="true"
+              maxLength={100}
+              autoComplete="billing address-level2"
+              value={billingDetails.city}
+              onChange={(event) =>
+                onBillingDetailsChange({ ...billingDetails, city: event.target.value })
+              }
+              className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label htmlFor="wizard-province" className="mb-1 block text-sm font-medium">
+              {isItalianBilling ? copy.provinceItaly : copy.provinceForeign}
+            </label>
+            <input
+              id="wizard-province"
+              type="text"
+              required={isItalianBilling}
+              aria-required={isItalianBilling}
+              maxLength={100}
+              autoComplete="billing address-level1"
+              value={billingDetails.province}
+              onChange={(event) =>
+                onBillingDetailsChange({ ...billingDetails, province: event.target.value })
+              }
+              className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+          <div>
+            <label htmlFor="wizard-postal-code" className="mb-1 block text-sm font-medium">
+              {copy.postalCode}
+            </label>
+            <input
+              id="wizard-postal-code"
+              type="text"
+              required
+              aria-required="true"
+              maxLength={20}
+              autoComplete="billing postal-code"
+              value={billingDetails.postalCode}
+              onChange={(event) =>
+                onBillingDetailsChange({ ...billingDetails, postalCode: event.target.value })
+              }
+              className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-3 text-base focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+            />
+          </div>
+        </div>
+      </fieldset>
       {turnstileSiteKey && (
         <div className="max-w-full overflow-x-auto pb-1">
           <TurnstileWidget

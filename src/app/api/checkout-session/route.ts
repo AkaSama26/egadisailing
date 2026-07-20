@@ -26,6 +26,10 @@ import { isPublicBookingServiceEnabled } from "@/lib/services/public-booking";
 import { localizedPath } from "@/lib/i18n/paths";
 import { getExperiencePublicSlug } from "@/data/catalog/experiences";
 import { buildAnalyticsTransactionId } from "@/lib/analytics/transaction-id";
+import {
+  isoCountryCodeSchema,
+  privateBillingDetailsSchema,
+} from "@/lib/booking/billing-details";
 
 export const runtime = "nodejs";
 
@@ -55,9 +59,10 @@ const schema = z.object({
       .min(1, "Telefono obbligatorio")
       .max(30)
       .regex(/^(?=.*\d)[+\d\s()\-.]{1,30}$/, "Numero telefono non valido"),
-    nationality: z.string().length(2).optional(),
+    nationality: isoCountryCodeSchema,
     language: z.string().max(8).optional(),
   }),
+  billingDetails: privateBillingDetailsSchema,
   paymentSchedule: z.enum(["FULL", "DEPOSIT_BALANCE"]),
   depositPercentage: z.number().int().min(1).max(100).optional(),
   notes: z.string().max(1000).optional(),
@@ -121,6 +126,7 @@ export const POST = withErrorHandler(async (req: Request) => {
     numPeople: input.numPeople,
     passengers: input.passengers,
     customer: input.customer,
+    billingDetails: input.billingDetails,
     paymentSchedule: input.paymentSchedule,
     depositPercentage: input.depositPercentage,
     notes: input.notes,

@@ -194,6 +194,15 @@ const bookingInput = (overrides: Record<string, unknown> = {}) => ({
     nationality: "IT",
     language: "it",
   },
+  billingDetails: {
+    taxId: "RSSMRA80A01H501U",
+    addressLine1: "Via Roma 1",
+    addressLine2: "",
+    city: "Roma",
+    province: "RM",
+    postalCode: "00100",
+    countryCode: "IT",
+  },
   paymentSchedule: "DEPOSIT_BALANCE" as const,
   consent: {
     privacyAccepted: true,
