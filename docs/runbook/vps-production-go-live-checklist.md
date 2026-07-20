@@ -483,13 +483,25 @@ Sequenza consigliata:
 2. Verificare `npm run typecheck`, `npm test`, build production.
 3. Abbassare TTL DNS a 300 se non gia' fatto.
 4. Deploy su VPS.
-5. Health check shallow e deep.
-6. Eseguire smoke test con pagamento controllato.
-7. Attivare Stripe live webhook.
-8. Attivare Cloudflare proxy se desiderato.
-9. Verificare `www`, canonical e sitemap.
-10. Aprire traffico reale.
-11. Monitorare per 2 ore.
+5. Verificare che, prima di `CONTAINMENT_INTENT`, il container legacy abbia
+   restart disabilitato e sia frozen. Il boundary deve attestare Redis AOF
+   `appendfsync=always`, entrambe le code globalmente in pausa e il container
+   legacy force-removed prima di evidence check, fetch, pull o cosign. Se
+   `activeObserved=true`, non riavviare: l'osservazione resta sticky in Redis
+   anche se il file host non viene completato. Riconciliare Brevo/Bokun e usare
+   solo `abort-pre-cutover`, che la riconosce esplicitamente mantenendo entrambe
+   le code in hold, senza alcun reinvio storico.
+6. Verificare nel deploy il marker di cutover email: tutti i record storici
+   non terminali `DISMISSED` con tombstone, code storiche email/pricing
+   corrispondenti esattamente all'export cifrato rimosse, pricing in pausa e
+   nessun percorso di reinvio (incluso 14 agosto).
+7. Health check shallow e deep.
+8. Eseguire smoke test con pagamento controllato.
+9. Attivare Stripe live webhook.
+10. Attivare Cloudflare proxy se desiderato.
+11. Verificare `www`, canonical e sitemap.
+12. Aprire traffico reale.
+13. Monitorare per 2 ore.
 
 ## Prime 72 ore post-live
 
@@ -500,7 +512,7 @@ Ogni giorno controllare:
 - Pagamenti Stripe e booking DB allineati.
 - `EmailOutbox` con status `FAILED`.
 - Health deep.
-- Backup giornaliero completato.
+- Backup PostgreSQL ogni 15 minuti completato.
 - Errori app nei log.
 - Alert manuali per OTA.
 - Disponibilita' su calendario admin.
@@ -511,7 +523,7 @@ Comandi utili:
 docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs app --tail 200
 curl -s https://egadisailing.com/api/health
-curl -s -H "Authorization: Bearer $CRON_SECRET" https://egadisailing.com/api/health?deep=1
+curl -s -H "Authorization: Bearer $OPS_HEALTH_SECRET" https://egadisailing.com/api/health?deep=1
 ```
 
 Query utili:
@@ -531,6 +543,11 @@ WHERE status = 'FAILED'
 ORDER BY "updatedAt" DESC
 LIMIT 20;
 
+SELECT COUNT(*) AS historical_non_terminal
+FROM "EmailOutbox"
+WHERE "historicalDismissedAt" IS NOT NULL
+  AND status <> 'DISMISSED';
+
 SELECT "confirmationCode", status, "createdAt"
 FROM "Booking"
 WHERE status = 'PENDING'
@@ -547,6 +564,8 @@ GO solo se:
 - Stripe live webhook testato.
 - Brevo invia email cliente/admin.
 - Health check passa.
+- Nessuna email storica e' `PENDING`, `SENDING` o `FAILED`; nessuna puo'
+  essere ritentata o sostituita.
 - Admin riesce a gestire booking test.
 - Legal copy pubblicata e approvata.
 - Esiste una persona reperibile per le prime 72 ore.

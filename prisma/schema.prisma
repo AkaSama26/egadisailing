@@ -453,6 +453,7 @@ model EmailOutbox {
   resolvedAt      DateTime?
   resolvedByUserId String?
   resolutionReason String?  @db.Text
+  historicalDismissedAt DateTime?
 
   booking    Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
   customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)

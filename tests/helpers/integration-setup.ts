@@ -26,6 +26,7 @@ export function mockQueueModule() {
     availBoataroundQueue: () => ({ add: sharedAdd }),
     availManualQueue: () => ({ add: sharedAdd }),
     pricingBokunQueue: () => ({ add: sharedAdd }),
+    bookingBokunQueue: () => ({ add: sharedAdd }),
     emailTransactionalQueue: () => ({ add: sharedAdd }),
     getQueue: () => ({ add: sharedAdd }),
     QUEUE_NAMES: {
@@ -33,6 +34,7 @@ export function mockQueueModule() {
       AVAIL_BOATAROUND: "sync.avail.boataround",
       AVAIL_MANUAL: "sync.avail.manual",
       PRICING_BOKUN: "sync.pricing.bokun",
+      BOOKING_BOKUN: "sync.booking.bokun",
       EMAIL_TRANSACTIONAL: "email.transactional",
     },
     ALL_QUEUE_NAMES: [
@@ -40,6 +42,13 @@ export function mockQueueModule() {
       "sync.avail.boataround",
       "sync.avail.manual",
       "sync.pricing.bokun",
+      "sync.booking.bokun",
+      "email.transactional",
+    ],
+    getActiveQueueNames: () => [
+      "sync.avail.bokun",
+      "sync.booking.bokun",
+      "sync.avail.manual",
       "email.transactional",
     ],
     // Esposto per assertion: tests possono importare e fare expect(sharedAdd)

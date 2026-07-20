@@ -3,15 +3,22 @@ import { defineWorker } from "@/lib/queue/define-worker";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { sendEmailWithResult } from "@/lib/email/brevo";
-import { EMAIL_OUTBOX_STATUS } from "@/lib/email/outbox";
+import {
+  EMAIL_OUTBOX_STATUS,
+  emailDeliveryWindowExpired,
+  emailProviderIdempotencyKey,
+  emailRetryPolicy,
+  isHistoricalEmailResolution,
+  MAX_EMAIL_ATTEMPTS,
+  SENDING_VISIBILITY_TIMEOUT_MS,
+} from "@/lib/email/outbox";
 import type { TransactionalEmailPayload } from "@/lib/queue/types";
+import { env } from "@/lib/env";
 
 interface TransactionalEmailJob {
   type: "email.transactional.send";
   data: TransactionalEmailPayload;
 }
-
-const MAX_EMAIL_ATTEMPTS = 5;
 
 export function startTransactionalEmailWorker() {
   return defineWorker<TransactionalEmailJob, TransactionalEmailPayload>({
@@ -23,6 +30,7 @@ export function startTransactionalEmailWorker() {
       limiter: { max: 10, duration: 1000 },
       alertOnFinalFailure: false,
     },
+    serializeByLogicalKey: {},
     handler: async (data) => {
       const email = await db.emailOutbox.findUnique({
         where: { id: data.emailOutboxId },
@@ -31,18 +39,79 @@ export function startTransactionalEmailWorker() {
         logger.warn({ emailOutboxId: data.emailOutboxId }, "Email outbox row missing");
         return;
       }
-      if (email.status === EMAIL_OUTBOX_STATUS.SENT) return;
+      // Difesa permanente anche se un operatore alterasse manualmente lo
+      // status: le comunicazioni archiviate al cutover non sono reinviabili.
+      if (
+        email.historicalDismissedAt !== null ||
+        isHistoricalEmailResolution(email.resolutionReason)
+      ) return;
+      if (
+        email.status === EMAIL_OUTBOX_STATUS.SENT ||
+        email.status === EMAIL_OUTBOX_STATUS.DISMISSED
+      ) return;
 
+      const now = new Date();
+      // Un record creato dal worker precedente incrementava `attempts` prima
+      // della chiamata Brevo, ma non registrava `deliveryStartedAt` ne' una
+      // idempotency key provider. Dopo il cutover non possiamo distinguere una
+      // risposta persa da un invio mai avvenuto: rendilo terminale e richiedi
+      // verifica manuale. Il retry amministrativo esplicito resetta entrambi i
+      // campi e resta quindi riconoscibile come autorizzato.
+      if (
+        email.status === EMAIL_OUTBOX_STATUS.PENDING &&
+        email.attempts > 0 &&
+        email.deliveryStartedAt === null
+      ) {
+        await db.emailOutbox.updateMany({
+          where: {
+            id: email.id,
+            status: EMAIL_OUTBOX_STATUS.PENDING,
+            historicalDismissedAt: null,
+            attempts: { gt: 0 },
+            deliveryStartedAt: null,
+          },
+          data: {
+            status: EMAIL_OUTBOX_STATUS.FAILED,
+            lastError:
+              "Legacy delivery outcome ambiguous; manual Brevo verification required",
+            nextAttemptAt: now,
+          },
+        });
+        return;
+      }
+      if (
+        email.status === EMAIL_OUTBOX_STATUS.PENDING &&
+        email.deliveryStartedAt &&
+        emailDeliveryWindowExpired(email.deliveryStartedAt, now)
+      ) {
+        await db.emailOutbox.updateMany({
+          where: {
+            id: email.id,
+            status: EMAIL_OUTBOX_STATUS.PENDING,
+            historicalDismissedAt: null,
+          },
+          data: {
+            status: EMAIL_OUTBOX_STATUS.FAILED,
+            lastError:
+              "Automatic retry stopped: provider idempotency window expired; manual delivery verification required",
+          },
+        });
+        return;
+      }
       const claimedRow = await db.emailOutbox.updateMany({
         where: {
           id: email.id,
-          status: { in: [EMAIL_OUTBOX_STATUS.PENDING, EMAIL_OUTBOX_STATUS.FAILED] },
+          status: EMAIL_OUTBOX_STATUS.PENDING,
+          historicalDismissedAt: null,
+          nextAttemptAt: { lte: now },
           attempts: { lt: MAX_EMAIL_ATTEMPTS },
         },
         data: {
           status: EMAIL_OUTBOX_STATUS.SENDING,
           attempts: { increment: 1 },
+          deliveryStartedAt: email.deliveryStartedAt ?? now,
           lastError: null,
+          nextAttemptAt: new Date(now.getTime() + SENDING_VISIBILITY_TIMEOUT_MS),
         },
       });
       if (claimedRow.count !== 1) return;
@@ -59,6 +128,8 @@ export function startTransactionalEmailWorker() {
           subject: true,
           htmlContent: true,
           textContent: true,
+          idempotencyKey: true,
+          deliveryStartedAt: true,
         },
       });
 
@@ -69,6 +140,7 @@ export function startTransactionalEmailWorker() {
           subject: claimed.subject,
           htmlContent: claimed.htmlContent,
           textContent: claimed.textContent ?? undefined,
+          idempotencyKey: emailProviderIdempotencyKey(claimed.idempotencyKey),
           replyTo: claimed.replyToEmail
             ? {
                 email: claimed.replyToEmail,
@@ -80,8 +152,8 @@ export function startTransactionalEmailWorker() {
           throw new Error("Brevo skipped delivery");
         }
 
-        await db.emailOutbox.update({
-          where: { id: claimed.id },
+        await db.emailOutbox.updateMany({
+          where: { id: claimed.id, status: EMAIL_OUTBOX_STATUS.SENDING },
           data: {
             status: EMAIL_OUTBOX_STATUS.SENT,
             brevoMessageId: result.messageId,
@@ -91,10 +163,17 @@ export function startTransactionalEmailWorker() {
         });
       } catch (err) {
         const attempts = claimed.attempts;
-        const finalFailure = attempts >= MAX_EMAIL_ATTEMPTS;
-        const delayMinutes = Math.min(60, Math.max(5, 2 ** attempts * 5));
-        await db.emailOutbox.update({
-          where: { id: claimed.id },
+        // La idempotency key Brevo ha TTL minima 15 minuti: retry fissi a
+        // 5 minuti restano nella finestra anche col cron ogni 5 minuti.
+        // SMTP non offre dedup garantita: una risposta persa va a revisione
+        // manuale, mai in retry automatico.
+        const { finalFailure, delayMinutes } = emailRetryPolicy(
+          env.EMAIL_DELIVERY_MODE,
+          attempts,
+          claimed.deliveryStartedAt ?? now,
+        );
+        await db.emailOutbox.updateMany({
+          where: { id: claimed.id, status: EMAIL_OUTBOX_STATUS.SENDING },
           data: {
             status: finalFailure ? EMAIL_OUTBOX_STATUS.FAILED : EMAIL_OUTBOX_STATUS.PENDING,
             lastError: (err as Error).message,

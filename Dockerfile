@@ -121,7 +121,9 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder --chown=1001:1001 /app/.next/cache ./.next/cache
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/deploy/dismiss-historical-emails.mjs ./deploy/dismiss-historical-emails.mjs
 COPY --from=builder /app/deploy/prepare-email-rollback.mjs ./deploy/prepare-email-rollback.mjs
+COPY --from=builder /app/deploy/queue-cutover-control.cjs ./deploy/queue-cutover-control.cjs
 
 # The standalone output contains the application trace. Merge the immutable
 # production dependency tree so the Prisma CLI and its transitive dependencies

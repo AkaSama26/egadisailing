@@ -47,7 +47,7 @@ services:
       - --appendonly
       - "yes"
       - --appendfsync
-      - "everysec"
+      - "always"
       - --maxmemory-policy
       - "noeviction"
     volumes:

@@ -10,6 +10,8 @@ import { parseIsoDay } from "@/lib/dates";
 import { quotePrice } from "@/lib/pricing/service";
 import { NotFoundError } from "@/lib/errors";
 import type { BokunPricingSyncPayload } from "@/lib/queue/types";
+import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 
 interface PricingJob {
   type: "pricing.bokun.sync";
@@ -27,9 +29,13 @@ export function startBokunPricingWorker() {
     queue: QUEUE_NAMES.PRICING_BOKUN,
     jobName: "pricing.bokun.sync",
     label: "bokun-pricing",
-    configCheck: isBokunConfigured,
+    configCheck: () => env.BOKUN_PRICING_SYNC_ENABLED && isBokunConfigured(),
     configCheckLogContext: (data) => ({ serviceId: data.serviceId }),
-    workerOptions: { concurrency: 2, limiter: { max: 5, duration: 1000 } },
+    // Il circuito resta spento di default. Se e quando Bokun confermera' il
+    // contratto pricing, il canary e i batch successivi devono essere
+    // strettamente seriali e non superare una richiesta al secondo.
+    workerOptions: { concurrency: 1, limiter: { max: 1, duration: 1000 } },
+    serializeByLogicalKey: {},
     handler: async (data) => {
       const service = await db.service.findUnique({ where: { id: data.serviceId } });
       if (!service || !service.bokunProductId) {
@@ -95,14 +101,8 @@ export function startBokunPricingWorker() {
         );
       }
 
-      const res = await upsertBokunPriceOverride({
-        productId: service.bokunProductId,
-        date: data.date,
-        amount: bokunAmount,
-      });
-
-      // R28-CRIT-6: upsert invece di create. Unique(bokunExperienceId, date)
-      // aggiunto via migration 20260421200500 permette idempotency su retry.
+      // Ledger scritto PRIMA della side effect esterna: un crash/failure non
+      // puo' lasciare una chiamata pricing priva di stato riconciliabile.
       await db.bokunPriceSync.upsert({
         where: {
           bokunExperienceId_date: {
@@ -112,20 +112,67 @@ export function startBokunPricingWorker() {
         },
         create: {
           bokunExperienceId: service.bokunProductId,
-          bokunPriceOverrideId: res.id,
           date: dateOnly,
           amount: bokunAmount,
-          status: "SYNCED",
-          syncedAt: new Date(),
+          status: "PENDING",
         },
         update: {
-          bokunPriceOverrideId: res.id,
           amount: bokunAmount,
-          status: "SYNCED",
-          syncedAt: new Date(),
+          status: "PENDING",
+          syncedAt: null,
           lastError: null,
         },
       });
+
+      try {
+        const res = await upsertBokunPriceOverride({
+          productId: service.bokunProductId,
+          date: data.date,
+          amount: bokunAmount,
+        });
+
+        const synced = await db.bokunPriceSync.update({
+          where: {
+            bokunExperienceId_date: {
+              bokunExperienceId: service.bokunProductId,
+              date: dateOnly,
+            },
+          },
+          data: {
+            bokunPriceOverrideId: res.id,
+            amount: bokunAmount,
+            status: "SYNCED",
+            syncedAt: new Date(),
+            lastError: null,
+          },
+          select: { id: true },
+        });
+        await auditLog({
+          action: AUDIT_ACTIONS.BOKUN_PRICING_RECONCILE,
+          entity: "BokunPriceSync",
+          entityId: synced.id,
+          after: { status: "SYNCED", date: data.date },
+        });
+      } catch (err) {
+        const errorMessage = (err as Error).message.slice(0, 500);
+        const failed = await db.bokunPriceSync.update({
+          where: {
+            bokunExperienceId_date: {
+              bokunExperienceId: service.bokunProductId,
+              date: dateOnly,
+            },
+          },
+          data: { status: "FAILED", lastError: errorMessage, syncedAt: null },
+          select: { id: true },
+        });
+        await auditLog({
+          action: AUDIT_ACTIONS.BOKUN_PRICING_RECONCILE,
+          entity: "BokunPriceSync",
+          entityId: failed.id,
+          after: { status: "FAILED", date: data.date },
+        });
+        throw err;
+      }
     },
   });
 }

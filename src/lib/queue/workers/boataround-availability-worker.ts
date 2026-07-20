@@ -23,6 +23,7 @@ export function startBoataroundAvailabilityWorker() {
     configCheck: isBoataroundConfigured,
     configCheckLogContext: (data) => ({ boatId: data.boatId, date: data.date }),
     workerOptions: { concurrency: 3, limiter: { max: 10, duration: 1000 } },
+    serializeByLogicalKey: {},
     handler: async (data) => {
       // Re-read DB prima di pushare upstream: coalescenza jobId BullMQ
       // garantisce l'ultimo job vinca per ID, ma job con date/boat diverse

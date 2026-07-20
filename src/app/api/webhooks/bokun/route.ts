@@ -10,6 +10,7 @@ import { getUserAgent } from "@/lib/http/client-ip";
 import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { withDedupedEvent } from "@/lib/dedup/processed-event";
 import { bookingBokunQueue } from "@/lib/queue";
+import { createQueueJobIdentity, queueExecutionJobId } from "@/lib/queue/job-identity";
 
 export const runtime = "nodejs";
 
@@ -159,10 +160,12 @@ export const POST = withWebhookGuard(
         }
 
         if (!bookingId) return;
+        const identity = createQueueJobIdentity(`booking:bokun:${bookingId}`);
         await bookingBokunQueue().add(
           "booking.webhook.process",
           {
             type: "booking.webhook.process",
+            ...identity,
             data: {
               provider: "BOKUN",
               eventId,
@@ -172,7 +175,7 @@ export const POST = withWebhookGuard(
               receivedAt: new Date().toISOString(),
             },
           },
-          { jobId: `bokun-booking-${eventId}` },
+          { jobId: queueExecutionJobId(identity) },
         );
       },
     );

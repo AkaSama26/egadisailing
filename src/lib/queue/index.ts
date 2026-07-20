@@ -6,8 +6,14 @@ import type { Job as SyncJob, JobType } from "./types";
 
 const JOB_BACKOFF_BASE_MS = 60_000; // 1min → 2min → 4min → 8min → 16min
 export const JOB_MAX_ATTEMPTS = 5;
-const JOB_COMPLETED_RETENTION = { count: 1000, age: 7 * 24 * 60 * 60 };
-const JOB_FAILED_RETENTION = { count: 5000 };
+export const JOB_COMPLETED_RETENTION_SECONDS = 7 * 24 * 60 * 60;
+export const JOB_FAILED_RETENTION_SECONDS = 30 * 24 * 60 * 60;
+export const JOB_COMPLETED_RETENTION_COUNT = 5000;
+const JOB_COMPLETED_RETENTION = {
+  count: JOB_COMPLETED_RETENTION_COUNT,
+  age: JOB_COMPLETED_RETENTION_SECONDS,
+};
+const JOB_FAILED_RETENTION = { count: 5000, age: JOB_FAILED_RETENTION_SECONDS };
 const DEFAULT_WORKER_CONCURRENCY = 5;
 
 // R28-ALTA-4: dedup per SYNC_FAILURE dispatch. Burst di failed job stessa
@@ -206,6 +212,32 @@ export const QUEUE_NAMES = {
 
 /** Lista queue attive per aggregate metrics (health + admin sync-log). */
 export const ALL_QUEUE_NAMES: readonly string[] = Object.values(QUEUE_NAMES);
+
+/**
+ * Code realmente abilitate nel runtime corrente. Il pricing Bokun e' un
+ * circuito separato: tenerlo spento non interrompe webhook, booking o
+ * availability Bokun.
+ */
+export function getActiveQueueNames(): readonly string[] {
+  const bokunConfigured = Boolean(env.BOKUN_ACCESS_KEY && env.BOKUN_SECRET_KEY);
+  const boataroundConfigured = Boolean(
+    env.BOATAROUND_SYNC_ENABLED &&
+      env.BOATAROUND_API_TOKEN &&
+      env.BOATAROUND_WEBHOOK_SECRET,
+  );
+
+  return [
+    ...(bokunConfigured
+      ? [QUEUE_NAMES.AVAIL_BOKUN, QUEUE_NAMES.BOOKING_BOKUN]
+      : []),
+    ...(bokunConfigured && env.BOKUN_PRICING_SYNC_ENABLED
+      ? [QUEUE_NAMES.PRICING_BOKUN]
+      : []),
+    ...(boataroundConfigured ? [QUEUE_NAMES.AVAIL_BOATAROUND] : []),
+    QUEUE_NAMES.AVAIL_MANUAL,
+    QUEUE_NAMES.EMAIL_TRANSACTIONAL,
+  ];
+}
 
 /** Queue per fan-out availability verso BOKUN API. */
 export function availBokunQueue(): Queue<SyncJob> {

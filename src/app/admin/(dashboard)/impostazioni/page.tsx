@@ -157,7 +157,7 @@ export default async function ImpostazioniPage() {
             <a className="text-blue-600 hover:underline" href="/api/health?deep=1">
               Health check deep
             </a>{" "}
-            (richiede Bearer CRON_SECRET)
+            (richiede Bearer OPS_HEALTH_SECRET)
           </li>
           <li>
             <a className="text-blue-600 hover:underline" href="/api/admin/customers/export">

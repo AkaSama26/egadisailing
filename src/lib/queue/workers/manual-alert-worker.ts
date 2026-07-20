@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { CHANNELS } from "@/lib/channels";
 import { parseIsoDay } from "@/lib/dates";
 import type { AvailabilityUpdateJobPayload } from "@/lib/queue/types";
+import { db } from "@/lib/db";
 
 interface AvailabilityJob {
   type: "availability.update";
@@ -26,6 +27,7 @@ export function startManualAlertWorker() {
     // concurrency=3 serialize inutile + scaricava pool Prisma + SIGTERM
     // timeout risk con 3 active jobs.
     workerOptions: { concurrency: 1 },
+    serializeByLogicalKey: {},
     handler: async (data) => {
       // Sanity guard: fan-out routing only enqueues CLICKANDBOAT/NAUTAL here,
       // un payload diverso significa producer bug — log+skip invece di drop.
@@ -37,14 +39,22 @@ export function startManualAlertWorker() {
         return;
       }
 
+      const current = await db.boatAvailability.findUnique({
+        where: {
+          boatId_date: { boatId: data.boatId, date: parseIsoDay(data.date) },
+        },
+        select: { status: true, lockedByBookingId: true },
+      });
+      const effectiveStatus = current?.status ?? data.status;
+
       await createManualAlert({
         channel: data.targetChannel,
         boatId: data.boatId,
         date: parseIsoDay(data.date),
-        action: data.status === "AVAILABLE" ? "UNBLOCK" : "BLOCK",
-        bookingId: data.originBookingId,
+        action: effectiveStatus === "AVAILABLE" ? "UNBLOCK" : "BLOCK",
+        bookingId: current?.lockedByBookingId ?? data.originBookingId,
         notes:
-          data.status === "AVAILABLE"
+          effectiveStatus === "AVAILABLE"
             ? "La data e' tornata disponibile nel calendario interno: riaprire manualmente la disponibilita' sul portale esterno."
             : "La data e' stata bloccata nel calendario interno: bloccare manualmente la disponibilita' sul portale esterno.",
       });

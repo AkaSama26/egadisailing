@@ -7,6 +7,8 @@ import { RATE_LIMIT_SCOPES } from "@/lib/channels";
 import { LEASE_KEYS } from "@/lib/lease/keys";
 import { pruneProcessedEvents } from "@/lib/dedup/processed-event";
 import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
+import { cleanExpiredQueueJobs } from "@/lib/queue/retention";
+import { auditLogRetentionWhere } from "@/lib/audit/retention";
 
 export const runtime = "nodejs";
 
@@ -27,7 +29,7 @@ export const runtime = "nodejs";
  * - ProcessedBoataroundEvent           → delete dopo 365 giorni (R25-A3-C2)
  * - ProcessedCharterEmail              → delete dopo 90 giorni
  * - WeatherForecastCache               → delete dopo 14 giorni
- * - AuditLog                           → delete dopo 24 mesi (bilanciato con antifraud/compliance)
+ * - AuditLog                           → delete dopo 24 mesi, esclusi marker deploy persistenti
  * - BokunBooking.rawPayload            → redacted PII dopo 90 giorni
  * - CharterBooking.rawPayload          → redacted PII dopo 90 giorni (R18)
  * - Booking e Customer: retention 10 anni (art. 2220 c.c.) gestiti separatamente
@@ -64,6 +66,8 @@ export const GET = withCronGuard(
       charterPayloadRedacted: 0,
       weatherCacheDeleted: 0,
       auditLogDeleted: 0,
+      queueCompletedDeleted: 0,
+      queueFailedDeleted: 0,
     };
     const errors: string[] = [];
 
@@ -283,12 +287,21 @@ export const GET = withCronGuard(
     try {
       results.auditLogDeleted = (
         await db.auditLog.deleteMany({
-          where: { timestamp: { lt: twoYearsAgo } },
+          where: auditLogRetentionWhere(twoYearsAgo),
         })
       ).count;
     } catch (err) {
       errors.push("auditLog");
       logger.error({ err }, "AuditLog retention cleanup failed");
+    }
+
+    try {
+      const queueRetention = await cleanExpiredQueueJobs();
+      results.queueCompletedDeleted = queueRetention.completedDeleted;
+      results.queueFailedDeleted = queueRetention.failedDeleted;
+    } catch (err) {
+      errors.push("queues");
+      logger.error({ err }, "BullMQ retention cleanup failed");
     }
 
     const payload = { ...results, errors };

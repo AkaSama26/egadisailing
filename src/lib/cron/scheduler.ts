@@ -1,5 +1,6 @@
 import { scheduleCronFetch } from "@/lib/cron/schedule-fetch";
 import { logger } from "@/lib/logger";
+import { env } from "@/lib/env";
 
 const globalForCron = globalThis as unknown as { __cronStarted__?: boolean };
 
@@ -13,8 +14,11 @@ export function startCronScheduler(): void {
   // Bokun reconciliation: ogni 5 minuti, fallback per webhook persi.
   scheduleCronFetch("*/5 * * * *", "/api/cron/bokun-reconciliation");
 
-  // Charter email parser disattivato: non usato nel flusso operativo admin.
-  // Le tabelle storiche restano per eventuale cleanup DB separato.
+  // Nessuna chiamata alla route IMAP quando il circuito e' spento: evita
+  // connessioni e backlog accidentali in ambienti con credenziali residue.
+  if (env.IMAP_INGEST_ENABLED) {
+    scheduleCronFetch("*/5 * * * *", "/api/cron/email-parser");
+  }
 
   // Weather check: ogni mattina 07:15 Europe/Rome. Alert admin su booking
   // CONFIRMED nei prossimi 7gg con risk HIGH/EXTREME (Plan 6).

@@ -23,6 +23,7 @@ export function startBokunBookingWorker() {
       eventId: data.eventId,
     }),
     workerOptions: { concurrency: 3, limiter: { max: 5, duration: 1000 } },
+    serializeByLogicalKey: {},
     handler: async (data) => {
       const bokunBooking = await getBokunBooking(data.bookingId);
       const imported = await importBokunBooking(bokunBooking);

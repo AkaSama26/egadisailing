@@ -78,6 +78,7 @@ export function startBokunAvailabilityWorker() {
     // Limiter: max 10 POST/sec verso Bokun per evitare 429. Concurrency=3
     // mantiene il throughput su job di canali diversi quando verranno aggiunti.
     workerOptions: { concurrency: 3, limiter: { max: 10, duration: 1000 } },
+    serializeByLogicalKey: {},
     handler: async (data) => {
       // R23-Q-CRITICA-2: re-read DB prima di push upstream. jobId coalescence
       // agisce solo su job waiting/delayed — una volta active, un nuovo

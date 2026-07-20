@@ -1,4 +1,5 @@
 import type { Channel } from "@/lib/channels";
+import type { QueueJobIdentity } from "./job-identity";
 
 /**
  * Tutti i job passano per un discriminated union `type`.
@@ -44,11 +45,13 @@ export interface TransactionalEmailPayload {
   emailOutboxId: string;
 }
 
-export type Job =
-  | { type: "availability.update"; data: AvailabilityUpdateJobPayload }
-  | { type: "pricing.bokun.sync"; data: BokunPricingSyncPayload }
-  | { type: "booking.webhook.process"; data: BookingWebhookPayload }
-  | { type: "email.transactional.send"; data: TransactionalEmailPayload }
-  | { type: "otp.cleanup"; data: OtpCleanupPayload };
+export type Job = QueueJobIdentity &
+  (
+    | { type: "availability.update"; data: AvailabilityUpdateJobPayload }
+    | { type: "pricing.bokun.sync"; data: BokunPricingSyncPayload }
+    | { type: "booking.webhook.process"; data: BookingWebhookPayload }
+    | { type: "email.transactional.send"; data: TransactionalEmailPayload }
+    | { type: "otp.cleanup"; data: OtpCleanupPayload }
+  );
 
 export type JobPayloadFor<T extends JobType> = Extract<Job, { type: T }>["data"];

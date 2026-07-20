@@ -14,6 +14,8 @@ import { recordChannelSync } from "@/lib/sync/record-channel-sync";
 import { processBatchPaginated } from "@/lib/cron/process-batch-paginated";
 import { dispatchNotification, defaultNotificationChannels } from "@/lib/notifications/dispatcher";
 import { NotFoundError } from "@/lib/errors";
+import { auditLog } from "@/lib/audit/log";
+import { AUDIT_ACTIONS } from "@/lib/audit/actions";
 
 export const runtime = "nodejs";
 
@@ -192,6 +194,19 @@ export const GET = withCronGuard(
         healthStatus,
         lastError,
       });
+      await auditLog({
+        action: AUDIT_ACTIONS.BOKUN_BOOKING_RECONCILE,
+        entity: "ChannelSyncStatus",
+        entityId: CHANNELS.BOKUN,
+        after: {
+          healthStatus,
+          imported,
+          failed,
+          skippedUnmapped,
+          pages: page - 1,
+          budgetExceeded,
+        },
+      });
 
       if (failed > 0 || budgetExceeded) {
         await dispatchNotification({
@@ -223,6 +238,12 @@ export const GET = withCronGuard(
         channel: CHANNELS.BOKUN,
         healthStatus: "RED",
         lastError: (err as Error).message,
+      });
+      await auditLog({
+        action: AUDIT_ACTIONS.BOKUN_BOOKING_RECONCILE,
+        entity: "ChannelSyncStatus",
+        entityId: CHANNELS.BOKUN,
+        after: { healthStatus: "RED", failed: true },
       });
       await dispatchNotification({
         type: "SYNC_FAILURE",

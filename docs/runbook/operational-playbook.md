@@ -71,10 +71,11 @@ systemctl reload caddy
 master DB/upstream tramite reconciliation. Le email non dipendono dal solo job
 Redis: `EmailOutbox` resta nel DB e il cron riaccoda i record `PENDING`. Non
 reinviare manualmente record `SENT`, `FAILED` o `DISMISSED`. Le sole eccezioni
-controllate sono il retry amministrativo di un `FAILED` dopo verifica Brevo e
-la creazione idempotente di un nuovo messaggio da una quarantena rollback via
-`/admin/sync-log#email-quarantena-rollback`; entrambe richiedono motivazione e
-scrivono audit.
+controllate sono i retry amministrativi di email future `FAILED` e la singola
+sostituzione idempotente di una email futura quarantinata durante un rollback,
+sempre dopo verifica Brevo e con audit. I record con
+`historicalDismissedAt` non hanno eccezioni: restano `DISMISSED` e non possono
+essere sostituiti, incluso il caso del 14 agosto.
 
 **Validation**:
 ```bash
