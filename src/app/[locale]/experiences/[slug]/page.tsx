@@ -57,6 +57,12 @@ const FALLBACK_HERO_IMAGE =
   "/images/egadisailing-experience/03-nuoto-cala-rossa-acqua-cristallina.webp";
 const EGADI_BOAT_FRONT_HERO_IMAGE =
   "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-frontale.webp";
+const TOUR_RIB_MAIN_HERO_IMAGE = "/images/boats/tour-rib/tour-rib-main.webp";
+const TOUR_RIB_SERVICE_IDS = new Set([
+  "rib-shared-full-day",
+  "rib-exclusive-full-day",
+  "rib-exclusive-morning",
+]);
 
 type CarouselGalleryItem = {
   src: string;
@@ -91,6 +97,124 @@ function jsonLd(data: unknown): string {
 
 function isFishingService(service: { id?: string }) {
   return service.id === "fishing-full-day";
+}
+
+function isTourRibService(service: { id?: string; boatId?: string }) {
+  return service.boatId === "tour-rib" || Boolean(service.id && TOUR_RIB_SERVICE_IDS.has(service.id));
+}
+
+const TOUR_RIB_TEXT_REPLACEMENTS = {
+  it: [
+    [/\bDella Gommone\b/g, "Del Gommone"],
+    [/\bdella Gommone\b/g, "del Gommone"],
+    [/\bLa barca è dedicata\b/g, "Il gommone è dedicato"],
+    [/\bla barca è dedicata\b/g, "il gommone è dedicato"],
+    [/\bLa barca è riservata\b/g, "Il gommone è riservato"],
+    [/\bla barca è riservata\b/g, "il gommone è riservato"],
+    [/\bLa barca selezionata\b/g, "Il gommone selezionato"],
+    [/\bla barca selezionata\b/g, "il gommone selezionato"],
+    [/\bbarca riservata\b/g, "gommone riservato"],
+    [/\bbarca dedicata\b/g, "gommone dedicato"],
+    [/\buna barca open, aperta e veloce\b/g, "un gommone open, aperto e veloce"],
+    [/\bDella barca\b/g, "Del gommone"],
+    [/\bdella barca\b/g, "del gommone"],
+    [/\bSulla barca\b/g, "Sul gommone"],
+    [/\bsulla barca\b/g, "sul gommone"],
+    [/\bTutta la barca\b/g, "Tutto il gommone"],
+    [/\btutta la barca\b/g, "tutto il gommone"],
+    [/\bQuesta barca\b/g, "Questo gommone"],
+    [/\bquesta barca\b/g, "questo gommone"],
+    [/\bUna barca\b/g, "Un gommone"],
+    [/\buna barca\b/g, "un gommone"],
+    [/\bLa barca\b/g, "Il gommone"],
+    [/\bla barca\b/g, "il gommone"],
+    [/\bBarche\b/g, "Gommoni"],
+    [/\bbarche\b/g, "gommoni"],
+    [/\bBarca\b/g, "Gommone"],
+    [/\bbarca\b/g, "gommone"],
+  ],
+  en: [
+    [/\bMotorboats\b/g, "RIBs"],
+    [/\bmotorboats\b/g, "RIBs"],
+    [/\bMotorboat\b/g, "RIB"],
+    [/\bmotorboat\b/g, "RIB"],
+    [/\bBoats\b/g, "RIBs"],
+    [/\bboats\b/g, "RIBs"],
+    [/\bBoat\b/g, "RIB"],
+    [/\bboat\b/g, "RIB"],
+  ],
+  es: [
+    [/\bBarco reservado\b/g, "Semirrígida reservada"],
+    [/\bBarco privado\b/g, "Semirrígida privada"],
+    [/\bEl barco queda reservado\b/g, "La semirrígida queda reservada"],
+    [/\bel barco queda reservado\b/g, "la semirrígida queda reservada"],
+    [/\bEl barco está dedicado\b/g, "La semirrígida está dedicada"],
+    [/\bel barco está dedicado\b/g, "la semirrígida está dedicada"],
+    [/\bEl barco seleccionado\b/g, "La semirrígida seleccionada"],
+    [/\bel barco seleccionado\b/g, "la semirrígida seleccionada"],
+    [/\bDel barco\b/g, "De la semirrígida"],
+    [/\bdel barco\b/g, "de la semirrígida"],
+    [/\bAl barco\b/g, "A la semirrígida"],
+    [/\bal barco\b/g, "a la semirrígida"],
+    [/\bEl barco\b/g, "La semirrígida"],
+    [/\bel barco\b/g, "la semirrígida"],
+    [/\bUn barco\b/g, "Una semirrígida"],
+    [/\bun barco\b/g, "una semirrígida"],
+    [/\bBarcos\b/g, "Semirrígidas"],
+    [/\bbarcos\b/g, "semirrígidas"],
+    [/\bBarco\b/g, "Semirrígida"],
+    [/\bbarco reservado\b/g, "semirrígida reservada"],
+    [/\bbarco privado\b/g, "semirrígida privada"],
+    [/\bbarco\b/g, "semirrígida"],
+  ],
+  fr: [
+    [/\bBateaux\b/g, "Semi-rigides"],
+    [/\bbateaux\b/g, "semi-rigides"],
+    [/\bBateau\b/g, "Semi-rigide"],
+    [/\bbateau\b/g, "semi-rigide"],
+  ],
+  de: [
+    [/\beinen Bootsnamen\b/g, "eine RIB-Bezeichnung"],
+    [/\bMotorboote\b/g, "RIBs"],
+    [/\bMotorboot\b/g, "RIB"],
+    [/\bBootsfahrten\b/g, "RIB-Touren"],
+    [/\bBootsfahrt\b/g, "RIB-Tour"],
+    [/\bBootstouren\b/g, "RIB-Touren"],
+    [/\bBootstour\b/g, "RIB-Tour"],
+    [/\bBootserlebnis\b/g, "RIB-Erlebnis"],
+    [/\bBooten\b/g, "RIBs"],
+    [/\bBoote\b/g, "RIBs"],
+    [/\bBootes\b/g, "RIBs"],
+    [/\bBoot\b/g, "RIB"],
+  ],
+} as const satisfies Record<string, ReadonlyArray<readonly [RegExp, string]>>;
+
+/**
+ * Keeps the established boat-tour editorial structure while changing vessel
+ * terminology only for the dedicated tour RIB. The normal boat pages retain
+ * their existing copy unchanged.
+ */
+function withTourRibTerminology<T>(value: T, locale: string): T {
+  const replacements =
+    TOUR_RIB_TEXT_REPLACEMENTS[locale as keyof typeof TOUR_RIB_TEXT_REPLACEMENTS] ??
+    TOUR_RIB_TEXT_REPLACEMENTS.it;
+
+  if (typeof value === "string") {
+    let transformed: string = value;
+    for (const [pattern, replacement] of replacements) {
+      transformed = transformed.replace(pattern, replacement);
+    }
+    return transformed as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => withTourRibTerminology(item, locale)) as T;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, withTourRibTerminology(item, locale)]),
+    ) as T;
+  }
+  return value;
 }
 
 type ExperienceSchemaCategory = "boatTour" | "charter" | "fishing" | "gourmet";
@@ -193,7 +317,30 @@ const EXPERIENCE_DETAIL_SCHEMA_TOPICS = {
   },
 } as const satisfies Record<string, Record<ExperienceSchemaCategory, ExperienceSchemaTopics>>;
 
-function experienceDetailSchemaTopics(locale: string, service: { id?: string; type: string }) {
+const TOUR_RIB_DETAIL_SCHEMA_TOPICS = {
+  it: {
+    about: ["Tour in gommone alle Egadi da Trapani", "Gommone Favignana e Levanzo", "Escursione in gommone condivisa o privata"],
+    keywords: ["tour in gommone egadi", "escursione gommone favignana levanzo", "gommone da trapani", "tour gommone condiviso"],
+  },
+  en: {
+    about: ["Egadi Islands RIB tour from Trapani", "Favignana and Levanzo RIB trip", "Shared or private RIB tour"],
+    keywords: ["egadi islands rib tour", "favignana levanzo rib trip", "rib tour from trapani", "shared rib tour egadi"],
+  },
+  es: {
+    about: ["Tour en neumática por las Islas Egadi desde Trapani", "Neumática Favignana y Levanzo", "Excursión compartida o privada en neumática"],
+    keywords: ["tour neumática egadi", "neumática favignana levanzo", "excursión neumática trapani", "tour compartido neumática"],
+  },
+  fr: {
+    about: ["Excursion en semi-rigide aux îles Égades depuis Trapani", "Semi-rigide Favignana et Levanzo", "Sortie partagée ou privée en semi-rigide"],
+    keywords: ["excursion semi-rigide égades", "semi-rigide favignana levanzo", "sortie semi-rigide trapani", "tour semi-rigide partagé"],
+  },
+  de: {
+    about: ["RIB-Tour zu den Ägadischen Inseln ab Trapani", "RIB-Ausflug Favignana und Levanzo", "Geteilte oder private RIB-Tour"],
+    keywords: ["rib tour ägadische inseln", "rib favignana levanzo", "rib ausflug trapani", "geteilte rib tour"],
+  },
+} as const satisfies Record<string, ExperienceSchemaTopics>;
+
+function experienceDetailSchemaTopics(locale: string, service: { id?: string; boatId?: string; type: string }) {
   const category: ExperienceSchemaCategory = isFishingService(service)
     ? "fishing"
     : service.type === "CABIN_CHARTER"
@@ -206,7 +353,16 @@ function experienceDetailSchemaTopics(locale: string, service: { id?: string; ty
     EXPERIENCE_DETAIL_SCHEMA_TOPICS[locale as keyof typeof EXPERIENCE_DETAIL_SCHEMA_TOPICS] ??
     EXPERIENCE_DETAIL_SCHEMA_TOPICS.it;
 
-  return topicsByLocale[category];
+  const topics = topicsByLocale[category];
+  if (!isTourRibService(service)) return topics;
+
+  const ribTopics =
+    TOUR_RIB_DETAIL_SCHEMA_TOPICS[locale as keyof typeof TOUR_RIB_DETAIL_SCHEMA_TOPICS] ??
+    TOUR_RIB_DETAIL_SCHEMA_TOPICS.it;
+  return {
+    about: [...topics.about, ...ribTopics.about],
+    keywords: [...topics.keywords, ...ribTopics.keywords],
+  };
 }
 
 const RELATED_EXPERIENCE_IDS_BY_SERVICE: Record<string, string[]> = {
@@ -214,6 +370,9 @@ const RELATED_EXPERIENCE_IDS_BY_SERVICE: Record<string, string[]> = {
   "boat-exclusive-full-day": ["boat-shared-full-day", "boat-exclusive-morning", "exclusive-experience"],
   "boat-exclusive-morning": ["boat-exclusive-full-day", "boat-shared-full-day", "exclusive-experience"],
   "boat-exclusive-afternoon": ["boat-exclusive-morning", "boat-exclusive-full-day", "boat-shared-full-day"],
+  "rib-shared-full-day": ["rib-exclusive-full-day", "rib-exclusive-morning", "boat-shared-full-day"],
+  "rib-exclusive-full-day": ["rib-shared-full-day", "rib-exclusive-morning", "boat-exclusive-full-day"],
+  "rib-exclusive-morning": ["rib-exclusive-full-day", "rib-shared-full-day", "boat-exclusive-morning"],
   "cabin-charter": ["exclusive-experience", "boat-exclusive-full-day", "fishing-full-day"],
   "exclusive-experience": ["cabin-charter", "boat-exclusive-full-day", "boat-shared-full-day"],
   "fishing-full-day": ["cabin-charter", "boat-exclusive-full-day", "boat-shared-full-day"],
@@ -373,6 +532,50 @@ function getEgadiBoatHeroAlt(locale: string) {
   if (locale === "de") return "Frontansicht der Barca Egadi Sailing";
   if (locale === "en") return "Front view of Barca Egadi Sailing";
   return "Vista frontale della Barca Egadi Sailing";
+}
+
+function getTourRibHeroAlt(locale: string) {
+  if (locale === "es") return "Neumática Egadisailing para excursiones por las Islas Egadi";
+  if (locale === "fr") return "Semi-rigide Egadisailing pour les excursions aux îles Égades";
+  if (locale === "de") return "Egadisailing RIB für Touren zu den Ägadischen Inseln";
+  if (locale === "en") return "Egadisailing RIB for Egadi Islands tours";
+  return "Gommone Egadisailing per tour alle Isole Egadi";
+}
+
+function getTourRibTouristTypes(locale: string, isShared: boolean): string[] {
+  if (locale === "es") {
+    return [
+      isShared ? "Tour compartido en semirrígida" : "Tour privado en semirrígida",
+      "Esnórquel",
+      "Islas Egadi",
+    ];
+  }
+  if (locale === "fr") {
+    return [
+      isShared ? "Excursion partagée en semi-rigide" : "Excursion privée en semi-rigide",
+      "Snorkeling",
+      "Îles Égades",
+    ];
+  }
+  if (locale === "de") {
+    return [
+      isShared ? "Geteilte RIB-Tour" : "Private RIB-Tour",
+      "Schnorcheln",
+      "Ägadische Inseln",
+    ];
+  }
+  if (locale === "en") {
+    return [
+      isShared ? "Shared RIB tour" : "Private RIB tour",
+      "Snorkelling",
+      "Egadi Islands",
+    ];
+  }
+  return [
+    isShared ? "Tour condiviso in gommone" : "Tour privato in gommone",
+    "Snorkeling",
+    "Isole Egadi",
+  ];
 }
 
 function getEgadiBoatRouteGallery(locale: string, isHalfDay: boolean): CarouselGalleryItem[] {
@@ -824,7 +1027,9 @@ function getFishingSeoExpansionCopy(
 function isPriorityFullDayBoatService(service: { id?: string }) {
   return (
     service.id === "boat-shared-full-day" ||
-    service.id === "boat-exclusive-full-day"
+    service.id === "boat-exclusive-full-day" ||
+    service.id === "rib-shared-full-day" ||
+    service.id === "rib-exclusive-full-day"
   );
 }
 
@@ -3799,7 +4004,12 @@ export async function generateMetadata({
     description: content.seoDescription,
     path: `/experiences/${getExperiencePublicSlug(service.id, locale)}`,
     locale,
-    image: service.boatId === "boat" ? EGADI_BOAT_FRONT_HERO_IMAGE : content.media[0]?.src,
+    image:
+      service.boatId === "boat"
+        ? EGADI_BOAT_FRONT_HERO_IMAGE
+        : service.boatId === "tour-rib"
+          ? TOUR_RIB_MAIN_HERO_IMAGE
+          : content.media[0]?.src,
   });
 }
 
@@ -3822,6 +4032,8 @@ export default async function ExperienceDetailPage({
   if (slug !== canonicalSlug) permanentRedirect(localizedPath(locale, `/experiences/${canonicalSlug}`));
 
   const boatContent = getBoatContent(service.boatId, locale);
+  const isEgadiBoatExperience = boatContent?.id === "boat";
+  const isTourRibExperience = boatContent?.id === "tour-rib" || isTourRibService(service);
   const boatDetailHref =
     boatContent?.id === "trimarano" ? localizedPath(locale, `/boats/${boatContent.slug}`) : null;
   const [displayPrice, itinerary] = await Promise.all([
@@ -3829,7 +4041,10 @@ export default async function ExperienceDetailPage({
     getExperienceItinerary(service.id, locale, content.itinerary),
   ]);
 
-  const copy = getDetailCopy(locale, service);
+  const detailCopy = getDetailCopy(locale, service);
+  const copy = isTourRibExperience
+    ? withTourRibTerminology(detailCopy, locale)
+    : detailCopy;
   const pagePath = `/experiences/${canonicalSlug}`;
   const bookingServiceParam = getExperiencePublicSlug(service.id, locale);
   const bookingHref = localizedPath(locale, `/prenota?service=${bookingServiceParam}`);
@@ -3876,28 +4091,48 @@ export default async function ExperienceDetailPage({
             ? "4.9 out of 5"
             : "4.9 su 5";
   const durationText = getServiceDurationLabel(service, locale);
-  const seoExpansion = getSeoExpansionCopy(locale, service, durationText, boatContent?.title);
-  const experienceIntro = getExperienceIntroSectionCopy(
+  const seoExpansionCopy = getSeoExpansionCopy(locale, service, durationText, boatContent?.title);
+  const seoExpansion = isTourRibExperience
+    ? withTourRibTerminology(seoExpansionCopy, locale)
+    : seoExpansionCopy;
+  const experienceIntroCopy = getExperienceIntroSectionCopy(
     locale,
     service,
     durationText,
     boatContent?.title,
   );
-  const excursionSnapshot = getExcursionSnapshotCopy(locale, service, durationText);
-  const dayProgram = getDayProgramEditorialCopy(locale, service, durationText, boatContent?.title);
+  const experienceIntro = isTourRibExperience
+    ? withTourRibTerminology(experienceIntroCopy, locale)
+    : experienceIntroCopy;
+  const excursionSnapshotCopy = getExcursionSnapshotCopy(locale, service, durationText);
+  const excursionSnapshot = isTourRibExperience
+    ? withTourRibTerminology(excursionSnapshotCopy, locale)
+    : excursionSnapshotCopy;
+  const dayProgramCopy = getDayProgramEditorialCopy(
+    locale,
+    service,
+    durationText,
+    boatContent?.title,
+  );
+  const dayProgram = isTourRibExperience
+    ? withTourRibTerminology(dayProgramCopy, locale)
+    : dayProgramCopy;
   const priceUnit =
     service.type === "CABIN_CHARTER" || service.pricingUnit === "PER_PACKAGE"
       ? getPriceUnitLabel(service.pricingUnit, service.type, locale)
       : t("experience.perPerson");
   const heroMedia = content.media.find((item) => item.src) ?? content.media[0];
-  const isEgadiBoatExperience = boatContent?.id === "boat";
   const isHalfDayExperience =
     service.durationType === "HALF_DAY_MORNING" || service.durationType === "HALF_DAY_AFTERNOON";
   const heroImage = isEgadiBoatExperience
     ? EGADI_BOAT_FRONT_HERO_IMAGE
+    : isTourRibExperience
+      ? TOUR_RIB_MAIN_HERO_IMAGE
     : heroMedia?.src ?? FALLBACK_HERO_IMAGE;
   const heroImageAlt = isEgadiBoatExperience
     ? getEgadiBoatHeroAlt(locale)
+    : isTourRibExperience
+      ? getTourRibHeroAlt(locale)
     : heroMedia?.alt ?? content.title;
   const gallery = content.media.filter(
     (item): item is (typeof content.media)[number] & { src: string } => Boolean(item.src),
@@ -3907,16 +4142,29 @@ export default async function ExperienceDetailPage({
   const isCharterExperience = service.type === "CABIN_CHARTER";
   const showcaseGallery = isEgadiBoatExperience
     ? [...boatGallery, ...getEgadiBoatRouteGallery(locale, isHalfDayExperience)]
+    : isTourRibExperience
+      ? boatGallery
     : isGourmetExperience || isCharterExperience
       ? gallery
     : [...gallery, ...boatGallery];
-  const editorial = getEditorialExperienceCopy(locale, service, content.title, boatContent?.title);
+  const editorialCopy = getEditorialExperienceCopy(
+    locale,
+    service,
+    content.title,
+    boatContent?.title,
+  );
+  const editorial = isTourRibExperience
+    ? withTourRibTerminology(editorialCopy, locale)
+    : editorialCopy;
   const gourmetMenuCopy = getGourmetMenuCopy(locale);
   const gourmetMenus = service.type === "EXCLUSIVE_EXPERIENCE" ? getGourmetSampleMenus(locale) : [];
   const relatedExperiences = getRelatedExperienceIds(service.id)
     .map((id) => getExperienceContent(id, locale))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
-  const relatedIslandSection = getRelatedIslandSection(locale, service);
+  const relatedIslandSectionCopy = getRelatedIslandSection(locale, service);
+  const relatedIslandSection = isTourRibExperience
+    ? withTourRibTerminology(relatedIslandSectionCopy, locale)
+    : relatedIslandSectionCopy;
   const priceLabel = displayPrice.amount
     ? `${t("experience.from")} ${formatEur(displayPrice.amount, locale)}`
     : displayPrice.label;
@@ -3952,8 +4200,9 @@ export default async function ExperienceDetailPage({
       : service.durationHours > 0
         ? `PT${service.durationHours}H`
         : undefined;
-  const touristTypes =
-    locale === "de"
+  const touristTypes = isTourRibExperience
+    ? getTourRibTouristTypes(locale, service.type === "BOAT_SHARED")
+    : locale === "de"
       ? service.type === "CABIN_CHARTER"
         ? ["Privater Charter", "Mehrtägige Segelreise", "Ägadische Inseln"]
         : service.type === "BOAT_SHARED"

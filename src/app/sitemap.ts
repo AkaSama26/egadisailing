@@ -16,7 +16,7 @@ type SitemapEntry = MetadataRoute.Sitemap[number];
 type SitemapEntryOptions = Pick<SitemapEntry, "lastModified">;
 type LocalizedPaths = Record<(typeof routing.locales)[number], string>;
 
-const CATALOG_CONTENT_LAST_MODIFIED = new Date("2026-06-22T00:00:00.000Z");
+const CATALOG_CONTENT_LAST_MODIFIED = new Date("2026-07-20T00:00:00.000Z");
 
 function localizedUrl(baseUrl: string, locale: string, path: string): string {
   return localizedAbsoluteUrl(baseUrl, locale, path);

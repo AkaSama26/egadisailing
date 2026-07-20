@@ -146,6 +146,62 @@ async function main() {
       ],
     },
   });
+  const tourRib = await prisma.boat.upsert({
+    where: { id: "tour-rib" },
+    update: {
+      name: "Gommone Egadi Sailing",
+      type: "RIB",
+      description:
+        "Gommone Egadi Sailing per tour condivisi ed esclusivi tra Favignana e Levanzo, con soste bagno e snorkeling.",
+      amenities: {
+        seats: 12,
+        shade: true,
+        swimLadder: true,
+        snorkeling: true,
+        safetyEquipment: true,
+      },
+      images: [
+        "/images/boats/tour-rib/tour-rib-main.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-02.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-03.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-04.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-05.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-06.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-07.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-08.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-09.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-10.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-11.webp",
+      ],
+    },
+    create: {
+      id: "tour-rib",
+      name: "Gommone Egadi Sailing",
+      type: "RIB",
+      description:
+        "Gommone Egadi Sailing per tour condivisi ed esclusivi tra Favignana e Levanzo, con soste bagno e snorkeling.",
+      amenities: {
+        seats: 12,
+        shade: true,
+        swimLadder: true,
+        snorkeling: true,
+        safetyEquipment: true,
+      },
+      images: [
+        "/images/boats/tour-rib/tour-rib-main.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-02.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-03.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-04.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-05.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-06.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-07.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-08.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-09.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-10.webp",
+        "/images/boats/tour-rib/tour-rib-gallery-11.webp",
+      ],
+    },
+  });
   console.log("✓ Boats");
 
   // Services
@@ -290,6 +346,46 @@ async function main() {
       priority: 3,
       pricingUnit: "PER_PACKAGE",
     },
+    {
+      id: "rib-shared-full-day",
+      name: "Gommone condiviso giornata intera",
+      type: "BOAT_SHARED",
+      boatId: tourRib.id,
+      durationType: "FULL_DAY" as const,
+      durationHours: 8,
+      capacityMax: 12,
+      minPaying: 1,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
+      priority: 6,
+      pricingUnit: "PER_PERSON",
+    },
+    {
+      id: "rib-exclusive-full-day",
+      name: "Gommone esclusivo giornata intera",
+      type: "BOAT_EXCLUSIVE",
+      boatId: tourRib.id,
+      durationType: "FULL_DAY" as const,
+      durationHours: 8,
+      capacityMax: 12,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
+      priority: 9,
+      pricingUnit: "PER_PACKAGE",
+    },
+    {
+      id: "rib-exclusive-morning",
+      name: "Gommone esclusivo mattina",
+      type: "BOAT_EXCLUSIVE",
+      boatId: tourRib.id,
+      durationType: "HALF_DAY_MORNING" as const,
+      durationHours: 4,
+      capacityMax: 12,
+      defaultPaymentSchedule: "DEPOSIT_BALANCE" as const,
+      defaultDepositPercentage: 30,
+      priority: 5,
+      pricingUnit: "PER_PACKAGE",
+    },
   ];
 
   for (const svc of services) {
@@ -398,6 +494,16 @@ async function main() {
     ["sp-2026-fishing-low", "fishing-full-day", "LOW", null, 800, "PER_PACKAGE"],
     ["sp-2026-fishing-mid", "fishing-full-day", "MID", null, 1000, "PER_PACKAGE"],
     ["sp-2026-fishing-high", "fishing-full-day", "HIGH", null, 1000, "PER_PACKAGE"],
+
+    ["sp-2026-rib-shared-full-low", "rib-shared-full-day", "LOW", null, 75, "PER_PERSON"],
+    ["sp-2026-rib-shared-full-mid", "rib-shared-full-day", "MID", null, 85, "PER_PERSON"],
+    ["sp-2026-rib-shared-full-high", "rib-shared-full-day", "HIGH", null, 100, "PER_PERSON"],
+    ["sp-2026-rib-excl-full-low", "rib-exclusive-full-day", "LOW", null, 900, "PER_PACKAGE"],
+    ["sp-2026-rib-excl-full-mid", "rib-exclusive-full-day", "MID", null, 1050, "PER_PACKAGE"],
+    ["sp-2026-rib-excl-full-high", "rib-exclusive-full-day", "HIGH", null, 1200, "PER_PACKAGE"],
+    ["sp-2026-rib-excl-morning-low", "rib-exclusive-morning", "LOW", null, 630, "PER_PACKAGE"],
+    ["sp-2026-rib-excl-morning-mid", "rib-exclusive-morning", "MID", null, 740, "PER_PACKAGE"],
+    ["sp-2026-rib-excl-morning-high", "rib-exclusive-morning", "HIGH", null, 840, "PER_PACKAGE"],
 
     ["sp-2026-charter-3", "cabin-charter", null, 3, 3250, "PER_PACKAGE"],
     ["sp-2026-charter-4", "cabin-charter", null, 4, 4300, "PER_PACKAGE"],

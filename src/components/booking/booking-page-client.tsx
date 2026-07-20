@@ -69,7 +69,8 @@ interface ExperienceOption {
 const BOOKING_BOAT_ORDER: Record<string, number> = {
   trimarano: 10,
   boat: 20,
-  "fishing-rib": 30,
+  "tour-rib": 30,
+  "fishing-rib": 40,
 };
 const LUNCH_TRIMARAN_SERVICE_ID = "exclusive-experience";
 const LUNCH_TRIMARAN_CARD_IMAGE_SRC = "/images/home/trimarano-favignana.webp";
@@ -100,6 +101,13 @@ function bookingCategoryLabel(boatId: string, fallback: string, locale: string):
     if (locale === "de") return "Angelboot";
     if (locale === "en") return "Fishing boat";
     return "Barca da pesca";
+  }
+  if (boatId === "tour-rib") {
+    if (locale === "es") return "Neumática";
+    if (locale === "fr") return "Semi-rigide";
+    if (locale === "de") return "RIB";
+    if (locale === "en") return "RIB";
+    return "Gommone";
   }
   return bookingBoatTitle(boatId, fallback, locale);
 }
@@ -138,6 +146,17 @@ function bookingCategoryHint(boatId: string, locale: string): string {
             ? "Fishing charter"
             : "Charter pesca";
   }
+  if (boatId === "tour-rib") {
+    return locale === "es"
+      ? "Compartido o privado"
+      : locale === "fr"
+        ? "Partagé ou privé"
+        : locale === "de"
+          ? "Geteilt oder privat"
+          : locale === "en"
+            ? "Shared or private"
+            : "Condiviso o esclusivo";
+  }
   return bookingBoatSubtitle(boatId, locale);
 }
 
@@ -175,6 +194,17 @@ function bookingBoatSubtitle(boatId: string, locale: string): string {
             ? "Sport fishing day with professional setup."
             : "Giornata di pesca sportiva con setup professionale.";
   }
+  if (boatId === "tour-rib") {
+    return locale === "es"
+      ? "Tours ágiles en neumática, compartidos o privados, con paradas de baño."
+      : locale === "fr"
+        ? "Excursions agiles en semi-rigide, partagées ou privées, avec baignades."
+        : locale === "de"
+          ? "Agile RIB-Touren, geteilt oder privat, mit Badestopps."
+          : locale === "en"
+            ? "Agile RIB tours, shared or private, with swim stops."
+            : "Tour agili in gommone, condivisi o privati, con soste bagno.";
+  }
   return locale === "es"
     ? "Elige esta opción para ver las experiencias disponibles."
     : locale === "fr"
@@ -190,6 +220,7 @@ function bookingBoatImageSrc(service: BookingServiceOption): string {
   if (service.boatImageSrc) return service.boatImageSrc;
   if (service.boatId === "trimarano") return "/images/boats/neel-47/neel-47-hero.webp";
   if (service.boatId === "boat") return "/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-hero.webp";
+  if (service.boatId === "tour-rib") return "/images/boats/tour-rib/tour-rib-main.webp";
   if (service.boatId === "fishing-rib") return "/images/boats/fishing-rib/fishing-rib-hero.webp";
   return "/videos/hero-poster.webp";
 }
@@ -206,6 +237,13 @@ function bookingBoatImageAlt(
     if (locale === "en") return "Boat cruising through the Egadi Islands";
     return "Barca in navigazione alle Isole Egadi";
   }
+  if (boatId === "tour-rib") {
+    if (locale === "es") return "Neumática de excursión navegando por las Islas Egadi";
+    if (locale === "fr") return "Semi-rigide d'excursion naviguant aux îles Égades";
+    if (locale === "de") return "Ausflugs-RIB auf Fahrt zwischen den Ägadischen Inseln";
+    if (locale === "en") return "Tour RIB cruising through the Egadi Islands";
+    return "Gommone da escursione in navigazione alle Isole Egadi";
+  }
   return fallback ?? bookingBoatTitle(boatId, boatId, locale);
 }
 
@@ -217,6 +255,17 @@ function experienceKey(service: BookingServiceOption): string {
 
 function experienceTitle(service: BookingServiceOption, locale: string): string {
   if (service.serviceType === "BOAT_SHARED") {
+    if (service.boatId === "tour-rib") {
+      return locale === "es"
+        ? "Neumática compartida"
+        : locale === "fr"
+          ? "Semi-rigide partagé"
+          : locale === "de"
+            ? "Geteiltes RIB"
+            : locale === "en"
+              ? "Shared RIB"
+              : "Gommone condiviso";
+    }
     return locale === "es"
       ? "Barco compartido"
       : locale === "fr"
@@ -228,6 +277,18 @@ function experienceTitle(service: BookingServiceOption, locale: string): string 
           : "Barca condivisa";
   }
   if (service.serviceType === "BOAT_EXCLUSIVE") {
+    if (service.boatId === "fishing-rib") return service.title;
+    if (service.boatId === "tour-rib") {
+      return locale === "es"
+        ? "Neumática privada"
+        : locale === "fr"
+          ? "Semi-rigide privatisé"
+          : locale === "de"
+            ? "Privates RIB"
+            : locale === "en"
+              ? "Private RIB"
+              : "Gommone in esclusiva";
+    }
     return locale === "es"
       ? "Barco exclusivo"
       : locale === "fr"
@@ -531,7 +592,7 @@ export function BookingPageClient({
   }
 
   return (
-    <div className="mx-auto mt-10 flex h-[calc(100dvh-6.5rem)] w-full max-w-7xl flex-col overflow-hidden px-2 py-3 sm:mt-12 sm:h-[calc(100dvh-7rem)] sm:px-4 sm:py-5">
+    <div className="mx-auto mt-10 flex min-h-[calc(100svh-6.5rem)] w-full max-w-none flex-col px-2 py-3 sm:mt-12 sm:min-h-[calc(100svh-7rem)] sm:px-4 sm:py-5 lg:h-[calc(100dvh-7rem)] lg:min-h-0 lg:overflow-hidden">
       {selectionStep === "booking" ? (
         <h1 className="sr-only">{copy.title}</h1>
       ) : (
@@ -545,13 +606,16 @@ export function BookingPageClient({
         </div>
       )}
 
-      <section className="min-h-0 flex-1 overflow-hidden" aria-labelledby="booking-wizard-title">
+      <section
+        className="min-w-0 flex-1 lg:min-h-0 lg:overflow-hidden"
+        aria-labelledby="booking-wizard-title"
+      >
         {selectionStep === "booking" && selectedService ? (
-          <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          <div className="flex min-w-0 flex-col lg:h-full lg:min-h-0 lg:overflow-hidden">
             <h2 id="booking-wizard-title" className="sr-only">
               {copy.bookingWizard} {selectedService.title}
             </h2>
-            <div className="min-h-0 flex-1 overflow-hidden">
+            <div className="min-w-0 lg:min-h-0 lg:flex-1 lg:overflow-hidden">
               <BookingWizard
                 key={[
                   selectedService.id,
@@ -575,14 +639,15 @@ export function BookingPageClient({
                 initialEndDate={initialEndDate}
                 initialDurationDays={initialDurationDays}
                 onBackToSelection={backToSelectionFromBooking}
+                constrainHeight
               />
             </div>
           </div>
         ) : (
           <div
             className={cn(
-              "mx-auto flex max-h-full w-full flex-col overflow-hidden rounded-lg border border-white/16 bg-white p-2 shadow-2xl shadow-black/20 sm:p-4",
-              selectionStep === "boat" ? "h-full max-w-7xl" : "h-full max-w-5xl",
+              "mx-auto flex w-full flex-col rounded-lg border border-white/16 bg-white p-2 shadow-2xl shadow-black/20 sm:p-4 lg:h-full lg:max-h-full lg:overflow-hidden",
+              selectionStep === "boat" ? "max-w-7xl" : "max-w-5xl",
             )}
           >
             <h2 id="booking-wizard-title" className="sr-only">
@@ -593,9 +658,9 @@ export function BookingPageClient({
                   : copy.chooseExperienceTitle}
             </h2>
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col lg:min-h-0 lg:overflow-hidden">
               {selectionStep === "boat" ? (
-                <div className="grid min-h-0 flex-1 grid-rows-3 gap-2 overflow-hidden sm:grid-cols-3 sm:grid-rows-1">
+                <div className="grid flex-1 auto-rows-[minmax(11rem,1fr)] grid-cols-1 gap-2 sm:grid-cols-2 lg:min-h-0 lg:auto-rows-[minmax(13rem,1fr)] lg:grid-cols-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
                   {boats.map((boat) => (
                     <button
                       key={boat.id}
@@ -614,7 +679,7 @@ export function BookingPageClient({
                         alt=""
                         aria-hidden="true"
                         fill
-                        sizes="(min-width: 640px) 33vw, 100vw"
+                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                         className="object-cover transition duration-500 group-hover:scale-105"
                       />
                       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,18,37,0.08)_0%,rgba(3,18,37,0.26)_42%,rgba(3,18,37,0.82)_100%)]" />
@@ -636,7 +701,7 @@ export function BookingPageClient({
                       {copy.back}
                     </button>
                   </div>
-                  <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pb-2 pr-1 sm:gap-3">
+                  <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-2 pb-2 sm:gap-3 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
                     {selectedExperience.services.map((service) => (
                       <button
                         key={service.id}
@@ -683,7 +748,7 @@ export function BookingPageClient({
                       {copy.back}
                     </button>
                   </div>
-                  <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pb-2 pr-1 sm:gap-3">
+                  <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-2 pb-2 sm:gap-3 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
                     {experienceOptions.map((option) => {
                       const primaryService = option.services[0];
                       const requiresDuration = nextStepAfterExperience(option.services) === "duration";
@@ -798,7 +863,7 @@ function getBookingPageCopy(locale: string) {
       emptyTitle: "Keine aktiven Erlebnisse",
       emptyText: "Derzeit sind keine Services online buchbar.",
       chooseBoatTitle: "Wählen Sie, was Sie erleben möchten",
-      chooseBoatSubtitle: "Die Bilder helfen bei der Auswahl zwischen Trimaran-Komfort, Bootstouren und Angelcharter.",
+      chooseBoatSubtitle: "Die Bilder helfen bei der Auswahl zwischen Trimaran-Komfort, Boots- oder RIB-Touren und Angelcharter.",
       quickOverview: "Kurz erklärt",
       includedTitle: "Inklusive",
       notIncludedTitle: "Nicht inklusive / mitbringen",
@@ -839,7 +904,7 @@ function getBookingPageCopy(locale: string) {
       emptyTitle: "Aucune expérience active",
       emptyText: "Aucun service n'est actuellement disponible à la réservation en ligne.",
       chooseBoatTitle: "Choisissez ce que vous voulez vivre",
-      chooseBoatSubtitle: "Les images aident à distinguer le confort du trimaran, les sorties bateau et le charter pêche.",
+      chooseBoatSubtitle: "Les images aident à distinguer le confort du trimaran, les sorties en bateau ou semi-rigide et le charter pêche.",
       quickOverview: "En bref",
       includedTitle: "Inclus",
       notIncludedTitle: "Non inclus / à prévoir",
@@ -880,7 +945,7 @@ function getBookingPageCopy(locale: string) {
       emptyTitle: "No hay experiencias activas",
       emptyText: "En este momento no hay servicios disponibles para reservar online.",
       chooseBoatTitle: "Elige lo que quieres vivir",
-      chooseBoatSubtitle: "Las imágenes ayudan a distinguir entre confort en trimarán, tours en barco y charter de pesca.",
+      chooseBoatSubtitle: "Las imágenes ayudan a distinguir entre confort en trimarán, tours en barco o neumática y charter de pesca.",
       quickOverview: "Resumen rápido",
       includedTitle: "Incluido",
       notIncludedTitle: "No incluido / qué llevar",
@@ -921,7 +986,7 @@ function getBookingPageCopy(locale: string) {
       emptyTitle: "No active experiences",
       emptyText: "There are currently no services available to book online.",
       chooseBoatTitle: "Choose what you want to experience",
-      chooseBoatSubtitle: "The images help you choose between trimaran comfort, boat tours and fishing charter.",
+      chooseBoatSubtitle: "The images help you choose between trimaran comfort, boat or RIB tours, and fishing charter.",
       quickOverview: "Quick overview",
       includedTitle: "Included",
       notIncludedTitle: "Not included / bring",
@@ -961,7 +1026,7 @@ function getBookingPageCopy(locale: string) {
     emptyTitle: "Nessuna esperienza attiva",
     emptyText: "Al momento non ci sono servizi prenotabili online.",
     chooseBoatTitle: "Scegli cosa vuoi vivere",
-    chooseBoatSubtitle: "Le immagini aiutano a distinguere comfort in trimarano, tour in barca e charter pesca.",
+    chooseBoatSubtitle: "Le immagini aiutano a distinguere comfort in trimarano, tour in barca o gommone e charter pesca.",
     quickOverview: "Spiegazione veloce",
     includedTitle: "Cosa e' incluso",
     notIncludedTitle: "Cosa non e' incluso / da portare",

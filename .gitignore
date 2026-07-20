@@ -69,3 +69,9 @@ next-env.d.ts
 # asset bloat at repo root (put optimized versions in public/)
 /*.mp4
 /*.webp
+
+# Local photo sources; production uses the optimized WebP variants.
+/public/images/boats/tour-rib/*.jpeg
+/public/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-main.jpg
+/public/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-gallery-02.jpg
+/public/images/boats/cigala-bertinetti-34-offshore-open/cigala-bertinetti-34-offshore-open-gallery-03.jpg

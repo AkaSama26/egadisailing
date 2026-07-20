@@ -122,6 +122,27 @@ const experienceSlugsByService: Record<string, Record<string, string>> = {
     fr: "excursion-privee-egades-4-heures-apres-midi-depuis-trapani",
     de: "private-bootstour-aegadische-inseln-4-stunden-nachmittag-ab-trapani",
   },
+  "rib-shared-full-day": {
+    it: "escursione-gommone-favignana-levanzo-da-trapani",
+    en: "favignana-levanzo-rib-tour-from-trapani",
+    es: "excursion-compartida-semirrigida-favignana-levanzo-desde-trapani",
+    fr: "excursion-partagee-semi-rigide-favignana-levanzo-depuis-trapani",
+    de: "geteilte-rib-bootstour-favignana-levanzo-ab-trapani",
+  },
+  "rib-exclusive-full-day": {
+    it: "tour-privato-gommone-favignana-levanzo-da-trapani",
+    en: "private-favignana-levanzo-rib-tour-from-trapani",
+    es: "tour-privado-semirrigida-favignana-levanzo-desde-trapani",
+    fr: "excursion-privee-semi-rigide-favignana-levanzo-depuis-trapani",
+    de: "private-rib-bootstour-favignana-levanzo-ab-trapani",
+  },
+  "rib-exclusive-morning": {
+    it: "tour-privato-gommone-egadi-4-ore-da-trapani",
+    en: "private-4-hour-egadi-rib-tour-from-trapani",
+    es: "tour-privado-semirrigida-egadi-4-horas-desde-trapani",
+    fr: "excursion-privee-semi-rigide-egades-4-heures-depuis-trapani",
+    de: "private-rib-bootstour-egadi-4-stunden-ab-trapani",
+  },
   "fishing-full-day": {
     it: "charter-pesca-egadi-da-trapani",
     en: "egadi-fishing-charter-from-trapani",

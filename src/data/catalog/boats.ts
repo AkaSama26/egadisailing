@@ -133,7 +133,7 @@ function matchesBoatSlug(entry: BoatCatalogEntry, slug: string): boolean {
 
 const BOATS_PAGE_COPY = {
   seoTitle: {
-    it: "Catamarani Egadi, trimarano e barche da Trapani",
+    it: "Catamarano Egadi, trimarano e barche da Trapani",
     en: "Egadi Boats from Trapani: Trimaran and Open Boat",
     es: "Barcos Egadi desde Trapani: catamarán, trimarán y tour en barco",
     fr: "Bateaux aux Égades depuis Trapani : catamaran et trimaran",
@@ -154,7 +154,7 @@ const BOATS_PAGE_COPY = {
     de: "Egadisailing-Flotte",
   },
   title: {
-    it: "Catamarani Egadi, trimarano e barche per scoprire le isole da Trapani",
+    it: "Catamarano Egadi, trimarano e barche per scoprire le isole da Trapani",
     en: "Egadi boats from Trapani: trimaran and open boat for island tours",
     es: "Barcos para las Islas Egadi desde Trapani: trimarán, catamarán y tour en barco",
     fr: "Bateaux pour les îles Égades depuis Trapani : catamaran, trimaran et excursions",
@@ -1328,6 +1328,240 @@ export const BOAT_CATALOG = {
     specs: [
       { icon: "users", value: "12", label: { it: "Posti", en: "Seats" } },
       { icon: "engine", value: "800", label: { it: "HP", en: "HP" } },
+    ],
+  },
+  "tour-rib": {
+    id: "tour-rib",
+    slug: "gommone-egadi-sailing",
+    listed: false,
+    aliases: ["tour-rib", "gommone-egadi", "rib-egadi-sailing"],
+    order: 25,
+    title: {
+      it: "Gommone Egadi Sailing",
+      en: "Egadi Sailing RIB",
+      es: "Semirrígida Egadi Sailing",
+      fr: "Semi-rigide Egadi Sailing",
+      de: "Egadi Sailing RIB",
+    },
+    shortTitle: {
+      it: "Gommone Egadi Sailing",
+      en: "Egadi Sailing RIB",
+      es: "Semirrígida Egadi Sailing",
+      fr: "Semi-rigide Egadi Sailing",
+      de: "Egadi Sailing RIB",
+    },
+    eyebrow: {
+      it: "4 ore esclusivo · 8 ore condiviso o privato",
+      en: "4 hours private · 8 hours shared or private",
+      es: "4 horas privado · 8 horas compartido o privado",
+      fr: "4 heures privé · 8 heures partagé ou privé",
+      de: "4 Stunden privat · 8 Stunden geteilt oder privat",
+    },
+    description: {
+      it: "Il Gommone Egadi Sailing è veloce, pratico e pensato per vivere il mare da vicino. È disponibile per tour privati di 4 ore al mattino e per giornate di 8 ore condivise o private tra Favignana e Levanzo, con skipper, soste bagno e snorkeling.",
+      en: "The Egadi Sailing RIB is fast, practical and designed for experiencing the sea up close. It is available for private 4-hour morning tours and shared or private 8-hour days around Favignana and Levanzo, with skipper, swim stops and snorkelling.",
+      es: "La semirrígida Egadi Sailing es rápida, práctica y está pensada para vivir el mar de cerca. Está disponible para tours privados de 4 horas por la mañana y jornadas de 8 horas compartidas o privadas entre Favignana y Levanzo, con patrón, baños y snorkel.",
+      fr: "Le semi-rigide Egadi Sailing est rapide, pratique et conçu pour vivre la mer au plus près. Il est disponible pour des sorties privées de 4 heures le matin et des journées de 8 heures partagées ou privées entre Favignana et Levanzo, avec skipper, baignades et snorkeling.",
+      de: "Das Egadi Sailing RIB ist schnell, praktisch und für ein unmittelbares Meererlebnis konzipiert. Es ist für private 4-Stunden-Touren am Vormittag sowie geteilte oder private 8-Stunden-Tage zwischen Favignana und Levanzo verfügbar, mit Skipper, Badestopps und Schnorcheln.",
+    },
+    detail: {
+      eyebrow: {
+        it: "Gommone per tour alle Egadi da Trapani",
+        en: "RIB for Egadi tours from Trapani",
+        es: "Semirrígida para tours por las Egadi desde Trapani",
+        fr: "Semi-rigide pour les Égades depuis Trapani",
+        de: "RIB für Touren zu den Ägadischen Inseln ab Trapani",
+      },
+      title: {
+        it: "Gommone Egadi Sailing: tour agili tra Favignana e Levanzo",
+        en: "Egadi Sailing RIB: agile tours around Favignana and Levanzo",
+        es: "Semirrígida Egadi Sailing: tours ágiles por Favignana y Levanzo",
+        fr: "Semi-rigide Egadi Sailing : excursions agiles entre Favignana et Levanzo",
+        de: "Egadi Sailing RIB: flexible Touren rund um Favignana und Levanzo",
+      },
+      paragraphs: [
+        {
+          it: "Il Gommone Egadi Sailing è dedicato alle escursioni giornaliere alle Isole Egadi con partenza da Trapani. La configurazione open permette di muoversi con agilità tra le cale, alternando navigazione, soste bagno e snorkeling senza rinunciare a sedute, ombra e accesso comodo al mare.",
+          en: "The Egadi Sailing RIB is dedicated to day trips in the Egadi Islands departing from Trapani. Its open layout moves easily between coves while alternating cruising, swimming and snorkelling, with seating, shade and convenient sea access.",
+          es: "La semirrígida Egadi Sailing está dedicada a excursiones diurnas por las Islas Egadi desde Trapani. Su configuración abierta permite moverse con agilidad entre las calas, alternando navegación, baños y snorkel, con asientos, sombra y acceso cómodo al mar.",
+          fr: "Le semi-rigide Egadi Sailing est dédié aux excursions à la journée dans les îles Égades au départ de Trapani. Son aménagement ouvert permet de naviguer facilement entre les criques, avec baignades, snorkeling, assises, ombre et accès pratique à la mer.",
+          de: "Das Egadi Sailing RIB ist für Tagesausflüge zu den Ägadischen Inseln ab Trapani gedacht. Das offene Layout ermöglicht flexible Fahrten zwischen den Buchten mit Badestopps und Schnorcheln sowie Sitzplätzen, Schatten und bequemem Zugang zum Meer.",
+        },
+        {
+          it: "Puoi scegliere un tour privato di 4 ore al mattino oppure una giornata di 8 ore condivisa o privata. La formula breve concentra l'esperienza sulle soste migliori compatibili con il tempo disponibile; la giornata intera offre più margine per esplorare Favignana e Levanzo con un ritmo rilassato.",
+          en: "Choose a private 4-hour morning tour or a shared or private 8-hour day. The shorter format focuses on the best stops that fit the available time; the full day leaves more room to explore Favignana and Levanzo at a relaxed pace.",
+          es: "Puedes elegir un tour privado de 4 horas por la mañana o una jornada de 8 horas compartida o privada. La fórmula corta se centra en las mejores paradas posibles; el día completo permite explorar Favignana y Levanzo con más calma.",
+          fr: "Choisissez une sortie privée de 4 heures le matin ou une journée de 8 heures partagée ou privée. La formule courte privilégie les meilleurs arrêts possibles ; la journée complète permet d'explorer Favignana et Levanzo à un rythme plus détendu.",
+          de: "Zur Wahl stehen eine private 4-Stunden-Tour am Vormittag oder ein geteilter beziehungsweise privater 8-Stunden-Tag. Die kurze Tour konzentriert sich auf die besten erreichbaren Stopps; der ganze Tag lässt mehr Zeit für Favignana und Levanzo.",
+        },
+        {
+          it: "La rotta non è rigida: lo skipper la adatta ogni giorno a vento, mare e affollamento, privilegiando le baie più piacevoli e sicure. Non serve esperienza nautica; basta portare costume, protezione solare e voglia di stare in acqua.",
+          en: "The route is flexible: the skipper adjusts it each day around wind, sea and bay traffic, choosing the most enjoyable and safe areas. No boating experience is needed; bring swimwear, sun protection and a desire to be in the water.",
+          es: "La ruta es flexible: el patrón la adapta cada día al viento, al mar y a la afluencia, eligiendo las zonas más agradables y seguras. No hace falta experiencia náutica; basta con bañador, protección solar y ganas de entrar en el agua.",
+          fr: "La route reste flexible : le skipper l'adapte chaque jour au vent, à la mer et à la fréquentation, en privilégiant les zones agréables et sûres. Aucune expérience nautique n'est nécessaire ; prévoyez maillot, protection solaire et envie de profiter de l'eau.",
+          de: "Die Route bleibt flexibel: Der Skipper passt sie täglich an Wind, Meer und Auslastung der Buchten an und wählt angenehme, sichere Bereiche. Nautische Erfahrung ist nicht nötig; Badekleidung und Sonnenschutz genügen.",
+        },
+      ],
+    },
+    seoTitle: {
+      it: "Gommone Egadi Sailing per tour da Trapani",
+      en: "Egadi Sailing RIB Tours from Trapani",
+      es: "Tours en semirrígida Egadi Sailing desde Trapani",
+      fr: "Excursions en semi-rigide Egadi Sailing depuis Trapani",
+      de: "Egadi Sailing RIB-Touren ab Trapani",
+    },
+    seoDescription: {
+      it: "Gommone Egadi Sailing per tour alle Egadi da Trapani: 4 ore private o 8 ore condivise e private tra Favignana e Levanzo.",
+      en: "Egadi Sailing RIB tours from Trapani: private 4-hour or shared and private 8-hour trips around Favignana and Levanzo.",
+      es: "Tours en semirrígida Egadi Sailing desde Trapani: 4 horas privadas u 8 horas compartidas y privadas por Favignana y Levanzo.",
+      fr: "Excursions en semi-rigide Egadi Sailing depuis Trapani : 4 heures privées ou 8 heures partagées et privées entre Favignana et Levanzo.",
+      de: "Egadi Sailing RIB-Touren ab Trapani: 4 Stunden privat oder 8 Stunden geteilt und privat rund um Favignana und Levanzo.",
+    },
+    imageSrc: "/images/boats/tour-rib/tour-rib-main.webp",
+    imageAlt: {
+      it: "Gommone Egadi Sailing durante un tour alle Isole Egadi",
+      en: "Egadi Sailing RIB during an Egadi Islands tour",
+      es: "Semirrígida Egadi Sailing durante un tour por las Islas Egadi",
+      fr: "Semi-rigide Egadi Sailing pendant une excursion aux îles Égades",
+      de: "Egadi Sailing RIB während einer Tour zu den Ägadischen Inseln",
+    },
+    gallery: [
+      {
+        src: "/images/boats/tour-rib/tour-rib-main.webp",
+        alt: {
+          it: "Gommone Egadi Sailing in navigazione alle Isole Egadi",
+          en: "Egadi Sailing RIB cruising in the Egadi Islands",
+          es: "Semirrígida Egadi Sailing navegando por las Islas Egadi",
+          fr: "Semi-rigide Egadi Sailing en navigation dans les îles Égades",
+          de: "Egadi Sailing RIB bei der Fahrt auf den Ägadischen Inseln",
+        },
+        caption: { it: "Gommone Egadi Sailing", en: "Egadi Sailing RIB", es: "Semirrígida Egadi Sailing", fr: "Semi-rigide Egadi Sailing", de: "Egadi Sailing RIB" },
+      },
+      {
+        src: "/images/boats/tour-rib/tour-rib-gallery-02.webp",
+        alt: {
+          it: "Spazi a bordo del Gommone Egadi Sailing",
+          en: "On-board spaces of the Egadi Sailing RIB",
+          es: "Espacios a bordo de la semirrígida Egadi Sailing",
+          fr: "Espaces à bord du semi-rigide Egadi Sailing",
+          de: "Bereiche an Bord des Egadi Sailing RIB",
+        },
+        caption: { it: "Spazi a bordo", en: "On-board space", es: "Espacio a bordo", fr: "Espace à bord", de: "Platz an Bord" },
+      },
+      {
+        src: "/images/boats/tour-rib/tour-rib-gallery-03.webp",
+        alt: {
+          it: "Gommone Egadi Sailing pronto per le soste bagno",
+          en: "Egadi Sailing RIB ready for swim stops",
+          es: "Semirrígida Egadi Sailing preparada para las paradas de baño",
+          fr: "Semi-rigide Egadi Sailing prêt pour les arrêts baignade",
+          de: "Egadi Sailing RIB bereit für Badestopps",
+        },
+        caption: { it: "Vivere il mare", en: "Close to the sea", es: "Vivir el mar", fr: "Vivre la mer", de: "Nah am Meer" },
+      },
+      ...["04", "05", "06", "07", "08", "09", "10", "11"].map((imageNumber) => ({
+        src: `/images/boats/tour-rib/tour-rib-gallery-${imageNumber}.webp`,
+        alt: {
+          it: `Vista ${imageNumber} del Gommone Egadi Sailing per i tour alle Isole Egadi`,
+          en: `View ${imageNumber} of the Egadi Sailing RIB for Egadi Islands tours`,
+          es: `Vista ${imageNumber} de la semirrígida Egadi Sailing para tours por las Islas Egadi`,
+          fr: `Vue ${imageNumber} du semi-rigide Egadi Sailing pour les excursions aux îles Égades`,
+          de: `Ansicht ${imageNumber} des Egadi Sailing RIB für Touren zu den Ägadischen Inseln`,
+        },
+        caption: {
+          it: `Gommone Egadi Sailing · ${imageNumber}`,
+          en: `Egadi Sailing RIB · ${imageNumber}`,
+          es: `Semirrígida Egadi Sailing · ${imageNumber}`,
+          fr: `Semi-rigide Egadi Sailing · ${imageNumber}`,
+          de: `Egadi Sailing RIB · ${imageNumber}`,
+        },
+      })),
+    ],
+    idealFor: [
+      {
+        it: "Tour privati di 4 ore al mattino per coppie, famiglie e gruppi che vogliono il gommone in esclusiva.",
+        en: "Private 4-hour morning tours for couples, families and groups who want the RIB exclusively.",
+        es: "Tours privados de 4 horas por la mañana para parejas, familias y grupos que quieren la semirrígida en exclusiva.",
+        fr: "Sorties privées de 4 heures le matin pour couples, familles et groupes souhaitant le semi-rigide en exclusivité.",
+        de: "Private 4-Stunden-Touren am Vormittag für Paare, Familien und Gruppen mit exklusivem RIB.",
+      },
+      {
+        it: "Giornate di 8 ore condivise o private, con più tempo per Favignana, Levanzo, bagni e snorkeling.",
+        en: "Shared or private 8-hour days with more time for Favignana, Levanzo, swimming and snorkelling.",
+        es: "Jornadas de 8 horas compartidas o privadas, con más tiempo para Favignana, Levanzo, baños y snorkel.",
+        fr: "Journées de 8 heures partagées ou privées, avec plus de temps pour Favignana, Levanzo, baignades et snorkeling.",
+        de: "Geteilte oder private 8-Stunden-Tage mit mehr Zeit für Favignana, Levanzo, Baden und Schnorcheln.",
+      },
+    ],
+    routes: [
+      {
+        it: "Favignana e Levanzo nella giornata intera, con soste selezionate in base alle condizioni del mare.",
+        en: "Favignana and Levanzo on the full day, with stops selected around sea conditions.",
+        es: "Favignana y Levanzo durante el día completo, con paradas elegidas según las condiciones del mar.",
+        fr: "Favignana et Levanzo sur la journée complète, avec des arrêts choisis selon les conditions en mer.",
+        de: "Favignana und Levanzo am ganzen Tag, mit Stopps je nach Seebedingungen.",
+      },
+      {
+        it: "Rotta compatta nel tour mattutino di 4 ore, privilegiando le cale più adatte della giornata.",
+        en: "A compact route on the 4-hour morning tour, prioritising the day's most suitable coves.",
+        es: "Ruta compacta en el tour matinal de 4 horas, priorizando las calas más adecuadas del día.",
+        fr: "Route compacte lors de la sortie matinale de 4 heures, en privilégiant les criques les mieux adaptées.",
+        de: "Kompakte Route auf der 4-Stunden-Vormittagstour mit den jeweils passendsten Buchten.",
+      },
+    ],
+    serviceIds: ["rib-shared-full-day", "rib-exclusive-full-day", "rib-exclusive-morning"],
+    faqs: [
+      {
+        question: {
+          it: "Il gommone si può prenotare in esclusiva?",
+          en: "Can the RIB be booked privately?",
+          es: "¿Se puede reservar la semirrígida en exclusiva?",
+          fr: "Peut-on privatiser le semi-rigide ?",
+          de: "Kann das RIB privat gebucht werden?",
+        },
+        answer: {
+          it: "Sì. È disponibile in esclusiva per 4 ore al mattino o per l'intera giornata di 8 ore. La formula condivisa è prevista solo per la giornata intera.",
+          en: "Yes. It is available privately for 4 hours in the morning or for the full 8-hour day. The shared option is available only for the full day.",
+          es: "Sí. Está disponible en exclusiva durante 4 horas por la mañana o durante el día completo de 8 horas. La opción compartida solo está disponible para el día completo.",
+          fr: "Oui. Il est disponible en privé pendant 4 heures le matin ou pour la journée complète de 8 heures. La formule partagée est proposée uniquement à la journée.",
+          de: "Ja. Es ist privat für 4 Stunden am Vormittag oder für den ganzen 8-Stunden-Tag buchbar. Die geteilte Option gibt es nur ganztägig.",
+        },
+      },
+      {
+        question: {
+          it: "Dove parte il tour in gommone?",
+          en: "Where does the RIB tour depart from?",
+          es: "¿Desde dónde sale el tour en semirrígida?",
+          fr: "D'où part l'excursion en semi-rigide ?",
+          de: "Wo startet die RIB-Tour?",
+        },
+        answer: {
+          it: "La partenza è da Trapani. Il punto d'incontro preciso e le indicazioni pratiche vengono inviati dopo la prenotazione.",
+          en: "Departure is from Trapani. The exact meeting point and practical directions are sent after booking.",
+          es: "La salida es desde Trapani. El punto de encuentro exacto y la información práctica se envían después de la reserva.",
+          fr: "Le départ se fait de Trapani. Le lieu de rendez-vous exact et les informations pratiques sont envoyés après la réservation.",
+          de: "Die Abfahrt erfolgt in Trapani. Der genaue Treffpunkt und praktische Hinweise werden nach der Buchung gesendet.",
+        },
+      },
+      {
+        question: {
+          it: "La rotta è sempre la stessa?",
+          en: "Is the route always the same?",
+          es: "¿La ruta es siempre la misma?",
+          fr: "La route est-elle toujours la même ?",
+          de: "Ist die Route immer gleich?",
+        },
+        answer: {
+          it: "No. Lo skipper sceglie ogni giorno la rotta più piacevole e sicura in base a vento, mare e affollamento delle cale.",
+          en: "No. Each day the skipper chooses the most enjoyable and safe route according to wind, sea and bay traffic.",
+          es: "No. Cada día el patrón elige la ruta más agradable y segura según el viento, el mar y la afluencia en las calas.",
+          fr: "Non. Chaque jour, le skipper choisit la route la plus agréable et sûre selon le vent, la mer et la fréquentation des criques.",
+          de: "Nein. Der Skipper wählt täglich die angenehmste und sicherste Route je nach Wind, Meer und Auslastung der Buchten.",
+        },
+      },
+    ],
+    specs: [
+      { icon: "users", value: "12", label: { it: "Posti", en: "Seats", es: "Plazas", fr: "Places", de: "Plätze" } },
     ],
   },
   "fishing-rib": {

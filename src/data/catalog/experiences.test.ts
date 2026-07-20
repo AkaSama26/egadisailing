@@ -8,6 +8,7 @@ import {
 } from "./experiences";
 import { getBoatContent, getPublicBoatIds } from "./boats";
 import { localizedPathWithoutLocale } from "@/lib/i18n/paths";
+import { localizedExperiencePath } from "@/lib/i18n/public-experience-paths";
 
 describe("fishing charter catalog", () => {
   const locales = ["it", "en", "es", "fr", "de"] as const;
@@ -162,11 +163,17 @@ describe("fishing charter catalog", () => {
   it("uses SEO-first package titles on the experiences hub", () => {
     const italianPackages = getExperiencePackageContents("it");
 
-    expect(italianPackages[0]?.title).toBe(
+    expect(
+      italianPackages.find((item) => item.key === "tour-barca-egadi-8-ore")?.title,
+    ).toBe(
       "Escursione in barca Favignana e Levanzo 8 ore da Trapani",
     );
-    expect(italianPackages[1]?.title).toBe("Tour privato alle Egadi 4 ore da Trapani");
-    expect(italianPackages[2]?.title).toBe("Pranzo a bordo alle Egadi in trimarano");
+    expect(
+      italianPackages.find((item) => item.key === "tour-barca-egadi-4-ore")?.title,
+    ).toBe("Tour privato alle Egadi 4 ore da Trapani");
+    expect(
+      italianPackages.find((item) => item.key === "esperienza-gourmet-trimarano")?.title,
+    ).toBe("Pranzo a bordo alle Egadi in trimarano");
   });
 
   it("localizes new trimaran gallery captions and alt text beyond English", () => {
@@ -230,6 +237,149 @@ describe("fishing charter catalog", () => {
     );
     expect(localizedPathWithoutLocale("de", "/experiences/egadi-fishing-charter")).toBe(
       "/erlebnisse/angelcharter-aegadische-inseln-ab-trapani",
+    );
+  });
+});
+
+describe("tour RIB catalog", () => {
+  const slugs = {
+    it: {
+      shared: "escursione-gommone-favignana-levanzo-da-trapani",
+      privateFullDay: "tour-privato-gommone-favignana-levanzo-da-trapani",
+      privateMorning: "tour-privato-gommone-egadi-4-ore-da-trapani",
+    },
+    en: {
+      shared: "favignana-levanzo-rib-tour-from-trapani",
+      privateFullDay: "private-favignana-levanzo-rib-tour-from-trapani",
+      privateMorning: "private-4-hour-egadi-rib-tour-from-trapani",
+    },
+    es: {
+      shared: "excursion-compartida-semirrigida-favignana-levanzo-desde-trapani",
+      privateFullDay: "tour-privado-semirrigida-favignana-levanzo-desde-trapani",
+      privateMorning: "tour-privado-semirrigida-egadi-4-horas-desde-trapani",
+    },
+    fr: {
+      shared: "excursion-partagee-semi-rigide-favignana-levanzo-depuis-trapani",
+      privateFullDay: "excursion-privee-semi-rigide-favignana-levanzo-depuis-trapani",
+      privateMorning: "excursion-privee-semi-rigide-egades-4-heures-depuis-trapani",
+    },
+    de: {
+      shared: "geteilte-rib-bootstour-favignana-levanzo-ab-trapani",
+      privateFullDay: "private-rib-bootstour-favignana-levanzo-ab-trapani",
+      privateMorning: "private-rib-bootstour-egadi-4-stunden-ab-trapani",
+    },
+  } as const;
+
+  it("keeps the dedicated tour RIB out of the public fleet and orders all WebP photos", () => {
+    const boat = getBoatContent("tour-rib", "it");
+    const expectedImages = [
+      "/images/boats/tour-rib/tour-rib-main.webp",
+      ...Array.from(
+        { length: 10 },
+        (_, index) =>
+          `/images/boats/tour-rib/tour-rib-gallery-${String(index + 2).padStart(2, "0")}.webp`,
+      ),
+    ];
+
+    expect(getPublicBoatIds()).not.toContain("tour-rib");
+    expect(boat?.title).toBe("Gommone Egadi Sailing");
+    expect(boat?.serviceIds).toEqual([
+      "rib-shared-full-day",
+      "rib-exclusive-full-day",
+      "rib-exclusive-morning",
+    ]);
+    expect(boat?.gallery.map((item) => item.src)).toEqual(expectedImages);
+    expect(boat?.imageSrc).toBe(expectedImages[0]);
+  });
+
+  it("publishes distinct reversible RIB slugs in all supported locales", () => {
+    for (const [locale, localizedSlugs] of Object.entries(slugs)) {
+      expect(getExperiencePublicSlug("rib-shared-full-day", locale)).toBe(
+        localizedSlugs.shared,
+      );
+      expect(getExperiencePublicSlug("rib-exclusive-full-day", locale)).toBe(
+        localizedSlugs.privateFullDay,
+      );
+      expect(getExperiencePublicSlug("rib-exclusive-morning", locale)).toBe(
+        localizedSlugs.privateMorning,
+      );
+      expect(resolveExperienceServiceIdFromSlug(localizedSlugs.shared)).toBe(
+        "rib-shared-full-day",
+      );
+      expect(resolveExperienceServiceIdFromSlug(localizedSlugs.privateFullDay)).toBe(
+        "rib-exclusive-full-day",
+      );
+      expect(resolveExperienceServiceIdFromSlug(localizedSlugs.privateMorning)).toBe(
+        "rib-exclusive-morning",
+      );
+    }
+  });
+
+  it("keeps public path helpers aligned with the catalog slugs", () => {
+    expect(localizedExperiencePath("it", "rib-shared-full-day")).toBe(
+      `/it/esperienze/${slugs.it.shared}`,
+    );
+    expect(localizedExperiencePath("en", "rib-exclusive-full-day")).toBe(
+      `/en/experiences/${slugs.en.privateFullDay}`,
+    );
+    expect(localizedExperiencePath("es", "rib-exclusive-morning")).toBe(
+      `/es/experiencias/${slugs.es.privateMorning}`,
+    );
+    expect(localizedExperiencePath("fr", "rib-shared-full-day")).toBe(
+      `/fr/experiences/${slugs.fr.shared}`,
+    );
+    expect(localizedExperiencePath("de", "rib-exclusive-full-day")).toBe(
+      `/de/erlebnisse/${slugs.de.privateFullDay}`,
+    );
+  });
+
+  it("provides localized RIB detail content with the main photo first", () => {
+    const expectedTitles = {
+      it: "Escursione in gommone Favignana e Levanzo da Trapani",
+      en: "Favignana and Levanzo shared RIB tour from Trapani",
+      es: "Excursión compartida en semirrígida a Favignana y Levanzo desde Trapani",
+      fr: "Excursion partagée en semi-rigide à Favignana et Levanzo depuis Trapani",
+      de: "Geteilte RIB-Tour nach Favignana und Levanzo ab Trapani",
+    } as const;
+
+    for (const [locale, title] of Object.entries(expectedTitles)) {
+      const experience = getExperienceContent("rib-shared-full-day", locale);
+
+      expect(experience?.title).toBe(title);
+      expect(experience?.media).toHaveLength(11);
+      expect(experience?.media[0]?.src).toBe(
+        "/images/boats/tour-rib/tour-rib-main.webp",
+      );
+    }
+  });
+
+  it("publishes one private 4-hour package and one shared/private 8-hour package", () => {
+    const italianPackages = getExperiencePackageContents("it");
+    const fourHour = italianPackages.find((item) => item.key === "tour-gommone-egadi-4-ore");
+    const eightHour = italianPackages.find((item) => item.key === "tour-gommone-egadi-8-ore");
+
+    expect(fourHour?.serviceIds).toEqual(["rib-exclusive-morning"]);
+    expect(fourHour?.variants.map((variant) => variant.serviceId)).toEqual([
+      "rib-exclusive-morning",
+    ]);
+    expect(fourHour?.primaryHref).toBe(
+      `/esperienze/${slugs.it.privateMorning}`,
+    );
+    expect(eightHour?.serviceIds).toEqual([
+      "rib-shared-full-day",
+      "rib-exclusive-full-day",
+    ]);
+    expect(eightHour?.variants.map((variant) => variant.label)).toEqual([
+      "Condiviso",
+      "Privato",
+    ]);
+    expect(eightHour?.primaryHref).toBe(`/esperienze/${slugs.it.shared}`);
+    expect(getExperiencePackageServiceIds()).toEqual(
+      expect.arrayContaining([
+        "rib-shared-full-day",
+        "rib-exclusive-full-day",
+        "rib-exclusive-morning",
+      ]),
     );
   });
 });
