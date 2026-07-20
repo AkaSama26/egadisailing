@@ -48,8 +48,8 @@ jobs:
       TRIVY_BUNDLE_SHA256: dab3ba23f41fb2f1035e24920cbde4dfac0595b43d4ce239885cb4c1e947ad1e
       COSIGN_VERSION: 3.0.6
       COSIGN_SHA256: c956e5dfcac53d52bcf058360d579472f0c1d2d9b69f55209e256fe7783f4c74
-      COSIGN_CERTIFICATE_IDENTITY: https://github.com/AkaSama26/egadisailing/.github/workflows/release-image.yml@refs/heads/main
-      COSIGN_OIDC_ISSUER: https://token.actions.githubusercontent.com
+      EXPECTED_CERTIFICATE_IDENTITY: https://github.com/AkaSama26/egadisailing/.github/workflows/release-image.yml@refs/heads/main
+      EXPECTED_OIDC_ISSUER: https://token.actions.githubusercontent.com
 
     steps:
       - name: Validate release identity
@@ -219,8 +219,8 @@ jobs:
         run: |
           set -euo pipefail
           "${RUNNER_TEMP}/cosign" verify \
-            --certificate-identity "$COSIGN_CERTIFICATE_IDENTITY" \
-            --certificate-oidc-issuer "$COSIGN_OIDC_ISSUER" \
+            --certificate-identity "$EXPECTED_CERTIFICATE_IDENTITY" \
+            --certificate-oidc-issuer "$EXPECTED_OIDC_ISSUER" \
             "$SCAN_IMAGE" >/dev/null
 
       - name: Recheck full-SHA tag immediately before promotion
