@@ -68,16 +68,16 @@ export default async function BookingPage({
       : undefined;
 
   return (
-    <OceanLayout padding="md">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-8 text-center text-white">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-100">
+    <OceanLayout padding="sm" className="sm:py-12 lg:py-16">
+      <div className="mx-auto w-full max-w-none">
+        <div className="mb-5 text-center text-white sm:mb-7 lg:mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-100 sm:text-sm">
             {locale === "es" ? "Reserva guiada" : locale === "fr" ? "Réservation guidée" : locale === "de" ? "Geführte Buchung" : locale === "en" ? "Guided booking" : "Prenotazione guidata"}
           </p>
-          <h1 className="mx-auto mt-3 max-w-4xl font-heading text-4xl font-bold leading-[0.98] md:text-6xl">
+          <h1 className="mx-auto mt-2 max-w-5xl text-balance break-words font-heading text-3xl font-bold leading-[1.02] sm:mt-3 sm:text-4xl md:text-5xl lg:text-6xl">
             {locale === "es" ? "Reserva" : locale === "fr" ? "Réserver" : locale === "de" ? "Buchen" : locale === "en" ? "Book" : "Prenota"} {serviceTitle}
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/76 md:text-lg">
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/76 sm:mt-4 sm:text-base sm:leading-7 lg:mt-5 lg:text-lg">
             {locale === "es"
               ? "Elige fecha, huéspedes, datos y pago en un recorrido claro paso a paso."
               : locale === "fr"

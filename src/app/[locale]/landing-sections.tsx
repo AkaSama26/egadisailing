@@ -45,7 +45,9 @@ const featuredPackageOrder: Record<string, number> = {
   charter: 20,
   "barca-8-ore": 30,
   "barca-4-ore": 40,
-  "charter-pesca": 50,
+  "tour-gommone-egadi-8-ore": 50,
+  "tour-gommone-egadi-4-ore": 60,
+  "charter-pesca": 70,
 };
 
 const googleReviewsUrl = PUBLIC_REVIEW_LINKS.google;
@@ -972,6 +974,194 @@ export function LandingSections({ services, locale }: LandingSectionsProps) {
           caption: "Cala Rossa",
           color: "#FDE68A",
           src: "/images/experience-polaroids/barca-4-ore-cala-rossa.webp",
+        },
+      ],
+    },
+    {
+      key: "tour-gommone-egadi-8-ore",
+      serviceIds: ["rib-shared-full-day", "rib-exclusive-full-day"],
+      eyebrow: isEs ? "Día completo en neumática" : isFr ? "Journée en semi-rigide" : isDe ? "Ganztag im RIB" : isEn ? "Full day by RIB" : "Giornata in gommone",
+      title: isEs
+        ? "Tour en neumática Favignana y Levanzo desde Trapani"
+        : isFr
+          ? "Excursion en semi-rigide Favignana et Levanzo depuis Trapani"
+          : isDe
+            ? "RIB-Tour Favignana und Levanzo ab Trapani"
+            : isEn
+              ? "Favignana and Levanzo RIB tour from Trapani"
+              : "Tour in gommone Favignana e Levanzo da Trapani",
+      subtitle: isEs
+        ? "La misma jornada completa entre calas, baños y snorkel, en una neumática ágil disponible compartida o privada."
+        : isFr
+          ? "La même journée complète entre criques, baignades et snorkeling, sur un semi-rigide agile disponible en formule partagée ou privée."
+          : isDe
+            ? "Derselbe vollständige Tag zwischen Buchten, Badestopps und Schnorcheln, auf einem agilen RIB als geteilte oder private Tour."
+            : isEn
+              ? "The same full day among coves, swim stops and snorkelling, on an agile RIB available as a shared or private tour."
+              : "La stessa giornata completa tra cale, soste bagno e snorkeling, su un gommone agile disponibile condiviso o in esclusiva.",
+      priceLabel: priceLabelFor(["rib-shared-full-day", "rib-exclusive-full-day"]),
+      durationLabel: isEs ? "8 horas" : isFr ? "8 heures" : isDe ? "8 Stunden" : isEn ? "8 hours" : "8 ore",
+      detailLabel: isEs ? "Compartido o privado" : isFr ? "Partagé ou privé" : isDe ? "Geteilt oder privat" : isEn ? "Shared or private" : "Condiviso o esclusivo",
+      capacityLabel: capacityLabelFor(["rib-shared-full-day", "rib-exclusive-full-day"], isEs ? "huéspedes" : isFr ? "invités" : isDe ? "Gäste" : isEn ? "guests" : "persone"),
+      formulaLabel: isEs ? "Tour en neumática compartido o privado" : isFr ? "Excursion en semi-rigide partagée ou privée" : isDe ? "Geteilte oder private RIB-Tour" : isEn ? "Shared or private RIB tour" : "Tour in gommone condiviso o privato",
+      scheduleLabel: isEs
+        ? "Check-in 09:30, salida 10:00 y regreso hacia las 18:00."
+        : isFr
+          ? "Check-in 09:30, départ 10:00 et retour vers 18:00."
+          : isDe
+            ? "Check-in 09:30, Abfahrt 10:00 und Rückkehr gegen 18:00."
+            : isEn
+              ? "Check-in 09:30, departure 10:00 and return around 18:00."
+              : "Check-in 09:30, partenza 10:00 e rientro verso le 18:00.",
+      details: [
+        {
+          title: idealForTitle,
+          text: isEs
+            ? "Para quien quiere Favignana y Levanzo en un medio rápido, con más cercanía al agua."
+            : isFr
+              ? "Pour ceux qui veulent découvrir Favignana et Levanzo sur un bateau rapide, au plus près de l'eau."
+              : isDe
+                ? "Für Gäste, die Favignana und Levanzo mit einem schnellen, wassernahen Boot erleben möchten."
+                : isEn
+                  ? "For guests who want Favignana and Levanzo on a fast boat, closer to the water."
+                  : "Per chi vuole vivere Favignana e Levanzo su un mezzo veloce e vicino all'acqua.",
+        },
+        {
+          title: isEs ? "A bordo" : isFr ? "À bord" : isDe ? "An Bord" : isEn ? "On board" : "A bordo",
+          text: isEs
+            ? "Neumática compartida o privada, patrón incluido y paradas adaptadas al ritmo del grupo."
+            : isFr
+              ? "Semi-rigide partagé ou privé, skipper inclus et arrêts adaptés au rythme du groupe."
+              : isDe
+                ? "Geteiltes oder privates RIB, Skipper inklusive und Stopps im Rhythmus der Gruppe."
+                : isEn
+                  ? "Shared or private RIB, skipper included and stops adapted to the group's pace."
+                  : "Gommone condiviso o privato, skipper incluso e soste adattate al ritmo del gruppo.",
+        },
+        {
+          title: routeTitle,
+          text: isEs
+            ? "Favignana y Levanzo, con calas y paradas elegidas según mar, viento y seguridad."
+            : isFr
+              ? "Favignana et Levanzo, avec criques et arrêts choisis selon mer, vent et sécurité."
+              : isDe
+                ? "Favignana und Levanzo, mit Buchten und Stopps je nach Meer, Wind und Sicherheit."
+                : isEn
+                  ? "Favignana and Levanzo, with coves and stops chosen around sea, wind and safety."
+                  : "Favignana e Levanzo, con cale e soste scelte in base a mare, vento e sicurezza.",
+        },
+      ],
+      href: localizedExperiencePath(locale, "rib-shared-full-day"),
+      ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
+      polaroids: [
+        {
+          caption: isEs ? "Neumática Egadisailing" : isFr ? "Semi-rigide Egadisailing" : isDe ? "Egadisailing RIB" : isEn ? "Egadisailing RIB" : "Gommone Egadisailing",
+          color: "#BAE6FD",
+          src: "/images/boats/tour-rib/tour-rib-main.webp",
+        },
+        {
+          caption: isEs ? "Espacios a bordo" : isFr ? "Espaces à bord" : isDe ? "Platz an Bord" : isEn ? "On-board space" : "Spazi a bordo",
+          color: "#A7F3D0",
+          src: "/images/boats/tour-rib/tour-rib-gallery-02.webp",
+        },
+        {
+          caption: isEs ? "Paradas de baño" : isFr ? "Arrêts baignade" : isDe ? "Badestopps" : isEn ? "Swim stops" : "Soste bagno",
+          color: "#FDE68A",
+          src: "/images/boats/tour-rib/tour-rib-gallery-03.webp",
+        },
+      ],
+    },
+    {
+      key: "tour-gommone-egadi-4-ore",
+      serviceIds: ["rib-exclusive-morning"],
+      eyebrow: isEs ? "Medio día privado" : isFr ? "Demi-journée privée" : isDe ? "Privater Halbtag" : isEn ? "Private half day" : "Mezza giornata privata",
+      title: isEs
+        ? "Excursión privada en neumática de 4 horas por las Islas Egadi"
+        : isFr
+          ? "Excursion privée en semi-rigide de 4 heures aux îles Égades"
+          : isDe
+            ? "Private 4-Stunden-RIB-Tour zu den Ägadischen Inseln"
+            : isEn
+              ? "Private 4-hour Egadi Islands RIB tour"
+              : "Escursione privata in gommone di 4 ore alle Egadi",
+      subtitle: isEs
+        ? "La fórmula privada y compacta para navegar, bañarse y descubrir las calas más protegidas alrededor de Favignana."
+        : isFr
+          ? "La formule privée et compacte pour naviguer, se baigner et découvrir les criques les plus abritées autour de Favignana."
+          : isDe
+            ? "Das kompakte private Format zum Fahren, Baden und Entdecken der geschütztesten Buchten rund um Favignana."
+            : isEn
+              ? "The compact private format for cruising, swimming and discovering the most sheltered coves around Favignana."
+              : "La formula privata e compatta per navigare, fare il bagno e scoprire le cale più riparate intorno a Favignana.",
+      priceLabel: priceLabelFor(["rib-exclusive-morning"]),
+      durationLabel: isEs ? "4 horas" : isFr ? "4 heures" : isDe ? "4 Stunden" : isEn ? "4 hours" : "4 ore",
+      detailLabel: isEs ? "Solo privado" : isFr ? "Privé uniquement" : isDe ? "Nur privat" : isEn ? "Private only" : "Solo esclusivo",
+      capacityLabel: capacityLabelFor(["rib-exclusive-morning"], isEs ? "huéspedes" : isFr ? "invités" : isDe ? "Gäste" : isEn ? "guests" : "persone"),
+      formulaLabel: isEs ? "Tour privado en neumática" : isFr ? "Excursion privée en semi-rigide" : isDe ? "Private RIB-Tour" : isEn ? "Private RIB tour" : "Tour privato in gommone",
+      scheduleLabel: isEs
+        ? "Salida por la mañana, 4 horas con regreso claro."
+        : isFr
+          ? "Départ le matin, 4 heures avec retour clair."
+          : isDe
+            ? "Abfahrt am Vormittag, 4 Stunden mit klarer Rückkehrzeit."
+            : isEn
+              ? "Morning departure, 4 hours with a clear return time."
+              : "Partenza al mattino, 4 ore con rientro preciso.",
+      details: [
+        {
+          title: idealForTitle,
+          text: isEs
+            ? "Perfecta si tienes medio día y quieres una neumática reservada solo para tu grupo."
+            : isFr
+              ? "Parfaite si vous avez une demi-journée et souhaitez un semi-rigide réservé à votre groupe."
+              : isDe
+                ? "Perfekt für einen halben Tag mit einem RIB nur für Ihre Gruppe."
+                : isEn
+                  ? "Perfect for a half day with a RIB reserved for your group."
+                  : "Perfetta se hai mezza giornata e vuoi un gommone riservato al tuo gruppo.",
+        },
+        {
+          title: isEs ? "A bordo" : isFr ? "À bord" : isDe ? "An Bord" : isEn ? "On board" : "A bordo",
+          text: isEs
+            ? "Neumática privada con patrón, snorkel y paradas compactas en las aguas más resguardadas."
+            : isFr
+              ? "Semi-rigide privé avec skipper, snorkeling et arrêts compacts dans les eaux les plus abritées."
+              : isDe
+                ? "Privates RIB mit Skipper, Schnorcheln und kurzen Stopps in geschützten Gewässern."
+                : isEn
+                  ? "Private RIB with skipper, snorkelling and compact stops in sheltered waters."
+                  : "Gommone privato con skipper, snorkeling e soste compatte nelle acque più riparate.",
+        },
+        {
+          title: routeTitle,
+          text: isEs
+            ? "Favignana, eligiendo la mejor cala alcanzable con seguridad en cuatro horas."
+            : isFr
+              ? "Favignana, avec la meilleure crique accessible en sécurité en quatre heures."
+              : isDe
+                ? "Favignana, mit der besten Bucht, die in vier Stunden sicher erreichbar ist."
+                : isEn
+                  ? "Favignana, choosing the best cove that can be reached safely in four hours."
+                  : "Favignana, scegliendo la cala migliore raggiungibile in sicurezza in quattro ore.",
+        },
+      ],
+      href: localizedExperiencePath(locale, "rib-exclusive-morning"),
+      ctaLabel: isEs ? "Ver detalles" : isFr ? "Voir les détails" : isDe ? "Details ansehen" : isEn ? "Learn more" : "Scopri di più",
+      polaroids: [
+        {
+          caption: isEs ? "Neumática privada" : isFr ? "Semi-rigide privé" : isDe ? "Privates RIB" : isEn ? "Private RIB" : "Gommone privato",
+          color: "#BAE6FD",
+          src: "/images/boats/tour-rib/tour-rib-main.webp",
+        },
+        {
+          caption: isEs ? "Espacios a bordo" : isFr ? "Espaces à bord" : isDe ? "Platz an Bord" : isEn ? "On-board space" : "Spazi a bordo",
+          color: "#A7F3D0",
+          src: "/images/boats/tour-rib/tour-rib-gallery-02.webp",
+        },
+        {
+          caption: isEs ? "Calas protegidas" : isFr ? "Criques abritées" : isDe ? "Geschützte Buchten" : isEn ? "Sheltered coves" : "Cale riparate",
+          color: "#FDE68A",
+          src: "/images/boats/tour-rib/tour-rib-gallery-03.webp",
         },
       ],
     },

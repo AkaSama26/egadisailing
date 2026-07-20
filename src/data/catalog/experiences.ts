@@ -358,6 +358,22 @@ const fullDayBoatItinerary = [
   },
 ];
 
+const fullDayRibItinerary: ExperienceCatalogEntry["itinerary"] =
+  fullDayBoatItinerary.map((stop, index) =>
+    index === 0
+      ? {
+          ...stop,
+          text: {
+            it: "Imbarco, briefing sicurezza e partenza per un tour in gommone di 8 ore verso Favignana e Levanzo, con rotta definita dallo skipper in base a vento e mare.",
+            en: "Boarding, safety briefing and departure for an 8-hour RIB tour towards Favignana and Levanzo, with the skipper shaping the route around wind and sea conditions.",
+            es: "Embarque, briefing de seguridad y salida para un tour de 8 horas en semirrígida hacia Favignana y Levanzo, con ruta definida por el patrón según viento y mar.",
+            fr: "Embarquement, briefing sécurité et départ pour une excursion de 8 heures en semi-rigide vers Favignana et Levanzo, avec route définie par le skipper selon le vent et la mer.",
+            de: "Einschiffung, Sicherheitsbriefing und Start zu einer 8-stündigen RIB-Tour nach Favignana und Levanzo, mit Route je nach Wind und Meer.",
+          },
+        }
+      : stop,
+  );
+
 const fishingItinerary = [
   {
     time: "08:30",
@@ -547,6 +563,81 @@ const halfDayMorningItinerary = [
   },
 ];
 
+const halfDayMorningRibItinerary: ExperienceCatalogEntry["itinerary"] = [
+  {
+    time: "09:00",
+    title: {
+      it: "Partenza in gommone da Trapani",
+      en: "RIB departure from Trapani",
+      es: "Salida en semirrígida desde Trapani",
+      fr: "Départ en semi-rigide de Trapani",
+      de: "Abfahrt mit dem RIB von Trapani",
+    },
+    location: {
+      it: "Porto di Trapani",
+      en: "Trapani harbour",
+      es: "Puerto de Trapani",
+      fr: "Port de Trapani",
+      de: "Hafen Trapani",
+    },
+    text: {
+      it: "Imbarco e briefing con lo skipper per scegliere la rotta più riparata della mattina.",
+      en: "Boarding and briefing with the skipper to choose the most sheltered morning route.",
+      es: "Embarque y briefing con el patrón para elegir la ruta más resguardada de la mañana.",
+      fr: "Embarquement et briefing avec le skipper pour choisir la route la plus abritée du matin.",
+      de: "Einschiffung und Briefing mit dem Skipper zur Wahl der geschütztesten Vormittagsroute.",
+    },
+  },
+  {
+    time: "09:45",
+    title: {
+      it: "Prima cala",
+      en: "First cove",
+      es: "Primera cala",
+      fr: "Première crique",
+      de: "Erste Bucht",
+    },
+    location: { it: "Favignana", en: "Favignana", es: "Favignana", fr: "Favignana", de: "Favignana" },
+    text: {
+      it: "Bagno e snorkeling nelle acque più limpide raggiungibili in sicurezza in mezza giornata.",
+      en: "Swimming and snorkelling in the clearest waters that can be reached safely in half a day.",
+      es: "Baño y snorkel en las aguas más claras que pueden alcanzarse con seguridad en media jornada.",
+      fr: "Baignade et snorkeling dans les eaux les plus claires accessibles en toute sécurité en une demi-journée.",
+      de: "Baden und Schnorcheln im klarsten Wasser, das in einem halben Tag sicher erreichbar ist.",
+    },
+  },
+  {
+    time: "11:15",
+    title: {
+      it: "Seconda sosta",
+      en: "Second stop",
+      es: "Segunda parada",
+      fr: "Deuxième arrêt",
+      de: "Zweiter Stopp",
+    },
+    location: { it: "Favignana", en: "Favignana", es: "Favignana", fr: "Favignana", de: "Favignana" },
+    text: {
+      it: "Seconda baia o navigazione panoramica in gommone, secondo vento, mare e tempi di rientro.",
+      en: "Second bay or scenic RIB cruise depending on wind, sea and return timing.",
+      es: "Segunda bahía o navegación panorámica en semirrígida, según viento, mar y horario de regreso.",
+      fr: "Deuxième crique ou navigation panoramique en semi-rigide, selon le vent, la mer et l'heure de retour.",
+      de: "Zweite Bucht oder Panoramafahrt mit dem RIB, je nach Wind, Meer und Rückkehrzeit.",
+    },
+  },
+  {
+    time: "13:00",
+    title: { it: "Rientro", en: "Return", es: "Regreso", fr: "Retour", de: "Rückkehr" },
+    location: { it: "Trapani", en: "Trapani", es: "Trapani", fr: "Trapani", de: "Trapani" },
+    text: {
+      it: "Rientro e sbarco a Trapani.",
+      en: "Return and disembarkation in Trapani.",
+      es: "Regreso y desembarque en Trapani.",
+      fr: "Retour et débarquement à Trapani.",
+      de: "Rückkehr und Ausschiffung in Trapani.",
+    },
+  },
+];
+
 const halfDayAfternoonItinerary = [
   {
     time: "14:00",
@@ -627,6 +718,184 @@ const privateBoatIncludes = [
   { it: "Barca riservata al tuo gruppo", en: "Boat reserved for your group" },
   ...defaultIncludes,
   { it: "Rotta flessibile con lo skipper", en: "Flexible route with the skipper" },
+];
+
+const sharedRibIncludes: LocalizedString[] = [
+  {
+    it: "Posto a bordo sul tour condiviso in gommone",
+    en: "Seat on the shared RIB tour",
+    es: "Plaza a bordo en el tour compartido en semirrígida",
+    fr: "Place à bord de l'excursion partagée en semi-rigide",
+    de: "Platz an Bord der geteilten RIB-Tour",
+  },
+  {
+    it: "Skipper professionista",
+    en: "Professional skipper",
+    es: "Patrón profesional",
+    fr: "Skipper professionnel",
+    de: "Professioneller Skipper",
+  },
+  {
+    it: "Attrezzatura snorkeling",
+    en: "Snorkelling equipment",
+    es: "Equipo de snorkel",
+    fr: "Équipement de snorkeling",
+    de: "Schnorchelausrüstung",
+  },
+  {
+    it: "Acqua e soft drink",
+    en: "Water and soft drinks",
+    es: "Agua y refrescos",
+    fr: "Eau et boissons sans alcool",
+    de: "Wasser und Softdrinks",
+  },
+  {
+    it: "Carburante per la rotta prevista",
+    en: "Fuel for the planned route",
+    es: "Combustible para la ruta prevista",
+    fr: "Carburant pour la route prévue",
+    de: "Kraftstoff für die geplante Route",
+  },
+  {
+    it: "Soste bagno meteo-dipendenti",
+    en: "Weather-aware swim stops",
+    es: "Paradas de baño según la meteorología",
+    fr: "Arrêts baignade adaptés à la météo",
+    de: "Wetterabhängige Badestopps",
+  },
+];
+
+const privateRibIncludes: LocalizedString[] = [
+  {
+    it: "Gommone riservato al tuo gruppo",
+    en: "RIB reserved for your group",
+    es: "Semirrígida reservada para tu grupo",
+    fr: "Semi-rigide réservé à votre groupe",
+    de: "RIB exklusiv für Ihre Gruppe",
+  },
+  ...sharedRibIncludes.slice(1, 5),
+  {
+    it: "Rotta flessibile con lo skipper",
+    en: "Flexible route with the skipper",
+    es: "Ruta flexible con el patrón",
+    fr: "Route flexible avec le skipper",
+    de: "Flexible Route mit dem Skipper",
+  },
+];
+
+const tourRibBringItems: LocalizedString[] = [
+  {
+    it: "Costume",
+    en: "Swimwear",
+    es: "Bañador",
+    fr: "Maillot de bain",
+    de: "Badebekleidung",
+  },
+  {
+    it: "Asciugamano personale",
+    en: "Personal towel",
+    es: "Toalla personal",
+    fr: "Serviette personnelle",
+    de: "Persönliches Handtuch",
+  },
+  {
+    it: "Crema solare reef-safe",
+    en: "Reef-safe sunscreen",
+    es: "Protector solar respetuoso con el mar",
+    fr: "Crème solaire respectueuse de la mer",
+    de: "Meeresfreundliche Sonnencreme",
+  },
+  {
+    it: "Occhiali da sole e cappello",
+    en: "Sunglasses and hat",
+    es: "Gafas de sol y sombrero",
+    fr: "Lunettes de soleil et chapeau",
+    de: "Sonnenbrille und Hut",
+  },
+  {
+    it: "Borsa morbida facile da riporre",
+    en: "Soft bag that is easy to store",
+    es: "Bolsa blanda fácil de guardar",
+    fr: "Sac souple facile à ranger",
+    de: "Weiche, leicht verstaubare Tasche",
+  },
+];
+
+const tourRibMedia: ExperienceCatalogMedia[] = [
+  {
+    caption: {
+      it: "Gommone Egadi Sailing",
+      en: "Egadi Sailing RIB",
+      es: "Semirrígida Egadi Sailing",
+      fr: "Semi-rigide Egadi Sailing",
+      de: "Egadi Sailing RIB",
+    },
+    alt: {
+      it: "Gommone Egadi Sailing durante un tour tra Favignana e Levanzo",
+      en: "Egadi Sailing RIB during a tour around Favignana and Levanzo",
+      es: "Semirrígida Egadi Sailing durante un tour por Favignana y Levanzo",
+      fr: "Semi-rigide Egadi Sailing pendant une excursion entre Favignana et Levanzo",
+      de: "Egadi Sailing RIB während einer Tour rund um Favignana und Levanzo",
+    },
+    color: "#BAE6FD",
+    src: "/images/boats/tour-rib/tour-rib-main.webp",
+  },
+  {
+    caption: {
+      it: "Spazi a bordo",
+      en: "On-board space",
+      es: "Espacio a bordo",
+      fr: "Espace à bord",
+      de: "Platz an Bord",
+    },
+    alt: {
+      it: "Spazi del Gommone Egadi Sailing per una giornata alle Isole Egadi",
+      en: "Space aboard the Egadi Sailing RIB for a day in the Egadi Islands",
+      es: "Espacios de la semirrígida Egadi Sailing para un día en las Islas Egadi",
+      fr: "Espaces du semi-rigide Egadi Sailing pour une journée aux îles Égades",
+      de: "Platz auf dem Egadi Sailing RIB für einen Tag auf den Ägadischen Inseln",
+    },
+    color: "#A7F3D0",
+    src: "/images/boats/tour-rib/tour-rib-gallery-02.webp",
+  },
+  {
+    caption: {
+      it: "Soste bagno",
+      en: "Swim stops",
+      es: "Paradas de baño",
+      fr: "Arrêts baignade",
+      de: "Badestopps",
+    },
+    alt: {
+      it: "Gommone Egadi Sailing durante una sosta bagno alle Isole Egadi",
+      en: "Egadi Sailing RIB during a swim stop in the Egadi Islands",
+      es: "Semirrígida Egadi Sailing durante una parada de baño en las Islas Egadi",
+      fr: "Semi-rigide Egadi Sailing pendant un arrêt baignade aux îles Égades",
+      de: "Egadi Sailing RIB bei einem Badestopp auf den Ägadischen Inseln",
+    },
+    color: "#FDE68A",
+    src: "/images/boats/tour-rib/tour-rib-gallery-03.webp",
+  },
+  ...["04", "05", "06", "07", "08", "09", "10", "11"].map(
+    (imageNumber): ExperienceCatalogMedia => ({
+      caption: {
+        it: `Gommone Egadi Sailing · ${imageNumber}`,
+        en: `Egadi Sailing RIB · ${imageNumber}`,
+        es: `Semirrígida Egadi Sailing · ${imageNumber}`,
+        fr: `Semi-rigide Egadi Sailing · ${imageNumber}`,
+        de: `Egadi Sailing RIB · ${imageNumber}`,
+      },
+      alt: {
+        it: `Vista ${imageNumber} del Gommone Egadi Sailing durante i tour alle Isole Egadi`,
+        en: `View ${imageNumber} of the Egadi Sailing RIB during Egadi Islands tours`,
+        es: `Vista ${imageNumber} de la semirrígida Egadi Sailing durante los tours por las Islas Egadi`,
+        fr: `Vue ${imageNumber} du semi-rigide Egadi Sailing pendant les excursions aux îles Égades`,
+        de: `Ansicht ${imageNumber} des Egadi Sailing RIB während Touren zu den Ägadischen Inseln`,
+      },
+      color: "#BFDBFE",
+      src: `/images/boats/tour-rib/tour-rib-gallery-${imageNumber}.webp`,
+    }),
+  ),
 ];
 
 const fishingIncludes = [
@@ -1858,6 +2127,138 @@ export const EXPERIENCE_CATALOG = {
     includes: privateBoatIncludes,
     bringItems: defaultBringItems,
   },
+  "rib-shared-full-day": {
+    serviceId: "rib-shared-full-day",
+    order: 35,
+    listed: true,
+    title: {
+      it: "Escursione in gommone Favignana e Levanzo da Trapani",
+      en: "Favignana and Levanzo shared RIB tour from Trapani",
+      es: "Excursión compartida en semirrígida a Favignana y Levanzo desde Trapani",
+      fr: "Excursion partagée en semi-rigide à Favignana et Levanzo depuis Trapani",
+      de: "Geteilte RIB-Tour nach Favignana und Levanzo ab Trapani",
+    },
+    subtitle: {
+      it: "Tour condiviso di 8 ore in gommone tra Favignana e Levanzo, con skipper, soste bagno e snorkeling.",
+      en: "Shared 8-hour RIB tour around Favignana and Levanzo, with skipper, swim stops and snorkelling.",
+      es: "Tour compartido de 8 horas en semirrígida por Favignana y Levanzo, con patrón, baños y snorkel.",
+      fr: "Excursion partagée de 8 heures en semi-rigide entre Favignana et Levanzo, avec skipper, baignades et snorkeling.",
+      de: "Geteilte 8-Stunden-RIB-Tour rund um Favignana und Levanzo mit Skipper, Badestopps und Schnorcheln.",
+    },
+    detailDescription: {
+      it: "Escursione condivisa in gommone da Trapani a Favignana e Levanzo: una giornata di 8 ore con skipper, navigazione agile, snorkeling e soste nelle cale scelte in base a vento, mare e affollamento.",
+      en: "Shared RIB excursion from Trapani to Favignana and Levanzo: an 8-hour day with skipper, agile cruising, snorkelling and cove stops selected around wind, sea and crowds.",
+      es: "Excursión compartida en semirrígida desde Trapani a Favignana y Levanzo: 8 horas con patrón, navegación ágil, snorkel y paradas elegidas según viento, mar y afluencia.",
+      fr: "Excursion partagée en semi-rigide de Trapani à Favignana et Levanzo : 8 heures avec skipper, navigation agile, snorkeling et arrêts choisis selon le vent, la mer et la fréquentation.",
+      de: "Geteilte RIB-Tour ab Trapani nach Favignana und Levanzo: 8 Stunden mit Skipper, flexibler Fahrt, Schnorcheln und Stopps je nach Wind, Meer und Andrang.",
+    },
+    seoTitle: {
+      it: "Escursione in gommone Favignana e Levanzo da Trapani",
+      en: "Favignana and Levanzo Shared RIB Tour from Trapani",
+      es: "Excursión compartida en semirrígida a Favignana y Levanzo",
+      fr: "Excursion partagée en semi-rigide à Favignana et Levanzo",
+      de: "Geteilte RIB-Tour Favignana und Levanzo ab Trapani",
+    },
+    seoDescription: {
+      it: "Escursione condivisa in gommone Favignana e Levanzo da Trapani: 8 ore con skipper, snorkeling e soste bagno alle Isole Egadi.",
+      en: "Shared Favignana and Levanzo RIB tour from Trapani: 8 hours with skipper, snorkelling and swim stops in the Egadi Islands.",
+      es: "Excursión compartida en semirrígida a Favignana y Levanzo desde Trapani: 8 horas con patrón, snorkel y baños.",
+      fr: "Excursion partagée en semi-rigide à Favignana et Levanzo depuis Trapani : 8 heures avec skipper, snorkeling et baignades.",
+      de: "Geteilte RIB-Tour nach Favignana und Levanzo ab Trapani: 8 Stunden mit Skipper, Schnorcheln und Badestopps.",
+    },
+    media: tourRibMedia,
+    itinerary: fullDayRibItinerary,
+    includes: sharedRibIncludes,
+    bringItems: tourRibBringItems,
+  },
+  "rib-exclusive-full-day": {
+    serviceId: "rib-exclusive-full-day",
+    order: 65,
+    listed: true,
+    title: {
+      it: "Tour privato in gommone Favignana e Levanzo da Trapani",
+      en: "Private Favignana and Levanzo RIB tour from Trapani",
+      es: "Tour privado en semirrígida a Favignana y Levanzo desde Trapani",
+      fr: "Excursion privée en semi-rigide à Favignana et Levanzo depuis Trapani",
+      de: "Private RIB-Tour nach Favignana und Levanzo ab Trapani",
+    },
+    subtitle: {
+      it: "Gommone riservato per 8 ore tra Favignana e Levanzo, con skipper, rotta flessibile, soste bagno e snorkeling.",
+      en: "A RIB reserved for 8 hours around Favignana and Levanzo, with skipper, flexible route, swim stops and snorkelling.",
+      es: "Semirrígida reservada durante 8 horas por Favignana y Levanzo, con patrón, ruta flexible, baños y snorkel.",
+      fr: "Semi-rigide privatisé pendant 8 heures entre Favignana et Levanzo, avec skipper, route flexible, baignades et snorkeling.",
+      de: "Ein exklusives RIB für 8 Stunden rund um Favignana und Levanzo, mit Skipper, flexibler Route, Badestopps und Schnorcheln.",
+    },
+    detailDescription: {
+      it: "Tour privato in gommone da Trapani a Favignana e Levanzo: una giornata di 8 ore con il mezzo riservato al tuo gruppo e una rotta concordata con lo skipper in base alle condizioni del mare.",
+      en: "Private RIB tour from Trapani to Favignana and Levanzo: an 8-hour day with the craft reserved for your group and a route agreed with the skipper around sea conditions.",
+      es: "Tour privado en semirrígida desde Trapani a Favignana y Levanzo: 8 horas con la embarcación reservada para tu grupo y una ruta acordada con el patrón según el estado del mar.",
+      fr: "Excursion privée en semi-rigide de Trapani à Favignana et Levanzo : 8 heures avec l'embarcation réservée à votre groupe et une route définie avec le skipper selon la mer.",
+      de: "Private RIB-Tour ab Trapani nach Favignana und Levanzo: 8 Stunden mit dem Boot exklusiv für Ihre Gruppe und einer mit dem Skipper auf die Seebedingungen abgestimmten Route.",
+    },
+    seoTitle: {
+      it: "Tour privato in gommone Favignana e Levanzo da Trapani",
+      en: "Private Favignana and Levanzo RIB Tour from Trapani",
+      es: "Tour privado en semirrígida a Favignana y Levanzo",
+      fr: "Excursion privée en semi-rigide à Favignana et Levanzo",
+      de: "Private RIB-Tour Favignana und Levanzo ab Trapani",
+    },
+    seoDescription: {
+      it: "Tour privato in gommone Favignana e Levanzo da Trapani: 8 ore con skipper, mezzo in esclusiva, snorkeling e soste bagno.",
+      en: "Private Favignana and Levanzo RIB tour from Trapani: 8 hours with skipper, exclusive craft, snorkelling and swim stops.",
+      es: "Tour privado en semirrígida a Favignana y Levanzo desde Trapani: 8 horas con patrón, embarcación exclusiva, snorkel y baños.",
+      fr: "Excursion privée en semi-rigide à Favignana et Levanzo depuis Trapani : 8 heures avec skipper, bateau exclusif, snorkeling et baignades.",
+      de: "Private RIB-Tour nach Favignana und Levanzo ab Trapani: 8 Stunden mit Skipper, exklusivem Boot, Schnorcheln und Badestopps.",
+    },
+    media: tourRibMedia,
+    itinerary: fullDayRibItinerary,
+    includes: privateRibIncludes,
+    bringItems: tourRibBringItems,
+  },
+  "rib-exclusive-morning": {
+    serviceId: "rib-exclusive-morning",
+    order: 75,
+    listed: false,
+    title: {
+      it: "Tour privato in gommone alle Egadi 4 ore da Trapani",
+      en: "Private 4-hour Egadi RIB tour from Trapani",
+      es: "Tour privado en semirrígida por las Egadi de 4 horas desde Trapani",
+      fr: "Excursion privée en semi-rigide aux Égades de 4 heures depuis Trapani",
+      de: "Private 4-Stunden-RIB-Tour zu den Ägadischen Inseln ab Trapani",
+    },
+    subtitle: {
+      it: "Mezza giornata privata al mattino con gommone riservato, skipper, soste bagno e rotta scelta in base al mare.",
+      en: "A private morning half-day with a reserved RIB, skipper, swim stops and a route selected around sea conditions.",
+      es: "Media jornada privada por la mañana con semirrígida reservada, patrón, baños y ruta elegida según el mar.",
+      fr: "Une matinée privée avec semi-rigide réservé, skipper, baignades et route choisie selon la mer.",
+      de: "Ein privater Vormittag mit exklusivem RIB, Skipper, Badestopps und einer Route je nach Seebedingungen.",
+    },
+    detailDescription: {
+      it: "Tour privato di 4 ore in gommone alle Isole Egadi da Trapani, ideale per coppie, famiglie e gruppi che vogliono il mezzo in esclusiva e un'esperienza compatta tra navigazione, bagno e snorkeling.",
+      en: "Private 4-hour RIB tour in the Egadi Islands from Trapani, ideal for couples, families and groups who want the craft exclusively for a compact mix of cruising, swimming and snorkelling.",
+      es: "Tour privado de 4 horas en semirrígida por las Islas Egadi desde Trapani, ideal para parejas, familias y grupos que quieren la embarcación en exclusiva entre navegación, baños y snorkel.",
+      fr: "Excursion privée de 4 heures en semi-rigide aux îles Égades depuis Trapani, idéale pour couples, familles et groupes souhaitant l'embarcation en exclusivité entre navigation, baignades et snorkeling.",
+      de: "Private 4-Stunden-RIB-Tour zu den Ägadischen Inseln ab Trapani, ideal für Paare, Familien und Gruppen, die das Boot exklusiv für Fahrt, Baden und Schnorcheln wünschen.",
+    },
+    seoTitle: {
+      it: "Tour privato in gommone Egadi 4 ore da Trapani",
+      en: "Private 4-Hour Egadi RIB Tour from Trapani",
+      es: "Tour privado en semirrígida Egadi de 4 horas desde Trapani",
+      fr: "Excursion privée en semi-rigide Égades 4 heures depuis Trapani",
+      de: "Private RIB-Tour Ägadische Inseln 4 Stunden ab Trapani",
+    },
+    seoDescription: {
+      it: "Tour privato in gommone alle Egadi di 4 ore al mattino da Trapani, con skipper, carburante, snorkeling e soste bagno.",
+      en: "Private 4-hour morning RIB tour in the Egadi from Trapani, with skipper, fuel, snorkelling and swim stops.",
+      es: "Tour privado matinal de 4 horas en semirrígida por las Egadi desde Trapani, con patrón, combustible, snorkel y baños.",
+      fr: "Excursion privée matinale de 4 heures en semi-rigide aux Égades depuis Trapani, avec skipper, carburant, snorkeling et baignades.",
+      de: "Private 4-Stunden-RIB-Tour am Vormittag ab Trapani, mit Skipper, Kraftstoff, Schnorcheln und Badestopps.",
+    },
+    media: tourRibMedia,
+    itinerary: halfDayMorningRibItinerary,
+    includes: privateRibIncludes,
+    bringItems: tourRibBringItems,
+  },
   "fishing-full-day": {
     serviceId: "fishing-full-day",
     order: 90,
@@ -2328,6 +2729,130 @@ export const EXPERIENCE_PACKAGE_CATALOG = [
     ],
   },
   {
+    key: "tour-gommone-egadi-4-ore",
+    order: 25,
+    serviceIds: ["rib-exclusive-morning"],
+    title: {
+      it: "Tour privato in gommone alle Egadi 4 ore da Trapani",
+      en: "Private 4-hour Egadi RIB tour from Trapani",
+      es: "Tour privado en semirrígida por las Egadi de 4 horas desde Trapani",
+      fr: "Excursion privée en semi-rigide aux Égades de 4 heures depuis Trapani",
+      de: "Private 4-Stunden-RIB-Tour zu den Ägadischen Inseln ab Trapani",
+    },
+    subtitle: {
+      it: "La formula privata del mattino con il Gommone Egadi Sailing riservato, soste bagno, snorkeling e rotta adattata al mare.",
+      en: "A private morning experience with the Egadi Sailing RIB reserved for your group, swim stops, snorkelling and a sea-aware route.",
+      es: "La fórmula privada de la mañana con la semirrígida Egadi Sailing reservada, baños, snorkel y ruta adaptada al mar.",
+      fr: "La formule privée du matin avec le semi-rigide Egadi Sailing réservé, baignades, snorkeling et route adaptée à la mer.",
+      de: "Die private Vormittagsformel mit exklusivem Egadi Sailing RIB, Badestopps, Schnorcheln und an das Meer angepasster Route.",
+    },
+    seoTitle: {
+      it: "Tour privato in gommone Egadi 4 ore da Trapani",
+      en: "Private 4-Hour Egadi RIB Tour from Trapani",
+      es: "Tour privado en semirrígida Egadi 4 horas desde Trapani",
+      fr: "Excursion privée semi-rigide Égades 4 heures depuis Trapani",
+      de: "Private RIB-Tour Ägadische Inseln 4 Stunden ab Trapani",
+    },
+    seoDescription: {
+      it: "Tour privato in gommone alle Egadi di 4 ore da Trapani, con mezzo in esclusiva, skipper, snorkeling e soste bagno.",
+      en: "Private 4-hour Egadi RIB tour from Trapani, with exclusive craft, skipper, snorkelling and swim stops.",
+      es: "Tour privado de 4 horas en semirrígida por las Egadi desde Trapani, con embarcación exclusiva, patrón, snorkel y baños.",
+      fr: "Excursion privée de 4 heures en semi-rigide aux Égades depuis Trapani, avec bateau exclusif, skipper, snorkeling et baignades.",
+      de: "Private 4-Stunden-RIB-Tour zu den Ägadischen Inseln ab Trapani, mit exklusivem Boot, Skipper, Schnorcheln und Badestopps.",
+    },
+    durationLabel: { it: "4 ore", en: "4 hours", es: "4 horas", fr: "4 heures", de: "4 Stunden" },
+    detailLabel: {
+      it: "Gommone in esclusiva",
+      en: "Private RIB",
+      es: "Semirrígida exclusiva",
+      fr: "Semi-rigide privé",
+      de: "Privates RIB",
+    },
+    priceUnitLabel: { it: "per gommone", en: "per RIB", es: "por semirrígida", fr: "par semi-rigide", de: "pro RIB" },
+    primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package", es: "Ver paquete", fr: "Voir le forfait", de: "Paket ansehen" },
+    primaryHref: "/experiences/rib-exclusive-morning",
+    media: tourRibMedia,
+    variants: [
+      {
+        label: { it: "Privato mattina", en: "Private morning", es: "Privado por la mañana", fr: "Privé le matin", de: "Privat am Vormittag" },
+        description: {
+          it: "Gommone riservato al mattino, con rientro intorno alle 13:00.",
+          en: "RIB reserved in the morning, returning around 13:00.",
+          es: "Semirrígida reservada por la mañana, con regreso alrededor de las 13:00.",
+          fr: "Semi-rigide réservé le matin, avec retour vers 13:00.",
+          de: "RIB am Vormittag reserviert, Rückkehr gegen 13:00 Uhr.",
+        },
+        serviceId: "rib-exclusive-morning",
+        href: "/experiences/rib-exclusive-morning",
+      },
+    ],
+  },
+  {
+    key: "tour-gommone-egadi-8-ore",
+    order: 15,
+    serviceIds: ["rib-shared-full-day", "rib-exclusive-full-day"],
+    title: {
+      it: "Escursione in gommone Favignana e Levanzo 8 ore da Trapani",
+      en: "Favignana and Levanzo 8-hour RIB tour from Trapani",
+      es: "Excursión en semirrígida a Favignana y Levanzo de 8 horas desde Trapani",
+      fr: "Excursion en semi-rigide à Favignana et Levanzo de 8 heures depuis Trapani",
+      de: "8-Stunden-RIB-Tour nach Favignana und Levanzo ab Trapani",
+    },
+    subtitle: {
+      it: "Una giornata completa sul Gommone Egadi Sailing tra cale, bagni e snorkeling. Scegli posti condivisi oppure il gommone in esclusiva.",
+      en: "A full day on the Egadi Sailing RIB among coves, swimming and snorkelling. Choose shared seats or reserve the whole RIB.",
+      es: "Un día completo en la semirrígida Egadi Sailing entre calas, baños y snorkel. Elige plazas compartidas o reserva toda la embarcación.",
+      fr: "Une journée complète sur le semi-rigide Egadi Sailing entre criques, baignades et snorkeling. Choisissez des places partagées ou privatisez l'embarcation.",
+      de: "Ein ganzer Tag auf dem Egadi Sailing RIB zwischen Buchten, Baden und Schnorcheln. Wählen Sie geteilte Plätze oder das gesamte RIB privat.",
+    },
+    seoTitle: {
+      it: "Escursione in gommone Favignana e Levanzo 8 ore da Trapani",
+      en: "Favignana and Levanzo 8-Hour RIB Tour from Trapani",
+      es: "Excursión en semirrígida Favignana y Levanzo 8 horas",
+      fr: "Excursion en semi-rigide Favignana et Levanzo 8 heures",
+      de: "RIB-Tour Favignana und Levanzo 8 Stunden ab Trapani",
+    },
+    seoDescription: {
+      it: "Tour in gommone alle Egadi di 8 ore da Trapani, condiviso o privato, con skipper, snorkeling e soste bagno.",
+      en: "8-hour Egadi RIB tour from Trapani, shared or private, with skipper, snorkelling and swim stops.",
+      es: "Tour de 8 horas en semirrígida por las Egadi desde Trapani, compartido o privado, con patrón, snorkel y baños.",
+      fr: "Excursion de 8 heures en semi-rigide aux Égades depuis Trapani, partagée ou privée, avec skipper, snorkeling et baignades.",
+      de: "8-Stunden-RIB-Tour zu den Ägadischen Inseln ab Trapani, geteilt oder privat, mit Skipper, Schnorcheln und Badestopps.",
+    },
+    durationLabel: { it: "8 ore", en: "8 hours", es: "8 horas", fr: "8 heures", de: "8 Stunden" },
+    detailLabel: { it: "Condiviso o privato", en: "Shared or private", es: "Compartido o privado", fr: "Partagé ou privé", de: "Geteilt oder privat" },
+    priceUnitLabel: { it: "a persona o per gommone", en: "per person or per RIB", es: "por persona o por semirrígida", fr: "par personne ou par semi-rigide", de: "pro Person oder pro RIB" },
+    primaryCtaLabel: { it: "Scopri il pacchetto", en: "View package", es: "Ver paquete", fr: "Voir le forfait", de: "Paket ansehen" },
+    primaryHref: "/experiences/rib-shared-full-day",
+    media: tourRibMedia,
+    variants: [
+      {
+        label: { it: "Condiviso", en: "Shared", es: "Compartido", fr: "Partagé", de: "Geteilt" },
+        description: {
+          it: "Posti singoli sul gommone per una giornata intera.",
+          en: "Individual RIB seats for a full day.",
+          es: "Plazas individuales en la semirrígida para un día completo.",
+          fr: "Places individuelles sur le semi-rigide pour une journée complète.",
+          de: "Einzelplätze auf dem RIB für einen ganzen Tag.",
+        },
+        serviceId: "rib-shared-full-day",
+        href: "/experiences/rib-shared-full-day",
+      },
+      {
+        label: { it: "Privato", en: "Private", es: "Privado", fr: "Privé", de: "Privat" },
+        description: {
+          it: "Giornata intera con il gommone riservato al tuo gruppo.",
+          en: "Full day with the RIB reserved for your group.",
+          es: "Día completo con la semirrígida reservada para tu grupo.",
+          fr: "Journée complète avec le semi-rigide réservé à votre groupe.",
+          de: "Ganzer Tag mit dem RIB exklusiv für Ihre Gruppe.",
+        },
+        serviceId: "rib-exclusive-full-day",
+        href: "/experiences/rib-exclusive-full-day",
+      },
+    ],
+  },
+  {
     key: "charter-pesca-egadi",
     order: 50,
     serviceIds: ["fishing-full-day"],
@@ -2401,6 +2926,9 @@ const EXPERIENCE_PUBLIC_SLUGS: Partial<Record<ExperienceServiceId, string>> = {
   "cabin-charter": "charter-egadi-trimarano-da-trapani",
   "boat-exclusive-morning": "tour-privato-egadi-4-ore-mattina-da-trapani",
   "boat-exclusive-afternoon": "tour-privato-egadi-4-ore-pomeriggio-da-trapani",
+  "rib-shared-full-day": "escursione-gommone-favignana-levanzo-da-trapani",
+  "rib-exclusive-full-day": "tour-privato-gommone-favignana-levanzo-da-trapani",
+  "rib-exclusive-morning": "tour-privato-gommone-egadi-4-ore-da-trapani",
   "fishing-full-day": "charter-pesca-egadi-da-trapani",
 };
 
@@ -2444,6 +2972,27 @@ const EXPERIENCE_PUBLIC_SLUGS_BY_LOCALE: Partial<
     fr: "excursion-privee-egades-4-heures-apres-midi-depuis-trapani",
     de: "private-bootstour-aegadische-inseln-4-stunden-nachmittag-ab-trapani",
   },
+  "rib-shared-full-day": {
+    it: "escursione-gommone-favignana-levanzo-da-trapani",
+    en: "favignana-levanzo-rib-tour-from-trapani",
+    es: "excursion-compartida-semirrigida-favignana-levanzo-desde-trapani",
+    fr: "excursion-partagee-semi-rigide-favignana-levanzo-depuis-trapani",
+    de: "geteilte-rib-bootstour-favignana-levanzo-ab-trapani",
+  },
+  "rib-exclusive-full-day": {
+    it: "tour-privato-gommone-favignana-levanzo-da-trapani",
+    en: "private-favignana-levanzo-rib-tour-from-trapani",
+    es: "tour-privado-semirrigida-favignana-levanzo-desde-trapani",
+    fr: "excursion-privee-semi-rigide-favignana-levanzo-depuis-trapani",
+    de: "private-rib-bootstour-favignana-levanzo-ab-trapani",
+  },
+  "rib-exclusive-morning": {
+    it: "tour-privato-gommone-egadi-4-ore-da-trapani",
+    en: "private-4-hour-egadi-rib-tour-from-trapani",
+    es: "tour-privado-semirrigida-egadi-4-horas-desde-trapani",
+    fr: "excursion-privee-semi-rigide-egades-4-heures-depuis-trapani",
+    de: "private-rib-bootstour-egadi-4-stunden-ab-trapani",
+  },
   "fishing-full-day": {
     it: "charter-pesca-egadi-da-trapani",
     en: "egadi-fishing-charter-from-trapani",
@@ -2483,6 +3032,21 @@ const EXPERIENCE_SLUG_ALIASES: Record<string, ExperienceServiceId> = {
   "excursion-privee-egades-4-heures-apres-midi-depuis-trapani": "boat-exclusive-afternoon",
   "private-bootstour-aegadische-inseln-4-stunden-vormittag-ab-trapani": "boat-exclusive-morning",
   "private-bootstour-aegadische-inseln-4-stunden-nachmittag-ab-trapani": "boat-exclusive-afternoon",
+  "escursione-gommone-favignana-levanzo-da-trapani": "rib-shared-full-day",
+  "favignana-levanzo-rib-tour-from-trapani": "rib-shared-full-day",
+  "excursion-compartida-semirrigida-favignana-levanzo-desde-trapani": "rib-shared-full-day",
+  "excursion-partagee-semi-rigide-favignana-levanzo-depuis-trapani": "rib-shared-full-day",
+  "geteilte-rib-bootstour-favignana-levanzo-ab-trapani": "rib-shared-full-day",
+  "tour-privato-gommone-favignana-levanzo-da-trapani": "rib-exclusive-full-day",
+  "private-favignana-levanzo-rib-tour-from-trapani": "rib-exclusive-full-day",
+  "tour-privado-semirrigida-favignana-levanzo-desde-trapani": "rib-exclusive-full-day",
+  "excursion-privee-semi-rigide-favignana-levanzo-depuis-trapani": "rib-exclusive-full-day",
+  "private-rib-bootstour-favignana-levanzo-ab-trapani": "rib-exclusive-full-day",
+  "tour-privato-gommone-egadi-4-ore-da-trapani": "rib-exclusive-morning",
+  "private-4-hour-egadi-rib-tour-from-trapani": "rib-exclusive-morning",
+  "tour-privado-semirrigida-egadi-4-horas-desde-trapani": "rib-exclusive-morning",
+  "excursion-privee-semi-rigide-egades-4-heures-depuis-trapani": "rib-exclusive-morning",
+  "private-rib-bootstour-egadi-4-stunden-ab-trapani": "rib-exclusive-morning",
   "charter-pesca-egadi-da-trapani": "fishing-full-day",
   "egadi-fishing-charter-from-trapani": "fishing-full-day",
   "charter-pesca-egadi-desde-trapani": "fishing-full-day",
@@ -3443,6 +4007,8 @@ function applyLocalizedPackageOverride(
     "charter-egadi": "cabin-charter",
     "tour-barca-egadi-4-ore": "boat-exclusive-morning",
     "tour-barca-egadi-8-ore": "boat-shared-full-day",
+    "tour-gommone-egadi-4-ore": "rib-exclusive-morning",
+    "tour-gommone-egadi-8-ore": "rib-shared-full-day",
     "charter-pesca-egadi": "fishing-full-day",
   };
   const primaryHref = experienceHref(

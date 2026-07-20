@@ -42,8 +42,10 @@ const packagePriority: Record<string, number> = {
   "pranzo-a-bordo": 10,
   "barca-8-ore": 20,
   "barca-4-ore": 30,
-  charter: 40,
-  "charter-pesca": 50,
+  "tour-gommone-egadi-8-ore": 40,
+  "tour-gommone-egadi-4-ore": 50,
+  charter: 60,
+  "charter-pesca": 70,
 };
 
 function sectionCopy(locale: string) {
@@ -72,14 +74,14 @@ function sectionCopy(locale: string) {
       ? "Choose your Egadi Islands boat tour from Trapani"
       : "Scegli il tuo tour in barca alle Egadi da Trapani",
     intro: isEs
-      ? "Compara excursiones compartidas, tours privados, experiencias premium en trimarán con almuerzo a bordo, charter de varios días y pesca deportiva. Precio, duración, fórmula y salida se muestran de inmediato para ayudarte a elegir sin perder el estilo del viaje."
+      ? "Compara excursiones compartidas o privadas en barco y neumática, experiencias premium en trimarán con almuerzo a bordo, charter de varios días y pesca deportiva. Precio, duración, fórmula y salida se muestran de inmediato para ayudarte a elegir sin perder el estilo del viaje."
       : isFr
-      ? "Comparez excursions partagées, tours privés, expériences premium en trimaran avec déjeuner à bord, charters de plusieurs jours et pêche sportive. Prix, durée, formule et départ restent visibles pour choisir facilement sans perdre l'esprit du voyage."
+      ? "Comparez excursions partagées ou privées en bateau et semi-rigide, expériences premium en trimaran avec déjeuner à bord, charters de plusieurs jours et pêche sportive. Prix, durée, formule et départ restent visibles pour choisir facilement sans perdre l'esprit du voyage."
       : isDe
-      ? "Vergleichen Sie geteilte Ausflüge, private Touren, Premium-Erlebnisse im Trimaran mit Mittagessen an Bord, mehrtägige Charter und Sportangeln. Preis, Dauer, Format und Abfahrt bleiben sichtbar, damit die Auswahl einfach und hochwertig bleibt."
+      ? "Vergleichen Sie geteilte oder private Boots- und RIB-Touren, Premium-Erlebnisse im Trimaran mit Mittagessen an Bord, mehrtägige Charter und Sportangeln. Preis, Dauer, Format und Abfahrt bleiben sichtbar, damit die Auswahl einfach und hochwertig bleibt."
       : isEn
-      ? "Compare shared excursions, private tours, premium trimaran experiences with lunch on board, multi-day charters and sport fishing. Price, duration, format and departure stay visible, so choosing feels clear without losing the premium tone."
-      : "Confronta escursioni condivise, tour privati, esperienze premium in trimarano con pranzo a bordo, charter di più giorni e pesca sportiva. Prezzo, durata, formula e partenza restano subito visibili, così scegliere è semplice senza perdere il tono premium del viaggio.",
+      ? "Compare shared or private boat and RIB tours, premium trimaran experiences with lunch on board, multi-day charters and sport fishing. Price, duration, format and departure stay visible, so choosing feels clear without losing the premium tone."
+      : "Confronta tour condivisi o privati in barca e gommone, esperienze premium in trimarano con pranzo a bordo, charter di più giorni e pesca sportiva. Prezzo, durata, formula e partenza restano subito visibili, così scegliere è semplice senza perdere il tono premium del viaggio.",
     policyTitle: isEs
       ? "Meteorología, cancelación y reembolso"
       : isFr

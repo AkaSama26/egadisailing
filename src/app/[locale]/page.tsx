@@ -51,6 +51,13 @@ const CHOICE_RECOMMENDATION_SERVICE_IDS = {
   fishing: "fishing-full-day",
 } as const satisfies Record<ExperienceChoiceRecommendationKey, string>;
 
+const HOME_STRUCTURED_EXPERIENCE_SERVICE_IDS = [
+  ...Object.values(CHOICE_RECOMMENDATION_SERVICE_IDS),
+  "rib-shared-full-day",
+  "rib-exclusive-full-day",
+  "rib-exclusive-morning",
+] as const;
+
 const getCachedHomeServices = unstable_cache(
   async () =>
     db.service.findMany({
@@ -272,6 +279,8 @@ function packagePills(input: {
     "charter-egadi": isEs ? "Ruta a medida" : isFr ? "Route sur mesure" : isDe ? "Route nach Maß" : isEn ? "Tailored route" : "Itinerario su misura",
     "tour-barca-egadi-4-ore": isEs ? "Baños flexibles" : isFr ? "Baignades flexibles" : isDe ? "Flexible Badestopps" : isEn ? "Flexible swim stops" : "Soste bagno flessibili",
     "tour-barca-egadi-8-ore": isEs ? "Snorkel" : isDe ? "Schnorcheln" : isEn ? "Snorkelling" : "Snorkeling",
+    "tour-gommone-egadi-4-ore": isEs ? "Ruta ágil" : isFr ? "Route agile" : isDe ? "Agile Route" : isEn ? "Agile route" : "Rotta agile",
+    "tour-gommone-egadi-8-ore": isEs ? "Snorkel" : isDe ? "Schnorcheln" : isEn ? "Snorkelling" : "Snorkeling",
     "charter-pesca-egadi": isEs ? "Equipo profesional" : isFr ? "Matériel professionnel" : isDe ? "Profi-Ausrüstung" : isEn ? "Professional gear" : "Attrezzatura pro",
   };
 
@@ -364,6 +373,46 @@ function heroCardCopy(
         ? "A compact half day of swimming and sheltered coves."
         : "Mezza giornata agile tra bagno e cale riparate.",
     },
+    "tour-gommone-egadi-8-ore": {
+      title: isEs
+        ? "Tour en neumática Favignana y Levanzo desde Trapani"
+        : isFr
+          ? "Excursion en semi-rigide Favignana et Levanzo depuis Trapani"
+          : isDe
+            ? "RIB-Tour Favignana und Levanzo ab Trapani"
+            : isEn
+              ? "Favignana and Levanzo RIB tour from Trapani"
+              : "Tour in gommone Favignana e Levanzo da Trapani",
+      subtitle: isEs
+        ? "Día completo, snorkel y opciones compartida o privada."
+        : isFr
+          ? "Journée complète, snorkeling et formules partagée ou privée."
+          : isDe
+            ? "Ganzer Tag, Schnorcheln und geteilte oder private Option."
+            : isEn
+              ? "Full day, snorkelling and shared or private options."
+              : "Giornata completa, snorkeling e formula condivisa o privata.",
+    },
+    "tour-gommone-egadi-4-ore": {
+      title: isEs
+        ? "Excursión privada en neumática de 4 horas por las Islas Egadi"
+        : isFr
+          ? "Excursion privée en semi-rigide de 4 heures aux îles Égades"
+          : isDe
+            ? "Private 4-Stunden-RIB-Tour zu den Ägadischen Inseln"
+            : isEn
+              ? "Private 4-hour Egadi Islands RIB tour"
+              : "Escursione privata in gommone di 4 ore alle Egadi",
+      subtitle: isEs
+        ? "Media jornada rápida entre calas protegidas y baños."
+        : isFr
+          ? "Une demi-journée rapide entre criques abritées et baignades."
+          : isDe
+            ? "Ein schneller halber Tag zwischen geschützten Buchten und Badestopps."
+            : isEn
+              ? "A quick half day between sheltered coves and swim stops."
+              : "Mezza giornata veloce tra cale riparate e soste bagno.",
+    },
     "charter-pesca-egadi": {
       title: isEs ? "Charter de pesca Egadi en neumática" : isFr ? "Charter de pêche Égades en semi-rigide" : isDe ? "Angelcharter Ägadische Inseln im RIB" : isEn ? "Egadi fishing charter by RIB" : "Charter pesca Egadi in gommone",
       subtitle: isEs
@@ -410,6 +459,30 @@ function heroCardImagesForPackage(packageKey: string, locale: string): Array<{ s
         : isEn
         ? "Favignana and Levanzo boat tour from Trapani seen by drone"
         : "Tour in barca Favignana e Levanzo da Trapani visto dal drone",
+    },
+    "tour-gommone-egadi-4-ore": {
+      src: "/images/boats/tour-rib/tour-rib-main.webp",
+      alt: isEs
+        ? "Neumática Egadisailing para una excursión privada de 4 horas por las Islas Egadi"
+        : isFr
+          ? "Semi-rigide Egadisailing pour une excursion privée de 4 heures aux îles Égades"
+          : isDe
+            ? "Egadisailing RIB für eine private 4-Stunden-Tour zu den Ägadischen Inseln"
+            : isEn
+              ? "Egadisailing RIB for a private 4-hour Egadi Islands tour"
+              : "Gommone Egadisailing per tour privato di 4 ore alle Isole Egadi",
+    },
+    "tour-gommone-egadi-8-ore": {
+      src: "/images/boats/tour-rib/tour-rib-main.webp",
+      alt: isEs
+        ? "Tour en neumática Favignana y Levanzo desde Trapani"
+        : isFr
+          ? "Excursion en semi-rigide Favignana et Levanzo depuis Trapani"
+          : isDe
+            ? "RIB-Tour Favignana und Levanzo ab Trapani"
+            : isEn
+              ? "Favignana and Levanzo RIB tour from Trapani"
+              : "Tour in gommone Favignana e Levanzo da Trapani",
     },
     "esperienza-gourmet-trimarano": {
       src: "/images/boats/neel-47/trimarano-pasta-saltata.webp",
@@ -605,11 +678,11 @@ export default async function HomePage({
   const schemaTopics = homeSchemaTopics(locale);
   const areaServed = ["Isole Egadi", "Favignana", "Levanzo", "Marettimo", "Trapani"];
   const boardingAddress = PUBLIC_CONTACT_POSTAL_ADDRESS;
-  const homepageExperienceItems = Object.entries(CHOICE_RECOMMENDATION_SERVICE_IDS).map(
-    ([key, serviceId], index) => {
-      const recommendationKey = key as ExperienceChoiceRecommendationKey;
+  const homepageExperienceItems = HOME_STRUCTURED_EXPERIENCE_SERVICE_IDS.map(
+    (serviceId, index) => {
       const content = getExperienceContent(serviceId, locale);
-      const url = `${siteBase}${choiceRecommendationSeed[recommendationKey].detailHref}`;
+      const slug = getExperiencePublicSlug(serviceId, locale);
+      const url = `${siteBase}${localizedPath(locale, `/experiences/${slug}`)}`;
 
       return {
         "@type": "ListItem",

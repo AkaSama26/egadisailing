@@ -76,7 +76,7 @@ function experienceHubSeoCopy(locale: string, fallback: { title: string; descrip
     return {
       title: "Egadi Boat Tour Packages from Trapani | Egadi Sailing",
       description:
-        "Compare Egadi boat tours from Trapani: Favignana and Levanzo boat trips, shared or private tours, snorkelling, trimaran charter and fishing.",
+        "Compare Egadi boat and RIB tours from Trapani: Favignana and Levanzo trips, shared or private tours, snorkelling, trimaran charter and fishing.",
     };
   }
 
@@ -84,7 +84,7 @@ function experienceHubSeoCopy(locale: string, fallback: { title: string; descrip
     return {
       title: "Paseos en barco desde Trapani a las Islas Egadi | Egadi Sailing",
       description:
-        "Compara paseos y excursiones en barco desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, trimarán y pesca.",
+        "Compara excursiones en barco o neumática desde Trapani a las Islas Egadi: Favignana y Levanzo, tour compartido o privado, snorkel, trimarán y pesca.",
     };
   }
 
@@ -92,7 +92,7 @@ function experienceHubSeoCopy(locale: string, fallback: { title: string; descrip
     return {
       title: "Tour in barca Egadi da Trapani | Egadi Sailing",
       description:
-        "Confronta tour in barca alle Egadi da Trapani: Favignana e Levanzo, escursioni condivise o private, trimarano, pranzo a bordo e pesca.",
+        "Confronta tour in barca o gommone alle Egadi da Trapani: Favignana e Levanzo, escursioni condivise o private, trimarano, pranzo a bordo e pesca.",
     };
   }
 
@@ -100,7 +100,7 @@ function experienceHubSeoCopy(locale: string, fallback: { title: string; descrip
     return {
       title: "Excursions bateau Égades depuis Trapani | Egadi Sailing",
       description:
-        "Comparez les excursions bateau aux îles Égades depuis Trapani : Favignana, Levanzo, sorties privées ou partagées, trimaran, déjeuner à bord et pêche.",
+        "Comparez les excursions en bateau ou semi-rigide aux îles Égades depuis Trapani : Favignana, Levanzo, sorties privées ou partagées, trimaran et pêche.",
     };
   }
 
@@ -108,7 +108,7 @@ function experienceHubSeoCopy(locale: string, fallback: { title: string; descrip
     return {
       title: "Bootstouren ab Trapani zu den Ägadischen Inseln | Egadi Sailing",
       description:
-        "Vergleichen Sie Bootstouren ab Trapani zu den Ägadischen Inseln: Favignana, Levanzo, private oder geteilte Ausfahrten, Trimaran, Mittagessen an Bord und Angeln.",
+        "Vergleichen Sie Boots- und RIB-Touren ab Trapani zu den Ägadischen Inseln: Favignana, Levanzo, private oder geteilte Ausfahrten, Trimaran und Angeln.",
     };
   }
 
@@ -128,6 +128,7 @@ function experiencePageTopics(locale: string) {
         "Snorkelling",
         "Private boat tour",
         "Shared boat tour",
+        "Shared or private RIB tour",
         "Charter",
       ],
       keywords: [
@@ -139,6 +140,7 @@ function experiencePageTopics(locale: string) {
         "trapani boat trips",
         "favignana and levanzo boat tour",
         "boat tours from trapani",
+        "egadi islands rib tour",
       ],
     };
   }
@@ -157,6 +159,7 @@ function experiencePageTopics(locale: string) {
         "Snorkel",
         "Tour privado en barco",
         "Tour compartido en barco",
+        "Tour compartido o privado en neumática",
         "Charter",
       ],
       keywords: [
@@ -168,6 +171,7 @@ function experiencePageTopics(locale: string) {
         "favignana y levanzo en barco",
         "tour en barco trapani",
         "islas egadi en barco",
+        "tour neumática egadi",
       ],
     };
   }
@@ -183,6 +187,7 @@ function experiencePageTopics(locale: string) {
         "Schnorcheln",
         "Private Bootstour",
         "Geteilte Ausfahrt",
+        "Geteilte oder private RIB-Tour",
         "Charter",
       ],
       keywords: [
@@ -191,6 +196,7 @@ function experiencePageTopics(locale: string) {
         "bootstouren ägadische inseln",
         "favignana und levanzo bootstour",
         "bootstour favignana trapani",
+        "rib tour ägadische inseln",
       ],
     };
   }
@@ -205,6 +211,7 @@ function experiencePageTopics(locale: string) {
         "Snorkeling",
         "Excursion privée en bateau",
         "Excursion partagée en bateau",
+        "Excursion partagée ou privée en semi-rigide",
         "Charter",
       ],
       keywords: [
@@ -213,6 +220,7 @@ function experiencePageTopics(locale: string) {
         "excursion bateau favignana levanzo",
         "charter égades",
         "bateau privé trapani",
+        "excursion semi-rigide égades",
       ],
     };
   }
@@ -227,6 +235,7 @@ function experiencePageTopics(locale: string) {
       "Snorkeling",
       "Tour privato in barca",
       "Tour condiviso in barca",
+      "Tour condiviso o privato in gommone",
       "Charter Egadi",
     ],
     keywords: [
@@ -236,6 +245,7 @@ function experiencePageTopics(locale: string) {
       "favignana e levanzo in barca",
       "charter egadi",
       "barca egadi trapani",
+      "tour in gommone egadi",
     ],
   };
 }
@@ -243,6 +253,7 @@ function experiencePageTopics(locale: string) {
 function getHubQuickLinks(locale: string) {
   const sharedHref = localizedExperiencePath(locale, "boat-shared-full-day");
   const privateHref = localizedExperiencePath(locale, "boat-exclusive-full-day");
+  const ribHref = localizedExperiencePath(locale, "rib-shared-full-day");
   const charterHref = localizedExperiencePath(locale, "cabin-charter");
   const fishingHref = localizedExperiencePath(locale, "fishing-full-day");
 
@@ -251,7 +262,7 @@ function getHubQuickLinks(locale: string) {
       eyebrow: "Quick choice",
       title: "Choose the Egadi boat tour that matches your search",
       intro:
-        "If you already know the format, go straight to the most relevant page: full-day boat trip, private tour, multi-day charter or fishing experience.",
+        "If you already know the format, go straight to the most relevant page: full-day boat or RIB trip, private tour, multi-day charter or fishing experience.",
       links: [
         {
           label: "Favignana and Levanzo boat tour from Trapani",
@@ -262,6 +273,11 @@ function getHubQuickLinks(locale: string) {
           label: "Private Favignana and Levanzo boat tour",
           description: "Best for families, small groups and guests who want the boat reserved for them.",
           href: privateHref,
+        },
+        {
+          label: "Favignana and Levanzo RIB tour",
+          description: "The same swimming and snorkelling route on an agile RIB, with shared or private options.",
+          href: ribHref,
         },
         {
           label: "Egadi trimaran charter",
@@ -282,7 +298,7 @@ function getHubQuickLinks(locale: string) {
       eyebrow: "Elección rápida",
       title: "Elige tu paseo en barco por las Islas Egadi desde Trapani",
       intro:
-        "Si ya sabes qué formato quieres, entra directamente en la página más útil: paseo compartido de día completo, tour privado, charter de varios días o pesca.",
+        "Si ya sabes qué formato quieres, entra directamente en la página más útil: paseo en barco o neumática, tour privado, charter de varios días o pesca.",
       links: [
         {
           label: "Paseo en barco compartido Favignana y Levanzo",
@@ -293,6 +309,11 @@ function getHubQuickLinks(locale: string) {
           label: "Paseo privado Favignana y Levanzo",
           description: "Barco reservado desde Trapani para familias, grupos pequeños y quien quiere más libertad de ruta.",
           href: privateHref,
+        },
+        {
+          label: "Tour en neumática Favignana y Levanzo",
+          description: "La misma ruta de baños y snorkel en una neumática ágil, compartida o privada.",
+          href: ribHref,
         },
         {
           label: "Charter Egadi en trimarán",
@@ -313,7 +334,7 @@ function getHubQuickLinks(locale: string) {
       eyebrow: "Choix rapide",
       title: "Choisir l'excursion Égades qui correspond à votre recherche",
       intro:
-        "Si vous connaissez déjà la formule, allez directement à la page la plus pertinente : journée complète, excursion privée, charter ou pêche.",
+        "Si vous connaissez déjà la formule, allez directement à la page la plus pertinente : bateau ou semi-rigide, excursion privée, charter ou pêche.",
       links: [
         {
           label: "Excursion bateau Favignana et Levanzo depuis Trapani",
@@ -324,6 +345,11 @@ function getHubQuickLinks(locale: string) {
           label: "Excursion privée Favignana et Levanzo",
           description: "Adapté aux familles, petits groupes et voyageurs qui veulent le bateau réservé.",
           href: privateHref,
+        },
+        {
+          label: "Excursion en semi-rigide Favignana et Levanzo",
+          description: "La même route de baignade et snorkeling sur un semi-rigide agile, partagé ou privé.",
+          href: ribHref,
         },
         {
           label: "Charter Égades en trimaran",
@@ -344,7 +370,7 @@ function getHubQuickLinks(locale: string) {
       eyebrow: "Schnelle Auswahl",
       title: "Die passende Ägadische-Inseln-Bootstour für Ihre Reisepläne finden",
       intro:
-        "Wenn das Format schon klar ist, gehen Sie direkt zur passenden Seite: Ganztagsausfahrt, private Bootstour, mehrtägiger Charter oder Angeln.",
+        "Wenn das Format schon klar ist, gehen Sie direkt zur passenden Seite: Boots- oder RIB-Tour, private Ausfahrt, mehrtägiger Charter oder Angeln.",
       links: [
         {
           label: "Favignana und Levanzo Bootstour ab Trapani",
@@ -355,6 +381,11 @@ function getHubQuickLinks(locale: string) {
           label: "Private Bootstour Favignana und Levanzo",
           description: "Passend für Familien, kleine Gruppen und Gäste, die ein reserviertes Boot wünschen.",
           href: privateHref,
+        },
+        {
+          label: "RIB-Tour Favignana und Levanzo",
+          description: "Dieselbe Bade- und Schnorchelroute auf einem agilen RIB, geteilt oder privat.",
+          href: ribHref,
         },
         {
           label: "Trimaran-Charter Ägadische Inseln",
@@ -374,7 +405,7 @@ function getHubQuickLinks(locale: string) {
     eyebrow: "Scelta rapida",
     title: "Trova il tour Egadi più adatto alla tua ricerca",
     intro:
-      "Se hai già chiaro il tipo di esperienza, entra direttamente nella pagina più pertinente: giornata completa, tour privato, charter o pesca.",
+      "Se hai già chiaro il tipo di esperienza, entra direttamente nella pagina più pertinente: tour in barca o gommone, tour privato, charter o pesca.",
     links: [
       {
         label: "Escursione in barca Favignana e Levanzo da Trapani",
@@ -385,6 +416,11 @@ function getHubQuickLinks(locale: string) {
         label: "Tour privato Favignana e Levanzo",
         description: "La scelta più adatta per famiglie, piccoli gruppi e chi vuole la barca riservata.",
         href: privateHref,
+      },
+      {
+        label: "Tour in gommone Favignana e Levanzo",
+        description: "La stessa rotta tra bagno e snorkeling su un gommone agile, condiviso o privato.",
+        href: ribHref,
       },
       {
         label: "Charter Egadi in trimarano",
@@ -425,7 +461,12 @@ function packageCapacityLabel(
 }
 
 function packageSchemaDuration(packageKey: string): string {
-  if (packageKey === "tour-barca-egadi-4-ore") return "PT4H";
+  if (
+    packageKey === "tour-barca-egadi-4-ore" ||
+    packageKey === "tour-gommone-egadi-4-ore"
+  ) {
+    return "PT4H";
+  }
   if (packageKey === "charter-egadi") return "P3D";
   return "PT8H";
 }
@@ -485,6 +526,16 @@ function getHubCopy(locale: string) {
 	          route: "Salida desde Trapani hacia una cala protegida alrededor de Favignana, con ruta flexible según viento y mar.",
 	          includes: "Barco privado, skipper, combustible, snorkel y paradas de baño.",
 	        },
+        "tour-gommone-egadi-8-ore": {
+          formula: "Tour en neumática compartido o privado",
+          route: "Salida desde Trapani hacia Favignana y Levanzo, con calas y paradas elegidas según mar, viento y seguridad.",
+          includes: "Neumática, patrón, combustible, snorkel, agua, paradas de baño y asistencia.",
+        },
+        "tour-gommone-egadi-4-ore": {
+          formula: "Tour privado de medio día en neumática",
+          route: "Salida desde Trapani hacia una cala protegida alrededor de Favignana, con ruta flexible según viento y mar.",
+          includes: "Neumática privada, patrón, combustible, snorkel y paradas de baño.",
+        },
         "esperienza-gourmet-trimarano": {
           formula: "Trimarán privado con almuerzo a bordo",
           route: "Desde Trapani hacia Favignana y Levanzo, con almuerzo a bordo, paradas de baño y comodidad de catamarán.",
@@ -557,6 +608,16 @@ function getHubCopy(locale: string) {
           formula: "Excursion privée demi-journée",
           route: "Départ de Trapani vers une crique abritée autour de Favignana, avec route flexible selon vent et mer.",
           includes: "Bateau privé, skipper, carburant, snorkeling et arrêts baignade.",
+        },
+        "tour-gommone-egadi-8-ore": {
+          formula: "Excursion en semi-rigide partagée ou privée",
+          route: "Départ de Trapani vers Favignana et Levanzo, avec criques et arrêts choisis selon mer, vent et sécurité.",
+          includes: "Semi-rigide, skipper, carburant, snorkeling, eau, arrêts baignade et assistance.",
+        },
+        "tour-gommone-egadi-4-ore": {
+          formula: "Excursion privée demi-journée en semi-rigide",
+          route: "Départ de Trapani vers une crique abritée autour de Favignana, avec route flexible selon vent et mer.",
+          includes: "Semi-rigide privé, skipper, carburant, snorkeling et arrêts baignade.",
         },
         "esperienza-gourmet-trimarano": {
           formula: "Trimaran privé avec déjeuner à bord",
@@ -631,6 +692,16 @@ function getHubCopy(locale: string) {
           route: "Abfahrt ab Trapani zu einer geschützten Bucht rund um Favignana, flexibel nach Wind und Meer.",
           includes: "Privates Boot, Skipper, Treibstoff, Schnorcheln und Badestopps.",
         },
+        "tour-gommone-egadi-8-ore": {
+          formula: "Geteilte oder private RIB-Tour",
+          route: "Abfahrt ab Trapani nach Favignana und Levanzo, mit Buchten und Stopps je nach Meer, Wind und Sicherheit.",
+          includes: "RIB, Skipper, Treibstoff, Schnorcheln, Wasser, Badestopps und Betreuung.",
+        },
+        "tour-gommone-egadi-4-ore": {
+          formula: "Private Halbtages-RIB-Tour",
+          route: "Abfahrt ab Trapani zu einer geschützten Bucht rund um Favignana, flexibel nach Wind und Meer.",
+          includes: "Privates RIB, Skipper, Treibstoff, Schnorcheln und Badestopps.",
+        },
         "esperienza-gourmet-trimarano": {
           formula: "Privater Trimaran mit Mittagessen an Bord",
           route: "Von Trapani nach Favignana und Levanzo, mit Mittagessen an Bord, Badestopps und Katamaran-Komfort.",
@@ -704,6 +775,16 @@ function getHubCopy(locale: string) {
 	          route: "Departure from Trapani toward a sheltered cove around Favignana, flexible according to wind and sea.",
 	          includes: "Private boat, skipper, fuel, snorkelling and swim stops.",
 	        },
+        "tour-gommone-egadi-8-ore": {
+          formula: "Shared or private RIB tour",
+          route: "Departure from Trapani to Favignana and Levanzo, with coves and stops chosen around sea, wind and safety.",
+          includes: "RIB, skipper, fuel, snorkelling, water, swim stops and assistance.",
+        },
+        "tour-gommone-egadi-4-ore": {
+          formula: "Private half-day RIB tour",
+          route: "Departure from Trapani toward a sheltered cove around Favignana, flexible according to wind and sea.",
+          includes: "Private RIB, skipper, fuel, snorkelling and swim stops.",
+        },
         "esperienza-gourmet-trimarano": {
           formula: "Private trimaran with lunch on board",
           route: "From Trapani to Favignana and Levanzo, with lunch on board, swim stops and catamaran-style comfort.",
@@ -776,6 +857,16 @@ function getHubCopy(locale: string) {
 	        route: "Partenza da Trapani verso una cala riparata intorno a Favignana, con rotta flessibile secondo vento e mare.",
 	        includes: "Barca privata, skipper, carburante, snorkeling e soste bagno.",
 	      },
+      "tour-gommone-egadi-8-ore": {
+        formula: "Tour in gommone condiviso o privato",
+        route: "Partenza da Trapani verso Favignana e Levanzo, con cale e soste scelte in base a mare, vento e sicurezza.",
+        includes: "Gommone, skipper, carburante, snorkeling, acqua, soste bagno e assistenza.",
+      },
+      "tour-gommone-egadi-4-ore": {
+        formula: "Tour privato mezza giornata in gommone",
+        route: "Partenza da Trapani verso una cala riparata intorno a Favignana, con rotta flessibile secondo vento e mare.",
+        includes: "Gommone privato, skipper, carburante, snorkeling e soste bagno.",
+      },
       "esperienza-gourmet-trimarano": {
         formula: "Trimarano privato con pranzo a bordo",
         route: "Da Trapani verso Favignana e Levanzo, con pranzo a bordo, soste bagno e comfort da catamarano.",
@@ -861,7 +952,9 @@ export default async function ExperiencesPage({
       priceUnitLabel: item.priceUnitLabel,
       primaryHref: item.primaryHref,
       primaryCtaLabel: item.primaryCtaLabel,
-      media: item.media,
+      // The hub needs only a compact preview stack; the detail carousel keeps
+      // the complete 11-image RIB gallery from the catalog.
+      media: item.key.startsWith("tour-gommone-") ? item.media.slice(0, 5) : item.media,
       capacityLabel: packageCapacityLabel(item.serviceIds, serviceById, locale),
       facts,
       labels: {
