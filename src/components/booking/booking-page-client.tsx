@@ -660,7 +660,7 @@ export function BookingPageClient({
 
             <div className="flex flex-1 flex-col lg:min-h-0 lg:overflow-hidden">
               {selectionStep === "boat" ? (
-                <div className="grid flex-1 auto-rows-[minmax(11rem,1fr)] grid-cols-1 gap-2 sm:grid-cols-2 lg:min-h-0 lg:auto-rows-[minmax(13rem,1fr)] lg:grid-cols-4 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+                <div className="grid flex-1 auto-rows-[minmax(11rem,1fr)] grid-cols-1 gap-2 sm:grid-cols-2 lg:min-h-0 lg:grid-cols-2 lg:grid-rows-2 lg:auto-rows-[minmax(0,1fr)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
                   {boats.map((boat) => (
                     <button
                       key={boat.id}
@@ -679,7 +679,7 @@ export function BookingPageClient({
                         alt=""
                         aria-hidden="true"
                         fill
-                        sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                        sizes="(min-width: 1280px) 620px, (min-width: 640px) 50vw, 100vw"
                         className="object-cover transition duration-500 group-hover:scale-105"
                       />
                       <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,18,37,0.08)_0%,rgba(3,18,37,0.26)_42%,rgba(3,18,37,0.82)_100%)]" />
