@@ -62,35 +62,10 @@ services:
       - internal
 
   app:
-    # Build from repo root using Dockerfile. Replace with a pinned registry
-    # image (ghcr.io/...) once CI publishes builds.
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        APP_URL: ${APP_URL:?APP_URL required}
-        APP_LOCALES_DEFAULT: ${APP_LOCALES_DEFAULT:-it}
-        NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
-        NEXT_DEPLOYMENT_ID: ${NEXT_DEPLOYMENT_ID:-}
-        DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:-}
-        SENTRY_RELEASE: ${SENTRY_RELEASE:-}
-        GIT_SHA: ${GIT_SHA:-}
-        SERVER_ACTIONS_ALLOWED_ORIGINS: ${SERVER_ACTIONS_ALLOWED_ORIGINS:?required}
-        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:?required}
-        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?required}
-        NEXT_PUBLIC_ASSET_CDN_URL: ${NEXT_PUBLIC_ASSET_CDN_URL:-}
-        NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID:-}
-        NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-}
-        NEXT_PUBLIC_GOOGLE_ADS_ID: ${NEXT_PUBLIC_GOOGLE_ADS_ID:-}
-        NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID:-}
-        NEXT_PUBLIC_BING_UET_TAG_ID: ${NEXT_PUBLIC_BING_UET_TAG_ID:-}
-        NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: ${NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION:-}
-        NEXT_PUBLIC_BING_SITE_VERIFICATION: ${NEXT_PUBLIC_BING_SITE_VERIFICATION:-}
-        NEXT_PUBLIC_META_DOMAIN_VERIFICATION: ${NEXT_PUBLIC_META_DOMAIN_VERIFICATION:-}
-        FEATURE_OVERRIDE_ENABLED: ${FEATURE_OVERRIDE_ENABLED:-false}
-        FEATURE_OVERRIDE_OTA_ENABLED: ${FEATURE_OVERRIDE_OTA_ENABLED:-false}
-        OVERRIDE_CANCELLATION_RATE_SOFT_WARN: ${OVERRIDE_CANCELLATION_RATE_SOFT_WARN:-0.03}
-        OVERRIDE_CANCELLATION_RATE_HARD_BLOCK: ${OVERRIDE_CANCELLATION_RATE_HARD_BLOCK:-0.05}
+    # CI publishes the image. Production never builds from a VPS checkout.
+    # APP_IMAGE must be an immutable ghcr.io/...@sha256:... reference.
+    image: ${APP_IMAGE:?APP_IMAGE digest required}
+    container_name: egadisailing-app
     restart: unless-stopped
     # R28-CRIT-5: grace period esteso per drain BullMQ workers (25s) +
     # graceful close (5s) + margine HTTP in-flight Next (10s). Se un job
@@ -113,22 +88,23 @@ services:
       APP_URL: ${APP_URL:?APP_URL required}
       APP_LOCALES_DEFAULT: ${APP_LOCALES_DEFAULT:-it}
       NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL required}
-      NEXT_DEPLOYMENT_ID: ${NEXT_DEPLOYMENT_ID:-}
-      DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:-}
-      GIT_SHA: ${GIT_SHA:-}
+      NEXT_DEPLOYMENT_ID: ${RELEASE_SHA:?RELEASE_SHA required}
+      DEPLOYMENT_VERSION: ${RELEASE_SHA:?RELEASE_SHA required}
+      GIT_SHA: ${RELEASE_SHA:?RELEASE_SHA required}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET required}
       AUTH_URL: ${AUTH_URL:-${NEXTAUTH_URL}}
       AUTH_SECRET: ${AUTH_SECRET:-${NEXTAUTH_SECRET}}
       AUTH_TRUST_HOST: ${AUTH_TRUST_HOST:-true}
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?required}
       SERVER_ACTIONS_ALLOWED_ORIGINS: ${SERVER_ACTIONS_ALLOWED_ORIGINS:?required}
       CRON_SECRET: ${CRON_SECRET:?CRON_SECRET required}
+      OPS_HEALTH_SECRET: ${OPS_HEALTH_SECRET:?OPS_HEALTH_SECRET required}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:?required}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:?required}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:?required}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:?required}
       FEATURE_STRIPE_CHECKOUT_ENABLED: ${FEATURE_STRIPE_CHECKOUT_ENABLED:-false}
       NEXT_PUBLIC_ASSET_CDN_URL: ${NEXT_PUBLIC_ASSET_CDN_URL:-}
+      NEXT_PUBLIC_HOME_TOUR_EGADI_VIDEO_URL: ${NEXT_PUBLIC_HOME_TOUR_EGADI_VIDEO_URL:-}
       NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID:-}
       NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-}
       NEXT_PUBLIC_GOOGLE_ADS_ID: ${NEXT_PUBLIC_GOOGLE_ADS_ID:-}
@@ -158,24 +134,31 @@ services:
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:?required}
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?required}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-info@egadisailing.com}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
-      SENTRY_DSN: ${SENTRY_DSN}
+      # Disabled integrations are blanked deliberately even if stale values
+      # remain in the VPS env file. Enable them only in a reviewed release.
+      TELEGRAM_NOTIFICATIONS_ENABLED: "false"
+      TELEGRAM_BOT_TOKEN: ""
+      TELEGRAM_CHAT_ID: ""
+      # Disabled by production policy. Re-enable only in a reviewed release.
+      SENTRY_DSN: ""
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-      SENTRY_RELEASE: ${SENTRY_RELEASE}
-      BOKUN_VENDOR_ID: ${BOKUN_VENDOR_ID}
-      BOKUN_ACCESS_KEY: ${BOKUN_ACCESS_KEY}
-      BOKUN_SECRET_KEY: ${BOKUN_SECRET_KEY}
-      BOKUN_WEBHOOK_SECRET: ${BOKUN_WEBHOOK_SECRET}
+      SENTRY_RELEASE: ${RELEASE_SHA:?RELEASE_SHA required}
+      BOKUN_VENDOR_ID: ${BOKUN_VENDOR_ID:?BOKUN_VENDOR_ID required}
+      BOKUN_ACCESS_KEY: ${BOKUN_ACCESS_KEY:?BOKUN_ACCESS_KEY required}
+      BOKUN_SECRET_KEY: ${BOKUN_SECRET_KEY:?BOKUN_SECRET_KEY required}
+      BOKUN_WEBHOOK_SECRET: ${BOKUN_WEBHOOK_SECRET:?BOKUN_WEBHOOK_SECRET required}
       BOKUN_API_URL: ${BOKUN_API_URL:-https://api.bokun.io}
       BOKUN_PRICE_MARKUP: ${BOKUN_PRICE_MARKUP:-1.15}
-      BOATAROUND_API_URL: ${BOATAROUND_API_URL}
-      BOATAROUND_API_TOKEN: ${BOATAROUND_API_TOKEN}
-      BOATAROUND_WEBHOOK_SECRET: ${BOATAROUND_WEBHOOK_SECRET}
-      IMAP_HOST: ${IMAP_HOST}
+      BOKUN_PRICING_SYNC_ENABLED: ${BOKUN_PRICING_SYNC_ENABLED:-false}
+      BOATAROUND_SYNC_ENABLED: "false"
+      BOATAROUND_API_URL: ""
+      BOATAROUND_API_TOKEN: ""
+      BOATAROUND_WEBHOOK_SECRET: ""
+      IMAP_INGEST_ENABLED: "false"
+      IMAP_HOST: ""
       IMAP_PORT: ${IMAP_PORT:-993}
-      IMAP_USER: ${IMAP_USER}
-      IMAP_PASSWORD: ${IMAP_PASSWORD}
+      IMAP_USER: ""
+      IMAP_PASSWORD: ""
     volumes:
       - next_cache:/app/.next/cache
     depends_on:
@@ -185,56 +168,33 @@ services:
         condition: service_healthy
       pgbouncer:
         condition: service_started
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
     networks:
       internal:
       proxy:
         aliases:
           - egadisailing-app
-      web:
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    environment:
-      APP_DOMAIN: ${APP_DOMAIN:-egadisailing.com}
-      CDN_DOMAIN: ${CDN_DOMAIN:-cdn.egadisailing.com}
-      ACME_EMAIL: ${ACME_EMAIL:-ops@egadisailing.com}
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./public:/srv/cdn:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - app
-    networks:
-      - web
-
-  # pg_dump sidecar → local VPS backups every 15 minutes.
-  # Local retention defaults to 3 days. S3/B2 upload remains optional if the
-  # BACKUP_S3_* variables are configured.
+  # pg_dump sidecar → verified local VPS copy; Restic remains optional.
   backup:
     image: alpine:3.20
+    container_name: egadisailing-backup
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       BACKUP_DIR: /backups
-      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-3}
-      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
-      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-}
-      BACKUP_S3_KEY: ${BACKUP_S3_KEY:-}
-      BACKUP_S3_SECRET: ${BACKUP_S3_SECRET:-}
+      BACKUP_RETENTION_DAYS: "7"
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
+      RESTIC_KEEP_DAILY: "7"
+      RESTIC_KEEP_WEEKLY: "4"
+      RESTIC_KEEP_MONTHLY: "12"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-auto}
+      B2_ACCOUNT_ID: ${B2_ACCOUNT_ID:-}
+      B2_ACCOUNT_KEY: ${B2_ACCOUNT_KEY:-}
     volumes:
       - ./docker/backup.sh:/backup.sh:ro
       - ./backups/postgres:/backups
@@ -242,11 +202,21 @@ services:
       - sh
       - -c
       - |
-        apk add --no-cache postgresql-client aws-cli coreutils
+        set -eu
+        apk add --no-cache postgresql-client coreutils util-linux
+        if [ -n "$${RESTIC_REPOSITORY:-}" ] || [ -n "$${RESTIC_PASSWORD:-}" ]; then
+          apk add --no-cache restic
+        fi
         mkdir -p /backups
         echo "*/15 * * * * /backup.sh >> /proc/1/fd/1 2>> /proc/1/fd/2" | crontab -
         /backup.sh
         exec crond -f -d 8
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /backups/.last-success-epoch && age=$$(($$(date -u +%s)-$$(cat /backups/.last-success-epoch))) && test $$age -le 1800"]
+      interval: 5m
+      timeout: 10s
+      retries: 2
+      start_period: 5m
     depends_on:
       postgres:
         condition: service_healthy
@@ -256,8 +226,6 @@ services:
 volumes:
   pgdata:
   redis_data:
-  caddy_data:
-  caddy_config:
   next_cache:
 
 networks:
@@ -266,5 +234,3 @@ networks:
   proxy:
     external: true
     name: proxy
-  web:
-    driver: bridge

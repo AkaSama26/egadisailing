@@ -10,6 +10,10 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { setupTestDb, resetTestDb, closeTestDb } from "../helpers/test-db";
 import { installRedisMock, resetRedisMock } from "../helpers/redis-mock";
 
+const TEST_YEAR = new Date().getUTCFullYear() + 1;
+const testDate = (monthDay: string) =>
+  new Date(`${TEST_YEAR}-${monthDay}T00:00:00.000Z`);
+
 let testPrisma: Awaited<ReturnType<typeof setupTestDb>>;
 vi.mock("@/lib/db", () => ({
   get db() {
@@ -117,27 +121,27 @@ async function seedFishingCatalog() {
   await db.season.createMany({
     data: [
       {
-        year: 2026,
+        year: TEST_YEAR,
         key: "low",
         label: "Low",
-        startDate: new Date("2026-01-01"),
-        endDate: new Date("2026-05-31"),
+        startDate: testDate("01-01"),
+        endDate: testDate("05-31"),
         priceBucket: "LOW",
       },
       {
-        year: 2026,
+        year: TEST_YEAR,
         key: "mid",
         label: "Mid",
-        startDate: new Date("2026-06-01"),
-        endDate: new Date("2026-07-14"),
+        startDate: testDate("06-01"),
+        endDate: testDate("07-14"),
         priceBucket: "MID",
       },
       {
-        year: 2026,
+        year: TEST_YEAR,
         key: "high",
         label: "High",
-        startDate: new Date("2026-07-15"),
-        endDate: new Date("2026-08-31"),
+        startDate: testDate("07-15"),
+        endDate: testDate("08-31"),
         priceBucket: "HIGH",
       },
     ],
@@ -148,7 +152,7 @@ async function seedFishingCatalog() {
       {
         id: "sp-2026-fishing-low",
         serviceId: service.id,
-        year: 2026,
+        year: TEST_YEAR,
         priceBucket: "LOW",
         durationDays: null,
         amount: "800.00",
@@ -157,7 +161,7 @@ async function seedFishingCatalog() {
       {
         id: "sp-2026-fishing-mid",
         serviceId: service.id,
-        year: 2026,
+        year: TEST_YEAR,
         priceBucket: "MID",
         durationDays: null,
         amount: "1000.00",
@@ -166,7 +170,7 @@ async function seedFishingCatalog() {
       {
         id: "sp-2026-fishing-high",
         serviceId: service.id,
-        year: 2026,
+        year: TEST_YEAR,
         priceBucket: "HIGH",
         durationDays: null,
         amount: "1000.00",
@@ -180,7 +184,7 @@ async function seedFishingCatalog() {
 
 const bookingInput = (overrides: Record<string, unknown> = {}) => ({
   serviceId: "fishing-full-day",
-  startDate: new Date("2026-06-20T00:00:00.000Z"),
+  startDate: testDate("06-20"),
   numPeople: 4,
   customer: {
     email: "fishing@example.com",
@@ -206,9 +210,9 @@ describe("fishing-full-day package", () => {
     await seedFishingCatalog();
     const { quotePrice } = await import("@/lib/pricing/service");
 
-    const low = await quotePrice("fishing-full-day", new Date("2026-04-10"), 1);
-    const mid = await quotePrice("fishing-full-day", new Date("2026-06-20"), 4);
-    const high = await quotePrice("fishing-full-day", new Date("2026-08-10"), 2);
+    const low = await quotePrice("fishing-full-day", testDate("04-10"), 1);
+    const mid = await quotePrice("fishing-full-day", testDate("06-20"), 4);
+    const high = await quotePrice("fishing-full-day", testDate("08-10"), 2);
 
     expect(low.pricingUnit).toBe("PER_PACKAGE");
     expect(low.totalPrice.toString()).toBe("800");
@@ -226,7 +230,7 @@ describe("fishing-full-day package", () => {
     await expect(
       createPendingDirectBooking(
         bookingInput({
-          startDate: new Date("2026-06-21T00:00:00.000Z"),
+          startDate: testDate("06-21"),
           numPeople: 1,
           customer: { ...bookingInput().customer, email: "fishing-one@example.com" },
         }),
@@ -240,7 +244,7 @@ describe("fishing-full-day package", () => {
     await expect(
       createPendingDirectBooking(
         bookingInput({
-          startDate: new Date("2026-06-22T00:00:00.000Z"),
+          startDate: testDate("06-22"),
           numPeople: 4,
           customer: { ...bookingInput().customer, email: "fishing-four@example.com" },
         }),
@@ -254,7 +258,7 @@ describe("fishing-full-day package", () => {
     await expect(
       createPendingDirectBooking(
         bookingInput({
-          startDate: new Date("2026-06-23T00:00:00.000Z"),
+          startDate: testDate("06-23"),
           numPeople: 5,
           customer: { ...bookingInput().customer, email: "fishing-five@example.com" },
         }),
@@ -268,7 +272,7 @@ describe("fishing-full-day package", () => {
     const { applyDirectBookingAvailabilityHold } = await import(
       "@/lib/booking/direct-availability-hold"
     );
-    const date = new Date("2026-06-24T00:00:00.000Z");
+    const date = testDate("06-24");
 
     const created = await createPendingDirectBooking(
       bookingInput({

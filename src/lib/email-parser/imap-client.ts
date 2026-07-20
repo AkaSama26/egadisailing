@@ -33,7 +33,38 @@ const MAX_HTML_PARSER_BYTES = 1_000_000;
 // Chunk per UID SET IMAP (server imprecisi su liste lunghe).
 const MARK_SEEN_CHUNK_SIZE = 500;
 
+/**
+ * Converte un messaggio MIME grezzo nel formato interno usato dai parser
+ * charter. La funzione resta separata dal trasporto IMAP per poter verificare
+ * con fixture reali gli upgrade di `mailparser` senza aprire connessioni di
+ * rete nei test.
+ */
+export async function parseEmailSource(uid: number, source: Buffer): Promise<FetchedEmail> {
+  if (source.length > MAX_MESSAGE_SIZE_BYTES) {
+    throw new Error("Email exceeds max size");
+  }
+  const parsed = await simpleParser(source, {
+    maxHtmlLengthToParse: MAX_HTML_PARSER_BYTES,
+    skipImageLinks: true,
+    skipTextToHtml: true,
+  });
+  const fromAddr = parsed.from?.value?.[0]?.address ?? "";
+  return {
+    uid,
+    // Message-ID fallback: random UUID per evitare collision tra email
+    // multiple arrivate senza header Message-ID nello stesso ms.
+    messageId: parsed.messageId ?? `no-id-${crypto.randomUUID()}`,
+    from: fromAddr.toLowerCase(),
+    subject: parsed.subject ?? "",
+    html: typeof parsed.html === "string" ? parsed.html : null,
+    text: parsed.text ?? null,
+    date: parsed.date ?? null,
+    raw: parsed,
+  };
+}
+
 export function imapConfigFromEnv(): ImapConfig | null {
+  if (!env.IMAP_INGEST_ENABLED) return null;
   if (!env.IMAP_HOST || !env.IMAP_USER || !env.IMAP_PASSWORD) return null;
   return {
     host: env.IMAP_HOST,
@@ -52,6 +83,10 @@ export function imapConfigFromEnv(): ImapConfig | null {
  * il successo del processing per garantire at-least-once delivery.
  */
 export async function fetchUnseenEmails(config: ImapConfig): Promise<FetchedEmail[]> {
+  if (!env.IMAP_INGEST_ENABLED) {
+    logger.debug("IMAP ingest disabled, skipping mailbox connection");
+    return [];
+  }
   const client = new ImapFlow({
     host: config.host,
     port: config.port,
@@ -87,24 +122,7 @@ export async function fetchUnseenEmails(config: ImapConfig): Promise<FetchedEmai
           continue;
         }
         try {
-          const parsed = await simpleParser(msg.source, {
-            maxHtmlLengthToParse: MAX_HTML_PARSER_BYTES,
-            skipImageLinks: true,
-            skipTextToHtml: true,
-          });
-          const fromAddr = parsed.from?.value?.[0]?.address ?? "";
-          emails.push({
-            uid: Number(msg.uid),
-            // Message-ID fallback: random UUID per evitare collision tra email
-            // multiple arrivate senza header Message-ID nello stesso ms.
-            messageId: parsed.messageId ?? `no-id-${crypto.randomUUID()}`,
-            from: fromAddr.toLowerCase(),
-            subject: parsed.subject ?? "",
-            html: typeof parsed.html === "string" ? parsed.html : null,
-            text: parsed.text ?? null,
-            date: parsed.date ?? null,
-            raw: parsed,
-          });
+          emails.push(await parseEmailSource(Number(msg.uid), msg.source));
           count++;
         } catch (err) {
           logger.error({ uid: msg.uid, errMessage: (err as Error).message }, "Email parse failed, skipping");
@@ -128,6 +146,7 @@ export async function fetchUnseenEmails(config: ImapConfig): Promise<FetchedEmai
  * grandi (bootstrap produzione con 10k UNSEEN email).
  */
 export async function markEmailsSeen(config: ImapConfig, uids: number[]): Promise<void> {
+  if (!env.IMAP_INGEST_ENABLED) return;
   if (uids.length === 0) return;
   const client = new ImapFlow({
     host: config.host,

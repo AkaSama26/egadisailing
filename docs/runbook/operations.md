@@ -116,8 +116,8 @@ stripe events list --type payment_intent.succeeded --created[gte]=$(date -d '7 d
 
 **Diagnosi**:
 ```bash
-# Healthcheck deep (richiede Bearer CRON_SECRET):
-curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/health?deep=1
+# Healthcheck deep (secret operativo dedicato, mai CRON_SECRET):
+curl -H "Authorization: Bearer $OPS_HEALTH_SECRET" http://localhost:3000/api/health?deep=1
 # Admin dashboard /admin/sync-log mostra breakdown per-queue (R23 split:
 # sync.avail.bokun, sync.avail.boataround, sync.avail.manual, sync.pricing.bokun).
 docker compose logs -f app | grep "bullmq\|queue\|Job failed"
@@ -127,24 +127,80 @@ redis-cli -a $REDIS_PASSWORD LLEN 'bull:sync.avail.boataround:failed'
 
 **Azione**:
 - Worker not running → riavvia il container app
-- Worker running ma job fallisce ripetutamente → controlla `lastError` nella SyncQueue row, fix il canale esterno (credenziali Bokun? Boataround API down?), poi retry manuale
+- Worker running ma job fallisce ripetutamente → controlla `lastError`, correggi
+  il canale esterno e riconcilia dallo stato master nel DB.
+- Non fare retry massivo dei failed job storici. Prima esporta conteggi e
+  metadati senza PII, classifica l'esito e conserva l'audit. In particolare i
+  job pricing Bokun restano archiviati con
+  `BOKUN_PRICING_SYNC_ENABLED=false` finche' Bokun non conferma il contratto
+  API e un canary con read-back non passa. Il rollback verso l'immagine legacy
+  mette inoltre `sync.pricing.bokun` in pausa globale persistente: non fare
+  `resume` durante il normale ripristino operativo.
+- I failed job retained piu' vecchi della finestra operativa sono evidenza
+  storica, non un incidente attivo. Il deep health deve degradare soltanto per
+  errori recenti irrisolti o job bloccati.
 
 ## Database restore
 
 **Sintomo**: corruzione dati, mistake operatore, disaster recovery.
 
-**Prerequisito**: backup giornaliero `pg_dump` esistente (Plan 3+ workflow).
+**Prerequisito**: `pg_dump` locale recente, gzip verificato dal sidecar. Il
+drill calcola e registra anche il checksum del file usato.
+
+**Verifica non distruttiva (procedura normale)**:
+```bash
+./deploy/restore-drill.sh
+```
+
+Il drill usa esclusivamente un DB temporaneo con prefisso
+`egadisailing_restore_drill_`, valida tabelle e migration e lo elimina alla
+fine. Non sostituisce il DB production.
+
+Un restore reale e' distruttivo e richiede maintenance window, approvazione
+esplicita, snapshot dei volumi e verifica del target esatto. Non eliminare mai
+il volume PostgreSQL come primo tentativo: crea un nuovo volume/istanza,
+ripristina e valida li', quindi effettua uno switch controllato. Conserva
+l'istanza precedente finche' booking, pagamenti, migration e healthcheck non
+sono stati riconciliati.
+
+## Backup PostgreSQL assente o stale
+
+**Sintomo**: nessun dump locale riuscito negli ultimi 30 minuti o backup
+sidecar in restart loop.
+
+**Diagnosi**:
+
+```bash
+./deploy/compose.sh logs --tail 150 backup
+docker exec egadisailing-backup sh -c 'cat /backups/.last-success-epoch && find /backups -maxdepth 1 -type f -name "pgdump-*.sql.gz" -print | tail -n 3'
+```
 
 **Azione**:
+
+- Blocca deploy e migration, ma lascia il sito corrente online.
+- Verifica spazio locale, raggiungibilita' PostgreSQL e credenziali DB del
+  sidecar.
+- Se Restic e' stato configurato opzionalmente, verifica anche endpoint,
+  chiave bucket-scoped e `RESTIC_PASSWORD`. Non eseguire `restic init` su un
+  repository gia' esistente.
+- Dopo il fix forza `docker exec egadisailing-backup /backup.sh` e completa
+  `./deploy/restore-drill.sh` prima di sbloccare il deploy.
+
+## Deploy immutabile fallito
+
+`deploy/release.sh` applica migration forward-only e sostituisce soltanto il
+container app. Se shallow, deep o release-SHA health falliscono, ripristina
+l'immagine che era effettivamente in esecuzione.
+
 ```bash
-docker compose down
-docker volume rm egadisailing_pgdata
-docker compose up -d postgres
-# attendi healthy
-cat prisma/backup/dump-YYYY-MM-DD.sql | docker compose exec -T postgres psql -U egadisailing -d egadisailing
-docker compose up -d app
-curl http://localhost:3000/api/health
+./deploy/compose.sh ps
+./deploy/compose.sh logs --tail 200 app
+./deploy/rollback.sh
 ```
+
+Non eseguire migration down durante un rollback. Se il vecchio container non
+e' sano dopo lo switch, conserva entrambi i digest e il backup pre-migration,
+mantieni la maintenance window e indaga prima di qualsiasi modifica dati.
 
 ## Secret rotation
 
@@ -163,6 +219,20 @@ curl http://localhost:3000/api/health
 
 ### CRON_SECRET
 - Low risk, restart solo scheduler. Jobs in flight continuano con vecchio secret a scadenza naturale.
+
+### OPS_HEALTH_SECRET
+- E' separato da `CRON_SECRET` e autorizza solo il deep health operativo.
+- Ruota `.env`, riavvia app e aggiorna il monitor esterno nello stesso change.
+- Non inviarlo in query string o log; usa sempre `Authorization: Bearer`.
+
+### TELEGRAM_BOT_TOKEN esposto
+- Revoca subito il token tramite BotFather: rimuoverlo dal repository non
+  invalida le copie gia' clonate o presenti nella history.
+- Lascia token e chat ID vuoti in production finche' l'integrazione non viene
+  riapprovata. Un nuovo token vive solo nel secret store.
+- Scansiona l'intera history e ruota ogni ulteriore credenziale trovata. Dopo
+  la revoca non riscrivere la history soltanto per nascondere il vecchio token;
+  registra il fingerprint revocato nella baseline dello scanner.
 
 ## Rate limit: admin override
 
@@ -254,7 +324,8 @@ esplicito + workflow OTA manuale.
 **Week 1 (staging)**: `FEATURE_OVERRIDE_ENABLED=true`, OTA disabled. QA DIRECT-vs-DIRECT (punti 1-11 + 15 della checklist).
 
 **Week 2 (prod canary)**: stesso setup. 7 giorni monitoring:
-- Sentry alert su `OVERRIDE_RECONCILE_FAILED` (non dovrebbe firare con OTA off).
+- Alert email dai log su `OVERRIDE_RECONCILE_FAILED` (non dovrebbe scattare
+  con OTA off).
 - Daily KPI review: `/admin/override-requests` PENDING count + approve/reject ratio.
 - Metric: % booking che diventano override_request vs normal (atteso <10%).
 
@@ -278,11 +349,13 @@ esplicito + workflow OTA manuale.
 
 ### Monitoring obbligatorio
 
-- **Sentry**: `SENTRY_DSN` configurato. Alert su:
-  - `logger.error` con tag `event=OVERRIDE_RECONCILE_FAILED` → Slack + email admin.
-  - `logger.fatal` con tag `event=override*` → SMS admin.
-- **UptimeRobot**: ping su `/api/health?deep=1` + `/api/cron/override-reconcile` (5min interval, alert se HTTP != 200).
-- **Telegram alert**: `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` per FATAL admin notifications.
+- **Log applicativi**: controllare `logger.error`/`logger.fatal` tramite i log
+  del container e inviare gli alert operativi all'email admin.
+- **Uptime monitor**: ping pubblico su `/api/health`; per
+  `/api/health?deep=1` configurare il custom header
+  `Authorization: Bearer <OPS_HEALTH_SECRET>` (5min, alert se HTTP != 200).
+- **Telegram alert**: disabilitato e credenziali vuote finche' non esiste una
+  riattivazione separata e revisionata. Usare email e uptime monitor.
 - **Daily KPI review** (5min mattina):
   - `/admin` — KPI "Override approvati questo mese" count.
   - `/admin/override-requests?status=PENDING` — count + eta' oldest request.

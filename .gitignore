@@ -38,6 +38,16 @@ yarn-error.log*
 # docker
 pgdata/
 /backups/
+/.deploy/
+
+# operator-only data (credentials, exports and contact/outreach ledgers)
+/private/
+/backup/
+/outreach-data/
+/contact-ledgers/
+*.contact-ledger.*
+/scripts/send-partner-emails.mjs
+/docs/partner-email-send-log.json
 
 # vercel
 .vercel

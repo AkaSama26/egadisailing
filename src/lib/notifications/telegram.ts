@@ -16,6 +16,10 @@ import { logger } from "@/lib/logger";
  * Plan 6+ deferred: creare bot Telegram, fornire credenziali.
  */
 export async function sendTelegramMessage(text: string): Promise<boolean> {
+  if (!env.TELEGRAM_NOTIFICATIONS_ENABLED) {
+    logger.debug("Telegram notifications disabled, skipping message");
+    return false;
+  }
   const token = env.TELEGRAM_BOT_TOKEN;
   const chatId = env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) {

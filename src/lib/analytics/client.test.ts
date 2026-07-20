@@ -86,7 +86,7 @@ describe("analytics dataLayer client", () => {
     const dataLayer: unknown[] = [];
     const dispatchEvent = vi.fn();
     vi.stubGlobal("window", { dataLayer, dispatchEvent });
-    const { pushConsentUpdate } = await import("./client");
+    const { ANALYTICS_EVENT_BROWSER_EVENT, pushConsentUpdate } = await import("./client");
 
     expect(
       pushConsentUpdate(
@@ -116,7 +116,15 @@ describe("analytics dataLayer client", () => {
       ad_storage: "granted",
       source: "test",
     });
-    expect(dispatchEvent).toHaveBeenCalledOnce();
+    expect(dispatchEvent).toHaveBeenCalledTimes(2);
+    expect(dispatchEvent.mock.calls[0][0]).toMatchObject({
+      type: ANALYTICS_EVENT_BROWSER_EVENT,
+      detail: { event: "egadi_consent_update", source: "test" },
+    });
+    expect(dispatchEvent.mock.calls[1][0]).toMatchObject({
+      type: "egadi:tracking-consent-updated",
+      detail: { analyticsGranted: true, marketingGranted: true },
+    });
   });
 
   test("dispatches sanitized analytics events for first-party bridges", async () => {

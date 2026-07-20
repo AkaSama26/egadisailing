@@ -142,7 +142,9 @@ describe("createManualAdminBooking", () => {
     expect(booking?.numPeople).toBe(3);
     expect(booking?.adultCount).toBe(3);
     expect(Number(booking?.totalPrice.toString())).toBe(300);
-    expect(booking?.customer.email).toBe("mariorossi@example.com");
+    // Dot stripping e' Gmail-specific; sugli altri domini il local-part non
+    // va alterato perche' puo' identificare mailbox differenti.
+    expect(booking?.customer.email).toBe("mario.rossi@example.com");
     expect(booking?.directBooking?.paymentSchedule).toBe("DEPOSIT_BALANCE");
     expect(Number(booking?.directBooking?.depositAmount?.toString())).toBe(100);
     expect(Number(booking?.directBooking?.balanceAmount?.toString())).toBe(200);

@@ -46,24 +46,23 @@ https://egadisailing.com/api/webhooks/stripe
 ## Deploy
 
 ```bash
-cd /home/ubuntu/egadisailing
-git pull origin main
-docker compose -f docker-compose.prod.yml up -d --build app
+cd /home/ubuntu/www/egadisailing
+git fetch --prune origin main
+git checkout main
+git merge --ff-only origin/main
+npm run deploy:prod:app -- "$(git rev-parse HEAD)"
 ```
 
-L'entrypoint dell'app esegue `prisma migrate deploy` prima dello start di
-Next. Se si sta facendo un deploy non containerizzato, applicare prima le
-migration:
-
-```bash
-npm run db:deploy
-```
+Questo è l'unico percorso di produzione: risolve il digest GHCR, esegue backup
+e restore drill, applica le migration additive e accetta il container solo dopo
+i gate shallow/deep/release. I deploy non containerizzati sono vietati. Vedi
+`docs/runbook/deployment.md`.
 
 Verifica post-deploy:
 
 ```bash
 curl -s https://egadisailing.com/api/health
-docker compose -f docker-compose.prod.yml logs app | tail -80
+./deploy/compose.sh logs --tail 80 app
 ```
 
 ## Attivazione
@@ -74,10 +73,10 @@ Quando la release e' sana, attivare il flag in `.env`:
 FEATURE_STRIPE_CHECKOUT_ENABLED=true
 ```
 
-Poi riavviare l'app:
+Poi ricreare l'app dalla stessa immagine immutabile, senza build locale:
 
 ```bash
-docker compose -f docker-compose.prod.yml restart app
+./deploy/compose.sh up -d --no-build --force-recreate app
 ```
 
 Da questo momento il click su "Conferma" crea una Checkout Session hosted e
@@ -123,7 +122,7 @@ FEATURE_STRIPE_CHECKOUT_ENABLED=false
 Poi:
 
 ```bash
-docker compose -f docker-compose.prod.yml restart app
+./deploy/compose.sh restart app
 ```
 
 Le Checkout Session gia' aperte possono ancora completarsi: il webhook resta

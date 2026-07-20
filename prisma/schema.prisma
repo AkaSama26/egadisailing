@@ -31,6 +31,7 @@ model User {
   overrideDecisions OverrideRequest[]
   changeRequestDecisions BookingChangeRequest[] @relation("BookingChangeRequestDecision")
   cancelledReceipts Receipt[] @relation("ReceiptCancelledBy")
+  resolvedEmailOutboxEntries EmailOutbox[] @relation("EmailOutboxResolver")
 }
 
 model AuditLog {
@@ -448,13 +449,19 @@ model EmailOutbox {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   sentAt          DateTime?
+  deliveryStartedAt DateTime?
+  resolvedAt      DateTime?
+  resolvedByUserId String?
+  resolutionReason String?  @db.Text
 
-  booking  Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  booking    Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  resolvedBy User?     @relation("EmailOutboxResolver", fields: [resolvedByUserId], references: [id], onDelete: SetNull)
 
   @@index([status, nextAttemptAt])
   @@index([bookingId])
   @@index([customerId])
+  @@index([resolvedByUserId])
   @@index([templateKey, createdAt])
 }
 

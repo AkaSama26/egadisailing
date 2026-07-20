@@ -1,5 +1,9 @@
 # Go-Live Final Assessment — 18 aprile 2026
 
+> **Documento storico.** I valori e i gap sotto fotografano il Round 18 e non
+> rappresentano lo stato di rilascio corrente. Per deploy immutabile, backup,
+> health e policy di osservabilita' corrente usare [`deployment.md`](deployment.md).
+
 Audit Round 18 consolidated post-17-round. **VERDICT: Stop audit, shift delivery. Pilot launch target 20 maggio 2026.**
 
 ## State-of-the-art dopo 17 round
@@ -20,7 +24,7 @@ Qualità pesata **6.2/10**. Core transazionale 8+/10, ma GDPR (2/10), infra (3/1
 | **GDPR/Legal** | **2** | ConsentRecord, /privacy /terms /cookie, DSR endpoint |
 | Security headers | 8.5 | CSP non configurato |
 | Rate-limit | 8 | Fail-open tradeoff (partial fix R17) |
-| Observability | 4 | **Sentry non wired**, uptime monitor esterno |
+| Observability | 4 | error tracking e uptime monitor non wired |
 | **Infra/Deploy** | **3** | **docker-compose.prod, Caddyfile, backup, CI/CD, staging** |
 | **Testing** | **3** | 106 unit pure. Zero integration/E2E |
 | Frontend UX | 7 | **Turnstile widget non renderizzato** client, contact form rotto |
@@ -44,7 +48,7 @@ Qualità pesata **6.2/10**. Core transazionale 8+/10, ma GDPR (2/10), infra (3/1
 - R8-DMARC/SPF/DKIM verify (2 gg + cliente DNS)
 - R7-anonymizeCustomer helper (1 gg)
 - R11-i18n hardcode IT cleanup (1 gg + EN translations cliente)
-- R6-Sentry wiring (0.5 gg)
+- R6-central error tracking wiring (0.5 gg)
 - R7-CI/CD GitHub Actions (1 gg)
 - R11-Tier-A Testing (10 gg)
 
@@ -64,12 +68,12 @@ Qualità pesata **6.2/10**. Core transazionale 8+/10, ma GDPR (2/10), infra (3/1
 
 **Strategia**:
 - W1 (21-27 apr): Turnstile client + admin actions + GDPR placeholder + kickoff legal cliente
-- W2 (28 apr - 4 mag): Infra deploy + Caddy + backup + Sentry wiring + staging
+- W2 (28 apr - 4 mag): Infra deploy + Caddy + backup + monitoring + staging
 - W3 (5-11 mag): Legal copy (cliente) + ConsentRecord wiring + smoke test
 - W4 (12-18 mag): Fix da staging + Stripe LIVE onboarding + dry-run
 - W5 (19-25 mag): Go-live **pilot** — feature flag limit 10 booking/day W1, 30/day W2, full W3
 
-**Rischio primario primo mese**: regressione silente fix R10-R12 (refund flow, auto-refund cancelled, Payment REFUND record). Mitigation: Sentry + daily KPI review + pilot flag per rollback <5min.
+**Rischio primario primo mese**: regressione silente fix R10-R12 (refund flow, auto-refund cancelled, Payment REFUND record). Mitigation: deep health, log review, uptime monitor, daily KPI review e pilot flag per rollback <5min.
 
 ## Dipendenze critiche cliente (urgent, chiedere oggi)
 

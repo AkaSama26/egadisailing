@@ -1,0 +1,30 @@
+# Historical findings reviewed on 2026-07-19.
+# The Telegram credential was removed from every active environment. BotFather
+# revocation is a separate no-go gate and must be confirmed by the owner before
+# production release; this fingerprint exists only to baseline Git history.
+# All remaining entries are synthetic test/documentation values or non-secret
+# itinerary identifiers.
+d6f1af141266a74b2be0e8725fa183d3880b2a83:.env.example:telegram-bot-api-token:181
+77e8c29ceb58f1b5df833a0d830f110a778716ec:src/data/itineraries.ts:generic-api-key:41
+77e8c29ceb58f1b5df833a0d830f110a778716ec:src/data/itineraries.ts:generic-api-key:60
+77e8c29ceb58f1b5df833a0d830f110a778716ec:src/data/itineraries.ts:generic-api-key:67
+77e8c29ceb58f1b5df833a0d830f110a778716ec:src/data/itineraries.ts:generic-api-key:74
+77e8c29ceb58f1b5df833a0d830f110a778716ec:src/data/itineraries.ts:generic-api-key:155
+77e8c29ceb58f1b5df833a0d830f110a778716ec:src/data/itineraries.ts:generic-api-key:168
+582adb2a5c60bff6556e26659a469647fe1d9b73:tests/integration/boataround-webhook.test.ts:generic-api-key:77
+8748e74b7a34b7d7ff614992aa230e3ec2664e30:.github/workflows/ci.yml:generic-api-key:42
+193a7667f6fb79d1f864031688027be7cef9c5c1:src/lib/boataround/webhook-verifier.test.ts:generic-api-key:5
+f38e1cfe39779569cbd3bccf0e26e74f6a8836a8:src/lib/bokun/signer.test.ts:generic-api-key:5
+24fed827032fac64761fc90194fa71fc86556d70:.env.example:stripe-access-token:37
+7e98176f5e347d743eaf2e241d63accb4ccb0790:docs/superpowers/plans/2026-04-16-bokun-integration-plan.md:generic-api-key:102
+7e98176f5e347d743eaf2e241d63accb4ccb0790:docs/superpowers/plans/2026-04-17-plan-3-bokun-integration.md:generic-api-key:58
+7e98176f5e347d743eaf2e241d63accb4ccb0790:docs/superpowers/plans/2026-04-17-plan-3-bokun-integration.md:generic-api-key:142
+7e98176f5e347d743eaf2e241d63accb4ccb0790:docs/superpowers/plans/2026-04-17-plan-2-site-stripe-otp.md:stripe-access-token:145
+7f93ab2b839b1439f6db0f8ada8464c77c33843f:docs/superpowers/plans/2026-04-15-islands-itinerary.md:generic-api-key:91
+7f93ab2b839b1439f6db0f8ada8464c77c33843f:docs/superpowers/plans/2026-04-15-islands-itinerary.md:generic-api-key:104
+7f93ab2b839b1439f6db0f8ada8464c77c33843f:docs/superpowers/plans/2026-04-15-islands-itinerary.md:generic-api-key:200
+7f93ab2b839b1439f6db0f8ada8464c77c33843f:docs/superpowers/plans/2026-04-15-islands-itinerary.md:generic-api-key:213
+17862ebe623675264c181ae9971d69ca11194e67:src/data/itineraries.ts:generic-api-key:67
+17862ebe623675264c181ae9971d69ca11194e67:src/data/itineraries.ts:generic-api-key:80
+17862ebe623675264c181ae9971d69ca11194e67:src/data/itineraries.ts:generic-api-key:176
+17862ebe623675264c181ae9971d69ca11194e67:src/data/itineraries.ts:generic-api-key:189
