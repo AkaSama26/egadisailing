@@ -23,6 +23,8 @@ export interface WebhookGuardConfig {
 export interface WebhookHandlerCtx {
   /** Body raw (Buffer) — usato per HMAC verify bit-exact. */
   body: Buffer;
+  /** URL parsato, inclusi i query params di autenticazione provider. */
+  url: URL;
   /** Request headers. */
   headers: Headers;
   /** IP raw (per log diagnostico HMAC fail). */
@@ -43,7 +45,7 @@ export interface WebhookHandlerCtx {
  * tolerance + parse JSON e aggiungere rate-limit altererebbe il delivery
  * semantica del provider.
  *
- * Handler riceve `{body: Buffer, headers, ip}` post-validazione struttura.
+ * Handler riceve `{body, url, headers, ip}` post-validazione struttura.
  * Signature verify + dedup + import logic resta nel handler caller-specific.
  */
 export function withWebhookGuard<T>(
@@ -84,7 +86,12 @@ export function withWebhookGuard<T>(
     }
 
     const body = Buffer.from(arrayBuf);
-    const result = await handler({ body, headers: req.headers, ip });
+    const result = await handler({
+      body,
+      url: new URL(req.url),
+      headers: req.headers,
+      ip,
+    });
     // Handler puo' tornare un Response (es. early return) o un payload da
     // wrappare in NextResponse.json.
     if (result instanceof Response) return result;

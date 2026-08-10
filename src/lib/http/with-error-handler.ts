@@ -31,7 +31,10 @@ export function withErrorHandler<H extends Handler>(handler: H): H {
   return (async (req, ...args) => {
     const requestId =
       req.headers.get("x-request-id") ?? crypto.randomUUID();
-    const reqLogger = logger.child({ requestId, url: req.url });
+    const logUrl = new URL(req.url);
+    // Query params possono contenere token webhook/cron: non devono finire nei log.
+    logUrl.search = "";
+    const reqLogger = logger.child({ requestId, url: logUrl.toString() });
 
     try {
       const res = await handler(req, ...args);

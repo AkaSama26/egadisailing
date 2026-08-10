@@ -2,6 +2,7 @@ import { bokunClient } from "./index";
 import { bokunBookingResponseSchema } from "./schemas";
 import { logger } from "@/lib/logger";
 import type { BokunBookingSummary } from "./types";
+import { toBokunRestBookingId } from "./booking-id";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -254,15 +255,11 @@ function getTotalHits(raw: unknown, fallback: number): number {
 }
 
 /**
- * Fetch single booking by Bokun confirmation code.
- *
- * `bookingId` DEVE essere gia' validato con `bokunBookingIdSchema` prima di
- * essere passato qui — ma facciamo comunque `encodeURIComponent` come
- * defense-in-depth per prevenire SSRF/path-traversal verso altri endpoint
- * Bokun authenticati.
+ * Recupera il dettaglio da un ID REST numerico o dal global ID GraphQL del
+ * webhook; la conversione strict precede la costruzione del path autenticato.
  */
 export async function getBokunBooking(bookingId: string | number): Promise<BokunBookingSummary> {
-  const safeId = encodeURIComponent(String(bookingId));
+  const safeId = encodeURIComponent(toBokunRestBookingId(bookingId));
   const raw = await bokunClient().request<unknown>(
     "GET",
     `/booking.json/booking/${safeId}`,

@@ -13,6 +13,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import crypto from "node:crypto";
 import { setupTestDb, resetTestDb, closeTestDb } from "../helpers/test-db";
 import { installRedisMock, resetRedisMock } from "../helpers/redis-mock";
+import { deriveBokunLegacyWebhookAuth } from "@/lib/bokun/legacy-webhook";
 
 const bookingBokunAdd = vi.hoisted(() => vi.fn().mockResolvedValue({ id: "job-bokun-booking" }));
 
@@ -53,7 +54,7 @@ vi.mock("@/lib/queue", () => ({
 // Mock Bokun SDK helpers per evitare HTTP esterno.
 vi.mock("@/lib/bokun/bookings", () => ({
   getBokunBooking: vi.fn().mockResolvedValue({
-    id: "bkn-test-1",
+    id: "37648",
     productId: "prod-1",
     confirmationCode: "BKN-TEST-1",
     productConfirmationCode: "PROD-CONF-1",
@@ -173,9 +174,9 @@ function makeReq(
 
 describe("Bokun webhook security (R24-R25)", () => {
   it("valid signature + recent x-bokun-date → 200 received", async () => {
-    const body = { bookingId: "bkn-test-1", timestamp: new Date().toISOString() };
+    const body = { bookingId: "37648", timestamp: new Date().toISOString() };
     const headers = buildBokunHeaders({
-      bookingId: "bkn-test-1",
+      bookingId: "37648",
       topic: "bookings/create",
     });
 
@@ -186,10 +187,26 @@ describe("Bokun webhook security (R24-R25)", () => {
     expect(bookingBokunAdd.mock.calls[0]?.[0]).toBe("booking.webhook.process");
   });
 
-  it("body/header bookingId mismatch → 400", async () => {
-    const body = { bookingId: "other-booking", timestamp: new Date().toISOString() };
+  it("accepts the official Bokun global booking ID shape", async () => {
+    const bookingId = "Qm9va2luZzozNzY0OA"; // base64 di Booking:37648
+    const body = { bookingId, timestamp: new Date().toISOString() };
     const headers = buildBokunHeaders({
-      bookingId: "bkn-test-1",
+      bookingId,
+      topic: "bookings/create",
+    });
+
+    const { POST } = await import("@/app/api/webhooks/bokun/route");
+    const res = await POST(makeReq(body, headers));
+
+    expect(res.status).toBe(200);
+    expect(bookingBokunAdd).toHaveBeenCalledTimes(1);
+    expect(bookingBokunAdd.mock.calls[0]?.[1]?.data.bookingId).toBe(bookingId);
+  });
+
+  it("body/header bookingId mismatch → 400", async () => {
+    const body = { bookingId: "37649", timestamp: new Date().toISOString() };
+    const headers = buildBokunHeaders({
+      bookingId: "37648",
       topic: "bookings/create",
     });
 
@@ -200,11 +217,11 @@ describe("Bokun webhook security (R24-R25)", () => {
   });
 
   it("R25-A3-C1: x-bokun-date > 5min old → reject ValidationError", async () => {
-    const body = { bookingId: "bkn-test-1", timestamp: new Date().toISOString() };
+    const body = { bookingId: "37648", timestamp: new Date().toISOString() };
     // Date 10min fa → fuori replay window.
     const oldDate = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const headers = buildBokunHeaders({
-      bookingId: "bkn-test-1",
+      bookingId: "37648",
       topic: "bookings/create",
       date: oldDate,
     });
@@ -218,10 +235,10 @@ describe("Bokun webhook security (R24-R25)", () => {
   });
 
   it("R25-A3-C1: x-bokun-date > 5min future → reject ValidationError", async () => {
-    const body = { bookingId: "bkn-test-1" };
+    const body = { bookingId: "37648" };
     const futureDate = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     const headers = buildBokunHeaders({
-      bookingId: "bkn-test-1",
+      bookingId: "37648",
       topic: "bookings/create",
       date: futureDate,
     });
@@ -232,7 +249,7 @@ describe("Bokun webhook security (R24-R25)", () => {
   });
 
   it("missing signature → UnauthorizedError 401", async () => {
-    const body = { bookingId: "bkn-test-1" };
+    const body = { bookingId: "37648" };
     const { POST } = await import("@/app/api/webhooks/bokun/route");
     const res = await POST(
       makeReq(body, { "x-bokun-topic": "bookings/create" }),
@@ -241,7 +258,7 @@ describe("Bokun webhook security (R24-R25)", () => {
   });
 
   it("invalid HMAC → 401 + log con reason", async () => {
-    const body = { bookingId: "bkn-test-1" };
+    const body = { bookingId: "37648" };
     const headers = {
       "x-bokun-topic": "bookings/create",
       "x-bokun-date": new Date().toISOString(),
@@ -278,9 +295,9 @@ describe("Bokun webhook security (R24-R25)", () => {
   });
 
   it("dedup via ProcessedBokunEvent: stesso eventId → 200 duplicate", async () => {
-    const body = { bookingId: "bkn-test-1", timestamp: new Date().toISOString() };
+    const body = { bookingId: "37648", timestamp: new Date().toISOString() };
     const headers = buildBokunHeaders({
-      bookingId: "bkn-test-1",
+      bookingId: "37648",
       topic: "bookings/create",
     });
 
@@ -300,5 +317,112 @@ describe("Bokun webhook security (R24-R25)", () => {
     const rows = await db.processedBokunEvent.findMany();
     expect(rows).toHaveLength(1);
     expect(bookingBokunAdd).toHaveBeenCalledTimes(1);
+  });
+});
+
+
+describe("Bokun legacy HTTP booking notification", () => {
+  const auth = deriveBokunLegacyWebhookAuth(TEST_SECRET);
+
+  function makeLegacyReq(
+    body: unknown,
+    providedAuth: string = auth,
+  ): Request {
+    const bodyStr = JSON.stringify(body);
+    const url = new URL(
+      "http://localhost/api/webhooks/bokun-legacy",
+    );
+    url.searchParams.set("auth", providedAuth);
+
+    return new Request(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "content-length": String(bodyStr.length),
+        "user-agent": "AHC/2.1",
+      },
+      body: bodyStr,
+    });
+  }
+
+  it("auth valida → accoda solo l'ID e non il payload con PII", async () => {
+    const payload = {
+      bookingId: 99802913,
+      status: "CONFIRMED",
+      customer: { email: "private@example.test" },
+    };
+
+    const { POST } = await import(
+      "@/app/api/webhooks/bokun-legacy/route"
+    );
+    const res = await POST(makeLegacyReq(payload));
+
+    expect(res.status).toBe(200);
+    expect(bookingBokunAdd).toHaveBeenCalledTimes(1);
+    const queued = bookingBokunAdd.mock.calls[0]?.[1]?.data;
+    expect(queued).toMatchObject({
+      provider: "BOKUN",
+      bookingId: "99802913",
+      topic: "bookings/update",
+    });
+    expect(JSON.stringify(queued)).not.toContain("private@example.test");
+  });
+
+  it("mappa una cancellazione sul topic bookings/cancel", async () => {
+    const { POST } = await import(
+      "@/app/api/webhooks/bokun-legacy/route"
+    );
+    const res = await POST(
+      makeLegacyReq({ bookingId: 99802913, status: "CANCELLED" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(
+      bookingBokunAdd.mock.calls[0]?.[1]?.data.topic,
+    ).toBe("bookings/cancel");
+  });
+
+  it("auth mancante o errata → 401 senza job", async () => {
+    const { POST } = await import(
+      "@/app/api/webhooks/bokun-legacy/route"
+    );
+    const res = await POST(
+      makeLegacyReq(
+        { bookingId: 99802913, status: "CONFIRMED" },
+        "a".repeat(64),
+      ),
+    );
+
+    expect(res.status).toBe(401);
+    expect(bookingBokunAdd).not.toHaveBeenCalled();
+  });
+
+  it("payload senza booking ID → 400 senza marker", async () => {
+    const { POST } = await import(
+      "@/app/api/webhooks/bokun-legacy/route"
+    );
+    const res = await POST(
+      makeLegacyReq({ status: "CONFIRMED" }),
+    );
+
+    expect(res.status).toBe(400);
+    expect(bookingBokunAdd).not.toHaveBeenCalled();
+    expect(await db.processedBokunEvent.count()).toBe(0);
+  });
+
+  it("retry identico → 200 duplicate e un solo job", async () => {
+    const payload = { bookingId: 99802913, status: "CONFIRMED" };
+    const { POST } = await import(
+      "@/app/api/webhooks/bokun-legacy/route"
+    );
+
+    const first = await POST(makeLegacyReq(payload));
+    const second = await POST(makeLegacyReq(payload));
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(await second.json()).toMatchObject({ duplicate: true });
+    expect(bookingBokunAdd).toHaveBeenCalledTimes(1);
+    expect(await db.processedBokunEvent.count()).toBe(1);
   });
 });

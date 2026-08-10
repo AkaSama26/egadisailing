@@ -7,8 +7,9 @@ import crypto from "node:crypto";
  * 1. Raccogli tutti gli header `x-bokun-*` ECCETTO `x-bokun-hmac`
  * 2. Lowercase nomi + sort alphabetical
  * 3. Concatena come `name1=value1&name2=value2&...`
- * 4. HMAC-SHA256 con `secret`, output hex
- * 5. Confronta con header `x-bokun-hmac` (timing-safe)
+ * 4. HMAC-SHA256 con `secret`
+ * 5. Accetta sia hex sia base64, entrambi documentati da Bokun
+ * 6. Confronta con header `x-bokun-hmac` (timing-safe)
  *
  * Ritorna esito tipato (non boolean) per permettere al caller di distinguere
  * brute-force attack (signature malformata) vs config drift (length mismatch)
@@ -38,17 +39,23 @@ export function verifyBokunWebhookResult(
 
   bokunHeaders.sort(([a], [b]) => a.localeCompare(b));
   const stringToSign = bokunHeaders.map(([k, v]) => `${k}=${v}`).join("&");
-  const computed = crypto.createHmac("sha256", secret).update(stringToSign).digest("hex");
+  const computedBuf = crypto.createHmac("sha256", secret).update(stringToSign).digest();
 
-  // R25-A3-A3: check hex format explicit invece di affidarsi al catch di
-  // `Buffer.from(..., "hex")`. Buffer.from con hex invalid non throws — ritorna
-  // buffer troncato o vuoto → length-mismatch ambiguous. Regex esplicita.
-  if (!/^[0-9a-fA-F]+$/.test(received)) {
+  // La documentazione descrive la firma come base64 ma mostra un esempio hex.
+  // Supportiamo entrambi senza indebolire il confronto sui 32 byte SHA-256.
+  let receivedBuf: Buffer;
+  if (/^[0-9a-fA-F]{64}$/.test(received)) {
+    receivedBuf = Buffer.from(received, "hex");
+  } else if (
+    /^[A-Za-z0-9+/]+={0,2}$/.test(received) &&
+    received.length % 4 === 0
+  ) {
+    receivedBuf = Buffer.from(received, "base64");
+  } else {
+    // Nome reason mantenuto per compatibilita' con alert e test storici.
     return { ok: false, reason: "not-hex" };
   }
 
-  const receivedBuf = Buffer.from(received, "hex");
-  const computedBuf = Buffer.from(computed, "hex");
   if (receivedBuf.length !== computedBuf.length) {
     return { ok: false, reason: "length-mismatch" };
   }

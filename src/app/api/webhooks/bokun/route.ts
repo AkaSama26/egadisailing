@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { verifyBokunWebhookResult } from "@/lib/bokun/webhook-verifier";
-import { bokunBookingIdSchema, bokunWebhookBodySchema } from "@/lib/bokun/schemas";
+import {
+  bokunBookingIdSchema,
+  bokunExperienceBookingIdSchema,
+  bokunWebhookBodySchema,
+} from "@/lib/bokun/schemas";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { withWebhookGuard } from "@/lib/http/with-webhook-guard";
@@ -120,7 +124,7 @@ export const POST = withWebhookGuard(
     }
     const experienceBookingId =
       headerExperienceBookingId !== undefined
-        ? String(bokunBookingIdSchema.parse(headerExperienceBookingId))
+        ? String(bokunExperienceBookingIdSchema.parse(headerExperienceBookingId))
         : body.experienceBookingId !== undefined
           ? String(body.experienceBookingId)
           : undefined;
@@ -181,8 +185,10 @@ export const POST = withWebhookGuard(
     );
 
     if (dedup.skipped) {
+      logger.info({ topic, bookingId, duplicate: true }, "Bokun webhook accepted");
       return NextResponse.json({ received: true, duplicate: true });
     }
+    logger.info({ topic, bookingId, duplicate: false }, "Bokun webhook accepted");
     return NextResponse.json({ received: true });
   },
 );

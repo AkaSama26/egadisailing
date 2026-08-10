@@ -7,12 +7,13 @@ const SECRET = "test-webhook-secret";
 function makeSignedHeaders(
   payload: Record<string, string>,
   secret: string = SECRET,
+  encoding: "hex" | "base64" = "hex",
 ): Record<string, string> {
   const concatenated = Object.entries(payload)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k}=${v}`)
     .join("&");
-  const hmac = crypto.createHmac("sha256", secret).update(concatenated).digest("hex");
+  const hmac = crypto.createHmac("sha256", secret).update(concatenated).digest(encoding);
   return { ...payload, "x-bokun-hmac": hmac };
 }
 
@@ -23,6 +24,19 @@ describe("verifyBokunWebhook", () => {
       "x-bokun-vendor-id": "123",
       "x-bokun-topic": "bookings/create",
     });
+    expect(verifyBokunWebhook(hdrs, SECRET)).toBe(true);
+  });
+
+  test("accepts the base64 signature format described by Bokun", () => {
+    const hdrs = makeSignedHeaders(
+      {
+        "x-bokun-apikey": "abc",
+        "x-bokun-vendor-id": "123",
+        "x-bokun-topic": "bookings/create",
+      },
+      SECRET,
+      "base64",
+    );
     expect(verifyBokunWebhook(hdrs, SECRET)).toBe(true);
   });
 

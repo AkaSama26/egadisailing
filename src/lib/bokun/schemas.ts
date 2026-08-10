@@ -1,20 +1,39 @@
 import { z } from "zod";
+import { toBokunRestBookingId } from "./booking-id";
+
+const bokunWebhookEntityIdSchema = z.union([
+  z.number().int().positive(),
+  z
+    .string()
+    .min(1)
+    .max(128)
+    .regex(/^[A-Za-z0-9+/_=-]+$/, "Invalid Bokun entity ID format"),
+]);
 
 /**
- * Schema strict per `bookingId` usato come segmento path della Bokun API.
- * Accetta solo numeri interi positivi o codici alfanumerici (no `/`, `.`,
- * `..`, nessun carattere URL-reserved). Previene SSRF/path-traversal su
- * endpoint del tipo `/booking.json/booking/${bookingId}`.
+ * Schema strict per gli ID ricevuti dal webhook Bokun. Accetta ID numerici e
+ * global ID GraphQL base64/base64url (es. `Qm9va2luZzozNzY0OA`). La conversione
+ * al formato REST numerico avviene in `toBokunRestBookingId` prima di costruire
+ * qualsiasi path autenticato.
  */
-export const bokunBookingIdSchema = z.union([
-  z.number().int().positive(),
-  z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, "Invalid Bokun bookingId format"),
-]);
+export const bokunBookingIdSchema = bokunWebhookEntityIdSchema.refine(
+  (value) => {
+    try {
+      toBokunRestBookingId(value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  "Invalid Bokun bookingId format",
+);
+
+export const bokunExperienceBookingIdSchema = bokunWebhookEntityIdSchema;
 
 export const bokunWebhookBodySchema = z.object({
   timestamp: z.string().optional(),
   bookingId: bokunBookingIdSchema.optional(),
-  experienceBookingId: bokunBookingIdSchema.optional(),
+  experienceBookingId: bokunExperienceBookingIdSchema.optional(),
 });
 
 /**
