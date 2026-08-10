@@ -124,7 +124,7 @@ const prismaVersion = spawnSync(
   ["/app/node_modules/prisma/build/index.js", "--version"],
   { encoding: "utf8", timeout: 15_000 },
 );
-if (prismaVersion.status !== 0 || !prismaVersion.stdout.includes("7.8.0")) {
+if (prismaVersion.status !== 0 || !prismaVersion.stdout.includes("7.9.1")) {
   throw new Error(
     `Prisma CLI runtime validation failed: ${prismaVersion.stderr || prismaVersion.error}`,
   );
