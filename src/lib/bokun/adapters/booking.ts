@@ -74,6 +74,7 @@ export async function importBokunBooking(
   if (!service) {
     throw new NotFoundError("Service", `bokunProductId=${booking.productId}`);
   }
+  const exclusiveSlot = isBoatExclusiveServiceType(service.type);
 
   const startDate = parseIsoDay(booking.startDate.slice(0, 10));
   const endDate = parseIsoDay((booking.endDate ?? booking.startDate).slice(0, 10));
@@ -252,7 +253,7 @@ export async function importBokunBooking(
             status,
             numPeople: booking.numPeople ?? existing.booking.numPeople,
             totalPrice: totalPriceStr,
-            exclusiveSlot: true,
+            exclusiveSlot,
             claimsAvailability: true,
           },
           select: { id: true, boatId: true, startDate: true, endDate: true, status: true },
@@ -328,7 +329,7 @@ export async function importBokunBooking(
           // constraint violation in produzione al primo ordine non-EUR.
           currency: "EUR",
           status,
-          exclusiveSlot: true,
+          exclusiveSlot,
           claimsAvailability: true,
           bokunBooking: {
             create: {

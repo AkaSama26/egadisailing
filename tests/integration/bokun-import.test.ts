@@ -104,6 +104,36 @@ async function seedMappedService() {
   return { boat, service };
 }
 
+async function seedMappedSharedService() {
+  const boat = await db.boat.create({
+    data: {
+      id: "shared-test",
+      name: "Shared Test",
+      type: "MOTORBOAT",
+      description: "Test",
+      amenities: [],
+      images: [],
+    },
+  });
+  const service = await db.service.create({
+    data: {
+      id: "svc-bokun-shared",
+      boatId: boat.id,
+      name: "Tour condiviso",
+      type: "BOAT_SHARED",
+      durationType: "FULL_DAY",
+      durationHours: 8,
+      capacityMax: 12,
+      defaultPaymentSchedule: "FULL",
+      priority: 5,
+      pricingUnit: "PER_PERSON",
+      bokunProductId: "prod-shared",
+      active: true,
+    },
+  });
+  return { boat, service };
+}
+
 function bokunBooking(overrides: Partial<BokunBookingSummary> = {}): BokunBookingSummary {
   return {
     id: 1001,
@@ -131,6 +161,42 @@ function bokunBooking(overrides: Partial<BokunBookingSummary> = {}): BokunBookin
 }
 
 describe("Bokun import hardening", () => {
+  it("permette più booking BOAT_SHARED nello stesso giorno senza slot esclusivo", async () => {
+    await seedMappedSharedService();
+    const { importBokunBooking } = await import("@/lib/bokun/adapters/booking");
+
+    const first = await importBokunBooking(
+      bokunBooking({
+        id: 2001,
+        productId: "prod-shared",
+        confirmationCode: "BKN2001",
+        productConfirmationCode: "PROD2001",
+        numPeople: 2,
+      }),
+    );
+    const second = await importBokunBooking(
+      bokunBooking({
+        id: 2002,
+        productId: "prod-shared",
+        confirmationCode: "BKN2002",
+        productConfirmationCode: "PROD2002",
+        numPeople: 2,
+      }),
+    );
+
+    expect(first.mode).toBe("created");
+    expect(second.mode).toBe("created");
+    const bookings = await db.booking.findMany({
+      where: { serviceId: "svc-bokun-shared" },
+      orderBy: { confirmationCode: "asc" },
+      select: { exclusiveSlot: true, claimsAvailability: true },
+    });
+    expect(bookings).toEqual([
+      { exclusiveSlot: false, claimsAvailability: true },
+      { exclusiveSlot: false, claimsAvailability: true },
+    ]);
+  });
+
   it("update con nuova data libera la vecchia cella owned e blocca la nuova", async () => {
     const { boat } = await seedMappedService();
     const { importBokunBooking } = await import("@/lib/bokun/adapters/booking");
