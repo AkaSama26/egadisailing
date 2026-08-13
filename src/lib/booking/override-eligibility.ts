@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { addDays, toUtcDay } from "@/lib/dates";
 
 /**
  * Input per checkOverrideEligibility — pure helper, nessun DB access.
@@ -88,8 +89,10 @@ export function checkOverrideEligibility(
     };
   }
   // Regola 3: 15-day cutoff strict (> 15 = eligible, <= 15 = blocked)
+  const experienceDay = toUtcDay(input.experienceDate);
+  const todayDay = toUtcDay(input.today);
   const daysToExperience = Math.floor(
-    (input.experienceDate.getTime() - input.today.getTime()) /
+    (experienceDay.getTime() - todayDay.getTime()) /
       (24 * 60 * 60 * 1000),
   );
   if (daysToExperience <= 15) {
@@ -114,8 +117,7 @@ export function checkOverrideEligibility(
   }
 
   // Eligibile
-  const dropDeadAt = new Date(input.experienceDate);
-  dropDeadAt.setDate(dropDeadAt.getDate() - 15);
+  const dropDeadAt = addDays(experienceDay, -15);
 
   return {
     status: "override_request",

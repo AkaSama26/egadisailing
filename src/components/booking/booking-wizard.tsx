@@ -11,6 +11,7 @@ import { centsToAnalyticsValue, trackEvent, trackEventOncePerSession } from "@/l
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
+import { resolveCalendarDateSelection } from "@/lib/booking/calendar-selection";
 import {
   DEFAULT_PASSENGER_FARE_CATEGORIES,
   PASSENGER_FARE_SERVICE_TYPE,
@@ -2140,6 +2141,7 @@ function calendarDayAriaLabel(
   date: string,
   day?: CalendarApiDay,
   locale?: string | null,
+  isCharterEndCandidate = false,
 ): string {
   const isEn = locale === "en";
   const isEs = locale === "es";
@@ -2152,6 +2154,19 @@ function calendarDayAriaLabel(
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00.000Z`));
+  if (isCharterEndCandidate) {
+    return `${formatted}, ${
+      isEs
+        ? "seleccionar como regreso"
+        : isFr
+          ? "sélectionner comme retour"
+          : isDe
+            ? "als Rückkehr auswählen"
+            : isEn
+              ? "select as return date"
+              : "seleziona come data di ritorno"
+    }`;
+  }
   if (!day) {
     return `${formatted}, ${
       isEs
@@ -2184,6 +2199,7 @@ function calendarDayClass({
   rangeSelected,
   outOfMonth,
   status,
+  isCharterEndCandidate,
   loading,
   fillAvailableHeight,
 }: {
@@ -2191,6 +2207,7 @@ function calendarDayClass({
   rangeSelected: boolean;
   outOfMonth: boolean;
   status?: CalendarApiDay["status"];
+  isCharterEndCandidate: boolean;
   loading: boolean;
   fillAvailableHeight: boolean;
 }): string {
@@ -2212,6 +2229,10 @@ function calendarDayClass({
       !rangeSelected &&
       status === "unavailable" &&
       "border-slate-200 bg-slate-100 text-slate-400",
+    !selected &&
+      !rangeSelected &&
+      isCharterEndCandidate &&
+      "border-sky-300 bg-sky-50 text-sky-950 hover:bg-sky-100",
     outOfMonth && !selected && !rangeSelected && "opacity-55",
     loading && "animate-pulse",
   );
@@ -2221,11 +2242,13 @@ function calendarDayDotClass({
   selected,
   rangeSelected,
   status,
+  isCharterEndCandidate,
   loading,
 }: {
   selected: boolean;
   rangeSelected: boolean;
   status?: CalendarApiDay["status"];
+  isCharterEndCandidate: boolean;
   loading: boolean;
 }): string {
   return cnStep(
@@ -2234,7 +2257,12 @@ function calendarDayDotClass({
     !selected && !rangeSelected && status === "available" && "bg-emerald-500",
     !selected && !rangeSelected && status === "request" && "bg-amber-500",
     !selected && !rangeSelected && status === "unavailable" && "bg-slate-300",
-    !selected && !rangeSelected && !status && "bg-slate-200",
+    !selected && !rangeSelected && isCharterEndCandidate && "bg-sky-500",
+    !selected &&
+      !rangeSelected &&
+      !status &&
+      !isCharterEndCandidate &&
+      "bg-slate-200",
     loading && "animate-pulse",
   );
 }
@@ -2602,7 +2630,19 @@ function DateStep({
                   value && selectedRangeEnd && date >= value && date <= selectedRangeEnd,
                 );
                 const includedInSelectedRange = rangeSelected && !selected;
-                const selectable = Boolean(day?.selectable);
+                const selection = resolveCalendarDateSelection({
+                  isCharter,
+                  fixedDurationDays,
+                  startDate: value,
+                  endDate: endValue,
+                  candidateDate: date,
+                  availabilityLoaded: Boolean(day),
+                  daySelectable: Boolean(day?.selectable),
+                });
+                const selectable = selection.selectable;
+                const displayedStatus = selection.isCharterEndCandidate
+                  ? undefined
+                  : day?.status;
                 return (
                   <button
                     key={date}
@@ -2622,14 +2662,20 @@ function DateStep({
                       if (outOfMonth) setVisibleMonth(monthKeyFromIso(date));
                     }}
                     aria-pressed={selected || rangeSelected}
-                    aria-label={`${calendarDayAriaLabel(date, day, locale)}${
+                    aria-label={`${calendarDayAriaLabel(
+                      date,
+                      day,
+                      locale,
+                      selection.isCharterEndCandidate,
+                    )}${
                       includedInSelectedRange ? copy.includedInSelectedRange : ""
                     }`}
                     className={calendarDayClass({
                       selected,
                       rangeSelected,
                       outOfMonth,
-                      status: day?.status,
+                      status: displayedStatus,
+                      isCharterEndCandidate: selection.isCharterEndCandidate,
                       loading: calendarLoading && !day,
                       fillAvailableHeight,
                     })}
@@ -2639,20 +2685,31 @@ function DateStep({
                     </span>
                     <span className="mt-1 hidden min-h-4 w-full max-w-full truncate text-center text-[10px] font-semibold leading-tight tabular-nums sm:block sm:text-left">
                       {includedInSelectedRange
+                        ? locale === "es"
+                          ? "Incluido"
+                          : locale === "fr"
+                            ? "Inclus"
+                            : locale === "en"
+                              ? "Included"
+                              : "Incluso"
+                        : selection.isCharterEndCandidate
                           ? locale === "es"
-                            ? "Incluido"
+                            ? "Regreso"
                             : locale === "fr"
-                              ? "Inclus"
-                              : locale === "en"
-                                ? "Included"
-                                : "Incluso"
-                        : day?.reasonLabel ?? (calendarLoading ? "..." : "")}
+                              ? "Retour"
+                              : locale === "de"
+                                ? "Rückkehr"
+                                : locale === "en"
+                                  ? "Return"
+                                  : "Ritorno"
+                          : day?.reasonLabel ?? (calendarLoading ? "..." : "")}
                     </span>
                     <span
                       className={calendarDayDotClass({
                         selected,
                         rangeSelected,
-                        status: day?.status,
+                        status: displayedStatus,
+                        isCharterEndCandidate: selection.isCharterEndCandidate,
                         loading: calendarLoading && !day,
                       })}
                       aria-hidden="true"

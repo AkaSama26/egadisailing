@@ -81,6 +81,20 @@ describe("checkOverrideEligibility", () => {
     }
   });
 
+  it("normalizza l'ora corrente: il 29 agosto resta a 16 giorni dal 13 agosto", () => {
+    const result = checkOverrideEligibility({
+      ...baseInput,
+      newBookingRevenue: new Decimal("4000"),
+      experienceDate: new Date("2026-08-29T00:00:00.000Z"),
+      today: new Date("2026-08-13T18:15:00.000Z"),
+      conflictingBookings: [
+        { id: "b1", revenue: new Decimal("2500"), isAdminBlock: false },
+      ],
+    });
+
+    expect(result.status).toBe("override_request");
+  });
+
   it("revenue pari → blocked/insufficient_revenue", () => {
     const result = checkOverrideEligibility({
       ...baseInput,
