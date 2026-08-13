@@ -16,16 +16,53 @@ describe("resolveCalendarDateSelection", () => {
         ...baseInput,
         candidateDate: "2026-08-29",
       }),
-    ).toEqual({ selectable: true, isCharterEndCandidate: true });
+    ).toEqual({
+      selectable: true,
+      isCharterEndCandidate: true,
+      isCharterIntermediateDay: false,
+    });
   });
 
-  it("non consente un ritorno prima della durata minima di 3 giorni", () => {
+  it("mostra il 28 come giorno intermedio libero dopo una partenza il 27", () => {
     expect(
       resolveCalendarDateSelection({
         ...baseInput,
+        startDate: "2026-08-27",
+        candidateDate: "2026-08-28",
+      }),
+    ).toEqual({
+      selectable: false,
+      isCharterEndCandidate: false,
+      isCharterIntermediateDay: true,
+    });
+  });
+
+  it("non classifica la data di partenza stessa come giorno intermedio", () => {
+    expect(
+      resolveCalendarDateSelection({
+        ...baseInput,
+        startDate: "2026-08-27",
         candidateDate: "2026-08-27",
       }),
-    ).toEqual({ selectable: false, isCharterEndCandidate: false });
+    ).toEqual({
+      selectable: false,
+      isCharterEndCandidate: false,
+      isCharterIntermediateDay: false,
+    });
+  });
+
+  it("mostra il 29 come primo rientro valido dopo una partenza il 27", () => {
+    expect(
+      resolveCalendarDateSelection({
+        ...baseInput,
+        startDate: "2026-08-27",
+        candidateDate: "2026-08-29",
+      }),
+    ).toEqual({
+      selectable: true,
+      isCharterEndCandidate: true,
+      isCharterIntermediateDay: false,
+    });
   });
 
   it("non consente un ritorno oltre la durata massima di 7 giorni", () => {
@@ -34,7 +71,11 @@ describe("resolveCalendarDateSelection", () => {
         ...baseInput,
         candidateDate: "2026-09-02",
       }),
-    ).toEqual({ selectable: false, isCharterEndCandidate: false });
+    ).toEqual({
+      selectable: false,
+      isCharterEndCandidate: false,
+      isCharterIntermediateDay: false,
+    });
   });
 
   it("continua a usare lo stato API per scegliere una nuova partenza precedente", () => {
@@ -44,7 +85,11 @@ describe("resolveCalendarDateSelection", () => {
         candidateDate: "2026-08-25",
         daySelectable: true,
       }),
-    ).toEqual({ selectable: true, isCharterEndCandidate: false });
+    ).toEqual({
+      selectable: true,
+      isCharterEndCandidate: false,
+      isCharterIntermediateDay: false,
+    });
   });
 
   it("non abilita celle prima che la disponibilita' sia caricata", () => {
@@ -54,7 +99,11 @@ describe("resolveCalendarDateSelection", () => {
         candidateDate: "2026-08-29",
         availabilityLoaded: false,
       }),
-    ).toEqual({ selectable: false, isCharterEndCandidate: false });
+    ).toEqual({
+      selectable: false,
+      isCharterEndCandidate: false,
+      isCharterIntermediateDay: false,
+    });
   });
 
   it("per servizi non charter conserva la selezionabilita' restituita dall'API", () => {
@@ -64,6 +113,10 @@ describe("resolveCalendarDateSelection", () => {
         isCharter: false,
         candidateDate: "2026-08-29",
       }),
-    ).toEqual({ selectable: false, isCharterEndCandidate: false });
+    ).toEqual({
+      selectable: false,
+      isCharterEndCandidate: false,
+      isCharterIntermediateDay: false,
+    });
   });
 });

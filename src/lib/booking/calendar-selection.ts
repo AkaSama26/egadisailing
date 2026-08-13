@@ -16,6 +16,7 @@ interface CalendarDateSelectionInput {
 export interface CalendarDateSelection {
   selectable: boolean;
   isCharterEndCandidate: boolean;
+  isCharterIntermediateDay: boolean;
 }
 
 /**
@@ -29,7 +30,11 @@ export function resolveCalendarDateSelection(
   input: CalendarDateSelectionInput,
 ): CalendarDateSelection {
   if (!input.availabilityLoaded) {
-    return { selectable: false, isCharterEndCandidate: false };
+    return {
+      selectable: false,
+      isCharterEndCandidate: false,
+      isCharterIntermediateDay: false,
+    };
   }
 
   const isChoosingCharterEnd =
@@ -42,6 +47,7 @@ export function resolveCalendarDateSelection(
     return {
       selectable: input.daySelectable,
       isCharterEndCandidate: false,
+      isCharterIntermediateDay: false,
     };
   }
 
@@ -52,9 +58,13 @@ export function resolveCalendarDateSelection(
   const isCharterEndCandidate =
     durationDays >= CHARTER_MIN_DURATION_DAYS &&
     durationDays <= CHARTER_MAX_DURATION_DAYS;
+  const isCharterIntermediateDay =
+    input.candidateDate > input.startDate &&
+    durationDays < CHARTER_MIN_DURATION_DAYS;
 
   return {
     selectable: isCharterEndCandidate,
     isCharterEndCandidate,
+    isCharterIntermediateDay,
   };
 }

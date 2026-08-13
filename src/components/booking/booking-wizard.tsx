@@ -2142,6 +2142,7 @@ function calendarDayAriaLabel(
   day?: CalendarApiDay,
   locale?: string | null,
   isCharterEndCandidate = false,
+  isCharterIntermediateDay = false,
 ): string {
   const isEn = locale === "en";
   const isEs = locale === "es";
@@ -2154,6 +2155,18 @@ function calendarDayAriaLabel(
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00.000Z`));
+  if (isCharterIntermediateDay) {
+    const stateLabel = isEs
+      ? "día intermedio libre"
+      : isFr
+        ? "jour intermédiaire libre"
+        : isDe
+          ? "freier Zwischentag"
+          : isEn
+            ? "available intermediate day"
+            : "giorno intermedio libero";
+    return [formatted, stateLabel].join(", ");
+  }
   if (isCharterEndCandidate) {
     return `${formatted}, ${
       isEs
@@ -2200,6 +2213,8 @@ function calendarDayClass({
   outOfMonth,
   status,
   isCharterEndCandidate,
+  isCharterIntermediateDay,
+  selectable,
   loading,
   fillAvailableHeight,
 }: {
@@ -2208,19 +2223,27 @@ function calendarDayClass({
   outOfMonth: boolean;
   status?: CalendarApiDay["status"];
   isCharterEndCandidate: boolean;
+  isCharterIntermediateDay: boolean;
+  selectable: boolean;
   loading: boolean;
   fillAvailableHeight: boolean;
 }): string {
   return cnStep(
-    "relative flex h-10 w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed sm:h-12 sm:items-stretch sm:justify-start sm:p-1.5 sm:text-left",
+    "relative flex h-10 w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 sm:h-12 sm:items-stretch sm:justify-start sm:p-1.5 sm:text-left",
     fillAvailableHeight ? "lg:h-full" : "lg:h-14",
+    selectable ? "cursor-pointer" : isCharterIntermediateDay ? "cursor-default" : "cursor-not-allowed",
     (selected || rangeSelected) &&
       "border-sky-700 bg-sky-700 text-white shadow-sm ring-2 ring-sky-200 hover:bg-sky-800",
-    !selected && !rangeSelected && !status && "border-slate-200 bg-white text-slate-400",
+    !selected &&
+      !rangeSelected &&
+      !status &&
+      !isCharterEndCandidate &&
+      !isCharterIntermediateDay &&
+      "border-slate-200 bg-white text-slate-400",
     !selected &&
       !rangeSelected &&
       status === "available" &&
-      "border-emerald-200 bg-white text-slate-950 hover:bg-emerald-50",
+      "border-emerald-300 bg-emerald-50 text-slate-950 shadow-sm hover:bg-emerald-100",
     !selected &&
       !rangeSelected &&
       status === "request" &&
@@ -2228,11 +2251,15 @@ function calendarDayClass({
     !selected &&
       !rangeSelected &&
       status === "unavailable" &&
-      "border-slate-200 bg-slate-100 text-slate-400",
+      "border-slate-400 bg-slate-300 text-slate-700",
+    !selected &&
+      !rangeSelected &&
+      isCharterIntermediateDay &&
+      "border-emerald-300 bg-emerald-50 text-emerald-950 shadow-sm",
     !selected &&
       !rangeSelected &&
       isCharterEndCandidate &&
-      "border-sky-300 bg-sky-50 text-sky-950 hover:bg-sky-100",
+      "border-sky-400 bg-sky-100 text-sky-950 shadow-sm hover:bg-sky-200",
     outOfMonth && !selected && !rangeSelected && "opacity-55",
     loading && "animate-pulse",
   );
@@ -2243,12 +2270,14 @@ function calendarDayDotClass({
   rangeSelected,
   status,
   isCharterEndCandidate,
+  isCharterIntermediateDay,
   loading,
 }: {
   selected: boolean;
   rangeSelected: boolean;
   status?: CalendarApiDay["status"];
   isCharterEndCandidate: boolean;
+  isCharterIntermediateDay: boolean;
   loading: boolean;
 }): string {
   return cnStep(
@@ -2256,12 +2285,14 @@ function calendarDayDotClass({
     (selected || rangeSelected) && "bg-white",
     !selected && !rangeSelected && status === "available" && "bg-emerald-500",
     !selected && !rangeSelected && status === "request" && "bg-amber-500",
-    !selected && !rangeSelected && status === "unavailable" && "bg-slate-300",
+    !selected && !rangeSelected && status === "unavailable" && "bg-slate-600",
+    !selected && !rangeSelected && isCharterIntermediateDay && "bg-emerald-500",
     !selected && !rangeSelected && isCharterEndCandidate && "bg-sky-500",
     !selected &&
       !rangeSelected &&
       !status &&
       !isCharterEndCandidate &&
+      !isCharterIntermediateDay &&
       "bg-slate-200",
     loading && "animate-pulse",
   );
@@ -2640,7 +2671,8 @@ function DateStep({
                   daySelectable: Boolean(day?.selectable),
                 });
                 const selectable = selection.selectable;
-                const displayedStatus = selection.isCharterEndCandidate
+                const displayedStatus =
+                  selection.isCharterEndCandidate || selection.isCharterIntermediateDay
                   ? undefined
                   : day?.status;
                 return (
@@ -2667,6 +2699,7 @@ function DateStep({
                       day,
                       locale,
                       selection.isCharterEndCandidate,
+                      selection.isCharterIntermediateDay,
                     )}${
                       includedInSelectedRange ? copy.includedInSelectedRange : ""
                     }`}
@@ -2676,6 +2709,8 @@ function DateStep({
                       outOfMonth,
                       status: displayedStatus,
                       isCharterEndCandidate: selection.isCharterEndCandidate,
+                      isCharterIntermediateDay: selection.isCharterIntermediateDay,
+                      selectable,
                       loading: calendarLoading && !day,
                       fillAvailableHeight,
                     })}
@@ -2692,7 +2727,17 @@ function DateStep({
                             : locale === "en"
                               ? "Included"
                               : "Incluso"
-                        : selection.isCharterEndCandidate
+                        : selection.isCharterIntermediateDay
+                          ? locale === "es"
+                            ? "Intermedio"
+                            : locale === "fr"
+                              ? "Intermédiaire"
+                              : locale === "de"
+                                ? "Zwischentag"
+                                : locale === "en"
+                                  ? "Intermediate"
+                                  : "Intermedio"
+                          : selection.isCharterEndCandidate
                           ? locale === "es"
                             ? "Regreso"
                             : locale === "fr"
@@ -2701,7 +2746,7 @@ function DateStep({
                                 ? "Rückkehr"
                                 : locale === "en"
                                   ? "Return"
-                                  : "Ritorno"
+                                  : "Rientro"
                           : day?.reasonLabel ?? (calendarLoading ? "..." : "")}
                     </span>
                     <span
@@ -2710,6 +2755,7 @@ function DateStep({
                         rangeSelected,
                         status: displayedStatus,
                         isCharterEndCandidate: selection.isCharterEndCandidate,
+                        isCharterIntermediateDay: selection.isCharterIntermediateDay,
                         loading: calendarLoading && !day,
                       })}
                       aria-hidden="true"
@@ -2728,7 +2774,7 @@ function DateStep({
                 {copy.onRequest}
               </span>
               <span className="inline-flex items-center gap-1">
-                <span className="size-2 rounded-full bg-slate-300" aria-hidden="true" />
+                <span className="size-2 rounded-full bg-slate-600" aria-hidden="true" />
                 {copy.unavailable}
               </span>
             </div>
