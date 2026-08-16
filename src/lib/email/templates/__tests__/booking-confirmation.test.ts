@@ -37,4 +37,29 @@ describe("bookingConfirmationTemplate", () => {
     expect(tpl.html).not.toContain("javascript:");
     expect(tpl.html).not.toContain("Biglietto QR");
   });
+
+  it.each([
+    ["it", "Punto di incontro", "Presentati alle ore 9:00", "Apri in Google Maps"],
+    ["en", "Meeting point", "Please arrive at 9:00 AM", "Open in Google Maps"],
+    ["es", "Punto de encuentro", "Preséntate a las 9:00", "Abrir en Google Maps"],
+    ["fr", "Point de rendez-vous", "Présentez-vous à 9 h 00", "Ouvrir dans Google Maps"],
+    ["de", "Treffpunkt", "am Abreisetag um 9:00 Uhr", "In Google Maps öffnen"],
+  ])(
+    "includes localized meeting details for locale %s",
+    (locale, meetingPoint, instructions, mapCta) => {
+      const tpl = bookingConfirmationTemplate({
+        ...baseData,
+        locale,
+      });
+
+      for (const rendered of [tpl.html, tpl.text]) {
+        expect(rendered).toContain(meetingPoint);
+        expect(rendered).toContain("Marina Vento di Maestrale");
+        expect(rendered).toContain(instructions);
+        expect(rendered).toContain("Nicolò Genna");
+        expect(rendered).toContain(mapCta);
+        expect(rendered).toContain("https://maps.app.goo.gl/g1SYWfksRB7aExbm7");
+      }
+    },
+  );
 });

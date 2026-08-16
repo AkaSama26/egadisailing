@@ -15,6 +15,8 @@ export interface BookingConfirmationData {
   locale?: string | null;
 }
 
+const MEETING_POINT_MAP_URL = "https://maps.app.goo.gl/g1SYWfksRB7aExbm7";
+
 export function bookingConfirmationTemplate(data: BookingConfirmationData) {
   const locale = resolveEmailLocale(data.locale);
   const copy = {
@@ -141,6 +143,36 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
             : locale === "de"
               ? "Buchung verwalten"
             : "Gestisci la prenotazione",
+    meetingPoint:
+      locale === "en"
+        ? "Meeting point"
+        : locale === "es"
+          ? "Punto de encuentro"
+          : locale === "fr"
+            ? "Point de rendez-vous"
+            : locale === "de"
+              ? "Treffpunkt"
+              : "Punto di incontro",
+    meetingInstructions:
+      locale === "en"
+        ? "Please arrive at 9:00 AM on the departure day and ask for Nicolò Genna from Egadisailing."
+        : locale === "es"
+          ? "Preséntate a las 9:00 del día de salida y pregunta por Nicolò Genna de Egadisailing."
+          : locale === "fr"
+            ? "Présentez-vous à 9 h 00 le jour du départ et demandez Nicolò Genna d’Egadisailing."
+            : locale === "de"
+              ? "Bitte finden Sie sich am Abreisetag um 9:00 Uhr dort ein und fragen Sie nach Nicolò Genna von Egadisailing."
+              : "Presentati alle ore 9:00 del giorno di partenza e chiedi di Nicolò Genna di Egadisailing.",
+    mapCta:
+      locale === "en"
+        ? "Open in Google Maps"
+        : locale === "es"
+          ? "Abrir en Google Maps"
+          : locale === "fr"
+            ? "Ouvrir dans Google Maps"
+            : locale === "de"
+              ? "In Google Maps öffnen"
+              : "Apri in Google Maps",
   };
   const subject = copy.subject;
   const ticketHref = data.ticketUrl ? safeUrl(data.ticketUrl) : undefined;
@@ -166,6 +198,11 @@ export function bookingConfirmationTemplate(data: BookingConfirmationData) {
       <p><strong>${copy.total}:</strong> ${escapeHtml(data.totalPrice)}</p>
       <p><strong>${copy.paid}:</strong> ${escapeHtml(data.paidAmount)}</p>
       ${balanceBlock}
+      <div style="margin: 22px 0; padding: 18px; background: #f0f9ff; border-left: 4px solid #0369a1; border-radius: 8px;">
+        <p><strong>${copy.meetingPoint}:</strong> Marina Vento di Maestrale</p>
+        <p>${copy.meetingInstructions}</p>
+        <p style="margin-bottom: 0;"><a href="${safeUrl(MEETING_POINT_MAP_URL)}">${copy.mapCta}</a></p>
+      </div>
       ${ticketBlock}
       <p style="color: #6b7280; font-size: 14px;">
         ${copy.manage}
@@ -184,7 +221,10 @@ ${copy.date}: ${data.startDate}
 ${copy.people}: ${data.numPeople}
 ${copy.total}: ${data.totalPrice}
 ${copy.paid}: ${data.paidAmount}
-${data.balanceAmount ? `${copy.balance}: ${data.balanceAmount}.\n` : ""}${hasSafeTicketUrl ? `${copy.ticket}: ${data.ticketUrl}\n` : `${copy.manageCta}: ${data.recoveryUrl}`}`;
+${data.balanceAmount ? `${copy.balance}: ${data.balanceAmount}.\n` : ""}${copy.meetingPoint}: Marina Vento di Maestrale
+${copy.meetingInstructions}
+${copy.mapCta}: ${MEETING_POINT_MAP_URL}
+${hasSafeTicketUrl ? `${copy.ticket}: ${data.ticketUrl}\n` : `${copy.manageCta}: ${data.recoveryUrl}`}`;
 
   return { subject, html, text };
 }
