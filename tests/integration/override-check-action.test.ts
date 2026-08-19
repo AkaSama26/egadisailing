@@ -1,4 +1,13 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { setupTestDb, resetTestDb, closeTestDb } from "../helpers/test-db";
 import { seedBoatAndService, seedBooking } from "../helpers/seed-override";
 
@@ -13,6 +22,8 @@ vi.mock("@/lib/rate-limit/service", () => ({
 }));
 
 let db: Awaited<ReturnType<typeof setupTestDb>>;
+const TEST_NOW = new Date("2026-08-01T12:00:00.000Z");
+
 vi.mock("@/lib/db", () => ({
   get db() {
     return db;
@@ -29,8 +40,15 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await resetTestDb();
+  // Le regole di override dipendono dalla distanza dall'esperienza: mantenere
+  // fisso l'orologio evita che le date fixture diventino obsolete col tempo.
+  vi.setSystemTime(TEST_NOW);
   process.env.FEATURE_OVERRIDE_ENABLED = "true";
   vi.resetModules();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("checkOverrideEligibilityAction", () => {
