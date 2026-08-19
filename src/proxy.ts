@@ -180,6 +180,14 @@ export default async function proxy(req: NextRequest) {
     return createGoneResponse();
   }
 
+  // Mantiene validi i link del primo prototipo: il mockup non contiene dati
+  // reali e viene ora servito dalla rotta pubblica fuori dal layout protetto.
+  if (pathname === "/admin/mockup-finanza") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/mockup-finanza";
+    return NextResponse.redirect(url);
+  }
+
   // R26-P3 dev-test found: tutto `/admin*` bypassa il next-intl middleware.
   // Senza questo, `/admin/login` cadeva su intlMiddleware → redirect a
   // `/it/admin/login` (locale prepend) → 404. Admin dashboard + login sono
@@ -205,6 +213,15 @@ export default async function proxy(req: NextRequest) {
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
     }
+    return NextResponse.next();
+  }
+
+  // Mockup dimostrativo con soli dati statici: deve poter essere condiviso
+  // senza login admin e senza redirect automatico al prefisso lingua.
+  if (
+    pathname === "/mockup-finanza" ||
+    pathname === "/mockup-dettaglio-prenotazione"
+  ) {
     return NextResponse.next();
   }
 

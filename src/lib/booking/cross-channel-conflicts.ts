@@ -7,22 +7,12 @@ import {
   defaultNotificationChannels,
   toDispatchResult,
 } from "@/lib/notifications/dispatcher";
+import {
+  BOAT_EXCLUSIVE_SERVICE_TYPES,
+  isBoatExclusiveServiceType,
+} from "@/lib/booking/service-types";
 
-// R29-AUDIT-FIX2/R30-BIZ: helper per decidere se un service type richiede
-// serializzazione cross-adapter. I pacchetti venduti come barca intera
-// (gourmet/exclusive experience, charter, boat exclusive) devono
-// occupare lo slot del trimarano. Tours condivisi (SOCIAL_BOATING 20 posti,
-// BOAT_SHARED 12 posti) NON hanno bisogno del lock "availability" perche'
-// cohabitation e' feature, non bug.
-export const BOAT_EXCLUSIVE_SERVICE_TYPES = [
-  "EXCLUSIVE_EXPERIENCE",
-  "CABIN_CHARTER",
-  "BOAT_EXCLUSIVE",
-] as const;
-
-export function isBoatExclusiveServiceType(type: string): boolean {
-  return (BOAT_EXCLUSIVE_SERVICE_TYPES as readonly string[]).includes(type);
-}
+export { BOAT_EXCLUSIVE_SERVICE_TYPES, isBoatExclusiveServiceType };
 
 /**
  * R14 cross-OTA double-booking detection helper.

@@ -6,6 +6,9 @@ const base = {
   dateIso: "2026-07-15",
   status: "AVAILABLE" as const,
   bookings: [],
+  totalPeople: 0,
+  capacityMax: null,
+  hasExclusiveBooking: false,
   isAdminBlock: false,
 };
 
@@ -33,6 +36,9 @@ describe("computeActionState", () => {
             serviceName: "",
             serviceType: "BOAT_TOUR",
             customerName: "",
+            numPeople: 2,
+            capacityMax: 12,
+            isExclusive: false,
           },
         ],
       }),
@@ -51,6 +57,9 @@ describe("computeActionState", () => {
           serviceName: "",
           serviceType: "BOAT_TOUR",
           customerName: "",
+          numPeople: 2,
+          capacityMax: 12,
+          isExclusive: false,
         },
       ],
     });

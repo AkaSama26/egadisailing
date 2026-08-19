@@ -108,7 +108,13 @@ function ChildNavLink({ item, active }: { item: NavItem; active: boolean }) {
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const technicalOpen = technicalNavItems.some((item) => isActivePath(pathname, item.href));
+  const activePathname =
+    pathname === "/mockup-finanza"
+      ? "/admin/finanza"
+      : pathname === "/mockup-dettaglio-prenotazione"
+        ? "/admin/prenotazioni"
+        : pathname;
+  const technicalOpen = technicalNavItems.some((item) => isActivePath(activePathname, item.href));
 
   return (
     <aside className="hidden bg-white md:flex md:w-64 md:flex-col md:border-r">
@@ -136,14 +142,14 @@ export function AdminSidebar() {
           </div>
           {primaryNavItems.map((item) => (
             <div key={item.href}>
-              <NavLink item={item} active={isActiveItem(pathname, item)} />
+              <NavLink item={item} active={isActiveItem(activePathname, item)} />
               {item.children && (
                 <div className="ml-7 mt-1 space-y-1">
                   {item.children.map((child) => (
                     <ChildNavLink
                       key={child.href}
                       item={child}
-                      active={isActivePath(pathname, child.href)}
+                      active={isActivePath(activePathname, child.href)}
                     />
                   ))}
                 </div>
@@ -163,7 +169,7 @@ export function AdminSidebar() {
                 <NavLink
                   key={item.href}
                   item={item}
-                  active={isActivePath(pathname, item.href)}
+                  active={isActivePath(activePathname, item.href)}
                 />
               ))}
             </div>

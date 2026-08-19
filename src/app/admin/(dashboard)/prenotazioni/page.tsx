@@ -3,7 +3,13 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { BookingSource, BookingStatus } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
-import { BookingTable, type BookingRow } from "@/components/admin/booking-table";
+import {
+  BookingTable,
+  isBookingSortKey,
+  type BookingRow,
+  type BookingSortDirection,
+  type BookingTableSearchParams,
+} from "@/components/admin/booking-table";
 import { PageHeader } from "@/components/admin/page-header";
 import { db } from "@/lib/db";
 import {
@@ -19,6 +25,8 @@ interface Props {
     dateFrom?: string;
     dateTo?: string;
     serviceId?: string;
+    sort?: string;
+    dir?: string;
   }>;
 }
 
@@ -59,6 +67,9 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
   const dateFrom = parseDateParam(sp.dateFrom);
   const dateTo = parseDateParam(sp.dateTo);
   const serviceId = sp.serviceId?.trim() || undefined;
+  const sortBy = isBookingSortKey(sp.sort) ? sp.sort : "experienceDate";
+  const sortDirection: BookingSortDirection =
+    sp.dir === "asc" || sp.dir === "desc" ? sp.dir : "desc";
   const filters: Prisma.BookingWhereInput[] = [];
 
   if (sourceFilter) filters.push({ source: sourceFilter });
@@ -140,7 +151,9 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
       customerEmail: b.customer.email,
       customerPhone: b.customer.phone,
       serviceName: b.service.name,
+      createdAt: b.createdAt,
       startDate: b.startDate,
+      endDate: b.endDate,
       numPeople: b.numPeople,
       totalPrice: b.totalPrice.toString(),
       paidAmount: paid.gt(0) ? paid.toString() : externalPaid.toString(),
@@ -157,6 +170,8 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
         action="/admin/prenotazioni"
         className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 lg:grid-cols-[minmax(180px,1.4fr)_repeat(5,minmax(130px,1fr))_auto]"
       >
+        <input type="hidden" name="sort" value={sortBy} />
+        <input type="hidden" name="dir" value={sortDirection} />
         <label className="relative text-sm font-medium text-slate-700">
           Cerca
           <Search className="pointer-events-none absolute bottom-2.5 left-3 size-4 text-slate-400" aria-hidden="true" />
@@ -169,7 +184,7 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
           />
         </label>
         <label className="text-sm font-medium text-slate-700">
-          Da
+          Esperienza da
           <input
             name="dateFrom"
             type="date"
@@ -178,7 +193,7 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
           />
         </label>
         <label className="text-sm font-medium text-slate-700">
-          A
+          Esperienza a
           <input
             name="dateTo"
             type="date"
@@ -248,11 +263,31 @@ export default async function PrenotazioniPage({ searchParams }: Props) {
       </form>
 
       <p className="text-xs text-slate-500">
-        Mostrati i {rows.length} risultati piu' recenti (limite 200)
-        {q ? ` per "${q}"` : ""}. Usa i filtri per ridurre lo scope.
+        Mostrati i {rows.length} risultati più recenti (limite 200)
+        {q ? ` per "${q}"` : ""}. Usa i filtri per restringere l’elenco.
       </p>
 
-      <BookingTable rows={rows} />
+      <BookingTable
+        rows={rows}
+        sortBy={sortBy}
+        sortDirection={sortDirection}
+        searchParams={buildTableSearchParams({
+          q,
+          dateFrom: dateFrom ? sp.dateFrom : undefined,
+          dateTo: dateTo ? sp.dateTo : undefined,
+          status: statusFilter,
+          source: sourceFilter,
+          serviceId,
+        })}
+      />
     </div>
+  );
+}
+
+function buildTableSearchParams(
+  params: BookingTableSearchParams,
+): BookingTableSearchParams {
+  return Object.fromEntries(
+    Object.entries(params).filter((entry): entry is [string, string] => Boolean(entry[1])),
   );
 }

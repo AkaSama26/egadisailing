@@ -39,6 +39,7 @@ import {
   genericExperienceName,
   resolveEmailLocale,
 } from "@/lib/email/templates/locale";
+import { addDays, parseDateLikelyLocalDay } from "@/lib/dates";
 
 /**
  * Admin action: cancella una prenotazione + refund Stripe dei payments
@@ -471,6 +472,7 @@ export interface RegisterPaymentInput {
   amountEur: number;
   method: Extract<PaymentMethod, "CASH" | "BANK_TRANSFER">;
   type: Extract<PaymentType, "DEPOSIT" | "BALANCE" | "FULL">;
+  processedAtDay?: string;
   note?: string;
 }
 
@@ -494,6 +496,18 @@ export async function registerManualPayment(input: RegisterPaymentInput): Promis
     throw new ValidationError("Nota max 2000 caratteri");
   }
   const amountCents = toCents(input.amountEur);
+  let processedAt = new Date();
+  if (input.processedAtDay) {
+    try {
+      processedAt = parseDateLikelyLocalDay(input.processedAtDay);
+    } catch {
+      throw new ValidationError("Data pagamento non valida");
+    }
+    const tomorrow = addDays(parseDateLikelyLocalDay(new Date()), 1);
+    if (processedAt.getTime() >= tomorrow.getTime()) {
+      throw new ValidationError("La data del pagamento non puo' essere futura");
+    }
+  }
 
   await db.$transaction(async (tx) => {
     // Guard status: impedisce di registrare payment su booking chiusi
@@ -531,17 +545,26 @@ export async function registerManualPayment(input: RegisterPaymentInput): Promis
     // R21-A1-MEDIA-1: check overflow somma pagamenti non-REFUND vs totalPrice.
     // Previene errori di inserimento (admin scrive 1000 invece di 100) →
     // contabilita' inconsistente senza alert.
-    const existingPaymentsAgg = await tx.payment.aggregate({
+    const existingPayments = await tx.payment.findMany({
       where: {
         bookingId: input.bookingId,
-        status: "SUCCEEDED",
-        type: { in: ["DEPOSIT", "BALANCE", "FULL"] },
       },
-      _sum: { amount: true },
+      select: { amount: true, type: true, status: true },
     });
-    const alreadyPaidCents = existingPaymentsAgg._sum.amount
-      ? toCents(existingPaymentsAgg._sum.amount)
-      : 0;
+    const grossPaidCents = existingPayments.reduce((sum, payment) => {
+      if (
+        payment.type === "REFUND" ||
+        (payment.status !== "SUCCEEDED" && payment.status !== "REFUNDED")
+      ) {
+        return sum;
+      }
+      return sum + toCents(payment.amount);
+    }, 0);
+    const refundedCents = existingPayments.reduce((sum, payment) => {
+      if (payment.type !== "REFUND" || payment.status !== "REFUNDED") return sum;
+      return sum + toCents(payment.amount);
+    }, 0);
+    const alreadyPaidCents = Math.max(grossPaidCents - refundedCents, 0);
     const totalCents = toCents(booking.totalPrice);
     // Tolleranza ±1 cent per arrotondamenti Decimal. Hard-fail su scostamenti
     // significativi — l'admin deve riconciliare manualmente.
@@ -559,7 +582,7 @@ export async function registerManualPayment(input: RegisterPaymentInput): Promis
         type: input.type,
         method: input.method,
         status: "SUCCEEDED",
-        processedAt: new Date(),
+        processedAt,
         note: input.note?.trim() || null,
       },
     });
@@ -583,7 +606,12 @@ export async function registerManualPayment(input: RegisterPaymentInput): Promis
     action: AUDIT_ACTIONS.REGISTER_PAYMENT,
     entity: "Booking",
     entityId: input.bookingId,
-    after: { amountEur: input.amountEur, method: input.method, type: input.type },
+    after: {
+      amountEur: input.amountEur,
+      method: input.method,
+      type: input.type,
+      processedAtDay: input.processedAtDay ?? null,
+    },
   });
 
   revalidatePath(`/admin/prenotazioni/${input.bookingId}`);

@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { AdminCard } from "@/components/admin/admin-card";
 import { type DayCell } from "@/components/admin/calendar-grid";
 import { PageHeader } from "@/components/admin/page-header";
 import { AUDIT_ACTIONS } from "@/lib/audit/actions";
@@ -10,12 +8,7 @@ import { CalendarClient, type CalendarBoatView, type CalendarWeatherSummary } fr
 import { enrichDayCells, type DayCellEnriched } from "./enrich";
 
 interface Props {
-  searchParams: Promise<{ month?: string; year?: string; view?: string }>;
-}
-
-interface FilterOption {
-  value: string;
-  label: string;
+  searchParams: Promise<{ month?: string; year?: string; boat?: string; view?: string }>;
 }
 
 export default async function CalendarioPage({ searchParams }: Props) {
@@ -76,9 +69,10 @@ export default async function CalendarioPage({ searchParams }: Props) {
         confirmationCode: true,
         boatId: true,
         serviceId: true,
+        numPeople: true,
         startDate: true,
         endDate: true,
-        service: { select: { name: true, type: true } },
+        service: { select: { name: true, type: true, capacityMax: true } },
         customer: { select: { firstName: true, lastName: true } },
       },
     }),
@@ -106,46 +100,24 @@ export default async function CalendarioPage({ searchParams }: Props) {
     getAllWeather().catch(() => []),
   ]);
 
-  const requestedView = sp.view ?? "all";
-  const serviceViews = new Set(activeServices.map((service) => `service:${service.id}`));
-  const boatViews = new Set(boats.map((boat) => `boat:${boat.id}`));
-  const selectedView =
-    requestedView === "all" || serviceViews.has(requestedView) || boatViews.has(requestedView)
-      ? requestedView
-      : "all";
-
-  const selectedServiceId = selectedView.startsWith("service:")
-    ? selectedView.slice("service:".length)
-    : null;
-  const selectedBoatId = selectedView.startsWith("boat:")
-    ? selectedView.slice("boat:".length)
-    : null;
-  const selectedService = selectedServiceId
-    ? activeServices.find((service) => service.id === selectedServiceId)
-    : null;
-
-  const visibleBoatIds = new Set<string>();
-  if (selectedService) {
-    visibleBoatIds.add(selectedService.boatId);
-  } else if (selectedBoatId) {
-    visibleBoatIds.add(selectedBoatId);
-  } else {
-    for (const boat of boats) visibleBoatIds.add(boat.id);
-  }
-
-  const visibleBoats = boats.filter((boat) => visibleBoatIds.has(boat.id));
-  const visibleBookings = bookings.filter((booking) => visibleBoatIds.has(booking.boatId));
+  const legacyBoatId = sp.view?.startsWith("boat:")
+    ? sp.view.slice("boat:".length)
+    : undefined;
+  const requestedBoatId = sp.boat ?? legacyBoatId;
+  const initialBoatId = requestedBoatId && boats.some((boat) => boat.id === requestedBoatId)
+    ? requestedBoatId
+    : boats[0]?.id ?? null;
 
   const enriched = enrichDayCells({
-    boats: visibleBoats,
-    bookings: visibleBookings,
+    boats,
+    bookings,
     availability,
     auditLogs,
     monthStart,
     monthEnd,
   });
 
-  const calendars: CalendarBoatView[] = visibleBoats.map((boat) => {
+  const calendars: CalendarBoatView[] = boats.map((boat) => {
     const boatEnriched = enriched.get(boat.id) ?? [];
     return {
       boatId: boat.id,
@@ -178,99 +150,35 @@ export default async function CalendarioPage({ searchParams }: Props) {
     },
   }));
 
-  const prev = month === 1 ? { m: 12, y: year - 1 } : { m: month - 1, y: year };
-  const next = month === 12 ? { m: 1, y: year + 1 } : { m: month + 1, y: year };
   const todayIso = isoDay(toUtcDay(now));
   const initialDateIso = todayIso >= isoDay(monthStart) && todayIso <= isoDay(monthEnd)
     ? todayIso
     : isoDay(monthStart);
-  const initialSelected = calendars[0]
-    ? { boatId: calendars[0].boatId, dateIso: initialDateIso }
+  const initialSelected = initialBoatId
+    ? { boatId: initialBoatId, dateIso: initialDateIso }
     : null;
+  const rawMonthLabel = new Intl.DateTimeFormat("it-IT", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(monthStart);
+  const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1);
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={`Calendario · ${year}-${String(month).padStart(2, "0")}`}
-        subtitle="Seleziona esperienza o barca, poi usa il dettaglio della giornata a destra."
-        actions={
-          <>
-            <Link
-              href={calendarHref({ year: prev.y, month: prev.m, view: selectedView })}
-              className="rounded border bg-white px-3 py-1 text-sm hover:bg-slate-50"
-            >
-              Prec
-            </Link>
-            <Link
-              href={calendarHref({ view: selectedView })}
-              className="rounded border bg-white px-3 py-1 text-sm hover:bg-slate-50"
-            >
-              Oggi
-            </Link>
-            <Link
-              href={calendarHref({ year: next.y, month: next.m, view: selectedView })}
-              className="rounded border bg-white px-3 py-1 text-sm hover:bg-slate-50"
-            >
-              Succ
-            </Link>
-          </>
-        }
-      />
-
-      <AdminCard padding="sm">
-        <form action="/admin/calendario" className="flex flex-col gap-3 md:flex-row md:items-end">
-          <input type="hidden" name="year" value={year} />
-          <input type="hidden" name="month" value={month} />
-          <label className="flex-1 text-sm font-medium text-slate-700">
-            Esperienza o barca
-            <select
-              name="view"
-              defaultValue={selectedView}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="all">Tutte le esperienze</option>
-              <optgroup label="Esperienze attive">
-                {activeServices.map((service) => (
-                  <option key={service.id} value={`service:${service.id}`}>
-                    {service.name} · {service.boat.name}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Barche">
-                {boats.map((boat) => (
-                  <option key={boat.id} value={`boat:${boat.id}`}>
-                    {boat.name}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-          </label>
-          <button
-            type="submit"
-            className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-          >
-            Applica filtro
-          </button>
-        </form>
-      </AdminCard>
+    <div>
+      <PageHeader title="Calendario" />
 
       <CalendarClient
+        key={`${year}-${month}-${initialBoatId ?? "none"}`}
         calendars={calendars}
         weather={weather}
         initialSelected={initialSelected}
+        initialBoatId={initialBoatId}
+        year={year}
+        month={month}
+        monthLabel={monthLabel}
         services={manualBookingServices}
-        initialServiceId={selectedServiceId}
       />
-
-      <AdminCard padding="sm" className="space-y-1 text-xs text-slate-600">
-        <p className="font-semibold text-slate-900">Legenda:</p>
-        <div className="flex flex-wrap gap-3">
-          <LegendBadge className="bg-red-50 border-red-200">Bloccato / prenotato</LegendBadge>
-          <LegendBadge className="bg-amber-50 border-amber-200">Parzialmente prenotato</LegendBadge>
-          <LegendBadge className="bg-white border-slate-200">Disponibile</LegendBadge>
-        </div>
-        <p className="mt-2">Fino a 3 booking per cella; oltre mostra +N.</p>
-      </AdminCard>
     </div>
   );
 }
@@ -282,7 +190,15 @@ function buildCalendarDays(
 ): DayCell[] {
   const days: DayCell[] = [];
   for (let i = 0; i < firstWeekday; i++) {
-    days.push({ date: monthStart, bookings: [], status: "AVAILABLE", isPadding: true });
+    days.push({
+      date: monthStart,
+      bookings: [],
+      totalPeople: 0,
+      capacityMax: null,
+      hasExclusiveBooking: false,
+      status: "AVAILABLE",
+      isPadding: true,
+    });
   }
   for (const day of enriched) {
     days.push({
@@ -293,30 +209,14 @@ function buildCalendarDays(
         serviceName: booking.serviceName,
         serviceType: booking.serviceType,
         confirmationCode: booking.confirmationCode,
+        numPeople: booking.numPeople,
+        isExclusive: booking.isExclusive,
       })),
+      totalPeople: day.totalPeople,
+      capacityMax: day.capacityMax,
+      hasExclusiveBooking: day.hasExclusiveBooking,
       status: day.status,
     });
   }
   return days;
-}
-
-function calendarHref({
-  year,
-  month,
-  view,
-}: {
-  year?: number;
-  month?: number;
-  view?: string;
-}): string {
-  const search = new URLSearchParams();
-  if (year) search.set("year", String(year));
-  if (month) search.set("month", String(month));
-  if (view && view !== "all") search.set("view", view);
-  const qs = search.toString();
-  return qs ? `/admin/calendario?${qs}` : "/admin/calendario";
-}
-
-function LegendBadge({ children, className }: { children: string; className: string }) {
-  return <span className={`rounded border px-2 py-0.5 ${className}`}>{children}</span>;
 }

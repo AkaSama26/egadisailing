@@ -30,6 +30,9 @@ describe("enrichDayCells", () => {
     expect(days[30].dateIso).toBe("2026-07-31");
     expect(days[0].status).toBe("AVAILABLE");
     expect(days[0].bookings).toEqual([]);
+    expect(days[0].totalPeople).toBe(0);
+    expect(days[0].capacityMax).toBeNull();
+    expect(days[0].hasExclusiveBooking).toBe(false);
     expect(days[0].isAdminBlock).toBe(false);
   });
 
@@ -65,9 +68,10 @@ describe("enrichDayCells", () => {
           source: "DIRECT",
           status: "CONFIRMED",
           boatId: "boat-1",
+          numPeople: 8,
           startDate: new Date(Date.UTC(2026, 6, 10)),
           endDate: new Date(Date.UTC(2026, 6, 12)),
-          service: { name: "Charter", type: "CABIN_CHARTER" },
+          service: { name: "Charter", type: "CABIN_CHARTER", capacityMax: 6 },
           customer: { firstName: "Mario", lastName: "Rossi" },
         },
       ],
@@ -95,7 +99,45 @@ describe("enrichDayCells", () => {
       serviceName: "Charter",
       serviceType: "CABIN_CHARTER",
       customerName: "Mario Rossi",
+      numPeople: 8,
+      capacityMax: 6,
+      isExclusive: true,
     });
+    expect(day10.totalPeople).toBe(8);
+    expect(day10.capacityMax).toBeNull();
+    expect(day10.hasExclusiveBooking).toBe(true);
+    expect(day13.totalPeople).toBe(0);
+    expect(day13.hasExclusiveBooking).toBe(false);
+  });
+
+  it("somma le persone delle prenotazioni condivise nella stessa giornata", () => {
+    const sharedBooking = {
+      confirmationCode: "SHARED",
+      source: "DIRECT" as const,
+      status: "CONFIRMED" as const,
+      boatId: "boat-1",
+      startDate: new Date(Date.UTC(2026, 6, 20)),
+      endDate: new Date(Date.UTC(2026, 6, 20)),
+      service: { name: "Social Boating", type: "SOCIAL_BOATING", capacityMax: 20 },
+      customer: { firstName: "Cliente", lastName: "Test" },
+    };
+    const result = enrichDayCells({
+      boats: [{ id: "boat-1", name: "Trimarano" }],
+      bookings: [
+        { ...sharedBooking, id: "bk-1", numPeople: 7 },
+        { ...sharedBooking, id: "bk-2", numPeople: 5 },
+      ],
+      availability: [],
+      auditLogs: [],
+      monthStart: new Date(Date.UTC(2026, 6, 1)),
+      monthEnd: new Date(Date.UTC(2026, 6, 31)),
+    });
+
+    const day20 = result.get("boat-1")!.find((day) => day.dateIso === "2026-07-20")!;
+    expect(day20.bookings).toHaveLength(2);
+    expect(day20.totalPeople).toBe(12);
+    expect(day20.capacityMax).toBe(20);
+    expect(day20.hasExclusiveBooking).toBe(false);
   });
 
   it("admin-block arricchito con reason + blockedAt da AuditLog", () => {

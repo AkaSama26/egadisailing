@@ -1,4 +1,5 @@
 import type { BookingSource, BookingStatus } from "@/generated/prisma/enums";
+import { isBoatExclusiveServiceType } from "@/lib/booking/service-types";
 
 export interface DayCellEnriched {
   date: Date;
@@ -12,7 +13,13 @@ export interface DayCellEnriched {
     serviceName: string;
     serviceType: string;
     customerName: string;
+    numPeople: number;
+    capacityMax: number;
+    isExclusive: boolean;
   }>;
+  totalPeople: number;
+  capacityMax: number | null;
+  hasExclusiveBooking: boolean;
   isAdminBlock: boolean;
   adminBlockInfo?: {
     reason?: string;
@@ -28,9 +35,10 @@ export interface EnrichInput {
     source: BookingSource;
     status: BookingStatus;
     boatId: string;
+    numPeople: number;
     startDate: Date;
     endDate: Date;
-    service: { name: string; type: string };
+    service: { name: string; type: string; capacityMax: number };
     customer: { firstName: string; lastName: string };
   }>;
   availability: Array<{
@@ -158,7 +166,6 @@ export function enrichDayCells(input: EnrichInput): Map<string, DayCellEnriched[
         .filter(
           (b) => b.startDate.getTime() <= dayMs && b.endDate.getTime() >= dayMs,
         )
-        .slice(0, 20) // cap R17 perf: la UI mostra max 3 + "+N" label
         .map((b) => ({
           id: b.id,
           confirmationCode: b.confirmationCode,
@@ -167,7 +174,16 @@ export function enrichDayCells(input: EnrichInput): Map<string, DayCellEnriched[
           serviceName: b.service.name,
           serviceType: b.service.type,
           customerName: `${b.customer.firstName} ${b.customer.lastName}`.trim(),
+          numPeople: b.numPeople,
+          capacityMax: b.service.capacityMax,
+          isExclusive: isBoatExclusiveServiceType(b.service.type),
         }));
+      const totalPeople = dayBookings.reduce((total, booking) => total + booking.numPeople, 0);
+      const hasExclusiveBooking = dayBookings.some((booking) => booking.isExclusive);
+      const sharedCapacities = dayBookings
+        .filter((booking) => !booking.isExclusive)
+        .map((booking) => booking.capacityMax);
+      const capacityMax = sharedCapacities.length > 0 ? Math.max(...sharedCapacities) : null;
       const blockInfo = isAdminBlock
         ? (blockInfoByKey.get(`${boat.id}|${dateIso}`) ??
           fallbackByBoat.get(boat.id))
@@ -177,6 +193,9 @@ export function enrichDayCells(input: EnrichInput): Map<string, DayCellEnriched[
         dateIso,
         status: avail?.status ?? "AVAILABLE",
         bookings: dayBookings,
+        totalPeople,
+        capacityMax,
+        hasExclusiveBooking,
         isAdminBlock,
         adminBlockInfo: blockInfo,
       });
