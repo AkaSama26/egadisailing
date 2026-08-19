@@ -12,12 +12,13 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { DayCellEnriched } from "@/app/admin/(dashboard)/calendario/enrich";
 import {
   manualBlockRange,
   manualReleaseRange,
 } from "@/app/admin/(dashboard)/calendario/actions";
-import { formatItDay } from "@/lib/dates";
+import { formatItDay, parseIsoDay } from "@/lib/dates";
 import {
   BOOKING_STATUS_LABEL,
   BOOKING_SOURCE_LABEL,
@@ -130,7 +131,7 @@ export function DayActionsModal({ boatId, boatName, day, onClose }: DayActionsMo
         {/* Body: info full-width top + azioni in grid 2-col */}
         <div className="p-6 space-y-6">
           <InfoSection day={day} />
-          <ActionSection boatId={boatId} day={day} />
+          <ActionSection boatId={boatId} day={day} onSuccess={onClose} />
         </div>
 
         {/* Footer con close button secondary */}
@@ -246,7 +247,15 @@ function InfoSection({ day }: { day: DayCellEnriched }) {
  * stacked su mobile. Quick-pick date (oggi, domani, weekend, +7gg) per
  * velocizzare compilazione range.
  */
-function ActionSection({ boatId, day }: { boatId: string; day: DayCellEnriched }) {
+function ActionSection({
+  boatId,
+  day,
+  onSuccess,
+}: {
+  boatId: string;
+  day: DayCellEnriched;
+  onSuccess: () => void;
+}) {
   const state = computeActionState(day);
   return (
     <div className="space-y-3">
@@ -254,8 +263,8 @@ function ActionSection({ boatId, day }: { boatId: string; day: DayCellEnriched }
         Azioni
       </h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <BlockForm boatId={boatId} day={day} state={state} />
-        <ReleaseForm boatId={boatId} day={day} state={state} />
+        <BlockForm boatId={boatId} day={day} state={state} onSuccess={onSuccess} />
+        <ReleaseForm boatId={boatId} day={day} state={state} onSuccess={onSuccess} />
       </div>
     </div>
   );
@@ -337,26 +346,51 @@ function BlockForm({
   boatId,
   day,
   state,
+  onSuccess,
 }: {
   boatId: string;
   day: DayCellEnriched;
   state: ActionState;
+  onSuccess: () => void;
 }) {
   const [pending, setPending] = useState(false);
   return (
     <form
       action={async (fd) => {
+        const startDate = String(fd.get("startDate"));
+        const endDate = String(fd.get("endDate"));
+        let completed = false;
         setPending(true);
         try {
           await manualBlockRange(
             boatId,
-            String(fd.get("startDate")),
-            String(fd.get("endDate")),
+            startDate,
+            endDate,
             String(fd.get("reason") ?? ""),
           );
+          const formattedStart = formatItDay(parseIsoDay(startDate));
+          const formattedEnd = formatItDay(parseIsoDay(endDate));
+          toast.success(
+            startDate === endDate
+              ? "Giorno bloccato con successo"
+              : "Periodo bloccato con successo",
+            {
+              description:
+                startDate === endDate
+                  ? `La data ${formattedStart} non è più prenotabile.`
+                  : `Il periodo ${formattedStart} – ${formattedEnd} non è più prenotabile.`,
+            },
+          );
+          completed = true;
+        } catch (err) {
+          toast.error("Blocco non riuscito", {
+            description:
+              err instanceof Error ? err.message : "Si è verificato un errore imprevisto.",
+          });
         } finally {
           setPending(false);
         }
+        if (completed) onSuccess();
       }}
       className={`rounded-xl border p-5 transition-opacity ${
         state.canBlock
@@ -457,25 +491,46 @@ function ReleaseForm({
   boatId,
   day,
   state,
+  onSuccess,
 }: {
   boatId: string;
   day: DayCellEnriched;
   state: ActionState;
+  onSuccess: () => void;
 }) {
   const [pending, setPending] = useState(false);
   return (
     <form
       action={async (fd) => {
+        const startDate = String(fd.get("startDate"));
+        const endDate = String(fd.get("endDate"));
+        let completed = false;
         setPending(true);
         try {
-          await manualReleaseRange(
-            boatId,
-            String(fd.get("startDate")),
-            String(fd.get("endDate")),
+          await manualReleaseRange(boatId, startDate, endDate);
+          const formattedStart = formatItDay(parseIsoDay(startDate));
+          const formattedEnd = formatItDay(parseIsoDay(endDate));
+          toast.success(
+            startDate === endDate
+              ? "Giorno sbloccato con successo"
+              : "Periodo sbloccato con successo",
+            {
+              description:
+                startDate === endDate
+                  ? `La data ${formattedStart} è nuovamente disponibile.`
+                  : `Il periodo ${formattedStart} – ${formattedEnd} è nuovamente disponibile.`,
+            },
           );
+          completed = true;
+        } catch (err) {
+          toast.error("Rilascio non riuscito", {
+            description:
+              err instanceof Error ? err.message : "Si è verificato un errore imprevisto.",
+          });
         } finally {
           setPending(false);
         }
+        if (completed) onSuccess();
       }}
       className={`rounded-xl border p-5 transition-opacity ${
         state.canRelease

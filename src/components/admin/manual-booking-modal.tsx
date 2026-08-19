@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Euro, Save, Users, X } from "lucide-react";
+import { toast } from "sonner";
 import {
   createManualBookingAction,
   quoteManualBookingPriceAction,
@@ -216,27 +217,51 @@ export function ManualBookingModal({
     if (!selectedService) return;
     setSaving(true);
     setError(null);
+    let completed = false;
 
-    const result = await createManualBookingAction({
-      boatId,
-      serviceId,
-      dateIso,
-      seats: seatsNumber,
-      customer: { firstName, lastName, email, phone },
-      totalEur: parseMoney(totalEur),
-      depositEur: parseMoney(depositEur),
-      balanceEur: parseMoney(balanceEur),
-      paymentMethod,
-      note,
-    });
+    try {
+      const result = await createManualBookingAction({
+        boatId,
+        serviceId,
+        dateIso,
+        seats: seatsNumber,
+        customer: { firstName, lastName, email, phone },
+        totalEur: parseMoney(totalEur),
+        depositEur: parseMoney(depositEur),
+        balanceEur: parseMoney(balanceEur),
+        paymentMethod,
+        note,
+      });
 
-    setSaving(false);
-    if (!result.ok) {
-      setError(result.message);
-      return;
+      if (!result.ok) {
+        setError(result.message);
+        toast.error("Prenotazione non salvata", { description: result.message });
+        return;
+      }
+
+      const created = result.data;
+      toast.success("Prenotazione creata con successo", {
+        description: created?.confirmationCode
+          ? `Codice conferma: ${created.confirmationCode}`
+          : `${selectedService.name} · ${dateIso}`,
+        action: created?.bookingId
+          ? {
+              label: "Apri dettaglio",
+              onClick: () => router.push(`/admin/prenotazioni/${created.bookingId}`),
+            }
+          : undefined,
+      });
+      router.refresh();
+      completed = true;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Si è verificato un errore imprevisto.";
+      setError(message);
+      toast.error("Prenotazione non salvata", { description: message });
+    } finally {
+      setSaving(false);
     }
-    router.refresh();
-    onClose();
+    if (completed) onClose();
   };
 
   return (
