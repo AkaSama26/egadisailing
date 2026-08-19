@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { resolveCalendarDateSelection } from "@/lib/booking/calendar-selection";
+import {
+  groupCalendarDaysBySelectedRange,
+  resolveCalendarDateSelection,
+} from "@/lib/booking/calendar-selection";
 
 const baseInput = {
   isCharter: true,
@@ -118,5 +121,41 @@ describe("resolveCalendarDateSelection", () => {
       isCharterEndCandidate: false,
       isCharterIntermediateDay: false,
     });
+  });
+});
+
+describe("groupCalendarDaysBySelectedRange", () => {
+  const days = Array.from({ length: 14 }, (_, index) => {
+    const date = new Date(Date.UTC(2026, 7, 17 + index));
+    return date.toISOString().slice(0, 10);
+  });
+
+  it("unisce le date selezionate del charter in un solo blocco", () => {
+    const groups = groupCalendarDaysBySelectedRange(days, "2026-08-18", "2026-08-21");
+    const selectedGroups = groups.filter((group) => group.isSelectedRange);
+
+    expect(selectedGroups).toEqual([
+      {
+        dates: ["2026-08-18", "2026-08-19", "2026-08-20", "2026-08-21"],
+        isSelectedRange: true,
+      },
+    ]);
+  });
+
+  it("spezza il blocco tra domenica e lunedi'", () => {
+    const groups = groupCalendarDaysBySelectedRange(days, "2026-08-21", "2026-08-24");
+    const selectedGroups = groups.filter((group) => group.isSelectedRange);
+
+    expect(selectedGroups.map((group) => group.dates)).toEqual([
+      ["2026-08-21", "2026-08-22", "2026-08-23"],
+      ["2026-08-24"],
+    ]);
+  });
+
+  it("lascia separate le date quando non esiste un intervallo valido", () => {
+    const groups = groupCalendarDaysBySelectedRange(days, "2026-08-21", "");
+
+    expect(groups).toHaveLength(days.length);
+    expect(groups.every((group) => !group.isSelectedRange && group.dates.length === 1)).toBe(true);
   });
 });

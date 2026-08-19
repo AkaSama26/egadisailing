@@ -11,7 +11,10 @@ import { centsToAnalyticsValue, trackEvent, trackEventOncePerSession } from "@/l
 import { CURRENT_POLICY_VERSION } from "@/lib/legal/policy-version";
 import { PUBLIC_CONTACT_EMAIL } from "@/lib/public-contact";
 import { checkOverrideEligibilityAction } from "@/lib/booking/override-check-action";
-import { resolveCalendarDateSelection } from "@/lib/booking/calendar-selection";
+import {
+  groupCalendarDaysBySelectedRange,
+  resolveCalendarDateSelection,
+} from "@/lib/booking/calendar-selection";
 import {
   DEFAULT_PASSENGER_FARE_CATEGORIES,
   PASSENGER_FARE_SERVICE_TYPE,
@@ -2210,6 +2213,8 @@ function calendarDayAriaLabel(
 function calendarDayClass({
   selected,
   rangeSelected,
+  connectedRange,
+  connectedRangeDivider,
   outOfMonth,
   status,
   isCharterEndCandidate,
@@ -2220,6 +2225,8 @@ function calendarDayClass({
 }: {
   selected: boolean;
   rangeSelected: boolean;
+  connectedRange: boolean;
+  connectedRangeDivider: boolean;
   outOfMonth: boolean;
   status?: CalendarApiDay["status"];
   isCharterEndCandidate: boolean;
@@ -2229,11 +2236,17 @@ function calendarDayClass({
   fillAvailableHeight: boolean;
 }): string {
   return cnStep(
-    "relative flex h-10 w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-md border text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 sm:h-12 sm:items-stretch sm:justify-start sm:p-1.5 sm:text-left",
-    fillAvailableHeight ? "lg:h-full" : "lg:h-14",
+    "relative flex w-full min-w-0 flex-col items-center justify-center overflow-hidden text-center transition focus:outline-none focus:ring-2 focus:ring-sky-500 sm:items-stretch sm:justify-start sm:p-1.5 sm:text-left",
+    connectedRange
+      ? "h-full rounded-none border-0 bg-sky-700 text-white shadow-none focus:z-30 focus:ring-inset"
+      : "h-10 rounded-md border sm:h-12",
+    !connectedRange && (fillAvailableHeight ? "lg:h-full" : "lg:h-14"),
+    connectedRange && connectedRangeDivider && "border-l border-sky-500",
     selectable ? "cursor-pointer" : isCharterIntermediateDay ? "cursor-default" : "cursor-not-allowed",
     (selected || rangeSelected) &&
+      !connectedRange &&
       "border-sky-700 bg-sky-700 text-white shadow-sm ring-2 ring-sky-200 hover:bg-sky-800",
+    connectedRange && selectable && "hover:bg-sky-800",
     !selected &&
       !rangeSelected &&
       !status &&
@@ -2376,6 +2389,15 @@ function DateStep({
   const currentMonth = new Date().toISOString().slice(0, 7);
   const canGoPrevious = visibleMonth > currentMonth;
   const selectedDay = value ? calendarDays[value] : undefined;
+  const calendarGroups = useMemo(
+    () =>
+      groupCalendarDaysBySelectedRange(
+        range.days,
+        isCharter ? value : "",
+        isCharter ? selectedRangeEnd : "",
+      ),
+    [isCharter, range.days, selectedRangeEnd, value],
+  );
   const effectiveSelectedDay = isCharter && !fixedDurationDays ? rangeQuoteDay : selectedDay;
   const rangeBlocksContinue =
     isCharter &&
@@ -2653,114 +2675,145 @@ function DateStep({
                   "lg:min-h-0 lg:flex-1 lg:grid-rows-[repeat(6,minmax(2.5rem,1fr))]",
               )}
             >
-              {range.days.map((date) => {
-                const day = calendarDays[date];
-                const outOfMonth = monthKeyFromIso(date) !== visibleMonth;
-                const selected = value === date || (Boolean(displayedEndDate) && displayedEndDate === date);
-                const rangeSelected = Boolean(
-                  value && selectedRangeEnd && date >= value && date <= selectedRangeEnd,
-                );
-                const includedInSelectedRange = rangeSelected && !selected;
-                const selection = resolveCalendarDateSelection({
-                  isCharter,
-                  fixedDurationDays,
-                  startDate: value,
-                  endDate: endValue,
-                  candidateDate: date,
-                  availabilityLoaded: Boolean(day),
-                  daySelectable: Boolean(day?.selectable),
-                });
-                const selectable = selection.selectable;
-                const displayedStatus =
-                  selection.isCharterEndCandidate || selection.isCharterIntermediateDay
-                  ? undefined
-                  : day?.status;
-                return (
-                  <button
-                    key={date}
-                    type="button"
-                    disabled={checking || !selectable}
-                    onClick={() => {
-                      selectCalendarDate(date);
-                      if (!isCharter && day?.priceAmount != null && day.pricingUnit) {
-                        onPriceChange({
-                          amount: day.priceAmount,
-                          pricingUnit: day.pricingUnit,
-                          passengerCategoryPrices: day.passengerCategoryPrices ?? null,
-                        });
-                      } else if (!isCharter) {
-                        onPriceChange(null);
-                      }
-                      if (outOfMonth) setVisibleMonth(monthKeyFromIso(date));
-                    }}
-                    aria-pressed={selected || rangeSelected}
-                    aria-label={`${calendarDayAriaLabel(
-                      date,
-                      day,
-                      locale,
-                      selection.isCharterEndCandidate,
-                      selection.isCharterIntermediateDay,
-                    )}${
-                      includedInSelectedRange ? copy.includedInSelectedRange : ""
-                    }`}
-                    className={calendarDayClass({
-                      selected,
-                      rangeSelected,
-                      outOfMonth,
-                      status: displayedStatus,
-                      isCharterEndCandidate: selection.isCharterEndCandidate,
-                      isCharterIntermediateDay: selection.isCharterIntermediateDay,
-                      selectable,
-                      loading: calendarLoading && !day,
-                      fillAvailableHeight,
-                    })}
-                  >
-                    <span className="block w-full shrink-0 text-center text-sm font-bold leading-none sm:text-left">
-                      {Number(date.slice(8, 10))}
-                    </span>
-                    <span className="mt-1 hidden min-h-4 w-full max-w-full truncate text-center text-[10px] font-semibold leading-tight tabular-nums sm:block sm:text-left">
-                      {includedInSelectedRange
-                        ? locale === "es"
-                          ? "Incluido"
-                          : locale === "fr"
-                            ? "Inclus"
-                            : locale === "en"
-                              ? "Included"
-                              : "Incluso"
-                        : selection.isCharterIntermediateDay
-                          ? locale === "es"
-                            ? "Libre"
-                            : locale === "fr"
-                              ? "Libre"
-                              : locale === "de"
-                                ? "Frei"
-                                : locale === "en"
-                                  ? "Available"
-                                  : "Libero"
-                          : selection.isCharterEndCandidate
-                          ? locale === "es"
-                            ? "Regreso"
-                            : locale === "fr"
-                              ? "Retour"
-                              : locale === "de"
-                                ? "Rückkehr"
-                                : locale === "en"
-                                  ? "Return"
-                                  : "Rientro"
-                          : day?.reasonLabel ?? (calendarLoading ? "..." : "")}
-                    </span>
-                    <span
-                      className={calendarDayDotClass({
+              {calendarGroups.map((calendarGroup) => {
+                const dayButtons = calendarGroup.dates.map((date, groupIndex) => {
+                  const day = calendarDays[date];
+                  const outOfMonth = monthKeyFromIso(date) !== visibleMonth;
+                  const selected =
+                    value === date || (Boolean(displayedEndDate) && displayedEndDate === date);
+                  const rangeSelected = Boolean(
+                    value && selectedRangeEnd && date >= value && date <= selectedRangeEnd,
+                  );
+                  const includedInSelectedRange = rangeSelected && !selected;
+                  const selection = resolveCalendarDateSelection({
+                    isCharter,
+                    fixedDurationDays,
+                    startDate: value,
+                    endDate: endValue,
+                    candidateDate: date,
+                    availabilityLoaded: Boolean(day),
+                    daySelectable: Boolean(day?.selectable),
+                  });
+                  const selectable = selection.selectable;
+                  const displayedStatus =
+                    selection.isCharterEndCandidate || selection.isCharterIntermediateDay
+                      ? undefined
+                      : day?.status;
+                  return (
+                    <button
+                      key={date}
+                      type="button"
+                      disabled={checking || !selectable}
+                      onClick={() => {
+                        selectCalendarDate(date);
+                        if (!isCharter && day?.priceAmount != null && day.pricingUnit) {
+                          onPriceChange({
+                            amount: day.priceAmount,
+                            pricingUnit: day.pricingUnit,
+                            passengerCategoryPrices: day.passengerCategoryPrices ?? null,
+                          });
+                        } else if (!isCharter) {
+                          onPriceChange(null);
+                        }
+                        if (outOfMonth) setVisibleMonth(monthKeyFromIso(date));
+                      }}
+                      aria-pressed={selected || rangeSelected}
+                      aria-label={`${calendarDayAriaLabel(
+                        date,
+                        day,
+                        locale,
+                        selection.isCharterEndCandidate,
+                        selection.isCharterIntermediateDay,
+                      )}${includedInSelectedRange ? copy.includedInSelectedRange : ""}`}
+                      className={calendarDayClass({
                         selected,
                         rangeSelected,
+                        connectedRange: calendarGroup.isSelectedRange,
+                        connectedRangeDivider: groupIndex > 0,
+                        outOfMonth,
                         status: displayedStatus,
                         isCharterEndCandidate: selection.isCharterEndCandidate,
                         isCharterIntermediateDay: selection.isCharterIntermediateDay,
+                        selectable,
                         loading: calendarLoading && !day,
+                        fillAvailableHeight,
                       })}
-                      aria-hidden="true"
-                    />
-                  </button>
+                    >
+                      <span className="block w-full shrink-0 text-center text-sm font-bold leading-none sm:text-left">
+                        {Number(date.slice(8, 10))}
+                      </span>
+                      {!calendarGroup.isSelectedRange && (
+                        <span className="mt-1 hidden min-h-4 w-full max-w-full truncate text-center text-[10px] font-semibold leading-tight tabular-nums sm:block sm:text-left">
+                          {includedInSelectedRange
+                            ? locale === "es"
+                              ? "Incluido"
+                              : locale === "fr"
+                                ? "Inclus"
+                                : locale === "en"
+                                  ? "Included"
+                                  : "Incluso"
+                            : selection.isCharterIntermediateDay
+                              ? locale === "es"
+                                ? "Libre"
+                                : locale === "fr"
+                                  ? "Libre"
+                                  : locale === "de"
+                                    ? "Frei"
+                                    : locale === "en"
+                                      ? "Available"
+                                      : "Libero"
+                              : selection.isCharterEndCandidate
+                                ? locale === "es"
+                                  ? "Regreso"
+                                  : locale === "fr"
+                                    ? "Retour"
+                                    : locale === "de"
+                                      ? "Rückkehr"
+                                      : locale === "en"
+                                        ? "Return"
+                                        : "Rientro"
+                                : day?.reasonLabel ?? (calendarLoading ? "..." : "")}
+                        </span>
+                      )}
+                      <span
+                        className={calendarDayDotClass({
+                          selected,
+                          rangeSelected,
+                          status: displayedStatus,
+                          isCharterEndCandidate: selection.isCharterEndCandidate,
+                          isCharterIntermediateDay: selection.isCharterIntermediateDay,
+                          loading: calendarLoading && !day,
+                        })}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  );
+                });
+
+                if (!calendarGroup.isSelectedRange) return dayButtons[0];
+
+                return (
+                  <div
+                    key={`charter-range-${calendarGroup.dates[0]}`}
+                    className={cnStep(
+                      "relative grid h-10 min-w-0 overflow-hidden rounded-md border-2 border-sky-700 bg-sky-700 shadow-sm ring-2 ring-sky-200 sm:h-12",
+                      fillAvailableHeight ? "lg:h-full" : "lg:h-14",
+                    )}
+                    style={{
+                      gridColumn: `span ${calendarGroup.dates.length}`,
+                      gridTemplateColumns: `repeat(${calendarGroup.dates.length}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {dayButtons}
+                    <span className="pointer-events-none absolute inset-x-1 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center px-1 text-center sm:flex">
+                      <span className="truncate text-[10px] font-black uppercase tracking-wide text-white sm:text-xs">
+                        Charter
+                        {charterDurationDays
+                          ? ` · ${charterDurationDays} ${copy.days}`
+                          : ""}
+                      </span>
+                    </span>
+                  </div>
                 );
               })}
             </div>

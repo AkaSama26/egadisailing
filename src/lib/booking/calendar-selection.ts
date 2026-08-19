@@ -19,6 +19,54 @@ export interface CalendarDateSelection {
   isCharterIntermediateDay: boolean;
 }
 
+export interface CalendarDateGroup {
+  dates: string[];
+  isSelectedRange: boolean;
+}
+
+/**
+ * Raggruppa le date selezionate del charter in blocchi contigui, senza mai
+ * attraversare il limite domenica/lunedi'. Ogni blocco puo' cosi' occupare
+ * una sola cella CSS Grid estesa, come il charter nel calendario admin.
+ */
+export function groupCalendarDaysBySelectedRange(
+  days: string[],
+  startDate: string,
+  endDate: string,
+): CalendarDateGroup[] {
+  const groups: CalendarDateGroup[] = [];
+  const hasSelectedRange = Boolean(startDate && endDate && endDate >= startDate);
+  let index = 0;
+
+  while (index < days.length) {
+    const date = days[index];
+    const isSelectedRange = hasSelectedRange && date >= startDate && date <= endDate;
+
+    if (!isSelectedRange) {
+      groups.push({ dates: [date], isSelectedRange: false });
+      index += 1;
+      continue;
+    }
+
+    const dates = [date];
+    const weekEndExclusive = Math.min(days.length, index + (7 - (index % 7)));
+    let cursor = index + 1;
+    while (
+      cursor < weekEndExclusive &&
+      days[cursor] >= startDate &&
+      days[cursor] <= endDate
+    ) {
+      dates.push(days[cursor]);
+      cursor += 1;
+    }
+
+    groups.push({ dates, isSelectedRange: true });
+    index = cursor;
+  }
+
+  return groups;
+}
+
 /**
  * Decide se una cella del calendario puo' essere cliccata nel passo corrente.
  *
