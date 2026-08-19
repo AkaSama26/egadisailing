@@ -7,7 +7,8 @@ digest and never builds from its checkout.
 The canonical build toolchain is Node 24.18.0 / npm 11.16.0. Dependency and
 scanner exceptions are tracked in
 [`dependency-risk-register.md`](dependency-risk-register.md); every release
-must keep the HIGH/CRITICAL count at zero.
+must keep the unsuppressed HIGH/CRITICAL count at zero. Any suppression must be
+exact, package-scoped, time-bounded and documented in that register.
 
 ## Production topology
 

@@ -1,0 +1,12 @@
+vulnerabilities:
+  - id: CVE-2026-14456
+    purls:
+      - pkg:deb/debian/libssl3t64
+    expired_at: 2026-09-19
+    statement: >-
+      Time-bounded non-exposure exception: the issue is limited to OpenSSL
+      QUIC server listeners. Egadisailing runs a Node.js HTTP server behind
+      the central nginx proxy and does not create or expose an OpenSSL QUIC
+      listener. Debian classifies the issue as minor/postponed and has not
+      published a fixed trixie package. Remove this exception as soon as the
+      pinned distroless runtime contains the fixed libssl package.

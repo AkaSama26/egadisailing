@@ -200,6 +200,8 @@ jobs:
           --exit-code 1
           --severity HIGH,CRITICAL
           --scanners vuln
+          --ignorefile .trivyignore.yaml
+          --show-suppressed
           --no-progress
           "$SCAN_IMAGE"
 
