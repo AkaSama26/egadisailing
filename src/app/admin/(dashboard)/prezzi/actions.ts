@@ -200,9 +200,17 @@ const servicePriceInputSchema = z.object({
   pricingUnit: z.enum(["PER_PERSON", "PER_PACKAGE"]),
 });
 
+const editablePassengerFareSeasonPriceInputSchema = z.object({
+  serviceId: z.string().min(1),
+  priceBucket: z.enum(PRICE_BUCKETS),
+  category: z.enum(["CHILD", "INFANT"]),
+  amount: z.number().min(0).max(100_000),
+});
+
 const saveServicePriceMatrixSchema = z.object({
   year: z.number().int().min(2020).max(2100),
   rows: z.array(servicePriceInputSchema).min(1),
+  passengerRows: z.array(editablePassengerFareSeasonPriceInputSchema).optional(),
 });
 
 type ServicePriceInput = z.infer<typeof servicePriceInputSchema>;
@@ -265,10 +273,19 @@ export const saveServicePriceMatrix = withAdminAction(
   {
     schema: saveServicePriceMatrixSchema,
     revalidatePaths: (input) =>
-      pricingRevalidatePaths(input.rows.map((row) => row.serviceId)),
+      pricingRevalidatePaths([
+        ...input.rows.map((row) => row.serviceId),
+        ...(input.passengerRows ?? []).map((row) => row.serviceId),
+      ]),
   },
   async (input, { userId }) => {
-    const touchedServiceIds = Array.from(new Set(input.rows.map((row) => row.serviceId)));
+    const passengerRows = input.passengerRows ?? [];
+    const touchedServiceIds = Array.from(
+      new Set([
+        ...input.rows.map((row) => row.serviceId),
+        ...passengerRows.map((row) => row.serviceId),
+      ]),
+    );
     await db.$transaction(async (tx) => {
       await acquireTxAdvisoryLock(tx, "service-price-matrix", String(input.year));
       const services = await tx.service.findMany({
@@ -310,6 +327,31 @@ export const saveServicePriceMatrix = withAdminAction(
           });
         }
       }
+
+      const seenPassengerRows = new Set<string>();
+      for (const row of passengerRows) {
+        const dedupKey = `${row.serviceId}:${row.priceBucket}:${row.category}`;
+        if (seenPassengerRows.has(dedupKey)) {
+          throw new ValidationError(`Prezzo categoria duplicato: ${dedupKey}`);
+        }
+        seenPassengerRows.add(dedupKey);
+
+        const serviceType = serviceTypeById.get(row.serviceId);
+        if (!serviceType) throw new ValidationError(`Servizio non trovato: ${row.serviceId}`);
+        if (serviceType !== PASSENGER_FARE_SERVICE_TYPE) {
+          throw new ValidationError(
+            "I prezzi categoria stagionali sono supportati solo per barca condivisa",
+          );
+        }
+
+        await upsertPassengerFareSeasonPrice(tx, {
+          serviceId: row.serviceId,
+          year: input.year,
+          priceBucket: row.priceBucket,
+          category: row.category,
+          amount: row.amount,
+        });
+      }
     });
 
     await auditLog({
@@ -321,6 +363,7 @@ export const saveServicePriceMatrix = withAdminAction(
         year: input.year,
         services: touchedServiceIds,
         rows: input.rows.length,
+        passengerRows: passengerRows.length,
       },
     });
 

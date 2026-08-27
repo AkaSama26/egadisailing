@@ -3,11 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
-import {
-  savePassengerFareSeasonPrices,
-  saveSeasons,
-  saveServicePriceMatrix,
-} from "../actions";
+import { saveSeasons, saveServicePriceMatrix } from "../actions";
 import { AdminCard } from "@/components/admin/admin-card";
 import {
   DEFAULT_PASSENGER_FARE_CATEGORIES,
@@ -18,6 +14,7 @@ import {
 
 type PriceBucket = "LOW" | "MID" | "HIGH";
 type SeasonKey = PriceBucket | "LATE_LOW";
+type EditablePassengerFareCategory = Exclude<PassengerFareCategory, "ADULT">;
 
 const SEASON_COLUMNS: Array<{ key: SeasonKey; label: string; bucket: PriceBucket; readOnly?: boolean }> = [
   { key: "LOW", label: "Bassa", bucket: "LOW" },
@@ -233,6 +230,7 @@ export function PriceMatrixForm({
     rule: PassengerFareCategoryConfig,
     bucket: PriceBucket,
   ): string {
+    if (rule.category === "ADULT") return derivedPassengerSeasonPrice(service, rule, bucket);
     return (
       passengerSeasonPriceValues[passengerSeasonPriceKey(service.id, rule.category, bucket)] ??
       derivedPassengerSeasonPrice(service, rule, bucket)
@@ -257,6 +255,12 @@ export function PriceMatrixForm({
       durationDays?: number | null;
       amount: number;
       pricingUnit: "PER_PERSON" | "PER_PACKAGE";
+    }> = [];
+    const passengerRows: Array<{
+      serviceId: string;
+      priceBucket: PriceBucket;
+      category: EditablePassengerFareCategory;
+      amount: number;
     }> = [];
 
     for (const service of seasonalServices) {
@@ -303,15 +307,37 @@ export function PriceMatrixForm({
       }
     }
 
+    for (const service of sharedServices) {
+      for (const rule of passengerCategories) {
+        if (rule.category === "ADULT") continue;
+        for (const column of SEASON_COLUMNS.filter((c) => !c.readOnly)) {
+          const raw = passengerSeasonInputValue(service, rule, column.bucket);
+          const amount = normalizeNonNegativeNumber(raw);
+          if (amount == null) {
+            toast.error("Listino non salvato", {
+              description: `Inserisci un prezzo valido per ${rule.label} · ${service.name} (${column.label}).`,
+            });
+            return;
+          }
+          passengerRows.push({
+            serviceId: service.id,
+            priceBucket: column.bucket,
+            category: rule.category,
+            amount,
+          });
+        }
+      }
+    }
+
     startTransition(async () => {
       try {
-        const result = await saveServicePriceMatrix({ year, rows });
+        const result = await saveServicePriceMatrix({ year, rows, passengerRows });
         if (!result.ok) {
           toast.error("Listino non salvato", { description: result.message });
           return;
         }
         toast.success("Listino salvato", {
-          description: `I prezzi ${year} sono stati aggiornati.`,
+          description: `I prezzi e le tariffe passeggeri ${year} sono stati aggiornati.`,
         });
       } catch (error) {
         notifyUnexpectedSaveError("Listino non salvato", error);
@@ -341,59 +367,6 @@ export function PriceMatrixForm({
         });
       } catch (error) {
         notifyUnexpectedSaveError("Stagioni non salvate", error);
-      }
-    });
-  }
-
-  function submitPassengerSeasonPrices() {
-    if (sharedServices.length === 0) {
-      toast.error("Prezzi passeggeri non salvati", {
-        description: "Nessun servizio barca condivisa attivo.",
-      });
-      return;
-    }
-
-    const rows: Array<{
-      serviceId: string;
-      priceBucket: PriceBucket;
-      category: PassengerFareCategory;
-      amount: number;
-    }> = [];
-
-    for (const service of sharedServices) {
-      for (const rule of passengerCategories) {
-        for (const column of SEASON_COLUMNS.filter((c) => !c.readOnly)) {
-          const raw = passengerSeasonInputValue(service, rule, column.bucket);
-          const amount =
-            rule.category === "ADULT" ? normalizeNumber(raw) : normalizeNonNegativeNumber(raw);
-          if (amount == null) {
-            toast.error("Prezzi passeggeri non salvati", {
-              description: `Inserisci un prezzo valido per ${rule.label} · ${service.name} (${column.label}).`,
-            });
-            return;
-          }
-          rows.push({
-            serviceId: service.id,
-            priceBucket: column.bucket,
-            category: rule.category,
-            amount,
-          });
-        }
-      }
-    }
-
-    startTransition(async () => {
-      try {
-        const result = await savePassengerFareSeasonPrices({ year, rows });
-        if (!result.ok) {
-          toast.error("Prezzi passeggeri non salvati", { description: result.message });
-          return;
-        }
-        toast.success("Prezzi passeggeri salvati", {
-          description: `Le tariffe passeggeri ${year} sono state aggiornate.`,
-        });
-      } catch (error) {
-        notifyUnexpectedSaveError("Prezzi passeggeri non salvati", error);
       }
     });
   }
@@ -538,6 +511,10 @@ export function PriceMatrixForm({
       {sharedServices.length > 0 && (
         <AdminCard title="Prezzi passeggeri stagionali · barca condivisa">
           <div className="space-y-5">
+            <p className="text-sm text-slate-600">
+              La tariffa adulto segue il prezzo del servizio nel listino stagionale. Il
+              pulsante finale salva insieme listino e tariffe bambini/neonati.
+            </p>
             {sharedServices.map((service) => (
               <div key={service.id} className="overflow-x-auto">
                 <div className="mb-2 text-sm font-semibold text-slate-900">
@@ -574,7 +551,7 @@ export function PriceMatrixForm({
                                 min={rule.category === "ADULT" ? 1 : 0}
                                 step="0.01"
                                 value={value}
-                                readOnly={column.readOnly}
+                                readOnly={column.readOnly || rule.category === "ADULT"}
                                 onChange={(event) => updatePassengerSeasonPrice(key, event.target.value)}
                                 className="w-28 rounded-md border border-slate-300 px-2 py-2 text-right font-mono text-sm read-only:bg-slate-100"
                                 aria-label={`${service.name} ${rule.label} ${column.label}`}
@@ -589,15 +566,6 @@ export function PriceMatrixForm({
               </div>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={submitPassengerSeasonPrices}
-            disabled={isPending}
-            className="mt-4 inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            <Save className="size-4" />
-            Salva prezzi passeggeri
-          </button>
         </AdminCard>
       )}
 
@@ -609,7 +577,7 @@ export function PriceMatrixForm({
           className="inline-flex items-center gap-2 rounded-md bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
         >
           <Save className="size-4" />
-          Salva listino
+          Salva listino e tariffe
         </button>
       </div>
     </div>
