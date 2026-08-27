@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { Save } from "lucide-react";
+import { toast } from "sonner";
 import {
   savePassengerFareSeasonPrices,
   saveSeasons,
@@ -102,6 +103,23 @@ function normalizeNonNegativeNumber(value: string): number | null {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
+function notifyUnexpectedSaveError(title: string, error: unknown) {
+  const message = error instanceof Error ? error.message : "Si è verificato un errore imprevisto.";
+  const staleServerAction = message.includes("Failed to find Server Action");
+
+  toast.error(title, {
+    description: staleServerAction
+      ? "La pagina non è più aggiornata. Ricaricala e riprova il salvataggio."
+      : message,
+    action: staleServerAction
+      ? {
+          label: "Ricarica",
+          onClick: () => window.location.reload(),
+        }
+      : undefined,
+  });
+}
+
 function serviceDurationLabel(service: MatrixService): string {
   if (service.durationType === "FULL_DAY") return "8h";
   if (service.durationType === "HALF_DAY_MORNING") return "4h mattina";
@@ -118,7 +136,6 @@ export function PriceMatrixForm({
   passengerFareSeasonPrices,
 }: PriceMatrixFormProps) {
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
   const passengerCategories = DEFAULT_PASSENGER_FARE_CATEGORIES;
   const [passengerSeasonPriceValues, setPassengerSeasonPriceValues] = useState<Record<string, string>>(() => {
     const values: Record<string, string> = {};
@@ -234,7 +251,6 @@ export function PriceMatrixForm({
   }
 
   function submitPrices() {
-    setMessage(null);
     const rows: Array<{
       serviceId: string;
       priceBucket?: PriceBucket | null;
@@ -247,7 +263,9 @@ export function PriceMatrixForm({
       for (const column of SEASON_COLUMNS.filter((c) => !c.readOnly)) {
         const amount = normalizeNumber(priceValues[seasonalPriceKey(service.id, column.bucket)] ?? "");
         if (!amount) {
-          setMessage(`Inserisci un prezzo valido per ${service.name} (${column.label})`);
+          toast.error("Listino non salvato", {
+            description: `Inserisci un prezzo valido per ${service.name} (${column.label}).`,
+          });
           return;
         }
         rows.push({
@@ -269,7 +287,9 @@ export function PriceMatrixForm({
               "",
           );
           if (!amount) {
-            setMessage(`Inserisci un prezzo charter valido per ${days} giornate (${column.label})`);
+            toast.error("Listino non salvato", {
+              description: `Inserisci un prezzo charter valido per ${days} giornate (${column.label}).`,
+            });
             return;
           }
           rows.push({
@@ -284,32 +304,52 @@ export function PriceMatrixForm({
     }
 
     startTransition(async () => {
-      const result = await saveServicePriceMatrix({ year, rows });
-      setMessage(result.ok ? "Listino salvato." : result.message);
+      try {
+        const result = await saveServicePriceMatrix({ year, rows });
+        if (!result.ok) {
+          toast.error("Listino non salvato", { description: result.message });
+          return;
+        }
+        toast.success("Listino salvato", {
+          description: `I prezzi ${year} sono stati aggiornati.`,
+        });
+      } catch (error) {
+        notifyUnexpectedSaveError("Listino non salvato", error);
+      }
     });
   }
 
   function submitSeasons() {
-    setMessage(null);
     startTransition(async () => {
-      const result = await saveSeasons({
-        year,
-        seasons: SEASON_COLUMNS.map((column) => ({
-          key: column.key,
-          label: seasonValues[column.key].label,
-          startDate: seasonValues[column.key].startDate,
-          endDate: seasonValues[column.key].endDate,
-          priceBucket: column.key === "LATE_LOW" ? "LOW" : column.bucket,
-        })),
-      });
-      setMessage(result.ok ? "Stagioni salvate." : result.message);
+      try {
+        const result = await saveSeasons({
+          year,
+          seasons: SEASON_COLUMNS.map((column) => ({
+            key: column.key,
+            label: seasonValues[column.key].label,
+            startDate: seasonValues[column.key].startDate,
+            endDate: seasonValues[column.key].endDate,
+            priceBucket: column.key === "LATE_LOW" ? "LOW" : column.bucket,
+          })),
+        });
+        if (!result.ok) {
+          toast.error("Stagioni non salvate", { description: result.message });
+          return;
+        }
+        toast.success("Stagioni salvate", {
+          description: `I periodi stagionali ${year} sono stati aggiornati.`,
+        });
+      } catch (error) {
+        notifyUnexpectedSaveError("Stagioni non salvate", error);
+      }
     });
   }
 
   function submitPassengerSeasonPrices() {
-    setMessage(null);
     if (sharedServices.length === 0) {
-      setMessage("Nessun servizio barca condivisa attivo.");
+      toast.error("Prezzi passeggeri non salvati", {
+        description: "Nessun servizio barca condivisa attivo.",
+      });
       return;
     }
 
@@ -327,7 +367,9 @@ export function PriceMatrixForm({
           const amount =
             rule.category === "ADULT" ? normalizeNumber(raw) : normalizeNonNegativeNumber(raw);
           if (amount == null) {
-            setMessage(`Inserisci un prezzo valido per ${rule.label} · ${service.name} (${column.label})`);
+            toast.error("Prezzi passeggeri non salvati", {
+              description: `Inserisci un prezzo valido per ${rule.label} · ${service.name} (${column.label}).`,
+            });
             return;
           }
           rows.push({
@@ -341,19 +383,23 @@ export function PriceMatrixForm({
     }
 
     startTransition(async () => {
-      const result = await savePassengerFareSeasonPrices({ year, rows });
-      setMessage(result.ok ? "Prezzi passeggeri stagionali salvati." : result.message);
+      try {
+        const result = await savePassengerFareSeasonPrices({ year, rows });
+        if (!result.ok) {
+          toast.error("Prezzi passeggeri non salvati", { description: result.message });
+          return;
+        }
+        toast.success("Prezzi passeggeri salvati", {
+          description: `Le tariffe passeggeri ${year} sono state aggiornate.`,
+        });
+      } catch (error) {
+        notifyUnexpectedSaveError("Prezzi passeggeri non salvati", error);
+      }
     });
   }
 
   return (
     <div className="space-y-6">
-      {message && (
-        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-          {message}
-        </div>
-      )}
-
       <AdminCard title="Stagioni annuali">
         <div className="grid gap-3 md:grid-cols-4">
           {SEASON_COLUMNS.map((column) => {
